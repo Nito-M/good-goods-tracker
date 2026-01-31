@@ -1,41 +1,37 @@
-import { useState } from 'react';
 import { Package, DollarSign, AlertTriangle, Plus, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/StatCard';
 import { InventoryTable } from '@/components/InventoryTable';
-import { AddItemDialog } from '@/components/AddItemDialog';
 import { SearchFilter } from '@/components/SearchFilter';
-import { useInventory } from '@/hooks/useInventory';
 import { InventoryItem } from '@/types/inventory';
 
-const Index = () => {
-  const {
-    items,
-    stats,
-    searchQuery,
-    setSearchQuery,
-    categoryFilter,
-    setCategoryFilter,
-    addItem,
-    updateItem,
-    deleteItem,
-  } = useInventory();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-
-  const handleEdit = (item: InventoryItem) => {
-    setEditingItem(item);
-    setDialogOpen(true);
+interface IndexProps {
+  items: InventoryItem[];
+  stats: {
+    totalItems: number;
+    totalValue: number;
+    lowStockCount: number;
   };
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  categoryFilter: string;
+  setCategoryFilter: (category: string) => void;
+  onEdit: (item: InventoryItem) => void;
+  onDelete: (id: string) => void;
+  onOpenDialog: () => void;
+}
 
-  const handleCloseDialog = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) {
-      setEditingItem(null);
-    }
-  };
-
+const Index = ({
+  items,
+  stats,
+  searchQuery,
+  setSearchQuery,
+  categoryFilter,
+  setCategoryFilter,
+  onEdit,
+  onDelete,
+  onOpenDialog,
+}: IndexProps) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -57,7 +53,7 @@ const Index = () => {
               </div>
               <h1 className="text-xl font-bold text-card-foreground">Inventory</h1>
             </div>
-            <Button onClick={() => setDialogOpen(true)} className="gap-2">
+            <Button onClick={onOpenDialog} className="gap-2">
               <Plus className="h-4 w-4" />
               Add Item
             </Button>
@@ -102,19 +98,10 @@ const Index = () => {
         {/* Inventory Table */}
         <InventoryTable
           items={items}
-          onEdit={handleEdit}
-          onDelete={deleteItem}
+          onEdit={onEdit}
+          onDelete={onDelete}
         />
       </main>
-
-      {/* Add/Edit Dialog */}
-      <AddItemDialog
-        open={dialogOpen}
-        onOpenChange={handleCloseDialog}
-        onSave={addItem}
-        editItem={editingItem}
-        onUpdate={updateItem}
-      />
     </div>
   );
 };
