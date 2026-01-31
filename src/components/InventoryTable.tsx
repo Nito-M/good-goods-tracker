@@ -1,5 +1,6 @@
+import { useNavigate } from 'react-router-dom';
 import { InventoryItem } from '@/types/inventory';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,6 +20,8 @@ interface InventoryTableProps {
 }
 
 export function InventoryTable({ items, onEdit, onDelete }: InventoryTableProps) {
+  const navigate = useNavigate();
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -80,6 +83,14 @@ export function InventoryTable({ items, onEdit, onDelete }: InventoryTableProps)
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/item/${item.id}`)}
+                        className="h-8 w-8 text-muted-foreground hover:text-card-foreground"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
