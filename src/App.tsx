@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import { ItemDetails } from "./pages/ItemDetails";
 import { Auth } from "./pages/Auth";
+import { PurchaseOrders } from "./pages/PurchaseOrders";
 import NotFound from "./pages/NotFound";
 import { useInventory } from "@/hooks/useInventory";
 import { AddItemDialog } from "@/components/AddItemDialog";
@@ -78,6 +79,14 @@ function AppContent() {
                 onEdit={handleEdit}
                 onDelete={deleteItem}
               />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/purchase-orders"
+          element={
+            <ProtectedRoute>
+              <PurchaseOrders />
             </ProtectedRoute>
           }
         />
