@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { InventoryItem, Dimensions } from '@/types/inventory';
+import { InventoryItem } from '@/types/inventory';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DbInventoryItem {
   id: string;
@@ -22,6 +23,7 @@ interface DbInventoryItem {
   description: string | null;
   created_at: string;
   updated_at: string;
+  user_id: string;
 }
 
 function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
@@ -55,8 +57,15 @@ export function useInventory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchItems = useCallback(async () => {
+    if (!user) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('inventory_items')
       .select('*')
@@ -68,12 +77,13 @@ export function useInventory() {
         description: error.message,
         variant: 'destructive',
       });
+      setLoading(false);
       return;
     }
 
     setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
     setLoading(false);
-  }, [toast]);
+  }, [toast, user]);
 
   useEffect(() => {
     fetchItems();
@@ -95,6 +105,15 @@ export function useInventory() {
   }, [items]);
 
   const addItem = async (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) {
+      toast({
+        title: 'Not authenticated',
+        description: 'Please sign in to add items.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { error } = await supabase.from('inventory_items').insert({
       name: item.name,
       sku: item.sku,
@@ -111,6 +130,7 @@ export function useInventory() {
       dimensions_unit: item.dimensions.unit,
       colors: item.colors,
       description: item.description,
+      user_id: user.id,
     });
 
     if (error) {

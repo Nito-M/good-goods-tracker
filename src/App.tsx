@@ -6,10 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import { ItemDetails } from "./pages/ItemDetails";
+import { Auth } from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { useInventory } from "@/hooks/useInventory";
 import { AddItemDialog } from "@/components/AddItemDialog";
 import { InventoryItem } from "@/types/inventory";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -46,31 +49,36 @@ function AppContent() {
   return (
     <>
       <Routes>
+        <Route path="/auth" element={<Auth />} />
         <Route
           path="/"
           element={
-            <Index
-              items={items}
-              stats={stats}
-              loading={loading}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              categoryFilter={categoryFilter}
-              setCategoryFilter={setCategoryFilter}
-              onEdit={handleEdit}
-              onDelete={deleteItem}
-              onOpenDialog={() => setDialogOpen(true)}
-            />
+            <ProtectedRoute>
+              <Index
+                items={items}
+                stats={stats}
+                loading={loading}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                categoryFilter={categoryFilter}
+                setCategoryFilter={setCategoryFilter}
+                onEdit={handleEdit}
+                onDelete={deleteItem}
+                onOpenDialog={() => setDialogOpen(true)}
+              />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/item/:id"
           element={
-            <ItemDetails
-              items={allItems}
-              onEdit={handleEdit}
-              onDelete={deleteItem}
-            />
+            <ProtectedRoute>
+              <ItemDetails
+                items={allItems}
+                onEdit={handleEdit}
+                onDelete={deleteItem}
+              />
+            </ProtectedRoute>
           }
         />
         <Route path="*" element={<NotFound />} />
@@ -89,11 +97,13 @@ function AppContent() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
