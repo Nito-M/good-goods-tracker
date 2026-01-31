@@ -32,6 +32,7 @@ export type Database = {
           quantity: number
           sku: string
           updated_at: string
+          user_id: string | null
           weight: number
           weight_unit: string
         }
@@ -52,6 +53,7 @@ export type Database = {
           quantity?: number
           sku: string
           updated_at?: string
+          user_id?: string | null
           weight?: number
           weight_unit?: string
         }
@@ -72,8 +74,36 @@ export type Database = {
           quantity?: number
           sku?: string
           updated_at?: string
+          user_id?: string | null
           weight?: number
           weight_unit?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
