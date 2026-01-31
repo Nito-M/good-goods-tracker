@@ -1,0 +1,109 @@
+import { InventoryItem } from '@/types/inventory';
+import { Edit2, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+
+interface InventoryTableProps {
+  items: InventoryItem[];
+  onEdit: (item: InventoryItem) => void;
+  onDelete: (id: string) => void;
+}
+
+export function InventoryTable({ items, onEdit, onDelete }: InventoryTableProps) {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
+            <TableHead className="font-semibold text-card-foreground">Category</TableHead>
+            <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
+            <TableHead className="font-semibold text-card-foreground text-right">Price</TableHead>
+            <TableHead className="font-semibold text-card-foreground text-right">Total Value</TableHead>
+            <TableHead className="font-semibold text-card-foreground">Status</TableHead>
+            <TableHead className="font-semibold text-card-foreground text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                No items found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            items.map((item) => {
+              const isLowStock = item.quantity <= item.minStock;
+              return (
+                <TableRow
+                  key={item.id}
+                  className="transition-colors hover:bg-muted/30"
+                >
+                  <TableCell className="font-medium text-card-foreground">{item.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="font-normal">
+                      {item.category}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(item.price)}</TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">
+                    {formatCurrency(item.quantity * item.price)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={cn(
+                        'font-medium',
+                        isLowStock
+                          ? 'bg-warning/10 text-warning hover:bg-warning/20'
+                          : 'bg-success/10 text-success hover:bg-success/20'
+                      )}
+                    >
+                      {isLowStock ? 'Low Stock' : 'In Stock'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(item)}
+                        className="h-8 w-8 text-muted-foreground hover:text-card-foreground"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(item.id)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
