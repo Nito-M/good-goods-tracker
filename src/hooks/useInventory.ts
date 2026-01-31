@@ -1,115 +1,83 @@
-import { useState, useMemo } from 'react';
-import { InventoryItem } from '@/types/inventory';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { InventoryItem, Dimensions } from '@/types/inventory';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-const INITIAL_ITEMS: InventoryItem[] = [
-  {
-    id: '1',
-    name: 'MacBook Pro 14"',
-    sku: 'ELEC-MBP14-001',
-    category: 'Electronics',
-    quantity: 12,
-    price: 1999.99,
-    cost: 1599.99,
-    minStock: 5,
-    weight: 3.5,
-    weightUnit: 'lb',
-    dimensions: { length: 12.31, width: 8.71, height: 0.61, unit: 'in' },
-    colors: ['Space Gray', 'Silver'],
-    description: 'Apple MacBook Pro 14-inch with M3 Pro chip, 18GB RAM, and 512GB SSD. Features Liquid Retina XDR display and up to 17 hours of battery life.',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-  },
-  {
-    id: '2',
-    name: 'Wireless Mouse',
-    sku: 'ELEC-WM-002',
-    category: 'Electronics',
-    quantity: 45,
-    price: 29.99,
-    cost: 12.50,
-    minStock: 10,
-    weight: 0.22,
-    weightUnit: 'lb',
-    dimensions: { length: 4.5, width: 2.8, height: 1.5, unit: 'in' },
-    colors: ['Black', 'White', 'Blue'],
-    description: 'Ergonomic wireless mouse with 2.4GHz connectivity, adjustable DPI settings, and silent click technology.',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-18'),
-  },
-  {
-    id: '3',
-    name: 'Office Chair',
-    sku: 'OFF-CHR-003',
-    category: 'Office',
-    quantity: 3,
-    price: 299.99,
-    cost: 180.00,
-    minStock: 5,
-    weight: 35,
-    weightUnit: 'lb',
-    dimensions: { length: 26, width: 26, height: 42, unit: 'in' },
-    colors: ['Black', 'Gray'],
-    description: 'Ergonomic office chair with lumbar support, adjustable armrests, and breathable mesh back. Supports up to 300 lbs.',
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: '4',
-    name: 'Cotton T-Shirt (L)',
-    sku: 'CLO-TSH-004',
-    category: 'Clothing',
-    quantity: 150,
-    price: 24.99,
-    cost: 8.50,
-    minStock: 20,
-    weight: 0.35,
-    weightUnit: 'lb',
-    dimensions: { length: 12, width: 10, height: 1, unit: 'in' },
-    colors: ['White', 'Black', 'Navy', 'Red', 'Green'],
-    description: '100% organic cotton t-shirt, pre-shrunk, machine washable. Classic fit with reinforced seams.',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-12'),
-  },
-  {
-    id: '5',
-    name: 'Mechanical Keyboard',
-    sku: 'ELEC-KB-005',
-    category: 'Electronics',
-    quantity: 8,
-    price: 149.99,
-    cost: 75.00,
-    minStock: 10,
-    weight: 2.2,
-    weightUnit: 'lb',
-    dimensions: { length: 17.5, width: 5.5, height: 1.5, unit: 'in' },
-    colors: ['Black', 'White'],
-    description: 'Full-size mechanical keyboard with Cherry MX switches, RGB backlighting, and programmable macro keys.',
-    createdAt: new Date('2024-01-08'),
-    updatedAt: new Date('2024-01-19'),
-  },
-  {
-    id: '6',
-    name: 'Desk Lamp',
-    sku: 'OFF-LMP-006',
-    category: 'Office',
-    quantity: 25,
-    price: 49.99,
-    cost: 22.00,
-    minStock: 8,
-    weight: 1.8,
-    weightUnit: 'lb',
-    dimensions: { length: 6, width: 6, height: 18, unit: 'in' },
-    colors: ['Black', 'White', 'Silver'],
-    description: 'LED desk lamp with adjustable brightness levels, color temperature control, and USB charging port.',
-    createdAt: new Date('2024-01-03'),
-    updatedAt: new Date('2024-01-14'),
-  },
-];
+interface DbInventoryItem {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  quantity: number;
+  price: number;
+  cost: number;
+  min_stock: number;
+  weight: number;
+  weight_unit: string;
+  dimensions_length: number;
+  dimensions_width: number;
+  dimensions_height: number;
+  dimensions_unit: string;
+  colors: string[];
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
+  return {
+    id: db.id,
+    name: db.name,
+    sku: db.sku,
+    category: db.category,
+    quantity: db.quantity,
+    price: Number(db.price),
+    cost: Number(db.cost),
+    minStock: db.min_stock,
+    weight: Number(db.weight),
+    weightUnit: db.weight_unit as 'lb' | 'kg',
+    dimensions: {
+      length: Number(db.dimensions_length),
+      width: Number(db.dimensions_width),
+      height: Number(db.dimensions_height),
+      unit: db.dimensions_unit as 'in' | 'cm',
+    },
+    colors: db.colors || [],
+    description: db.description || '',
+    createdAt: new Date(db.created_at),
+    updatedAt: new Date(db.updated_at),
+  };
+}
 
 export function useInventory() {
-  const [items, setItems] = useState<InventoryItem[]>(INITIAL_ITEMS);
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const { toast } = useToast();
+
+  const fetchItems = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('inventory_items')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({
+        title: 'Error loading inventory',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
+    setLoading(false);
+  }, [toast]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -126,32 +94,101 @@ export function useInventory() {
     return { totalItems, totalValue, lowStockCount: lowStockItems.length, lowStockItems };
   }, [items]);
 
-  const addItem = (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newItem: InventoryItem = {
-      ...item,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setItems((prev) => [...prev, newItem]);
+  const addItem = async (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const { error } = await supabase.from('inventory_items').insert({
+      name: item.name,
+      sku: item.sku,
+      category: item.category,
+      quantity: item.quantity,
+      price: item.price,
+      cost: item.cost,
+      min_stock: item.minStock,
+      weight: item.weight,
+      weight_unit: item.weightUnit,
+      dimensions_length: item.dimensions.length,
+      dimensions_width: item.dimensions.width,
+      dimensions_height: item.dimensions.height,
+      dimensions_unit: item.dimensions.unit,
+      colors: item.colors,
+      description: item.description,
+    });
+
+    if (error) {
+      toast({
+        title: 'Error adding item',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: 'Item added successfully' });
+    fetchItems();
   };
 
-  const updateItem = (id: string, updates: Partial<InventoryItem>) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, ...updates, updatedAt: new Date() } : item
-      )
-    );
+  const updateItem = async (id: string, updates: Partial<InventoryItem>) => {
+    const dbUpdates: Record<string, unknown> = {};
+    
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
+    if (updates.category !== undefined) dbUpdates.category = updates.category;
+    if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+    if (updates.price !== undefined) dbUpdates.price = updates.price;
+    if (updates.cost !== undefined) dbUpdates.cost = updates.cost;
+    if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
+    if (updates.weight !== undefined) dbUpdates.weight = updates.weight;
+    if (updates.weightUnit !== undefined) dbUpdates.weight_unit = updates.weightUnit;
+    if (updates.dimensions !== undefined) {
+      dbUpdates.dimensions_length = updates.dimensions.length;
+      dbUpdates.dimensions_width = updates.dimensions.width;
+      dbUpdates.dimensions_height = updates.dimensions.height;
+      dbUpdates.dimensions_unit = updates.dimensions.unit;
+    }
+    if (updates.colors !== undefined) dbUpdates.colors = updates.colors;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+
+    const { error } = await supabase
+      .from('inventory_items')
+      .update(dbUpdates)
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error updating item',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: 'Item updated successfully' });
+    fetchItems();
   };
 
-  const deleteItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  const deleteItem = async (id: string) => {
+    const { error } = await supabase
+      .from('inventory_items')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Error deleting item',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: 'Item deleted successfully' });
+    fetchItems();
   };
 
   return {
     items: filteredItems,
     allItems: items,
     stats,
+    loading,
     searchQuery,
     setSearchQuery,
     categoryFilter,

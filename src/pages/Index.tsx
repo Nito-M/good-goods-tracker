@@ -12,6 +12,7 @@ interface IndexProps {
     totalValue: number;
     lowStockCount: number;
   };
+  loading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   categoryFilter: string;
@@ -24,6 +25,7 @@ interface IndexProps {
 const Index = ({
   items,
   stats,
+  loading,
   searchQuery,
   setSearchQuery,
   categoryFilter,
@@ -96,11 +98,17 @@ const Index = ({
         </div>
 
         {/* Inventory Table */}
-        <InventoryTable
-          items={items}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-muted-foreground">Loading inventory...</div>
+          </div>
+        ) : (
+          <InventoryTable
+            items={items}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        )}
       </main>
     </div>
   );

@@ -18,6 +18,7 @@ function AppContent() {
     items,
     allItems,
     stats,
+    loading,
     searchQuery,
     setSearchQuery,
     categoryFilter,
@@ -51,6 +52,7 @@ function AppContent() {
             <Index
               items={items}
               stats={stats}
+              loading={loading}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               categoryFilter={categoryFilter}
