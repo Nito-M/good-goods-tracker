@@ -1,11 +1,11 @@
-import { Package, DollarSign, AlertTriangle, Plus, Box, LogOut } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Plus, Box, LogOut, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/StatCard';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
 import { InventoryItem } from '@/types/inventory';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { Link } from 'react-router-dom';
 interface IndexProps {
   items: InventoryItem[];
   stats: {
@@ -59,6 +59,12 @@ const Index = ({
               <h1 className="text-xl font-bold text-card-foreground">Inventory</h1>
             </div>
             <div className="flex items-center gap-2">
+              <Link to="/purchase-orders">
+                <Button variant="outline" className="gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Purchase Orders
+                </Button>
+              </Link>
               <Button onClick={onOpenDialog} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add Item

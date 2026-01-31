@@ -107,6 +107,54 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          item_name: string
+          notes: string | null
+          ordered_at: string
+          pdf_url: string | null
+          quantity: number
+          received_at: string | null
+          sku: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          item_name: string
+          notes?: string | null
+          ordered_at?: string
+          pdf_url?: string | null
+          quantity?: number
+          received_at?: string | null
+          sku: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          item_name?: string
+          notes?: string | null
+          ordered_at?: string
+          pdf_url?: string | null
+          quantity?: number
+          received_at?: string | null
+          sku?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
