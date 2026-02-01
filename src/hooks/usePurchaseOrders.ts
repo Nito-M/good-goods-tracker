@@ -157,6 +157,80 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const updateOrder = async (
+    orderId: string,
+    updates: {
+      items: PurchaseOrderItem[];
+      orderedAt: Date;
+      notes?: string;
+    },
+    pdfFile?: File | null,
+    imageFile?: File | null
+  ) => {
+    if (!user) {
+      toast({
+        title: 'Not authenticated',
+        description: 'Please sign in to update purchase orders.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (updates.items.length === 0) {
+      toast({
+        title: 'No items added',
+        description: 'Please add at least one item to the order.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    let pdfUrl: string | undefined;
+    let imageUrl: string | undefined;
+
+    if (pdfFile) {
+      const url = await uploadFile(pdfFile, 'pdf');
+      if (url) pdfUrl = url;
+    }
+
+    if (imageFile) {
+      const url = await uploadFile(imageFile, 'image');
+      if (url) imageUrl = url;
+    }
+
+    const firstItem = updates.items[0];
+    const totalQuantity = updates.items.reduce((sum, item) => sum + item.quantity, 0);
+
+    const updateData: Record<string, unknown> = {
+      sku: firstItem.sku,
+      item_name: firstItem.itemName,
+      quantity: totalQuantity,
+      items: JSON.parse(JSON.stringify(updates.items)),
+      ordered_at: updates.orderedAt.toISOString(),
+      notes: updates.notes || null,
+    };
+
+    if (pdfUrl) updateData.pdf_url = pdfUrl;
+    if (imageUrl) updateData.image_url = imageUrl;
+
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update(updateData)
+      .eq('id', orderId);
+
+    if (error) {
+      toast({
+        title: 'Error updating purchase order',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({ title: 'Purchase order updated successfully' });
+    fetchOrders();
+  };
+
   const deleteOrder = async (id: string) => {
     const { error } = await supabase
       .from('purchase_orders')
@@ -180,6 +254,7 @@ export function usePurchaseOrders() {
     orders,
     loading,
     createOrder,
+    updateOrder,
     markAsReceived,
     deleteOrder,
     refetch: fetchOrders,

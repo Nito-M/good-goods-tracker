@@ -10,12 +10,14 @@ import {
   Package,
   Calendar,
   Hash,
+  Pencil,
 } from 'lucide-react';
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
   onMarkReceived: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (order: PurchaseOrder) => void;
   loading?: boolean;
 }
 
@@ -23,6 +25,7 @@ export function PurchaseOrderCard({
   order,
   onMarkReceived,
   onDelete,
+  onEdit,
   loading,
 }: PurchaseOrderCardProps) {
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -135,6 +138,15 @@ export function PurchaseOrderCard({
                   Mark Received
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onEdit(order)}
+                className="gap-2"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
               <Button
                 size="sm"
                 variant="outline"

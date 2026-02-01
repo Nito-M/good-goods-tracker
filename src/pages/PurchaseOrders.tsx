@@ -1,22 +1,26 @@
 import { useState } from 'react';
-import { Plus, Box, LogOut, ArrowLeft, ClipboardList } from 'lucide-react';
+import { Plus, LogOut, ArrowLeft, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { AddPurchaseOrderDialog } from '@/components/AddPurchaseOrderDialog';
+import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PurchaseOrder } from '@/types/purchaseOrder';
 
 export function PurchaseOrders() {
-  const { signOut, user } = useAuth();
-  const { orders, loading, createOrder, markAsReceived, deleteOrder } =
+  const { signOut } = useAuth();
+  const { orders, loading, createOrder, updateOrder, markAsReceived, deleteOrder } =
     usePurchaseOrders();
   const { allItems: inventoryItems, addItem } = useInventory();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -78,6 +82,11 @@ export function PurchaseOrders() {
 
     await markAsReceived(orderId);
     setProcessingId(null);
+  };
+
+  const handleEdit = (order: PurchaseOrder) => {
+    setEditingOrder(order);
+    setEditDialogOpen(true);
   };
 
   const orderedOrders = orders.filter((o) => o.status === 'ordered');
@@ -173,6 +182,7 @@ export function PurchaseOrders() {
                     order={order}
                     onMarkReceived={handleMarkReceived}
                     onDelete={deleteOrder}
+                    onEdit={handleEdit}
                     loading={processingId === order.id}
                   />
                 ))
@@ -191,6 +201,7 @@ export function PurchaseOrders() {
                     order={order}
                     onMarkReceived={handleMarkReceived}
                     onDelete={deleteOrder}
+                    onEdit={handleEdit}
                     loading={processingId === order.id}
                   />
                 ))
@@ -206,6 +217,16 @@ export function PurchaseOrders() {
         onSave={createOrder}
         inventoryItems={inventoryItems}
       />
+
+      {editingOrder && (
+        <EditPurchaseOrderDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          order={editingOrder}
+          onSave={updateOrder}
+          inventoryItems={inventoryItems}
+        />
+      )}
     </div>
   );
 }
