@@ -29,51 +29,51 @@ export function PurchaseOrders() {
       return;
     }
 
-    // Find matching inventory item by SKU
-    const existingItem = inventoryItems.find((item) => item.sku === order.sku);
+    // Process each item in the order
+    for (const orderItem of order.items) {
+      const existingItem = inventoryItems.find((item) => item.sku === orderItem.sku);
 
-    if (existingItem) {
-      // Update existing item quantity
-      const { error } = await supabase
-        .from('inventory_items')
-        .update({ quantity: existingItem.quantity + order.quantity })
-        .eq('id', existingItem.id);
+      if (existingItem) {
+        const { error } = await supabase
+          .from('inventory_items')
+          .update({ quantity: existingItem.quantity + orderItem.quantity })
+          .eq('id', existingItem.id);
 
-      if (error) {
+        if (error) {
+          toast({
+            title: 'Error updating inventory',
+            description: error.message,
+            variant: 'destructive',
+          });
+          setProcessingId(null);
+          return;
+        }
+
         toast({
-          title: 'Error updating inventory',
-          description: error.message,
-          variant: 'destructive',
+          title: 'Inventory updated',
+          description: `Added ${orderItem.quantity} units to ${existingItem.name}`,
         });
-        setProcessingId(null);
-        return;
+      } else {
+        await addItem({
+          name: orderItem.itemName,
+          sku: orderItem.sku,
+          category: 'Other',
+          quantity: orderItem.quantity,
+          price: 0,
+          cost: 0,
+          minStock: 0,
+          weight: 0,
+          weightUnit: 'lb',
+          dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
+          colors: [],
+          description: `Added from Purchase Order on ${new Date().toLocaleDateString()}`,
+        });
+
+        toast({
+          title: 'New inventory item created',
+          description: `${orderItem.itemName} added to inventory with ${orderItem.quantity} units`,
+        });
       }
-
-      toast({
-        title: 'Inventory updated',
-        description: `Added ${order.quantity} units to ${existingItem.name}`,
-      });
-    } else {
-      // Create new inventory item
-      await addItem({
-        name: order.itemName,
-        sku: order.sku,
-        category: 'Other',
-        quantity: order.quantity,
-        price: 0,
-        cost: 0,
-        minStock: 0,
-        weight: 0,
-        weightUnit: 'lb',
-        dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
-        colors: [],
-        description: `Added from Purchase Order on ${new Date().toLocaleDateString()}`,
-      });
-
-      toast({
-        title: 'New inventory item created',
-        description: `${order.itemName} added to inventory with ${order.quantity} units`,
-      });
     }
 
     await markAsReceived(orderId);

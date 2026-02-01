@@ -113,6 +113,7 @@ export type Database = {
           id: string
           image_url: string | null
           item_name: string
+          items: Json | null
           notes: string | null
           ordered_at: string
           pdf_url: string | null
@@ -128,6 +129,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           item_name: string
+          items?: Json | null
           notes?: string | null
           ordered_at?: string
           pdf_url?: string | null
@@ -143,6 +145,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           item_name?: string
+          items?: Json | null
           notes?: string | null
           ordered_at?: string
           pdf_url?: string | null

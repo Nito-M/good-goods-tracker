@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder } from '@/types/purchaseOrder';
+import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem } from '@/types/purchaseOrder';
 
 export function usePurchaseOrders() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
@@ -68,9 +68,7 @@ export function usePurchaseOrders() {
 
   const createOrder = async (
     order: {
-      sku: string;
-      itemName: string;
-      quantity: number;
+      items: PurchaseOrderItem[];
       orderedAt: Date;
       notes?: string;
     },
@@ -81,6 +79,15 @@ export function usePurchaseOrders() {
       toast({
         title: 'Not authenticated',
         description: 'Please sign in to create purchase orders.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (order.items.length === 0) {
+      toast({
+        title: 'No items added',
+        description: 'Please add at least one item to the order.',
         variant: 'destructive',
       });
       return;
@@ -97,17 +104,22 @@ export function usePurchaseOrders() {
       imageUrl = await uploadFile(imageFile, 'image');
     }
 
-    const { error } = await supabase.from('purchase_orders').insert({
+    // Use first item for legacy columns, store all in items array
+    const firstItem = order.items[0];
+    const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+    const { error } = await supabase.from('purchase_orders').insert([{
       user_id: user.id,
-      sku: order.sku,
-      item_name: order.itemName,
-      quantity: order.quantity,
+      sku: firstItem.sku,
+      item_name: firstItem.itemName,
+      quantity: totalQuantity,
+      items: JSON.parse(JSON.stringify(order.items)),
       ordered_at: order.orderedAt.toISOString(),
       notes: order.notes || null,
       pdf_url: pdfUrl,
       image_url: imageUrl,
       status: 'ordered',
-    });
+    }]);
 
     if (error) {
       toast({
