@@ -17,16 +17,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InventoryItem } from '@/types/inventory';
-import { Upload, FileText, Image as ImageIcon, X } from 'lucide-react';
+import { PurchaseOrderItem } from '@/types/purchaseOrder';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2 } from 'lucide-react';
 
 interface AddPurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (
     order: {
-      sku: string;
-      itemName: string;
-      quantity: number;
+      items: PurchaseOrderItem[];
       orderedAt: Date;
       notes?: string;
     },
@@ -36,16 +35,31 @@ interface AddPurchaseOrderDialogProps {
   inventoryItems: InventoryItem[];
 }
 
+interface LineItem {
+  id: string;
+  selectedItemId: string;
+  customSku: string;
+  customName: string;
+  quantity: number;
+}
+
+function createEmptyLineItem(): LineItem {
+  return {
+    id: crypto.randomUUID(),
+    selectedItemId: '',
+    customSku: '',
+    customName: '',
+    quantity: 1,
+  };
+}
+
 export function AddPurchaseOrderDialog({
   open,
   onOpenChange,
   onSave,
   inventoryItems,
 }: AddPurchaseOrderDialogProps) {
-  const [selectedItemId, setSelectedItemId] = useState<string>('');
-  const [customSku, setCustomSku] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
   const [orderedAt, setOrderedAt] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -57,20 +71,52 @@ export function AddPurchaseOrderDialog({
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedItem = inventoryItems.find((i) => i.id === selectedItemId);
+  const updateLineItem = (id: string, updates: Partial<LineItem>) => {
+    setLineItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+    );
+  };
+
+  const addLineItem = () => {
+    setLineItems((prev) => [...prev, createEmptyLineItem()]);
+  };
+
+  const removeLineItem = (id: string) => {
+    if (lineItems.length > 1) {
+      setLineItems((prev) => prev.filter((item) => item.id !== id));
+    }
+  };
+
+  const getItemDetails = (lineItem: LineItem) => {
+    const inventoryItem = inventoryItems.find((i) => i.id === lineItem.selectedItemId);
+    if (inventoryItem) {
+      return { sku: inventoryItem.sku, itemName: inventoryItem.name };
+    }
+    return { sku: lineItem.customSku, itemName: lineItem.customName };
+  };
+
+  const isLineItemValid = (lineItem: LineItem) => {
+    const { sku, itemName } = getItemDetails(lineItem);
+    return sku && itemName && lineItem.quantity >= 1;
+  };
+
+  const isFormValid = () => {
+    return lineItems.every(isLineItemValid);
+  };
 
   const handleSave = async () => {
-    const sku = selectedItem ? selectedItem.sku : customSku;
-    const itemName = selectedItem ? selectedItem.name : customName;
-
-    if (!sku || !itemName || quantity < 1) return;
+    if (!isFormValid()) return;
 
     setSaving(true);
+
+    const items: PurchaseOrderItem[] = lineItems.map((lineItem) => {
+      const { sku, itemName } = getItemDetails(lineItem);
+      return { sku, itemName, quantity: lineItem.quantity };
+    });
+
     await onSave(
       {
-        sku,
-        itemName,
-        quantity,
+        items,
         orderedAt: new Date(orderedAt),
         notes: notes || undefined,
       },
@@ -83,10 +129,7 @@ export function AddPurchaseOrderDialog({
   };
 
   const resetForm = () => {
-    setSelectedItemId('');
-    setCustomSku('');
-    setCustomName('');
-    setQuantity(1);
+    setLineItems([createEmptyLineItem()]);
     setOrderedAt(new Date().toISOString().split('T')[0]);
     setNotes('');
     setPdfFile(null);
@@ -109,74 +152,125 @@ export function AddPurchaseOrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Purchase Order</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Select from inventory or enter custom */}
-          <div className="space-y-2">
-            <Label>Select from Inventory (optional)</Label>
-            <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select an item or enter custom below" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
-                {inventoryItems.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name} ({item.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Custom item fields if no selection */}
-          {(!selectedItemId || selectedItemId === 'custom') && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="customSku">SKU Number *</Label>
-                <Input
-                  id="customSku"
-                  value={customSku}
-                  onChange={(e) => setCustomSku(e.target.value)}
-                  placeholder="Enter SKU"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="customName">Item Name *</Label>
-                <Input
-                  id="customName"
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Enter item name"
-                />
-              </div>
-            </>
-          )}
-
-          {/* Selected item display */}
-          {selectedItem && (
-            <div className="p-3 rounded-lg bg-muted">
-              <p className="font-medium">{selectedItem.name}</p>
-              <p className="text-sm text-muted-foreground">
-                SKU: {selectedItem.sku}
-              </p>
+        <div className="space-y-6 py-4">
+          {/* Line Items */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-semibold">Items</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addLineItem}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
             </div>
-          )}
 
-          {/* Quantity */}
-          <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity *</Label>
-            <Input
-              id="quantity"
-              type="number"
-              min={1}
-              value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-            />
+            {lineItems.map((lineItem, index) => (
+              <div
+                key={lineItem.id}
+                className="p-4 rounded-lg border bg-muted/30 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Item {index + 1}
+                  </span>
+                  {lineItems.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => removeLineItem(lineItem.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Select from Inventory</Label>
+                  <Select
+                    value={lineItem.selectedItemId}
+                    onValueChange={(value) =>
+                      updateLineItem(lineItem.id, {
+                        selectedItemId: value,
+                        customSku: '',
+                        customName: '',
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an item or enter custom below" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
+                      {inventoryItems.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name} ({item.sku})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {(!lineItem.selectedItemId || lineItem.selectedItemId === 'custom') && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>SKU *</Label>
+                      <Input
+                        value={lineItem.customSku}
+                        onChange={(e) =>
+                          updateLineItem(lineItem.id, { customSku: e.target.value })
+                        }
+                        placeholder="Enter SKU"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Item Name *</Label>
+                      <Input
+                        value={lineItem.customName}
+                        onChange={(e) =>
+                          updateLineItem(lineItem.id, { customName: e.target.value })
+                        }
+                        placeholder="Enter item name"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {lineItem.selectedItemId &&
+                  lineItem.selectedItemId !== 'custom' && (
+                    <div className="p-2 rounded bg-muted text-sm">
+                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.name} (
+                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.sku})
+                    </div>
+                  )}
+
+                <div className="space-y-2">
+                  <Label>Quantity *</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={lineItem.quantity}
+                    onChange={(e) =>
+                      updateLineItem(lineItem.id, {
+                        quantity: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    className="w-32"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Order Date */}
@@ -280,14 +374,7 @@ export function AddPurchaseOrderDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={
-              saving ||
-              ((!selectedItemId || selectedItemId === 'custom') &&
-                (!customSku || !customName))
-            }
-          >
+          <Button onClick={handleSave} disabled={saving || !isFormValid()}>
             {saving ? 'Creating...' : 'Create Order'}
           </Button>
         </div>

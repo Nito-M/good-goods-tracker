@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import {
   FileText,
-  Image as ImageIcon,
   Check,
   Trash2,
   Package,
@@ -26,6 +25,8 @@ export function PurchaseOrderCard({
   onDelete,
   loading,
 }: PurchaseOrderCardProps) {
+  const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
@@ -35,7 +36,7 @@ export function PurchaseOrderCard({
             {order.imageUrl ? (
               <img
                 src={order.imageUrl}
-                alt={order.itemName}
+                alt="Order"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -47,11 +48,17 @@ export function PurchaseOrderCard({
           <div className="flex-1 p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="font-semibold text-lg">{order.itemName}</h3>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Hash className="h-3 w-3" />
-                  <span>{order.sku}</span>
-                </div>
+                <h3 className="font-semibold text-lg">
+                  {order.items.length === 1
+                    ? order.items[0].itemName
+                    : `${order.items.length} Items`}
+                </h3>
+                {order.items.length === 1 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Hash className="h-3 w-3" />
+                    <span>{order.items[0].sku}</span>
+                  </div>
+                )}
               </div>
               <Badge
                 variant={order.status === 'received' ? 'default' : 'secondary'}
@@ -65,11 +72,24 @@ export function PurchaseOrderCard({
               </Badge>
             </div>
 
+            {/* Multiple items list */}
+            {order.items.length > 1 && (
+              <div className="space-y-1 text-sm">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-muted-foreground">
+                    <Package className="h-3 w-3" />
+                    <span className="flex-1 truncate">{item.itemName}</span>
+                    <span className="text-foreground font-medium">x{item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Details grid */}
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-muted-foreground" />
-                <span>Qty: {order.quantity}</span>
+                <span>Total Qty: {totalQuantity}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
