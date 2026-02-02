@@ -14,6 +14,7 @@ import {
   Pencil,
   Building2,
   Download,
+  DollarSign,
 } from 'lucide-react';
 
 interface PurchaseOrderCardProps {
@@ -34,6 +35,14 @@ export function PurchaseOrderCard({
   loading,
 }: PurchaseOrderCardProps) {
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCost = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -91,6 +100,9 @@ export function PurchaseOrderCard({
                     <Package className="h-3 w-3" />
                     <span className="flex-1 truncate">{item.itemName}</span>
                     <span className="text-foreground font-medium">x{item.quantity}</span>
+                    {item.unitCost !== undefined && (
+                      <span className="text-muted-foreground">@ {formatCurrency(item.unitCost)}</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -108,6 +120,12 @@ export function PurchaseOrderCard({
                 <Package className="h-4 w-4 text-muted-foreground" />
                 <span>Total Qty: {totalQuantity}</span>
               </div>
+              {totalCost > 0 && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span>Total: {formatCurrency(totalCost)}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>Ordered: {format(order.orderedAt, 'MMM d, yyyy')}</span>
