@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import { ItemDetails } from "./pages/ItemDetails";
 import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
+import { Sales } from "./pages/Sales";
 import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { useInventory } from "@/hooks/useInventory";
@@ -93,6 +94,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <PurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sales"
+          element={
+            <ProtectedRoute>
+              <Sales />
             </ProtectedRoute>
           }
         />
