@@ -55,8 +55,8 @@ const Index = ({
             <div className="flex items-center gap-3">
               {/* Logo placeholder - replace src with your logo */}
               <img 
-                src="/placeholder.svg" 
-                alt="Company Logo" 
+                src="/nol_logo.png" 
+                alt="Northern Outline Logo" 
                 className="h-10 w-auto object-contain"
               />
               <h1 className="text-xl font-bold text-card-foreground">Inventory</h1>

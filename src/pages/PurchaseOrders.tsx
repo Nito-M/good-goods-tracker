@@ -105,8 +105,8 @@ export function PurchaseOrders() {
                 </Button>
               </Link>
               <img 
-                src="/placeholder.svg" 
-                alt="Company Logo" 
+                src="/nol_logo.png" 
+                alt="Northern Outline Logo" 
                 className="h-10 w-auto object-contain"
               />
               <h1 className="text-xl font-bold text-card-foreground">
