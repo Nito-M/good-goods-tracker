@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCategories } from '@/hooks/useCategories';
+import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogoUpload } from '@/components/LogoUpload';
 import {
@@ -43,6 +44,25 @@ export function Settings() {
   const { theme, setTheme } = useTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customCategories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
+  const { profile, loading: profileLoading, updateProfile } = useProfile();
+
+  // Invoice settings state
+  const [businessName, setBusinessName] = useState('');
+  const [businessAddress, setBusinessAddress] = useState('');
+  const [businessPhone, setBusinessPhone] = useState('');
+  const [businessEmail, setBusinessEmail] = useState('');
+  const [invoiceThankYouNote, setInvoiceThankYouNote] = useState('');
+
+  // Load profile data into form
+  useEffect(() => {
+    if (profile) {
+      setBusinessName(profile.businessName || '');
+      setBusinessAddress(profile.businessAddress || '');
+      setBusinessPhone(profile.businessPhone || '');
+      setBusinessEmail(profile.businessEmail || '');
+      setInvoiceThankYouNote(profile.invoiceThankYouNote || 'Thank you for your business!');
+    }
+  }, [profile]);
 
   // Vendor dialog state
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
@@ -103,6 +123,17 @@ export function Settings() {
     setNewCategory('');
   };
 
+  const handleSaveInvoiceSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateProfile({
+      businessName: businessName || null,
+      businessAddress: businessAddress || null,
+      businessPhone: businessPhone || null,
+      businessEmail: businessEmail || null,
+      invoiceThankYouNote: invoiceThankYouNote || null,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -138,10 +169,14 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
+            </TabsTrigger>
+            <TabsTrigger value="invoice" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Invoice
             </TabsTrigger>
             <TabsTrigger value="vendors" className="gap-2">
               <Building2 className="h-4 w-4" />
@@ -194,6 +229,94 @@ export function Settings() {
                     </SelectContent>
                   </Select>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Invoice Tab */}
+          <TabsContent value="invoice" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Invoice Settings</CardTitle>
+                <CardDescription>Customize how your invoices look</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSaveInvoiceSettings} className="space-y-6">
+                  {/* Logo Section */}
+                  <div className="space-y-2">
+                    <Label>Company Logo</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Upload a logo to appear on your invoices
+                    </p>
+                    <LogoUpload />
+                  </div>
+
+                  {/* Business Information */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Business Information</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="business-name">Business Name</Label>
+                        <Input
+                          id="business-name"
+                          value={businessName}
+                          onChange={(e) => setBusinessName(e.target.value)}
+                          placeholder="Your Company Name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="business-email">Business Email</Label>
+                        <Input
+                          id="business-email"
+                          type="email"
+                          value={businessEmail}
+                          onChange={(e) => setBusinessEmail(e.target.value)}
+                          placeholder="contact@company.com"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="business-phone">Business Phone</Label>
+                        <Input
+                          id="business-phone"
+                          value={businessPhone}
+                          onChange={(e) => setBusinessPhone(e.target.value)}
+                          placeholder="+1 234 567 8900"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <Label htmlFor="business-address">Business Address</Label>
+                        <Textarea
+                          id="business-address"
+                          value={businessAddress}
+                          onChange={(e) => setBusinessAddress(e.target.value)}
+                          placeholder="123 Main St&#10;City, State 12345"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Thank You Note */}
+                  <div className="space-y-2">
+                    <Label htmlFor="thank-you-note">Thank You Note</Label>
+                    <p className="text-sm text-muted-foreground">
+                      This message appears at the bottom of your invoices
+                    </p>
+                    <Textarea
+                      id="thank-you-note"
+                      value={invoiceThankYouNote}
+                      onChange={(e) => setInvoiceThankYouNote(e.target.value)}
+                      placeholder="Thank you for your business!"
+                      rows={2}
+                    />
+                  </div>
+
+                  <Button type="submit" disabled={profileLoading}>
+                    Save Invoice Settings
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>

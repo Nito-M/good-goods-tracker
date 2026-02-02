@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSales } from '@/hooks/useSales';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
+import { useProfile } from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
 import { LogoUpload } from '@/components/LogoUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -44,6 +45,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { SaleCard } from '@/components/SaleCard';
 import { InventoryItem } from '@/types/inventory';
+import { InvoiceSettings } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 
 interface CartItem {
@@ -56,6 +58,17 @@ export function Sales() {
   const { sales, loading, createSale, deleteSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
+  const { profile } = useProfile();
+
+  // Build invoice settings from profile
+  const invoiceSettings: InvoiceSettings = useMemo(() => ({
+    logoUrl: profile?.logoUrl || null,
+    businessName: profile?.businessName || null,
+    businessAddress: profile?.businessAddress || null,
+    businessPhone: profile?.businessPhone || null,
+    businessEmail: profile?.businessEmail || null,
+    thankYouNote: profile?.invoiceThankYouNote || null,
+  }), [profile]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
@@ -534,7 +547,7 @@ export function Sales() {
                     key={sale.id}
                     sale={sale}
                     onDelete={deleteSale}
-                    onDownloadInvoice={() => generateInvoicePDF(sale)}
+                    onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
                   />
                 ))}
               </div>

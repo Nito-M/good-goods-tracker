@@ -46,3 +46,12 @@ export interface CreateSaleInput {
   paymentTerms: string;
   dueDate: string | null;
 }
+
+export interface InvoiceSettings {
+  logoUrl: string | null;
+  businessName: string | null;
+  businessAddress: string | null;
+  businessPhone: string | null;
+  businessEmail: string | null;
+  thankYouNote: string | null;
+}
