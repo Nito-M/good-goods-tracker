@@ -7,6 +7,7 @@ export interface PurchaseOrderItem {
 export interface PurchaseOrder {
   id: string;
   userId: string;
+  poNumber: string | null;
   vendorId: string | null;
   vendorName?: string | null;
   pdfUrl: string | null;
@@ -23,6 +24,7 @@ export interface PurchaseOrder {
 export interface DbPurchaseOrder {
   id: string;
   user_id: string;
+  po_number: string | null;
   vendor_id: string | null;
   pdf_url: string | null;
   image_url: string | null;
@@ -48,6 +50,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
   return {
     id: db.id,
     userId: db.user_id,
+    poNumber: db.po_number,
     vendorId: db.vendor_id,
     vendorName,
     pdfUrl: db.pdf_url,

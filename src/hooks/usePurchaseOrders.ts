@@ -95,6 +95,7 @@ export function usePurchaseOrders() {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
+      poNumber?: string;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -134,6 +135,7 @@ export function usePurchaseOrders() {
 
     const { error } = await supabase.from('purchase_orders').insert([{
       user_id: user.id,
+      po_number: order.poNumber || null,
       sku: firstItem.sku,
       item_name: firstItem.itemName,
       quantity: totalQuantity,
@@ -189,6 +191,7 @@ export function usePurchaseOrders() {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
+      poNumber?: string;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -228,6 +231,7 @@ export function usePurchaseOrders() {
     const totalQuantity = updates.items.reduce((sum, item) => sum + item.quantity, 0);
 
     const updateData: Record<string, unknown> = {
+      po_number: updates.poNumber || null,
       sku: firstItem.sku,
       item_name: firstItem.itemName,
       quantity: totalQuantity,

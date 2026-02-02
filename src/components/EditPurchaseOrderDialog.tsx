@@ -32,6 +32,7 @@ interface EditPurchaseOrderDialogProps {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
+      poNumber?: string;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -78,6 +79,7 @@ export function EditPurchaseOrderDialog({
   vendors,
 }: EditPurchaseOrderDialogProps) {
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
+  const [poNumber, setPoNumber] = useState('');
   const [orderedAt, setOrderedAt] = useState('');
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
@@ -92,6 +94,7 @@ export function EditPurchaseOrderDialog({
   useEffect(() => {
     if (order && open) {
       setLineItems(order.items.map(item => createLineItemFromOrder(item, inventoryItems)));
+      setPoNumber(order.poNumber || '');
       setOrderedAt(order.orderedAt.toISOString().split('T')[0]);
       setNotes(order.notes || '');
       setVendorId(order.vendorId || '');
@@ -150,6 +153,7 @@ export function EditPurchaseOrderDialog({
         orderedAt: new Date(orderedAt),
         notes: notes || undefined,
         vendorId: vendorId || null,
+        poNumber: poNumber || undefined,
       },
       pdfFile,
       imageFile
@@ -293,6 +297,17 @@ export function EditPurchaseOrderDialog({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* PO Number */}
+          <div className="space-y-2">
+            <Label htmlFor="poNumber">PO Number</Label>
+            <Input
+              id="poNumber"
+              value={poNumber}
+              onChange={(e) => setPoNumber(e.target.value)}
+              placeholder="e.g., PO-0001"
+            />
           </div>
 
           {/* Vendor Selection */}

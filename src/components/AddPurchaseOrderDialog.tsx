@@ -30,6 +30,7 @@ interface AddPurchaseOrderDialogProps {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
+      poNumber?: string;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -64,6 +65,7 @@ export function AddPurchaseOrderDialog({
   vendors,
 }: AddPurchaseOrderDialogProps) {
   const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
+  const [poNumber, setPoNumber] = useState('');
   const [orderedAt, setOrderedAt] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -125,6 +127,7 @@ export function AddPurchaseOrderDialog({
         orderedAt: new Date(orderedAt),
         notes: notes || undefined,
         vendorId: vendorId || null,
+        poNumber: poNumber || undefined,
       },
       pdfFile,
       imageFile
@@ -136,6 +139,7 @@ export function AddPurchaseOrderDialog({
 
   const resetForm = () => {
     setLineItems([createEmptyLineItem()]);
+    setPoNumber('');
     setOrderedAt(new Date().toISOString().split('T')[0]);
     setNotes('');
     setVendorId('');
@@ -278,6 +282,20 @@ export function AddPurchaseOrderDialog({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* PO Number */}
+          <div className="space-y-2">
+            <Label htmlFor="poNumber">PO Number</Label>
+            <Input
+              id="poNumber"
+              value={poNumber}
+              onChange={(e) => setPoNumber(e.target.value)}
+              placeholder="Auto-generated if left empty (e.g., PO-0001)"
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave empty to auto-generate
+            </p>
           </div>
 
           {/* Vendor Selection */}

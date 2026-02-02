@@ -56,6 +56,10 @@ export function PurchaseOrderCard({
           <div className="flex-1 p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <Hash className="h-3 w-3" />
+                  <span className="font-medium">{order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`}</span>
+                </div>
                 <h3 className="font-semibold text-lg">
                   {order.items.length === 1
                     ? order.items[0].itemName
@@ -63,8 +67,7 @@ export function PurchaseOrderCard({
                 </h3>
                 {order.items.length === 1 && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Hash className="h-3 w-3" />
-                    <span>{order.items[0].sku}</span>
+                    <span>SKU: {order.items[0].sku}</span>
                   </div>
                 )}
               </div>
