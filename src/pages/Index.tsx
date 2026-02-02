@@ -1,4 +1,4 @@
-import { Package, DollarSign, AlertTriangle, Plus, LogOut, ClipboardList, Settings } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Plus, LogOut, ClipboardList, Settings, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/StatCard';
 import { InventoryTable } from '@/components/InventoryTable';
@@ -69,6 +69,12 @@ const Index = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Link to="/sales">
+                <Button variant="outline" className="gap-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  Sales
+                </Button>
+              </Link>
               <Link to="/purchase-orders">
                 <Button variant="outline" className="gap-2">
                   <ClipboardList className="h-4 w-4" />
