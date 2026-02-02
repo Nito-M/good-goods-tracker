@@ -80,6 +80,43 @@ All colors MUST be HSL.
     --spacing: 0.25rem;
   }
 
+  /* Color Theme Variants - Light Mode */
+  .theme-green:root, :root.theme-green {
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 142 76% 36%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 142 76% 36%;
+  }
+
+  .theme-blue:root, :root.theme-blue {
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 217 91% 60%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .theme-grey:root, :root.theme-grey {
+    --primary: 215 16% 47%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 215 16% 47%;
+    --sidebar-primary: 215 16% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 215 16% 47%;
+  }
+
+  .theme-red:root, :root.theme-red {
+    --primary: 0 72% 50%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 0 72% 50%;
+    --sidebar-primary: 0 72% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 0 72% 50%;
+  }
+
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
@@ -137,6 +174,43 @@ All colors MUST be HSL.
     --shadow-lg: 7px 5px 48.75px -1px hsl(0, 0%, 0%);
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  }
+
+  /* Color Theme Variants - Dark Mode */
+  .dark.theme-green, .theme-green.dark {
+    --primary: 142 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 142 70% 45%;
+    --sidebar-primary: 142 70% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 142 70% 45%;
+  }
+
+  .dark.theme-blue, .theme-blue.dark {
+    --primary: 217 91% 65%;
+    --primary-foreground: 217 91% 10%;
+    --ring: 217 91% 65%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary-foreground: 217 91% 10%;
+    --sidebar-ring: 217 91% 65%;
+  }
+
+  .dark.theme-grey, .theme-grey.dark {
+    --primary: 215 20% 65%;
+    --primary-foreground: 222 47% 11%;
+    --ring: 215 20% 65%;
+    --sidebar-primary: 215 20% 65%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-ring: 215 20% 65%;
+  }
+
+  .dark.theme-red, .theme-red.dark {
+    --primary: 0 84% 60%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 0 84% 60%;
+    --sidebar-primary: 0 84% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 0 84% 60%;
   }
 }
 
