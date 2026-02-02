@@ -57,7 +57,7 @@ const Index = ({
               <img 
                 src="/nol_logo.png" 
                 alt="Northern Outline Logo" 
-                className="h-10 w-auto object-contain"
+                className="h-20 w-auto object-contain"
               />
               <h1 className="text-xl font-bold text-card-foreground">Inventory</h1>
             </div>
