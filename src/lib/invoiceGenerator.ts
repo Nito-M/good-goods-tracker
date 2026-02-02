@@ -25,7 +25,7 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   if (settings?.logoUrl) {
     try {
       const img = await loadImage(settings.logoUrl);
-      const imgWidth = 60;
+      const imgWidth = 40;
       const imgHeight = (img.height / img.width) * imgWidth;
       doc.addImage(img, 'PNG', 20, y, imgWidth, Math.min(imgHeight, 40));
       y += Math.min(imgHeight, 40) + 10;
