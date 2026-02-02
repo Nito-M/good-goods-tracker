@@ -72,6 +72,7 @@ export function Sales() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
+  const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
   const [taxRate, setTaxRate] = useState(0);
   const [discountRate, setDiscountRate] = useState(0);
   const [notes, setNotes] = useState('');
@@ -142,6 +143,7 @@ export function Sales() {
 
     const sale = await createSale({
       vendorId: selectedVendorId || null,
+      invoiceNumber: customInvoiceNumber.trim() || null,
       items: cart.map((c) => ({
         inventoryItemId: c.inventoryItem.id,
         itemName: c.inventoryItem.name,
@@ -159,6 +161,7 @@ export function Sales() {
     if (sale) {
       setCart([]);
       setSelectedVendorId('');
+      setCustomInvoiceNumber('');
       setTaxRate(0);
       setDiscountRate(0);
       setNotes('');
@@ -409,6 +412,18 @@ export function Sales() {
                     <CardTitle>Order Details</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Invoice Number (optional)</Label>
+                      <Input
+                        placeholder="Auto-generated if left empty"
+                        value={customInvoiceNumber}
+                        onChange={(e) => setCustomInvoiceNumber(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Leave blank for auto-generated number (INV-0001, INV-0002, etc.)
+                      </p>
+                    </div>
+
                     <div className="space-y-2">
                       <Label>Vendor (Customer)</Label>
                       <Select

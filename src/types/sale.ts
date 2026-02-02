@@ -34,6 +34,7 @@ export interface Sale {
 
 export interface CreateSaleInput {
   vendorId: string | null;
+  invoiceNumber?: string | null;
   items: {
     inventoryItemId: string;
     itemName: string;
