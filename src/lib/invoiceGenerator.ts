@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
-import { Sale } from '@/types/sale';
+import { Sale, InvoiceSettings } from '@/types/sale';
 
-export function generateInvoicePDF(sale: Sale) {
+export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = 20;
@@ -20,6 +20,49 @@ export function generateInvoicePDF(sale: Sale) {
       day: 'numeric',
     });
   };
+
+  // Add logo if available
+  if (settings?.logoUrl) {
+    try {
+      const img = await loadImage(settings.logoUrl);
+      const imgWidth = 40;
+      const imgHeight = (img.height / img.width) * imgWidth;
+      doc.addImage(img, 'PNG', 20, y, imgWidth, Math.min(imgHeight, 25));
+      y += Math.min(imgHeight, 25) + 10;
+    } catch (e) {
+      console.error('Failed to load logo:', e);
+    }
+  }
+
+  // Business Info (right side)
+  if (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    let businessY = 20;
+    
+    if (settings.businessName) {
+      doc.setFont('helvetica', 'bold');
+      doc.text(settings.businessName, pageWidth - 20, businessY, { align: 'right' });
+      businessY += 5;
+      doc.setFont('helvetica', 'normal');
+    }
+    if (settings.businessAddress) {
+      const addressLines = settings.businessAddress.split('\n');
+      addressLines.forEach((line) => {
+        doc.text(line, pageWidth - 20, businessY, { align: 'right' });
+        businessY += 5;
+      });
+    }
+    if (settings.businessPhone) {
+      doc.text(settings.businessPhone, pageWidth - 20, businessY, { align: 'right' });
+      businessY += 5;
+    }
+    if (settings.businessEmail) {
+      doc.text(settings.businessEmail, pageWidth - 20, businessY, { align: 'right' });
+    }
+    
+    y = Math.max(y, businessY + 10);
+  }
 
   // Header
   doc.setFontSize(24);
@@ -134,14 +177,25 @@ export function generateInvoicePDF(sale: Sale) {
     doc.text(splitNotes, 20, y);
   }
 
-  // Footer
+  // Footer with thank you note
+  const thankYouNote = settings?.thankYouNote || 'Thank you for your business!';
   const footerY = doc.internal.pageSize.getHeight() - 20;
   doc.setFontSize(8);
   doc.setTextColor(128, 128, 128);
-  doc.text('Thank you for your business!', pageWidth / 2, footerY, {
+  doc.text(thankYouNote, pageWidth / 2, footerY, {
     align: 'center',
   });
 
   // Save the PDF
   doc.save(`${sale.invoiceNumber}.pdf`);
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
 }
