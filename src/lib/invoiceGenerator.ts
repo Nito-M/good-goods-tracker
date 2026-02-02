@@ -25,10 +25,10 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   if (settings?.logoUrl) {
     try {
       const img = await loadImage(settings.logoUrl);
-      const imgWidth = 40;
+      const imgWidth = 60;
       const imgHeight = (img.height / img.width) * imgWidth;
-      doc.addImage(img, 'PNG', 20, y, imgWidth, Math.min(imgHeight, 25));
-      y += Math.min(imgHeight, 25) + 10;
+      doc.addImage(img, 'PNG', 20, y, imgWidth, Math.min(imgHeight, 40));
+      y += Math.min(imgHeight, 40) + 10;
     } catch (e) {
       console.error('Failed to load logo:', e);
     }
@@ -91,7 +91,17 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     y += 6;
     doc.setFont('helvetica', 'normal');
     doc.text(sale.vendorName, 20, y);
-    y += 15;
+    y += 6;
+    
+    // Add vendor address if available
+    if (sale.vendorAddress) {
+      const addressLines = sale.vendorAddress.split('\n');
+      addressLines.forEach((line) => {
+        doc.text(line, 20, y);
+        y += 5;
+      });
+    }
+    y += 10;
   }
 
   // Items Table Header

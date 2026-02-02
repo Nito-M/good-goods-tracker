@@ -15,6 +15,7 @@ export interface Sale {
   userId: string;
   vendorId: string | null;
   vendorName?: string;
+  vendorAddress?: string;
   invoiceNumber: string;
   status: 'draft' | 'completed' | 'cancelled';
   subtotal: number;
