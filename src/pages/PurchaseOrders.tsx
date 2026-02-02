@@ -10,6 +10,7 @@ import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 
@@ -125,6 +126,7 @@ export function PurchaseOrders() {
                 <Plus className="h-4 w-4" />
                 New Order
               </Button>
+              <ThemeToggle />
               <Button
                 variant="outline"
                 size="icon"

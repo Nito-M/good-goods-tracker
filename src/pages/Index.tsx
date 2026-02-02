@@ -6,6 +6,7 @@ import { SearchFilter } from '@/components/SearchFilter';
 import { InventoryItem } from '@/types/inventory';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ThemeToggle';
 interface IndexProps {
   items: InventoryItem[];
   stats: {
@@ -80,6 +81,7 @@ const Index = ({
                 <Plus className="h-4 w-4" />
                 Add Item
               </Button>
+              <ThemeToggle />
               <Button variant="outline" size="icon" onClick={signOut} title="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
