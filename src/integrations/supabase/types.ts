@@ -159,6 +159,7 @@ export type Database = {
           notes: string | null
           ordered_at: string
           pdf_url: string | null
+          po_number: string | null
           quantity: number
           received_at: string | null
           sku: string
@@ -176,6 +177,7 @@ export type Database = {
           notes?: string | null
           ordered_at?: string
           pdf_url?: string | null
+          po_number?: string | null
           quantity?: number
           received_at?: string | null
           sku: string
@@ -193,6 +195,7 @@ export type Database = {
           notes?: string | null
           ordered_at?: string
           pdf_url?: string | null
+          po_number?: string | null
           quantity?: number
           received_at?: string | null
           sku?: string

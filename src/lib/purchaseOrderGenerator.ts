@@ -62,9 +62,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   y += 15;
 
   // PO Info
+  const poNumber = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`PO Number: PO-${order.id.slice(0, 8).toUpperCase()}`, 20, y);
+  doc.text(`PO Number: ${poNumber}`, 20, y);
   doc.text(`Order Date: ${formatDate(order.orderedAt)}`, pageWidth - 20, y, {
     align: 'right',
   });
@@ -148,7 +149,8 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   });
 
   // Save the PDF
-  doc.save(`PO-${order.id.slice(0, 8).toUpperCase()}.pdf`);
+  const fileName = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
+  doc.save(`${fileName}.pdf`);
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
