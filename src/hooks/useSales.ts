@@ -18,7 +18,7 @@ export function useSales() {
         .from('sales')
         .select(`
           *,
-          vendors (name)
+          vendors (name, address)
         `)
         .order('created_at', { ascending: false });
 
@@ -36,6 +36,7 @@ export function useSales() {
             userId: sale.user_id,
             vendorId: sale.vendor_id,
             vendorName: sale.vendors?.name,
+            vendorAddress: sale.vendors?.address,
             invoiceNumber: sale.invoice_number,
             status: sale.status as Sale['status'],
             subtotal: Number(sale.subtotal),
