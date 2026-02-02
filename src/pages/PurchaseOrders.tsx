@@ -97,8 +97,8 @@ export function PurchaseOrders() {
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex h-24 items-center justify-between">
+            <div className="flex items-center gap-4">
               <Link to="/">
                 <Button variant="ghost" size="icon">
                   <ArrowLeft className="h-5 w-5" />
@@ -111,9 +111,14 @@ export function PurchaseOrders() {
                   className="h-20 w-auto object-contain"
                 />
               </Link>
-              <h1 className="text-xl font-bold text-card-foreground">
-                Purchase Orders
-              </h1>
+              <div className="flex flex-col">
+                <h1 className="text-2xl font-bold tracking-tight text-card-foreground font-sans">
+                  Purchase Orders
+                </h1>
+                <p className="text-sm text-muted-foreground font-medium tracking-wide">
+                  Manage incoming inventory
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setDialogOpen(true)} className="gap-2">
