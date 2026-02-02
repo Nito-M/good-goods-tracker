@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogoUpload } from '@/components/LogoUpload';
+import { useColorTheme, ColorTheme } from '@/hooks/useColorTheme';
 import {
   Dialog,
   DialogContent,
@@ -42,9 +43,18 @@ import { CATEGORIES as DEFAULT_CATEGORIES } from '@/types/inventory';
 export function Settings() {
   const { signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { colorTheme, setColorTheme } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customCategories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
+
+  const colorThemeOptions: { value: ColorTheme; label: string; color: string }[] = [
+    { value: 'normal', label: 'Normal (Teal)', color: 'bg-[hsl(200,98%,39%)]' },
+    { value: 'green', label: 'Light Green', color: 'bg-[hsl(142,76%,36%)]' },
+    { value: 'blue', label: 'Light Blue', color: 'bg-[hsl(217,91%,60%)]' },
+    { value: 'grey', label: 'Light Grey', color: 'bg-[hsl(215,16%,47%)]' },
+    { value: 'red', label: 'Light Red', color: 'bg-[hsl(0,72%,50%)]' },
+  ];
 
   // Invoice settings state
   const [businessName, setBusinessName] = useState('');
@@ -228,6 +238,29 @@ export function Settings() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="space-y-0.5">
+                    <Label>Accent Color</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Choose your preferred accent color
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {colorThemeOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setColorTheme(option.value)}
+                        className={`w-8 h-8 rounded-full ${option.color} transition-all ${
+                          colorTheme === option.value
+                            ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
+                            : 'hover:scale-105'
+                        }`}
+                        title={option.label}
+                      />
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
