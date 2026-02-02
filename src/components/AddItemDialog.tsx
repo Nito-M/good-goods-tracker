@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { InventoryItem, CATEGORIES, Dimensions } from '@/types/inventory';
+import { InventoryItem, Dimensions } from '@/types/inventory';
 import {
   Dialog,
   DialogContent,
@@ -26,14 +26,15 @@ interface AddItemDialogProps {
   onSave: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
   editItem?: InventoryItem | null;
   onUpdate?: (id: string, updates: Partial<InventoryItem>) => void;
+  categories: string[];
 }
 
 const DEFAULT_DIMENSIONS: Dimensions = { length: 0, width: 0, height: 0, unit: 'in' };
 
-export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate }: AddItemDialogProps) {
+export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, categories }: AddItemDialogProps) {
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
-  const [category, setCategory] = useState<string>('Electronics');
+  const [category, setCategory] = useState<string>(categories[0] || 'Other');
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [cost, setCost] = useState('');
@@ -61,7 +62,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate }
     } else {
       setName('');
       setSku('');
-      setCategory('Electronics');
+      setCategory(categories[0] || 'Other');
       setQuantity('');
       setPrice('');
       setCost('');
@@ -141,7 +142,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate }
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((cat) => (
+                  {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
                     </SelectItem>

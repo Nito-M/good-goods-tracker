@@ -1,4 +1,4 @@
-import { Package, DollarSign, AlertTriangle, Plus, Box, LogOut, ClipboardList } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Plus, LogOut, ClipboardList, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/StatCard';
 import { InventoryTable } from '@/components/InventoryTable';
@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LogoUpload } from '@/components/LogoUpload';
+
 interface IndexProps {
   items: InventoryItem[];
   stats: {
@@ -20,6 +21,7 @@ interface IndexProps {
   setSearchQuery: (query: string) => void;
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
+  categories: string[];
   onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
   onOpenDialog: () => void;
@@ -33,6 +35,7 @@ const Index = ({
   setSearchQuery,
   categoryFilter,
   setCategoryFilter,
+  categories,
   onEdit,
   onDelete,
   onOpenDialog,
@@ -70,6 +73,11 @@ const Index = ({
                 <Button variant="outline" className="gap-2">
                   <ClipboardList className="h-4 w-4" />
                   Purchase Orders
+                </Button>
+              </Link>
+              <Link to="/settings">
+                <Button variant="outline" size="icon" title="Settings">
+                  <Settings className="h-4 w-4" />
                 </Button>
               </Link>
               <Button onClick={onOpenDialog} className="gap-2">
@@ -116,6 +124,7 @@ const Index = ({
             onSearchChange={setSearchQuery}
             categoryFilter={categoryFilter}
             onCategoryChange={setCategoryFilter}
+            categories={categories}
           />
         </div>
 
