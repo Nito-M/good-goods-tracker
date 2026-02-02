@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LogoUpload } from '@/components/LogoUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 
@@ -105,13 +106,7 @@ export function PurchaseOrders() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/">
-                <img 
-                  src="/nol_logo.png" 
-                  alt="Northern Outline Logo" 
-                  className="h-20 w-auto object-contain"
-                />
-              </Link>
+              <LogoUpload />
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground font-sans">
                   Purchase Orders

@@ -7,6 +7,7 @@ import { InventoryItem } from '@/types/inventory';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LogoUpload } from '@/components/LogoUpload';
 interface IndexProps {
   items: InventoryItem[];
   stats: {
@@ -54,13 +55,7 @@ const Index = ({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-24 items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/">
-                <img 
-                  src="/nol_logo.png" 
-                  alt="Northern Outline Logo" 
-                  className="h-20 w-auto object-contain"
-                />
-              </Link>
+              <LogoUpload />
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground font-sans">
                   Inventory Management
