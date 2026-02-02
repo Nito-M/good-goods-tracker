@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
+import { useVendors } from '@/hooks/useVendors';
 import { AddPurchaseOrderDialog } from '@/components/AddPurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
@@ -20,6 +21,7 @@ export function PurchaseOrders() {
   const { orders, loading, createOrder, updateOrder, markAsReceived, deleteOrder } =
     usePurchaseOrders();
   const { allItems: inventoryItems, addItem } = useInventory();
+  const { vendors } = useVendors();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
@@ -222,6 +224,7 @@ export function PurchaseOrders() {
         onOpenChange={setDialogOpen}
         onSave={createOrder}
         inventoryItems={inventoryItems}
+        vendors={vendors}
       />
 
       {editingOrder && (
@@ -231,6 +234,7 @@ export function PurchaseOrders() {
           order={editingOrder}
           onSave={updateOrder}
           inventoryItems={inventoryItems}
+          vendors={vendors}
         />
       )}
     </div>

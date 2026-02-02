@@ -4,6 +4,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem } from '@/types/purchaseOrder';
 
+interface DbVendor {
+  id: string;
+  name: string;
+}
+
 export function usePurchaseOrders() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,22 +22,40 @@ export function usePurchaseOrders() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('purchase_orders')
-      .select('*')
-      .order('ordered_at', { ascending: false });
+    // Fetch orders and vendors in parallel
+    const [ordersResult, vendorsResult] = await Promise.all([
+      supabase
+        .from('purchase_orders')
+        .select('*')
+        .order('ordered_at', { ascending: false }),
+      supabase
+        .from('vendors')
+        .select('id, name'),
+    ]);
 
-    if (error) {
+    if (ordersResult.error) {
       toast({
         title: 'Error loading purchase orders',
-        description: error.message,
+        description: ordersResult.error.message,
         variant: 'destructive',
       });
       setLoading(false);
       return;
     }
 
-    setOrders((data as DbPurchaseOrder[]).map(dbToPurchaseOrder));
+    // Create vendor lookup map
+    const vendorMap = new Map<string, string>();
+    if (vendorsResult.data) {
+      (vendorsResult.data as DbVendor[]).forEach((v) => {
+        vendorMap.set(v.id, v.name);
+      });
+    }
+
+    setOrders(
+      (ordersResult.data as DbPurchaseOrder[]).map((db) =>
+        dbToPurchaseOrder(db, db.vendor_id ? vendorMap.get(db.vendor_id) : null)
+      )
+    );
     setLoading(false);
   }, [toast, user]);
 
@@ -71,6 +94,7 @@ export function usePurchaseOrders() {
       items: PurchaseOrderItem[];
       orderedAt: Date;
       notes?: string;
+      vendorId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -116,6 +140,7 @@ export function usePurchaseOrders() {
       items: JSON.parse(JSON.stringify(order.items)),
       ordered_at: order.orderedAt.toISOString(),
       notes: order.notes || null,
+      vendor_id: order.vendorId || null,
       pdf_url: pdfUrl,
       image_url: imageUrl,
       status: 'ordered',
@@ -163,6 +188,7 @@ export function usePurchaseOrders() {
       items: PurchaseOrderItem[];
       orderedAt: Date;
       notes?: string;
+      vendorId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -208,6 +234,7 @@ export function usePurchaseOrders() {
       items: JSON.parse(JSON.stringify(updates.items)),
       ordered_at: updates.orderedAt.toISOString(),
       notes: updates.notes || null,
+      vendor_id: updates.vendorId !== undefined ? updates.vendorId : undefined,
     };
 
     if (pdfUrl) updateData.pdf_url = pdfUrl;
