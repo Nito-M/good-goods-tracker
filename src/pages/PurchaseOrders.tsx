@@ -5,12 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
+import { useProfile } from '@/hooks/useProfile';
 import { AddPurchaseOrderDialog } from '@/components/AddPurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
 
 import { LogoUpload } from '@/components/LogoUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +24,7 @@ export function PurchaseOrders() {
     usePurchaseOrders();
   const { allItems: inventoryItems, addItem } = useInventory();
   const { vendors } = useVendors();
+  const { profile } = useProfile();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
@@ -91,6 +94,19 @@ export function PurchaseOrders() {
   const handleEdit = (order: PurchaseOrder) => {
     setEditingOrder(order);
     setEditDialogOpen(true);
+  };
+
+  const handleDownload = async (order: PurchaseOrder) => {
+    const settings = profile ? {
+      logoUrl: profile.logoUrl,
+      businessName: profile.businessName,
+      businessAddress: profile.businessAddress,
+      businessPhone: profile.businessPhone,
+      businessEmail: profile.businessEmail,
+      thankYouNote: profile.invoiceThankYouNote,
+    } : undefined;
+    
+    await generatePurchaseOrderPDF(order, settings);
   };
 
   const orderedOrders = orders.filter((o) => o.status === 'ordered');
@@ -190,6 +206,7 @@ export function PurchaseOrders() {
                     onMarkReceived={handleMarkReceived}
                     onDelete={deleteOrder}
                     onEdit={handleEdit}
+                    onDownload={handleDownload}
                     loading={processingId === order.id}
                   />
                 ))
@@ -209,6 +226,7 @@ export function PurchaseOrders() {
                     onMarkReceived={handleMarkReceived}
                     onDelete={deleteOrder}
                     onEdit={handleEdit}
+                    onDownload={handleDownload}
                     loading={processingId === order.id}
                   />
                 ))
