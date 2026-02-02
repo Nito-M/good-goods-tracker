@@ -104,11 +104,13 @@ export function PurchaseOrders() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <img 
-                src="/nol_logo.png" 
-                alt="Northern Outline Logo" 
-                className="h-20 w-auto object-contain"
-              />
+              <Link to="/">
+                <img 
+                  src="/nol_logo.png" 
+                  alt="Northern Outline Logo" 
+                  className="h-20 w-auto object-contain"
+                />
+              </Link>
               <h1 className="text-xl font-bold text-card-foreground">
                 Purchase Orders
               </h1>
