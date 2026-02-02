@@ -13,7 +13,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogoUpload } from '@/components/LogoUpload';
-import { useColorTheme, ColorTheme } from '@/hooks/useColorTheme';
+import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
 import {
   Dialog,
   DialogContent,
@@ -43,7 +43,7 @@ import { CATEGORIES as DEFAULT_CATEGORIES } from '@/types/inventory';
 export function Settings() {
   const { signOut } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { colorTheme, setColorTheme } = useColorTheme();
+  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customCategories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
@@ -54,6 +54,15 @@ export function Settings() {
     { value: 'blue', label: 'Light Blue', color: 'bg-[hsl(217,91%,60%)]' },
     { value: 'grey', label: 'Light Grey', color: 'bg-[hsl(215,16%,47%)]' },
     { value: 'red', label: 'Light Red', color: 'bg-[hsl(0,72%,50%)]' },
+  ];
+
+  const backgroundThemeOptions: { value: BackgroundTheme; label: string; color: string }[] = [
+    { value: 'normal', label: 'Normal', color: 'bg-[hsl(209,40%,96%)]' },
+    { value: 'green', label: 'Light Green', color: 'bg-[hsl(142,40%,96%)]' },
+    { value: 'blue', label: 'Light Blue', color: 'bg-[hsl(217,40%,96%)]' },
+    { value: 'grey', label: 'Light Grey', color: 'bg-[hsl(0,0%,96%)]' },
+    { value: 'red', label: 'Light Red', color: 'bg-[hsl(0,40%,96%)]' },
+    { value: 'black', label: 'Black', color: 'bg-[hsl(0,0%,8%)]' },
   ];
 
   // Invoice settings state
@@ -254,6 +263,29 @@ export function Settings() {
                         onClick={() => setColorTheme(option.value)}
                         className={`w-8 h-8 rounded-full ${option.color} transition-all ${
                           colorTheme === option.value
+                            ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
+                            : 'hover:scale-105'
+                        }`}
+                        title={option.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="space-y-0.5">
+                    <Label>Background Color</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Choose your preferred background color
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {backgroundThemeOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setBackgroundTheme(option.value)}
+                        className={`w-8 h-8 rounded-full ${option.color} border border-border transition-all ${
+                          backgroundTheme === option.value
                             ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
                             : 'hover:scale-105'
                         }`}

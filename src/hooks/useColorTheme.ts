@@ -1,13 +1,22 @@
 import { useState, useEffect } from 'react';
 
 export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red';
+export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black';
 
 const COLOR_THEME_KEY = 'color-theme';
+const BACKGROUND_THEME_KEY = 'background-theme';
 
 export function useColorTheme() {
   const [colorTheme, setColorThemeState] = useState<ColorTheme>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem(COLOR_THEME_KEY) as ColorTheme) || 'normal';
+    }
+    return 'normal';
+  });
+
+  const [backgroundTheme, setBackgroundThemeState] = useState<BackgroundTheme>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem(BACKGROUND_THEME_KEY) as BackgroundTheme) || 'normal';
     }
     return 'normal';
   });
@@ -25,9 +34,26 @@ export function useColorTheme() {
     localStorage.setItem(COLOR_THEME_KEY, colorTheme);
   }, [colorTheme]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    // Remove all background theme classes
+    root.classList.remove('bg-normal', 'bg-green', 'bg-blue', 'bg-grey', 'bg-red', 'bg-black');
+    
+    // Add the current background theme class
+    root.classList.add(`bg-${backgroundTheme}`);
+    
+    // Save to localStorage
+    localStorage.setItem(BACKGROUND_THEME_KEY, backgroundTheme);
+  }, [backgroundTheme]);
+
   const setColorTheme = (theme: ColorTheme) => {
     setColorThemeState(theme);
   };
 
-  return { colorTheme, setColorTheme };
+  const setBackgroundTheme = (theme: BackgroundTheme) => {
+    setBackgroundThemeState(theme);
+  };
+
+  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme };
 }

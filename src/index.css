@@ -80,6 +80,62 @@ All colors MUST be HSL.
     --spacing: 0.25rem;
   }
 
+  /* Background Theme Variants - Light Mode */
+  .bg-green:root, :root.bg-green {
+    --background: 142 40% 96%;
+    --card: 142 40% 98%;
+    --popover: 142 31% 91%;
+    --muted: 142 20% 65%;
+    --accent: 142 40% 98%;
+    --border: 142 26% 83%;
+    --input: 142 26% 83%;
+  }
+
+  .bg-blue:root, :root.bg-blue {
+    --background: 217 40% 96%;
+    --card: 217 40% 98%;
+    --popover: 217 31% 91%;
+    --muted: 217 20% 65%;
+    --accent: 217 40% 98%;
+    --border: 217 26% 83%;
+    --input: 217 26% 83%;
+  }
+
+  .bg-grey:root, :root.bg-grey {
+    --background: 0 0% 96%;
+    --card: 0 0% 98%;
+    --popover: 0 0% 91%;
+    --muted: 0 0% 65%;
+    --accent: 0 0% 98%;
+    --border: 0 0% 83%;
+    --input: 0 0% 83%;
+  }
+
+  .bg-red:root, :root.bg-red {
+    --background: 0 40% 96%;
+    --card: 0 40% 98%;
+    --popover: 0 31% 91%;
+    --muted: 0 20% 65%;
+    --accent: 0 40% 98%;
+    --border: 0 26% 83%;
+    --input: 0 26% 83%;
+  }
+
+  .bg-black:root, :root.bg-black {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 95%;
+    --muted: 0 0% 30%;
+    --muted-foreground: 0 0% 85%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 85%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+  }
+
   /* Color Theme Variants - Light Mode */
   .theme-green:root, :root.theme-green {
     --primary: 142 76% 36%;
@@ -211,6 +267,62 @@ All colors MUST be HSL.
     --sidebar-primary: 0 84% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-ring: 0 84% 60%;
+  }
+
+  /* Background Theme Variants - Dark Mode */
+  .dark.bg-green, .bg-green.dark {
+    --background: 142 30% 8%;
+    --card: 142 25% 12%;
+    --popover: 142 24% 15%;
+    --muted: 142 16% 35%;
+    --accent: 142 20% 10%;
+    --border: 142 19% 25%;
+    --input: 142 19% 25%;
+  }
+
+  .dark.bg-blue, .bg-blue.dark {
+    --background: 217 30% 8%;
+    --card: 217 25% 12%;
+    --popover: 217 24% 15%;
+    --muted: 217 16% 35%;
+    --accent: 217 20% 10%;
+    --border: 217 19% 25%;
+    --input: 217 19% 25%;
+  }
+
+  .dark.bg-grey, .bg-grey.dark {
+    --background: 0 0% 8%;
+    --card: 0 0% 12%;
+    --popover: 0 0% 15%;
+    --muted: 0 0% 35%;
+    --accent: 0 0% 10%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+  }
+
+  .dark.bg-red, .bg-red.dark {
+    --background: 0 20% 8%;
+    --card: 0 18% 12%;
+    --popover: 0 15% 15%;
+    --muted: 0 12% 35%;
+    --accent: 0 15% 10%;
+    --border: 0 12% 25%;
+    --input: 0 12% 25%;
+  }
+
+  .dark.bg-black, .bg-black.dark {
+    --background: 0 0% 3%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 0 0% 8%;
+    --accent-foreground: 0 0% 80%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
   }
 }
 
