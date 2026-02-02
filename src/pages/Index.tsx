@@ -1,10 +1,9 @@
-import { Package, DollarSign, AlertTriangle, Plus, LogOut, ClipboardList, Settings, ShoppingCart } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Plus, ClipboardList, Settings, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/StatCard';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
 import { InventoryItem } from '@/types/inventory';
-import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
 import { LogoUpload } from '@/components/LogoUpload';
@@ -40,8 +39,6 @@ const Index = ({
   onDelete,
   onOpenDialog,
 }: IndexProps) => {
-  const { signOut } = useAuth();
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -89,9 +86,6 @@ const Index = ({
               <Button onClick={onOpenDialog} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add Item
-              </Button>
-              <Button variant="outline" size="icon" onClick={signOut} title="Sign out">
-                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
