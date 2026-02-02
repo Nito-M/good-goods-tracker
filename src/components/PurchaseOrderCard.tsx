@@ -11,6 +11,7 @@ import {
   Calendar,
   Hash,
   Pencil,
+  Building2,
 } from 'lucide-react';
 
 interface PurchaseOrderCardProps {
@@ -90,6 +91,12 @@ export function PurchaseOrderCard({
 
             {/* Details grid */}
             <div className="grid grid-cols-2 gap-2 text-sm">
+              {order.vendorName && (
+                <div className="flex items-center gap-2 col-span-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span>Vendor: {order.vendorName}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-muted-foreground" />
                 <span>Total Qty: {totalQuantity}</span>

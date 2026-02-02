@@ -7,6 +7,8 @@ export interface PurchaseOrderItem {
 export interface PurchaseOrder {
   id: string;
   userId: string;
+  vendorId: string | null;
+  vendorName?: string | null;
   pdfUrl: string | null;
   imageUrl: string | null;
   items: PurchaseOrderItem[];
@@ -21,6 +23,7 @@ export interface PurchaseOrder {
 export interface DbPurchaseOrder {
   id: string;
   user_id: string;
+  vendor_id: string | null;
   pdf_url: string | null;
   image_url: string | null;
   items: unknown;
@@ -35,7 +38,7 @@ export interface DbPurchaseOrder {
   updated_at: string;
 }
 
-export function dbToPurchaseOrder(db: DbPurchaseOrder): PurchaseOrder {
+export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | null): PurchaseOrder {
   // Support both old format (single item) and new format (items array)
   const rawItems = db.items as PurchaseOrderItem[] | null;
   const items: PurchaseOrderItem[] = rawItems && Array.isArray(rawItems) && rawItems.length > 0
@@ -45,6 +48,8 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder): PurchaseOrder {
   return {
     id: db.id,
     userId: db.user_id,
+    vendorId: db.vendor_id,
+    vendorName,
     pdfUrl: db.pdf_url,
     imageUrl: db.image_url,
     items,

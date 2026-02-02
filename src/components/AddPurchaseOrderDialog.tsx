@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { InventoryItem } from '@/types/inventory';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
+import { Vendor } from '@/hooks/useVendors';
 import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2 } from 'lucide-react';
 
 interface AddPurchaseOrderDialogProps {
@@ -28,11 +29,13 @@ interface AddPurchaseOrderDialogProps {
       items: PurchaseOrderItem[];
       orderedAt: Date;
       notes?: string;
+      vendorId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
   ) => Promise<void>;
   inventoryItems: InventoryItem[];
+  vendors: Vendor[];
 }
 
 interface LineItem {
@@ -58,12 +61,14 @@ export function AddPurchaseOrderDialog({
   onOpenChange,
   onSave,
   inventoryItems,
+  vendors,
 }: AddPurchaseOrderDialogProps) {
   const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
   const [orderedAt, setOrderedAt] = useState(
     new Date().toISOString().split('T')[0]
   );
   const [notes, setNotes] = useState('');
+  const [vendorId, setVendorId] = useState<string>('');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -119,6 +124,7 @@ export function AddPurchaseOrderDialog({
         items,
         orderedAt: new Date(orderedAt),
         notes: notes || undefined,
+        vendorId: vendorId || null,
       },
       pdfFile,
       imageFile
@@ -132,6 +138,7 @@ export function AddPurchaseOrderDialog({
     setLineItems([createEmptyLineItem()]);
     setOrderedAt(new Date().toISOString().split('T')[0]);
     setNotes('');
+    setVendorId('');
     setPdfFile(null);
     setImageFile(null);
   };
@@ -271,6 +278,24 @@ export function AddPurchaseOrderDialog({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Vendor Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="vendor">Vendor</Label>
+            <Select value={vendorId} onValueChange={setVendorId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a vendor (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- No Vendor --</SelectItem>
+                {vendors.map((vendor) => (
+                  <SelectItem key={vendor.id} value={vendor.id}>
+                    {vendor.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Order Date */}
