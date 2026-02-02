@@ -45,6 +45,7 @@ interface LineItem {
   customSku: string;
   customName: string;
   quantity: number;
+  unitCost: string;
 }
 
 function createEmptyLineItem(): LineItem {
@@ -54,6 +55,7 @@ function createEmptyLineItem(): LineItem {
     customSku: '',
     customName: '',
     quantity: 1,
+    unitCost: '',
   };
 }
 
@@ -118,7 +120,8 @@ export function AddPurchaseOrderDialog({
 
     const items: PurchaseOrderItem[] = lineItems.map((lineItem) => {
       const { sku, itemName } = getItemDetails(lineItem);
-      return { sku, itemName, quantity: lineItem.quantity };
+      const unitCost = lineItem.unitCost ? parseFloat(lineItem.unitCost) : undefined;
+      return { sku, itemName, quantity: lineItem.quantity, unitCost };
     });
 
     await onSave(
@@ -266,19 +269,35 @@ export function AddPurchaseOrderDialog({
                     </div>
                   )}
 
-                <div className="space-y-2">
-                  <Label>Quantity *</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={lineItem.quantity}
-                    onChange={(e) =>
-                      updateLineItem(lineItem.id, {
-                        quantity: parseInt(e.target.value) || 1,
-                      })
-                    }
-                    className="w-32"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Quantity *</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={lineItem.quantity}
+                      onChange={(e) =>
+                        updateLineItem(lineItem.id, {
+                          quantity: parseInt(e.target.value) || 1,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unit Cost</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={lineItem.unitCost}
+                      onChange={(e) =>
+                        updateLineItem(lineItem.id, {
+                          unitCost: e.target.value,
+                        })
+                      }
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
               </div>
             ))}

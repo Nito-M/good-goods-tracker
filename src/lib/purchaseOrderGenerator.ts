@@ -12,6 +12,15 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     return format(date, 'MMMM d, yyyy');
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
+
+  const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
+
   // Add logo if available
   if (settings?.logoUrl) {
     try {
@@ -93,8 +102,12 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   doc.rect(20, y - 4, pageWidth - 40, 8, 'F');
   doc.setFont('helvetica', 'bold');
   doc.text('Item', 22, y);
-  doc.text('SKU', 100, y);
-  doc.text('Quantity', pageWidth - 22, y, { align: 'right' });
+  doc.text('SKU', 80, y);
+  doc.text('Qty', 115, y);
+  if (hasAnyCost) {
+    doc.text('Unit Cost', 135, y);
+    doc.text('Total', pageWidth - 22, y, { align: 'right' });
+  }
   y += 10;
 
   // Items
@@ -106,12 +119,17 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     }
     
     const itemName =
-      item.itemName.length > 40
-        ? item.itemName.substring(0, 40) + '...'
+      item.itemName.length > 30
+        ? item.itemName.substring(0, 30) + '...'
         : item.itemName;
     doc.text(itemName, 22, y);
-    doc.text(item.sku, 100, y);
-    doc.text(item.quantity.toString(), pageWidth - 22, y, { align: 'right' });
+    doc.text(item.sku, 80, y);
+    doc.text(item.quantity.toString(), 115, y);
+    if (hasAnyCost) {
+      const unitCost = item.unitCost || 0;
+      doc.text(formatCurrency(unitCost), 135, y);
+      doc.text(formatCurrency(unitCost * item.quantity), pageWidth - 22, y, { align: 'right' });
+    }
     y += 7;
   });
 
@@ -121,11 +139,19 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   doc.line(20, y, pageWidth - 20, y);
   y += 10;
 
-  // Total Quantity
+  // Totals
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCost = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+  
   doc.setFont('helvetica', 'bold');
   doc.text('Total Items:', pageWidth - 70, y);
   doc.text(totalQuantity.toString(), pageWidth - 22, y, { align: 'right' });
+  
+  if (hasAnyCost) {
+    y += 7;
+    doc.text('Total Cost:', pageWidth - 70, y);
+    doc.text(formatCurrency(totalCost), pageWidth - 22, y, { align: 'right' });
+  }
 
   // Notes
   if (order.notes) {

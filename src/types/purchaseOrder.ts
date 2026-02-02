@@ -2,6 +2,7 @@ export interface PurchaseOrderItem {
   sku: string;
   itemName: string;
   quantity: number;
+  unitCost?: number;
 }
 
 export interface PurchaseOrder {
