@@ -104,9 +104,11 @@ export function PurchaseOrders() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-                <ClipboardList className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <img 
+                src="/placeholder.svg" 
+                alt="Company Logo" 
+                className="h-10 w-auto object-contain"
+              />
               <h1 className="text-xl font-bold text-card-foreground">
                 Purchase Orders
               </h1>
