@@ -53,12 +53,13 @@ const Index = ({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Logo placeholder - replace src with your logo */}
-              <img 
-                src="/nol_logo.png" 
-                alt="Northern Outline Logo" 
-                className="h-20 w-auto object-contain"
-              />
+              <Link to="/">
+                <img 
+                  src="/nol_logo.png" 
+                  alt="Northern Outline Logo" 
+                  className="h-20 w-auto object-contain"
+                />
+              </Link>
               <h1 className="text-xl font-bold text-card-foreground">Inventory</h1>
             </div>
             <div className="flex items-center gap-2">
