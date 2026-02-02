@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PurchaseOrder } from '@/types/purchaseOrder';
+import { InvoiceSettings } from '@/types/sale';
 import {
   FileText,
   Check,
@@ -12,6 +13,7 @@ import {
   Hash,
   Pencil,
   Building2,
+  Download,
 } from 'lucide-react';
 
 interface PurchaseOrderCardProps {
@@ -19,6 +21,7 @@ interface PurchaseOrderCardProps {
   onMarkReceived: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (order: PurchaseOrder) => void;
+  onDownload: (order: PurchaseOrder) => void;
   loading?: boolean;
 }
 
@@ -27,6 +30,7 @@ export function PurchaseOrderCard({
   onMarkReceived,
   onDelete,
   onEdit,
+  onDownload,
   loading,
 }: PurchaseOrderCardProps) {
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -133,7 +137,7 @@ export function PurchaseOrderCard({
             )}
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-wrap gap-2 pt-2">
               {order.status === 'ordered' && (
                 <Button
                   size="sm"
@@ -145,6 +149,15 @@ export function PurchaseOrderCard({
                   Mark Received
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onDownload(order)}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
