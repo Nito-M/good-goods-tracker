@@ -9,8 +9,10 @@ import Index from "./pages/Index";
 import { ItemDetails } from "./pages/ItemDetails";
 import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
+import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { useInventory } from "@/hooks/useInventory";
+import { useCategories } from "@/hooks/useCategories";
 import { AddItemDialog } from "@/components/AddItemDialog";
 import { InventoryItem } from "@/types/inventory";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -32,6 +34,8 @@ function AppContent() {
     updateItem,
     deleteItem,
   } = useInventory();
+
+  const { allCategories } = useCategories();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -64,6 +68,7 @@ function AppContent() {
                 setSearchQuery={setSearchQuery}
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
+                categories={allCategories}
                 onEdit={handleEdit}
                 onDelete={deleteItem}
                 onOpenDialog={() => setDialogOpen(true)}
@@ -91,6 +96,14 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AddItemDialog
@@ -99,6 +112,7 @@ function AppContent() {
         onSave={addItem}
         editItem={editingItem}
         onUpdate={updateItem}
+        categories={allCategories}
       />
     </>
   );

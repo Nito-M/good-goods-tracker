@@ -7,13 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CATEGORIES } from '@/types/inventory';
 
 interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   categoryFilter: string;
   onCategoryChange: (value: string) => void;
+  categories: string[];
 }
 
 export function SearchFilter({
@@ -21,6 +21,7 @@ export function SearchFilter({
   onSearchChange,
   categoryFilter,
   onCategoryChange,
+  categories,
 }: SearchFilterProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
@@ -39,7 +40,7 @@ export function SearchFilter({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Categories</SelectItem>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <SelectItem key={cat} value={cat}>
               {cat}
             </SelectItem>
