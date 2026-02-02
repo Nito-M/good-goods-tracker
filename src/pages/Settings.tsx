@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { LogoUpload } from '@/components/LogoUpload';
 import {
   Dialog,
@@ -29,10 +29,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { CATEGORIES as DEFAULT_CATEGORIES } from '@/types/inventory';
 
 export function Settings() {
   const { signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customCategories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
 
@@ -119,7 +127,6 @@ export function Settings() {
                   Back to Inventory
                 </Button>
               </Link>
-              <ThemeToggle />
               <Button variant="outline" size="icon" onClick={signOut} title="Sign out">
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -130,8 +137,12 @@ export function Settings() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="vendors" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
+            <TabsTrigger value="general" className="gap-2">
+              <Monitor className="h-4 w-4" />
+              General
+            </TabsTrigger>
             <TabsTrigger value="vendors" className="gap-2">
               <Building2 className="h-4 w-4" />
               Vendors
@@ -141,6 +152,51 @@ export function Settings() {
               Categories
             </TabsTrigger>
           </TabsList>
+
+          {/* General Tab */}
+          <TabsContent value="general" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Appearance</CardTitle>
+                <CardDescription>Customize how the app looks</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="theme">Theme</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Select your preferred color scheme
+                    </p>
+                  </div>
+                  <Select value={theme} onValueChange={setTheme}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">
+                        <div className="flex items-center gap-2">
+                          <Sun className="h-4 w-4" />
+                          Light
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="dark">
+                        <div className="flex items-center gap-2">
+                          <Moon className="h-4 w-4" />
+                          Dark
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="system">
+                        <div className="flex items-center gap-2">
+                          <Monitor className="h-4 w-4" />
+                          System
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Vendors Tab */}
           <TabsContent value="vendors" className="mt-6">
