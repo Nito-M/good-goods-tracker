@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { InventoryItem } from '@/types/inventory';
+import { ItemPurchaseHistory } from '@/components/ItemPurchaseHistory';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
@@ -190,6 +191,9 @@ export function ItemDetails({ items, onEdit, onDelete }: ItemDetailsProps) {
               </p>
             </CardContent>
           </Card>
+
+          {/* Purchase & Sales History */}
+          <ItemPurchaseHistory sku={item.sku} currentStock={item.quantity} />
 
           {/* Timestamps Card */}
           <Card className="md:col-span-2">
