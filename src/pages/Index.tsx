@@ -1,12 +1,9 @@
-import { Package, DollarSign, AlertTriangle, Plus, ClipboardList, Settings, ShoppingCart } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/StatCard';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
 import { InventoryItem } from '@/types/inventory';
-import { Link } from 'react-router-dom';
-
-import { LogoUpload } from '@/components/LogoUpload';
 
 interface IndexProps {
   items: InventoryItem[];
@@ -53,41 +50,14 @@ const Index = ({
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-24 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <LogoUpload />
-              <div className="flex flex-col">
-                <h1 className="text-2xl font-bold tracking-tight text-card-foreground font-sans">
-                  Inventory Management
-                </h1>
-                <p className="text-sm text-muted-foreground font-medium tracking-wide">
-                  Track and manage your stock
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link to="/sales">
-                <Button variant="outline" className="gap-2">
-                  <ShoppingCart className="h-4 w-4" />
-                  Sales
-                </Button>
-              </Link>
-              <Link to="/purchase-orders">
-                <Button variant="outline" className="gap-2">
-                  <ClipboardList className="h-4 w-4" />
-                  Purchase Orders
-                </Button>
-              </Link>
-              <Link to="/settings">
-                <Button variant="outline" size="icon" title="Settings">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button onClick={onOpenDialog} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Item
-              </Button>
-            </div>
+          <div className="flex h-16 items-center justify-between">
+            <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
+              Inventory Management
+            </h1>
+            <Button onClick={onOpenDialog} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
           </div>
         </div>
       </header>

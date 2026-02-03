@@ -18,6 +18,7 @@ import { AddItemDialog } from "@/components/AddItemDialog";
 import { InventoryItem } from "@/types/inventory";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AppLayout } from "@/components/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -61,19 +62,21 @@ function AppContent() {
           path="/"
           element={
             <ProtectedRoute>
-              <Index
-                items={items}
-                stats={stats}
-                loading={loading}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                categoryFilter={categoryFilter}
-                setCategoryFilter={setCategoryFilter}
-                categories={allCategories}
-                onEdit={handleEdit}
-                onDelete={deleteItem}
-                onOpenDialog={() => setDialogOpen(true)}
-              />
+              <AppLayout>
+                <Index
+                  items={items}
+                  stats={stats}
+                  loading={loading}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                  categories={allCategories}
+                  onEdit={handleEdit}
+                  onDelete={deleteItem}
+                  onOpenDialog={() => setDialogOpen(true)}
+                />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -81,11 +84,13 @@ function AppContent() {
           path="/item/:id"
           element={
             <ProtectedRoute>
-              <ItemDetails
-                items={allItems}
-                onEdit={handleEdit}
-                onDelete={deleteItem}
-              />
+              <AppLayout>
+                <ItemDetails
+                  items={allItems}
+                  onEdit={handleEdit}
+                  onDelete={deleteItem}
+                />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -93,7 +98,9 @@ function AppContent() {
           path="/purchase-orders"
           element={
             <ProtectedRoute>
-              <PurchaseOrders />
+              <AppLayout>
+                <PurchaseOrders />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -101,7 +108,9 @@ function AppContent() {
           path="/sales"
           element={
             <ProtectedRoute>
-              <Sales />
+              <AppLayout>
+                <Sales />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -109,7 +118,9 @@ function AppContent() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <Settings />
+              <AppLayout>
+                <Settings />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
