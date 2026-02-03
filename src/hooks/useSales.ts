@@ -96,11 +96,113 @@ export function useSales() {
     fetchSales();
   }, [user]);
 
+  // Get available PO quantities for FIFO costing
+  const getAvailablePOItems = async (sku: string): Promise<Array<{
+    poId: string;
+    unitCost: number;
+    availableQty: number;
+    receivedAt: Date;
+  }>> => {
+    // Get all received POs containing this SKU
+    const { data: poData } = await supabase
+      .from('purchase_orders')
+      .select('id, items, received_at')
+      .eq('status', 'received')
+      .order('received_at', { ascending: true });
+
+    if (!poData) return [];
+
+    // Get already allocated quantities for this SKU
+    const { data: allocations } = await supabase
+      .from('po_item_allocations')
+      .select('purchase_order_id, quantity_allocated')
+      .eq('sku', sku);
+
+    const allocatedByPO = new Map<string, number>();
+    if (allocations) {
+      for (const alloc of allocations) {
+        const current = allocatedByPO.get(alloc.purchase_order_id) || 0;
+        allocatedByPO.set(alloc.purchase_order_id, current + alloc.quantity_allocated);
+      }
+    }
+
+    const result: Array<{
+      poId: string;
+      unitCost: number;
+      availableQty: number;
+      receivedAt: Date;
+    }> = [];
+
+    for (const po of poData) {
+      const items = po.items as Array<{ sku: string; quantity: number; unitCost?: number }> | null;
+      if (!items || !Array.isArray(items)) continue;
+
+      const matchingItem = items.find(item => item.sku === sku);
+      if (!matchingItem) continue;
+
+      const totalQty = matchingItem.quantity;
+      const allocatedQty = allocatedByPO.get(po.id) || 0;
+      const availableQty = totalQty - allocatedQty;
+
+      if (availableQty > 0) {
+        result.push({
+          poId: po.id,
+          unitCost: matchingItem.unitCost || 0,
+          availableQty,
+          receivedAt: new Date(po.received_at!),
+        });
+      }
+    }
+
+    return result;
+  };
+
   const createSale = async (input: CreateSaleInput): Promise<Sale | null> => {
     if (!user) return null;
 
     try {
-      // Calculate totals
+      // For each item, get FIFO costs from POs
+      const itemsWithFIFOCosts: Array<{
+        item: typeof input.items[0];
+        allocations: Array<{ poId: string; quantity: number; unitCost: number }>;
+        weightedAvgCost: number;
+      }> = [];
+
+      for (const item of input.items) {
+        const availablePOs = await getAvailablePOItems(item.sku);
+        const allocations: Array<{ poId: string; quantity: number; unitCost: number }> = [];
+        let remainingQty = item.quantity;
+        let totalCostWeighted = 0;
+
+        // Allocate from POs in FIFO order
+        for (const po of availablePOs) {
+          if (remainingQty <= 0) break;
+
+          const qtyFromThisPO = Math.min(remainingQty, po.availableQty);
+          allocations.push({
+            poId: po.poId,
+            quantity: qtyFromThisPO,
+            unitCost: po.unitCost,
+          });
+          totalCostWeighted += qtyFromThisPO * po.unitCost;
+          remainingQty -= qtyFromThisPO;
+        }
+
+        // If we still have remaining qty, use the passed unitCost (for items not from POs)
+        if (remainingQty > 0) {
+          totalCostWeighted += remainingQty * item.unitCost;
+        }
+
+        const weightedAvgCost = item.quantity > 0 ? totalCostWeighted / item.quantity : item.unitCost;
+
+        itemsWithFIFOCosts.push({
+          item,
+          allocations,
+          weightedAvgCost,
+        });
+      }
+
+      // Calculate totals using FIFO costs
       const subtotal = input.items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice,
         0
@@ -133,26 +235,37 @@ export function useSales() {
 
       if (saleError) throw saleError;
 
-      // Create sale items
-      const saleItems = input.items.map((item) => ({
-        sale_id: sale.id,
-        inventory_item_id: item.inventoryItemId,
-        item_name: item.itemName,
-        sku: item.sku,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        unit_cost: item.unitCost,
-        total_price: item.quantity * item.unitPrice,
-      }));
+      // Create sale items with FIFO costs
+      for (const { item, allocations, weightedAvgCost } of itemsWithFIFOCosts) {
+        const { data: saleItem, error: itemError } = await supabase
+          .from('sale_items')
+          .insert({
+            sale_id: sale.id,
+            inventory_item_id: item.inventoryItemId,
+            item_name: item.itemName,
+            sku: item.sku,
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            unit_cost: weightedAvgCost,
+            total_price: item.quantity * item.unitPrice,
+          })
+          .select()
+          .single();
 
-      const { error: itemsError } = await supabase
-        .from('sale_items')
-        .insert(saleItems);
+        if (itemError) throw itemError;
 
-      if (itemsError) throw itemsError;
+        // Create PO allocations for FIFO tracking
+        for (const alloc of allocations) {
+          await supabase.from('po_item_allocations').insert({
+            sale_item_id: saleItem.id,
+            purchase_order_id: alloc.poId,
+            sku: item.sku,
+            quantity_allocated: alloc.quantity,
+            unit_cost: alloc.unitCost,
+          });
+        }
 
-      // Update inventory quantities
-      for (const item of input.items) {
+        // Update inventory quantity
         const { data: currentItem } = await supabase
           .from('inventory_items')
           .select('quantity')
@@ -220,20 +333,34 @@ export function useSales() {
         return;
       }
 
-      // Restore inventory quantities for each item
-      for (const item of sale.items) {
-        if (item.inventoryItemId) {
-          const { data: currentItem } = await supabase
-            .from('inventory_items')
-            .select('quantity')
-            .eq('id', item.inventoryItemId)
-            .single();
+      // Get sale items to find their IDs for deleting allocations
+      const { data: saleItems } = await supabase
+        .from('sale_items')
+        .select('id, inventory_item_id, quantity')
+        .eq('sale_id', id);
 
-          if (currentItem) {
-            await supabase
+      // Delete PO allocations for this sale (restores FIFO availability)
+      if (saleItems) {
+        for (const saleItem of saleItems) {
+          await supabase
+            .from('po_item_allocations')
+            .delete()
+            .eq('sale_item_id', saleItem.id);
+
+          // Restore inventory quantities
+          if (saleItem.inventory_item_id) {
+            const { data: currentItem } = await supabase
               .from('inventory_items')
-              .update({ quantity: currentItem.quantity + item.quantity })
-              .eq('id', item.inventoryItemId);
+              .select('quantity')
+              .eq('id', saleItem.inventory_item_id)
+              .single();
+
+            if (currentItem) {
+              await supabase
+                .from('inventory_items')
+                .update({ quantity: currentItem.quantity + saleItem.quantity })
+                .eq('id', saleItem.inventory_item_id);
+            }
           }
         }
       }
@@ -248,7 +375,7 @@ export function useSales() {
 
       toast({
         title: 'Sale reverted',
-        description: 'Items have been restored to inventory',
+        description: 'Items have been restored to inventory and PO allocations cleared',
       });
 
       // Update local state
