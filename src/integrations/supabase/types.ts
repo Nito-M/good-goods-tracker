@@ -110,6 +110,7 @@ export type Database = {
           business_address: string | null
           business_email: string | null
           business_name: string | null
+          business_number: string | null
           business_phone: string | null
           created_at: string
           display_name: string | null
@@ -124,6 +125,7 @@ export type Database = {
           business_address?: string | null
           business_email?: string | null
           business_name?: string | null
+          business_number?: string | null
           business_phone?: string | null
           created_at?: string
           display_name?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           business_address?: string | null
           business_email?: string | null
           business_name?: string | null
+          business_number?: string | null
           business_phone?: string | null
           created_at?: string
           display_name?: string | null

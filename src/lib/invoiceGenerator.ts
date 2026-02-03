@@ -35,7 +35,7 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   }
 
   // Business Info (right side)
-  if (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail) {
+  if (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail || settings?.businessNumber) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     let businessY = 20;
@@ -59,6 +59,10 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     }
     if (settings.businessEmail) {
       doc.text(settings.businessEmail, pageWidth - 20, businessY, { align: 'right' });
+      businessY += 5;
+    }
+    if (settings.businessNumber) {
+      doc.text(`Business #: ${settings.businessNumber}`, pageWidth - 20, businessY, { align: 'right' });
     }
     
     y = Math.max(y, businessY + 10);

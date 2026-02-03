@@ -103,6 +103,7 @@ export function PurchaseOrders() {
       businessAddress: profile.businessAddress,
       businessPhone: profile.businessPhone,
       businessEmail: profile.businessEmail,
+      businessNumber: profile.businessNumber,
       thankYouNote: profile.invoiceThankYouNote,
     } : undefined;
     

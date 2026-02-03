@@ -55,5 +55,6 @@ export interface InvoiceSettings {
   businessAddress: string | null;
   businessPhone: string | null;
   businessEmail: string | null;
+  businessNumber: string | null;
   thankYouNote: string | null;
 }
