@@ -1,7 +1,9 @@
 import { Package, DollarSign, AlertTriangle } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
+import { SalesAnalyticsChart } from '@/components/SalesAnalyticsChart';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useSales } from '@/hooks/useSales';
 
 interface IndexProps {
   items: unknown[];
@@ -25,6 +27,8 @@ const Index = ({
   stats,
   loading,
 }: IndexProps) => {
+  const { sales, loading: salesLoading } = useSales();
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -75,6 +79,18 @@ const Index = ({
                 icon={AlertTriangle}
                 variant="warning"
               />
+            </div>
+
+            {/* Sales Analytics */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-4">Sales Analytics</h2>
+              {salesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-muted-foreground">Loading sales data...</div>
+                </div>
+              ) : (
+                <SalesAnalyticsChart sales={sales} />
+              )}
             </div>
 
             {/* Quick Actions */}
