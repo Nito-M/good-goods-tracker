@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Sale, SaleItem, CreateSaleInput } from '@/types/sale';
+import { createSaleSchema, validateInput } from '@/lib/validation';
 
 export function useSales() {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -81,10 +82,11 @@ export function useSales() {
       );
 
       setSales(salesWithItems);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Error fetching sales:', error);
       toast({
         title: 'Error fetching sales',
-        description: error.message,
+        description: 'Unable to load sales. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -159,6 +161,27 @@ export function useSales() {
 
   const createSale = async (input: CreateSaleInput): Promise<Sale | null> => {
     if (!user) return null;
+
+    // Validate input
+    const validation = validateInput(createSaleSchema, {
+      vendorId: input.vendorId,
+      invoiceNumber: input.invoiceNumber,
+      items: input.items,
+      taxRate: input.taxRate,
+      discountRate: input.discountRate,
+      notes: input.notes,
+      paymentTerms: input.paymentTerms,
+      dueDate: input.dueDate,
+    });
+    
+    if (!validation.success) {
+      toast({
+        title: 'Validation error',
+        description: validation.errors[0],
+        variant: 'destructive',
+      });
+      return null;
+    }
 
     try {
       // For each item, get FIFO costs from POs
@@ -287,10 +310,11 @@ export function useSales() {
 
       await fetchSales();
       return sales.find((s) => s.id === sale.id) || null;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Error creating sale:', error);
       toast({
         title: 'Error creating sale',
-        description: error.message,
+        description: 'Unable to create sale. Please try again.',
         variant: 'destructive',
       });
       return null;
@@ -309,10 +333,11 @@ export function useSales() {
       });
 
       setSales((prev) => prev.filter((s) => s.id !== id));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Error deleting sale:', error);
       toast({
         title: 'Error deleting sale',
-        description: error.message,
+        description: 'Unable to delete sale. Please try again.',
         variant: 'destructive',
       });
     }
@@ -384,10 +409,11 @@ export function useSales() {
           s.id === id ? { ...s, status: 'cancelled' as const } : s
         )
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Error reverting sale:', error);
       toast({
         title: 'Error reverting sale',
-        description: error.message,
+        description: 'Unable to revert sale. Please try again.',
         variant: 'destructive',
       });
     }

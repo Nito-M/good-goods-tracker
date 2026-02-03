@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { profileSchema, validateInput } from '@/lib/validation';
 
 export interface Profile {
   id: string;
@@ -74,18 +75,29 @@ export function useProfile() {
   const updateProfile = async (input: UpdateProfileInput) => {
     if (!user) return false;
 
+    // Validate input
+    const validation = validateInput(profileSchema.partial(), input);
+    if (!validation.success) {
+      toast({
+        title: 'Validation error',
+        description: validation.errors[0],
+        variant: 'destructive',
+      });
+      return false;
+    }
+
     try {
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, unknown> = {};
       
-      if (input.displayName !== undefined) updateData.display_name = input.displayName;
-      if (input.avatarUrl !== undefined) updateData.avatar_url = input.avatarUrl;
-      if (input.logoUrl !== undefined) updateData.logo_url = input.logoUrl;
-      if (input.businessName !== undefined) updateData.business_name = input.businessName;
-      if (input.businessAddress !== undefined) updateData.business_address = input.businessAddress;
-      if (input.businessPhone !== undefined) updateData.business_phone = input.businessPhone;
-      if (input.businessEmail !== undefined) updateData.business_email = input.businessEmail;
-      if (input.businessNumber !== undefined) updateData.business_number = input.businessNumber;
-      if (input.invoiceThankYouNote !== undefined) updateData.invoice_thank_you_note = input.invoiceThankYouNote;
+      if (validation.data.displayName !== undefined) updateData.display_name = validation.data.displayName;
+      if (validation.data.avatarUrl !== undefined) updateData.avatar_url = validation.data.avatarUrl;
+      if (validation.data.logoUrl !== undefined) updateData.logo_url = validation.data.logoUrl;
+      if (validation.data.businessName !== undefined) updateData.business_name = validation.data.businessName;
+      if (validation.data.businessAddress !== undefined) updateData.business_address = validation.data.businessAddress;
+      if (validation.data.businessPhone !== undefined) updateData.business_phone = validation.data.businessPhone;
+      if (validation.data.businessEmail !== undefined) updateData.business_email = validation.data.businessEmail;
+      if (validation.data.businessNumber !== undefined) updateData.business_number = validation.data.businessNumber;
+      if (validation.data.invoiceThankYouNote !== undefined) updateData.invoice_thank_you_note = validation.data.invoiceThankYouNote;
 
       const { error } = await supabase
         .from('profiles')
@@ -101,10 +113,11 @@ export function useProfile() {
 
       await fetchProfile();
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Error saving settings:', error);
       toast({
         title: 'Error saving settings',
-        description: error.message,
+        description: 'Unable to save settings. Please try again.',
         variant: 'destructive',
       });
       return false;

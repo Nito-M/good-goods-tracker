@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { vendorSchema, validateInput } from '@/lib/validation';
 
 export interface Vendor {
   id: string;
@@ -53,15 +54,31 @@ export function useVendors() {
   const addVendor = async (vendor: Omit<Vendor, 'id' | 'created_at' | 'updated_at'>) => {
     if (!user) return;
 
-    const { error } = await supabase.from('vendors').insert({
-      ...vendor,
+    // Validate input
+    const validation = validateInput(vendorSchema, vendor);
+    if (!validation.success) {
+      toast({
+        title: 'Validation error',
+        description: validation.errors[0],
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { error } = await supabase.from('vendors').insert([{
+      name: validation.data.name,
+      contact_email: validation.data.contact_email ?? null,
+      contact_phone: validation.data.contact_phone ?? null,
+      address: validation.data.address ?? null,
+      notes: validation.data.notes ?? null,
       user_id: user.id,
-    });
+    }]);
 
     if (error) {
+      console.error('Error adding vendor:', error);
       toast({
         title: 'Error adding vendor',
-        description: error.message,
+        description: 'Unable to add vendor. Please try again.',
         variant: 'destructive',
       });
       return;
@@ -72,15 +89,28 @@ export function useVendors() {
   };
 
   const updateVendor = async (id: string, updates: Partial<Vendor>) => {
+    // Validate partial update - only validate provided fields
+    const partialSchema = vendorSchema.partial();
+    const validation = validateInput(partialSchema, updates);
+    if (!validation.success) {
+      toast({
+        title: 'Validation error',
+        description: validation.errors[0],
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from('vendors')
-      .update(updates)
+      .update(validation.data)
       .eq('id', id);
 
     if (error) {
+      console.error('Error updating vendor:', error);
       toast({
         title: 'Error updating vendor',
-        description: error.message,
+        description: 'Unable to update vendor. Please try again.',
         variant: 'destructive',
       });
       return;
@@ -97,9 +127,10 @@ export function useVendors() {
       .eq('id', id);
 
     if (error) {
+      console.error('Error deleting vendor:', error);
       toast({
         title: 'Error deleting vendor',
-        description: error.message,
+        description: 'Unable to delete vendor. It may be in use by other records.',
         variant: 'destructive',
       });
       return;

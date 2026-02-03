@@ -11,6 +11,7 @@ import {
   deleteItem as deleteFromDb,
   addToSyncQueue,
 } from '@/lib/offlineDb';
+import { inventoryItemSchema, validateInput } from '@/lib/validation';
 
 interface DbInventoryItem {
   id: string;
@@ -125,9 +126,10 @@ export function useInventory() {
 
       if (error) {
         if (items.length === 0) {
+          console.error('Error loading inventory:', error);
           toast({
             title: 'Error loading inventory',
-            description: error.message,
+            description: 'Unable to load inventory. Please try again.',
             variant: 'destructive',
           });
         }
@@ -181,7 +183,18 @@ export function useInventory() {
       return;
     }
 
-    const dbItem = inventoryItemToDb(item, user.id);
+    // Validate input
+    const validation = validateInput(inventoryItemSchema, item);
+    if (!validation.success) {
+      toast({
+        title: 'Validation error',
+        description: validation.errors[0],
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const dbItem = inventoryItemToDb(validation.data as Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>, user.id);
 
     // Save locally first
     await put('inventory_items', dbItem as unknown as Record<string, unknown>);
