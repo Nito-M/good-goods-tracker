@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -107,6 +107,9 @@ export function Settings() {
   const [businessEmail, setBusinessEmail] = useState('');
   const [businessNumber, setBusinessNumber] = useState('');
   const [invoiceThankYouNote, setInvoiceThankYouNote] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Load profile data into form
   useEffect(() => {
@@ -117,8 +120,42 @@ export function Settings() {
       setBusinessEmail(profile.businessEmail || '');
       setBusinessNumber(profile.businessNumber || '');
       setInvoiceThankYouNote(profile.invoiceThankYouNote || 'Thank you for your business!');
+      setLogoUrl(profile.logoUrl || '');
     }
   }, [profile]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/logo.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('logos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('logos')
+        .getPublicUrl(filePath);
+
+      setLogoUrl(publicUrl);
+      await updateProfile({ logoUrl: publicUrl });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    setLogoUrl('');
+    await updateProfile({ logoUrl: null });
+  };
 
   // Vendor dialog state
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
@@ -344,6 +381,52 @@ export function Settings() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSaveInvoiceSettings} className="space-y-6">
+                  {/* Logo Upload */}
+                  <div className="space-y-2">
+                    <Label>Business Logo</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Upload a 40x40 logo that will appear on your invoices
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="relative w-10 h-10 rounded border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => logoInputRef.current?.click()}
+                      >
+                        {logoUrl ? (
+                          <img 
+                            src={logoUrl} 
+                            alt="Business logo" 
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <Upload className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <input
+                          ref={logoInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                      </div>
+                      {logoUrl && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRemoveLogo}
+                          className="gap-1"
+                        >
+                          <X className="h-3 w-3" />
+                          Remove
+                        </Button>
+                      )}
+                      {uploadingLogo && (
+                        <span className="text-sm text-muted-foreground">Uploading...</span>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Business Information */}
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium">Business Information</h4>
