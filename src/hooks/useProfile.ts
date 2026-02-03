@@ -16,6 +16,9 @@ export interface Profile {
   businessEmail: string | null;
   businessNumber: string | null;
   invoiceThankYouNote: string | null;
+  theme: string | null;
+  colorTheme: string | null;
+  backgroundTheme: string | null;
 }
 
 export interface UpdateProfileInput {
@@ -28,6 +31,9 @@ export interface UpdateProfileInput {
   businessEmail?: string | null;
   businessNumber?: string | null;
   invoiceThankYouNote?: string | null;
+  theme?: string | null;
+  colorTheme?: string | null;
+  backgroundTheme?: string | null;
 }
 
 export function useProfile() {
@@ -60,6 +66,9 @@ export function useProfile() {
         businessEmail: data.business_email,
         businessNumber: data.business_number,
         invoiceThankYouNote: data.invoice_thank_you_note,
+        theme: data.theme,
+        colorTheme: data.color_theme,
+        backgroundTheme: data.background_theme,
       });
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
@@ -98,6 +107,9 @@ export function useProfile() {
       if (validation.data.businessEmail !== undefined) updateData.business_email = validation.data.businessEmail;
       if (validation.data.businessNumber !== undefined) updateData.business_number = validation.data.businessNumber;
       if (validation.data.invoiceThankYouNote !== undefined) updateData.invoice_thank_you_note = validation.data.invoiceThankYouNote;
+      if (validation.data.theme !== undefined) updateData.theme = validation.data.theme;
+      if (validation.data.colorTheme !== undefined) updateData.color_theme = validation.data.colorTheme;
+      if (validation.data.backgroundTheme !== undefined) updateData.background_theme = validation.data.backgroundTheme;
 
       const { error } = await supabase
         .from('profiles')

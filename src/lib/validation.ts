@@ -36,6 +36,9 @@ export const profileSchema = z.object({
   businessEmail: optionalEmail,
   businessNumber: z.string().max(100, 'Business number must be less than 100 characters').optional().nullable(),
   invoiceThankYouNote: z.string().max(500, 'Thank you note must be less than 500 characters').optional().nullable(),
+  theme: z.string().max(20).optional().nullable(),
+  colorTheme: z.string().max(20).optional().nullable(),
+  backgroundTheme: z.string().max(20).optional().nullable(),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
