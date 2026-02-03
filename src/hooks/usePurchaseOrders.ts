@@ -162,6 +162,17 @@ export function usePurchaseOrders() {
   };
 
   const markAsReceived = async (orderId: string) => {
+    // Get the order to access its items and costs
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) {
+      toast({
+        title: 'Order not found',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    // Update the purchase order status
     const { error } = await supabase
       .from('purchase_orders')
       .update({
@@ -179,7 +190,34 @@ export function usePurchaseOrders() {
       return false;
     }
 
-    toast({ title: 'Order marked as received' });
+    // Update inventory items with new costs and quantities
+    for (const item of order.items) {
+      // Find matching inventory item by SKU
+      const { data: inventoryItem } = await supabase
+        .from('inventory_items')
+        .select('id, quantity, cost')
+        .eq('sku', item.sku)
+        .eq('user_id', user!.id)
+        .single();
+
+      if (inventoryItem) {
+        const updates: Record<string, unknown> = {
+          quantity: inventoryItem.quantity + item.quantity,
+        };
+
+        // Update cost if provided in the PO
+        if (item.unitCost !== undefined && item.unitCost > 0) {
+          updates.cost = item.unitCost;
+        }
+
+        await supabase
+          .from('inventory_items')
+          .update(updates)
+          .eq('id', inventoryItem.id);
+      }
+    }
+
+    toast({ title: 'Order marked as received', description: 'Inventory updated with new quantities and costs' });
     fetchOrders();
     return true;
   };
