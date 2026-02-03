@@ -21,6 +21,28 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     });
   };
 
+  // Add logo if available (top left, 40x40 max)
+  if (settings?.logoUrl) {
+    try {
+      const img = await loadImage(settings.logoUrl);
+      const maxSize = 40 * 0.352778; // Convert 40px to mm (approx 14mm)
+      let imgWidth = maxSize;
+      let imgHeight = maxSize;
+      
+      // Maintain aspect ratio
+      const aspectRatio = img.width / img.height;
+      if (aspectRatio > 1) {
+        imgHeight = imgWidth / aspectRatio;
+      } else {
+        imgWidth = imgHeight * aspectRatio;
+      }
+      
+      doc.addImage(img, 'PNG', 20, y, imgWidth, imgHeight);
+      y = 20 + imgHeight + 5;
+    } catch (error) {
+      console.error('Failed to load logo:', error);
+    }
+  }
 
   // Business Info (right side)
   if (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail || settings?.businessNumber) {

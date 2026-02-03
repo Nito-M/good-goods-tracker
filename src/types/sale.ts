@@ -62,4 +62,5 @@ export interface InvoiceSettings {
   businessEmail: string | null;
   businessNumber: string | null;
   thankYouNote: string | null;
+  logoUrl: string | null;
 }
