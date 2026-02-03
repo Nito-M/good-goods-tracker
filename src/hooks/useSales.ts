@@ -189,11 +189,73 @@ export function useSales() {
     }
   };
 
+  const revertSale = async (id: string) => {
+    try {
+      // Find the sale to revert
+      const sale = sales.find((s) => s.id === id);
+      if (!sale) throw new Error('Sale not found');
+
+      if (sale.status === 'cancelled') {
+        toast({
+          title: 'Already reverted',
+          description: 'This sale has already been reverted',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Restore inventory quantities for each item
+      for (const item of sale.items) {
+        if (item.inventoryItemId) {
+          const { data: currentItem } = await supabase
+            .from('inventory_items')
+            .select('quantity')
+            .eq('id', item.inventoryItemId)
+            .single();
+
+          if (currentItem) {
+            await supabase
+              .from('inventory_items')
+              .update({ quantity: currentItem.quantity + item.quantity })
+              .eq('id', item.inventoryItemId);
+          }
+        }
+      }
+
+      // Update sale status to cancelled
+      const { error } = await supabase
+        .from('sales')
+        .update({ status: 'cancelled' })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sale reverted',
+        description: 'Items have been restored to inventory',
+      });
+
+      // Update local state
+      setSales((prev) =>
+        prev.map((s) =>
+          s.id === id ? { ...s, status: 'cancelled' as const } : s
+        )
+      );
+    } catch (error: any) {
+      toast({
+        title: 'Error reverting sale',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     sales,
     loading,
     createSale,
     deleteSale,
+    revertSale,
     refetch: fetchSales,
   };
 }
