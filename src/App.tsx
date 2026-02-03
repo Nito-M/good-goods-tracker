@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
+import { Items } from "./pages/Items";
 import { ItemDetails } from "./pages/ItemDetails";
 import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
@@ -66,6 +67,27 @@ function AppContent() {
                 <Index
                   items={items}
                   stats={stats}
+                  loading={loading}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                  categories={allCategories}
+                  onEdit={handleEdit}
+                  onDelete={deleteItem}
+                  onOpenDialog={() => setDialogOpen(true)}
+                />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/items"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Items
+                  items={items}
                   loading={loading}
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
