@@ -18,7 +18,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
-import { LogoUpload } from '@/components/LogoUpload';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
@@ -64,7 +64,6 @@ export function Sales() {
 
   // Build invoice settings from profile
   const invoiceSettings: InvoiceSettings = useMemo(() => ({
-    logoUrl: profile?.logoUrl || null,
     businessName: profile?.businessName || null,
     businessAddress: profile?.businessAddress || null,
     businessPhone: profile?.businessPhone || null,
@@ -198,7 +197,7 @@ export function Sales() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <LogoUpload />
+              
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground font-sans">
                   Sales
