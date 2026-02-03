@@ -172,6 +172,15 @@ export function usePurchaseOrders() {
       return false;
     }
 
+    // Prevent duplicate inventory updates if already received
+    if (order.status === 'received') {
+      toast({
+        title: 'Order already received',
+        description: 'This order has already been marked as received.',
+      });
+      return false;
+    }
+
     // Update the purchase order status
     const { error } = await supabase
       .from('purchase_orders')
