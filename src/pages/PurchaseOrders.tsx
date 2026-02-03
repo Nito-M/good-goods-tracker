@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
 
-import { LogoUpload } from '@/components/LogoUpload';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 
@@ -44,7 +44,6 @@ export function PurchaseOrders() {
 
   const handleDownload = async (order: PurchaseOrder) => {
     const settings = profile ? {
-      logoUrl: profile.logoUrl,
       businessName: profile.businessName,
       businessAddress: profile.businessAddress,
       businessPhone: profile.businessPhone,
@@ -78,7 +77,7 @@ export function PurchaseOrders() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <LogoUpload />
+              
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground font-sans">
                   Purchase Orders

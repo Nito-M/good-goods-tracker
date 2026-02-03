@@ -22,18 +22,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   const TAX_RATE = 0.05;
   const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
 
-  // Add logo if available
-  if (settings?.logoUrl) {
-    try {
-      const img = await loadImage(settings.logoUrl);
-      const imgWidth = 40;
-      const imgHeight = (img.height / img.width) * imgWidth;
-      doc.addImage(img, 'PNG', 20, y, imgWidth, Math.min(imgHeight, 40));
-      y += Math.min(imgHeight, 40) + 10;
-    } catch (e) {
-      console.error('Failed to load logo:', e);
-    }
-  }
 
   // Business Info (right side)
   if (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail || settings?.businessNumber) {

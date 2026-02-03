@@ -12,7 +12,7 @@ import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCategories } from '@/hooks/useCategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogoUpload } from '@/components/LogoUpload';
+
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
 import {
   Dialog,
@@ -163,7 +163,6 @@ export function Settings() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-24 items-center justify-between">
             <div className="flex items-center gap-4">
-              <LogoUpload />
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground font-sans">
                   Settings
@@ -310,15 +309,6 @@ export function Settings() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSaveInvoiceSettings} className="space-y-6">
-                  {/* Logo Section */}
-                  <div className="space-y-2">
-                    <Label>Company Logo</Label>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Upload a logo to appear on your invoices
-                    </p>
-                    <LogoUpload />
-                  </div>
-
                   {/* Business Information */}
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium">Business Information</h4>

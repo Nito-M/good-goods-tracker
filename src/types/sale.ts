@@ -56,7 +56,6 @@ export interface CreateSaleInput {
 }
 
 export interface InvoiceSettings {
-  logoUrl: string | null;
   businessName: string | null;
   businessAddress: string | null;
   businessPhone: string | null;
