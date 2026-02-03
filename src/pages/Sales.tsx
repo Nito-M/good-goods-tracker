@@ -20,6 +20,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { Link } from 'react-router-dom';
 import { LogoUpload } from '@/components/LogoUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   Card,
   CardContent,
@@ -178,6 +179,11 @@ export function Sales() {
       style: 'currency',
       currency: 'USD',
     }).format(value);
+  };
+
+  const getMonthKey = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
   return (
@@ -563,18 +569,72 @@ export function Sales() {
                 {/* Analytics Charts */}
                 <SalesAnalyticsChart sales={sales} />
                 
-                {/* Sales List */}
+                {/* Sales List grouped by month */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">All Sales</h3>
-                  {sales.map((sale) => (
-                    <SaleCard
-                      key={sale.id}
-                      sale={sale}
-                      onDelete={deleteSale}
-                      onRevert={revertSale}
-                      onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
-                    />
-                  ))}
+                  <h3 className="text-lg font-semibold">Sales History</h3>
+                  <Accordion type="multiple" defaultValue={[getMonthKey(new Date())]} className="w-full space-y-2">
+                    {(() => {
+                      // Group sales by month
+                      const salesByMonth = sales.reduce((acc, sale) => {
+                        const monthKey = getMonthKey(sale.createdAt);
+                        if (!acc[monthKey]) {
+                          acc[monthKey] = [];
+                        }
+                        acc[monthKey].push(sale);
+                        return acc;
+                      }, {} as Record<string, typeof sales>);
+
+                      // Sort months in descending order (most recent first)
+                      const sortedMonths = Object.keys(salesByMonth).sort((a, b) => {
+                        const [aMonth, aYear] = a.split(' ');
+                        const [bMonth, bYear] = b.split(' ');
+                        const aDate = new Date(`${aMonth} 1, ${aYear}`);
+                        const bDate = new Date(`${bMonth} 1, ${bYear}`);
+                        return bDate.getTime() - aDate.getTime();
+                      });
+
+                      return sortedMonths.map((monthKey) => {
+                        const monthSales = salesByMonth[monthKey];
+                        const monthTotal = monthSales.reduce((sum, s) => sum + s.total, 0);
+                        const monthProfit = monthSales.reduce((sum, s) => {
+                          const cost = s.items.reduce((itemSum, item) => itemSum + (item.unitCost * item.quantity), 0);
+                          return sum + (s.total - cost);
+                        }, 0);
+
+                        return (
+                          <AccordionItem key={monthKey} value={monthKey} className="border rounded-lg px-4">
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-center justify-between w-full pr-4">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-semibold">{monthKey}</span>
+                                  <Badge variant="secondary">{monthSales.length} {monthSales.length === 1 ? 'sale' : 'sales'}</Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <span className="text-muted-foreground">
+                                    Revenue: <span className="font-medium text-foreground">{formatCurrency(monthTotal)}</span>
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    Profit: <span className="font-medium text-success">{formatCurrency(monthProfit)}</span>
+                                  </span>
+                                </div>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-3 pt-2">
+                              {monthSales.map((sale) => (
+                                <SaleCard
+                                  key={sale.id}
+                                  sale={sale}
+                                  onDelete={deleteSale}
+                                  onRevert={revertSale}
+                                  onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
+                                />
+                              ))}
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      });
+                    })()}
+                  </Accordion>
                 </div>
               </div>
             )}
