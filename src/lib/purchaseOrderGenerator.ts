@@ -19,6 +19,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     }).format(value);
   };
 
+  const TAX_RATE = 0.05;
   const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
 
   // Add logo if available
@@ -141,7 +142,9 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
 
   // Totals
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalCost = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+  const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+  const taxAmount = subtotal * TAX_RATE;
+  const totalCost = subtotal + taxAmount;
   
   doc.setFont('helvetica', 'bold');
   doc.text('Total Items:', pageWidth - 70, y);
@@ -149,7 +152,14 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   
   if (hasAnyCost) {
     y += 7;
-    doc.text('Total Cost:', pageWidth - 70, y);
+    doc.text('Subtotal:', pageWidth - 70, y);
+    doc.text(formatCurrency(subtotal), pageWidth - 22, y, { align: 'right' });
+    y += 7;
+    doc.text('Tax (5%):', pageWidth - 70, y);
+    doc.text(formatCurrency(taxAmount), pageWidth - 22, y, { align: 'right' });
+    y += 7;
+    doc.setFontSize(11);
+    doc.text('Total:', pageWidth - 70, y);
     doc.text(formatCurrency(totalCost), pageWidth - 22, y, { align: 'right' });
   }
 

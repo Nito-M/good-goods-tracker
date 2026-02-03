@@ -34,8 +34,11 @@ export function PurchaseOrderCard({
   onDownload,
   loading,
 }: PurchaseOrderCardProps) {
+  const TAX_RATE = 0.05;
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalCost = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+  const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+  const taxAmount = subtotal * TAX_RATE;
+  const totalCost = subtotal + taxAmount;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -120,11 +123,21 @@ export function PurchaseOrderCard({
                 <Package className="h-4 w-4 text-muted-foreground" />
                 <span>Total Qty: {totalQuantity}</span>
               </div>
-              {totalCost > 0 && (
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span>Total: {formatCurrency(totalCost)}</span>
-                </div>
+              {subtotal > 0 && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <span>Subtotal: {formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <span>Tax (5%): {formatCurrency(taxAmount)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 col-span-2 font-semibold">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <span>Total: {formatCurrency(totalCost)}</span>
+                  </div>
+                </>
               )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
