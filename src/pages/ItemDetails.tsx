@@ -26,9 +26,9 @@ export function ItemDetails({ items, onEdit, onDelete }: ItemDetailsProps) {
           <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-card-foreground mb-2">Item Not Found</h2>
           <p className="text-muted-foreground mb-4">The item you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/')}>
+          <Button onClick={() => navigate('/items')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Inventory
+            Back to Items & Inventory
           </Button>
         </div>
       </div>
@@ -47,12 +47,12 @@ export function ItemDetails({ items, onEdit, onDelete }: ItemDetailsProps) {
 
   const handleEdit = () => {
     onEdit(item);
-    navigate('/');
+    navigate('/items');
   };
 
   const handleDelete = () => {
     onDelete(item.id);
-    navigate('/');
+    navigate('/items');
   };
 
   return (
@@ -61,9 +61,9 @@ export function ItemDetails({ items, onEdit, onDelete }: ItemDetailsProps) {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate('/')} className="gap-2">
+            <Button variant="ghost" onClick={() => navigate('/items')} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Inventory
+              Back to Items & Inventory
             </Button>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleEdit} className="gap-2">
