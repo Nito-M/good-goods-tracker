@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { InventoryItem, Dimensions } from '@/types/inventory';
+import { Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,12 +27,13 @@ interface AddItemDialogProps {
   onSave: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
   editItem?: InventoryItem | null;
   onUpdate?: (id: string, updates: Partial<InventoryItem>) => void;
+  onDelete?: (id: string) => void;
   categories: string[];
 }
 
 const DEFAULT_DIMENSIONS: Dimensions = { length: 0, width: 0, height: 0, unit: 'in' };
 
-export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, categories }: AddItemDialogProps) {
+export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, onDelete, categories }: AddItemDialogProps) {
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [category, setCategory] = useState<string>(categories[0] || 'Other');
@@ -297,13 +299,31 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
             </div>
           </form>
         </ScrollArea>
-        <DialogFooter className="pt-4">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" form="item-form">
-            {editItem ? 'Save Changes' : 'Add Item'}
-          </Button>
+        <DialogFooter className="pt-4 flex-col sm:flex-row gap-2">
+          <div className="flex-1">
+            {editItem && onDelete && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  onDelete(editItem.id);
+                  onOpenChange(false);
+                }}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Item
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="item-form">
+              {editItem ? 'Save Changes' : 'Add Item'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
