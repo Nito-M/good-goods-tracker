@@ -1,4 +1,4 @@
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 
@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button";
 import { LogoUpload } from "@/components/LogoUpload";
 
 const menuItems = [
-  { title: "Inventory", url: "/", icon: Home },
+  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Items", url: "/items", icon: Package },
   { title: "Sales", url: "/sales", icon: ShoppingCart },
   { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
   { title: "Settings", url: "/settings", icon: Settings },
@@ -31,8 +32,8 @@ export function AppSidebar() {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    if (path === "/") {
-      return location.pathname === "/" || location.pathname.startsWith("/item/");
+    if (path === "/items") {
+      return location.pathname === "/items" || location.pathname.startsWith("/item/");
     }
     return location.pathname === path;
   };
