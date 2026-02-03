@@ -181,6 +181,18 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice }: SaleCa
               <span>Total</span>
               <span>{formatCurrency(sale.total)}</span>
             </div>
+            {sale.status === 'completed' && sale.totalCost > 0 && (
+              <div className="flex justify-between text-sm pt-2 border-t mt-2">
+                <span className="text-muted-foreground">Cost</span>
+                <span>{formatCurrency(sale.totalCost)}</span>
+              </div>
+            )}
+            {sale.status === 'completed' && sale.totalCost > 0 && (
+              <div className="flex justify-between font-bold text-green-600">
+                <span>Profit</span>
+                <span>{formatCurrency(sale.totalProfit)}</span>
+              </div>
+            )}
           </div>
 
           {/* Notes */}

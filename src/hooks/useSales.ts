@@ -31,6 +31,29 @@ export function useSales() {
             .select('*')
             .eq('sale_id', sale.id);
 
+          const mappedItems = (items || []).map((item) => {
+            const unitCost = Number(item.unit_cost) || 0;
+            const totalCost = unitCost * item.quantity;
+            const totalPrice = Number(item.total_price);
+            return {
+              id: item.id,
+              saleId: item.sale_id,
+              inventoryItemId: item.inventory_item_id,
+              itemName: item.item_name,
+              sku: item.sku,
+              quantity: item.quantity,
+              unitPrice: Number(item.unit_price),
+              unitCost,
+              totalPrice,
+              totalCost,
+              profit: totalPrice - totalCost,
+              createdAt: item.created_at,
+            };
+          });
+
+          const totalCost = mappedItems.reduce((sum, item) => sum + item.totalCost, 0);
+          const totalProfit = mappedItems.reduce((sum, item) => sum + item.profit, 0);
+
           return {
             id: sale.id,
             userId: sale.user_id,
@@ -40,6 +63,8 @@ export function useSales() {
             invoiceNumber: sale.invoice_number,
             status: sale.status as Sale['status'],
             subtotal: Number(sale.subtotal),
+            totalCost,
+            totalProfit,
             taxRate: Number(sale.tax_rate),
             taxAmount: Number(sale.tax_amount),
             discountRate: Number(sale.discount_rate),
@@ -48,17 +73,7 @@ export function useSales() {
             notes: sale.notes,
             paymentTerms: sale.payment_terms,
             dueDate: sale.due_date,
-            items: (items || []).map((item) => ({
-              id: item.id,
-              saleId: item.sale_id,
-              inventoryItemId: item.inventory_item_id,
-              itemName: item.item_name,
-              sku: item.sku,
-              quantity: item.quantity,
-              unitPrice: Number(item.unit_price),
-              totalPrice: Number(item.total_price),
-              createdAt: item.created_at,
-            })),
+            items: mappedItems,
             createdAt: sale.created_at,
             updatedAt: sale.updated_at,
           };
@@ -126,6 +141,7 @@ export function useSales() {
         sku: item.sku,
         quantity: item.quantity,
         unit_price: item.unitPrice,
+        unit_cost: item.unitCost,
         total_price: item.quantity * item.unitPrice,
       }));
 

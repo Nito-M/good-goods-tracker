@@ -151,6 +151,7 @@ export function Sales() {
         sku: c.inventoryItem.sku,
         quantity: c.quantity,
         unitPrice: c.inventoryItem.price,
+        unitCost: c.inventoryItem.cost,
       })),
       taxRate,
       discountRate,

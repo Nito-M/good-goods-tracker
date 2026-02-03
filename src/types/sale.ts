@@ -6,7 +6,10 @@ export interface SaleItem {
   sku: string;
   quantity: number;
   unitPrice: number;
+  unitCost: number;
   totalPrice: number;
+  totalCost: number;
+  profit: number;
   createdAt: string;
 }
 
@@ -19,6 +22,8 @@ export interface Sale {
   invoiceNumber: string;
   status: 'draft' | 'completed' | 'cancelled';
   subtotal: number;
+  totalCost: number;
+  totalProfit: number;
   taxRate: number;
   taxAmount: number;
   discountRate: number;
@@ -41,6 +46,7 @@ export interface CreateSaleInput {
     sku: string;
     quantity: number;
     unitPrice: number;
+    unitCost: number;
   }[];
   taxRate: number;
   discountRate: number;
