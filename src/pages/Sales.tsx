@@ -55,7 +55,7 @@ interface CartItem {
 
 export function Sales() {
   const { signOut } = useAuth();
-  const { sales, loading, createSale, deleteSale } = useSales();
+  const { sales, loading, createSale, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -562,6 +562,7 @@ export function Sales() {
                     key={sale.id}
                     sale={sale}
                     onDelete={deleteSale}
+                    onRevert={revertSale}
                     onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
                   />
                 ))}

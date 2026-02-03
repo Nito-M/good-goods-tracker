@@ -1,4 +1,4 @@
-import { Download, Trash2, Building2, Calendar, FileText } from 'lucide-react';
+import { Download, Trash2, Building2, Calendar, FileText, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -24,10 +24,11 @@ import { Sale } from '@/types/sale';
 interface SaleCardProps {
   sale: Sale;
   onDelete: (id: string) => void;
+  onRevert: (id: string) => void;
   onDownloadInvoice: () => void;
 }
 
-export function SaleCard({ sale, onDelete, onDownloadInvoice }: SaleCardProps) {
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice }: SaleCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -43,17 +44,24 @@ export function SaleCard({ sale, onDelete, onDownloadInvoice }: SaleCardProps) {
     });
   };
 
+  const getStatusBadge = () => {
+    switch (sale.status) {
+      case 'completed':
+        return <Badge variant="default">completed</Badge>;
+      case 'cancelled':
+        return <Badge variant="secondary">reverted</Badge>;
+      default:
+        return <Badge variant="secondary">{sale.status}</Badge>;
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg">{sale.invoiceNumber}</CardTitle>
-            <Badge
-              variant={sale.status === 'completed' ? 'default' : 'secondary'}
-            >
-              {sale.status}
-            </Badge>
+            {getStatusBadge()}
           </div>
           <CardDescription className="flex items-center gap-4">
             <span className="flex items-center gap-1">
@@ -73,6 +81,30 @@ export function SaleCard({ sale, onDelete, onDownloadInvoice }: SaleCardProps) {
             <Download className="h-4 w-4 mr-2" />
             Invoice
           </Button>
+          {sale.status === 'completed' && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="icon" title="Revert sale">
+                  <Undo2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Revert Sale?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will mark {sale.invoiceNumber} as reverted and restore all
+                    items back to inventory.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onRevert(sale.id)}>
+                    Revert Sale
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="icon" className="text-destructive">
