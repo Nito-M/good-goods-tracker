@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { SaleCard } from '@/components/SaleCard';
-import { SalesAnalyticsChart } from '@/components/SalesAnalyticsChart';
+
 import { InventoryItem } from '@/types/inventory';
 import { InvoiceSettings } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
@@ -565,14 +565,9 @@ export function Sales() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-6">
-                {/* Analytics Charts */}
-                <SalesAnalyticsChart sales={sales} />
-                
+              <div className="space-y-4">
                 {/* Sales List grouped by month */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Sales History</h3>
-                  <Accordion type="multiple" className="w-full space-y-2">
+                <Accordion type="multiple" className="w-full space-y-2">
                     {(() => {
                       // Group sales by month
                       const salesByMonth = sales.reduce((acc, sale) => {
@@ -635,7 +630,6 @@ export function Sales() {
                       });
                     })()}
                   </Accordion>
-                </div>
               </div>
             )}
           </TabsContent>
