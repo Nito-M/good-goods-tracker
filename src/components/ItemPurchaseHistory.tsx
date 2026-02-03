@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ShoppingCart, Package, CheckCircle } from 'lucide-react';
 
 interface PurchaseHistoryItem {
@@ -253,111 +254,124 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
           </div>
         </div>
 
-        {/* Purchase Orders Table */}
-        <div>
-          <h4 className="font-semibold text-card-foreground mb-3 flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            Purchase Orders ({purchases.length})
-          </h4>
-          {purchases.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No purchase orders found for this item.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>PO Number</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Qty Ordered</TableHead>
-                  <TableHead className="text-right">Qty Sold</TableHead>
-                  <TableHead className="text-right">Remaining</TableHead>
-                  <TableHead className="text-right">Unit Cost</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {purchases.map((purchase) => (
-                  <TableRow key={purchase.id}>
-                    <TableCell className="font-medium">{purchase.poNumber || 'N/A'}</TableCell>
-                    <TableCell>{formatDate(purchase.orderedAt)}</TableCell>
-                    <TableCell className="text-right">{purchase.quantity}</TableCell>
-                    <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {purchase.status === 'received' ? purchase.remainingQuantity : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(purchase.unitCost)}</TableCell>
-                    <TableCell>
-                      {purchase.status === 'received' ? (
-                        purchase.remainingQuantity === 0 ? (
-                          <Badge className="bg-muted text-muted-foreground hover:bg-muted">
-                            All Sold
-                          </Badge>
-                        ) : purchase.soldQuantity > 0 ? (
-                          <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-                            Partial
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-success/10 text-success hover:bg-success/20">
-                            In Stock
-                          </Badge>
-                        )
-                      ) : (
-                        <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
-                          Ordered
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+        {/* Collapsible Purchase Orders & Sales */}
+        <Accordion type="multiple" className="w-full space-y-2">
+          {/* Purchase Orders Accordion */}
+          <AccordionItem value="purchases" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                <span className="font-semibold">Purchase Orders</span>
+                <Badge variant="secondary" className="ml-2">{purchases.length}</Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              {purchases.length === 0 ? (
+                <p className="text-muted-foreground text-sm py-2">No purchase orders found for this item.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>PO Number</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Qty Ordered</TableHead>
+                      <TableHead className="text-right">Qty Sold</TableHead>
+                      <TableHead className="text-right">Remaining</TableHead>
+                      <TableHead className="text-right">Unit Cost</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {purchases.map((purchase) => (
+                      <TableRow key={purchase.id}>
+                        <TableCell className="font-medium">{purchase.poNumber || 'N/A'}</TableCell>
+                        <TableCell>{formatDate(purchase.orderedAt)}</TableCell>
+                        <TableCell className="text-right">{purchase.quantity}</TableCell>
+                        <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {purchase.status === 'received' ? purchase.remainingQuantity : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">{formatCurrency(purchase.unitCost)}</TableCell>
+                        <TableCell>
+                          {purchase.status === 'received' ? (
+                            purchase.remainingQuantity === 0 ? (
+                              <Badge className="bg-muted text-muted-foreground hover:bg-muted">
+                                All Sold
+                              </Badge>
+                            ) : purchase.soldQuantity > 0 ? (
+                              <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
+                                Partial
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-success/10 text-success hover:bg-success/20">
+                                In Stock
+                              </Badge>
+                            )
+                          ) : (
+                            <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
+                              Ordered
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </AccordionContent>
+          </AccordionItem>
 
-        {/* Sales Table */}
-        <div>
-          <h4 className="font-semibold text-card-foreground mb-3 flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Sales ({soldItems.length})
-          </h4>
-          {soldItems.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No sales recorded for this item.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>From PO</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Sale Price</TableHead>
-                  <TableHead className="text-right">Cost</TableHead>
-                  <TableHead className="text-right">Profit</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {soldItems.map((sale, index) => (
-                  <TableRow key={`${sale.saleId}-${index}`}>
-                    <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
-                    <TableCell>
-                      {sale.poNumber ? (
-                        <Badge variant="outline">{sale.poNumber}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{formatDate(sale.createdAt)}</TableCell>
-                    <TableCell className="text-right">{sale.quantity}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(sale.unitPrice)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(sale.unitCost)}</TableCell>
-                    <TableCell className="text-right text-success font-medium">
-                      {formatCurrency(sale.profit)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+          {/* Sales Accordion */}
+          <AccordionItem value="sales" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                <span className="font-semibold">Sales</span>
+                <Badge variant="secondary" className="ml-2">{soldItems.length}</Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              {soldItems.length === 0 ? (
+                <p className="text-muted-foreground text-sm py-2">No sales recorded for this item.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice #</TableHead>
+                      <TableHead>From PO</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Qty</TableHead>
+                      <TableHead className="text-right">Sale Price</TableHead>
+                      <TableHead className="text-right">Cost</TableHead>
+                      <TableHead className="text-right">Profit</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {soldItems.map((sale, index) => (
+                      <TableRow key={`${sale.saleId}-${index}`}>
+                        <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
+                        <TableCell>
+                          {sale.poNumber ? (
+                            <Badge variant="outline">{sale.poNumber}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{formatDate(sale.createdAt)}</TableCell>
+                        <TableCell className="text-right">{sale.quantity}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(sale.unitPrice)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(sale.unitCost)}</TableCell>
+                        <TableCell className="text-right text-success font-medium">
+                          {formatCurrency(sale.profit)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </CardContent>
     </Card>
   );
