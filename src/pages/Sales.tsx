@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { SaleCard } from '@/components/SaleCard';
+import { SalesAnalyticsChart } from '@/components/SalesAnalyticsChart';
 import { InventoryItem } from '@/types/inventory';
 import { InvoiceSettings } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
@@ -558,16 +559,23 @@ export function Sales() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {sales.map((sale) => (
-                  <SaleCard
-                    key={sale.id}
-                    sale={sale}
-                    onDelete={deleteSale}
-                    onRevert={revertSale}
-                    onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
-                  />
-                ))}
+              <div className="space-y-6">
+                {/* Analytics Charts */}
+                <SalesAnalyticsChart sales={sales} />
+                
+                {/* Sales List */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">All Sales</h3>
+                  {sales.map((sale) => (
+                    <SaleCard
+                      key={sale.id}
+                      sale={sale}
+                      onDelete={deleteSale}
+                      onRevert={revertSale}
+                      onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
