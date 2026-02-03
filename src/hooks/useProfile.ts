@@ -13,6 +13,7 @@ export interface Profile {
   businessAddress: string | null;
   businessPhone: string | null;
   businessEmail: string | null;
+  businessNumber: string | null;
   invoiceThankYouNote: string | null;
 }
 
@@ -24,6 +25,7 @@ export interface UpdateProfileInput {
   businessAddress?: string | null;
   businessPhone?: string | null;
   businessEmail?: string | null;
+  businessNumber?: string | null;
   invoiceThankYouNote?: string | null;
 }
 
@@ -55,6 +57,7 @@ export function useProfile() {
         businessAddress: data.business_address,
         businessPhone: data.business_phone,
         businessEmail: data.business_email,
+        businessNumber: data.business_number,
         invoiceThankYouNote: data.invoice_thank_you_note,
       });
     } catch (error: any) {
@@ -81,6 +84,7 @@ export function useProfile() {
       if (input.businessAddress !== undefined) updateData.business_address = input.businessAddress;
       if (input.businessPhone !== undefined) updateData.business_phone = input.businessPhone;
       if (input.businessEmail !== undefined) updateData.business_email = input.businessEmail;
+      if (input.businessNumber !== undefined) updateData.business_number = input.businessNumber;
       if (input.invoiceThankYouNote !== undefined) updateData.invoice_thank_you_note = input.invoiceThankYouNote;
 
       const { error } = await supabase

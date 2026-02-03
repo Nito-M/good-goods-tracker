@@ -70,6 +70,7 @@ export function Settings() {
   const [businessAddress, setBusinessAddress] = useState('');
   const [businessPhone, setBusinessPhone] = useState('');
   const [businessEmail, setBusinessEmail] = useState('');
+  const [businessNumber, setBusinessNumber] = useState('');
   const [invoiceThankYouNote, setInvoiceThankYouNote] = useState('');
 
   // Load profile data into form
@@ -79,6 +80,7 @@ export function Settings() {
       setBusinessAddress(profile.businessAddress || '');
       setBusinessPhone(profile.businessPhone || '');
       setBusinessEmail(profile.businessEmail || '');
+      setBusinessNumber(profile.businessNumber || '');
       setInvoiceThankYouNote(profile.invoiceThankYouNote || 'Thank you for your business!');
     }
   }, [profile]);
@@ -149,6 +151,7 @@ export function Settings() {
       businessAddress: businessAddress || null,
       businessPhone: businessPhone || null,
       businessEmail: businessEmail || null,
+      businessNumber: businessNumber || null,
       invoiceThankYouNote: invoiceThankYouNote || null,
     });
   };
@@ -350,16 +353,25 @@ export function Settings() {
                           placeholder="+1 234 567 8900"
                         />
                       </div>
-                      <div className="space-y-2 col-span-2 md:col-span-1">
-                        <Label htmlFor="business-address">Business Address</Label>
-                        <Textarea
-                          id="business-address"
-                          value={businessAddress}
-                          onChange={(e) => setBusinessAddress(e.target.value)}
-                          placeholder="123 Main St&#10;City, State 12345"
-                          rows={3}
+                      <div className="space-y-2">
+                        <Label htmlFor="business-number">Business Number</Label>
+                        <Input
+                          id="business-number"
+                          value={businessNumber}
+                          onChange={(e) => setBusinessNumber(e.target.value)}
+                          placeholder="Tax ID / Registration #"
                         />
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="business-address">Business Address</Label>
+                      <Textarea
+                        id="business-address"
+                        value={businessAddress}
+                        onChange={(e) => setBusinessAddress(e.target.value)}
+                        placeholder="123 Main St&#10;City, State 12345"
+                        rows={3}
+                      />
                     </div>
                   </div>
 

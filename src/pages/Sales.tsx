@@ -67,6 +67,7 @@ export function Sales() {
     businessAddress: profile?.businessAddress || null,
     businessPhone: profile?.businessPhone || null,
     businessEmail: profile?.businessEmail || null,
+    businessNumber: profile?.businessNumber || null,
     thankYouNote: profile?.invoiceThankYouNote || null,
   }), [profile]);
 
