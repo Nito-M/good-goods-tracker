@@ -56,8 +56,15 @@ export function PurchaseOrders() {
     await generatePurchaseOrderPDF(order, settings);
   };
 
-  const orderedOrders = orders.filter((o) => o.status === 'ordered');
-  const receivedOrders = orders.filter((o) => o.status === 'received');
+  // Sort by PO number descending (highest first)
+  const sortByPoNumber = (a: PurchaseOrder, b: PurchaseOrder) => {
+    const aNum = parseInt(a.poNumber?.replace('PO-', '') || '0', 10);
+    const bNum = parseInt(b.poNumber?.replace('PO-', '') || '0', 10);
+    return bNum - aNum;
+  };
+
+  const orderedOrders = orders.filter((o) => o.status === 'ordered').sort(sortByPoNumber);
+  const receivedOrders = orders.filter((o) => o.status === 'received').sort(sortByPoNumber);
 
   return (
     <div className="min-h-screen bg-background">

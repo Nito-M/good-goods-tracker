@@ -78,8 +78,14 @@ export function PurchaseOrderCard({
                     : `${order.items.length} Items`}
                 </h3>
                 {order.items.length === 1 && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>SKU: {order.items[0].sku}</span>
+                    <span>Qty: {order.items[0].quantity}</span>
+                    {order.items[0].unitCost !== undefined && order.items[0].unitCost > 0 && (
+                      <span className="font-medium text-foreground">
+                        @ {formatCurrency(order.items[0].unitCost)} each
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
