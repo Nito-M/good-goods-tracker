@@ -38,14 +38,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CATEGORIES as DEFAULT_CATEGORIES } from '@/types/inventory';
+
 
 export function Settings() {
   const { signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
-  const { customCategories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
+  const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
   const colorThemeOptions: { value: ColorTheme; label: string; color: string }[] = [
@@ -460,39 +460,26 @@ export function Settings() {
                   </Button>
                 </form>
 
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-3">Default Categories</h4>
+                {categories.length === 0 ? (
+                  <div className="text-muted-foreground py-4 text-center">
+                    No categories yet. Add your first category to get started.
+                  </div>
+                ) : (
                   <div className="flex flex-wrap gap-2">
-                    {DEFAULT_CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                       <div
-                        key={cat}
-                        className="px-3 py-1.5 bg-muted rounded-md text-sm"
+                        key={cat.id}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 rounded-md text-sm"
                       >
-                        {cat}
+                        {cat.name}
+                        <button
+                          onClick={() => setDeleteCategoryId(cat.id)}
+                          className="ml-1 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
                       </div>
                     ))}
-                  </div>
-                </div>
-
-                {customCategories.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Custom Categories</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {customCategories.map((cat) => (
-                        <div
-                          key={cat.id}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 rounded-md text-sm"
-                        >
-                          {cat.name}
-                          <button
-                            onClick={() => setDeleteCategoryId(cat.id)}
-                            className="ml-1 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )}
               </CardContent>

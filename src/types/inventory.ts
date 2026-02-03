@@ -23,6 +23,5 @@ export interface InventoryItem {
   updatedAt: Date;
 }
 
-export type Category = 'Electronics' | 'Clothing' | 'Food' | 'Office' | 'Other';
-
-export const CATEGORIES: Category[] = ['Electronics', 'Clothing', 'Food', 'Office', 'Other'];
+// Default categories that can be seeded for new users
+export const DEFAULT_CATEGORY_NAMES = ['Electronics', 'Clothing', 'Food', 'Office', 'Other'] as const;

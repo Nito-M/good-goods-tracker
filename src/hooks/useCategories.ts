@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { CATEGORIES as DEFAULT_CATEGORIES } from '@/types/inventory';
+import { DEFAULT_CATEGORY_NAMES } from '@/types/inventory';
 import { categorySchema, validateInput } from '@/lib/validation';
+
 export interface Category {
   id: string;
   name: string;
@@ -12,14 +13,31 @@ export interface Category {
 }
 
 export function useCategories() {
-  const [customCategories, setCustomCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const seedDefaultCategories = useCallback(async () => {
+    if (!user || seeding) return;
+    
+    setSeeding(true);
+    const categoriesToInsert = DEFAULT_CATEGORY_NAMES.map((name) => ({
+      name,
+      user_id: user.id,
+    }));
+
+    const { error } = await supabase.from('categories').insert(categoriesToInsert);
+    if (error) {
+      console.error('Error seeding default categories:', error);
+    }
+    setSeeding(false);
+  }, [user, seeding]);
+
   const fetchCategories = useCallback(async () => {
     if (!user) {
-      setCustomCategories([]);
+      setCategories([]);
       setLoading(false);
       return;
     }
@@ -39,19 +57,28 @@ export function useCategories() {
       return;
     }
 
-    setCustomCategories(data || []);
+    // If no categories exist, seed with defaults
+    if (!data || data.length === 0) {
+      await seedDefaultCategories();
+      // Re-fetch after seeding
+      const { data: seededData } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name', { ascending: true });
+      setCategories(seededData || []);
+    } else {
+      setCategories(data);
+    }
+    
     setLoading(false);
-  }, [toast, user]);
+  }, [toast, user, seedDefaultCategories]);
 
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
 
-  // Combine default categories with custom ones
-  const allCategories = [
-    ...DEFAULT_CATEGORIES,
-    ...customCategories.map((c) => c.name).filter((name) => !DEFAULT_CATEGORIES.includes(name as any)),
-  ];
+  // All categories come from the database now
+  const allCategories = categories.map((c) => c.name);
 
   const addCategory = async (name: string) => {
     if (!user) return;
@@ -118,7 +145,7 @@ export function useCategories() {
   };
 
   return {
-    customCategories,
+    categories,
     allCategories,
     loading,
     addCategory,
