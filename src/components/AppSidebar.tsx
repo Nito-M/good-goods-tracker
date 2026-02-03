@@ -16,7 +16,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { LogoUpload } from "@/components/LogoUpload";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: Home },
@@ -42,7 +41,6 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          {!collapsed && <LogoUpload />}
           {!collapsed && (
             <div className="flex flex-col">
               <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground">
@@ -51,11 +49,6 @@ export function AppSidebar() {
               <p className="text-xs text-muted-foreground">
                 Inventory Management
               </p>
-            </div>
-          )}
-          {collapsed && (
-            <div className="flex justify-center w-full">
-              <LogoUpload />
             </div>
           )}
         </div>
