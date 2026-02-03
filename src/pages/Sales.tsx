@@ -572,7 +572,7 @@ export function Sales() {
                 {/* Sales List grouped by month */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Sales History</h3>
-                  <Accordion type="multiple" defaultValue={[getMonthKey(new Date())]} className="w-full space-y-2">
+                  <Accordion type="multiple" className="w-full space-y-2">
                     {(() => {
                       // Group sales by month
                       const salesByMonth = sales.reduce((acc, sale) => {
