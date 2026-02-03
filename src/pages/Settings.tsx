@@ -12,6 +12,7 @@ import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCategories } from '@/hooks/useCategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
 import {
@@ -41,12 +42,46 @@ import {
 
 
 export function Settings() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
+
+  // Save theme to database when changed
+  const handleThemeChange = async (newTheme: string) => {
+    setTheme(newTheme);
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ theme: newTheme })
+        .eq('user_id', user.id);
+    }
+  };
+
+  // Load theme from database on mount
+  useEffect(() => {
+    const loadThemeFromDatabase = async () => {
+      if (!user) return;
+      
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('theme')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data?.theme && data.theme !== theme) {
+          setTheme(data.theme);
+        }
+      } catch (error) {
+        console.error('Error loading theme:', error);
+      }
+    };
+
+    loadThemeFromDatabase();
+  }, [user]);
 
   const colorThemeOptions: { value: ColorTheme; label: string; color: string }[] = [
     { value: 'normal', label: 'Normal (Teal)', color: 'bg-[hsl(200,98%,39%)]' },
@@ -224,7 +259,7 @@ export function Settings() {
                       Select your preferred color scheme
                     </p>
                   </div>
-                  <Select value={theme} onValueChange={setTheme}>
+                  <Select value={theme} onValueChange={handleThemeChange}>
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Select theme" />
                     </SelectTrigger>
