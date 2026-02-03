@@ -36,7 +36,7 @@ export const Items = ({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
-              Items
+              Items & Inventory
             </h1>
             <Button onClick={onOpenDialog} className="gap-2">
               <Plus className="h-4 w-4" />
