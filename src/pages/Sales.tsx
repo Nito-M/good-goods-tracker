@@ -70,6 +70,7 @@ export function Sales() {
     businessEmail: profile?.businessEmail || null,
     businessNumber: profile?.businessNumber || null,
     thankYouNote: profile?.invoiceThankYouNote || null,
+    logoUrl: profile?.logoUrl || null,
   }), [profile]);
 
   const [cart, setCart] = useState<CartItem[]>([]);

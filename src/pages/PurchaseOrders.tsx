@@ -50,6 +50,7 @@ export function PurchaseOrders() {
       businessEmail: profile.businessEmail,
       businessNumber: profile.businessNumber,
       thankYouNote: profile.invoiceThankYouNote,
+      logoUrl: profile.logoUrl,
     } : undefined;
     
     await generatePurchaseOrderPDF(order, settings);

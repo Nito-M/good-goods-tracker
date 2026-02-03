@@ -389,7 +389,8 @@ export function Settings() {
                     </p>
                     <div className="flex items-center gap-4">
                       <div 
-                        className="relative w-10 h-10 rounded border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted cursor-pointer hover:border-primary transition-colors"
+                        className="relative rounded border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted cursor-pointer hover:border-primary transition-colors"
+                        style={{ width: '40px', height: '40px', maxWidth: '40px', maxHeight: '40px' }}
                         onClick={() => logoInputRef.current?.click()}
                       >
                         {logoUrl ? (
@@ -397,6 +398,7 @@ export function Settings() {
                             src={logoUrl} 
                             alt="Business logo" 
                             className="w-full h-full object-contain"
+                            style={{ maxWidth: '40px', maxHeight: '40px' }}
                           />
                         ) : (
                           <Upload className="h-4 w-4 text-muted-foreground" />
