@@ -124,10 +124,14 @@ export function AddPurchaseOrderDialog({
       return { sku, itemName, quantity: lineItem.quantity, unitCost };
     });
 
+    // Parse date as local time to avoid timezone offset issues
+    const [year, month, day] = orderedAt.split('-').map(Number);
+    const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
+
     await onSave(
       {
         items,
-        orderedAt: new Date(orderedAt),
+        orderedAt: localOrderedAt,
         notes: notes || undefined,
         vendorId: vendorId || null,
         poNumber: poNumber || undefined,
