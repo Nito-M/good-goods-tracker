@@ -33,60 +33,6 @@ export function PurchaseOrders() {
 
   const handleMarkReceived = async (orderId: string) => {
     setProcessingId(orderId);
-
-    const order = orders.find((o) => o.id === orderId);
-    if (!order) {
-      setProcessingId(null);
-      return;
-    }
-
-    // Process each item in the order
-    for (const orderItem of order.items) {
-      const existingItem = inventoryItems.find((item) => item.sku === orderItem.sku);
-
-      if (existingItem) {
-        const { error } = await supabase
-          .from('inventory_items')
-          .update({ quantity: existingItem.quantity + orderItem.quantity })
-          .eq('id', existingItem.id);
-
-        if (error) {
-          toast({
-            title: 'Error updating inventory',
-            description: error.message,
-            variant: 'destructive',
-          });
-          setProcessingId(null);
-          return;
-        }
-
-        toast({
-          title: 'Inventory updated',
-          description: `Added ${orderItem.quantity} units to ${existingItem.name}`,
-        });
-      } else {
-        await addItem({
-          name: orderItem.itemName,
-          sku: orderItem.sku,
-          category: 'Other',
-          quantity: orderItem.quantity,
-          price: 0,
-          cost: 0,
-          minStock: 0,
-          weight: 0,
-          weightUnit: 'lb',
-          dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
-          colors: [],
-          description: `Added from Purchase Order on ${new Date().toLocaleDateString()}`,
-        });
-
-        toast({
-          title: 'New inventory item created',
-          description: `${orderItem.itemName} added to inventory with ${orderItem.quantity} units`,
-        });
-      }
-    }
-
     await markAsReceived(orderId);
     setProcessingId(null);
   };
