@@ -104,6 +104,51 @@ export type Database = {
         }
         Relationships: []
       }
+      po_item_allocations: {
+        Row: {
+          created_at: string
+          id: string
+          purchase_order_id: string
+          quantity_allocated: number
+          sale_item_id: string
+          sku: string
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          purchase_order_id: string
+          quantity_allocated?: number
+          sale_item_id: string
+          sku: string
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          purchase_order_id?: string
+          quantity_allocated?: number
+          sale_item_id?: string
+          sku?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_item_allocations_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_item_allocations_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: false
+            referencedRelation: "sale_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
