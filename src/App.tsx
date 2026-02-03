@@ -154,6 +154,7 @@ function AppContent() {
         onSave={addItem}
         editItem={editingItem}
         onUpdate={updateItem}
+        onDelete={deleteItem}
         categories={allCategories}
       />
     </>

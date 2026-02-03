@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem } from '@/types/inventory';
-import { Edit2, Trash2, Eye } from 'lucide-react';
+import { Edit2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -98,14 +98,6 @@ export function InventoryTable({ items, onEdit, onDelete }: InventoryTableProps)
                         className="h-8 w-8 text-muted-foreground hover:text-card-foreground"
                       >
                         <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(item.id)}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
