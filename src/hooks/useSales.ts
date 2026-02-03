@@ -241,7 +241,7 @@ export function useSales() {
         .insert({
           user_id: user.id,
           vendor_id: input.vendorId,
-          invoice_number: input.invoiceNumber || '',
+          invoice_number: input.invoiceNumber || null,
           status: 'completed',
           subtotal,
           tax_rate: input.taxRate,
