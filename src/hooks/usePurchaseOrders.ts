@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem } from '@/types/purchaseOrder';
+import { purchaseOrderSchema, validateInput } from '@/lib/validation';
 
 interface DbVendor {
   id: string;
@@ -34,9 +35,10 @@ export function usePurchaseOrders() {
     ]);
 
     if (ordersResult.error) {
+      console.error('Error loading purchase orders:', ordersResult.error);
       toast({
         title: 'Error loading purchase orders',
-        description: ordersResult.error.message,
+        description: 'Unable to load purchase orders. Please try again.',
         variant: 'destructive',
       });
       setLoading(false);
@@ -74,9 +76,10 @@ export function usePurchaseOrders() {
       .upload(fileName, file);
 
     if (uploadError) {
+      console.error('Error uploading file:', uploadError);
       toast({
         title: 'Error uploading file',
-        description: uploadError.message,
+        description: 'Unable to upload file. Please try again.',
         variant: 'destructive',
       });
       return null;
@@ -109,7 +112,25 @@ export function usePurchaseOrders() {
       return;
     }
 
-    if (order.items.length === 0) {
+    // Validate input
+    const validation = validateInput(purchaseOrderSchema, {
+      items: order.items,
+      orderedAt: order.orderedAt,
+      notes: order.notes,
+      vendorId: order.vendorId,
+      poNumber: order.poNumber,
+    });
+    
+    if (!validation.success) {
+      toast({
+        title: 'Validation error',
+        description: validation.errors[0],
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (validation.data.items.length === 0) {
       toast({
         title: 'No items added',
         description: 'Please add at least one item to the order.',
@@ -130,28 +151,29 @@ export function usePurchaseOrders() {
     }
 
     // Use first item for legacy columns, store all in items array
-    const firstItem = order.items[0];
-    const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+    const firstItem = validation.data.items[0];
+    const totalQuantity = validation.data.items.reduce((sum, item) => sum + item.quantity, 0);
 
     const { error } = await supabase.from('purchase_orders').insert([{
       user_id: user.id,
-      po_number: order.poNumber || null,
+      po_number: validation.data.poNumber || null,
       sku: firstItem.sku,
       item_name: firstItem.itemName,
       quantity: totalQuantity,
-      items: JSON.parse(JSON.stringify(order.items)),
-      ordered_at: order.orderedAt.toISOString(),
-      notes: order.notes || null,
-      vendor_id: order.vendorId || null,
+      items: JSON.parse(JSON.stringify(validation.data.items)),
+      ordered_at: validation.data.orderedAt.toISOString(),
+      notes: validation.data.notes || null,
+      vendor_id: validation.data.vendorId || null,
       pdf_url: pdfUrl,
       image_url: imageUrl,
       status: 'ordered',
     }]);
 
     if (error) {
+      console.error('Error creating purchase order:', error);
       toast({
         title: 'Error creating purchase order',
-        description: error.message,
+        description: 'Unable to create purchase order. Please try again.',
         variant: 'destructive',
       });
       return;
@@ -191,9 +213,10 @@ export function usePurchaseOrders() {
       .eq('id', orderId);
 
     if (error) {
+      console.error('Error updating order:', error);
       toast({
         title: 'Error updating order',
-        description: error.message,
+        description: 'Unable to update order. Please try again.',
         variant: 'destructive',
       });
       return false;
@@ -252,7 +275,25 @@ export function usePurchaseOrders() {
       return;
     }
 
-    if (updates.items.length === 0) {
+    // Validate input
+    const validation = validateInput(purchaseOrderSchema, {
+      items: updates.items,
+      orderedAt: updates.orderedAt,
+      notes: updates.notes,
+      vendorId: updates.vendorId,
+      poNumber: updates.poNumber,
+    });
+    
+    if (!validation.success) {
+      toast({
+        title: 'Validation error',
+        description: validation.errors[0],
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (validation.data.items.length === 0) {
       toast({
         title: 'No items added',
         description: 'Please add at least one item to the order.',
@@ -274,18 +315,18 @@ export function usePurchaseOrders() {
       if (url) imageUrl = url;
     }
 
-    const firstItem = updates.items[0];
-    const totalQuantity = updates.items.reduce((sum, item) => sum + item.quantity, 0);
+    const firstItem = validation.data.items[0];
+    const totalQuantity = validation.data.items.reduce((sum, item) => sum + item.quantity, 0);
 
     const updateData: Record<string, unknown> = {
-      po_number: updates.poNumber || null,
+      po_number: validation.data.poNumber || null,
       sku: firstItem.sku,
       item_name: firstItem.itemName,
       quantity: totalQuantity,
-      items: JSON.parse(JSON.stringify(updates.items)),
-      ordered_at: updates.orderedAt.toISOString(),
-      notes: updates.notes || null,
-      vendor_id: updates.vendorId !== undefined ? updates.vendorId : undefined,
+      items: JSON.parse(JSON.stringify(validation.data.items)),
+      ordered_at: validation.data.orderedAt.toISOString(),
+      notes: validation.data.notes || null,
+      vendor_id: validation.data.vendorId !== undefined ? validation.data.vendorId : undefined,
     };
 
     if (pdfUrl) updateData.pdf_url = pdfUrl;
@@ -297,9 +338,10 @@ export function usePurchaseOrders() {
       .eq('id', orderId);
 
     if (error) {
+      console.error('Error updating purchase order:', error);
       toast({
         title: 'Error updating purchase order',
-        description: error.message,
+        description: 'Unable to update purchase order. Please try again.',
         variant: 'destructive',
       });
       return;
@@ -316,9 +358,10 @@ export function usePurchaseOrders() {
       .eq('id', id);
 
     if (error) {
+      console.error('Error deleting order:', error);
       toast({
         title: 'Error deleting order',
-        description: error.message,
+        description: 'Unable to delete order. Please try again.',
         variant: 'destructive',
       });
       return;

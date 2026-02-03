@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIES as DEFAULT_CATEGORIES } from '@/types/inventory';
-
+import { categorySchema, validateInput } from '@/lib/validation';
 export interface Category {
   id: string;
   name: string;
@@ -56,15 +56,18 @@ export function useCategories() {
   const addCategory = async (name: string) => {
     if (!user) return;
 
-    const trimmedName = name.trim();
-    if (!trimmedName) {
+    // Validate input
+    const validation = validateInput(categorySchema, { name });
+    if (!validation.success) {
       toast({
-        title: 'Invalid category name',
-        description: 'Category name cannot be empty.',
+        title: 'Validation error',
+        description: validation.errors[0],
         variant: 'destructive',
       });
       return;
     }
+
+    const trimmedName = validation.data.name.trim();
 
     if (allCategories.includes(trimmedName)) {
       toast({
@@ -81,9 +84,10 @@ export function useCategories() {
     });
 
     if (error) {
+      console.error('Error adding category:', error);
       toast({
         title: 'Error adding category',
-        description: error.message,
+        description: 'Unable to add category. Please try again.',
         variant: 'destructive',
       });
       return;
@@ -100,9 +104,10 @@ export function useCategories() {
       .eq('id', id);
 
     if (error) {
+      console.error('Error deleting category:', error);
       toast({
         title: 'Error deleting category',
-        description: error.message,
+        description: 'Unable to delete category. It may be in use.',
         variant: 'destructive',
       });
       return;
