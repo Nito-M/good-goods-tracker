@@ -3,6 +3,14 @@ import { InventoryItem } from '@/types/inventory';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnlineStatus } from './useOnlineStatus';
+import {
+  getAll,
+  put,
+  putMany,
+  deleteItem as deleteFromDb,
+  addToSyncQueue,
+} from '@/lib/offlineDb';
 
 interface DbInventoryItem {
   id: string;
@@ -51,6 +59,35 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
   };
 }
 
+function inventoryItemToDb(
+  item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>,
+  userId: string,
+  id?: string
+): DbInventoryItem {
+  const now = new Date().toISOString();
+  return {
+    id: id || crypto.randomUUID(),
+    name: item.name,
+    sku: item.sku,
+    category: item.category,
+    quantity: item.quantity,
+    price: item.price,
+    cost: item.cost,
+    min_stock: item.minStock,
+    weight: item.weight,
+    weight_unit: item.weightUnit,
+    dimensions_length: item.dimensions.length,
+    dimensions_width: item.dimensions.width,
+    dimensions_height: item.dimensions.height,
+    dimensions_unit: item.dimensions.unit,
+    colors: item.colors,
+    description: item.description || null,
+    created_at: now,
+    updated_at: now,
+    user_id: userId,
+  };
+}
+
 export function useInventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +95,9 @@ export function useInventory() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isOnline } = useOnlineStatus();
 
+  // Load from local DB first, then sync with server
   const fetchItems = useCallback(async () => {
     if (!user) {
       setItems([]);
@@ -66,27 +105,55 @@ export function useInventory() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('inventory_items')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({
-        title: 'Error loading inventory',
-        description: error.message,
-        variant: 'destructive',
-      });
-      setLoading(false);
-      return;
+    // First, load from IndexedDB for instant display
+    try {
+      const localItems = await getAll('inventory_items', user.id);
+      if (localItems.length > 0) {
+        setItems((localItems as unknown as DbInventoryItem[]).map(dbToInventoryItem));
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error loading from IndexedDB:', error);
     }
 
-    setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
+    // If online, fetch from server and update local
+    if (isOnline) {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (items.length === 0) {
+          toast({
+            title: 'Error loading inventory',
+            description: error.message,
+            variant: 'destructive',
+          });
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Update local DB with server data
+      if (data) {
+        await putMany('inventory_items', data as unknown as Record<string, unknown>[]);
+        setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
+      }
+    }
+
     setLoading(false);
-  }, [toast, user]);
+  }, [toast, user, isOnline]);
 
   useEffect(() => {
     fetchItems();
+  }, [fetchItems]);
+
+  // Listen for sync complete events
+  useEffect(() => {
+    const handleSyncComplete = () => fetchItems();
+    window.addEventListener('sync-complete', handleSyncComplete);
+    return () => window.removeEventListener('sync-complete', handleSyncComplete);
   }, [fetchItems]);
 
   const filteredItems = useMemo(() => {
@@ -114,40 +181,64 @@ export function useInventory() {
       return;
     }
 
-    const { error } = await supabase.from('inventory_items').insert({
-      name: item.name,
-      sku: item.sku,
-      category: item.category,
-      quantity: item.quantity,
-      price: item.price,
-      cost: item.cost,
-      min_stock: item.minStock,
-      weight: item.weight,
-      weight_unit: item.weightUnit,
-      dimensions_length: item.dimensions.length,
-      dimensions_width: item.dimensions.width,
-      dimensions_height: item.dimensions.height,
-      dimensions_unit: item.dimensions.unit,
-      colors: item.colors,
-      description: item.description,
-      user_id: user.id,
-    });
+    const dbItem = inventoryItemToDb(item, user.id);
 
-    if (error) {
-      toast({
-        title: 'Error adding item',
-        description: error.message,
-        variant: 'destructive',
+    // Save locally first
+    await put('inventory_items', dbItem as unknown as Record<string, unknown>);
+    setItems((prev) => [dbToInventoryItem(dbItem), ...prev]);
+
+    if (isOnline) {
+      // Try to save to server immediately
+      const { error } = await supabase.from('inventory_items').insert({
+        id: dbItem.id,
+        name: item.name,
+        sku: item.sku,
+        category: item.category,
+        quantity: item.quantity,
+        price: item.price,
+        cost: item.cost,
+        min_stock: item.minStock,
+        weight: item.weight,
+        weight_unit: item.weightUnit,
+        dimensions_length: item.dimensions.length,
+        dimensions_width: item.dimensions.width,
+        dimensions_height: item.dimensions.height,
+        dimensions_unit: item.dimensions.unit,
+        colors: item.colors,
+        description: item.description,
+        user_id: user.id,
       });
+
+      if (error) {
+        // Queue for later sync
+        await addToSyncQueue({
+          table: 'inventory_items',
+          operation: 'insert',
+          data: dbItem as unknown as Record<string, unknown>,
+        });
+        toast({ title: 'Item saved offline', description: 'Will sync when back online' });
+        return;
+      }
+    } else {
+      // Queue for sync
+      await addToSyncQueue({
+        table: 'inventory_items',
+        operation: 'insert',
+        data: dbItem as unknown as Record<string, unknown>,
+      });
+      toast({ title: 'Item saved offline', description: 'Will sync when back online' });
       return;
     }
 
     toast({ title: 'Item added successfully' });
-    fetchItems();
   };
 
   const updateItem = async (id: string, updates: Partial<InventoryItem>) => {
-    const dbUpdates: Record<string, unknown> = {};
+    const existingItem = items.find((i) => i.id === id);
+    if (!existingItem) return;
+
+    // Prepare DB updates
+    const dbUpdates: Record<string, unknown> = { id };
     
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
@@ -166,42 +257,83 @@ export function useInventory() {
     }
     if (updates.colors !== undefined) dbUpdates.colors = updates.colors;
     if (updates.description !== undefined) dbUpdates.description = updates.description;
+    dbUpdates.updated_at = new Date().toISOString();
 
-    const { error } = await supabase
-      .from('inventory_items')
-      .update(dbUpdates)
-      .eq('id', id);
+    // Get current item from local DB and merge updates
+    const localItem = await getAll('inventory_items', user?.id).then(
+      (items) => items.find((i) => (i as { id: string }).id === id)
+    );
+    
+    const mergedItem = { ...localItem, ...dbUpdates };
 
-    if (error) {
-      toast({
-        title: 'Error updating item',
-        description: error.message,
-        variant: 'destructive',
+    // Update locally first
+    await put('inventory_items', mergedItem);
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, ...updates, updatedAt: new Date() } : item
+      )
+    );
+
+    if (isOnline) {
+      const { id: _, ...updateData } = dbUpdates;
+      const { error } = await supabase
+        .from('inventory_items')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) {
+        await addToSyncQueue({
+          table: 'inventory_items',
+          operation: 'update',
+          data: dbUpdates,
+        });
+        toast({ title: 'Changes saved offline', description: 'Will sync when back online' });
+        return;
+      }
+    } else {
+      await addToSyncQueue({
+        table: 'inventory_items',
+        operation: 'update',
+        data: dbUpdates,
       });
+      toast({ title: 'Changes saved offline', description: 'Will sync when back online' });
       return;
     }
 
     toast({ title: 'Item updated successfully' });
-    fetchItems();
   };
 
   const deleteItem = async (id: string) => {
-    const { error } = await supabase
-      .from('inventory_items')
-      .delete()
-      .eq('id', id);
+    // Delete locally first
+    await deleteFromDb('inventory_items', id);
+    setItems((prev) => prev.filter((item) => item.id !== id));
 
-    if (error) {
-      toast({
-        title: 'Error deleting item',
-        description: error.message,
-        variant: 'destructive',
+    if (isOnline) {
+      const { error } = await supabase
+        .from('inventory_items')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        await addToSyncQueue({
+          table: 'inventory_items',
+          operation: 'delete',
+          data: { id },
+        });
+        toast({ title: 'Delete saved offline', description: 'Will sync when back online' });
+        return;
+      }
+    } else {
+      await addToSyncQueue({
+        table: 'inventory_items',
+        operation: 'delete',
+        data: { id },
       });
+      toast({ title: 'Delete saved offline', description: 'Will sync when back online' });
       return;
     }
 
     toast({ title: 'Item deleted successfully' });
-    fetchItems();
   };
 
   return {
