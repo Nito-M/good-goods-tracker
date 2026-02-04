@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
   LogOut,
@@ -76,13 +76,32 @@ export function Sales() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
-  const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
   const [taxRate, setTaxRate] = useState(5);
   const [discountRate, setDiscountRate] = useState(0);
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [searchQuery, setSearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
+
+  // Calculate the next invoice number
+  const nextInvoiceNumber = useMemo(() => {
+    const maxNum = sales.reduce((max, sale) => {
+      const match = sale.invoiceNumber.match(/^INV-(\d+)$/);
+      if (match) {
+        return Math.max(max, parseInt(match[1], 10));
+      }
+      return max;
+    }, 0);
+    return `INV-${String(maxNum + 1).padStart(4, '0')}`;
+  }, [sales]);
+
+  // Auto-populate invoice number when sales load or after a sale is completed
+  useEffect(() => {
+    if (!customInvoiceNumber || customInvoiceNumber.match(/^INV-\d+$/)) {
+      setCustomInvoiceNumber(nextInvoiceNumber);
+    }
+  }, [nextInvoiceNumber]);
 
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(
@@ -212,16 +231,7 @@ export function Sales() {
               {/* Next Invoice Number Badge */}
               <div className="ml-4 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
                 <span className="text-sm font-medium text-primary">
-                  Next: {(() => {
-                    const maxNum = sales.reduce((max, sale) => {
-                      const match = sale.invoiceNumber.match(/^INV-(\d+)$/);
-                      if (match) {
-                        return Math.max(max, parseInt(match[1], 10));
-                      }
-                      return max;
-                    }, 0);
-                    return `INV-${String(maxNum + 1).padStart(4, '0')}`;
-                  })()}
+                  Next: {nextInvoiceNumber}
                 </span>
               </div>
             </div>
