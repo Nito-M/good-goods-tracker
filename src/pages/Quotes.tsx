@@ -18,6 +18,8 @@ import { useQuotes } from '@/hooks/useQuotes';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
+import { useSales } from '@/hooks/useSales';
+import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { Link } from 'react-router-dom';
 import { addDays, format } from 'date-fns';
 
@@ -70,6 +72,27 @@ export function Quotes() {
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
+  const { sales } = useSales();
+  const { orders: purchaseOrders } = usePurchaseOrders();
+
+  // Build lookup maps for linked documents
+  const invoiceNumberMap = useMemo(() => {
+    const map = new Map<string, string>();
+    sales.forEach((sale) => {
+      map.set(sale.id, sale.invoiceNumber);
+    });
+    return map;
+  }, [sales]);
+
+  const poNumberMap = useMemo(() => {
+    const map = new Map<string, string>();
+    purchaseOrders.forEach((po) => {
+      if (po.poNumber) {
+        map.set(po.id, po.poNumber);
+      }
+    });
+    return map;
+  }, [purchaseOrders]);
 
   // Build quote settings from profile
   const quoteSettings: QuoteSettings = useMemo(() => ({
@@ -767,6 +790,8 @@ export function Quotes() {
                                 onConvertToInvoice={convertToInvoice}
                                 onConvertToPurchaseOrder={convertToPurchaseOrder}
                                 quoteSettings={quoteSettings}
+                                linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
+                                linkedPoNumber={quote.convertedToPoId ? poNumberMap.get(quote.convertedToPoId) : null}
                               />
                             ))}
                         </AccordionContent>
