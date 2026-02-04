@@ -110,7 +110,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh]">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             {editItem ? 'Edit Item' : 'Add New Item'}
