@@ -208,6 +208,22 @@ export function Sales() {
                   Create invoices and manage sales
                 </p>
               </div>
+              
+              {/* Next Invoice Number Badge */}
+              <div className="ml-4 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
+                <span className="text-sm font-medium text-primary">
+                  Next: {(() => {
+                    const maxNum = sales.reduce((max, sale) => {
+                      const match = sale.invoiceNumber.match(/^INV-(\d+)$/);
+                      if (match) {
+                        return Math.max(max, parseInt(match[1], 10));
+                      }
+                      return max;
+                    }, 0);
+                    return `INV-${String(maxNum + 1).padStart(4, '0')}`;
+                  })()}
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
