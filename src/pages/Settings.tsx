@@ -385,12 +385,12 @@ export function Settings() {
                   <div className="space-y-2">
                     <Label>Business Logo</Label>
                     <p className="text-sm text-muted-foreground">
-                      Upload a 40x40 logo that will appear on your invoices
+                      Upload a logo (max 160x160) that will appear on your invoices
                     </p>
                     <div className="flex items-center gap-4">
                       <div 
                         className="relative rounded border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted cursor-pointer hover:border-primary transition-colors"
-                        style={{ width: '40px', height: '40px', maxWidth: '40px', maxHeight: '40px' }}
+                        style={{ width: '160px', height: '160px', maxWidth: '160px', maxHeight: '160px' }}
                         onClick={() => logoInputRef.current?.click()}
                       >
                         {logoUrl ? (
@@ -398,10 +398,10 @@ export function Settings() {
                             src={logoUrl} 
                             alt="Business logo" 
                             className="w-full h-full object-contain"
-                            style={{ maxWidth: '40px', maxHeight: '40px' }}
+                            style={{ maxWidth: '160px', maxHeight: '160px' }}
                           />
                         ) : (
-                          <Upload className="h-4 w-4 text-muted-foreground" />
+                          <Upload className="h-8 w-8 text-muted-foreground" />
                         )}
                         <input
                           ref={logoInputRef}
