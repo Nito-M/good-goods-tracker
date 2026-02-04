@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { InventoryItem } from '@/types/inventory';
+import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { ItemPurchaseHistory } from '@/components/ItemPurchaseHistory';
 
 interface ItemDetailsProps {
@@ -133,11 +133,15 @@ export function ItemDetails({ items, onEdit, onDelete }: ItemDetailsProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Quantity in Stock</p>
-                  <p className="text-xl font-semibold text-card-foreground">{item.quantity}</p>
+                  <p className="text-xl font-semibold text-card-foreground">
+                    {item.quantity} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Minimum Stock Level</p>
-                  <p className="text-xl font-semibold text-card-foreground">{item.minStock}</p>
+                  <p className="text-xl font-semibold text-card-foreground">
+                    {item.minStock} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                  </p>
                 </div>
               </div>
             </CardContent>

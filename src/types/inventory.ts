@@ -5,12 +5,23 @@ export interface Dimensions {
   unit: 'in' | 'cm';
 }
 
+export type QuantityUnit = 'pcs' | 'ft' | 'm' | 'yd' | 'in';
+
+export const QUANTITY_UNIT_LABELS: Record<QuantityUnit, string> = {
+  pcs: 'Pieces',
+  ft: 'Feet',
+  m: 'Meters',
+  yd: 'Yards',
+  in: 'Inches',
+};
+
 export interface InventoryItem {
   id: string;
   name: string;
   sku: string;
   category: string;
   quantity: number;
+  quantityUnit: QuantityUnit;
   price: number;
   cost: number;
   minStock: number;

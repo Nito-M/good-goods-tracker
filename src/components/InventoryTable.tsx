@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { InventoryItem } from '@/types/inventory';
+import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +64,9 @@ export function InventoryTable({ items, onEdit, onDelete }: InventoryTableProps)
                       {item.category}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {item.quantity} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                  </TableCell>
                   <TableCell className="text-right tabular-nums">{formatCurrency(item.price)}</TableCell>
                   <TableCell className="text-right tabular-nums font-medium">
                     {formatCurrency(item.quantity * item.price)}
