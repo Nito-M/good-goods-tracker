@@ -56,7 +56,7 @@ interface CartItem {
   inventoryItemId: string | null;
   itemName: string;
   sku: string;
-  quantity: number;
+  quantity: number | null;
   quantityUnit: QuantityUnit;
   unitPrice: number;
   unitCost: number;
@@ -85,8 +85,8 @@ export function Quotes() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
-  const [taxRate, setTaxRate] = useState(5);
-  const [discountRate, setDiscountRate] = useState(0);
+  const [taxRate, setTaxRate] = useState<number | null>(null);
+  const [discountRate, setDiscountRate] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,7 +136,7 @@ export function Quotes() {
       if (existing) {
         return prev.map((c) =>
           c.inventoryItemId === item.id
-            ? { ...c, quantity: c.quantity + 1 }
+            ? { ...c, quantity: (c.quantity || 0) + 1 }
             : c
         );
       }
@@ -145,7 +145,7 @@ export function Quotes() {
         inventoryItemId: item.id,
         itemName: item.name,
         sku: item.sku,
-        quantity: 1,
+        quantity: null,
         quantityUnit: item.quantityUnit,
         unitPrice: item.price,
         unitCost: item.cost,
@@ -161,7 +161,7 @@ export function Quotes() {
       inventoryItemId: null,
       itemName: '',
       sku: '',
-      quantity: 1,
+      quantity: null,
       quantityUnit: 'pcs' as QuantityUnit,
       unitPrice: 0,
       unitCost: 0,
@@ -179,11 +179,7 @@ export function Quotes() {
     );
   };
 
-  const updateCartQuantity = (itemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setCart((prev) => prev.filter((c) => c.id !== itemId));
-      return;
-    }
+  const updateCartQuantity = (itemId: string, quantity: number | null) => {
     updateCartItem(itemId, { quantity });
   };
 
@@ -193,13 +189,15 @@ export function Quotes() {
 
   const subtotal = useMemo(
     () =>
-      cart.reduce((sum, c) => sum + c.quantity * c.unitPrice, 0),
+      cart.reduce((sum, c) => sum + (c.quantity || 0) * c.unitPrice, 0),
     [cart]
   );
 
-  const discountAmount = subtotal * (discountRate / 100);
+  const effectiveDiscountRate = discountRate ?? 0;
+  const effectiveTaxRate = taxRate ?? 0;
+  const discountAmount = subtotal * (effectiveDiscountRate / 100);
   const afterDiscount = subtotal - discountAmount;
-  const taxAmount = afterDiscount * (taxRate / 100);
+  const taxAmount = afterDiscount * (effectiveTaxRate / 100);
   const total = afterDiscount + taxAmount;
 
   const handleCreateQuote = async () => {
@@ -220,14 +218,14 @@ export function Quotes() {
         inventoryItemId: c.inventoryItemId,
         itemName: c.itemName,
         sku: c.sku || 'CUSTOM',
-        quantity: c.quantity,
+        quantity: c.quantity ?? 0,
         quantityUnit: c.quantityUnit,
         unitPrice: c.unitPrice,
         unitCost: c.unitCost,
         notes: c.notes || null,
       })),
-      taxRate,
-      discountRate,
+      taxRate: effectiveTaxRate,
+      discountRate: effectiveDiscountRate,
       notes: notes || null,
       paymentTerms,
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
@@ -237,8 +235,8 @@ export function Quotes() {
       setCart([]);
       setSelectedVendorId('');
       setCustomQuoteNumber('');
-      setTaxRate(5);
-      setDiscountRate(0);
+      setTaxRate(null);
+      setDiscountRate(null);
       setNotes('');
       if (quoteSettings.validityDays) {
         const defaultDate = addDays(new Date(), quoteSettings.validityDays);
@@ -476,32 +474,18 @@ export function Quotes() {
                                 <div className="grid grid-cols-4 gap-2">
                                   <div className="space-y-1">
                                     <Label className="text-xs">Quantity</Label>
-                                    <div className="flex items-center gap-1">
-                                      <Button
-                                        size="icon"
-                                        variant="outline"
-                                        className="h-8 w-8"
-                                        onClick={() => updateCartQuantity(c.id, c.quantity - 1)}
-                                      >
-                                        <Minus className="h-3 w-3" />
-                                      </Button>
-                                      <Input
-                                        type="number"
-                                        className="w-16 text-center"
-                                        value={c.quantity}
-                                        onChange={(e) => updateCartQuantity(c.id, parseFloat(e.target.value) || 0)}
-                                        min={0.01}
-                                        step={0.01}
-                                      />
-                                      <Button
-                                        size="icon"
-                                        variant="outline"
-                                        className="h-8 w-8"
-                                        onClick={() => updateCartQuantity(c.id, c.quantity + 1)}
-                                      >
-                                        <Plus className="h-3 w-3" />
-                                      </Button>
-                                    </div>
+                                    <Input
+                                      type="number"
+                                      className="h-8"
+                                      placeholder="Qty"
+                                      value={c.quantity ?? ''}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        updateCartQuantity(c.id, val === '' ? null : parseFloat(val));
+                                      }}
+                                      min={0}
+                                      step={0.01}
+                                    />
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs">Unit</Label>
@@ -538,7 +522,7 @@ export function Quotes() {
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-xs">Total</Label>
-                                    <p className="font-bold h-8 flex items-center">{formatCurrency(c.quantity * c.unitPrice)}</p>
+                                    <p className="font-bold h-8 flex items-center">{formatCurrency((c.quantity || 0) * c.unitPrice)}</p>
                                   </div>
                                 </div>
 
@@ -621,10 +605,12 @@ export function Quotes() {
                         <Label>Tax Rate (%)</Label>
                         <Input
                           type="number"
-                          value={taxRate}
-                          onChange={(e) =>
-                            setTaxRate(parseFloat(e.target.value) || 0)
-                          }
+                          placeholder="0"
+                          value={taxRate ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setTaxRate(val === '' ? null : parseFloat(val));
+                          }}
                           min={0}
                           step={0.1}
                         />
@@ -633,10 +619,12 @@ export function Quotes() {
                         <Label>Discount (%)</Label>
                         <Input
                           type="number"
-                          value={discountRate}
-                          onChange={(e) =>
-                            setDiscountRate(parseFloat(e.target.value) || 0)
-                          }
+                          placeholder="0"
+                          value={discountRate ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setDiscountRate(val === '' ? null : parseFloat(val));
+                          }}
                           min={0}
                           step={0.1}
                         />
@@ -683,16 +671,16 @@ export function Quotes() {
                       <span className="text-muted-foreground">Subtotal</span>
                       <span>{formatCurrency(subtotal)}</span>
                     </div>
-                    {discountRate > 0 && (
+                    {effectiveDiscountRate > 0 && (
                       <div className="flex justify-between text-sm text-destructive">
-                        <span>Discount ({discountRate}%)</span>
+                        <span>Discount ({effectiveDiscountRate}%)</span>
                         <span>-{formatCurrency(discountAmount)}</span>
                       </div>
                     )}
-                    {taxRate > 0 && (
+                    {effectiveTaxRate > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Tax ({taxRate}%)
+                          Tax ({effectiveTaxRate}%)
                         </span>
                         <span>{formatCurrency(taxAmount)}</span>
                       </div>

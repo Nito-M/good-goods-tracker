@@ -125,10 +125,21 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.text(item.itemName.substring(0, 30), layout.itemsTable.x + 2, y);
       doc.setTextColor(100);
       doc.text(item.sku, layout.itemsTable.x + 70, y);
-      doc.text(item.quantity.toString(), layout.itemsTable.x + 100, y);
+      const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
+      doc.text(qtyDisplay, layout.itemsTable.x + 100, y);
       doc.text(`$${item.unitPrice.toFixed(2)}`, layout.itemsTable.x + 120, y);
       doc.text(`$${item.totalPrice.toFixed(2)}`, layout.itemsTable.x + 150, y);
       y += 7;
+      
+      // Add item notes if present
+      if (item.notes) {
+        doc.setFontSize(8);
+        doc.setTextColor(120);
+        const noteLines = doc.splitTextToSize(`Note: ${item.notes}`, 165);
+        doc.text(noteLines, layout.itemsTable.x + 4, y);
+        y += noteLines.length * 4 + 2;
+        doc.setFontSize(10);
+      }
     });
   }
 
