@@ -46,9 +46,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { SaleCard } from '@/components/SaleCard';
+import { EditSaleDialog } from '@/components/EditSaleDialog';
 
 import { InventoryItem } from '@/types/inventory';
-import { InvoiceSettings } from '@/types/sale';
+import { InvoiceSettings, Sale } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 
 interface CartItem {
@@ -58,7 +59,7 @@ interface CartItem {
 
 export function Sales() {
   const { signOut } = useAuth();
-  const { sales, loading, createSale, deleteSale, revertSale } = useSales();
+  const { sales, loading, createSale, updateSale, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -85,6 +86,11 @@ export function Sales() {
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
+  const [editingSale, setEditingSale] = useState<Sale | null>(null);
+
+  const handleSaveSale = async (saleId: string, data: any) => {
+    await updateSale(saleId, data);
+  };
 
   // Calculate the next invoice number
   const nextInvoiceNumber = useMemo(() => {
@@ -677,6 +683,7 @@ export function Sales() {
                                   onDelete={deleteSale}
                                   onRevert={revertSale}
                                   onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
+                                  onEdit={setEditingSale}
                                 />
                               ))}
                             </AccordionContent>
@@ -690,6 +697,14 @@ export function Sales() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <EditSaleDialog
+        sale={editingSale}
+        open={!!editingSale}
+        onOpenChange={(open) => !open && setEditingSale(null)}
+        onSave={handleSaveSale}
+        vendors={vendors}
+      />
     </div>
   );
 }

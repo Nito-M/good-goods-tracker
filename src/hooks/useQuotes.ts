@@ -287,10 +287,108 @@ export function useQuotes() {
     }
   };
 
+  const updateQuote = async (
+    quoteId: string,
+    input: {
+      vendorId: string | null;
+      quoteNumber: string;
+      items: Array<{
+        id: string;
+        inventoryItemId: string | null;
+        itemName: string;
+        sku: string;
+        quantity: number | null;
+        quantityUnit: string;
+        unitPrice: number;
+        unitCost: number;
+        notes: string;
+      }>;
+      taxRate: number;
+      discountRate: number;
+      notes: string | null;
+      paymentTerms: string;
+      validUntil: string | null;
+    }
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      // Calculate totals
+      const subtotal = input.items.reduce(
+        (sum, item) => sum + (item.quantity || 0) * item.unitPrice,
+        0
+      );
+      const discountAmount = subtotal * (input.discountRate / 100);
+      const afterDiscount = subtotal - discountAmount;
+      const taxAmount = afterDiscount * (input.taxRate / 100);
+      const total = afterDiscount + taxAmount;
+
+      // Update quote
+      const { error: quoteError } = await supabase
+        .from('quotes')
+        .update({
+          vendor_id: input.vendorId,
+          quote_number: input.quoteNumber,
+          subtotal,
+          tax_rate: input.taxRate,
+          tax_amount: taxAmount,
+          discount_rate: input.discountRate,
+          discount_amount: discountAmount,
+          total,
+          notes: input.notes,
+          payment_terms: input.paymentTerms,
+          valid_until: input.validUntil,
+        })
+        .eq('id', quoteId);
+
+      if (quoteError) throw quoteError;
+
+      // Delete existing quote items
+      await supabase.from('quote_items').delete().eq('quote_id', quoteId);
+
+      // Create new quote items
+      for (const item of input.items) {
+        const { error: itemError } = await supabase
+          .from('quote_items')
+          .insert({
+            quote_id: quoteId,
+            inventory_item_id: item.inventoryItemId,
+            item_name: item.itemName,
+            sku: item.sku || 'CUSTOM',
+            quantity: item.quantity ?? 0,
+            quantity_unit: item.quantityUnit,
+            unit_price: item.unitPrice,
+            unit_cost: item.unitCost,
+            total_price: (item.quantity || 0) * item.unitPrice,
+            notes: item.notes || null,
+          } as any);
+
+        if (itemError) throw itemError;
+      }
+
+      toast({
+        title: 'Quote updated',
+        description: `Quote ${input.quoteNumber} updated successfully`,
+      });
+
+      await fetchQuotes();
+      return true;
+    } catch (error: unknown) {
+      console.error('Error updating quote:', error);
+      toast({
+        title: 'Error updating quote',
+        description: 'Unable to update quote. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     quotes,
     loading,
     createQuote,
+    updateQuote,
     updateQuoteStatus,
     deleteQuote,
     uploadAttachment,

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink } from 'lucide-react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,10 +29,11 @@ interface QuoteCardProps {
   onUpdateStatus: (id: string, status: Quote['status']) => void;
   onUploadAttachment: (quoteId: string, file: File) => Promise<string | null>;
   onRemoveAttachment: (quoteId: string) => void;
+  onEdit: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, quoteSettings }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, quoteSettings }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (value: number) => {
@@ -182,6 +183,10 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
         ) : null}
 
         <div className="flex gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => onEdit(quote)}>
+            <Pencil className="h-4 w-4 mr-1" />
+            Edit
+          </Button>
           <Button variant="outline" size="sm" className="flex-1" onClick={handleDownloadPDF}>
             <FileText className="h-4 w-4 mr-1" />
             PDF

@@ -1,4 +1,4 @@
-import { Download, Trash2, Building2, Calendar, FileText, Undo2 } from 'lucide-react';
+import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,9 +26,10 @@ interface SaleCardProps {
   onDelete: (id: string) => void;
   onRevert: (id: string) => void;
   onDownloadInvoice: () => void;
+  onEdit: (sale: Sale) => void;
 }
 
-export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice }: SaleCardProps) {
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit }: SaleCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -77,6 +78,10 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice }: SaleCa
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => onEdit(sale)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
           <Button variant="outline" size="sm" onClick={onDownloadInvoice}>
             <Download className="h-4 w-4 mr-2" />
             Invoice
