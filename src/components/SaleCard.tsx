@@ -19,7 +19,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Sale } from '@/types/sale';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Sale, SaleStatus } from '@/types/sale';
 
 interface SaleCardProps {
   sale: Sale;
@@ -27,9 +34,18 @@ interface SaleCardProps {
   onRevert: (id: string) => void;
   onDownloadInvoice: () => void;
   onEdit: (sale: Sale) => void;
+  onStatusChange?: (id: string, status: SaleStatus) => void;
 }
 
-export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit }: SaleCardProps) {
+const statusConfig: Record<SaleStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  draft: { label: 'Draft', variant: 'secondary' },
+  pending: { label: 'Pending', variant: 'outline' },
+  paid: { label: 'Paid', variant: 'default' },
+  overdue: { label: 'Overdue', variant: 'destructive' },
+  cancelled: { label: 'Cancelled', variant: 'secondary' },
+};
+
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit, onStatusChange }: SaleCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -46,14 +62,8 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit }
   };
 
   const getStatusBadge = () => {
-    switch (sale.status) {
-      case 'completed':
-        return <Badge variant="default">completed</Badge>;
-      case 'cancelled':
-        return <Badge variant="secondary">reverted</Badge>;
-      default:
-        return <Badge variant="secondary">{sale.status}</Badge>;
-    }
+    const config = statusConfig[sale.status] || statusConfig.draft;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   return (
@@ -78,6 +88,24 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit }
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
+          {/* Status Selector */}
+          {onStatusChange && sale.status !== 'cancelled' && (
+            <Select
+              value={sale.status}
+              onValueChange={(value: SaleStatus) => onStatusChange(sale.id, value)}
+            >
+              <SelectTrigger className="w-[120px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {sale.status === 'cancelled' && getStatusBadge()}
           <Button variant="outline" size="sm" onClick={() => onEdit(sale)}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit
@@ -86,7 +114,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit }
             <Download className="h-4 w-4 mr-2" />
             Invoice
           </Button>
-          {sale.status === 'completed' && (
+          {sale.status !== 'cancelled' && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="icon" title="Revert sale">
@@ -186,13 +214,13 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit }
               <span>Total</span>
               <span>{formatCurrency(sale.total)}</span>
             </div>
-            {sale.status === 'completed' && sale.totalCost > 0 && (
+            {sale.status === 'paid' && sale.totalCost > 0 && (
               <div className="flex justify-between text-sm pt-2 border-t mt-2">
                 <span className="text-muted-foreground">Cost</span>
                 <span>{formatCurrency(sale.totalCost)}</span>
               </div>
             )}
-            {sale.status === 'completed' && sale.totalCost > 0 && (
+            {sale.status === 'paid' && sale.totalCost > 0 && (
               <div className="flex justify-between font-bold text-green-600">
                 <span>Profit</span>
                 <span>{formatCurrency(sale.totalProfit)}</span>

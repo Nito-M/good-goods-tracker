@@ -15,6 +15,8 @@ export interface SaleItem {
   createdAt: string;
 }
 
+export type SaleStatus = 'draft' | 'pending' | 'paid' | 'overdue' | 'cancelled';
+
 export interface Sale {
   id: string;
   userId: string;
@@ -22,7 +24,7 @@ export interface Sale {
   vendorName?: string;
   vendorAddress?: string;
   invoiceNumber: string;
-  status: 'draft' | 'completed' | 'cancelled';
+  status: SaleStatus;
   subtotal: number;
   totalCost: number;
   totalProfit: number;
