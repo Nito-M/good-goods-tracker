@@ -59,7 +59,7 @@ interface CartItem {
 
 export function Sales() {
   const { signOut } = useAuth();
-  const { sales, loading, createSale, updateSale, deleteSale, revertSale } = useSales();
+  const { sales, loading, createSale, updateSale, updateStatus, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -684,6 +684,7 @@ export function Sales() {
                                   onRevert={revertSale}
                                   onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
                                   onEdit={setEditingSale}
+                                  onStatusChange={updateStatus}
                                 />
                               ))}
                             </AccordionContent>

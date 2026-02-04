@@ -17,21 +17,21 @@ interface SalesAnalyticsChartProps {
 
 export function SalesAnalyticsChart({ sales }: SalesAnalyticsChartProps) {
   const analytics = useMemo(() => {
-    // Filter only completed sales
-    const completedSales = sales.filter((s) => s.status === 'completed');
+    // Filter only paid sales for analytics
+    const paidSales = sales.filter((s) => s.status === 'paid');
 
     // Calculate totals
-    const totalItemsSold = completedSales.reduce(
+    const totalItemsSold = paidSales.reduce(
       (sum, sale) => sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
       0
     );
 
-    const totalRevenue = completedSales.reduce((sum, sale) => sum + sale.total, 0);
-    const totalCost = completedSales.reduce((sum, sale) => sum + sale.totalCost, 0);
-    const totalProfit = completedSales.reduce((sum, sale) => sum + sale.totalProfit, 0);
+    const totalRevenue = paidSales.reduce((sum, sale) => sum + sale.total, 0);
+    const totalCost = paidSales.reduce((sum, sale) => sum + sale.totalCost, 0);
+    const totalProfit = paidSales.reduce((sum, sale) => sum + sale.totalProfit, 0);
 
     // Prepare data for bar chart (last 7 sales or all if less)
-    const recentSales = completedSales.slice(0, 10).reverse();
+    const recentSales = paidSales.slice(0, 10).reverse();
     const barChartData = recentSales.map((sale, index) => ({
       name: sale.invoiceNumber || `Sale ${index + 1}`,
       revenue: sale.total,
@@ -118,7 +118,7 @@ export function SalesAnalyticsChart({ sales }: SalesAnalyticsChartProps) {
           <CardContent>
             {analytics.barChartData.length === 0 ? (
               <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                No completed sales to display
+                No paid sales to display
               </div>
             ) : (
               <ChartContainer config={chartConfig} className="h-[250px] w-full">
