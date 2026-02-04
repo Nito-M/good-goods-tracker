@@ -35,6 +35,8 @@ export interface Quote {
   paymentTerms: string;
   validUntil: string | null;
   attachmentUrl: string | null;
+  convertedToInvoiceId: string | null;
+  convertedToPoId: string | null;
   items: QuoteItem[];
   createdAt: string;
   updatedAt: string;

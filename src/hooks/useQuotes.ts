@@ -64,6 +64,8 @@ export function useQuotes() {
             paymentTerms: quote.payment_terms,
             validUntil: quote.valid_until,
             attachmentUrl: (quote as any).attachment_url || null,
+            convertedToInvoiceId: (quote as any).converted_to_invoice_id || null,
+            convertedToPoId: (quote as any).converted_to_po_id || null,
             items: mappedItems,
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
@@ -455,16 +457,16 @@ export function useQuotes() {
         }
       }
 
-      // Update quote status to converted
+      // Update quote status to converted and link to invoice
       await supabase
         .from('quotes')
-        .update({ status: 'converted' })
+        .update({ status: 'converted', converted_to_invoice_id: sale.id })
         .eq('id', quote.id);
 
       // Update local state
       setQuotes((prev) =>
         prev.map((q) =>
-          q.id === quote.id ? { ...q, status: 'converted' as QuoteStatus } : q
+          q.id === quote.id ? { ...q, status: 'converted' as QuoteStatus, convertedToInvoiceId: sale.id } : q
         )
       );
 
@@ -520,16 +522,16 @@ export function useQuotes() {
 
       if (poError) throw poError;
 
-      // Update quote status to converted
+      // Update quote status to converted and link to PO
       await supabase
         .from('quotes')
-        .update({ status: 'converted' })
+        .update({ status: 'converted', converted_to_po_id: po.id })
         .eq('id', quote.id);
 
       // Update local state
       setQuotes((prev) =>
         prev.map((q) =>
-          q.id === quote.id ? { ...q, status: 'converted' as QuoteStatus } : q
+          q.id === quote.id ? { ...q, status: 'converted' as QuoteStatus, convertedToPoId: po.id } : q
         )
       );
 

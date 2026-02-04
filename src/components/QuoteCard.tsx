@@ -39,9 +39,11 @@ interface QuoteCardProps {
   onConvertToInvoice?: (quote: Quote) => void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
+  linkedInvoiceNumber?: string | null;
+  linkedPoNumber?: string | null;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, quoteSettings }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (value: number) => {
@@ -238,6 +240,24 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
+          {/* Converted notice */}
+          {quote.status === 'converted' && (linkedInvoiceNumber || linkedPoNumber) && (
+            <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/20 rounded text-sm">
+              {linkedInvoiceNumber && (
+                <span className="flex items-center gap-1 text-success">
+                  <Receipt className="h-3 w-3" />
+                  Converted to Invoice: <strong>{linkedInvoiceNumber}</strong>
+                </span>
+              )}
+              {linkedPoNumber && (
+                <span className="flex items-center gap-1 text-primary">
+                  <ShoppingCart className="h-3 w-3" />
+                  Converted to PO: <strong>{linkedPoNumber}</strong>
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Attachment section */}
           {quote.attachmentUrl && (
             <div className="flex items-center justify-between p-2 bg-muted rounded text-sm">

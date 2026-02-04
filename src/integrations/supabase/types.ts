@@ -349,6 +349,8 @@ export type Database = {
       quotes: {
         Row: {
           attachment_url: string | null
+          converted_to_invoice_id: string | null
+          converted_to_po_id: string | null
           created_at: string
           discount_amount: number
           discount_rate: number
@@ -368,6 +370,8 @@ export type Database = {
         }
         Insert: {
           attachment_url?: string | null
+          converted_to_invoice_id?: string | null
+          converted_to_po_id?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number
@@ -387,6 +391,8 @@ export type Database = {
         }
         Update: {
           attachment_url?: string | null
+          converted_to_invoice_id?: string | null
+          converted_to_po_id?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number
@@ -405,6 +411,20 @@ export type Database = {
           vendor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quotes_converted_to_invoice_id_fkey"
+            columns: ["converted_to_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_converted_to_po_id_fkey"
+            columns: ["converted_to_po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotes_vendor_id_fkey"
             columns: ["vendor_id"]
