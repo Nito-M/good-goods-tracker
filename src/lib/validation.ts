@@ -96,7 +96,7 @@ export const saleItemSchema = z.object({
 
 export const createSaleSchema = z.object({
   vendorId: z.string().uuid().optional().nullable(),
-  invoiceNumber: z.string().max(50).optional(),
+  invoiceNumber: z.string().max(50).optional().nullable(),
   items: z.array(saleItemSchema).min(1, 'At least one item is required'),
   taxRate: z.number().min(0).max(100, 'Tax rate must be between 0-100'),
   discountRate: z.number().min(0).max(100, 'Discount rate must be between 0-100'),
