@@ -116,7 +116,7 @@ export function Settings() {
 
   // Quote settings state
   const [quoteThankYouNote, setQuoteThankYouNote] = useState('');
-  const [quoteValidityDays, setQuoteValidityDays] = useState(30);
+  const [quoteValidityDays, setQuoteValidityDays] = useState<number | null>(null);
   const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
 
   // Load profile data into form
@@ -131,9 +131,9 @@ export function Settings() {
       setLogoUrl(profile.logoUrl || '');
       setInvoiceLayout(profile.invoiceLayout || defaultInvoiceLayout);
       // Quote settings
-      setQuoteThankYouNote((profile as any).quoteThankYouNote || 'Thank you for considering our services!');
-      setQuoteValidityDays((profile as any).quoteValidityDays || 30);
-      setQuoteLayout((profile as any).quoteLayout || profile.invoiceLayout || defaultInvoiceLayout);
+      setQuoteThankYouNote(profile.quoteThankYouNote || 'Thank you for considering our services!');
+      setQuoteValidityDays(profile.quoteValidityDays || null);
+      setQuoteLayout(profile.quoteLayout || profile.invoiceLayout || defaultInvoiceLayout);
     }
   }, [profile]);
 
@@ -570,22 +570,23 @@ export function Settings() {
                   e.preventDefault();
                   await updateProfile({
                     quoteThankYouNote: quoteThankYouNote || null,
-                    quoteValidityDays: quoteValidityDays,
+                    quoteValidityDays: quoteValidityDays || undefined,
                     quoteLayout: quoteLayout,
                   });
                 }} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="quote-validity">Default Validity Period (days)</Label>
                     <p className="text-sm text-muted-foreground">
-                      How many days quotes are valid by default
+                      How many days quotes are valid by default (leave empty for no default)
                     </p>
                     <Input
                       id="quote-validity"
                       type="number"
-                      value={quoteValidityDays}
-                      onChange={(e) => setQuoteValidityDays(parseInt(e.target.value) || 30)}
+                      value={quoteValidityDays ?? ''}
+                      onChange={(e) => setQuoteValidityDays(e.target.value ? parseInt(e.target.value) : null)}
                       min={1}
                       max={365}
+                      placeholder="No default"
                       className="w-32"
                     />
                   </div>

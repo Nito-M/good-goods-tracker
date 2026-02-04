@@ -1,4 +1,5 @@
-import { Trash2, FileText, Send, Check, X, Clock } from 'lucide-react';
+import { useRef } from 'react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,10 +27,14 @@ interface QuoteCardProps {
   quote: Quote;
   onDelete: (id: string) => void;
   onUpdateStatus: (id: string, status: Quote['status']) => void;
+  onUploadAttachment: (quoteId: string, file: File) => Promise<string | null>;
+  onRemoveAttachment: (quoteId: string) => void;
   quoteSettings: QuoteSettings;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, quoteSettings }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, quoteSettings }: QuoteCardProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -81,6 +86,16 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, quoteSettings }: Qu
 
   const handleDownloadPDF = () => {
     generateQuotePDF(quote, quoteSettings);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await onUploadAttachment(quote.id, file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -142,10 +157,50 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, quoteSettings }: Qu
           </div>
         </div>
 
+        {/* Attachment section */}
+        {quote.attachmentUrl ? (
+          <div className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+            <a 
+              href={quote.attachmentUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-primary hover:underline truncate flex-1"
+            >
+              <Paperclip className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">Attachment</span>
+              <ExternalLink className="h-3 w-3 flex-shrink-0" />
+            </a>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+              onClick={() => onRemoveAttachment(quote.id)}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        ) : null}
+
         <div className="flex gap-2 pt-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={handleDownloadPDF}>
             <FileText className="h-4 w-4 mr-1" />
             PDF
+          </Button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.webp"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            title="Attach PDF or image"
+          >
+            <Upload className="h-4 w-4" />
           </Button>
           
           <DropdownMenu>

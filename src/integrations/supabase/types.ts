@@ -342,6 +342,7 @@ export type Database = {
       }
       quotes: {
         Row: {
+          attachment_url: string | null
           created_at: string
           discount_amount: number
           discount_rate: number
@@ -360,6 +361,7 @@ export type Database = {
           vendor_id: string | null
         }
         Insert: {
+          attachment_url?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number
@@ -378,6 +380,7 @@ export type Database = {
           vendor_id?: string | null
         }
         Update: {
+          attachment_url?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number

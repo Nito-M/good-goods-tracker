@@ -58,7 +58,7 @@ interface CartItem {
 
 export function Quotes() {
   const { signOut } = useAuth();
-  const { quotes, loading, createQuote, deleteQuote, updateQuoteStatus } = useQuotes();
+  const { quotes, loading, createQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -70,10 +70,10 @@ export function Quotes() {
     businessPhone: profile?.businessPhone || null,
     businessEmail: profile?.businessEmail || null,
     businessNumber: profile?.businessNumber || null,
-    thankYouNote: (profile as any)?.quoteThankYouNote || 'Thank you for considering our services!',
+    thankYouNote: profile?.quoteThankYouNote || 'Thank you for considering our services!',
     logoUrl: profile?.logoUrl || null,
-    layout: (profile as any)?.quoteLayout || profile?.invoiceLayout || null,
-    validityDays: (profile as any)?.quoteValidityDays || 30,
+    layout: profile?.quoteLayout || profile?.invoiceLayout || null,
+    validityDays: profile?.quoteValidityDays || null,
   }), [profile]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -196,8 +196,12 @@ export function Quotes() {
       setTaxRate(5);
       setDiscountRate(0);
       setNotes('');
-      const defaultDate = addDays(new Date(), quoteSettings.validityDays || 30);
-      setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
+      if (quoteSettings.validityDays) {
+        const defaultDate = addDays(new Date(), quoteSettings.validityDays);
+        setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
+      } else {
+        setValidUntil('');
+      }
     }
 
     setIsProcessing(false);
@@ -666,6 +670,8 @@ export function Quotes() {
                                 quote={quote}
                                 onDelete={deleteQuote}
                                 onUpdateStatus={updateQuoteStatus}
+                                onUploadAttachment={uploadAttachment}
+                                onRemoveAttachment={removeAttachment}
                                 quoteSettings={quoteSettings}
                               />
                             ))}

@@ -61,6 +61,7 @@ export function useQuotes() {
             notes: quote.notes,
             paymentTerms: quote.payment_terms,
             validUntil: quote.valid_until,
+            attachmentUrl: (quote as any).attachment_url || null,
             items: mappedItems,
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
@@ -207,12 +208,89 @@ export function useQuotes() {
     }
   };
 
+  const uploadAttachment = async (quoteId: string, file: File): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${quoteId}-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('quote-attachments')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('quote-attachments')
+        .getPublicUrl(filePath);
+
+      // Update quote with attachment URL
+      const { error: updateError } = await supabase
+        .from('quotes')
+        .update({ attachment_url: publicUrl })
+        .eq('id', quoteId);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === quoteId ? { ...q, attachmentUrl: publicUrl } : q))
+      );
+
+      toast({
+        title: 'Attachment uploaded',
+        description: 'File has been attached to the quote',
+      });
+
+      return publicUrl;
+    } catch (error: unknown) {
+      console.error('Error uploading attachment:', error);
+      toast({
+        title: 'Error uploading attachment',
+        description: 'Unable to upload file. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+  const removeAttachment = async (quoteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ attachment_url: null })
+        .eq('id', quoteId);
+
+      if (error) throw error;
+
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === quoteId ? { ...q, attachmentUrl: null } : q))
+      );
+
+      toast({
+        title: 'Attachment removed',
+        description: 'The attachment has been removed from the quote',
+      });
+    } catch (error: unknown) {
+      console.error('Error removing attachment:', error);
+      toast({
+        title: 'Error removing attachment',
+        description: 'Unable to remove attachment. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     quotes,
     loading,
     createQuote,
     updateQuoteStatus,
     deleteQuote,
+    uploadAttachment,
+    removeAttachment,
     refetch: fetchQuotes,
   };
 }
