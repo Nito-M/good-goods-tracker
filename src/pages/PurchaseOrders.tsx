@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, LogOut, ArrowLeft, ClipboardList } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, LogOut, ArrowLeft, ClipboardList, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -29,6 +29,7 @@ export function PurchaseOrders() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const handleMarkReceived = async (orderId: string) => {
@@ -63,8 +64,22 @@ export function PurchaseOrders() {
     return bNum - aNum;
   };
 
-  const orderedOrders = orders.filter((o) => o.status === 'ordered').sort(sortByPoNumber);
-  const receivedOrders = orders.filter((o) => o.status === 'received').sort(sortByPoNumber);
+  // Filter orders based on search query
+  const filteredOrders = useMemo(() => {
+    if (!searchQuery) return orders;
+    const query = searchQuery.toLowerCase();
+    return orders.filter((order) => {
+      const matchesPO = order.poNumber?.toLowerCase().includes(query);
+      const matchesVendor = order.vendorId && vendors.find(v => v.id === order.vendorId)?.name.toLowerCase().includes(query);
+      const matchesItems = order.items?.some(
+        (item) => item.itemName?.toLowerCase().includes(query) || item.sku?.toLowerCase().includes(query)
+      );
+      return matchesPO || matchesVendor || matchesItems;
+    });
+  }, [orders, searchQuery, vendors]);
+
+  const orderedOrders = filteredOrders.filter((o) => o.status === 'ordered').sort(sortByPoNumber);
+  const receivedOrders = filteredOrders.filter((o) => o.status === 'received').sort(sortByPoNumber);
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,6 +143,18 @@ export function PurchaseOrders() {
           </div>
         ) : (
           <Tabs defaultValue="ordered" className="space-y-6">
+            {/* Search bar for purchase orders */}
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search by PO number, vendor, or item..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-10 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm"
+              />
+            </div>
+            
             <TabsList>
               <TabsTrigger value="ordered" className="gap-2">
                 Ordered
