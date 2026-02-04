@@ -572,7 +572,7 @@ export function Settings() {
                     quoteThankYouNote: quoteThankYouNote || null,
                     quoteValidityDays: quoteValidityDays,
                     quoteLayout: quoteLayout,
-                  } as any);
+                  });
                 }} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="quote-validity">Default Validity Period (days)</Label>

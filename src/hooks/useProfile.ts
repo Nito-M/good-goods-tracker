@@ -79,9 +79,9 @@ export function useProfile() {
         colorTheme: data.color_theme,
         backgroundTheme: data.background_theme,
         invoiceLayout: (data.invoice_layout as unknown as InvoiceLayout) || defaultInvoiceLayout,
-        quoteThankYouNote: (data as any).quote_thank_you_note,
-        quoteValidityDays: (data as any).quote_validity_days || 30,
-        quoteLayout: ((data as any).quote_layout as unknown as InvoiceLayout) || defaultInvoiceLayout,
+        quoteThankYouNote: data.quote_thank_you_note,
+        quoteValidityDays: data.quote_validity_days || 30,
+        quoteLayout: (data.quote_layout as unknown as InvoiceLayout) || defaultInvoiceLayout,
       });
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
@@ -124,9 +124,9 @@ export function useProfile() {
       if (validation.data.colorTheme !== undefined) updateData.color_theme = validation.data.colorTheme;
       if (validation.data.backgroundTheme !== undefined) updateData.background_theme = validation.data.backgroundTheme;
       if (input.invoiceLayout !== undefined) updateData.invoice_layout = input.invoiceLayout;
-      if ((input as any).quoteThankYouNote !== undefined) updateData.quote_thank_you_note = (input as any).quoteThankYouNote;
-      if ((input as any).quoteValidityDays !== undefined) updateData.quote_validity_days = (input as any).quoteValidityDays;
-      if ((input as any).quoteLayout !== undefined) updateData.quote_layout = (input as any).quoteLayout;
+      if (input.quoteThankYouNote !== undefined) updateData.quote_thank_you_note = input.quoteThankYouNote;
+      if (input.quoteValidityDays !== undefined) updateData.quote_validity_days = input.quoteValidityDays;
+      if (input.quoteLayout !== undefined) updateData.quote_layout = input.quoteLayout;
 
       const { error } = await supabase
         .from('profiles')
