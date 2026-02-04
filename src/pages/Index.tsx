@@ -18,9 +18,7 @@ interface IndexProps {
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
   categories: string[];
-  onEdit: (item: unknown) => void;
   onDelete: (id: string) => void;
-  onOpenDialog: () => void;
 }
 
 const Index = ({

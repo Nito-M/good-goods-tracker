@@ -15,11 +15,10 @@ import { cn } from '@/lib/utils';
 
 interface InventoryTableProps {
   items: InventoryItem[];
-  onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
 }
 
-export function InventoryTable({ items, onEdit, onDelete }: InventoryTableProps) {
+export function InventoryTable({ items, onDelete }: InventoryTableProps) {
   const navigate = useNavigate();
 
   const formatCurrency = (value: number) => {

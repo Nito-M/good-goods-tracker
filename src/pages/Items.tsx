@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
@@ -12,9 +13,7 @@ interface ItemsProps {
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
   categories: string[];
-  onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
-  onOpenDialog: () => void;
 }
 
 export const Items = ({
@@ -25,10 +24,9 @@ export const Items = ({
   categoryFilter,
   setCategoryFilter,
   categories,
-  onEdit,
   onDelete,
-  onOpenDialog,
 }: ItemsProps) => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -38,7 +36,7 @@ export const Items = ({
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
               Items & Inventory
             </h1>
-            <Button onClick={onOpenDialog} className="gap-2">
+            <Button onClick={() => navigate('/items/new')} className="gap-2">
               <Plus className="h-4 w-4" />
               Add Item
             </Button>
@@ -67,7 +65,6 @@ export const Items = ({
         ) : (
           <InventoryTable
             items={items}
-            onEdit={onEdit}
             onDelete={onDelete}
           />
         )}

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import { Items } from "./pages/Items";
 import { ItemDetails } from "./pages/ItemDetails";
+import { AddItemPage } from "./pages/AddItem";
 import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
 import { Sales } from "./pages/Sales";
@@ -15,8 +15,6 @@ import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
-import { AddItemDialog } from "@/components/AddItemDialog";
-import { InventoryItem } from "@/types/inventory";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
@@ -40,20 +38,6 @@ function AppContent() {
 
   const { allCategories } = useCategories();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-
-  const handleEdit = (item: InventoryItem) => {
-    setEditingItem(item);
-    setDialogOpen(true);
-  };
-
-  const handleCloseDialog = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) {
-      setEditingItem(null);
-    }
-  };
 
   return (
     <>
@@ -73,9 +57,7 @@ function AppContent() {
                   categoryFilter={categoryFilter}
                   setCategoryFilter={setCategoryFilter}
                   categories={allCategories}
-                  onEdit={handleEdit}
                   onDelete={deleteItem}
-                  onOpenDialog={() => setDialogOpen(true)}
                 />
               </AppLayout>
             </ProtectedRoute>
@@ -94,9 +76,39 @@ function AppContent() {
                   categoryFilter={categoryFilter}
                   setCategoryFilter={setCategoryFilter}
                   categories={allCategories}
-                  onEdit={handleEdit}
                   onDelete={deleteItem}
-                  onOpenDialog={() => setDialogOpen(true)}
+                />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/items/new"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddItemPage
+                  categories={allCategories}
+                  onSave={addItem}
+                  onUpdate={updateItem}
+                  onDelete={deleteItem}
+                  items={allItems}
+                />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/items/edit/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddItemPage
+                  categories={allCategories}
+                  onSave={addItem}
+                  onUpdate={updateItem}
+                  onDelete={deleteItem}
+                  items={allItems}
                 />
               </AppLayout>
             </ProtectedRoute>
@@ -109,7 +121,6 @@ function AppContent() {
               <AppLayout>
                 <ItemDetails
                   items={allItems}
-                  onEdit={handleEdit}
                   onDelete={deleteItem}
                 />
               </AppLayout>
@@ -148,15 +159,6 @@ function AppContent() {
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <AddItemDialog
-        open={dialogOpen}
-        onOpenChange={handleCloseDialog}
-        onSave={addItem}
-        editItem={editingItem}
-        onUpdate={updateItem}
-        onDelete={deleteItem}
-        categories={allCategories}
-      />
     </>
   );
 }

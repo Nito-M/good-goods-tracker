@@ -9,11 +9,10 @@ import { ItemPurchaseHistory } from '@/components/ItemPurchaseHistory';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
-  onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
 }
 
-export function ItemDetails({ items, onEdit, onDelete }: ItemDetailsProps) {
+export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
@@ -46,8 +45,7 @@ export function ItemDetails({ items, onEdit, onDelete }: ItemDetailsProps) {
   const profitMargin = item.price > 0 ? ((item.price - item.cost) / item.price) * 100 : 0;
 
   const handleEdit = () => {
-    onEdit(item);
-    navigate('/items');
+    navigate(`/items/edit/${item.id}`);
   };
 
   const handleDelete = () => {
