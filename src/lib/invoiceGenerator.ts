@@ -21,11 +21,11 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     });
   };
 
-  // Add logo if available (top left, 40x40 max)
+  // Add logo if available (top left, 160x160 max)
   if (settings?.logoUrl) {
     try {
       const img = await loadImage(settings.logoUrl);
-      const maxSize = 40 * 0.352778; // Convert 40px to mm (approx 14mm)
+      const maxSize = 160 * 0.352778; // Convert 160px to mm (approx 56mm)
       let imgWidth = maxSize;
       let imgHeight = maxSize;
       

@@ -22,6 +22,28 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   const TAX_RATE = 0.05;
   const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
 
+  // Add logo if available (top left, 160x160 max)
+  if (settings?.logoUrl) {
+    try {
+      const img = await loadImage(settings.logoUrl);
+      const maxSize = 160 * 0.352778; // Convert 160px to mm (approx 56mm)
+      let imgWidth = maxSize;
+      let imgHeight = maxSize;
+      
+      // Maintain aspect ratio
+      const aspectRatio = img.width / img.height;
+      if (aspectRatio > 1) {
+        imgHeight = imgWidth / aspectRatio;
+      } else {
+        imgWidth = imgHeight * aspectRatio;
+      }
+      
+      doc.addImage(img, 'PNG', 20, y, imgWidth, imgHeight);
+      y = 20 + imgHeight + 5;
+    } catch (error) {
+      console.error('Failed to load logo:', error);
+    }
+  }
 
   // Business Info (right side)
   if (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail || settings?.businessNumber) {
