@@ -168,6 +168,9 @@ export type Database = {
           invoice_layout: Json | null
           invoice_thank_you_note: string | null
           logo_url: string | null
+          quote_layout: Json | null
+          quote_thank_you_note: string | null
+          quote_validity_days: number | null
           theme: string | null
           updated_at: string
           user_id: string
@@ -187,6 +190,9 @@ export type Database = {
           invoice_layout?: Json | null
           invoice_thank_you_note?: string | null
           logo_url?: string | null
+          quote_layout?: Json | null
+          quote_thank_you_note?: string | null
+          quote_validity_days?: number | null
           theme?: string | null
           updated_at?: string
           user_id: string
@@ -206,6 +212,9 @@ export type Database = {
           invoice_layout?: Json | null
           invoice_thank_you_note?: string | null
           logo_url?: string | null
+          quote_layout?: Json | null
+          quote_thank_you_note?: string | null
+          quote_validity_days?: number | null
           theme?: string | null
           updated_at?: string
           user_id?: string
@@ -270,6 +279,125 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "purchase_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string | null
+          item_name: string
+          quantity: number
+          quote_id: string
+          sku: string
+          total_price: number
+          unit_cost: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name: string
+          quantity?: number
+          quote_id: string
+          sku: string
+          total_price?: number
+          unit_cost?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name?: string
+          quantity?: number
+          quote_id?: string
+          sku?: string
+          total_price?: number
+          unit_cost?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          created_at: string
+          discount_amount: number
+          discount_rate: number
+          id: string
+          notes: string | null
+          payment_terms: string | null
+          quote_number: string
+          status: string
+          subtotal: number
+          tax_amount: number
+          tax_rate: number
+          total: number
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+          vendor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_amount?: number
+          discount_rate?: number
+          id?: string
+          notes?: string | null
+          payment_terms?: string | null
+          quote_number: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+          vendor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_amount?: number
+          discount_rate?: number
+          id?: string
+          notes?: string | null
+          payment_terms?: string | null
+          quote_number?: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"

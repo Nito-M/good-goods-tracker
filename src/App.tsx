@@ -11,6 +11,7 @@ import { AddItemPage } from "./pages/AddItem";
 import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
 import { Sales } from "./pages/Sales";
+import { Quotes } from "./pages/Quotes";
 import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { useInventory } from "@/hooks/useInventory";
@@ -143,6 +144,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Sales />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quotes"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Quotes />
               </AppLayout>
             </ProtectedRoute>
           }
