@@ -750,8 +750,7 @@ export function Quotes() {
                             <Badge variant="secondary">{monthQuotes.length}</Badge>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-4">
+                        <AccordionContent className="space-y-3 pt-2">
                             {monthQuotes.map((quote) => (
                               <QuoteCard
                                 key={quote.id}
@@ -764,7 +763,6 @@ export function Quotes() {
                                 quoteSettings={quoteSettings}
                               />
                             ))}
-                          </div>
                         </AccordionContent>
                       </AccordionItem>
                     ))}
