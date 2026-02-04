@@ -38,9 +38,11 @@ export function useQuotes() {
             itemName: item.item_name,
             sku: item.sku,
             quantity: item.quantity,
+            quantityUnit: (item as any).quantity_unit || 'pcs',
             unitPrice: Number(item.unit_price),
             unitCost: Number(item.unit_cost),
             totalPrice: Number(item.total_price),
+            notes: (item as any).notes || null,
             createdAt: item.created_at,
           }));
 
@@ -133,10 +135,12 @@ export function useQuotes() {
             item_name: item.itemName,
             sku: item.sku,
             quantity: item.quantity,
+            quantity_unit: item.quantityUnit,
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
             total_price: item.quantity * item.unitPrice,
-          });
+            notes: item.notes,
+          } as any);
 
         if (itemError) throw itemError;
       }
