@@ -1,3 +1,5 @@
+import { InvoiceLayout } from './invoiceLayout';
+
 export interface SaleItem {
   id: string;
   saleId: string;
@@ -63,4 +65,5 @@ export interface InvoiceSettings {
   businessNumber: string | null;
   thankYouNote: string | null;
   logoUrl: string | null;
+  layout?: InvoiceLayout | null;
 }

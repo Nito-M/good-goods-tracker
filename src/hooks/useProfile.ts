@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { profileSchema, validateInput } from '@/lib/validation';
+import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
 export interface Profile {
   id: string;
@@ -19,6 +20,7 @@ export interface Profile {
   theme: string | null;
   colorTheme: string | null;
   backgroundTheme: string | null;
+  invoiceLayout: InvoiceLayout;
 }
 
 export interface UpdateProfileInput {
@@ -34,6 +36,7 @@ export interface UpdateProfileInput {
   theme?: string | null;
   colorTheme?: string | null;
   backgroundTheme?: string | null;
+  invoiceLayout?: InvoiceLayout | null;
 }
 
 export function useProfile() {
@@ -69,6 +72,7 @@ export function useProfile() {
         theme: data.theme,
         colorTheme: data.color_theme,
         backgroundTheme: data.background_theme,
+        invoiceLayout: (data.invoice_layout as unknown as InvoiceLayout) || defaultInvoiceLayout,
       });
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
@@ -110,6 +114,7 @@ export function useProfile() {
       if (validation.data.theme !== undefined) updateData.theme = validation.data.theme;
       if (validation.data.colorTheme !== undefined) updateData.color_theme = validation.data.colorTheme;
       if (validation.data.backgroundTheme !== undefined) updateData.background_theme = validation.data.backgroundTheme;
+      if (input.invoiceLayout !== undefined) updateData.invoice_layout = input.invoiceLayout;
 
       const { error } = await supabase
         .from('profiles')

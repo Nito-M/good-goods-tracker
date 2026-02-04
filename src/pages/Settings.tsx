@@ -13,6 +13,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { InvoiceLayoutEditor } from '@/components/InvoiceLayoutEditor';
+import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
 import {
@@ -108,6 +110,7 @@ export function Settings() {
   const [businessNumber, setBusinessNumber] = useState('');
   const [invoiceThankYouNote, setInvoiceThankYouNote] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [invoiceLayout, setInvoiceLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,6 +124,7 @@ export function Settings() {
       setBusinessNumber(profile.businessNumber || '');
       setInvoiceThankYouNote(profile.invoiceThankYouNote || 'Thank you for your business!');
       setLogoUrl(profile.logoUrl || '');
+      setInvoiceLayout(profile.invoiceLayout || defaultInvoiceLayout);
     }
   }, [profile]);
 
@@ -225,6 +229,7 @@ export function Settings() {
       businessEmail: businessEmail || null,
       businessNumber: businessNumber || null,
       invoiceThankYouNote: invoiceThankYouNote || null,
+      invoiceLayout: invoiceLayout,
     });
   };
 
@@ -497,6 +502,16 @@ export function Settings() {
                       onChange={(e) => setInvoiceThankYouNote(e.target.value)}
                       placeholder="Thank you for your business!"
                       rows={2}
+                    />
+                  </div>
+
+                  {/* Invoice Layout Editor */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <InvoiceLayoutEditor
+                      layout={invoiceLayout}
+                      onChange={setInvoiceLayout}
+                      logoUrl={logoUrl}
+                      businessName={businessName}
                     />
                   </div>
 
