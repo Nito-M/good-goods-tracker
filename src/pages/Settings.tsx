@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -176,6 +176,28 @@ export function Settings() {
   // Delete confirmation state
   const [deleteVendorId, setDeleteVendorId] = useState<string | null>(null);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
+  
+  // Search state
+  const [vendorSearchQuery, setVendorSearchQuery] = useState('');
+  const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  
+  // Filtered vendors
+  const filteredVendors = vendors.filter((vendor) => {
+    if (!vendorSearchQuery) return true;
+    const query = vendorSearchQuery.toLowerCase();
+    return (
+      vendor.name.toLowerCase().includes(query) ||
+      vendor.contact_email?.toLowerCase().includes(query) ||
+      vendor.contact_phone?.toLowerCase().includes(query) ||
+      vendor.address?.toLowerCase().includes(query)
+    );
+  });
+  
+  // Filtered categories
+  const filteredCategories = categories.filter((cat) => {
+    if (!categorySearchQuery) return true;
+    return cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase());
+  });
 
   const openVendorDialog = (vendor?: Vendor) => {
     if (vendor) {
@@ -536,16 +558,29 @@ export function Settings() {
                   Add Vendor
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {/* Search bar for vendors */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search vendors..."
+                    value={vendorSearchQuery}
+                    onChange={(e) => setVendorSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                
                 {vendorsLoading ? (
                   <div className="text-muted-foreground py-8 text-center">Loading vendors...</div>
-                ) : vendors.length === 0 ? (
+                ) : filteredVendors.length === 0 ? (
                   <div className="text-muted-foreground py-8 text-center">
-                    No vendors yet. Add your first vendor to get started.
+                    {vendors.length === 0 
+                      ? "No vendors yet. Add your first vendor to get started."
+                      : "No vendors match your search."}
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
-                    {vendors.map((vendor) => (
+                    {filteredVendors.map((vendor) => (
                       <div key={vendor.id} className="flex items-center justify-between py-4">
                         <div>
                           <div className="font-medium">{vendor.name}</div>
@@ -595,13 +630,30 @@ export function Settings() {
                   </Button>
                 </form>
 
+                {/* Search bar for categories */}
+                {categories.length > 0 && (
+                  <div className="relative max-w-xs">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Search categories..."
+                      value={categorySearchQuery}
+                      onChange={(e) => setCategorySearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                )}
+
                 {categories.length === 0 ? (
                   <div className="text-muted-foreground py-4 text-center">
                     No categories yet. Add your first category to get started.
                   </div>
+                ) : filteredCategories.length === 0 ? (
+                  <div className="text-muted-foreground py-4 text-center">
+                    No categories match your search.
+                  </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => (
+                    {filteredCategories.map((cat) => (
                       <div
                         key={cat.id}
                         className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 rounded-md text-sm"

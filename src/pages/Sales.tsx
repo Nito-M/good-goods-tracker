@@ -7,6 +7,7 @@ import {
   Trash2,
   Minus,
   Receipt,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,6 +82,7 @@ export function Sales() {
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [searchQuery, setSearchQuery] = useState('');
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
 
@@ -579,6 +581,17 @@ export function Sales() {
           </TabsContent>
 
           <TabsContent value="history" className="space-y-4">
+            {/* Search bar for sales history */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by invoice number, customer, or item..."
+                value={historySearchQuery}
+                onChange={(e) => setHistorySearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-muted-foreground">Loading sales...</div>
@@ -596,8 +609,23 @@ export function Sales() {
                 {/* Sales List grouped by month */}
                 <Accordion type="multiple" className="w-full space-y-2">
                     {(() => {
+                      // Filter sales based on search query
+                      const filteredSales = historySearchQuery
+                        ? sales.filter((sale) => {
+                            const query = historySearchQuery.toLowerCase();
+                            const matchesInvoice = sale.invoiceNumber.toLowerCase().includes(query);
+                            const matchesVendor = sale.vendorId && vendors.find(v => v.id === sale.vendorId)?.name.toLowerCase().includes(query);
+                            const matchesItems = sale.items.some(
+                              (item) =>
+                                item.itemName.toLowerCase().includes(query) ||
+                                item.sku.toLowerCase().includes(query)
+                            );
+                            return matchesInvoice || matchesVendor || matchesItems;
+                          })
+                        : sales;
+
                       // Group sales by month
-                      const salesByMonth = sales.reduce((acc, sale) => {
+                      const salesByMonth = filteredSales.reduce((acc, sale) => {
                         const monthKey = getMonthKey(sale.createdAt);
                         if (!acc[monthKey]) {
                           acc[monthKey] = [];
