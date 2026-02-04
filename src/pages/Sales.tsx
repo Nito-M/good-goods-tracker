@@ -71,6 +71,7 @@ export function Sales() {
     businessNumber: profile?.businessNumber || null,
     thankYouNote: profile?.invoiceThankYouNote || null,
     logoUrl: profile?.logoUrl || null,
+    layout: profile?.invoiceLayout || null,
   }), [profile]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
