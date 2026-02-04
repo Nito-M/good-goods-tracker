@@ -48,12 +48,19 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
 
-import { InventoryItem } from '@/types/inventory';
+import { InventoryItem, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { QuoteSettings } from '@/types/quote';
 
 interface CartItem {
-  inventoryItem: InventoryItem;
+  id: string; // unique ID for cart item (inventory item ID or generated for custom)
+  inventoryItemId: string | null;
+  itemName: string;
+  sku: string;
   quantity: number;
+  quantityUnit: QuantityUnit;
+  unitPrice: number;
+  unitCost: number;
+  notes: string;
 }
 
 export function Quotes() {
@@ -125,39 +132,68 @@ export function Quotes() {
 
   const addToCart = (item: InventoryItem) => {
     setCart((prev) => {
-      const existing = prev.find((c) => c.inventoryItem.id === item.id);
+      const existing = prev.find((c) => c.inventoryItemId === item.id);
       if (existing) {
         return prev.map((c) =>
-          c.inventoryItem.id === item.id
+          c.inventoryItemId === item.id
             ? { ...c, quantity: c.quantity + 1 }
             : c
         );
       }
-      return [...prev, { inventoryItem: item, quantity: 1 }];
+      return [...prev, {
+        id: item.id,
+        inventoryItemId: item.id,
+        itemName: item.name,
+        sku: item.sku,
+        quantity: 1,
+        quantityUnit: item.quantityUnit,
+        unitPrice: item.price,
+        unitCost: item.cost,
+        notes: '',
+      }];
     });
   };
 
-  const updateCartQuantity = (itemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setCart((prev) => prev.filter((c) => c.inventoryItem.id !== itemId));
-      return;
-    }
+  const addCustomItem = () => {
+    const customId = `custom-${Date.now()}`;
+    setCart((prev) => [...prev, {
+      id: customId,
+      inventoryItemId: null,
+      itemName: '',
+      sku: '',
+      quantity: 1,
+      quantityUnit: 'pcs' as QuantityUnit,
+      unitPrice: 0,
+      unitCost: 0,
+      notes: '',
+    }]);
+  };
+
+  const updateCartItem = (itemId: string, updates: Partial<CartItem>) => {
     setCart((prev) =>
       prev.map((c) =>
-        c.inventoryItem.id === itemId
-          ? { ...c, quantity }
+        c.id === itemId
+          ? { ...c, ...updates }
           : c
       )
     );
   };
 
+  const updateCartQuantity = (itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      setCart((prev) => prev.filter((c) => c.id !== itemId));
+      return;
+    }
+    updateCartItem(itemId, { quantity });
+  };
+
   const removeFromCart = (itemId: string) => {
-    setCart((prev) => prev.filter((c) => c.inventoryItem.id !== itemId));
+    setCart((prev) => prev.filter((c) => c.id !== itemId));
   };
 
   const subtotal = useMemo(
     () =>
-      cart.reduce((sum, c) => sum + c.quantity * c.inventoryItem.price, 0),
+      cart.reduce((sum, c) => sum + c.quantity * c.unitPrice, 0),
     [cart]
   );
 
@@ -169,18 +205,26 @@ export function Quotes() {
   const handleCreateQuote = async () => {
     if (cart.length === 0) return;
 
+    // Validate custom items have names
+    const invalidItems = cart.filter((c) => !c.itemName.trim());
+    if (invalidItems.length > 0) {
+      return;
+    }
+
     setIsProcessing(true);
 
     const quote = await createQuote({
       vendorId: selectedVendorId || null,
       quoteNumber: customQuoteNumber.trim() || null,
       items: cart.map((c) => ({
-        inventoryItemId: c.inventoryItem.id,
-        itemName: c.inventoryItem.name,
-        sku: c.inventoryItem.sku,
+        inventoryItemId: c.inventoryItemId,
+        itemName: c.itemName,
+        sku: c.sku || 'CUSTOM',
         quantity: c.quantity,
-        unitPrice: c.inventoryItem.price,
-        unitCost: c.inventoryItem.cost,
+        quantityUnit: c.quantityUnit,
+        unitPrice: c.unitPrice,
+        unitCost: c.unitCost,
+        notes: c.notes || null,
       })),
       taxRate,
       discountRate,
@@ -379,97 +423,147 @@ export function Quotes() {
 
                 {/* Cart */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Quote Items ({cart.length} items)</CardTitle>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>Quote Items ({cart.length} items)</CardTitle>
+                      <CardDescription>Add items from inventory or create custom items</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={addCustomItem}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Custom Item
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     {cart.length === 0 ? (
                       <p className="text-muted-foreground text-center py-4">
-                        No items in quote. Add items from above.
+                        No items in quote. Add items from above or create custom items.
                       </p>
                     ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Item</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Quantity</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
-                            <TableHead></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {cart.map((c) => (
-                            <TableRow key={c.inventoryItem.id}>
-                              <TableCell className="font-medium">
-                                {c.inventoryItem.name}
-                              </TableCell>
-                              <TableCell>
-                                {formatCurrency(c.inventoryItem.price)}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="h-8 w-8"
-                                    onClick={() =>
-                                      updateCartQuantity(
-                                        c.inventoryItem.id,
-                                        c.quantity - 1
-                                      )
-                                    }
-                                  >
-                                    <Minus className="h-3 w-3" />
-                                  </Button>
-                                  <Input
-                                    type="number"
-                                    className="w-16 text-center"
-                                    value={c.quantity}
-                                    onChange={(e) =>
-                                      updateCartQuantity(
-                                        c.inventoryItem.id,
-                                        parseInt(e.target.value) || 0
-                                      )
-                                    }
-                                    min={1}
-                                  />
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="h-8 w-8"
-                                    onClick={() =>
-                                      updateCartQuantity(
-                                        c.inventoryItem.id,
-                                        c.quantity + 1
-                                      )
-                                    }
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                  </Button>
+                      <div className="space-y-4">
+                        {cart.map((c) => (
+                          <div key={c.id} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 space-y-3">
+                                {/* Item Name and SKU */}
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Item Name</Label>
+                                    {c.inventoryItemId ? (
+                                      <p className="font-medium">{c.itemName}</p>
+                                    ) : (
+                                      <Input
+                                        placeholder="Enter item name"
+                                        value={c.itemName}
+                                        onChange={(e) => updateCartItem(c.id, { itemName: e.target.value })}
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">SKU</Label>
+                                    {c.inventoryItemId ? (
+                                      <Badge variant="secondary">{c.sku}</Badge>
+                                    ) : (
+                                      <Input
+                                        placeholder="SKU (optional)"
+                                        value={c.sku}
+                                        onChange={(e) => updateCartItem(c.id, { sku: e.target.value })}
+                                      />
+                                    )}
+                                  </div>
                                 </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {formatCurrency(
-                                  c.quantity * c.inventoryItem.price
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="text-destructive"
-                                  onClick={() =>
-                                    removeFromCart(c.inventoryItem.id)
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+
+                                {/* Quantity, Unit, and Price */}
+                                <div className="grid grid-cols-4 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Quantity</Label>
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        size="icon"
+                                        variant="outline"
+                                        className="h-8 w-8"
+                                        onClick={() => updateCartQuantity(c.id, c.quantity - 1)}
+                                      >
+                                        <Minus className="h-3 w-3" />
+                                      </Button>
+                                      <Input
+                                        type="number"
+                                        className="w-16 text-center"
+                                        value={c.quantity}
+                                        onChange={(e) => updateCartQuantity(c.id, parseFloat(e.target.value) || 0)}
+                                        min={0.01}
+                                        step={0.01}
+                                      />
+                                      <Button
+                                        size="icon"
+                                        variant="outline"
+                                        className="h-8 w-8"
+                                        onClick={() => updateCartQuantity(c.id, c.quantity + 1)}
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Unit</Label>
+                                    <Select
+                                      value={c.quantityUnit}
+                                      onValueChange={(v) => updateCartItem(c.id, { quantityUnit: v as QuantityUnit })}
+                                    >
+                                      <SelectTrigger className="h-8">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {Object.entries(QUANTITY_UNIT_LABELS).map(([value, label]) => (
+                                          <SelectItem key={value} value={value}>
+                                            {label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Unit Price</Label>
+                                    {c.inventoryItemId ? (
+                                      <p className="font-medium h-8 flex items-center">{formatCurrency(c.unitPrice)}</p>
+                                    ) : (
+                                      <Input
+                                        type="number"
+                                        className="h-8"
+                                        value={c.unitPrice}
+                                        onChange={(e) => updateCartItem(c.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+                                        min={0}
+                                        step={0.01}
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs">Total</Label>
+                                    <p className="font-bold h-8 flex items-center">{formatCurrency(c.quantity * c.unitPrice)}</p>
+                                  </div>
+                                </div>
+
+                                {/* Per-Item Notes */}
+                                <div className="space-y-1">
+                                  <Label className="text-xs">Item Notes</Label>
+                                  <Input
+                                    placeholder="Add notes for this item..."
+                                    value={c.notes}
+                                    onChange={(e) => updateCartItem(c.id, { notes: e.target.value })}
+                                  />
+                                </div>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="text-destructive shrink-0"
+                                onClick={() => removeFromCart(c.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </CardContent>
                 </Card>

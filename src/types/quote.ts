@@ -7,9 +7,11 @@ export interface QuoteItem {
   itemName: string;
   sku: string;
   quantity: number;
+  quantityUnit: string;
   unitPrice: number;
   unitCost: number;
   totalPrice: number;
+  notes: string | null;
   createdAt: string;
 }
 
@@ -40,12 +42,14 @@ export interface CreateQuoteInput {
   vendorId: string | null;
   quoteNumber?: string | null;
   items: {
-    inventoryItemId: string;
+    inventoryItemId: string | null;
     itemName: string;
     sku: string;
     quantity: number;
+    quantityUnit: string;
     unitPrice: number;
     unitCost: number;
+    notes: string | null;
   }[];
   taxRate: number;
   discountRate: number;
