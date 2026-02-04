@@ -66,7 +66,7 @@ interface CartItem {
 
 export function Quotes() {
   const { signOut } = useAuth();
-  const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice } = useQuotes();
+  const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -765,6 +765,7 @@ export function Quotes() {
                                 onRemoveAttachment={removeAttachment}
                                 onEdit={setEditingQuote}
                                 onConvertToInvoice={convertToInvoice}
+                                onConvertToPurchaseOrder={convertToPurchaseOrder}
                                 quoteSettings={quoteSettings}
                               />
                             ))}
