@@ -51,8 +51,17 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedElement, setSelectedElement] = useState<InvoiceElementKey | null>(null);
 
+  // Ensure layout has all required keys - merge with defaults to handle partial/corrupted layouts
+  const safeLayout: InvoiceLayout = {
+    ...defaultInvoiceLayout,
+    ...layout,
+  };
+
+  // Filter to only valid element keys that exist in elementSizes
+  const validKeys = (Object.keys(defaultInvoiceLayout) as InvoiceElementKey[]);
+
   const handleMouseDown = useCallback((key: InvoiceElementKey, e: React.MouseEvent) => {
-    if (!layout[key].visible) return;
+    if (!safeLayout[key]?.visible) return;
     e.preventDefault();
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setDragOffset({
@@ -61,7 +70,7 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
     });
     setDragging(key);
     setSelectedElement(key);
-  }, [layout]);
+  }, [safeLayout]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragging || !canvasRef.current) return;
@@ -74,15 +83,15 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
     
     // Convert back to mm for storage
     const newLayout = {
-      ...layout,
+      ...safeLayout,
       [dragging]: {
-        ...layout[dragging],
+        ...safeLayout[dragging],
         x: Math.round(x / SCALE),
         y: Math.round(y / SCALE),
       },
     };
     onChange(newLayout);
-  }, [dragging, dragOffset, layout, onChange]);
+  }, [dragging, dragOffset, safeLayout, onChange]);
 
   const handleMouseUp = useCallback(() => {
     setDragging(null);
@@ -98,10 +107,10 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
 
   const toggleVisibility = (key: InvoiceElementKey) => {
     onChange({
-      ...layout,
+      ...safeLayout,
       [key]: {
-        ...layout[key],
-        visible: !layout[key].visible,
+        ...safeLayout[key],
+        visible: !safeLayout[key].visible,
       },
     });
   };
@@ -111,7 +120,8 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
   };
 
   const getElementPosition = (key: InvoiceElementKey) => {
-    const pos = layout[key];
+    const pos = safeLayout[key];
+    if (!pos) return { left: 0, top: 0 };
     // Y of -1 means auto-positioned (at end of content)
     const y = pos.y === -1 ? PAGE_HEIGHT - 60 - (key === 'footer' ? 0 : key === 'notes' ? 40 : 20) : pos.y * SCALE;
     return {
@@ -150,10 +160,11 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
           </div>
 
           {/* Draggable elements */}
-          {(Object.keys(layout) as InvoiceElementKey[]).map((key) => {
+          {validKeys.map((key) => {
             const pos = getElementPosition(key);
             const size = elementSizes[key];
-            const isVisible = layout[key].visible;
+            if (!size) return null;
+            const isVisible = safeLayout[key]?.visible ?? true;
             
             return (
               <div
@@ -190,7 +201,7 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
             <CardDescription className="text-xs">Toggle which elements appear on invoices</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {(Object.keys(layout) as InvoiceElementKey[]).map((key) => (
+            {validKeys.map((key) => (
               <div key={key} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={cn('w-3 h-3 rounded border', elementColors[key])} />
@@ -199,14 +210,14 @@ export function InvoiceLayoutEditor({ layout, onChange, logoUrl, businessName }:
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  {layout[key].visible ? (
+                  {safeLayout[key]?.visible ? (
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   ) : (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
                   )}
                   <Switch
                     id={`vis-${key}`}
-                    checked={layout[key].visible}
+                    checked={safeLayout[key]?.visible ?? true}
                     onCheckedChange={() => toggleVisibility(key)}
                   />
                 </div>
