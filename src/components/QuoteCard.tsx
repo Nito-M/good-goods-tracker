@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download } from 'lucide-react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,20 +26,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Quote, QuoteSettings } from '@/types/quote';
+import { Quote, QuoteSettings, QuoteStatus } from '@/types/quote';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 
 interface QuoteCardProps {
   quote: Quote;
   onDelete: (id: string) => void;
-  onUpdateStatus: (id: string, status: Quote['status']) => void;
+  onUpdateStatus: (id: string, status: QuoteStatus) => void;
   onUploadAttachment: (quoteId: string, file: File) => Promise<string | null>;
   onRemoveAttachment: (quoteId: string) => void;
   onEdit: (quote: Quote) => void;
+  onConvertToInvoice?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, quoteSettings }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, quoteSettings }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (value: number) => {
@@ -69,6 +70,8 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
         return <Badge variant="destructive">rejected</Badge>;
       case 'expired':
         return <Badge variant="secondary">expired</Badge>;
+      case 'converted':
+        return <Badge variant="default" className="bg-success text-success-foreground">converted</Badge>;
       default:
         return <Badge variant="secondary">{quote.status}</Badge>;
     }
@@ -110,6 +113,30 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
+          {quote.status !== 'converted' && onConvertToInvoice && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="text-success">
+                  <Receipt className="h-4 w-4 mr-2" />
+                  Convert to Invoice
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Convert to Invoice?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will create a new invoice from {quote.quoteNumber} and mark the quote as converted.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onConvertToInvoice(quote)}>
+                    Convert
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Button variant="outline" size="sm" onClick={() => onEdit(quote)}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit

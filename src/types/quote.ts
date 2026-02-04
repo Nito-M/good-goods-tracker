@@ -15,6 +15,8 @@ export interface QuoteItem {
   createdAt: string;
 }
 
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'converted';
+
 export interface Quote {
   id: string;
   userId: string;
@@ -22,7 +24,7 @@ export interface Quote {
   vendorName?: string;
   vendorAddress?: string;
   quoteNumber: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  status: QuoteStatus;
   subtotal: number;
   taxRate: number;
   taxAmount: number;
