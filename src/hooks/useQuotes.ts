@@ -1,0 +1,218 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { Quote, QuoteItem, CreateQuoteInput } from '@/types/quote';
+
+export function useQuotes() {
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const fetchQuotes = async () => {
+    if (!user) return;
+
+    try {
+      const { data: quotesData, error: quotesError } = await supabase
+        .from('quotes')
+        .select(`
+          *,
+          vendors (name, address)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (quotesError) throw quotesError;
+
+      const quotesWithItems: Quote[] = await Promise.all(
+        (quotesData || []).map(async (quote) => {
+          const { data: items } = await supabase
+            .from('quote_items')
+            .select('*')
+            .eq('quote_id', quote.id);
+
+          const mappedItems: QuoteItem[] = (items || []).map((item) => ({
+            id: item.id,
+            quoteId: item.quote_id,
+            inventoryItemId: item.inventory_item_id,
+            itemName: item.item_name,
+            sku: item.sku,
+            quantity: item.quantity,
+            unitPrice: Number(item.unit_price),
+            unitCost: Number(item.unit_cost),
+            totalPrice: Number(item.total_price),
+            createdAt: item.created_at,
+          }));
+
+          return {
+            id: quote.id,
+            userId: quote.user_id,
+            vendorId: quote.vendor_id,
+            vendorName: quote.vendors?.name,
+            vendorAddress: quote.vendors?.address,
+            quoteNumber: quote.quote_number,
+            status: quote.status as Quote['status'],
+            subtotal: Number(quote.subtotal),
+            taxRate: Number(quote.tax_rate),
+            taxAmount: Number(quote.tax_amount),
+            discountRate: Number(quote.discount_rate),
+            discountAmount: Number(quote.discount_amount),
+            total: Number(quote.total),
+            notes: quote.notes,
+            paymentTerms: quote.payment_terms,
+            validUntil: quote.valid_until,
+            items: mappedItems,
+            createdAt: quote.created_at,
+            updatedAt: quote.updated_at,
+          };
+        })
+      );
+
+      setQuotes(quotesWithItems);
+    } catch (error: unknown) {
+      console.error('Error fetching quotes:', error);
+      toast({
+        title: 'Error fetching quotes',
+        description: 'Unable to load quotes. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuotes();
+  }, [user]);
+
+  const createQuote = async (input: CreateQuoteInput): Promise<Quote | null> => {
+    if (!user) return null;
+
+    try {
+      // Calculate totals
+      const subtotal = input.items.reduce(
+        (sum, item) => sum + item.quantity * item.unitPrice,
+        0
+      );
+      const discountAmount = subtotal * (input.discountRate / 100);
+      const afterDiscount = subtotal - discountAmount;
+      const taxAmount = afterDiscount * (input.taxRate / 100);
+      const total = afterDiscount + taxAmount;
+
+      // Create quote
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .insert({
+          user_id: user.id,
+          vendor_id: input.vendorId,
+          quote_number: input.quoteNumber || null,
+          status: 'draft',
+          subtotal,
+          tax_rate: input.taxRate,
+          tax_amount: taxAmount,
+          discount_rate: input.discountRate,
+          discount_amount: discountAmount,
+          total,
+          notes: input.notes,
+          payment_terms: input.paymentTerms,
+          valid_until: input.validUntil,
+        })
+        .select()
+        .single();
+
+      if (quoteError) throw quoteError;
+
+      // Create quote items
+      for (const item of input.items) {
+        const { error: itemError } = await supabase
+          .from('quote_items')
+          .insert({
+            quote_id: quote.id,
+            inventory_item_id: item.inventoryItemId,
+            item_name: item.itemName,
+            sku: item.sku,
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            unit_cost: item.unitCost,
+            total_price: item.quantity * item.unitPrice,
+          });
+
+        if (itemError) throw itemError;
+      }
+
+      toast({
+        title: 'Quote created',
+        description: `Quote ${quote.quote_number} created successfully`,
+      });
+
+      await fetchQuotes();
+      return quotes.find((q) => q.id === quote.id) || null;
+    } catch (error: unknown) {
+      console.error('Error creating quote:', error);
+      toast({
+        title: 'Error creating quote',
+        description: 'Unable to create quote. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+  const updateQuoteStatus = async (id: string, status: Quote['status']) => {
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ status })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Quote updated',
+        description: `Quote status changed to ${status}`,
+      });
+
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === id ? { ...q, status } : q))
+      );
+    } catch (error: unknown) {
+      console.error('Error updating quote:', error);
+      toast({
+        title: 'Error updating quote',
+        description: 'Unable to update quote. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const deleteQuote = async (id: string) => {
+    try {
+      const { error } = await supabase.from('quotes').delete().eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Quote deleted',
+        description: 'The quote has been removed',
+      });
+
+      setQuotes((prev) => prev.filter((q) => q.id !== id));
+    } catch (error: unknown) {
+      console.error('Error deleting quote:', error);
+      toast({
+        title: 'Error deleting quote',
+        description: 'Unable to delete quote. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return {
+    quotes,
+    loading,
+    createQuote,
+    updateQuoteStatus,
+    deleteQuote,
+    refetch: fetchQuotes,
+  };
+}

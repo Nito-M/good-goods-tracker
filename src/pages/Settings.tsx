@@ -114,6 +114,11 @@ export function Settings() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Quote settings state
+  const [quoteThankYouNote, setQuoteThankYouNote] = useState('');
+  const [quoteValidityDays, setQuoteValidityDays] = useState(30);
+  const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
+
   // Load profile data into form
   useEffect(() => {
     if (profile) {
@@ -125,6 +130,10 @@ export function Settings() {
       setInvoiceThankYouNote(profile.invoiceThankYouNote || 'Thank you for your business!');
       setLogoUrl(profile.logoUrl || '');
       setInvoiceLayout(profile.invoiceLayout || defaultInvoiceLayout);
+      // Quote settings
+      setQuoteThankYouNote((profile as any).quoteThankYouNote || 'Thank you for considering our services!');
+      setQuoteValidityDays((profile as any).quoteValidityDays || 30);
+      setQuoteLayout((profile as any).quoteLayout || profile.invoiceLayout || defaultInvoiceLayout);
     }
   }, [profile]);
 
@@ -289,7 +298,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -297,6 +306,10 @@ export function Settings() {
             <TabsTrigger value="invoice" className="gap-2">
               <FileText className="h-4 w-4" />
               Invoice
+            </TabsTrigger>
+            <TabsTrigger value="quote" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Quote
             </TabsTrigger>
             <TabsTrigger value="vendors" className="gap-2">
               <Building2 className="h-4 w-4" />
@@ -539,6 +552,73 @@ export function Settings() {
 
                   <Button type="submit" disabled={profileLoading}>
                     Save Invoice Settings
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Quote Tab */}
+          <TabsContent value="quote" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quote Settings</CardTitle>
+                <CardDescription>Customize how your quotes look</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  await updateProfile({
+                    quoteThankYouNote: quoteThankYouNote || null,
+                    quoteValidityDays: quoteValidityDays,
+                    quoteLayout: quoteLayout,
+                  } as any);
+                }} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="quote-validity">Default Validity Period (days)</Label>
+                    <p className="text-sm text-muted-foreground">
+                      How many days quotes are valid by default
+                    </p>
+                    <Input
+                      id="quote-validity"
+                      type="number"
+                      value={quoteValidityDays}
+                      onChange={(e) => setQuoteValidityDays(parseInt(e.target.value) || 30)}
+                      min={1}
+                      max={365}
+                      className="w-32"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quote-thank-you-note">Thank You Note</Label>
+                    <p className="text-sm text-muted-foreground">
+                      This message appears at the bottom of your quotes
+                    </p>
+                    <Textarea
+                      id="quote-thank-you-note"
+                      value={quoteThankYouNote}
+                      onChange={(e) => setQuoteThankYouNote(e.target.value)}
+                      placeholder="Thank you for considering our services!"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="space-y-2 pt-4 border-t">
+                    <h4 className="text-sm font-medium">Quote Layout</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Customize the layout of your quote PDFs. Uses the same layout options as invoices.
+                    </p>
+                    <InvoiceLayoutEditor
+                      layout={quoteLayout}
+                      onChange={setQuoteLayout}
+                      logoUrl={logoUrl}
+                      businessName={businessName}
+                    />
+                  </div>
+
+                  <Button type="submit" disabled={profileLoading}>
+                    Save Quote Settings
                   </Button>
                 </form>
               </CardContent>
