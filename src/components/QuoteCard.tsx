@@ -1,7 +1,13 @@
 import { useRef } from 'react';
-import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil } from 'lucide-react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -51,37 +57,20 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
     });
   };
 
-  const getStatusColor = (status: Quote['status']) => {
-    switch (status) {
+  const getStatusBadge = () => {
+    switch (quote.status) {
       case 'draft':
-        return 'secondary';
+        return <Badge variant="secondary">draft</Badge>;
       case 'sent':
-        return 'default';
+        return <Badge variant="default">sent</Badge>;
       case 'accepted':
-        return 'default';
+        return <Badge variant="default">accepted</Badge>;
       case 'rejected':
-        return 'destructive';
+        return <Badge variant="destructive">rejected</Badge>;
       case 'expired':
-        return 'secondary';
+        return <Badge variant="secondary">expired</Badge>;
       default:
-        return 'secondary';
-    }
-  };
-
-  const getStatusIcon = (status: Quote['status']) => {
-    switch (status) {
-      case 'draft':
-        return <FileText className="h-3 w-3" />;
-      case 'sent':
-        return <Send className="h-3 w-3" />;
-      case 'accepted':
-        return <Check className="h-3 w-3" />;
-      case 'rejected':
-        return <X className="h-3 w-3" />;
-      case 'expired':
-        return <Clock className="h-3 w-3" />;
-      default:
-        return null;
+        return <Badge variant="secondary">{quote.status}</Badge>;
     }
   };
 
@@ -101,97 +90,34 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">{quote.quoteNumber}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {quote.vendorName || 'No customer'}
-            </p>
-          </div>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Badge variant={getStatusColor(quote.status)} className="gap-1">
-              {getStatusIcon(quote.status)}
-              {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
-            </Badge>
+            <CardTitle className="text-lg">{quote.quoteNumber}</CardTitle>
+            {getStatusBadge()}
           </div>
+          <CardDescription className="flex items-center gap-4">
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {formatDate(quote.createdAt)}
+            </span>
+            {quote.vendorName && (
+              <span className="flex items-center gap-1">
+                <Building2 className="h-3 w-3" />
+                {quote.vendorName}
+              </span>
+            )}
+          </CardDescription>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Created</p>
-            <p className="font-medium">{formatDate(quote.createdAt)}</p>
-          </div>
-          {quote.validUntil && (
-            <div>
-              <p className="text-muted-foreground">Valid Until</p>
-              <p className="font-medium">{formatDate(quote.validUntil)}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="border-t pt-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Items</span>
-            <span>{quote.items.length}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span>{formatCurrency(quote.subtotal)}</span>
-          </div>
-          {quote.discountAmount > 0 && (
-            <div className="flex justify-between text-sm text-destructive">
-              <span>Discount ({quote.discountRate}%)</span>
-              <span>-{formatCurrency(quote.discountAmount)}</span>
-            </div>
-          )}
-          {quote.taxAmount > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tax ({quote.taxRate}%)</span>
-              <span>{formatCurrency(quote.taxAmount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between font-medium mt-1 pt-1 border-t">
-            <span>Total</span>
-            <span>{formatCurrency(quote.total)}</span>
-          </div>
-        </div>
-
-        {/* Attachment section */}
-        {quote.attachmentUrl ? (
-          <div className="flex items-center justify-between p-2 bg-muted rounded text-sm">
-            <a 
-              href={quote.attachmentUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-primary hover:underline truncate flex-1"
-            >
-              <Paperclip className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">Attachment</span>
-              <ExternalLink className="h-3 w-3 flex-shrink-0" />
-            </a>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-              onClick={() => onRemoveAttachment(quote.id)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        ) : null}
-
-        <div className="flex gap-2 pt-2">
+        <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => onEdit(quote)}>
-            <Pencil className="h-4 w-4 mr-1" />
+            <Pencil className="h-4 w-4 mr-2" />
             Edit
           </Button>
-          <Button variant="outline" size="sm" className="flex-1" onClick={handleDownloadPDF}>
-            <FileText className="h-4 w-4 mr-1" />
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+            <Download className="h-4 w-4 mr-2" />
             PDF
           </Button>
-          
           <input
             ref={fileInputRef}
             type="file"
@@ -201,13 +127,12 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           />
           <Button 
             variant="outline" 
-            size="sm"
+            size="icon"
             onClick={() => fileInputRef.current?.click()}
             title="Attach PDF or image"
           >
             <Upload className="h-4 w-4" />
           </Button>
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -232,28 +157,122 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-destructive">
+              <Button variant="outline" size="icon" className="text-destructive">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete Quote</AlertDialogTitle>
+                <AlertDialogTitle>Delete Quote?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete quote {quote.quoteNumber}? This action cannot be undone.
+                  This will permanently delete {quote.quoteNumber}. This action
+                  cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(quote.id)}>
+                <AlertDialogAction
+                  onClick={() => onDelete(quote.id)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {/* Attachment section */}
+          {quote.attachmentUrl && (
+            <div className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+              <a 
+                href={quote.attachmentUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-primary hover:underline truncate flex-1"
+              >
+                <Paperclip className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">Attachment</span>
+                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+              </a>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                onClick={() => onRemoveAttachment(quote.id)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+
+          {/* Items */}
+          <div className="space-y-1">
+            <p className="text-sm font-medium flex items-center gap-1">
+              <FileText className="h-3 w-3" />
+              Items ({quote.items.length})
+            </p>
+            <div className="text-sm text-muted-foreground pl-4">
+              {quote.items.slice(0, 3).map((item) => (
+                <div key={item.id} className="flex justify-between">
+                  <span>
+                    {item.itemName} × {item.quantity} {item.quantityUnit}
+                  </span>
+                  <span>{formatCurrency(item.totalPrice)}</span>
+                </div>
+              ))}
+              {quote.items.length > 3 && (
+                <p className="text-xs italic">
+                  +{quote.items.length - 3} more items
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Valid Until */}
+          {quote.validUntil && (
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              Valid until {formatDate(quote.validUntil)}
+            </div>
+          )}
+
+          {/* Totals */}
+          <div className="border-t pt-3 space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>{formatCurrency(quote.subtotal)}</span>
+            </div>
+            {quote.discountAmount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Discount ({quote.discountRate}%)</span>
+                <span>-{formatCurrency(quote.discountAmount)}</span>
+              </div>
+            )}
+            {quote.taxAmount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Tax ({quote.taxRate}%)
+                </span>
+                <span>{formatCurrency(quote.taxAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold">
+              <span>Total</span>
+              <span>{formatCurrency(quote.total)}</span>
+            </div>
+          </div>
+
+          {/* Notes */}
+          {quote.notes && (
+            <div className="border-t pt-3">
+              <p className="text-sm text-muted-foreground">{quote.notes}</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
