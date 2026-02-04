@@ -95,6 +95,7 @@ export function Quotes() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [customQuoteNumber, setCustomQuoteNumber] = useState('');
   const [validUntil, setValidUntil] = useState<string>('');
+  const [validUntilInitialized, setValidUntilInitialized] = useState(false);
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
 
   const handleSaveQuote = async (quoteId: string, data: any) => {
@@ -120,13 +121,14 @@ export function Quotes() {
     }
   }, [nextQuoteNumber]);
 
-  // Set default validity date
+  // Set default validity date only on initial load
   useEffect(() => {
-    if (!validUntil && quoteSettings.validityDays) {
+    if (!validUntilInitialized && quoteSettings.validityDays) {
       const defaultDate = addDays(new Date(), quoteSettings.validityDays);
       setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
+      setValidUntilInitialized(true);
     }
-  }, [quoteSettings.validityDays]);
+  }, [quoteSettings.validityDays, validUntilInitialized]);
 
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(
@@ -244,9 +246,11 @@ export function Quotes() {
       setTaxRate(null);
       setDiscountRate(null);
       setNotes('');
+      setValidUntilInitialized(false);
       if (quoteSettings.validityDays) {
         const defaultDate = addDays(new Date(), quoteSettings.validityDays);
         setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
+        setValidUntilInitialized(true);
       } else {
         setValidUntil('');
       }
