@@ -1,0 +1,386 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { InventoryItem, Dimensions, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
+import { ArrowLeft, Trash2, Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+interface AddItemPageProps {
+  categories: string[];
+  onSave: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onUpdate?: (id: string, updates: Partial<InventoryItem>) => void;
+  onDelete?: (id: string) => void;
+  items: InventoryItem[];
+}
+
+const DEFAULT_DIMENSIONS: Dimensions = { length: 0, width: 0, height: 0, unit: 'in' };
+
+export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: AddItemPageProps) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const editItem = id ? items.find(item => item.id === id) : null;
+  const isEditing = !!editItem;
+
+  const [name, setName] = useState('');
+  const [sku, setSku] = useState('');
+  const [category, setCategory] = useState<string>(categories[0] || 'Other');
+  const [quantity, setQuantity] = useState('');
+  const [quantityUnit, setQuantityUnit] = useState<QuantityUnit>('pcs');
+  const [price, setPrice] = useState('');
+  const [cost, setCost] = useState('');
+  const [minStock, setMinStock] = useState('');
+  const [weight, setWeight] = useState('');
+  const [weightUnit, setWeightUnit] = useState<'lb' | 'kg'>('lb');
+  const [dimensions, setDimensions] = useState<Dimensions>(DEFAULT_DIMENSIONS);
+  const [colors, setColors] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (editItem) {
+      setName(editItem.name);
+      setSku(editItem.sku);
+      setCategory(editItem.category);
+      setQuantity(String(editItem.quantity));
+      setQuantityUnit(editItem.quantityUnit || 'pcs');
+      setPrice(String(editItem.price));
+      setCost(String(editItem.cost));
+      setMinStock(String(editItem.minStock));
+      setWeight(String(editItem.weight));
+      setWeightUnit(editItem.weightUnit);
+      setDimensions(editItem.dimensions);
+      setColors(editItem.colors.join(', '));
+      setDescription(editItem.description);
+    }
+  }, [editItem]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const itemData = {
+      name,
+      sku,
+      category,
+      quantity: parseInt(quantity) || 0,
+      quantityUnit,
+      price: parseFloat(price) || 0,
+      cost: parseFloat(cost) || 0,
+      minStock: parseInt(minStock) || 0,
+      weight: parseFloat(weight) || 0,
+      weightUnit,
+      dimensions,
+      colors: colors.split(',').map((c) => c.trim()).filter(Boolean),
+      description,
+    };
+
+    if (editItem && onUpdate) {
+      onUpdate(editItem.id, itemData);
+    } else {
+      onSave(itemData);
+    }
+    
+    navigate('/items');
+  };
+
+  const handleDelete = () => {
+    if (editItem && onDelete) {
+      onDelete(editItem.id);
+      navigate('/items');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
+                {isEditing ? 'Edit Item' : 'Add New Item'}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              {isEditing && onDelete && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="gap-2">
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{editItem?.name}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              <Button type="submit" form="item-form" className="gap-2">
+                <Save className="h-4 w-4" />
+                {isEditing ? 'Save Changes' : 'Add Item'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <form id="item-form" onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Product Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter product name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sku">SKU</Label>
+                <Input
+                  id="sku"
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                  placeholder="e.g. ELEC-001"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Inventory & Pricing */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Inventory & Pricing</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="0"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="0"
+                    className="flex-1"
+                    required
+                  />
+                  <Select value={quantityUnit} onValueChange={(v) => setQuantityUnit(v as QuantityUnit)}>
+                    <SelectTrigger className="w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(QUANTITY_UNIT_LABELS) as QuantityUnit[]).map((unit) => (
+                        <SelectItem key={unit} value={unit}>
+                          {QUANTITY_UNIT_LABELS[unit]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Price ($)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cost">Cost ($)</Label>
+                <Input
+                  id="cost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minStock">Min Stock Level</Label>
+                <Input
+                  id="minStock"
+                  type="number"
+                  min="0"
+                  value={minStock}
+                  onChange={(e) => setMinStock(e.target.value)}
+                  placeholder="0"
+                  required
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Physical Properties */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Physical Properties</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="weight">Weight</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="weight"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    placeholder="0"
+                    className="flex-1"
+                  />
+                  <Select value={weightUnit} onValueChange={(v) => setWeightUnit(v as 'lb' | 'kg')}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lb">lb</SelectItem>
+                      <SelectItem value="kg">kg</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Dimensions</Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="L"
+                    value={dimensions.length || ''}
+                    onChange={(e) => setDimensions({ ...dimensions, length: parseFloat(e.target.value) || 0 })}
+                    className="w-20"
+                  />
+                  <span className="text-muted-foreground">×</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="W"
+                    value={dimensions.width || ''}
+                    onChange={(e) => setDimensions({ ...dimensions, width: parseFloat(e.target.value) || 0 })}
+                    className="w-20"
+                  />
+                  <span className="text-muted-foreground">×</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="H"
+                    value={dimensions.height || ''}
+                    onChange={(e) => setDimensions({ ...dimensions, height: parseFloat(e.target.value) || 0 })}
+                    className="w-20"
+                  />
+                  <Select value={dimensions.unit} onValueChange={(v) => setDimensions({ ...dimensions, unit: v as 'in' | 'cm' })}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="in">in</SelectItem>
+                      <SelectItem value="cm">cm</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Additional Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Additional Details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="colors">Colors (comma-separated)</Label>
+                <Input
+                  id="colors"
+                  value={colors}
+                  onChange={(e) => setColors(e.target.value)}
+                  placeholder="e.g. Black, White, Blue"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter product description..."
+                  rows={4}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </main>
+    </div>
+  );
+}
