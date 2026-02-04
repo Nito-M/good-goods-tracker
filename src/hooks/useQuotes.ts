@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, QuoteItem, CreateQuoteInput } from '@/types/quote';
+import { Quote, QuoteItem, CreateQuoteInput, QuoteStatus } from '@/types/quote';
 
 export function useQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -384,6 +384,107 @@ export function useQuotes() {
     }
   };
 
+  const convertToInvoice = async (quote: Quote): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      // Calculate totals for the invoice
+      const subtotal = quote.items.reduce(
+        (sum, item) => sum + item.quantity * item.unitPrice,
+        0
+      );
+      const discountAmount = subtotal * (quote.discountRate / 100);
+      const afterDiscount = subtotal - discountAmount;
+      const taxAmount = afterDiscount * (quote.taxRate / 100);
+      const total = afterDiscount + taxAmount;
+
+      // Create the sale/invoice
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert({
+          user_id: user.id,
+          vendor_id: quote.vendorId,
+          invoice_number: null, // Auto-generate
+          status: 'pending',
+          subtotal,
+          tax_rate: quote.taxRate,
+          tax_amount: taxAmount,
+          discount_rate: quote.discountRate,
+          discount_amount: discountAmount,
+          total,
+          notes: quote.notes,
+          payment_terms: quote.paymentTerms,
+          due_date: null,
+        })
+        .select()
+        .single();
+
+      if (saleError) throw saleError;
+
+      // Create sale items from quote items
+      for (const item of quote.items) {
+        const { error: itemError } = await supabase
+          .from('sale_items')
+          .insert({
+            sale_id: sale.id,
+            inventory_item_id: item.inventoryItemId,
+            item_name: item.itemName,
+            sku: item.sku || 'CUSTOM',
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            unit_cost: item.unitCost,
+            total_price: item.quantity * item.unitPrice,
+          });
+
+        if (itemError) throw itemError;
+
+        // Update inventory quantity if linked to inventory item
+        if (item.inventoryItemId) {
+          const { data: currentItem } = await supabase
+            .from('inventory_items')
+            .select('quantity')
+            .eq('id', item.inventoryItemId)
+            .single();
+
+          if (currentItem) {
+            await supabase
+              .from('inventory_items')
+              .update({ quantity: Math.max(0, currentItem.quantity - item.quantity) })
+              .eq('id', item.inventoryItemId);
+          }
+        }
+      }
+
+      // Update quote status to converted
+      await supabase
+        .from('quotes')
+        .update({ status: 'converted' })
+        .eq('id', quote.id);
+
+      // Update local state
+      setQuotes((prev) =>
+        prev.map((q) =>
+          q.id === quote.id ? { ...q, status: 'converted' as QuoteStatus } : q
+        )
+      );
+
+      toast({
+        title: 'Quote converted',
+        description: `Invoice ${sale.invoice_number} created from ${quote.quoteNumber}`,
+      });
+
+      return sale.id;
+    } catch (error: unknown) {
+      console.error('Error converting quote to invoice:', error);
+      toast({
+        title: 'Error converting quote',
+        description: 'Unable to convert quote to invoice. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
   return {
     quotes,
     loading,
@@ -393,6 +494,7 @@ export function useQuotes() {
     deleteQuote,
     uploadAttachment,
     removeAttachment,
+    convertToInvoice,
     refetch: fetchQuotes,
   };
 }
