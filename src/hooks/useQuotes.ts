@@ -485,6 +485,71 @@ export function useQuotes() {
     }
   };
 
+  const convertToPurchaseOrder = async (quote: Quote): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      // Build items array for purchase order
+      const poItems = quote.items.map((item) => ({
+        sku: item.sku || 'CUSTOM',
+        itemName: item.itemName,
+        quantity: item.quantity,
+        unitCost: item.unitCost,
+      }));
+
+      const firstItem = poItems[0];
+      const totalQuantity = poItems.reduce((sum, item) => sum + item.quantity, 0);
+
+      // Create the purchase order
+      const { data: po, error: poError } = await supabase
+        .from('purchase_orders')
+        .insert({
+          user_id: user.id,
+          vendor_id: quote.vendorId,
+          po_number: null, // Auto-generate
+          sku: firstItem.sku,
+          item_name: firstItem.itemName,
+          quantity: totalQuantity,
+          items: JSON.parse(JSON.stringify(poItems)),
+          ordered_at: new Date().toISOString(),
+          notes: quote.notes,
+          status: 'ordered',
+        })
+        .select()
+        .single();
+
+      if (poError) throw poError;
+
+      // Update quote status to converted
+      await supabase
+        .from('quotes')
+        .update({ status: 'converted' })
+        .eq('id', quote.id);
+
+      // Update local state
+      setQuotes((prev) =>
+        prev.map((q) =>
+          q.id === quote.id ? { ...q, status: 'converted' as QuoteStatus } : q
+        )
+      );
+
+      toast({
+        title: 'Quote converted',
+        description: `Purchase Order ${po.po_number} created from ${quote.quoteNumber}`,
+      });
+
+      return po.id;
+    } catch (error: unknown) {
+      console.error('Error converting quote to purchase order:', error);
+      toast({
+        title: 'Error converting quote',
+        description: 'Unable to convert quote to purchase order. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
   return {
     quotes,
     loading,
@@ -495,6 +560,7 @@ export function useQuotes() {
     uploadAttachment,
     removeAttachment,
     convertToInvoice,
+    convertToPurchaseOrder,
     refetch: fetchQuotes,
   };
 }

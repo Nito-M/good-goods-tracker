@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt } from 'lucide-react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -37,10 +37,11 @@ interface QuoteCardProps {
   onRemoveAttachment: (quoteId: string) => void;
   onEdit: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote) => void;
+  onConvertToPurchaseOrder?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, quoteSettings }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, quoteSettings }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (value: number) => {
@@ -118,7 +119,7 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm" className="text-success">
                   <Receipt className="h-4 w-4 mr-2" />
-                  Convert to Invoice
+                  To Invoice
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -131,6 +132,30 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={() => onConvertToInvoice(quote)}>
+                    Convert
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {quote.status !== 'converted' && onConvertToPurchaseOrder && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="text-primary">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  To PO
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Convert to Purchase Order?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will create a new purchase order from {quote.quoteNumber} and mark the quote as converted.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onConvertToPurchaseOrder(quote)}>
                     Convert
                   </AlertDialogAction>
                 </AlertDialogFooter>
