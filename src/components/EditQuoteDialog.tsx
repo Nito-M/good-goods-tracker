@@ -169,12 +169,12 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
             </div>
             <div className="space-y-2">
               <Label>Customer</Label>
-              <Select value={vendorId} onValueChange={setVendorId}>
+            <Select value={vendorId || 'none'} onValueChange={(val) => setVendorId(val === 'none' ? '' : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select customer (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No customer</SelectItem>
+                  <SelectItem value="none">No customer</SelectItem>
                   {vendors.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
                       {v.name}
