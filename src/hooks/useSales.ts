@@ -419,10 +419,104 @@ export function useSales() {
     }
   };
 
+  const updateSale = async (
+    saleId: string,
+    input: {
+      vendorId: string | null;
+      invoiceNumber: string;
+      items: Array<{
+        id: string;
+        inventoryItemId: string | null;
+        itemName: string;
+        sku: string;
+        quantity: number;
+        unitPrice: number;
+        unitCost: number;
+      }>;
+      taxRate: number;
+      discountRate: number;
+      notes: string | null;
+      paymentTerms: string;
+      dueDate: string | null;
+    }
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      // Calculate totals
+      const subtotal = input.items.reduce(
+        (sum, item) => sum + item.quantity * item.unitPrice,
+        0
+      );
+      const discountAmount = subtotal * (input.discountRate / 100);
+      const afterDiscount = subtotal - discountAmount;
+      const taxAmount = afterDiscount * (input.taxRate / 100);
+      const total = afterDiscount + taxAmount;
+
+      // Update sale
+      const { error: saleError } = await supabase
+        .from('sales')
+        .update({
+          vendor_id: input.vendorId,
+          invoice_number: input.invoiceNumber,
+          subtotal,
+          tax_rate: input.taxRate,
+          tax_amount: taxAmount,
+          discount_rate: input.discountRate,
+          discount_amount: discountAmount,
+          total,
+          notes: input.notes,
+          payment_terms: input.paymentTerms,
+          due_date: input.dueDate,
+        })
+        .eq('id', saleId);
+
+      if (saleError) throw saleError;
+
+      // Delete existing sale items (and their PO allocations via cascade)
+      await supabase.from('sale_items').delete().eq('sale_id', saleId);
+
+      // Create new sale items
+      for (const item of input.items) {
+        const { error: itemError } = await supabase
+          .from('sale_items')
+          .insert({
+            sale_id: saleId,
+            inventory_item_id: item.inventoryItemId,
+            item_name: item.itemName,
+            sku: item.sku || 'CUSTOM',
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            unit_cost: item.unitCost,
+            total_price: item.quantity * item.unitPrice,
+          });
+
+        if (itemError) throw itemError;
+      }
+
+      toast({
+        title: 'Invoice updated',
+        description: `Invoice ${input.invoiceNumber} updated successfully`,
+      });
+
+      await fetchSales();
+      return true;
+    } catch (error: unknown) {
+      console.error('Error updating sale:', error);
+      toast({
+        title: 'Error updating invoice',
+        description: 'Unable to update invoice. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     sales,
     loading,
     createSale,
+    updateSale,
     deleteSale,
     revertSale,
     refetch: fetchSales,

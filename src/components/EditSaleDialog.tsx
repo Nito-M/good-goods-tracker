@@ -1,0 +1,351 @@
+import { useState, useEffect } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Sale, SaleItem } from '@/types/sale';
+import { format } from 'date-fns';
+
+interface EditableSaleItem {
+  id: string;
+  inventoryItemId: string | null;
+  itemName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  unitCost: number;
+}
+
+interface EditSaleDialogProps {
+  sale: Sale | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (saleId: string, data: {
+    vendorId: string | null;
+    invoiceNumber: string;
+    items: EditableSaleItem[];
+    taxRate: number;
+    discountRate: number;
+    notes: string | null;
+    paymentTerms: string;
+    dueDate: string | null;
+  }) => Promise<void>;
+  vendors: Array<{ id: string; name: string }>;
+}
+
+export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: EditSaleDialogProps) {
+  const [items, setItems] = useState<EditableSaleItem[]>([]);
+  const [vendorId, setVendorId] = useState<string>('');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [taxRate, setTaxRate] = useState(0);
+  const [discountRate, setDiscountRate] = useState(0);
+  const [notes, setNotes] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
+  const [dueDate, setDueDate] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (sale) {
+      setItems(sale.items.map(item => ({
+        id: item.id,
+        inventoryItemId: item.inventoryItemId,
+        itemName: item.itemName,
+        sku: item.sku,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        unitCost: item.unitCost,
+      })));
+      setVendorId(sale.vendorId || '');
+      setInvoiceNumber(sale.invoiceNumber);
+      setTaxRate(sale.taxRate);
+      setDiscountRate(sale.discountRate);
+      setNotes(sale.notes || '');
+      setPaymentTerms(sale.paymentTerms || 'Due on receipt');
+      setDueDate(sale.dueDate ? format(new Date(sale.dueDate), 'yyyy-MM-dd') : '');
+    }
+  }, [sale]);
+
+  const updateItem = (itemId: string, updates: Partial<EditableSaleItem>) => {
+    setItems(prev => prev.map(item =>
+      item.id === itemId ? { ...item, ...updates } : item
+    ));
+  };
+
+  const removeItem = (itemId: string) => {
+    setItems(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const addCustomItem = () => {
+    const customId = `new-${Date.now()}`;
+    setItems(prev => [...prev, {
+      id: customId,
+      inventoryItemId: null,
+      itemName: '',
+      sku: '',
+      quantity: 1,
+      unitPrice: 0,
+      unitCost: 0,
+    }]);
+  };
+
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const discountAmount = subtotal * (discountRate / 100);
+  const afterDiscount = subtotal - discountAmount;
+  const taxAmount = afterDiscount * (taxRate / 100);
+  const total = afterDiscount + taxAmount;
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
+
+  const handleSave = async () => {
+    if (!sale) return;
+    
+    const invalidItems = items.filter(item => !item.itemName.trim());
+    if (invalidItems.length > 0) return;
+
+    setIsSaving(true);
+    await onSave(sale.id, {
+      vendorId: vendorId || null,
+      invoiceNumber,
+      items,
+      taxRate,
+      discountRate,
+      notes: notes || null,
+      paymentTerms,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+    });
+    setIsSaving(false);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Invoice</DialogTitle>
+          <DialogDescription>
+            Modify invoice details and items
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Invoice Details */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Invoice Number</Label>
+              <Input
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Customer</Label>
+              <Select value={vendorId} onValueChange={setVendorId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select customer (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No customer</SelectItem>
+                  {vendors.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Due Date</Label>
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Terms</Label>
+              <Input
+                value={paymentTerms}
+                onChange={(e) => setPaymentTerms(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Items */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-base">Items</Label>
+              <Button variant="outline" size="sm" onClick={addCustomItem}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add Item
+              </Button>
+            </div>
+            
+            {items.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No items</p>
+            ) : (
+              <div className="space-y-3">
+                {items.map((item) => (
+                  <div key={item.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Item Name</Label>
+                          <Input
+                            value={item.itemName}
+                            onChange={(e) => updateItem(item.id, { itemName: e.target.value })}
+                            placeholder="Item name"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">SKU</Label>
+                          <Input
+                            value={item.sku}
+                            onChange={(e) => updateItem(item.id, { sku: e.target.value })}
+                            placeholder="SKU"
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive mt-5"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Quantity</Label>
+                        <Input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(item.id, { quantity: parseInt(e.target.value) || 0 })}
+                          min={1}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Unit Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.unitPrice}
+                          onChange={(e) => updateItem(item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Unit Cost</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.unitCost}
+                          onChange={(e) => updateItem(item.id, { unitCost: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Total</Label>
+                        <Input
+                          readOnly
+                          value={formatCurrency(item.quantity * item.unitPrice)}
+                          className="bg-muted"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Rates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Discount Rate (%)</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={discountRate}
+                onChange={(e) => setDiscountRate(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tax Rate (%)</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={taxRate}
+                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label>Notes</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Invoice notes..."
+              rows={3}
+            />
+          </div>
+
+          {/* Totals */}
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span>{formatCurrency(subtotal)}</span>
+            </div>
+            {discountRate > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Discount ({discountRate}%)</span>
+                <span>-{formatCurrency(discountAmount)}</span>
+              </div>
+            )}
+            {taxRate > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tax ({taxRate}%)</span>
+                <span>{formatCurrency(taxAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>{formatCurrency(total)}</span>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving || items.length === 0}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

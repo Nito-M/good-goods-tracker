@@ -47,9 +47,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
+import { EditQuoteDialog } from '@/components/EditQuoteDialog';
 
 import { InventoryItem, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
-import { QuoteSettings } from '@/types/quote';
+import { QuoteSettings, Quote } from '@/types/quote';
 
 interface CartItem {
   id: string; // unique ID for cart item (inventory item ID or generated for custom)
@@ -65,7 +66,7 @@ interface CartItem {
 
 export function Quotes() {
   const { signOut } = useAuth();
-  const { quotes, loading, createQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment } = useQuotes();
+  const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -94,6 +95,11 @@ export function Quotes() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [customQuoteNumber, setCustomQuoteNumber] = useState('');
   const [validUntil, setValidUntil] = useState<string>('');
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+
+  const handleSaveQuote = async (quoteId: string, data: any) => {
+    await updateQuote(quoteId, data);
+  };
 
   // Calculate the next quote number
   const nextQuoteNumber = useMemo(() => {
@@ -754,6 +760,7 @@ export function Quotes() {
                                 onUpdateStatus={updateQuoteStatus}
                                 onUploadAttachment={uploadAttachment}
                                 onRemoveAttachment={removeAttachment}
+                                onEdit={setEditingQuote}
                                 quoteSettings={quoteSettings}
                               />
                             ))}
@@ -768,6 +775,14 @@ export function Quotes() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <EditQuoteDialog
+        quote={editingQuote}
+        open={!!editingQuote}
+        onOpenChange={(open) => !open && setEditingQuote(null)}
+        onSave={handleSaveQuote}
+        vendors={vendors}
+      />
     </div>
   );
 }
