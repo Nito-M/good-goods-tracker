@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { InventoryItem } from '@/types/inventory';
+import { InventoryItem, QuantityUnit } from '@/types/inventory';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,7 @@ interface DbInventoryItem {
   sku: string;
   category: string;
   quantity: number;
+  quantity_unit: string;
   price: number;
   cost: number;
   min_stock: number;
@@ -42,6 +43,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     sku: db.sku,
     category: db.category,
     quantity: db.quantity,
+    quantityUnit: (db.quantity_unit || 'pcs') as QuantityUnit,
     price: Number(db.price),
     cost: Number(db.cost),
     minStock: db.min_stock,
@@ -72,6 +74,7 @@ function inventoryItemToDb(
     sku: item.sku,
     category: item.category,
     quantity: item.quantity,
+    quantity_unit: item.quantityUnit || 'pcs',
     price: item.price,
     cost: item.cost,
     min_stock: item.minStock,
@@ -88,6 +91,7 @@ function inventoryItemToDb(
     user_id: userId,
   };
 }
+
 
 export function useInventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -208,6 +212,7 @@ export function useInventory() {
         sku: item.sku,
         category: item.category,
         quantity: item.quantity,
+        quantity_unit: item.quantityUnit || 'pcs',
         price: item.price,
         cost: item.cost,
         min_stock: item.minStock,
@@ -257,6 +262,7 @@ export function useInventory() {
     if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
     if (updates.category !== undefined) dbUpdates.category = updates.category;
     if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+    if (updates.quantityUnit !== undefined) dbUpdates.quantity_unit = updates.quantityUnit;
     if (updates.price !== undefined) dbUpdates.price = updates.price;
     if (updates.cost !== undefined) dbUpdates.cost = updates.cost;
     if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;

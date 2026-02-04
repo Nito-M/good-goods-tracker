@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { InventoryItem, Dimensions } from '@/types/inventory';
+import { InventoryItem, Dimensions, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { Trash2 } from 'lucide-react';
 import {
   Dialog,
@@ -38,6 +38,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
   const [sku, setSku] = useState('');
   const [category, setCategory] = useState<string>(categories[0] || 'Other');
   const [quantity, setQuantity] = useState('');
+  const [quantityUnit, setQuantityUnit] = useState<QuantityUnit>('pcs');
   const [price, setPrice] = useState('');
   const [cost, setCost] = useState('');
   const [minStock, setMinStock] = useState('');
@@ -53,6 +54,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
       setSku(editItem.sku);
       setCategory(editItem.category);
       setQuantity(String(editItem.quantity));
+      setQuantityUnit(editItem.quantityUnit || 'pcs');
       setPrice(String(editItem.price));
       setCost(String(editItem.cost));
       setMinStock(String(editItem.minStock));
@@ -66,6 +68,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
       setSku('');
       setCategory(categories[0] || 'Other');
       setQuantity('');
+      setQuantityUnit('pcs');
       setPrice('');
       setCost('');
       setMinStock('');
@@ -85,6 +88,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
       sku,
       category,
       quantity: parseInt(quantity) || 0,
+      quantityUnit,
       price: parseFloat(price) || 0,
       cost: parseFloat(cost) || 0,
       minStock: parseInt(minStock) || 0,
@@ -156,15 +160,30 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  min="0"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="0"
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="0"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="0"
+                    className="flex-1"
+                    required
+                  />
+                  <Select value={quantityUnit} onValueChange={(v) => setQuantityUnit(v as QuantityUnit)}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(QUANTITY_UNIT_LABELS) as QuantityUnit[]).map((unit) => (
+                        <SelectItem key={unit} value={unit}>
+                          {QUANTITY_UNIT_LABELS[unit]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">Price ($)</Label>
