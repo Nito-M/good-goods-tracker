@@ -30,6 +30,7 @@ export interface Quote {
   notes: string | null;
   paymentTerms: string;
   validUntil: string | null;
+  attachmentUrl: string | null;
   items: QuoteItem[];
   createdAt: string;
   updatedAt: string;
@@ -62,5 +63,5 @@ export interface QuoteSettings {
   thankYouNote: string | null;
   logoUrl: string | null;
   layout?: InvoiceLayout | null;
-  validityDays?: number;
+  validityDays?: number | null;
 }
