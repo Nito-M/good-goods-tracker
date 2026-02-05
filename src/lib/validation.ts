@@ -8,12 +8,15 @@ const optionalNotes = z.string().max(2000, 'Notes must be less than 2000 charact
 const requiredName = z.string().min(1, 'Name is required').max(255, 'Name must be less than 255 characters');
 
 // Vendor validation
+const optionalUrl = z.string().url('Invalid URL format').max(2000, 'Link must be less than 2000 characters').optional().nullable().or(z.literal(''));
+
 export const vendorSchema = z.object({
   name: requiredName,
   contact_email: optionalEmail,
   contact_phone: optionalPhone,
   address: optionalAddress,
   notes: optionalNotes,
+  link: optionalUrl,
 });
 
 export type VendorInput = z.infer<typeof vendorSchema>;

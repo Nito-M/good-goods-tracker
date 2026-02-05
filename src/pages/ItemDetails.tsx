@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,10 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
 
   const getVendorName = (vendorId: string) => {
     return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
+  };
+
+  const getVendorLink = (vendorId: string) => {
+    return vendors.find((v) => v.id === vendorId)?.link || null;
   };
 
   if (!item) {
@@ -258,24 +262,40 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {vendorPrices.map((vp) => (
-                    <div
-                      key={vp.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
-                    >
-                      <div>
-                        <p className="font-medium">{getVendorName(vp.vendor_id)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Last updated: {new Date(vp.updated_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </p>
+                  {vendorPrices.map((vp) => {
+                    const vendorLink = getVendorLink(vp.vendor_id);
+                    return (
+                      <div
+                        key={vp.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{getVendorName(vp.vendor_id)}</p>
+                            {vendorLink && (
+                              <a
+                                href={vendorLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary/80 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Last updated: {new Date(vp.updated_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <p className="text-lg font-semibold">{formatCurrency(vp.price)}</p>
                       </div>
-                      <p className="text-lg font-semibold">{formatCurrency(vp.price)}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

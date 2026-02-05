@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -182,6 +182,7 @@ export function Settings() {
   const [vendorPhone, setVendorPhone] = useState('');
   const [vendorAddress, setVendorAddress] = useState('');
   const [vendorNotes, setVendorNotes] = useState('');
+  const [vendorLink, setVendorLink] = useState('');
 
   // Category state
   const [newCategory, setNewCategory] = useState('');
@@ -220,6 +221,7 @@ export function Settings() {
       setVendorPhone(vendor.contact_phone || '');
       setVendorAddress(vendor.address || '');
       setVendorNotes(vendor.notes || '');
+      setVendorLink(vendor.link || '');
     } else {
       setEditingVendor(null);
       setVendorName('');
@@ -227,6 +229,7 @@ export function Settings() {
       setVendorPhone('');
       setVendorAddress('');
       setVendorNotes('');
+      setVendorLink('');
     }
     setVendorDialogOpen(true);
   };
@@ -239,6 +242,7 @@ export function Settings() {
       contact_phone: vendorPhone || null,
       address: vendorAddress || null,
       notes: vendorNotes || null,
+      link: vendorLink || null,
     };
 
     if (editingVendor) {
@@ -837,6 +841,16 @@ export function Settings() {
                 onChange={(e) => setVendorAddress(e.target.value)}
                 placeholder="Full address"
                 rows={2}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vendor-link">Website / Link</Label>
+              <Input
+                id="vendor-link"
+                type="url"
+                value={vendorLink}
+                onChange={(e) => setVendorLink(e.target.value)}
+                placeholder="https://vendor-website.com"
               />
             </div>
             <div className="space-y-2">
