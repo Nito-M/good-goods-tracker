@@ -110,6 +110,7 @@ export function Settings() {
   const [businessNumber, setBusinessNumber] = useState('');
   const [invoiceThankYouNote, setInvoiceThankYouNote] = useState('');
   const [invoicePrefix, setInvoicePrefix] = useState('INV');
+  const [invoiceNextNumber, setInvoiceNextNumber] = useState(1);
   const [logoUrl, setLogoUrl] = useState('');
   const [invoiceLayout, setInvoiceLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -130,6 +131,7 @@ export function Settings() {
       setBusinessNumber(profile.businessNumber || '');
       setInvoiceThankYouNote(profile.invoiceThankYouNote || 'Thank you for your business!');
       setInvoicePrefix(profile.invoicePrefix || 'INV');
+      setInvoiceNextNumber(profile.invoiceNextNumber || 1);
       setLogoUrl(profile.logoUrl || '');
       setInvoiceLayout(profile.invoiceLayout || defaultInvoiceLayout);
       // Quote settings
@@ -263,6 +265,7 @@ export function Settings() {
       businessNumber: businessNumber || null,
       invoiceThankYouNote: invoiceThankYouNote || null,
       invoicePrefix: invoicePrefix || 'INV',
+      invoiceNextNumber: invoiceNextNumber,
       invoiceLayout: invoiceLayout,
     });
   };
@@ -532,15 +535,17 @@ export function Settings() {
                         <span className="text-lg text-muted-foreground font-bold mt-[-1rem]">-</span>
                         <div className="space-y-1">
                           <Input
-                            value="0001"
-                            readOnly
-                            className="w-20 text-center bg-muted font-mono"
+                            type="number"
+                            value={invoiceNextNumber}
+                            onChange={(e) => setInvoiceNextNumber(Math.max(1, parseInt(e.target.value) || 1))}
+                            min={1}
+                            className="w-20 text-center font-mono"
                           />
-                          <p className="text-xs text-muted-foreground text-center">Number</p>
+                          <p className="text-xs text-muted-foreground text-center">Next #</p>
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Example: {invoicePrefix || 'INV'}-0001, {invoicePrefix || 'INV'}-0002, etc.
+                        Next invoice will be: {invoicePrefix || 'INV'}-{String(invoiceNextNumber).padStart(4, '0')}
                       </p>
                     </div>
                     <div className="space-y-2">

@@ -95,28 +95,20 @@ export function Sales() {
   // Get the invoice prefix from profile
   const invoicePrefix = profile?.invoicePrefix || 'INV';
 
-  // Calculate the next invoice number
+  // Calculate the next invoice number from profile settings
   const nextInvoiceNumber = useMemo(() => {
     const prefix = profile?.invoicePrefix || 'INV';
-    const prefixPattern = new RegExp(`^${prefix}-([0-9]+)$`);
-    const maxNum = sales.reduce((max, sale) => {
-      const match = sale.invoiceNumber.match(prefixPattern);
-      if (match) {
-        return Math.max(max, parseInt(match[1], 10));
-      }
-      return max;
-    }, 0);
-    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
-  }, [sales, profile?.invoicePrefix]);
+    const nextNum = profile?.invoiceNextNumber || 1;
+    return `${prefix}-${String(nextNum).padStart(4, '0')}`;
+  }, [profile?.invoicePrefix, profile?.invoiceNextNumber]);
 
-  // Auto-populate invoice number when sales load or after a sale is completed
+  // Auto-populate invoice number when profile settings change
   useEffect(() => {
     const prefix = profile?.invoicePrefix || 'INV';
-    const prefixPattern = new RegExp(`^${prefix}-\\d+$`);
-    if (!customInvoiceNumber || prefixPattern.test(customInvoiceNumber)) {
-      setCustomInvoiceNumber(nextInvoiceNumber);
-    }
-  }, [nextInvoiceNumber, profile?.invoicePrefix]);
+    const nextNum = profile?.invoiceNextNumber || 1;
+    const newNumber = `${prefix}-${String(nextNum).padStart(4, '0')}`;
+    setCustomInvoiceNumber(newNumber);
+  }, [profile?.invoicePrefix, profile?.invoiceNextNumber]);
 
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(

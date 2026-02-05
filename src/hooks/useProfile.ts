@@ -18,6 +18,7 @@ export interface Profile {
   businessNumber: string | null;
   invoiceThankYouNote: string | null;
   invoicePrefix: string;
+  invoiceNextNumber: number;
   theme: string | null;
   colorTheme: string | null;
   backgroundTheme: string | null;
@@ -38,6 +39,7 @@ export interface UpdateProfileInput {
   businessNumber?: string | null;
   invoiceThankYouNote?: string | null;
   invoicePrefix?: string | null;
+  invoiceNextNumber?: number;
   theme?: string | null;
   colorTheme?: string | null;
   backgroundTheme?: string | null;
@@ -78,6 +80,7 @@ export function useProfile() {
         businessNumber: data.business_number,
         invoiceThankYouNote: data.invoice_thank_you_note,
         invoicePrefix: data.invoice_prefix || 'INV',
+        invoiceNextNumber: data.invoice_next_number || 1,
         theme: data.theme,
         colorTheme: data.color_theme,
         backgroundTheme: data.background_theme,
@@ -124,6 +127,7 @@ export function useProfile() {
       if (validation.data.businessNumber !== undefined) updateData.business_number = validation.data.businessNumber;
       if (validation.data.invoiceThankYouNote !== undefined) updateData.invoice_thank_you_note = validation.data.invoiceThankYouNote;
       if (input.invoicePrefix !== undefined) updateData.invoice_prefix = input.invoicePrefix;
+      if (input.invoiceNextNumber !== undefined) updateData.invoice_next_number = input.invoiceNextNumber;
       if (validation.data.theme !== undefined) updateData.theme = validation.data.theme;
       if (validation.data.colorTheme !== undefined) updateData.color_theme = validation.data.colorTheme;
       if (validation.data.backgroundTheme !== undefined) updateData.background_theme = validation.data.backgroundTheme;
