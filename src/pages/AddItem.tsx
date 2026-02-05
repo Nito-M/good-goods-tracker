@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 interface VendorPriceEntry {
   vendorId: string;
   price: string;
+  link?: string;
   isNew?: boolean;
 }
 
@@ -97,6 +98,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
         existingPrices.map((p) => ({
           vendorId: p.vendor_id,
           price: String(p.price),
+          link: p.link || '',
           isNew: false,
         }))
       );
@@ -139,7 +141,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
       // Upsert current vendor prices
       for (const vp of vendorPrices) {
         if (vp.price) {
-          await upsertPrice(vp.vendorId, parseFloat(vp.price));
+          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link);
         }
       }
       

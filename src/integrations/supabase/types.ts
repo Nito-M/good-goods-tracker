@@ -150,6 +150,7 @@ export type Database = {
           created_at: string
           id: string
           item_id: string
+          link: string | null
           price: number
           updated_at: string
           user_id: string
@@ -159,6 +160,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_id: string
+          link?: string | null
           price?: number
           updated_at?: string
           user_id: string
@@ -168,6 +170,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_id?: string
+          link?: string | null
           price?: number
           updated_at?: string
           user_id?: string
