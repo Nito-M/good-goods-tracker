@@ -13,6 +13,7 @@ import { PurchaseOrders } from "./pages/PurchaseOrders";
 import { Sales } from "./pages/Sales";
 import { Quotes } from "./pages/Quotes";
 import { Settings } from "./pages/Settings";
+import { Bank } from "./pages/Bank";
 import NotFound from "./pages/NotFound";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
@@ -164,6 +165,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Settings />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bank"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Bank />
               </AppLayout>
             </ProtectedRoute>
           }

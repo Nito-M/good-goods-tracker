@@ -526,7 +526,7 @@ export function useSales() {
     }
   };
 
-  const updateStatus = async (saleId: string, status: SaleStatus) => {
+  const updateStatus = async (saleId: string, status: SaleStatus, addProfitToBank?: (saleId: string, profit: number, invoiceNumber: string) => Promise<boolean>) => {
     try {
       const { error } = await supabase
         .from('sales')
@@ -534,6 +534,14 @@ export function useSales() {
         .eq('id', saleId);
 
       if (error) throw error;
+
+      // If marking as paid and we have the bank function, add profit to bank
+      if (status === 'paid' && addProfitToBank) {
+        const sale = sales.find((s) => s.id === saleId);
+        if (sale && sale.totalProfit > 0) {
+          await addProfitToBank(saleId, sale.totalProfit, sale.invoiceNumber);
+        }
+      }
 
       toast({
         title: 'Status updated',
