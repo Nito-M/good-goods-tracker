@@ -379,6 +379,12 @@ export function useSales() {
         }
       }
 
+      // Remove any bank transactions associated with this sale (profit entry)
+      await supabase
+        .from('bank_transactions')
+        .delete()
+        .eq('sale_id', id);
+
       // Update sale status to cancelled
       const { error } = await supabase
         .from('sales')
@@ -389,7 +395,7 @@ export function useSales() {
 
       toast({
         title: 'Sale reverted',
-        description: 'Items have been restored to inventory and PO allocations cleared',
+        description: 'Items restored to inventory and bank transaction reversed',
       });
 
       // Update local state
