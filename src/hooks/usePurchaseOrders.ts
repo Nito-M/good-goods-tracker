@@ -224,6 +224,7 @@ export function usePurchaseOrders() {
     }
 
     // Update inventory items with new costs and quantities, and save vendor prices
+    // For custom items that don't exist, create them as new inventory items
     for (const item of order.items) {
       // Find matching inventory item by SKU
       const { data: inventoryItem } = await supabase
@@ -234,6 +235,7 @@ export function usePurchaseOrders() {
         .single();
 
       if (inventoryItem) {
+        // Existing item - update quantity and cost
         const updates: Record<string, unknown> = {
           quantity: inventoryItem.quantity + item.quantity,
         };
@@ -252,10 +254,40 @@ export function usePurchaseOrders() {
           .from('inventory_items')
           .update(updates)
           .eq('id', inventoryItem.id);
+      } else {
+        // Custom item - create new inventory item
+        const { data: newItem, error: createError } = await supabase
+          .from('inventory_items')
+          .insert({
+            user_id: user!.id,
+            sku: item.sku,
+            name: item.itemName,
+            category: 'Other',
+            quantity: item.quantity,
+            cost: item.unitCost || 0,
+            price: 0,
+            min_stock: 0,
+            weight: 0,
+            weight_unit: 'lb',
+            quantity_unit: 'pcs',
+            dimensions_length: 0,
+            dimensions_width: 0,
+            dimensions_height: 0,
+            dimensions_unit: 'in',
+          })
+          .select('id')
+          .single();
+
+        if (createError) {
+          console.error('Error creating inventory item from PO:', createError);
+        } else if (newItem && order.vendorId && item.unitCost && item.unitCost > 0) {
+          // Save vendor price for the newly created item
+          await updateVendorPriceFromPO(user!.id, newItem.id, order.vendorId, item.unitCost);
+        }
       }
     }
 
-    toast({ title: 'Order marked as received', description: 'Inventory and vendor prices updated' });
+    toast({ title: 'Order marked as received', description: 'Inventory updated (new items created if needed)' });
     fetchOrders();
     return true;
   };
