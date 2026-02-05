@@ -18,6 +18,7 @@ import { useSales } from '@/hooks/useSales';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
+import { useBank } from '@/hooks/useBank';
 import { Link } from 'react-router-dom';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -63,6 +64,7 @@ export function Sales() {
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
+  const { addSaleProfit } = useBank();
 
   // Build invoice settings from profile
   const invoiceSettings: InvoiceSettings = useMemo(() => ({
@@ -701,7 +703,7 @@ export function Sales() {
                                   onRevert={revertSale}
                                   onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
                                   onEdit={setEditingSale}
-                                  onStatusChange={updateStatus}
+                                  onStatusChange={(id, status) => updateStatus(id, status, addSaleProfit)}
                                 />
                               ))}
                             </AccordionContent>
