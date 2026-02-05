@@ -92,24 +92,31 @@ export function Sales() {
     await updateSale(saleId, data);
   };
 
+  // Get the invoice prefix from profile
+  const invoicePrefix = profile?.invoicePrefix || 'INV';
+
   // Calculate the next invoice number
   const nextInvoiceNumber = useMemo(() => {
+    const prefix = profile?.invoicePrefix || 'INV';
+    const prefixPattern = new RegExp(`^${prefix}-([0-9]+)$`);
     const maxNum = sales.reduce((max, sale) => {
-      const match = sale.invoiceNumber.match(/^INV-(\d+)$/);
+      const match = sale.invoiceNumber.match(prefixPattern);
       if (match) {
         return Math.max(max, parseInt(match[1], 10));
       }
       return max;
     }, 0);
-    return `INV-${String(maxNum + 1).padStart(4, '0')}`;
-  }, [sales]);
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }, [sales, profile?.invoicePrefix]);
 
   // Auto-populate invoice number when sales load or after a sale is completed
   useEffect(() => {
-    if (!customInvoiceNumber || customInvoiceNumber.match(/^INV-\d+$/)) {
+    const prefix = profile?.invoicePrefix || 'INV';
+    const prefixPattern = new RegExp(`^${prefix}-\\d+$`);
+    if (!customInvoiceNumber || prefixPattern.test(customInvoiceNumber)) {
       setCustomInvoiceNumber(nextInvoiceNumber);
     }
-  }, [nextInvoiceNumber]);
+  }, [nextInvoiceNumber, profile?.invoicePrefix]);
 
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(
@@ -457,14 +464,32 @@ export function Sales() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Invoice Number (optional)</Label>
-                      <Input
-                        placeholder="Auto-generated if left empty"
-                        value={customInvoiceNumber}
-                        onChange={(e) => setCustomInvoiceNumber(e.target.value)}
-                      />
+                      <Label>Invoice Number</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={customInvoiceNumber.split('-')[0] || invoicePrefix}
+                          onChange={(e) => {
+                            const prefix = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                            const number = customInvoiceNumber.split('-').slice(1).join('-') || '';
+                            setCustomInvoiceNumber(number ? `${prefix}-${number}` : prefix);
+                          }}
+                          placeholder="Prefix"
+                          className="w-24"
+                        />
+                        <span className="flex items-center text-muted-foreground">-</span>
+                        <Input
+                          value={customInvoiceNumber.split('-').slice(1).join('-') || ''}
+                          onChange={(e) => {
+                            const prefix = customInvoiceNumber.split('-')[0] || invoicePrefix;
+                            const number = e.target.value.replace(/[^0-9]/g, '');
+                            setCustomInvoiceNumber(`${prefix}-${number}`);
+                          }}
+                          placeholder="0001"
+                          className="flex-1"
+                        />
+                      </div>
                       <p className="text-xs text-muted-foreground">
-                        Leave blank for auto-generated number (INV-0001, INV-0002, etc.)
+                        Prefix can be changed in Settings → Invoice tab
                       </p>
                     </div>
 

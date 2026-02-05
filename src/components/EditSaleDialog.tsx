@@ -153,10 +153,29 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Invoice Number</Label>
-              <Input
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={invoiceNumber.split('-')[0] || ''}
+                  onChange={(e) => {
+                    const prefix = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    const number = invoiceNumber.split('-').slice(1).join('-') || '';
+                    setInvoiceNumber(number ? `${prefix}-${number}` : prefix);
+                  }}
+                  placeholder="Prefix"
+                  className="w-24"
+                />
+                <span className="flex items-center text-muted-foreground">-</span>
+                <Input
+                  value={invoiceNumber.split('-').slice(1).join('-') || ''}
+                  onChange={(e) => {
+                    const prefix = invoiceNumber.split('-')[0] || 'INV';
+                    const number = e.target.value.replace(/[^0-9]/g, '');
+                    setInvoiceNumber(`${prefix}-${number}`);
+                  }}
+                  placeholder="Number"
+                  className="flex-1"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Customer</Label>
