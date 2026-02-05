@@ -41,6 +41,7 @@ interface SaleCardProps {
 const statusConfig: Record<SaleStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Draft', variant: 'secondary' },
   pending: { label: 'Pending', variant: 'outline' },
+  picked_up: { label: 'Picked Up', variant: 'default' },
   paid: { label: 'Paid', variant: 'default' },
   overdue: { label: 'Overdue', variant: 'destructive' },
   cancelled: { label: 'Cancelled', variant: 'secondary' },
@@ -101,6 +102,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="picked_up">Picked Up</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
@@ -219,13 +221,13 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               <span>Total</span>
               <span>{formatCurrency(sale.total)}</span>
             </div>
-            {sale.status === 'paid' && sale.totalCost > 0 && (
+            {(sale.status === 'picked_up' || sale.status === 'paid') && sale.totalCost > 0 && (
               <div className="flex justify-between text-sm pt-2 border-t mt-2">
                 <span className="text-muted-foreground">Cost</span>
                 <span>{formatCurrency(sale.totalCost)}</span>
               </div>
             )}
-            {sale.status === 'paid' && sale.totalCost > 0 && (
+            {(sale.status === 'picked_up' || sale.status === 'paid') && sale.totalCost > 0 && (
               <div className="flex justify-between font-bold text-green-600">
                 <span>Profit</span>
                 <span>{formatCurrency(sale.totalProfit)}</span>
