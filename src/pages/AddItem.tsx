@@ -431,16 +431,14 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
             </CardContent>
           </Card>
 
-          {/* Vendor Pricing - Only show when editing */}
-          {isEditing && (
-            <ItemVendorPricing
-              vendors={vendors}
-              existingPrices={existingPrices}
-              vendorPrices={vendorPrices}
-              onVendorPricesChange={setVendorPrices}
-              isEditing={isEditing}
-            />
-          )}
+          {/* Vendor Pricing */}
+          <ItemVendorPricing
+            vendors={vendors}
+            existingPrices={existingPrices}
+            vendorPrices={vendorPrices}
+            onVendorPricesChange={setVendorPrices}
+            isEditing={isEditing}
+          />
         </form>
       </main>
     </div>

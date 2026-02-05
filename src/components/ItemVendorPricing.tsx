@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, DollarSign, Store } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -76,6 +76,10 @@ export function ItemVendorPricing({
     return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
   };
 
+  const getVendorLink = (vendorId: string) => {
+    return vendors.find((v) => v.id === vendorId)?.link || null;
+  };
+
   const getLastUpdated = (vendorId: string) => {
     const existing = existingPrices.find((p) => p.vendor_id === vendorId);
     if (!existing) return null;
@@ -141,6 +145,7 @@ export function ItemVendorPricing({
             {vendorPrices.map((vp) => {
               const lastUpdated = getLastUpdated(vp.vendorId);
               const existingPrice = existingPrices.find((p) => p.vendor_id === vp.vendorId);
+              const vendorLink = getVendorLink(vp.vendorId);
 
               return (
                 <div
@@ -152,6 +157,17 @@ export function ItemVendorPricing({
                       <span className="font-medium truncate">
                         {getVendorName(vp.vendorId)}
                       </span>
+                      {vendorLink && (
+                        <a
+                          href={vendorLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
                       {vp.isNew && (
                         <Badge variant="secondary" className="text-xs">
                           New
