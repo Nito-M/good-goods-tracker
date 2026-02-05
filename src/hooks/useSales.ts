@@ -312,13 +312,58 @@ export function useSales() {
 
   const deleteSale = async (id: string) => {
     try {
+      // Find the sale to delete
+      const sale = sales.find((s) => s.id === id);
+      if (!sale) throw new Error('Sale not found');
+
+      // Get sale items for inventory restoration and PO allocation cleanup
+      const { data: saleItems } = await supabase
+        .from('sale_items')
+        .select('*')
+        .eq('sale_id', id);
+
+      // Restore inventory quantities for each item
+      if (saleItems) {
+        for (const saleItem of saleItems) {
+          if (saleItem.inventory_item_id) {
+            // Get current inventory quantity
+            const { data: inventoryItem } = await supabase
+              .from('inventory_items')
+              .select('quantity')
+              .eq('id', saleItem.inventory_item_id)
+              .single();
+
+            if (inventoryItem) {
+              // Restore the quantity
+              await supabase
+                .from('inventory_items')
+                .update({ quantity: inventoryItem.quantity + saleItem.quantity })
+                .eq('id', saleItem.inventory_item_id);
+            }
+          }
+
+          // Delete PO allocations for this sale item (restores FIFO availability)
+          await supabase
+            .from('po_item_allocations')
+            .delete()
+            .eq('sale_item_id', saleItem.id);
+        }
+      }
+
+      // Remove any bank transactions associated with this sale (profit entry)
+      await supabase
+        .from('bank_transactions')
+        .delete()
+        .eq('sale_id', id);
+
+      // Delete the sale (this will cascade delete sale_items)
       const { error } = await supabase.from('sales').delete().eq('id', id);
 
       if (error) throw error;
 
       toast({
         title: 'Sale deleted',
-        description: 'The sale has been removed',
+        description: 'Inventory restored, allocations cleared, and bank transaction reversed',
       });
 
       setSales((prev) => prev.filter((s) => s.id !== id));

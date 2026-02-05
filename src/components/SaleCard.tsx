@@ -154,9 +154,23 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Sale?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete {sale.invoiceNumber}. This action
-                  cannot be undone.
+                <AlertDialogDescription asChild>
+                  <div className="space-y-3">
+                    <p>
+                      This will permanently delete <strong>{sale.invoiceNumber}</strong>. 
+                      This action cannot be undone.
+                    </p>
+                    <div className="bg-muted/50 rounded-md p-3 text-sm space-y-1">
+                      <p className="font-medium text-foreground">The following will happen:</p>
+                      <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                        <li>Inventory quantities will be restored</li>
+                        <li>PO allocations (FIFO tracking) will be cleared</li>
+                        {sale.status === 'paid' && (
+                          <li>Bank transaction (profit) will be reversed</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -165,7 +179,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                   onClick={() => onDelete(sale.id)}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Delete
+                  Delete Anyway
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
