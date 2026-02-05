@@ -48,6 +48,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { SaleCard } from '@/components/SaleCard';
 import { EditSaleDialog } from '@/components/EditSaleDialog';
+import { InvoicePreviewDialog } from '@/components/InvoicePreviewDialog';
 
 import { InventoryItem } from '@/types/inventory';
 import { InvoiceSettings, Sale } from '@/types/sale';
@@ -89,6 +90,7 @@ export function Sales() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [previewSale, setPreviewSale] = useState<Sale | null>(null);
 
   const handleSaveSale = async (saleId: string, data: any) => {
     await updateSale(saleId, data);
@@ -702,6 +704,7 @@ export function Sales() {
                                   onDelete={deleteSale}
                                   onRevert={revertSale}
                                   onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
+                                  onPreviewInvoice={() => setPreviewSale(sale)}
                                   onEdit={setEditingSale}
                                   onStatusChange={(id, status) => updateStatus(id, status, addSaleProfit)}
                                 />
@@ -725,6 +728,19 @@ export function Sales() {
         onSave={handleSaveSale}
         vendors={vendors}
       />
+
+      {previewSale && (
+        <InvoicePreviewDialog
+          open={!!previewSale}
+          onOpenChange={(open) => !open && setPreviewSale(null)}
+          sale={previewSale}
+          settings={invoiceSettings}
+          onDownload={() => {
+            generateInvoicePDF(previewSale, invoiceSettings);
+            setPreviewSale(null);
+          }}
+        />
+      )}
     </div>
   );
 }

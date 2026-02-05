@@ -1,4 +1,4 @@
-import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil } from 'lucide-react';
+import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,6 +33,7 @@ interface SaleCardProps {
   onDelete: (id: string) => void;
   onRevert: (id: string) => void;
   onDownloadInvoice: () => void;
+  onPreviewInvoice: () => void;
   onEdit: (sale: Sale) => void;
   onStatusChange?: (id: string, status: SaleStatus) => void;
 }
@@ -45,7 +46,7 @@ const statusConfig: Record<SaleStatus, { label: string; variant: 'default' | 'se
   cancelled: { label: 'Cancelled', variant: 'secondary' },
 };
 
-export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit, onStatusChange }: SaleCardProps) {
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange }: SaleCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -109,6 +110,10 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onEdit, 
           <Button variant="outline" size="sm" onClick={() => onEdit(sale)}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit
+          </Button>
+          <Button variant="outline" size="sm" onClick={onPreviewInvoice}>
+            <Eye className="h-4 w-4 mr-2" />
+            Preview
           </Button>
           <Button variant="outline" size="sm" onClick={onDownloadInvoice}>
             <Download className="h-4 w-4 mr-2" />
