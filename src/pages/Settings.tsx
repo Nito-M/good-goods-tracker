@@ -109,6 +109,7 @@ export function Settings() {
   const [businessEmail, setBusinessEmail] = useState('');
   const [businessNumber, setBusinessNumber] = useState('');
   const [invoiceThankYouNote, setInvoiceThankYouNote] = useState('');
+  const [invoicePrefix, setInvoicePrefix] = useState('INV');
   const [logoUrl, setLogoUrl] = useState('');
   const [invoiceLayout, setInvoiceLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -128,6 +129,7 @@ export function Settings() {
       setBusinessEmail(profile.businessEmail || '');
       setBusinessNumber(profile.businessNumber || '');
       setInvoiceThankYouNote(profile.invoiceThankYouNote || 'Thank you for your business!');
+      setInvoicePrefix(profile.invoicePrefix || 'INV');
       setLogoUrl(profile.logoUrl || '');
       setInvoiceLayout(profile.invoiceLayout || defaultInvoiceLayout);
       // Quote settings
@@ -260,6 +262,7 @@ export function Settings() {
       businessEmail: businessEmail || null,
       businessNumber: businessNumber || null,
       invoiceThankYouNote: invoiceThankYouNote || null,
+      invoicePrefix: invoicePrefix || 'INV',
       invoiceLayout: invoiceLayout,
     });
   };
@@ -511,6 +514,20 @@ export function Settings() {
                           onChange={(e) => setBusinessNumber(e.target.value)}
                           placeholder="Tax ID / Registration #"
                         />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="invoice-prefix">Invoice Number Prefix</Label>
+                        <Input
+                          id="invoice-prefix"
+                          value={invoicePrefix}
+                          onChange={(e) => setInvoicePrefix(e.target.value.toUpperCase())}
+                          placeholder="INV"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          e.g., "NOL" will generate NOL-0001, NOL-0002, etc.
+                        </p>
                       </div>
                     </div>
                     <div className="space-y-2">
