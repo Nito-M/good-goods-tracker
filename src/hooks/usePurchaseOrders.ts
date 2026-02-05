@@ -390,6 +390,39 @@ export function usePurchaseOrders() {
   };
 
   const deleteOrder = async (id: string) => {
+    // Get the order first to check if it was paid
+    const order = orders.find((o) => o.id === id);
+    
+    // If the order was paid, reverse the bank withdrawal
+    if (order?.paidAt) {
+      const TAX_RATE = 0.05;
+      const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+      const totalCost = subtotal + (subtotal * TAX_RATE);
+      
+      if (totalCost > 0) {
+        const poLabel = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
+        
+        // Add a refund deposit to reverse the withdrawal
+        const { error: bankError } = await supabase
+          .from('bank_transactions')
+          .insert({
+            user_id: user!.id,
+            type: 'deposit',
+            amount: totalCost,
+            description: `Refund for deleted ${poLabel}`,
+          });
+        
+        if (bankError) {
+          console.error('Error refunding bank transaction:', bankError);
+          toast({
+            title: 'Warning',
+            description: 'PO deleted but bank refund failed. Please add manually.',
+            variant: 'destructive',
+          });
+        }
+      }
+    }
+
     const { error } = await supabase
       .from('purchase_orders')
       .delete()
@@ -405,7 +438,8 @@ export function usePurchaseOrders() {
       return;
     }
 
-    toast({ title: 'Purchase order deleted' });
+    const wasRefunded = order?.paidAt ? ' and bank refunded' : '';
+    toast({ title: `Purchase order deleted${wasRefunded}` });
     fetchOrders();
   };
 
