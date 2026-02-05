@@ -166,6 +166,7 @@ export type Database = {
           display_name: string | null
           id: string
           invoice_layout: Json | null
+          invoice_prefix: string | null
           invoice_thank_you_note: string | null
           logo_url: string | null
           quote_layout: Json | null
@@ -188,6 +189,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           invoice_layout?: Json | null
+          invoice_prefix?: string | null
           invoice_thank_you_note?: string | null
           logo_url?: string | null
           quote_layout?: Json | null
@@ -210,6 +212,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           invoice_layout?: Json | null
+          invoice_prefix?: string | null
           invoice_thank_you_note?: string | null
           logo_url?: string | null
           quote_layout?: Json | null
