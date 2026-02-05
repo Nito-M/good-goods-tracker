@@ -6,11 +6,11 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
+import { useBank } from '@/hooks/useBank';
 import { AddPurchaseOrderDialog } from '@/components/AddPurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
 
@@ -20,11 +20,12 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 
 export function PurchaseOrders() {
   const { signOut } = useAuth();
-  const { orders, loading, createOrder, updateOrder, markAsReceived, deleteOrder } =
+  const { orders, loading, createOrder, updateOrder, markAsReceived, markAsPaid, deleteOrder } =
     usePurchaseOrders();
   const { allItems: inventoryItems, addItem } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
+  const { addWithdrawal } = useBank();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
@@ -35,6 +36,12 @@ export function PurchaseOrders() {
   const handleMarkReceived = async (orderId: string) => {
     setProcessingId(orderId);
     await markAsReceived(orderId);
+    setProcessingId(null);
+  };
+
+  const handleMarkPaid = async (orderId: string) => {
+    setProcessingId(orderId);
+    await markAsPaid(orderId, addWithdrawal);
     setProcessingId(null);
   };
 
@@ -185,6 +192,7 @@ export function PurchaseOrders() {
                     key={order.id}
                     order={order}
                     onMarkReceived={handleMarkReceived}
+                    onMarkPaid={handleMarkPaid}
                     onDelete={deleteOrder}
                     onEdit={handleEdit}
                     onDownload={handleDownload}
@@ -205,6 +213,7 @@ export function PurchaseOrders() {
                     key={order.id}
                     order={order}
                     onMarkReceived={handleMarkReceived}
+                    onMarkPaid={handleMarkPaid}
                     onDelete={deleteOrder}
                     onEdit={handleEdit}
                     onDownload={handleDownload}

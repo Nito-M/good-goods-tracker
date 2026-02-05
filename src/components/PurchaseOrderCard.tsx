@@ -15,11 +15,13 @@ import {
   Building2,
   Download,
   DollarSign,
+  Banknote,
 } from 'lucide-react';
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
   onMarkReceived: (id: string) => void;
+  onMarkPaid: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (order: PurchaseOrder) => void;
   onDownload: (order: PurchaseOrder) => void;
@@ -29,6 +31,7 @@ interface PurchaseOrderCardProps {
 export function PurchaseOrderCard({
   order,
   onMarkReceived,
+  onMarkPaid,
   onDelete,
   onEdit,
   onDownload,
@@ -74,16 +77,27 @@ export function PurchaseOrderCard({
                   </div>
                 )}
               </div>
-              <Badge
-                variant={order.status === 'received' ? 'default' : 'secondary'}
-                className={
-                  order.status === 'received'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : ''
-                }
-              >
-                {order.status === 'received' ? 'Received' : 'Ordered'}
-              </Badge>
+              <div className="flex flex-col gap-1 items-end">
+                <Badge
+                  variant={order.status === 'received' ? 'default' : 'secondary'}
+                  className={
+                    order.status === 'received'
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : ''
+                  }
+                >
+                  {order.status === 'received' ? 'Received' : 'Ordered'}
+                </Badge>
+                {order.paidAt ? (
+                  <Badge variant="outline" className="border-blue-500 text-blue-600">
+                    Paid
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-500 text-amber-600">
+                    Unpaid
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {/* Multiple items list */}
@@ -135,10 +149,18 @@ export function PurchaseOrderCard({
                 <span>Ordered: {format(order.orderedAt, 'MMM d, yyyy')}</span>
               </div>
               {order.receivedAt && (
-                <div className="flex items-center gap-2 col-span-2">
+                <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
                   <span>
                     Received: {format(order.receivedAt, 'MMM d, yyyy')}
+                  </span>
+                </div>
+              )}
+              {order.paidAt && (
+                <div className="flex items-center gap-2">
+                  <Banknote className="h-4 w-4 text-blue-600" />
+                  <span>
+                    Paid: {format(order.paidAt, 'MMM d, yyyy')}
                   </span>
                 </div>
               )}
@@ -172,6 +194,18 @@ export function PurchaseOrderCard({
                 >
                   <Check className="h-4 w-4" />
                   Mark Received
+                </Button>
+              )}
+              {!order.paidAt && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onMarkPaid(order.id)}
+                  disabled={loading}
+                  className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+                >
+                  <Banknote className="h-4 w-4" />
+                  Mark Paid
                 </Button>
               )}
               <Button

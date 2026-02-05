@@ -274,6 +274,7 @@ export type Database = {
           items: Json | null
           notes: string | null
           ordered_at: string
+          paid_at: string | null
           pdf_url: string | null
           po_number: string | null
           quantity: number
@@ -292,6 +293,7 @@ export type Database = {
           items?: Json | null
           notes?: string | null
           ordered_at?: string
+          paid_at?: string | null
           pdf_url?: string | null
           po_number?: string | null
           quantity?: number
@@ -310,6 +312,7 @@ export type Database = {
           items?: Json | null
           notes?: string | null
           ordered_at?: string
+          paid_at?: string | null
           pdf_url?: string | null
           po_number?: string | null
           quantity?: number
