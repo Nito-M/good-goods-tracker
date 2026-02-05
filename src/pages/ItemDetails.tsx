@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { ItemPurchaseHistory } from '@/components/ItemPurchaseHistory';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { useVendors } from '@/hooks/useVendors';
+import { useLastPurchase } from '@/hooks/useLastPurchase';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
@@ -23,6 +24,7 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   // Fetch vendor prices and vendors for this item
   const { prices: vendorPrices } = useItemVendorPrices(item?.id);
   const { vendors } = useVendors();
+  const { lastPurchase } = useLastPurchase(item?.sku);
 
   const getVendorName = (vendorId: string) => {
     return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
@@ -203,6 +205,47 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
               </p>
             </CardContent>
           </Card>
+
+          {/* Last Purchase Card */}
+          {lastPurchase && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5" />
+                  Last Purchase
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Vendor</span>
+                    <span className="font-medium">{lastPurchase.vendorName || 'Unknown'}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Unit Cost</span>
+                    <span className="text-lg font-semibold text-primary">{formatCurrency(lastPurchase.unitCost)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">PO Number</span>
+                    <span className="font-medium">{lastPurchase.poNumber || 'N/A'}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Date</span>
+                    <span className="text-sm">
+                      {lastPurchase.receivedAt.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Vendor Pricing Card */}
           {vendorPrices.length > 0 && (
