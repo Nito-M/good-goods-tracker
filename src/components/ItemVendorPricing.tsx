@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, DollarSign, Store, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,7 @@ import { ItemVendorPrice } from '@/hooks/useItemVendorPrices';
 interface VendorPriceEntry {
   vendorId: string;
   price: string;
+  link?: string;
   isNew?: boolean;
 }
 
@@ -54,6 +55,7 @@ export function ItemVendorPricing({
       {
         vendorId: selectedVendor,
         price: existingPrice ? String(existingPrice.price) : '',
+        link: existingPrice?.link || '',
         isNew: !existingPrice,
       },
     ]);
@@ -64,6 +66,14 @@ export function ItemVendorPricing({
     onVendorPricesChange(
       vendorPrices.map((vp) =>
         vp.vendorId === vendorId ? { ...vp, price } : vp
+      )
+    );
+  };
+
+  const handleLinkChange = (vendorId: string, link: string) => {
+    onVendorPricesChange(
+      vendorPrices.map((vp) =>
+        vp.vendorId === vendorId ? { ...vp, link } : vp
       )
     );
   };
@@ -181,7 +191,7 @@ export function ItemVendorPricing({
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                     <div className="relative w-28">
                       <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -194,6 +204,27 @@ export function ItemVendorPricing({
                         className="pl-7"
                       />
                     </div>
+                    <div className="relative flex-1 min-w-[140px]">
+                      <Link className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="url"
+                        placeholder="https://..."
+                        value={vp.link || ''}
+                        onChange={(e) => handleLinkChange(vp.vendorId, e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                    {vp.link && (
+                      <a
+                        href={vp.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
                     <Button
                       type="button"
                       variant="ghost"
