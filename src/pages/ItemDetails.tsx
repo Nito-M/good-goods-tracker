@@ -262,14 +262,15 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {vendorPrices.map((vp) => {
+                {vendorPrices.map((vp) => {
                     const vendorLink = getVendorLink(vp.vendor_id);
+                    const itemVendorLink = vp.link;
                     return (
                       <div
                         key={vp.id}
                         className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
                       >
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-medium">{getVendorName(vp.vendor_id)}</p>
                             {vendorLink && (
@@ -277,10 +278,11 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                                 href={vendorLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-primary hover:text-primary/80 transition-colors"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
                                 onClick={(e) => e.stopPropagation()}
+                                title="Vendor website"
                               >
-                                <ExternalLink className="h-4 w-4" />
+                                <Store className="h-4 w-4" />
                               </a>
                             )}
                           </div>
@@ -292,7 +294,21 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                             })}
                           </p>
                         </div>
-                        <p className="text-lg font-semibold">{formatCurrency(vp.price)}</p>
+                        <div className="flex items-center gap-3">
+                          <p className="text-lg font-semibold">{formatCurrency(vp.price)}</p>
+                          {itemVendorLink && (
+                            <a
+                              href={itemVendorLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-primary/80 transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                              title="View item at vendor"
+                            >
+                              <ExternalLink className="h-5 w-5" />
+                            </a>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
