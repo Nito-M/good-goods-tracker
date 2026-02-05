@@ -49,23 +49,8 @@ export function PurchaseOrderCard({
 
   return (
     <Card className="overflow-hidden">
-      <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row">
-          {/* Image section */}
-          <div className="md:w-32 h-32 md:h-auto bg-muted flex items-center justify-center shrink-0">
-            {order.imageUrl ? (
-              <img
-                src={order.imageUrl}
-                alt="Order"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Package className="h-10 w-10 text-muted-foreground" />
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 p-4 space-y-3">
+      <CardContent className="p-4">
+        <div className="space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -218,8 +203,7 @@ export function PurchaseOrderCard({
               </Button>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+        </CardContent>
+      </Card>
+    );
+  }
