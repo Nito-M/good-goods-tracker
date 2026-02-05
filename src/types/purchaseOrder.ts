@@ -17,6 +17,7 @@ export interface PurchaseOrder {
   status: 'ordered' | 'received';
   orderedAt: Date;
   receivedAt: Date | null;
+  paidAt: Date | null;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +37,7 @@ export interface DbPurchaseOrder {
   status: string;
   ordered_at: string;
   received_at: string | null;
+  paid_at: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -60,6 +62,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     status: db.status as 'ordered' | 'received',
     orderedAt: new Date(db.ordered_at),
     receivedAt: db.received_at ? new Date(db.received_at) : null,
+    paidAt: db.paid_at ? new Date(db.paid_at) : null,
     notes: db.notes,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),

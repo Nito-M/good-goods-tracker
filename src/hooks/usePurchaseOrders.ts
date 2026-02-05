@@ -371,12 +371,68 @@ export function usePurchaseOrders() {
     fetchOrders();
   };
 
+  const markAsPaid = async (orderId: string, withdrawFromBank?: (amount: number, description: string) => Promise<boolean>) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) {
+      toast({
+        title: 'Order not found',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    if (order.paidAt) {
+      toast({
+        title: 'Order already paid',
+        description: 'This order has already been marked as paid.',
+      });
+      return false;
+    }
+
+    // Calculate total cost
+    const TAX_RATE = 0.05;
+    const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+    const totalCost = subtotal + (subtotal * TAX_RATE);
+
+    // Withdraw from bank if function provided and there's a cost
+    if (withdrawFromBank && totalCost > 0) {
+      const poLabel = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
+      const success = await withdrawFromBank(totalCost, `Payment for ${poLabel}`);
+      if (!success) {
+        return false; // Bank withdrawal failed (likely insufficient funds)
+      }
+    }
+
+    // Update the purchase order
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({
+        paid_at: new Date().toISOString(),
+      })
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: 'Error marking as paid',
+        description: 'Unable to update order. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    toast({ title: 'Order marked as paid', description: `${totalCost > 0 ? `$${totalCost.toFixed(2)} withdrawn from bank` : ''}` });
+    fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
     createOrder,
     updateOrder,
     markAsReceived,
+    markAsPaid,
     deleteOrder,
     refetch: fetchOrders,
   };
