@@ -143,7 +143,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
         const sold: SoldItem[] = [];
         
         for (const item of saleItemsData as any[]) {
-          if (item.sales?.status !== 'completed') continue;
+          if (item.sales?.status !== 'picked_up' && item.sales?.status !== 'paid') continue;
 
           const itemAllocations = allocationsBySaleItem.get(item.id) || [];
           

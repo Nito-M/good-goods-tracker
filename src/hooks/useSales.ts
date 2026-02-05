@@ -258,9 +258,9 @@ export function useSales() {
 
       if (saleError) throw saleError;
 
-      // Create sale items with FIFO costs
+      // Create sale items with FIFO costs (but don't allocate or reduce inventory yet)
       for (const { item, allocations, weightedAvgCost } of itemsWithFIFOCosts) {
-        const { data: saleItem, error: itemError } = await supabase
+        const { error: itemError } = await supabase
           .from('sale_items')
           .insert({
             sale_id: sale.id,
@@ -271,36 +271,11 @@ export function useSales() {
             unit_price: item.unitPrice,
             unit_cost: weightedAvgCost,
             total_price: item.quantity * item.unitPrice,
-          })
-          .select()
-          .single();
+          });
 
         if (itemError) throw itemError;
-
-        // Create PO allocations for FIFO tracking
-        for (const alloc of allocations) {
-          await supabase.from('po_item_allocations').insert({
-            sale_item_id: saleItem.id,
-            purchase_order_id: alloc.poId,
-            sku: item.sku,
-            quantity_allocated: alloc.quantity,
-            unit_cost: alloc.unitCost,
-          });
-        }
-
-        // Update inventory quantity
-        const { data: currentItem } = await supabase
-          .from('inventory_items')
-          .select('quantity')
-          .eq('id', item.inventoryItemId)
-          .single();
-
-        if (currentItem) {
-          await supabase
-            .from('inventory_items')
-            .update({ quantity: Math.max(0, currentItem.quantity - item.quantity) })
-            .eq('id', item.inventoryItemId);
-        }
+        
+        // Note: PO allocations and inventory reduction now happen when marked as "picked_up"
       }
 
       // Get current invoice_next_number and increment it
@@ -528,6 +503,57 @@ export function useSales() {
 
   const updateStatus = async (saleId: string, status: SaleStatus, addProfitToBank?: (saleId: string, profit: number, invoiceNumber: string) => Promise<boolean>) => {
     try {
+      const sale = sales.find((s) => s.id === saleId);
+      if (!sale) throw new Error('Sale not found');
+
+      // If marking as picked_up, perform inventory reduction and FIFO allocation
+      if (status === 'picked_up' && sale.status !== 'picked_up') {
+        // Get sale items
+        const { data: saleItems } = await supabase
+          .from('sale_items')
+          .select('id, sku, quantity, inventory_item_id')
+          .eq('sale_id', saleId);
+
+        if (saleItems) {
+          for (const saleItem of saleItems) {
+            // Get available PO items for FIFO allocation
+            const availablePOs = await getAvailablePOItems(saleItem.sku);
+            let remainingQty = saleItem.quantity;
+
+            // Allocate from POs in FIFO order
+            for (const po of availablePOs) {
+              if (remainingQty <= 0) break;
+
+              const qtyFromThisPO = Math.min(remainingQty, po.availableQty);
+              await supabase.from('po_item_allocations').insert({
+                sale_item_id: saleItem.id,
+                purchase_order_id: po.poId,
+                sku: saleItem.sku,
+                quantity_allocated: qtyFromThisPO,
+                unit_cost: po.unitCost,
+              });
+              remainingQty -= qtyFromThisPO;
+            }
+
+            // Update inventory quantity
+            if (saleItem.inventory_item_id) {
+              const { data: currentItem } = await supabase
+                .from('inventory_items')
+                .select('quantity')
+                .eq('id', saleItem.inventory_item_id)
+                .single();
+
+              if (currentItem) {
+                await supabase
+                  .from('inventory_items')
+                  .update({ quantity: Math.max(0, currentItem.quantity - saleItem.quantity) })
+                  .eq('id', saleItem.inventory_item_id);
+              }
+            }
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('sales')
         .update({ status })
@@ -537,7 +563,6 @@ export function useSales() {
 
       // If marking as paid and we have the bank function, add profit to bank
       if (status === 'paid' && addProfitToBank) {
-        const sale = sales.find((s) => s.id === saleId);
         if (sale && sale.totalProfit > 0) {
           await addProfitToBank(saleId, sale.totalProfit, sale.invoiceNumber);
         }
@@ -545,7 +570,7 @@ export function useSales() {
 
       toast({
         title: 'Status updated',
-        description: `Invoice status changed to ${status}`,
+        description: `Invoice status changed to ${status === 'picked_up' ? 'Picked Up' : status}`,
       });
 
       // Update local state
