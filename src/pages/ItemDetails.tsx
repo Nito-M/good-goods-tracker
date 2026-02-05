@@ -1,11 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { ItemPurchaseHistory } from '@/components/ItemPurchaseHistory';
+import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
+import { useVendors } from '@/hooks/useVendors';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
@@ -17,6 +19,14 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   const navigate = useNavigate();
   
   const item = items.find((i) => i.id === id);
+  
+  // Fetch vendor prices and vendors for this item
+  const { prices: vendorPrices } = useItemVendorPrices(item?.id);
+  const { vendors } = useVendors();
+
+  const getVendorName = (vendorId: string) => {
+    return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
+  };
 
   if (!item) {
     return (
@@ -193,6 +203,40 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
               </p>
             </CardContent>
           </Card>
+
+          {/* Vendor Pricing Card */}
+          {vendorPrices.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Store className="h-5 w-5" />
+                  Vendor Pricing
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {vendorPrices.map((vp) => (
+                    <div
+                      key={vp.id}
+                      className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                    >
+                      <div>
+                        <p className="font-medium">{getVendorName(vp.vendor_id)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Last updated: {new Date(vp.updated_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                      <p className="text-lg font-semibold">{formatCurrency(vp.price)}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Purchase & Sales History */}
           <ItemPurchaseHistory sku={item.sku} currentStock={item.quantity} />

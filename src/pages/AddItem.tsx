@@ -25,6 +25,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { ItemVendorPricing } from '@/components/ItemVendorPricing';
+import { useVendors, Vendor } from '@/hooks/useVendors';
+import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrices';
+import { useToast } from '@/hooks/use-toast';
+
+interface VendorPriceEntry {
+  vendorId: string;
+  price: string;
+  isNew?: boolean;
+}
 
 interface AddItemPageProps {
   categories: string[];
@@ -41,6 +51,11 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
   const { id } = useParams();
   const editItem = id ? items.find(item => item.id === id) : null;
   const isEditing = !!editItem;
+  const { toast } = useToast();
+
+  // Vendor and pricing hooks
+  const { vendors } = useVendors();
+  const { prices: existingPrices, upsertPrice, deletePrice } = useItemVendorPrices(editItem?.id);
 
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
@@ -55,6 +70,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
   const [dimensions, setDimensions] = useState<Dimensions>(DEFAULT_DIMENSIONS);
   const [colors, setColors] = useState('');
   const [description, setDescription] = useState('');
+  const [vendorPrices, setVendorPrices] = useState<VendorPriceEntry[]>([]);
 
   useEffect(() => {
     if (editItem) {
@@ -74,7 +90,20 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
     }
   }, [editItem]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Initialize vendor prices from existing data when editing
+  useEffect(() => {
+    if (isEditing && existingPrices.length > 0 && vendorPrices.length === 0) {
+      setVendorPrices(
+        existingPrices.map((p) => ({
+          vendorId: p.vendor_id,
+          price: String(p.price),
+          isNew: false,
+        }))
+      );
+    }
+  }, [isEditing, existingPrices, vendorPrices.length]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const itemData = {
@@ -95,8 +124,30 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
 
     if (editItem && onUpdate) {
       onUpdate(editItem.id, itemData);
+      
+      // Handle vendor price updates
+      const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
+      const existingVendorIds = existingPrices.map((p) => p.vendor_id);
+      
+      // Delete removed vendors
+      for (const vendorId of existingVendorIds) {
+        if (!currentVendorIds.includes(vendorId)) {
+          await deletePrice(vendorId);
+        }
+      }
+      
+      // Upsert current vendor prices
+      for (const vp of vendorPrices) {
+        if (vp.price) {
+          await upsertPrice(vp.vendorId, parseFloat(vp.price));
+        }
+      }
+      
+      toast({ title: 'Item updated successfully' });
     } else {
       onSave(itemData);
+      // Note: For new items, vendor prices will be added after item is created
+      // This would require returning the new item ID from onSave
     }
     
     navigate('/items');
@@ -379,6 +430,17 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
               </div>
             </CardContent>
           </Card>
+
+          {/* Vendor Pricing - Only show when editing */}
+          {isEditing && (
+            <ItemVendorPricing
+              vendors={vendors}
+              existingPrices={existingPrices}
+              vendorPrices={vendorPrices}
+              onVendorPricesChange={setVendorPrices}
+              isEditing={isEditing}
+            />
+          )}
         </form>
       </main>
     </div>

@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem } from '@/types/purchaseOrder';
 import { purchaseOrderSchema, validateInput } from '@/lib/validation';
+import { updateVendorPriceFromPO } from '@/hooks/useItemVendorPrices';
 
 interface DbVendor {
   id: string;
@@ -222,7 +223,7 @@ export function usePurchaseOrders() {
       return false;
     }
 
-    // Update inventory items with new costs and quantities
+    // Update inventory items with new costs and quantities, and save vendor prices
     for (const item of order.items) {
       // Find matching inventory item by SKU
       const { data: inventoryItem } = await supabase
@@ -240,6 +241,11 @@ export function usePurchaseOrders() {
         // Update cost if provided in the PO
         if (item.unitCost !== undefined && item.unitCost > 0) {
           updates.cost = item.unitCost;
+          
+          // Also update the vendor price for this item if a vendor is assigned
+          if (order.vendorId) {
+            await updateVendorPriceFromPO(user!.id, inventoryItem.id, order.vendorId, item.unitCost);
+          }
         }
 
         await supabase
@@ -249,7 +255,7 @@ export function usePurchaseOrders() {
       }
     }
 
-    toast({ title: 'Order marked as received', description: 'Inventory updated with new quantities and costs' });
+    toast({ title: 'Order marked as received', description: 'Inventory and vendor prices updated' });
     fetchOrders();
     return true;
   };
