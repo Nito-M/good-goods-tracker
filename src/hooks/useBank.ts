@@ -174,6 +174,26 @@ export function useBank() {
     }
   };
 
+  const removeSaleProfit = async (saleId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('bank_transactions')
+        .delete()
+        .eq('sale_id', saleId)
+        .eq('type', 'sale_profit');
+
+      if (error) throw error;
+
+      await fetchTransactions();
+      return true;
+    } catch (error) {
+      console.error('Error removing sale profit:', error);
+      return false;
+    }
+  };
+
   const deleteTransaction = async (id: string) => {
     try {
       const { error } = await supabase
@@ -206,6 +226,7 @@ export function useBank() {
     addDeposit,
     addWithdrawal,
     addSaleProfit,
+    removeSaleProfit,
     deleteTransaction,
     refetch: fetchTransactions,
   };
