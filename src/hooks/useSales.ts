@@ -303,6 +303,20 @@ export function useSales() {
         }
       }
 
+      // Get current invoice_next_number and increment it
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('invoice_next_number')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profileData) {
+        await supabase
+          .from('profiles')
+          .update({ invoice_next_number: (profileData.invoice_next_number || 1) + 1 })
+          .eq('user_id', user.id);
+      }
+
       toast({
         title: 'Sale completed',
         description: `Invoice ${sale.invoice_number} created successfully`,
