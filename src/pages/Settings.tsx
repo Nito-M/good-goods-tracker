@@ -516,19 +516,32 @@ export function Settings() {
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="invoice-prefix">Invoice Number Prefix</Label>
-                        <Input
-                          id="invoice-prefix"
-                          value={invoicePrefix}
-                          onChange={(e) => setInvoicePrefix(e.target.value.toUpperCase())}
-                          placeholder="INV"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          e.g., "NOL" will generate NOL-0001, NOL-0002, etc.
-                        </p>
+                    <div className="space-y-2">
+                      <Label>Invoice Number Format</Label>
+                      <div className="flex items-center gap-2">
+                        <div className="space-y-1">
+                          <Input
+                            id="invoice-prefix"
+                            value={invoicePrefix}
+                            onChange={(e) => setInvoicePrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                            placeholder="INV"
+                            className="w-24 text-center font-medium"
+                          />
+                          <p className="text-xs text-muted-foreground text-center">Prefix</p>
+                        </div>
+                        <span className="text-lg text-muted-foreground font-bold mt-[-1rem]">-</span>
+                        <div className="space-y-1">
+                          <Input
+                            value="0001"
+                            readOnly
+                            className="w-20 text-center bg-muted font-mono"
+                          />
+                          <p className="text-xs text-muted-foreground text-center">Number</p>
+                        </div>
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        Example: {invoicePrefix || 'INV'}-0001, {invoicePrefix || 'INV'}-0002, etc.
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="business-address">Business Address</Label>
