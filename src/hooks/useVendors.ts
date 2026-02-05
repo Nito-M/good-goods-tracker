@@ -11,6 +11,7 @@ export interface Vendor {
   contact_phone: string | null;
   address: string | null;
   notes: string | null;
+  link: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +72,7 @@ export function useVendors() {
       contact_phone: validation.data.contact_phone ?? null,
       address: validation.data.address ?? null,
       notes: validation.data.notes ?? null,
+      link: validation.data.link ?? null,
       user_id: user.id,
     }]);
 
