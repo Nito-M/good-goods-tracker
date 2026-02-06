@@ -44,9 +44,10 @@ export function Auth() {
     setLoading(false);
 
     if (error) {
+      console.error('Sign in error:', error);
       toast({
         title: 'Sign in failed',
-        description: error.message,
+        description: 'Invalid email or password. Please try again.',
         variant: 'destructive',
       });
     }
@@ -59,9 +60,10 @@ export function Auth() {
     setLoading(false);
 
     if (error) {
+      console.error('Sign up error:', error);
       toast({
         title: 'Sign up failed',
-        description: error.message,
+        description: 'Unable to create account. Please check your details and try again.',
         variant: 'destructive',
       });
     } else {

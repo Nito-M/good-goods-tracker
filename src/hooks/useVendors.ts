@@ -35,9 +35,10 @@ export function useVendors() {
       .order('name', { ascending: true });
 
     if (error) {
+      console.error('Error loading vendors:', error);
       toast({
         title: 'Error loading vendors',
-        description: error.message,
+        description: 'Unable to load vendors. Please try again.',
         variant: 'destructive',
       });
       setLoading(false);

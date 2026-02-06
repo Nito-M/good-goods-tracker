@@ -62,7 +62,7 @@ export function useItemVendorPrices(itemId?: string) {
         console.error('Error updating vendor price:', error);
         toast({
           title: 'Error updating vendor price',
-          description: error.message,
+          description: 'Unable to update vendor price. Please try again.',
           variant: 'destructive',
         });
         return false;
@@ -82,7 +82,7 @@ export function useItemVendorPrices(itemId?: string) {
         console.error('Error adding vendor price:', error);
         toast({
           title: 'Error adding vendor price',
-          description: error.message,
+          description: 'Unable to add vendor price. Please try again.',
           variant: 'destructive',
         });
         return false;
@@ -106,7 +106,7 @@ export function useItemVendorPrices(itemId?: string) {
       console.error('Error deleting vendor price:', error);
       toast({
         title: 'Error removing vendor',
-        description: error.message,
+        description: 'Unable to remove vendor. Please try again.',
         variant: 'destructive',
       });
       return;
