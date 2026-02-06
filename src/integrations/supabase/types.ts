@@ -551,6 +551,7 @@ export type Database = {
       requests: {
         Row: {
           created_at: string
+          gst_rate: number | null
           id: string
           image_url: string | null
           inventory_item_id: string | null
@@ -570,6 +571,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          gst_rate?: number | null
           id?: string
           image_url?: string | null
           inventory_item_id?: string | null
@@ -589,6 +591,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          gst_rate?: number | null
           id?: string
           image_url?: string | null
           inventory_item_id?: string | null

@@ -29,7 +29,10 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const isOverdue = request.needByDate && new Date(request.needByDate) < new Date() && request.status !== 'received' && request.status !== 'cancelled';
 
-  const totalPrice = request.price * request.quantity;
+  // Calculate price breakdown
+  const subtotal = request.quantity * request.price;
+  const gstAmount = subtotal * (request.gstRate / 100);
+  const totalPrice = subtotal + gstAmount;
 
   return (
     <>
@@ -68,32 +71,36 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Quantity and Price - Prominent Display */}
-          <div className="flex items-center gap-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
-            <div className="flex items-center gap-2">
-              <Hash className="h-4 w-4 text-primary" />
-              <div>
-                <p className="text-xs text-muted-foreground">Quantity</p>
-                <p className="text-lg font-bold">{request.quantity} <span className="text-sm font-normal text-muted-foreground">{request.quantityUnit}</span></p>
+          {/* Price Breakdown Display */}
+          <div className="p-3 bg-primary/5 rounded-lg border border-primary/10 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-primary" />
+                <span className="text-sm text-muted-foreground">Quantity</span>
               </div>
+              <span className="font-semibold">{request.quantity} <span className="text-sm font-normal text-muted-foreground">{request.quantityUnit}</span></span>
             </div>
-            <div className="h-8 w-px bg-border" />
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-green-600" />
-              <div>
-                <p className="text-xs text-muted-foreground">Unit Price</p>
-                <p className="text-lg font-bold text-green-600">${request.price.toFixed(2)}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Unit Price</span>
+              <span className="font-medium">${request.price.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Subtotal ({request.quantity} × ${request.price.toFixed(2)})</span>
+              <span className="font-medium">${subtotal.toFixed(2)}</span>
+            </div>
+            {request.gstRate > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">GST ({request.gstRate}%)</span>
+                <span className="font-medium">${gstAmount.toFixed(2)}</span>
               </div>
-            </div>
-            {request.quantity > 1 && (
-              <>
-                <div className="h-8 w-px bg-border" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-lg font-bold text-green-600">${totalPrice.toFixed(2)}</p>
-                </div>
-              </>
             )}
+            <div className="flex items-center justify-between border-t pt-2">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-green-600" />
+                <span className="font-semibold">Total</span>
+              </div>
+              <span className="text-lg font-bold text-green-600">${totalPrice.toFixed(2)}</span>
+            </div>
           </div>
 
           {/* Status Selector */}
