@@ -377,7 +377,7 @@ export function AddPurchaseOrder() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Quantity *</Label>
                       <Input
@@ -406,9 +406,28 @@ export function AddPurchaseOrder() {
                         placeholder="0.00"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label>Line Total</Label>
+                      <div className="h-10 flex items-center px-3 rounded-md border bg-muted font-medium">
+                        ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
+
+              {/* Items Subtotal */}
+              {vendorId && vendorId !== 'none' && lineItems.length > 0 && (
+                <div className="flex justify-end pt-2 border-t">
+                  <div className="text-right space-y-1">
+                    <div className="text-sm text-muted-foreground">
+                      Items Subtotal: <span className="font-semibold text-foreground">
+                        ${lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -537,6 +556,37 @@ export function AddPurchaseOrder() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Order Summary Card */}
+          {vendorId && vendorId !== 'none' && lineItems.some(li => parseFloat(li.unitCost) > 0) && (
+            <Card className="bg-muted/50">
+              <CardHeader>
+                <CardTitle className="text-lg">Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal ({lineItems.length} item{lineItems.length !== 1 ? 's' : ''})</span>
+                    <span className="font-medium">
+                      ${lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Tax (5%)</span>
+                    <span className="font-medium">
+                      ${(lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0) * 0.05).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-base pt-2 border-t font-semibold">
+                    <span>Total</span>
+                    <span className="text-primary">
+                      ${(lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0) * 1.05).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4">
