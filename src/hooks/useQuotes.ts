@@ -228,21 +228,27 @@ export function useQuotes() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('quote-attachments')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
 
-      // Update quote with attachment URL
+      if (signedUrlError || !signedUrlData) {
+        throw signedUrlError || new Error('Failed to create signed URL');
+      }
+
+      const signedUrl = signedUrlData.signedUrl;
+
+      // Update quote with attachment URL (store the file path, not the signed URL)
       const { error: updateError } = await supabase
         .from('quotes')
-        .update({ attachment_url: publicUrl })
+        .update({ attachment_url: signedUrl })
         .eq('id', quoteId);
 
       if (updateError) throw updateError;
 
       // Update local state
       setQuotes((prev) =>
-        prev.map((q) => (q.id === quoteId ? { ...q, attachmentUrl: publicUrl } : q))
+        prev.map((q) => (q.id === quoteId ? { ...q, attachmentUrl: signedUrl } : q))
       );
 
       toast({
@@ -250,7 +256,7 @@ export function useQuotes() {
         description: 'File has been attached to the quote',
       });
 
-      return publicUrl;
+      return signedUrl;
     } catch (error: unknown) {
       console.error('Error uploading attachment:', error);
       toast({

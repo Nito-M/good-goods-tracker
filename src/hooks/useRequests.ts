@@ -251,11 +251,16 @@ export function useRequests() {
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
+      const { data, error: signedUrlError } = await supabase.storage
         .from("request-images")
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 3600); // 1 hour expiry
 
-      return data.publicUrl;
+      if (signedUrlError || !data) {
+        console.error('Error creating signed URL:', signedUrlError);
+        return null;
+      }
+
+      return data.signedUrl;
     } catch (error: any) {
       console.error("Error uploading image:", error);
       toast({
