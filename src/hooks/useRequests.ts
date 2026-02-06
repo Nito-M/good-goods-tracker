@@ -32,6 +32,7 @@ export function useRequests() {
         link: r.link,
         notes: r.notes,
         imageUrl: r.image_url,
+        needByDate: r.need_by_date,
         status: r.status as RequestStatus,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
@@ -70,6 +71,7 @@ export function useRequests() {
           link: input.link || null,
           notes: input.notes || null,
           image_url: input.imageUrl || null,
+          need_by_date: input.needByDate || null,
           status: "pending",
         })
         .select()
@@ -88,6 +90,7 @@ export function useRequests() {
         link: data.link,
         notes: data.notes,
         imageUrl: data.image_url,
+        needByDate: data.need_by_date,
         status: data.status as RequestStatus,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
@@ -122,6 +125,7 @@ export function useRequests() {
       if (updates.link !== undefined) dbUpdates.link = updates.link;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
+      if (updates.needByDate !== undefined) dbUpdates.need_by_date = updates.needByDate;
 
       const { error } = await supabase
         .from("requests")

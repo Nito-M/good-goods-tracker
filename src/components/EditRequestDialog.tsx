@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,20 +7,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Upload, X, Link as LinkIcon, CalendarIcon } from "lucide-react";
+import { Upload, X, Link as LinkIcon, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { InventoryItem } from "@/types/inventory";
-import { CreateRequestInput } from "@/types/request";
+import { Request, CreateRequestInput } from "@/types/request";
 
-interface AddRequestDialogProps {
+interface EditRequestDialogProps {
+  request: Request | null;
   items: InventoryItem[];
-  onSave: (request: CreateRequestInput) => Promise<any>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (id: string, updates: Partial<CreateRequestInput>) => Promise<boolean>;
   onUploadImage: (file: File) => Promise<string | null>;
 }
 
-export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditRequestDialog({ 
+  request, 
+  items, 
+  open, 
+  onOpenChange, 
+  onSave, 
+  onUploadImage 
+}: EditRequestDialogProps) {
   const [loading, setLoading] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [itemName, setItemName] = useState("");
@@ -33,6 +42,22 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (request) {
+      setSelectedItemId(request.inventoryItemId || "custom");
+      setItemName(request.itemName);
+      setSku(request.sku || "");
+      setQuantity(request.quantity);
+      setQuantityUnit(request.quantityUnit);
+      setLink(request.link || "");
+      setNotes(request.notes || "");
+      setNeedByDate(request.needByDate ? new Date(request.needByDate) : undefined);
+      setImageUrl(request.imageUrl);
+      setImagePreview(request.imageUrl);
+      setImageFile(null);
+    }
+  }, [request]);
 
   const handleItemSelect = (value: string) => {
     setSelectedItemId(value);
@@ -68,23 +93,9 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
     setImageUrl(null);
   };
 
-  const resetForm = () => {
-    setSelectedItemId("");
-    setItemName("");
-    setSku("");
-    setQuantity(1);
-    setQuantityUnit("pcs");
-    setLink("");
-    setNotes("");
-    setNeedByDate(undefined);
-    setImageUrl(null);
-    setImageFile(null);
-    setImagePreview(null);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemName.trim()) return;
+    if (!request || !itemName.trim()) return;
 
     setLoading(true);
     try {
@@ -93,7 +104,7 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
         uploadedImageUrl = await onUploadImage(imageFile);
       }
 
-      await onSave({
+      const success = await onSave(request.id, {
         inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
         itemName: itemName.trim(),
         sku: sku.trim() || null,
@@ -105,24 +116,19 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
         needByDate: needByDate ? needByDate.toISOString() : null,
       });
 
-      resetForm();
-      setOpen(false);
+      if (success) {
+        onOpenChange(false);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          New Request
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Request</DialogTitle>
+          <DialogTitle>Edit Request</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Item Selection */}
@@ -145,9 +151,9 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
 
           {/* Item Name */}
           <div className="space-y-2">
-            <Label htmlFor="itemName">Item Name *</Label>
+            <Label htmlFor="editItemName">Item Name *</Label>
             <Input
-              id="itemName"
+              id="editItemName"
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               placeholder="Enter item name"
@@ -157,9 +163,9 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
 
           {/* SKU */}
           <div className="space-y-2">
-            <Label htmlFor="sku">SKU</Label>
+            <Label htmlFor="editSku">SKU</Label>
             <Input
-              id="sku"
+              id="editSku"
               value={sku}
               onChange={(e) => setSku(e.target.value)}
               placeholder="Enter SKU (optional)"
@@ -169,9 +175,9 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
           {/* Quantity */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
+              <Label htmlFor="editQuantity">Quantity *</Label>
               <Input
-                id="quantity"
+                id="editQuantity"
                 type="number"
                 min={1}
                 value={quantity}
@@ -180,7 +186,7 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="quantityUnit">Unit</Label>
+              <Label htmlFor="editQuantityUnit">Unit</Label>
               <Select value={quantityUnit} onValueChange={setQuantityUnit}>
                 <SelectTrigger>
                   <SelectValue />
@@ -224,16 +230,27 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
                 />
               </PopoverContent>
             </Popover>
+            {needByDate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setNeedByDate(undefined)}
+                className="text-muted-foreground"
+              >
+                Clear date
+              </Button>
+            )}
           </div>
 
           {/* Link */}
           <div className="space-y-2">
-            <Label htmlFor="link" className="flex items-center gap-2">
+            <Label htmlFor="editLink" className="flex items-center gap-2">
               <LinkIcon className="h-4 w-4" />
               Link
             </Label>
             <Input
-              id="link"
+              id="editLink"
               type="url"
               value={link}
               onChange={(e) => setLink(e.target.value)}
@@ -243,9 +260,9 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="editNotes">Notes</Label>
             <Textarea
-              id="notes"
+              id="editNotes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any notes or specifications..."
@@ -293,13 +310,13 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
               disabled={loading}
             >
               Cancel
             </Button>
             <Button type="submit" disabled={loading || !itemName.trim()}>
-              {loading ? "Creating..." : "Create Request"}
+              {loading ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
