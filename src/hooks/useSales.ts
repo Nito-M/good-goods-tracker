@@ -612,10 +612,10 @@ export function useSales() {
 
       if (error) throw error;
 
-      // If marking as paid and we have the bank function, add profit to bank
+      // If marking as paid and we have the bank function, add total (including GST) to bank
       if (status === 'paid' && addProfitToBank) {
-        if (sale && sale.totalProfit > 0) {
-          await addProfitToBank(saleId, sale.totalProfit, sale.invoiceNumber);
+        if (sale && sale.total > 0) {
+          await addProfitToBank(saleId, sale.total, sale.invoiceNumber);
         }
       }
 

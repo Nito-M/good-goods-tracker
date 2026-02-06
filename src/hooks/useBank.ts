@@ -139,11 +139,11 @@ export function useBank() {
     }
   };
 
-  const addSaleProfit = async (saleId: string, profit: number, invoiceNumber: string) => {
+  const addSaleRevenue = async (saleId: string, total: number, invoiceNumber: string) => {
     if (!user) return false;
 
     try {
-      // Check if this sale already has a profit entry
+      // Check if this sale already has a revenue entry
       const { data: existing } = await supabase
         .from('bank_transactions')
         .select('id')
@@ -158,9 +158,9 @@ export function useBank() {
 
       const { error } = await supabase.from('bank_transactions').insert({
         user_id: user.id,
-        amount: profit,
+        amount: total,
         type: 'sale_profit',
-        description: `Profit from ${invoiceNumber}`,
+        description: `Revenue from ${invoiceNumber}`,
         sale_id: saleId,
       });
 
@@ -225,7 +225,7 @@ export function useBank() {
     loading,
     addDeposit,
     addWithdrawal,
-    addSaleProfit,
+    addSaleRevenue,
     removeSaleProfit,
     deleteTransaction,
     refetch: fetchTransactions,
