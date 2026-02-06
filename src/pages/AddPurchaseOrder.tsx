@@ -17,7 +17,8 @@ import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useRequests } from '@/hooks/useRequests';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Percent, DollarSign } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VendorPrice {
@@ -64,6 +65,25 @@ export function AddPurchaseOrder() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+  const [discountValue, setDiscountValue] = useState<string>('');
+
+  // Calculate subtotal in cents for precision
+  const subtotalCents = lineItems.reduce((sum, item) => {
+    const qty = typeof item.quantity === 'number' ? item.quantity : 0;
+    const cost = parseFloat(item.unitCost) || 0;
+    return sum + Math.round(qty * cost * 100);
+  }, 0);
+  const subtotal = subtotalCents / 100;
+
+  // Calculate discount amount
+  const discountAmount = discountType === 'percentage'
+    ? Math.round(subtotalCents * (parseFloat(discountValue) || 0) / 100) / 100
+    : parseFloat(discountValue) || 0;
+  
+  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = Math.round(afterDiscount * 5) / 100; // 5% tax
+  const grandTotal = afterDiscount + taxAmount;
 
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -649,24 +669,61 @@ export function AddPurchaseOrder() {
                 <CardTitle className="text-lg">Order Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal ({lineItems.length} item{lineItems.length !== 1 ? 's' : ''})</span>
-                    <span className="font-medium">
-                      ${lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0).toFixed(2)}
-                    </span>
+                    <span className="font-medium">${subtotal.toFixed(2)}</span>
                   </div>
+                  
+                  {/* Discount Input */}
+                  <div className="flex items-center justify-between gap-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Discount</span>
+                      <ToggleGroup
+                        type="single"
+                        value={discountType}
+                        onValueChange={(val) => val && setDiscountType(val as 'percentage' | 'fixed')}
+                        className="h-7"
+                      >
+                        <ToggleGroupItem value="percentage" className="h-7 w-7 p-0">
+                          <Percent className="h-3 w-3" />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="fixed" className="h-7 w-7 p-0">
+                          <DollarSign className="h-3 w-3" />
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        step={discountType === 'percentage' ? '1' : '0.01'}
+                        max={discountType === 'percentage' ? 100 : undefined}
+                        value={discountValue}
+                        onChange={(e) => setDiscountValue(e.target.value)}
+                        placeholder={discountType === 'percentage' ? '0' : '0.00'}
+                        className="h-8 w-24 text-right"
+                      />
+                      <span className="text-sm text-muted-foreground w-8">
+                        {discountType === 'percentage' ? '%' : '$'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                      <span>Discount</span>
+                      <span>-${discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax (5%)</span>
-                    <span className="font-medium">
-                      ${(lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0) * 0.05).toFixed(2)}
-                    </span>
+                    <span className="font-medium">${taxAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-base pt-2 border-t font-semibold">
                     <span>Total</span>
-                    <span className="text-primary">
-                      ${(lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0) * 1.05).toFixed(2)}
-                    </span>
+                    <span className="text-primary">${grandTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
