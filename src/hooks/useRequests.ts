@@ -31,6 +31,7 @@ export function useRequests() {
         sku: r.sku,
         quantity: r.quantity,
         quantityUnit: r.quantity_unit,
+        price: r.price || 0,
         link: r.link,
         notes: r.notes,
         imageUrl: r.image_url,
@@ -74,6 +75,7 @@ export function useRequests() {
           sku: input.sku || null,
           quantity: input.quantity,
           quantity_unit: input.quantityUnit,
+          price: input.price || 0,
           link: input.link || null,
           notes: input.notes || null,
           image_url: input.imageUrl || null,
@@ -94,6 +96,7 @@ export function useRequests() {
         sku: data.sku,
         quantity: data.quantity,
         quantityUnit: data.quantity_unit,
+        price: data.price || 0,
         link: data.link,
         notes: data.notes,
         imageUrl: data.image_url,
@@ -130,11 +133,12 @@ export function useRequests() {
       if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
       if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
       if (updates.quantityUnit !== undefined) dbUpdates.quantity_unit = updates.quantityUnit;
+      if (updates.price !== undefined) dbUpdates.price = updates.price;
       if (updates.link !== undefined) dbUpdates.link = updates.link;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
       if (updates.needByDate !== undefined) dbUpdates.need_by_date = updates.needByDate;
-      // Note: requesterName is not editable here - it's set from profile
+      if (updates.requesterName !== undefined) dbUpdates.requester_name = updates.requesterName;
 
       const { error } = await supabase
         .from("requests")

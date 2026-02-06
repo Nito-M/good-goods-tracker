@@ -8,6 +8,7 @@ export interface Request {
   sku: string | null;
   quantity: number;
   quantityUnit: string;
+  price: number;
   link: string | null;
   notes: string | null;
   imageUrl: string | null;
@@ -24,6 +25,7 @@ export interface CreateRequestInput {
   sku: string | null;
   quantity: number;
   quantityUnit: string;
+  price: number;
   link: string | null;
   notes: string | null;
   imageUrl: string | null;
