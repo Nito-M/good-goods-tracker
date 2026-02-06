@@ -32,9 +32,10 @@ export function useCategories() {
         .order('name', { ascending: true });
 
       if (error) {
+        console.error('Error loading categories:', error);
         toast({
           title: 'Error loading categories',
-          description: error.message,
+          description: 'Unable to load categories. Please try again.',
           variant: 'destructive',
         });
         setLoading(false);
