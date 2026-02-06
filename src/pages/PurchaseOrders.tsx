@@ -7,11 +7,10 @@ import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
 import { useBank } from '@/hooks/useBank';
-import { AddPurchaseOrderDialog } from '@/components/AddPurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
 
 
@@ -19,14 +18,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 
 export function PurchaseOrders() {
+  const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { orders, loading, createOrder, updateOrder, markAsReceived, markAsPaid, deleteOrder } =
+  const { orders, loading, updateOrder, markAsReceived, markAsPaid, deleteOrder } =
     usePurchaseOrders();
-  const { allItems: inventoryItems, addItem } = useInventory();
+  const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
   const { addWithdrawal } = useBank();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -111,7 +110,7 @@ export function PurchaseOrders() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={() => setDialogOpen(true)} className="gap-2">
+              <Button onClick={() => navigate('/purchase-orders/new')} className="gap-2">
                 <Plus className="h-4 w-4" />
                 New Order
               </Button>
@@ -143,7 +142,7 @@ export function PurchaseOrders() {
             <p className="text-muted-foreground mb-4">
               Create your first purchase order to track incoming inventory.
             </p>
-            <Button onClick={() => setDialogOpen(true)} className="gap-2">
+            <Button onClick={() => navigate('/purchase-orders/new')} className="gap-2">
               <Plus className="h-4 w-4" />
               New Order
             </Button>
@@ -225,14 +224,6 @@ export function PurchaseOrders() {
           </Tabs>
         )}
       </main>
-
-      <AddPurchaseOrderDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSave={createOrder}
-        inventoryItems={inventoryItems}
-        vendors={vendors}
-      />
 
       {editingOrder && (
         <EditPurchaseOrderDialog
