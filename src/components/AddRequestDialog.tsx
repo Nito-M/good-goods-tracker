@@ -244,7 +244,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Unit Price ($) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="price">Unit Price ($) <span className="text-sky-400 font-normal">(optional)</span></Label>
               <Input
                 id="price"
                 type="number"
@@ -256,7 +256,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="gstRate">GST Rate (%) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="gstRate">GST Rate (%) <span className="text-sky-400 font-normal">(optional)</span></Label>
               <Input
                 id="gstRate"
                 type="number"
