@@ -1,0 +1,554 @@
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { useInventory } from '@/hooks/useInventory';
+import { useVendors } from '@/hooks/useVendors';
+import { PurchaseOrderItem } from '@/types/purchaseOrder';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface VendorPrice {
+  itemId: string;
+  price: number;
+}
+
+interface LineItem {
+  id: string;
+  selectedItemId: string;
+  customSku: string;
+  customName: string;
+  quantity: number;
+  unitCost: string;
+}
+
+function createEmptyLineItem(): LineItem {
+  return {
+    id: crypto.randomUUID(),
+    selectedItemId: '',
+    customSku: '',
+    customName: '',
+    quantity: 1,
+    unitCost: '',
+  };
+}
+
+export function AddPurchaseOrder() {
+  const navigate = useNavigate();
+  const { createOrder } = usePurchaseOrders();
+  const { allItems: inventoryItems } = useInventory();
+  const { vendors } = useVendors();
+
+  const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
+  const [poNumber, setPoNumber] = useState('');
+  const [orderedAt, setOrderedAt] = useState(
+    new Date().toISOString().split('T')[0]
+  );
+  const [notes, setNotes] = useState('');
+  const [vendorId, setVendorId] = useState<string>('');
+  const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch vendor prices when vendor changes
+  useEffect(() => {
+    const fetchVendorPrices = async () => {
+      if (!vendorId || vendorId === 'none') {
+        setVendorPrices([]);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('item_vendor_prices')
+        .select('item_id, price')
+        .eq('vendor_id', vendorId);
+
+      if (data) {
+        setVendorPrices(data.map(d => ({ itemId: d.item_id, price: Number(d.price) })));
+      }
+    };
+
+    fetchVendorPrices();
+  }, [vendorId]);
+
+  const applyVendorPrices = (selectedVendorId: string) => {
+    if (!selectedVendorId || selectedVendorId === 'none') return;
+
+    supabase
+      .from('item_vendor_prices')
+      .select('item_id, price')
+      .eq('vendor_id', selectedVendorId)
+      .then(({ data }) => {
+        if (data) {
+          const priceMap = new Map(data.map(d => [d.item_id, Number(d.price)]));
+          setLineItems(prev => prev.map(lineItem => {
+            if (lineItem.selectedItemId && lineItem.selectedItemId !== 'custom') {
+              const vendorPrice = priceMap.get(lineItem.selectedItemId);
+              if (vendorPrice !== undefined) {
+                return { ...lineItem, unitCost: vendorPrice.toFixed(2) };
+              }
+            }
+            return lineItem;
+          }));
+        }
+      });
+  };
+
+  const handleVendorChange = (newVendorId: string) => {
+    setVendorId(newVendorId);
+    setLineItems(prev => prev.map(item => {
+      if (item.selectedItemId === 'custom') {
+        return item;
+      }
+      return createEmptyLineItem();
+    }));
+    applyVendorPrices(newVendorId);
+  };
+
+  const filteredInventoryItems = vendorId && vendorId !== 'none'
+    ? inventoryItems.filter(item => vendorPrices.some(vp => vp.itemId === item.id))
+    : [];
+
+  const updateLineItem = (id: string, updates: Partial<LineItem>) => {
+    setLineItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const updated = { ...item, ...updates };
+        
+        if (updates.selectedItemId && updates.selectedItemId !== 'custom' && vendorId && vendorId !== 'none') {
+          const vendorPrice = vendorPrices.find(vp => vp.itemId === updates.selectedItemId);
+          if (vendorPrice) {
+            updated.unitCost = vendorPrice.price.toFixed(2);
+          }
+        }
+        
+        return updated;
+      })
+    );
+  };
+
+  const addLineItem = () => {
+    setLineItems((prev) => [...prev, createEmptyLineItem()]);
+  };
+
+  const removeLineItem = (id: string) => {
+    if (lineItems.length > 1) {
+      setLineItems((prev) => prev.filter((item) => item.id !== id));
+    }
+  };
+
+  const getItemDetails = (lineItem: LineItem) => {
+    const inventoryItem = inventoryItems.find((i) => i.id === lineItem.selectedItemId);
+    if (inventoryItem) {
+      return { sku: inventoryItem.sku, itemName: inventoryItem.name };
+    }
+    return { sku: lineItem.customSku, itemName: lineItem.customName };
+  };
+
+  const isLineItemValid = (lineItem: LineItem) => {
+    const { sku, itemName } = getItemDetails(lineItem);
+    return sku && itemName && lineItem.quantity >= 1;
+  };
+
+  const isFormValid = () => {
+    return vendorId && vendorId !== 'none' && lineItems.every(isLineItemValid);
+  };
+
+  const handleSave = async () => {
+    if (!isFormValid()) return;
+
+    setSaving(true);
+
+    const items: PurchaseOrderItem[] = lineItems.map((lineItem) => {
+      const { sku, itemName } = getItemDetails(lineItem);
+      const unitCost = lineItem.unitCost ? parseFloat(lineItem.unitCost) : undefined;
+      return { sku, itemName, quantity: lineItem.quantity, unitCost };
+    });
+
+    const [year, month, day] = orderedAt.split('-').map(Number);
+    const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
+
+    await createOrder(
+      {
+        items,
+        orderedAt: localOrderedAt,
+        notes: notes || undefined,
+        vendorId: vendorId || null,
+        poNumber: poNumber || undefined,
+      },
+      pdfFile,
+      imageFile
+    );
+    setSaving(false);
+    navigate('/purchase-orders');
+  };
+
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      setPdfFile(file);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setImageFile(file);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card sticky top-0 z-10">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center gap-4">
+            <Link to="/purchase-orders">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold tracking-tight text-card-foreground">
+              Create Purchase Order
+            </h1>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="space-y-6">
+          {/* Vendor Selection Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Vendor</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="vendor">Select Vendor *</Label>
+                <Select value={vendorId} onValueChange={handleVendorChange}>
+                  <SelectTrigger className="max-w-md">
+                    <SelectValue placeholder="Select a vendor first" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- No Vendor --</SelectItem>
+                    {vendors.map((vendor) => (
+                      <SelectItem key={vendor.id} value={vendor.id}>
+                        {vendor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Select a vendor to see available items with pricing
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Line Items Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Items</CardTitle>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addLineItem}
+                  className="gap-2"
+                  disabled={!vendorId || vendorId === 'none'}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Item
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {(!vendorId || vendorId === 'none') && (
+                <p className="text-sm text-muted-foreground text-center py-8 border rounded-lg bg-muted/30">
+                  Please select a vendor first to add items
+                </p>
+              )}
+
+              {vendorId && vendorId !== 'none' && lineItems.map((lineItem, index) => (
+                <div
+                  key={lineItem.id}
+                  className="p-4 rounded-lg border bg-muted/30 space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Item {index + 1}
+                    </span>
+                    {lineItems.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => removeLineItem(lineItem.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Select from Inventory</Label>
+                    <Select
+                      value={lineItem.selectedItemId}
+                      onValueChange={(value) =>
+                        updateLineItem(lineItem.id, {
+                          selectedItemId: value,
+                          customSku: '',
+                          customName: '',
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an item or enter custom below" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
+                        {filteredInventoryItems.length > 0 ? (
+                          filteredInventoryItems.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name} ({item.sku})
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-items" disabled>
+                            No items with pricing for this vendor
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {filteredInventoryItems.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        No inventory items have pricing set for this vendor. Use custom item or add vendor pricing to items.
+                      </p>
+                    )}
+                  </div>
+
+                  {(!lineItem.selectedItemId || lineItem.selectedItemId === 'custom') && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>SKU *</Label>
+                        <Input
+                          value={lineItem.customSku}
+                          onChange={(e) =>
+                            updateLineItem(lineItem.id, { customSku: e.target.value })
+                          }
+                          placeholder="Enter SKU"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Item Name *</Label>
+                        <Input
+                          value={lineItem.customName}
+                          onChange={(e) =>
+                            updateLineItem(lineItem.id, { customName: e.target.value })
+                          }
+                          placeholder="Enter item name"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {lineItem.selectedItemId && lineItem.selectedItemId !== 'custom' && (
+                    <div className="p-3 rounded bg-muted text-sm">
+                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.name} (
+                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.sku})
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Quantity *</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={lineItem.quantity}
+                        onChange={(e) =>
+                          updateLineItem(lineItem.id, {
+                            quantity: parseInt(e.target.value) || 1,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Unit Cost</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={lineItem.unitCost}
+                        onChange={(e) =>
+                          updateLineItem(lineItem.id, {
+                            unitCost: e.target.value,
+                          })
+                        }
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Order Details Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Order Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="poNumber">PO Number</Label>
+                  <Input
+                    id="poNumber"
+                    value={poNumber}
+                    onChange={(e) => setPoNumber(e.target.value)}
+                    placeholder="Auto-generated if left empty"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty to auto-generate (e.g., PO-0001)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="orderedAt">Order Date *</Label>
+                  <Input
+                    id="orderedAt"
+                    type="date"
+                    value={orderedAt}
+                    onChange={(e) => setOrderedAt(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Additional notes..."
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Attachments Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Attachments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* PDF Upload */}
+                <div className="space-y-2">
+                  <Label>PDF Document</Label>
+                  <input
+                    ref={pdfInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={handlePdfChange}
+                  />
+                  {pdfFile ? (
+                    <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <span className="flex-1 truncate text-sm">{pdfFile.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => setPdfFile(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => pdfInputRef.current?.click()}
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload PDF
+                    </Button>
+                  )}
+                </div>
+
+                {/* Image Upload */}
+                <div className="space-y-2">
+                  <Label>Item Picture</Label>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                  {imageFile ? (
+                    <div className="relative">
+                      <img
+                        src={URL.createObjectURL(imageFile)}
+                        alt="Preview"
+                        className="w-full h-32 object-cover rounded-lg border"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6 bg-background/80"
+                        onClick={() => setImageFile(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={() => imageInputRef.current?.click()}
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      Upload Image
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4">
+            <Link to="/purchase-orders">
+              <Button variant="outline">Cancel</Button>
+            </Link>
+            <Button onClick={handleSave} disabled={saving || !isFormValid()}>
+              {saving ? 'Creating...' : 'Create Order'}
+            </Button>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

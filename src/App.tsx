@@ -10,6 +10,7 @@ import { ItemDetails } from "./pages/ItemDetails";
 import { AddItemPage } from "./pages/AddItem";
 import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
+import { AddPurchaseOrder } from "./pages/AddPurchaseOrder";
 import { Sales } from "./pages/Sales";
 import { Quotes } from "./pages/Quotes";
 import { Settings } from "./pages/Settings";
@@ -136,6 +137,14 @@ function AppContent() {
               <AppLayout>
                 <PurchaseOrders />
               </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/purchase-orders/new"
+          element={
+            <ProtectedRoute>
+              <AddPurchaseOrder />
             </ProtectedRoute>
           }
         />
