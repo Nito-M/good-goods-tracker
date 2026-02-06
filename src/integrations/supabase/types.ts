@@ -336,6 +336,7 @@ export type Database = {
           po_number: string | null
           quantity: number
           received_at: string | null
+          request_id: string | null
           sku: string
           status: string
           updated_at: string
@@ -355,6 +356,7 @@ export type Database = {
           po_number?: string | null
           quantity?: number
           received_at?: string | null
+          request_id?: string | null
           sku: string
           status?: string
           updated_at?: string
@@ -374,6 +376,7 @@ export type Database = {
           po_number?: string | null
           quantity?: number
           received_at?: string | null
+          request_id?: string | null
           sku?: string
           status?: string
           updated_at?: string
@@ -381,6 +384,13 @@ export type Database = {
           vendor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_orders_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_orders_vendor_id_fkey"
             columns: ["vendor_id"]
@@ -551,6 +561,7 @@ export type Database = {
           price: number | null
           quantity: number
           quantity_unit: string
+          request_number: string | null
           requester_name: string | null
           sku: string | null
           status: string
@@ -569,6 +580,7 @@ export type Database = {
           price?: number | null
           quantity?: number
           quantity_unit?: string
+          request_number?: string | null
           requester_name?: string | null
           sku?: string | null
           status?: string
@@ -587,6 +599,7 @@ export type Database = {
           price?: number | null
           quantity?: number
           quantity_unit?: string
+          request_number?: string | null
           requester_name?: string | null
           sku?: string | null
           status?: string

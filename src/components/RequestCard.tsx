@@ -37,6 +37,12 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
+              {/* Request Number Badge */}
+              {request.requestNumber && (
+                <span className="inline-block text-xs font-mono font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded mb-1">
+                  {request.requestNumber}
+                </span>
+              )}
               <div className="text-base font-semibold truncate flex items-center gap-2">
                 {request.inventoryItemId ? (
                   <Package className="h-4 w-4 text-primary shrink-0" />

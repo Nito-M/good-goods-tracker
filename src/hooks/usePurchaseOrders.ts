@@ -24,8 +24,8 @@ export function usePurchaseOrders() {
       return;
     }
 
-    // Fetch orders and vendors in parallel
-    const [ordersResult, vendorsResult] = await Promise.all([
+    // Fetch orders, vendors, and requests in parallel
+    const [ordersResult, vendorsResult, requestsResult] = await Promise.all([
       supabase
         .from('purchase_orders')
         .select('*')
@@ -33,6 +33,9 @@ export function usePurchaseOrders() {
       supabase
         .from('vendors')
         .select('id, name'),
+      supabase
+        .from('requests')
+        .select('id, request_number'),
     ]);
 
     if (ordersResult.error) {
@@ -54,9 +57,23 @@ export function usePurchaseOrders() {
       });
     }
 
+    // Create request lookup map
+    const requestMap = new Map<string, string>();
+    if (requestsResult.data) {
+      requestsResult.data.forEach((r: { id: string; request_number: string | null }) => {
+        if (r.request_number) {
+          requestMap.set(r.id, r.request_number);
+        }
+      });
+    }
+
     setOrders(
       (ordersResult.data as DbPurchaseOrder[]).map((db) =>
-        dbToPurchaseOrder(db, db.vendor_id ? vendorMap.get(db.vendor_id) : null)
+        dbToPurchaseOrder(
+          db, 
+          db.vendor_id ? vendorMap.get(db.vendor_id) : null,
+          db.request_id ? requestMap.get(db.request_id) : null
+        )
       )
     );
     setLoading(false);
@@ -100,6 +117,7 @@ export function usePurchaseOrders() {
       notes?: string;
       vendorId?: string | null;
       poNumber?: string;
+      requestId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -120,6 +138,7 @@ export function usePurchaseOrders() {
       notes: order.notes,
       vendorId: order.vendorId,
       poNumber: order.poNumber,
+      requestId: order.requestId,
     });
     
     if (!validation.success) {
@@ -165,6 +184,7 @@ export function usePurchaseOrders() {
       ordered_at: validation.data.orderedAt.toISOString(),
       notes: validation.data.notes || null,
       vendor_id: validation.data.vendorId || null,
+      request_id: order.requestId || null,
       pdf_url: pdfUrl,
       image_url: imageUrl,
       status: 'ordered',

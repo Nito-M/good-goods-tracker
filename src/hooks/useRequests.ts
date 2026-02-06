@@ -26,6 +26,7 @@ export function useRequests() {
       const mapped: Request[] = (data || []).map((r) => ({
         id: r.id,
         userId: r.user_id,
+        requestNumber: r.request_number,
         inventoryItemId: r.inventory_item_id,
         itemName: r.item_name,
         sku: r.sku,
@@ -91,6 +92,7 @@ export function useRequests() {
       const newRequest: Request = {
         id: data.id,
         userId: data.user_id,
+        requestNumber: data.request_number,
         inventoryItemId: data.inventory_item_id,
         itemName: data.item_name,
         sku: data.sku,

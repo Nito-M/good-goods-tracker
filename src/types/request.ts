@@ -3,6 +3,7 @@ export type RequestStatus = 'pending' | 'approved' | 'ordered' | 'received' | 'c
 export interface Request {
   id: string;
   userId: string;
+  requestNumber: string | null;
   inventoryItemId: string | null;
   itemName: string;
   sku: string | null;
