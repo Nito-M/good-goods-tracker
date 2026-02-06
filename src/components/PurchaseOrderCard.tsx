@@ -102,22 +102,45 @@ export function PurchaseOrderCard({
 
             {/* Multiple items list */}
             {order.items.length > 1 && (
-              <div className="space-y-1 text-sm">
+              <div className="border-t pt-3 space-y-1.5">
                 {order.items.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-muted-foreground">
-                    <Package className="h-3 w-3" />
+                  <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground py-1 border-b border-dashed last:border-b-0">
+                    <Package className="h-3 w-3 shrink-0" />
                     <span className="flex-1 truncate">{item.itemName}</span>
                     <span className="text-foreground font-medium">x{item.quantity}</span>
                     {item.unitCost !== undefined && (
                       <span className="text-muted-foreground">@ {formatCurrency(item.unitCost)}</span>
+                    )}
+                    {item.unitCost !== undefined && (
+                      <span className="text-foreground font-medium min-w-[80px] text-right">
+                        {formatCurrency(item.unitCost * item.quantity)}
+                      </span>
                     )}
                   </div>
                 ))}
               </div>
             )}
 
+            {/* Pricing section */}
+            {subtotal > 0 && (
+              <div className="border-t pt-3 space-y-1 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Tax (5%)</span>
+                  <span>{formatCurrency(taxAmount)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-base pt-1 border-t">
+                  <span>Total</span>
+                  <span>{formatCurrency(totalCost)}</span>
+                </div>
+              </div>
+            )}
+
             {/* Details grid */}
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
               {order.vendorName && (
                 <div className="flex items-center gap-2 col-span-2">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -128,22 +151,6 @@ export function PurchaseOrderCard({
                 <Package className="h-4 w-4 text-muted-foreground" />
                 <span>Total Qty: {totalQuantity}</span>
               </div>
-              {subtotal > 0 && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>Subtotal: {formatCurrency(subtotal)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>Tax (5%): {formatCurrency(taxAmount)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 col-span-2 font-semibold">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>Total: {formatCurrency(totalCost)}</span>
-                  </div>
-                </>
-              )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>Ordered: {format(order.orderedAt, 'MMM d, yyyy')}</span>
