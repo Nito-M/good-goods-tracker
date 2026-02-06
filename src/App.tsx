@@ -15,6 +15,7 @@ import { Sales } from "./pages/Sales";
 import { Quotes } from "./pages/Quotes";
 import { Requests } from "./pages/Requests";
 import { Calendar } from "./pages/Calendar";
+import { Notes } from "./pages/Notes";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
 import NotFound from "./pages/NotFound";
@@ -186,6 +187,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Calendar />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notes"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Notes />
               </AppLayout>
             </ProtectedRoute>
           }
