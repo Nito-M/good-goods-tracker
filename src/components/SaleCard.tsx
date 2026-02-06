@@ -63,7 +63,16 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
     });
   };
 
-  const getStatusBadge = () => {
+  const getStatusBadges = () => {
+    // When paid, show both "Picked Up" and "Paid" badges
+    if (sale.status === 'paid') {
+      return (
+        <>
+          <Badge variant="default">Picked Up</Badge>
+          <Badge className="bg-primary/80 text-primary-foreground">Paid</Badge>
+        </>
+      );
+    }
     const config = statusConfig[sale.status] || statusConfig.draft;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
@@ -74,7 +83,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <CardTitle className="text-lg">{sale.invoiceNumber}</CardTitle>
-            {getStatusBadge()}
+            {getStatusBadges()}
           </div>
           <CardDescription className="flex items-center gap-4">
             <span className="flex items-center gap-1">
@@ -108,7 +117,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               </SelectContent>
             </Select>
           )}
-          {sale.status === 'cancelled' && getStatusBadge()}
+          {sale.status === 'cancelled' && getStatusBadges()}
           <Button variant="outline" size="sm" onClick={() => onEdit(sale)}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit
