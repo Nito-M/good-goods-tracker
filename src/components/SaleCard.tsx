@@ -114,8 +114,8 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          {/* Picked Up Checkbox */}
-          {onTogglePickedUp && sale.status !== 'cancelled' && (
+          {/* Picked Up Checkbox - only allow checking, not unchecking */}
+          {onTogglePickedUp && sale.status !== 'cancelled' && !isPickedUp && (
             <div className="flex items-center gap-2 px-2 py-1 rounded-md border bg-muted/50">
               <Checkbox
                 id={`picked-up-${sale.id}`}
@@ -126,13 +126,13 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                 htmlFor={`picked-up-${sale.id}`}
                 className="text-sm font-medium cursor-pointer"
               >
-                Picked Up
+                Mark Picked Up
               </label>
             </div>
           )}
           
-          {/* Status Selector (for payment status only) */}
-          {onStatusChange && sale.status !== 'cancelled' && (
+          {/* Status Selector - hide if already paid (can only revert) */}
+          {onStatusChange && sale.status !== 'cancelled' && sale.status !== 'paid' && (
             <Select
               value={sale.status === 'picked_up' ? 'pending' : sale.status}
               onValueChange={(value: SaleStatus) => onStatusChange(sale.id, value)}
