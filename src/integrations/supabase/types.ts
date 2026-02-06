@@ -532,6 +532,62 @@ export type Database = {
           },
         ]
       }
+      requests: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          inventory_item_id: string | null
+          item_name: string
+          link: string | null
+          notes: string | null
+          quantity: number
+          quantity_unit: string
+          sku: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          inventory_item_id?: string | null
+          item_name: string
+          link?: string | null
+          notes?: string | null
+          quantity?: number
+          quantity_unit?: string
+          sku?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          inventory_item_id?: string | null
+          item_name?: string
+          link?: string | null
+          notes?: string | null
+          quantity?: number
+          quantity_unit?: string
+          sku?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_items: {
         Row: {
           created_at: string

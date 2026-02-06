@@ -1,4 +1,4 @@
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 
@@ -23,6 +23,7 @@ const menuItems = [
   { title: "Sales", url: "/sales", icon: ShoppingCart },
   { title: "Quotes", url: "/quotes", icon: FileText },
   { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
+  { title: "Requests", url: "/requests", icon: ListTodo },
   { title: "Bank", url: "/bank", icon: Wallet },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
