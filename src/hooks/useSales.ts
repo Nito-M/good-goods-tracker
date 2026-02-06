@@ -316,14 +316,17 @@ export function useSales() {
       const sale = sales.find((s) => s.id === id);
       if (!sale) throw new Error('Sale not found');
 
+      // Only restore inventory/allocations if the sale wasn't already reverted (cancelled)
+      // This prevents double-restoration if user reverts then deletes
+      const needsRestoration = sale.status !== 'cancelled';
+
       // Get sale items for inventory restoration and PO allocation cleanup
       const { data: saleItems } = await supabase
         .from('sale_items')
         .select('*')
         .eq('sale_id', id);
 
-      // Restore inventory quantities for each item
-      if (saleItems) {
+      if (needsRestoration && saleItems) {
         for (const saleItem of saleItems) {
           if (saleItem.inventory_item_id) {
             // Get current inventory quantity
@@ -350,7 +353,7 @@ export function useSales() {
         }
       }
 
-      // Remove any bank transactions associated with this sale (profit entry)
+      // Remove any bank transactions associated with this sale (safe even if already deleted)
       await supabase
         .from('bank_transactions')
         .delete()
@@ -363,7 +366,9 @@ export function useSales() {
 
       toast({
         title: 'Sale deleted',
-        description: 'Inventory restored, allocations cleared, and bank transaction reversed',
+        description: needsRestoration 
+          ? 'Inventory restored, allocations cleared, and bank transaction reversed'
+          : 'Sale record deleted',
       });
 
       setSales((prev) => prev.filter((s) => s.id !== id));
