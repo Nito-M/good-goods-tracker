@@ -263,6 +263,7 @@ export type Database = {
           quote_thank_you_note: string | null
           quote_validity_days: number | null
           requester_name: string | null
+          requester_names: string[] | null
           theme: string | null
           updated_at: string
           user_id: string
@@ -288,6 +289,7 @@ export type Database = {
           quote_thank_you_note?: string | null
           quote_validity_days?: number | null
           requester_name?: string | null
+          requester_names?: string[] | null
           theme?: string | null
           updated_at?: string
           user_id: string
@@ -313,6 +315,7 @@ export type Database = {
           quote_thank_you_note?: string | null
           quote_validity_days?: number | null
           requester_name?: string | null
+          requester_names?: string[] | null
           theme?: string | null
           updated_at?: string
           user_id?: string

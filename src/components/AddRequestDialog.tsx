@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Upload, X, Link as LinkIcon, CalendarIcon } from "lucide-react";
+import { Plus, Upload, X, Link as LinkIcon, CalendarIcon, User } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { InventoryItem } from "@/types/inventory";
@@ -15,11 +15,12 @@ import { CreateRequestInput } from "@/types/request";
 
 interface AddRequestDialogProps {
   items: InventoryItem[];
+  requesterNames: string[];
   onSave: (request: CreateRequestInput) => Promise<any>;
   onUploadImage: (file: File) => Promise<string | null>;
 }
 
-export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDialogProps) {
+export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage }: AddRequestDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
@@ -33,6 +34,7 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedRequester, setSelectedRequester] = useState<string>("");
 
   const handleItemSelect = (value: string) => {
     setSelectedItemId(value);
@@ -80,11 +82,12 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
     setImageUrl(null);
     setImageFile(null);
     setImagePreview(null);
+    setSelectedRequester("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemName.trim()) return;
+    if (!itemName.trim() || !selectedRequester) return;
 
     setLoading(true);
     try {
@@ -103,7 +106,7 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
         needByDate: needByDate ? needByDate.toISOString() : null,
-        requesterName: null, // Will be set from profile in hook
+        requesterName: selectedRequester,
       });
 
       resetForm();
@@ -126,6 +129,32 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
           <DialogTitle>Create New Request</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Requester Selection */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Requester *
+            </Label>
+            {requesterNames.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/50">
+                No requesters configured. Please add requesters in Settings first.
+              </p>
+            ) : (
+              <Select value={selectedRequester} onValueChange={setSelectedRequester}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select who is making this request" />
+                </SelectTrigger>
+                <SelectContent>
+                  {requesterNames.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           {/* Item Selection */}
           <div className="space-y-2">
             <Label>Item</Label>
@@ -299,7 +328,7 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !itemName.trim()}>
+            <Button type="submit" disabled={loading || !itemName.trim() || !selectedRequester}>
               {loading ? "Creating..." : "Create Request"}
             </Button>
           </div>
