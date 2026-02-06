@@ -103,11 +103,16 @@ export function usePurchaseOrders() {
       return null;
     }
 
-    const { data } = supabase.storage
+    const { data, error: signedUrlError } = await supabase.storage
       .from('purchase-orders')
-      .getPublicUrl(fileName);
+      .createSignedUrl(fileName, 3600); // 1 hour expiry
 
-    return data.publicUrl;
+    if (signedUrlError || !data) {
+      console.error('Error creating signed URL:', signedUrlError);
+      return null;
+    }
+
+    return data.signedUrl;
   };
 
   const createOrder = async (
