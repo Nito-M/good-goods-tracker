@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRequests } from "@/hooks/useRequests";
 import { useInventory } from "@/hooks/useInventory";
+import { useProfile } from "@/hooks/useProfile";
 import { AddRequestDialog } from "@/components/AddRequestDialog";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { RequestCard } from "@/components/RequestCard";
@@ -13,6 +14,7 @@ import { Request, RequestStatus } from "@/types/request";
 export function Requests() {
   const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
   const { allItems } = useInventory();
+  const { profile } = useProfile();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
@@ -54,6 +56,7 @@ export function Requests() {
         </div>
         <AddRequestDialog
           items={allItems}
+          requesterNames={profile?.requesterNames || []}
           onSave={addRequest}
           onUploadImage={uploadImage}
         />
@@ -120,6 +123,7 @@ export function Requests() {
       <EditRequestDialog
         request={editingRequest}
         items={allItems}
+        requesterNames={profile?.requesterNames || []}
         open={!!editingRequest}
         onOpenChange={(open) => !open && setEditingRequest(null)}
         onSave={updateRequest}

@@ -27,6 +27,7 @@ export interface Profile {
   quoteValidityDays: number;
   quoteLayout: InvoiceLayout;
   requesterName: string | null;
+  requesterNames: string[];
 }
 
 export interface UpdateProfileInput {
@@ -49,6 +50,7 @@ export interface UpdateProfileInput {
   quoteValidityDays?: number;
   quoteLayout?: InvoiceLayout | null;
   requesterName?: string | null;
+  requesterNames?: string[];
 }
 
 export function useProfile() {
@@ -91,6 +93,7 @@ export function useProfile() {
         quoteValidityDays: data.quote_validity_days || 30,
         quoteLayout: (data.quote_layout as unknown as InvoiceLayout) || defaultInvoiceLayout,
         requesterName: data.requester_name,
+        requesterNames: data.requester_names || [],
       });
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
@@ -139,6 +142,7 @@ export function useProfile() {
       if (input.quoteValidityDays !== undefined) updateData.quote_validity_days = input.quoteValidityDays;
       if (input.quoteLayout !== undefined) updateData.quote_layout = input.quoteLayout;
       if (input.requesterName !== undefined) updateData.requester_name = input.requesterName;
+      if (input.requesterNames !== undefined) updateData.requester_names = input.requesterNames;
 
       const { error } = await supabase
         .from('profiles')

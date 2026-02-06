@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Upload, X, Link as LinkIcon, CalendarIcon } from "lucide-react";
+import { Upload, X, Link as LinkIcon, CalendarIcon, User } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { InventoryItem } from "@/types/inventory";
@@ -16,6 +16,7 @@ import { Request, CreateRequestInput } from "@/types/request";
 interface EditRequestDialogProps {
   request: Request | null;
   items: InventoryItem[];
+  requesterNames: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (id: string, updates: Partial<CreateRequestInput>) => Promise<boolean>;
@@ -24,7 +25,8 @@ interface EditRequestDialogProps {
 
 export function EditRequestDialog({ 
   request, 
-  items, 
+  items,
+  requesterNames,
   open, 
   onOpenChange, 
   onSave, 
@@ -42,6 +44,7 @@ export function EditRequestDialog({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedRequester, setSelectedRequester] = useState<string>("");
 
   useEffect(() => {
     if (request) {
@@ -56,6 +59,7 @@ export function EditRequestDialog({
       setImageUrl(request.imageUrl);
       setImagePreview(request.imageUrl);
       setImageFile(null);
+      setSelectedRequester(request.requesterName || "");
     }
   }, [request]);
 
@@ -95,7 +99,7 @@ export function EditRequestDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!request || !itemName.trim()) return;
+    if (!request || !itemName.trim() || !selectedRequester) return;
 
     setLoading(true);
     try {
@@ -114,7 +118,7 @@ export function EditRequestDialog({
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
         needByDate: needByDate ? needByDate.toISOString() : null,
-        requesterName: null, // Not editable here
+        requesterName: selectedRequester,
       });
 
       if (success) {
@@ -132,6 +136,32 @@ export function EditRequestDialog({
           <DialogTitle>Edit Request</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Requester Selection */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Requester *
+            </Label>
+            {requesterNames.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/50">
+                No requesters configured. Please add requesters in Settings first.
+              </p>
+            ) : (
+              <Select value={selectedRequester} onValueChange={setSelectedRequester}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select who is making this request" />
+                </SelectTrigger>
+                <SelectContent>
+                  {requesterNames.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           {/* Item Selection */}
           <div className="space-y-2">
             <Label>Item</Label>
@@ -316,7 +346,7 @@ export function EditRequestDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !itemName.trim()}>
+            <Button type="submit" disabled={loading || !itemName.trim() || !selectedRequester}>
               {loading ? "Saving..." : "Save Changes"}
             </Button>
           </div>
