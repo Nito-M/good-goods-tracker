@@ -103,6 +103,7 @@ export function AddRequestDialog({ items, onSave, onUploadImage }: AddRequestDia
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
         needByDate: needByDate ? needByDate.toISOString() : null,
+        requesterName: null, // Will be set from profile in hook
       });
 
       resetForm();

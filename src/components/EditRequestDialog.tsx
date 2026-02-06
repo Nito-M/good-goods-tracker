@@ -114,6 +114,7 @@ export function EditRequestDialog({
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
         needByDate: needByDate ? needByDate.toISOString() : null,
+        requesterName: null, // Not editable here
       });
 
       if (success) {

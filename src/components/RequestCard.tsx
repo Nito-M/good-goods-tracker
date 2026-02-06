@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, ExternalLink, Package, Pencil, CalendarClock } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 
 interface RequestCardProps {
@@ -22,6 +24,7 @@ const statusColors: Record<RequestStatus, string> = {
 };
 
 export function RequestCard({ request, onStatusChange, onDelete, onEdit }: RequestCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const isOverdue = request.needByDate && new Date(request.needByDate) < new Date() && request.status !== 'received' && request.status !== 'cancelled';
 
   return (
@@ -115,6 +118,29 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
           <p className="text-sm text-muted-foreground bg-muted/50 rounded-md p-2">
             {request.notes}
           </p>
+        )}
+
+        {/* Requester Info - Collapsible */}
+        {request.requesterName && (
+          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full justify-between p-2 h-auto">
+                <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  Requester Info
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2">
+              <div className="bg-muted/50 rounded-md p-3 space-y-1">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{request.requesterName}</span>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         {/* Footer */}

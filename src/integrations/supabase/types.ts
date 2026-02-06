@@ -262,6 +262,7 @@ export type Database = {
           quote_layout: Json | null
           quote_thank_you_note: string | null
           quote_validity_days: number | null
+          requester_name: string | null
           theme: string | null
           updated_at: string
           user_id: string
@@ -286,6 +287,7 @@ export type Database = {
           quote_layout?: Json | null
           quote_thank_you_note?: string | null
           quote_validity_days?: number | null
+          requester_name?: string | null
           theme?: string | null
           updated_at?: string
           user_id: string
@@ -310,6 +312,7 @@ export type Database = {
           quote_layout?: Json | null
           quote_thank_you_note?: string | null
           quote_validity_days?: number | null
+          requester_name?: string | null
           theme?: string | null
           updated_at?: string
           user_id?: string
@@ -544,6 +547,7 @@ export type Database = {
           notes: string | null
           quantity: number
           quantity_unit: string
+          requester_name: string | null
           sku: string | null
           status: string
           updated_at: string
@@ -560,6 +564,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           quantity_unit?: string
+          requester_name?: string | null
           sku?: string | null
           status?: string
           updated_at?: string
@@ -576,6 +581,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           quantity_unit?: string
+          requester_name?: string | null
           sku?: string | null
           status?: string
           updated_at?: string

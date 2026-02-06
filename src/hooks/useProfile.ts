@@ -26,6 +26,7 @@ export interface Profile {
   quoteThankYouNote: string | null;
   quoteValidityDays: number;
   quoteLayout: InvoiceLayout;
+  requesterName: string | null;
 }
 
 export interface UpdateProfileInput {
@@ -47,6 +48,7 @@ export interface UpdateProfileInput {
   quoteThankYouNote?: string | null;
   quoteValidityDays?: number;
   quoteLayout?: InvoiceLayout | null;
+  requesterName?: string | null;
 }
 
 export function useProfile() {
@@ -88,6 +90,7 @@ export function useProfile() {
         quoteThankYouNote: data.quote_thank_you_note,
         quoteValidityDays: data.quote_validity_days || 30,
         quoteLayout: (data.quote_layout as unknown as InvoiceLayout) || defaultInvoiceLayout,
+        requesterName: data.requester_name,
       });
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
@@ -135,6 +138,7 @@ export function useProfile() {
       if (input.quoteThankYouNote !== undefined) updateData.quote_thank_you_note = input.quoteThankYouNote;
       if (input.quoteValidityDays !== undefined) updateData.quote_validity_days = input.quoteValidityDays;
       if (input.quoteLayout !== undefined) updateData.quote_layout = input.quoteLayout;
+      if (input.requesterName !== undefined) updateData.requester_name = input.requesterName;
 
       const { error } = await supabase
         .from('profiles')
@@ -145,7 +149,7 @@ export function useProfile() {
 
       toast({
         title: 'Settings saved',
-        description: 'Your invoice settings have been updated',
+        description: 'Your settings have been updated',
       });
 
       await fetchProfile();
