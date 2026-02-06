@@ -289,138 +289,177 @@ export function AddPurchaseOrder() {
               {vendorId && vendorId !== 'none' && lineItems.map((lineItem, index) => (
                 <div
                   key={lineItem.id}
-                  className="p-4 rounded-lg border bg-muted/30 space-y-4"
+                  className="p-3 rounded-lg border bg-muted/30"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">
-                      Item {index + 1}
-                    </span>
-                    {lineItems.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => removeLineItem(lineItem.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Select from Inventory</Label>
-                    <Select
-                      value={lineItem.selectedItemId}
-                      onValueChange={(value) =>
-                        updateLineItem(lineItem.id, {
-                          selectedItemId: value,
-                          customSku: '',
-                          customName: '',
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an item or enter custom below" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
-                        {filteredInventoryItems.length > 0 ? (
-                          filteredInventoryItems
-                            .filter((item) => {
-                              // Exclude items already selected in other line items
-                              const alreadySelected = lineItems.some(
-                                (li) => li.id !== lineItem.id && li.selectedItemId === item.id
-                              );
-                              return !alreadySelected;
-                            })
-                            .map((item) => (
-                              <SelectItem key={item.id} value={item.id}>
-                                {item.name} ({item.sku})
-                              </SelectItem>
-                            ))
-                        ) : (
-                          <SelectItem value="no-items" disabled>
-                            No items with pricing for this vendor
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {filteredInventoryItems.length === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        No inventory items have pricing set for this vendor. Use custom item or add vendor pricing to items.
-                      </p>
-                    )}
-                  </div>
-
+                  {/* Custom item fields */}
                   {(!lineItem.selectedItemId || lineItem.selectedItemId === 'custom') && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>SKU *</Label>
+                    <div className="grid grid-cols-[1fr_1fr_100px_120px_100px_40px] gap-3 items-end">
+                      <div className="space-y-1">
+                        <Label className="text-xs">SKU *</Label>
                         <Input
                           value={lineItem.customSku}
                           onChange={(e) =>
                             updateLineItem(lineItem.id, { customSku: e.target.value })
                           }
-                          placeholder="Enter SKU"
+                          placeholder="SKU"
+                          className="h-9"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label>Item Name *</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Item Name *</Label>
                         <Input
                           value={lineItem.customName}
                           onChange={(e) =>
                             updateLineItem(lineItem.id, { customName: e.target.value })
                           }
-                          placeholder="Enter item name"
+                          placeholder="Item name"
+                          className="h-9"
                         />
                       </div>
-                    </div>
-                  )}
-
-                  {lineItem.selectedItemId && lineItem.selectedItemId !== 'custom' && (
-                    <div className="p-3 rounded bg-muted text-sm">
-                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.name} (
-                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.sku})
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Quantity *</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={lineItem.quantity}
-                        onChange={(e) =>
-                          updateLineItem(lineItem.id, {
-                            quantity: parseInt(e.target.value) || 1,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Unit Cost</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={lineItem.unitCost}
-                        onChange={(e) =>
-                          updateLineItem(lineItem.id, {
-                            unitCost: e.target.value,
-                          })
-                        }
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Line Total</Label>
-                      <div className="h-10 flex items-center px-3 rounded-md border bg-muted font-medium">
-                        ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
+                      <div className="space-y-1">
+                        <Label className="text-xs">Qty *</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={lineItem.quantity}
+                          onChange={(e) =>
+                            updateLineItem(lineItem.id, {
+                              quantity: parseInt(e.target.value) || 1,
+                            })
+                          }
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Unit Cost</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={lineItem.unitCost}
+                          onChange={(e) =>
+                            updateLineItem(lineItem.id, {
+                              unitCost: e.target.value,
+                            })
+                          }
+                          placeholder="0.00"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Total</Label>
+                        <div className="h-9 flex items-center px-2 rounded-md border bg-muted text-sm font-medium">
+                          ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
+                        </div>
+                      </div>
+                      <div>
+                        {lineItems.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-destructive hover:text-destructive"
+                            onClick={() => removeLineItem(lineItem.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Inventory item selection */}
+                  {lineItem.selectedItemId !== 'custom' && (
+                    <div className="grid grid-cols-[1fr_100px_120px_100px_40px] gap-3 items-end">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Item</Label>
+                        <Select
+                          value={lineItem.selectedItemId}
+                          onValueChange={(value) =>
+                            updateLineItem(lineItem.id, {
+                              selectedItemId: value,
+                              customSku: '',
+                              customName: '',
+                            })
+                          }
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Select item..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="custom">-- Custom Item --</SelectItem>
+                            {filteredInventoryItems.length > 0 ? (
+                              filteredInventoryItems
+                                .filter((item) => {
+                                  const alreadySelected = lineItems.some(
+                                    (li) => li.id !== lineItem.id && li.selectedItemId === item.id
+                                  );
+                                  return !alreadySelected;
+                                })
+                                .map((item) => (
+                                  <SelectItem key={item.id} value={item.id}>
+                                    {item.name} ({item.sku})
+                                  </SelectItem>
+                                ))
+                            ) : (
+                              <SelectItem value="no-items" disabled>
+                                No items with pricing
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Qty *</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={lineItem.quantity}
+                          onChange={(e) =>
+                            updateLineItem(lineItem.id, {
+                              quantity: parseInt(e.target.value) || 1,
+                            })
+                          }
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Unit Cost</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={lineItem.unitCost}
+                          onChange={(e) =>
+                            updateLineItem(lineItem.id, {
+                              unitCost: e.target.value,
+                            })
+                          }
+                          placeholder="0.00"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Total</Label>
+                        <div className="h-9 flex items-center px-2 rounded-md border bg-muted text-sm font-medium">
+                          ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
+                        </div>
+                      </div>
+                      <div>
+                        {lineItems.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-destructive hover:text-destructive"
+                            onClick={() => removeLineItem(lineItem.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 
