@@ -94,17 +94,31 @@ export function Sales() {
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
 
+  // Calculate markup price with proper precision (avoid floating-point errors)
+  const calculateMarkupPrice = (cost: number, markup: number): number => {
+    const costInCents = Math.round(cost * 100);
+    const markupAmountInCents = Math.round(costInCents * (markup / 100));
+    return (costInCents + markupAmountInCents) / 100;
+  };
+
   // Apply markup to all cart items when markup changes
   useEffect(() => {
-    if (markupPercent === '' || markupPercent === 0) {
-      // Clear custom prices when no markup
-      setCart(prev => prev.map(c => ({ ...c, customPrice: undefined })));
+    if (markupPercent === '') {
+      // Clear custom prices when no markup set
+      setCart(prev => {
+        const needsUpdate = prev.some(c => c.customPrice !== undefined);
+        if (!needsUpdate) return prev;
+        return prev.map(c => ({ ...c, customPrice: undefined }));
+      });
     } else {
       // Apply markup to cost for each item
-      setCart(prev => prev.map(c => ({
-        ...c,
-        customPrice: c.inventoryItem.cost * (1 + (markupPercent as number) / 100)
-      })));
+      setCart(prev => {
+        if (prev.length === 0) return prev;
+        return prev.map(c => ({
+          ...c,
+          customPrice: calculateMarkupPrice(c.inventoryItem.cost, markupPercent as number)
+        }));
+      });
     }
   }, [markupPercent]);
 
@@ -150,9 +164,9 @@ export function Sales() {
             : c
         );
       }
-      // Apply markup if set
-      const customPrice = markupPercent !== '' && markupPercent > 0
-        ? item.cost * (1 + markupPercent / 100)
+      // Apply markup if set (use 0% markup as valid)
+      const customPrice = markupPercent !== ''
+        ? calculateMarkupPrice(item.cost, markupPercent as number)
         : undefined;
       return [...prev, { inventoryItem: item, quantity: 1, customPrice }];
     });
