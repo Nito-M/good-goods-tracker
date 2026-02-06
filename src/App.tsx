@@ -13,6 +13,7 @@ import { PurchaseOrders } from "./pages/PurchaseOrders";
 import { AddPurchaseOrder } from "./pages/AddPurchaseOrder";
 import { Sales } from "./pages/Sales";
 import { Quotes } from "./pages/Quotes";
+import { Requests } from "./pages/Requests";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
 import NotFound from "./pages/NotFound";
@@ -164,6 +165,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Quotes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/requests"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Requests />
               </AppLayout>
             </ProtectedRoute>
           }
