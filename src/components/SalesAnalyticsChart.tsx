@@ -17,21 +17,21 @@ interface SalesAnalyticsChartProps {
 
 export function SalesAnalyticsChart({ sales }: SalesAnalyticsChartProps) {
   const analytics = useMemo(() => {
-    // Filter only paid sales for analytics
-    const paidSales = sales.filter((s) => s.status === 'paid');
+    // Filter completed sales for analytics (picked_up or paid)
+    const completedSales = sales.filter((s) => s.status === 'paid' || s.status === 'picked_up');
 
     // Calculate totals
-    const totalItemsSold = paidSales.reduce(
+    const totalItemsSold = completedSales.reduce(
       (sum, sale) => sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
       0
     );
 
-    const totalRevenue = paidSales.reduce((sum, sale) => sum + sale.total, 0);
-    const totalCost = paidSales.reduce((sum, sale) => sum + sale.totalCost, 0);
-    const totalProfit = paidSales.reduce((sum, sale) => sum + sale.totalProfit, 0);
+    const totalRevenue = completedSales.reduce((sum, sale) => sum + sale.total, 0);
+    const totalCost = completedSales.reduce((sum, sale) => sum + sale.totalCost, 0);
+    const totalProfit = completedSales.reduce((sum, sale) => sum + sale.totalProfit, 0);
 
     // Prepare data for bar chart (last 7 sales or all if less)
-    const recentSales = paidSales.slice(0, 10).reverse();
+    const recentSales = completedSales.slice(0, 10).reverse();
     const barChartData = recentSales.map((sale, index) => ({
       name: sale.invoiceNumber || `Sale ${index + 1}`,
       revenue: sale.total,
