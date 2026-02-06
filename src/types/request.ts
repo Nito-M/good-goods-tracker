@@ -10,6 +10,7 @@ export interface Request {
   quantity: number;
   quantityUnit: string;
   price: number;
+  gstRate: number;
   link: string | null;
   notes: string | null;
   imageUrl: string | null;
@@ -27,6 +28,7 @@ export interface CreateRequestInput {
   quantity: number;
   quantityUnit: string;
   price: number;
+  gstRate: number;
   link: string | null;
   notes: string | null;
   imageUrl: string | null;

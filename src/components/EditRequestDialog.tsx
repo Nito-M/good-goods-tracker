@@ -39,6 +39,7 @@ export function EditRequestDialog({
   const [quantity, setQuantity] = useState(1);
   const [quantityUnit, setQuantityUnit] = useState("pcs");
   const [price, setPrice] = useState(0);
+  const [gstRate, setGstRate] = useState(0);
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
@@ -46,6 +47,11 @@ export function EditRequestDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedRequester, setSelectedRequester] = useState<string>("");
+
+  // Calculate price breakdown
+  const subtotal = quantity * price;
+  const gstAmount = subtotal * (gstRate / 100);
+  const totalPrice = subtotal + gstAmount;
 
   useEffect(() => {
     if (request) {
@@ -55,6 +61,7 @@ export function EditRequestDialog({
       setQuantity(request.quantity);
       setQuantityUnit(request.quantityUnit);
       setPrice(request.price || 0);
+      setGstRate(request.gstRate || 0);
       setLink(request.link || "");
       setNotes(request.notes || "");
       setNeedByDate(request.needByDate ? new Date(request.needByDate) : undefined);
@@ -117,6 +124,7 @@ export function EditRequestDialog({
         quantity,
         quantityUnit,
         price,
+        gstRate,
         link: link.trim() || null,
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
@@ -206,8 +214,8 @@ export function EditRequestDialog({
             />
           </div>
 
-          {/* Quantity and Price */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Quantity, Unit Price, and GST */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="editQuantity">Quantity *</Label>
               <Input
@@ -236,6 +244,9 @@ export function EditRequestDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="editPrice">Unit Price ($)</Label>
               <Input
@@ -248,7 +259,40 @@ export function EditRequestDialog({
                 placeholder="0.00"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="editGstRate">GST Rate (%)</Label>
+              <Input
+                id="editGstRate"
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                value={gstRate}
+                onChange={(e) => setGstRate(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+              />
+            </div>
           </div>
+
+          {/* Price Breakdown */}
+          {price > 0 && (
+            <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal ({quantity} × ${price.toFixed(2)})</span>
+                <span className="font-medium">${subtotal.toFixed(2)}</span>
+              </div>
+              {gstRate > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">GST ({gstRate}%)</span>
+                  <span className="font-medium">${gstAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-2">
+                <span className="font-semibold">Total</span>
+                <span className="font-bold text-green-600">${totalPrice.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
 
           {/* Need By Date */}
           <div className="space-y-2">

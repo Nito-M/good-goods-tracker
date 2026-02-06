@@ -29,6 +29,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [quantity, setQuantity] = useState(1);
   const [quantityUnit, setQuantityUnit] = useState("pcs");
   const [price, setPrice] = useState(0);
+  const [gstRate, setGstRate] = useState(0);
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
@@ -36,6 +37,11 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedRequester, setSelectedRequester] = useState<string>("");
+
+  // Calculate price breakdown
+  const subtotal = quantity * price;
+  const gstAmount = subtotal * (gstRate / 100);
+  const totalPrice = subtotal + gstAmount;
 
   const handleItemSelect = (value: string) => {
     setSelectedItemId(value);
@@ -78,6 +84,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
     setQuantity(1);
     setQuantityUnit("pcs");
     setPrice(0);
+    setGstRate(0);
     setLink("");
     setNotes("");
     setNeedByDate(undefined);
@@ -105,6 +112,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
         quantity,
         quantityUnit,
         price,
+        gstRate,
         link: link.trim() || null,
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
@@ -199,8 +207,8 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
             />
           </div>
 
-          {/* Quantity and Price */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Quantity, Unit Price, and GST */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity *</Label>
               <Input
@@ -229,6 +237,9 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Unit Price ($)</Label>
               <Input
@@ -241,7 +252,40 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
                 placeholder="0.00"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="gstRate">GST Rate (%)</Label>
+              <Input
+                id="gstRate"
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                value={gstRate}
+                onChange={(e) => setGstRate(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+              />
+            </div>
           </div>
+
+          {/* Price Breakdown */}
+          {price > 0 && (
+            <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal ({quantity} × ${price.toFixed(2)})</span>
+                <span className="font-medium">${subtotal.toFixed(2)}</span>
+              </div>
+              {gstRate > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">GST ({gstRate}%)</span>
+                  <span className="font-medium">${gstAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-2">
+                <span className="font-semibold">Total</span>
+                <span className="font-bold text-green-600">${totalPrice.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
 
           {/* Need By Date */}
           <div className="space-y-2">

@@ -33,6 +33,7 @@ export function useRequests() {
         quantity: r.quantity,
         quantityUnit: r.quantity_unit,
         price: r.price || 0,
+        gstRate: r.gst_rate || 0,
         link: r.link,
         notes: r.notes,
         imageUrl: r.image_url,
@@ -77,6 +78,7 @@ export function useRequests() {
           quantity: input.quantity,
           quantity_unit: input.quantityUnit,
           price: input.price || 0,
+          gst_rate: input.gstRate || 0,
           link: input.link || null,
           notes: input.notes || null,
           image_url: input.imageUrl || null,
@@ -99,6 +101,7 @@ export function useRequests() {
         quantity: data.quantity,
         quantityUnit: data.quantity_unit,
         price: data.price || 0,
+        gstRate: data.gst_rate || 0,
         link: data.link,
         notes: data.notes,
         imageUrl: data.image_url,
@@ -136,6 +139,7 @@ export function useRequests() {
       if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
       if (updates.quantityUnit !== undefined) dbUpdates.quantity_unit = updates.quantityUnit;
       if (updates.price !== undefined) dbUpdates.price = updates.price;
+      if (updates.gstRate !== undefined) dbUpdates.gst_rate = updates.gstRate;
       if (updates.link !== undefined) dbUpdates.link = updates.link;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
