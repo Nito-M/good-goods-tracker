@@ -316,9 +316,10 @@ export function useSales() {
       const sale = sales.find((s) => s.id === id);
       if (!sale) throw new Error('Sale not found');
 
-      // Only restore inventory/allocations if the sale wasn't already reverted (cancelled)
-      // This prevents double-restoration if user reverts then deletes
-      const needsRestoration = sale.status !== 'cancelled';
+      // Only restore inventory/allocations if the sale was picked up (inventory was reduced)
+      // and wasn't already reverted (cancelled)
+      const wasPickedUp = sale.status === 'picked_up' || sale.status === 'paid';
+      const needsRestoration = sale.status !== 'cancelled' && wasPickedUp;
 
       // Get sale items for inventory restoration and PO allocation cleanup
       const { data: saleItems } = await supabase
