@@ -291,10 +291,21 @@ export function AddPurchaseOrder() {
                   key={lineItem.id}
                   className="p-3 rounded-lg border bg-muted/30"
                 >
-                  {/* Custom item fields */}
-                  {(!lineItem.selectedItemId || lineItem.selectedItemId === 'custom') && (
+                  {/* Custom item fields - only when explicitly custom */}
+                  {lineItem.selectedItemId === 'custom' && (
                     <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">Custom by SKU frame</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">Custom by SKU frame</p>
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-xs"
+                          onClick={() => updateLineItem(lineItem.id, { selectedItemId: '', customSku: '', customName: '' })}
+                        >
+                          Switch to inventory
+                        </Button>
+                      </div>
                       <div className="grid grid-cols-[1fr_1fr_100px_120px_100px_40px] gap-3 items-end">
                         <div className="space-y-1">
                           <Label className="text-xs">SKU *</Label>
