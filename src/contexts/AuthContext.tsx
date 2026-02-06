@@ -2,12 +2,14 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+const SESSION_ACTIVE_KEY = 'session_active_marker';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -26,10 +28,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Get initial session and check "remember me" status
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        // Check if user wanted to be remembered
+        // sessionStorage clears when browser closes, so if marker is gone but session exists,
+        // user didn't want to be remembered and browser was restarted
+        const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
+        const rememberMe = localStorage.getItem('remember_me');
+        
+        if (!sessionMarker && rememberMe === 'false') {
+          // Browser was closed and user didn't want to be remembered - sign out
+          await supabase.auth.signOut();
+          localStorage.removeItem('remember_me');
+          setSession(null);
+          setUser(null);
+        } else {
+          // Either remember me is true, or this is a continuing session
+          sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } else {
+        setSession(null);
+        setUser(null);
+      }
       setLoading(false);
     });
 
@@ -48,12 +71,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (!error) {
+      // Store remember me preference
+      localStorage.setItem('remember_me', rememberMe ? 'true' : 'false');
+      // Set session marker (will be cleared when browser closes)
+      sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
+    }
+    
     return { error };
   };
 
   const signOut = async () => {
+    localStorage.removeItem('remember_me');
+    sessionStorage.removeItem(SESSION_ACTIVE_KEY);
     await supabase.auth.signOut();
   };
 

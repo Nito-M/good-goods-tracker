@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box, Loader2 } from 'lucide-react';
@@ -17,6 +18,7 @@ export function Auth() {
   // Sign In form state
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
 
   // Sign Up form state
   const [signUpEmail, setSignUpEmail] = useState('');
@@ -38,7 +40,7 @@ export function Auth() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signIn(signInEmail, signInPassword);
+    const { error } = await signIn(signInEmail, signInPassword, rememberMe);
     setLoading(false);
 
     if (error) {
@@ -112,6 +114,19 @@ export function Auth() {
                     onChange={(e) => setSignInPassword(e.target.value)}
                     required
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="remember-me" 
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <Label 
+                    htmlFor="remember-me" 
+                    className="text-sm font-normal cursor-pointer text-muted-foreground"
+                  >
+                    Remember me
+                  </Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
