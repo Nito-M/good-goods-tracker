@@ -3,13 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, ExternalLink, Package, Image as ImageIcon } from "lucide-react";
+import { Trash2, ExternalLink, Package, Pencil, CalendarClock } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 
 interface RequestCardProps {
   request: Request;
   onStatusChange?: (id: string, status: RequestStatus) => void;
   onDelete?: (id: string) => void;
+  onEdit?: (request: Request) => void;
 }
 
 const statusColors: Record<RequestStatus, string> = {
@@ -20,7 +21,9 @@ const statusColors: Record<RequestStatus, string> = {
   cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
-export function RequestCard({ request, onStatusChange, onDelete }: RequestCardProps) {
+export function RequestCard({ request, onStatusChange, onDelete, onEdit }: RequestCardProps) {
+  const isOverdue = request.needByDate && new Date(request.needByDate) < new Date() && request.status !== 'received' && request.status !== 'cancelled';
+
   return (
     <Card className="relative">
       <CardHeader className="pb-2">
@@ -38,6 +41,16 @@ export function RequestCard({ request, onStatusChange, onDelete }: RequestCardPr
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onEdit(request)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
             {onStatusChange && request.status !== 'cancelled' && (
               <Select
                 value={request.status}
@@ -64,6 +77,15 @@ export function RequestCard({ request, onStatusChange, onDelete }: RequestCardPr
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {/* Need By Date */}
+        {request.needByDate && (
+          <div className={`flex items-center gap-2 text-sm ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+            <CalendarClock className="h-4 w-4" />
+            <span>Need by: {format(new Date(request.needByDate), "MMM d, yyyy")}</span>
+            {isOverdue && <Badge variant="destructive" className="text-xs">Overdue</Badge>}
+          </div>
+        )}
+
         {/* Image Preview */}
         {request.imageUrl && (
           <div className="relative w-full h-32 rounded-lg overflow-hidden border bg-muted">

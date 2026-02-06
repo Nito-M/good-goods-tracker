@@ -540,6 +540,7 @@ export type Database = {
           inventory_item_id: string | null
           item_name: string
           link: string | null
+          need_by_date: string | null
           notes: string | null
           quantity: number
           quantity_unit: string
@@ -555,6 +556,7 @@ export type Database = {
           inventory_item_id?: string | null
           item_name: string
           link?: string | null
+          need_by_date?: string | null
           notes?: string | null
           quantity?: number
           quantity_unit?: string
@@ -570,6 +572,7 @@ export type Database = {
           inventory_item_id?: string | null
           item_name?: string
           link?: string | null
+          need_by_date?: string | null
           notes?: string | null
           quantity?: number
           quantity_unit?: string

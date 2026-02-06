@@ -2,18 +2,20 @@ import { useState } from "react";
 import { useRequests } from "@/hooks/useRequests";
 import { useInventory } from "@/hooks/useInventory";
 import { AddRequestDialog } from "@/components/AddRequestDialog";
+import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { RequestCard } from "@/components/RequestCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, ClipboardList } from "lucide-react";
-import { RequestStatus } from "@/types/request";
+import { Request, RequestStatus } from "@/types/request";
 
 export function Requests() {
-  const { requests, loading, addRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
+  const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
   const { allItems } = useInventory();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [editingRequest, setEditingRequest] = useState<Request | null>(null);
 
   const filteredRequests = requests.filter((request) => {
     const matchesSearch =
@@ -34,6 +36,10 @@ export function Requests() {
     if (confirm("Are you sure you want to delete this request?")) {
       await deleteRequest(id);
     }
+  };
+
+  const handleEdit = (request: Request) => {
+    setEditingRequest(request);
   };
 
   return (
@@ -104,10 +110,21 @@ export function Requests() {
               request={request}
               onStatusChange={handleStatusChange}
               onDelete={handleDelete}
+              onEdit={handleEdit}
             />
           ))}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <EditRequestDialog
+        request={editingRequest}
+        items={allItems}
+        open={!!editingRequest}
+        onOpenChange={(open) => !open && setEditingRequest(null)}
+        onSave={updateRequest}
+        onUploadImage={uploadImage}
+      />
     </div>
   );
 }
