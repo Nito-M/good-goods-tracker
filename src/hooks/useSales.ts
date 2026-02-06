@@ -397,33 +397,39 @@ export function useSales() {
         return;
       }
 
+      // Only restore inventory if it was actually reduced (picked_up or paid status)
+      // Inventory is reduced when marked as 'picked_up', so only those need restoration
+      const wasPickedUp = sale.status === 'picked_up' || sale.status === 'paid';
+
       // Get sale items to find their IDs for deleting allocations
       const { data: saleItems } = await supabase
         .from('sale_items')
         .select('id, inventory_item_id, quantity')
         .eq('sale_id', id);
 
-      // Delete PO allocations for this sale (restores FIFO availability)
       if (saleItems) {
         for (const saleItem of saleItems) {
-          await supabase
-            .from('po_item_allocations')
-            .delete()
-            .eq('sale_item_id', saleItem.id);
+          // Only delete allocations and restore inventory if it was picked up
+          if (wasPickedUp) {
+            await supabase
+              .from('po_item_allocations')
+              .delete()
+              .eq('sale_item_id', saleItem.id);
 
-          // Restore inventory quantities
-          if (saleItem.inventory_item_id) {
-            const { data: currentItem } = await supabase
-              .from('inventory_items')
-              .select('quantity')
-              .eq('id', saleItem.inventory_item_id)
-              .single();
-
-            if (currentItem) {
-              await supabase
+            // Restore inventory quantities
+            if (saleItem.inventory_item_id) {
+              const { data: currentItem } = await supabase
                 .from('inventory_items')
-                .update({ quantity: currentItem.quantity + saleItem.quantity })
-                .eq('id', saleItem.inventory_item_id);
+                .select('quantity')
+                .eq('id', saleItem.inventory_item_id)
+                .single();
+
+              if (currentItem) {
+                await supabase
+                  .from('inventory_items')
+                  .update({ quantity: currentItem.quantity + saleItem.quantity })
+                  .eq('id', saleItem.inventory_item_id);
+              }
             }
           }
         }
@@ -445,7 +451,9 @@ export function useSales() {
 
       toast({
         title: 'Sale reverted',
-        description: 'Items restored to inventory and bank transaction reversed',
+        description: wasPickedUp 
+          ? 'Items restored to inventory and bank transaction reversed'
+          : 'Invoice cancelled',
       });
 
       // Update local state
