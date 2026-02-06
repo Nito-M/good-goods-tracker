@@ -65,7 +65,7 @@ export function Sales() {
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
-  const { addSaleProfit } = useBank();
+  const { addSaleRevenue } = useBank();
 
   // Build invoice settings from profile
   const invoiceSettings: InvoiceSettings = useMemo(() => ({
@@ -706,7 +706,7 @@ export function Sales() {
                                   onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
                                   onPreviewInvoice={() => setPreviewSale(sale)}
                                   onEdit={setEditingSale}
-                                  onStatusChange={(id, status) => updateStatus(id, status, addSaleProfit)}
+                                  onStatusChange={(id, status) => updateStatus(id, status, addSaleRevenue)}
                                 />
                               ))}
                             </AccordionContent>
