@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 import { Request, RequestStatus, CreateRequestInput } from "@/types/request";
 
 export function useRequests() {
@@ -9,6 +10,7 @@ export function useRequests() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { profile } = useProfile();
 
   const fetchRequests = useCallback(async () => {
     if (!user) return;
@@ -33,6 +35,7 @@ export function useRequests() {
         notes: r.notes,
         imageUrl: r.image_url,
         needByDate: r.need_by_date,
+        requesterName: r.requester_name,
         status: r.status as RequestStatus,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
@@ -59,6 +62,9 @@ export function useRequests() {
     if (!user) return null;
 
     try {
+      // Use requester name from profile if not provided
+      const requesterName = input.requesterName || profile?.requesterName || null;
+
       const { data, error } = await supabase
         .from("requests")
         .insert({
@@ -72,6 +78,7 @@ export function useRequests() {
           notes: input.notes || null,
           image_url: input.imageUrl || null,
           need_by_date: input.needByDate || null,
+          requester_name: requesterName,
           status: "pending",
         })
         .select()
@@ -91,6 +98,7 @@ export function useRequests() {
         notes: data.notes,
         imageUrl: data.image_url,
         needByDate: data.need_by_date,
+        requesterName: data.requester_name,
         status: data.status as RequestStatus,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
@@ -126,6 +134,7 @@ export function useRequests() {
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
       if (updates.needByDate !== undefined) dbUpdates.need_by_date = updates.needByDate;
+      // Note: requesterName is not editable here - it's set from profile
 
       const { error } = await supabase
         .from("requests")

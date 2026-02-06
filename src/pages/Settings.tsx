@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -121,6 +121,9 @@ export function Settings() {
   const [quoteValidityDays, setQuoteValidityDays] = useState<number | null>(null);
   const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
 
+  // Requester settings state
+  const [requesterName, setRequesterName] = useState('');
+
   // Load profile data into form
   useEffect(() => {
     if (profile) {
@@ -138,6 +141,8 @@ export function Settings() {
       setQuoteThankYouNote(profile.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(profile.quoteValidityDays || null);
       setQuoteLayout(profile.quoteLayout || profile.invoiceLayout || defaultInvoiceLayout);
+      // Requester settings
+      setRequesterName(profile.requesterName || '');
     }
   }, [profile]);
 
@@ -418,6 +423,37 @@ export function Settings() {
                     ))}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Requests Settings */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Requests
+                </CardTitle>
+                <CardDescription>Configure default settings for requests</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  await updateProfile({ requesterName: requesterName || null });
+                }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="requesterName">Default Requester Name</Label>
+                    <p className="text-sm text-muted-foreground">
+                      This name will be automatically added to new requests
+                    </p>
+                    <Input
+                      id="requesterName"
+                      placeholder="Enter your name"
+                      value={requesterName}
+                      onChange={(e) => setRequesterName(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit">Save Requester Name</Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>

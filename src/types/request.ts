@@ -12,6 +12,7 @@ export interface Request {
   notes: string | null;
   imageUrl: string | null;
   needByDate: string | null;
+  requesterName: string | null;
   status: RequestStatus;
   createdAt: string;
   updatedAt: string;
@@ -27,4 +28,5 @@ export interface CreateRequestInput {
   notes: string | null;
   imageUrl: string | null;
   needByDate: string | null;
+  requesterName: string | null;
 }
