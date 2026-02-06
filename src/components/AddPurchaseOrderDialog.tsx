@@ -135,8 +135,21 @@ export function AddPurchaseOrderDialog({
 
   const handleVendorChange = (newVendorId: string) => {
     setVendorId(newVendorId);
+    // Reset line items when vendor changes (keep only custom items or clear them)
+    setLineItems(prev => prev.map(item => {
+      if (item.selectedItemId === 'custom') {
+        return item; // Keep custom items as-is
+      }
+      // Clear inventory item selections since they may not belong to new vendor
+      return createEmptyLineItem();
+    }));
     applyVendorPrices(newVendorId);
   };
+
+  // Filter inventory items to only show those with pricing for the selected vendor
+  const filteredInventoryItems = vendorId && vendorId !== 'none'
+    ? inventoryItems.filter(item => vendorPrices.some(vp => vp.itemId === item.id))
+    : [];
 
   const updateLineItem = (id: string, updates: Partial<LineItem>) => {
     setLineItems((prev) =>
@@ -247,6 +260,27 @@ export function AddPurchaseOrderDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Vendor Selection - FIRST */}
+          <div className="space-y-2">
+            <Label htmlFor="vendor">Vendor *</Label>
+            <Select value={vendorId} onValueChange={handleVendorChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a vendor first" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- No Vendor --</SelectItem>
+                {vendors.map((vendor) => (
+                  <SelectItem key={vendor.id} value={vendor.id}>
+                    {vendor.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Select a vendor to see available items with pricing
+            </p>
+          </div>
+
           {/* Line Items */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -257,13 +291,20 @@ export function AddPurchaseOrderDialog({
                 size="sm"
                 onClick={addLineItem}
                 className="gap-2"
+                disabled={!vendorId || vendorId === 'none'}
               >
                 <Plus className="h-4 w-4" />
                 Add Item
               </Button>
             </div>
 
-            {lineItems.map((lineItem, index) => (
+            {(!vendorId || vendorId === 'none') && (
+              <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg bg-muted/30">
+                Please select a vendor first to add items
+              </p>
+            )}
+
+            {vendorId && vendorId !== 'none' && lineItems.map((lineItem, index) => (
               <div
                 key={lineItem.id}
                 className="p-4 rounded-lg border bg-muted/30 space-y-3"
@@ -302,13 +343,24 @@ export function AddPurchaseOrderDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
-                      {inventoryItems.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name} ({item.sku})
+                      {filteredInventoryItems.length > 0 ? (
+                        filteredInventoryItems.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name} ({item.sku})
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-items" disabled>
+                          No items with pricing for this vendor
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
+                  {filteredInventoryItems.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      No inventory items have pricing set for this vendor. Use custom item or add vendor pricing to items.
+                    </p>
+                  )}
                 </div>
 
                 {(!lineItem.selectedItemId || lineItem.selectedItemId === 'custom') && (
@@ -392,23 +444,7 @@ export function AddPurchaseOrderDialog({
             </p>
           </div>
 
-          {/* Vendor Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="vendor">Vendor</Label>
-            <Select value={vendorId} onValueChange={handleVendorChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a vendor (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">-- No Vendor --</SelectItem>
-                {vendors.map((vendor) => (
-                  <SelectItem key={vendor.id} value={vendor.id}>
-                    {vendor.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Vendor Selection moved to top */}
 
           {/* Order Date */}
           <div className="space-y-2">
