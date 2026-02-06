@@ -1,23 +1,39 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { ItemPurchaseHistory } from '@/components/ItemPurchaseHistory';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { useVendors } from '@/hooks/useVendors';
 import { useLastPurchase } from '@/hooks/useLastPurchase';
+import { useToast } from '@/hooks/use-toast';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<{ success: boolean; error?: string; poNumbers?: string[] }>;
 }
 
 export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<{ message: string; poNumbers?: string[] } | null>(null);
   
   const item = items.find((i) => i.id === id);
   
@@ -64,9 +80,18 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
     navigate(`/items/edit/${item.id}`);
   };
 
-  const handleDelete = () => {
-    onDelete(item.id);
-    navigate('/items');
+  const handleDelete = async () => {
+    const result = await onDelete(item.id);
+    if (result.success) {
+      navigate('/items');
+    } else if (result.error) {
+      setDeleteError({ message: result.error, poNumbers: result.poNumbers });
+      toast({
+        title: 'Cannot delete item',
+        description: result.error,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -84,10 +109,72 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                 <Edit2 className="h-4 w-4" />
                 Edit
               </Button>
-              <Button variant="destructive" onClick={handleDelete} className="gap-2">
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
+              <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+                setDeleteDialogOpen(open);
+                if (!open) setDeleteError(null);
+              }}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                      <div className="space-y-3">
+                        {deleteError ? (
+                          <>
+                            <p className="text-destructive font-medium">
+                              {deleteError.message}
+                            </p>
+                            {deleteError.poNumbers && deleteError.poNumbers.length > 0 && (
+                              <div className="bg-destructive/10 rounded-md p-3 text-sm">
+                                <p className="font-medium text-foreground mb-2">Blocking POs:</p>
+                                <ul className="list-disc list-inside text-muted-foreground">
+                                  {deleteError.poNumbers.map((po) => (
+                                    <li key={po}>{po}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            <p className="text-sm text-muted-foreground">
+                              Please receive or delete these POs first.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p>
+                              This will permanently remove <strong>{item.name}</strong> from your inventory.
+                            </p>
+                            <div className="bg-muted/50 rounded-md p-3 text-sm space-y-1">
+                              <p className="font-medium text-foreground">What happens:</p>
+                              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                                <li>Item won't appear in future PO/quote/invoice dropdowns</li>
+                                <li>Historical invoices and quotes will keep the item info</li>
+                                <li>Historical POs (received/paid) will keep the item info</li>
+                                <li>Vendor pricing records will be preserved</li>
+                              </ul>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    {!deleteError && (
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete Anyway
+                      </AlertDialogAction>
+                    )}
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>
