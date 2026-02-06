@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,6 +20,12 @@ import { InventoryItem } from '@/types/inventory';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
 import { Vendor } from '@/hooks/useVendors';
 import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface VendorPrice {
+  itemId: string;
+  price: number;
+}
 
 interface AddPurchaseOrderDialogProps {
   open: boolean;
@@ -73,6 +79,7 @@ export function AddPurchaseOrderDialog({
   );
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
+  const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -80,9 +87,73 @@ export function AddPurchaseOrderDialog({
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch vendor prices when vendor changes
+  useEffect(() => {
+    const fetchVendorPrices = async () => {
+      if (!vendorId || vendorId === 'none') {
+        setVendorPrices([]);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('item_vendor_prices')
+        .select('item_id, price')
+        .eq('vendor_id', vendorId);
+
+      if (data) {
+        setVendorPrices(data.map(d => ({ itemId: d.item_id, price: Number(d.price) })));
+      }
+    };
+
+    fetchVendorPrices();
+  }, [vendorId]);
+
+  // Update line item prices when vendor prices are fetched or line items change
+  const applyVendorPrices = (selectedVendorId: string) => {
+    if (!selectedVendorId || selectedVendorId === 'none') return;
+
+    // Fetch and apply prices for the selected vendor
+    supabase
+      .from('item_vendor_prices')
+      .select('item_id, price')
+      .eq('vendor_id', selectedVendorId)
+      .then(({ data }) => {
+        if (data) {
+          const priceMap = new Map(data.map(d => [d.item_id, Number(d.price)]));
+          setLineItems(prev => prev.map(lineItem => {
+            if (lineItem.selectedItemId && lineItem.selectedItemId !== 'custom') {
+              const vendorPrice = priceMap.get(lineItem.selectedItemId);
+              if (vendorPrice !== undefined) {
+                return { ...lineItem, unitCost: vendorPrice.toFixed(2) };
+              }
+            }
+            return lineItem;
+          }));
+        }
+      });
+  };
+
+  const handleVendorChange = (newVendorId: string) => {
+    setVendorId(newVendorId);
+    applyVendorPrices(newVendorId);
+  };
+
   const updateLineItem = (id: string, updates: Partial<LineItem>) => {
     setLineItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const updated = { ...item, ...updates };
+        
+        // If selecting an inventory item and we have a vendor selected, apply vendor price
+        if (updates.selectedItemId && updates.selectedItemId !== 'custom' && vendorId && vendorId !== 'none') {
+          const vendorPrice = vendorPrices.find(vp => vp.itemId === updates.selectedItemId);
+          if (vendorPrice) {
+            updated.unitCost = vendorPrice.price.toFixed(2);
+          }
+        }
+        
+        return updated;
+      })
     );
   };
 
@@ -324,7 +395,7 @@ export function AddPurchaseOrderDialog({
           {/* Vendor Selection */}
           <div className="space-y-2">
             <Label htmlFor="vendor">Vendor</Label>
-            <Select value={vendorId} onValueChange={setVendorId}>
+            <Select value={vendorId} onValueChange={handleVendorChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a vendor (optional)" />
               </SelectTrigger>
