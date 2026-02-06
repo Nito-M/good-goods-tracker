@@ -293,67 +293,69 @@ export function AddPurchaseOrder() {
                 >
                   {/* Custom item fields */}
                   {(!lineItem.selectedItemId || lineItem.selectedItemId === 'custom') && (
-                    <div className="grid grid-cols-[1fr_1fr_100px_120px_100px_40px] gap-3 items-end">
-                      <div className="space-y-1">
-                        <Label className="text-xs">SKU *</Label>
-                        <Input
-                          value={lineItem.customSku}
-                          onChange={(e) =>
-                            updateLineItem(lineItem.id, { customSku: e.target.value })
-                          }
-                          placeholder="SKU"
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Item Name *</Label>
-                        <Input
-                          value={lineItem.customName}
-                          onChange={(e) =>
-                            updateLineItem(lineItem.id, { customName: e.target.value })
-                          }
-                          placeholder="Item name"
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Qty *</Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={lineItem.quantity}
-                          onChange={(e) =>
-                            updateLineItem(lineItem.id, {
-                              quantity: parseInt(e.target.value) || 1,
-                            })
-                          }
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Unit Cost</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={lineItem.unitCost}
-                          onChange={(e) =>
-                            updateLineItem(lineItem.id, {
-                              unitCost: e.target.value,
-                            })
-                          }
-                          placeholder="0.00"
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Total</Label>
-                        <div className="h-9 flex items-center px-2 rounded-md border bg-muted text-sm font-medium">
-                          ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Custom by SKU frame</p>
+                      <div className="grid grid-cols-[1fr_1fr_100px_120px_100px_40px] gap-3 items-end">
+                        <div className="space-y-1">
+                          <Label className="text-xs">SKU *</Label>
+                          <Input
+                            value={lineItem.customSku}
+                            onChange={(e) =>
+                              updateLineItem(lineItem.id, { customSku: e.target.value })
+                            }
+                            placeholder="SKU"
+                            className="h-9"
+                          />
                         </div>
-                      </div>
-                      <div>
-                        {lineItems.length > 1 && (
+                        <div className="space-y-1">
+                          <Label className="text-xs">Item Name *</Label>
+                          <Input
+                            value={lineItem.customName}
+                            onChange={(e) =>
+                              updateLineItem(lineItem.id, { customName: e.target.value })
+                            }
+                            placeholder="Item name"
+                            className="h-9"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Qty *</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={lineItem.quantity}
+                            onChange={(e) =>
+                              updateLineItem(lineItem.id, {
+                                quantity: parseInt(e.target.value) || 1,
+                              })
+                            }
+                            className="h-9"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Unit Cost</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={lineItem.unitCost}
+                            onChange={(e) =>
+                              updateLineItem(lineItem.id, {
+                                unitCost: e.target.value,
+                              })
+                            }
+                            placeholder="0.00"
+                            className="h-9"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Total</Label>
+                          <div className="h-9 flex items-center px-2 rounded-md border bg-muted text-sm font-medium">
+                            ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
+                          </div>
+                        </div>
+                        <div>
+                          {lineItems.length > 1 && (
                           <Button
                             type="button"
                             variant="ghost"
@@ -364,6 +366,7 @@ export function AddPurchaseOrder() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
+                        </div>
                       </div>
                     </div>
                   )}
