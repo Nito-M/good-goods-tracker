@@ -19,17 +19,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener BEFORE getting session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Get initial session and check "remember me" status
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // First, do the initial session check with "remember me" logic
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (session) {
         // Check if user wanted to be remembered
         // sessionStorage clears when browser closes, so if marker is gone but session exists,
@@ -53,11 +49,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setUser(null);
       }
+      
       setLoading(false);
+      setInitialCheckDone(true);
+    };
+
+    initializeAuth();
+  }, []);
+
+  useEffect(() => {
+    // Only set up the auth state listener AFTER the initial check is done
+    if (!initialCheckDone) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialCheckDone]);
 
   const signUp = async (email: string, password: string, displayName: string) => {
     const { error } = await supabase.auth.signUp({
