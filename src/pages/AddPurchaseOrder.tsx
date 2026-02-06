@@ -326,11 +326,19 @@ export function AddPurchaseOrder() {
                       <SelectContent>
                         <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
                         {filteredInventoryItems.length > 0 ? (
-                          filteredInventoryItems.map((item) => (
-                            <SelectItem key={item.id} value={item.id}>
-                              {item.name} ({item.sku})
-                            </SelectItem>
-                          ))
+                          filteredInventoryItems
+                            .filter((item) => {
+                              // Exclude items already selected in other line items
+                              const alreadySelected = lineItems.some(
+                                (li) => li.id !== lineItem.id && li.selectedItemId === item.id
+                              );
+                              return !alreadySelected;
+                            })
+                            .map((item) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.name} ({item.sku})
+                              </SelectItem>
+                            ))
                         ) : (
                           <SelectItem value="no-items" disabled>
                             No items with pricing for this vendor
