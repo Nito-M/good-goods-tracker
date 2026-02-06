@@ -43,6 +43,14 @@ export function PurchaseOrderCard({
   const taxAmount = subtotal * TAX_RATE;
   const totalCost = subtotal + taxAmount;
 
+  // Parse date string to local date to avoid timezone shifting
+  const parseLocalDate = (dateValue: Date | string) => {
+    const dateStr = typeof dateValue === 'string' ? dateValue : dateValue.toISOString();
+    const [datePart] = dateStr.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0);
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -153,13 +161,13 @@ export function PurchaseOrderCard({
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>Ordered: {format(order.orderedAt, 'MMM d, yyyy')}</span>
+                <span>Ordered: {format(parseLocalDate(order.orderedAt), 'MMM d, yyyy')}</span>
               </div>
               {order.receivedAt && (
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
                   <span>
-                    Received: {format(order.receivedAt, 'MMM d, yyyy')}
+                    Received: {format(parseLocalDate(order.receivedAt), 'MMM d, yyyy')}
                   </span>
                 </div>
               )}
@@ -167,7 +175,7 @@ export function PurchaseOrderCard({
                 <div className="flex items-center gap-2">
                   <Banknote className="h-4 w-4 text-blue-600" />
                   <span>
-                    Paid: {format(order.paidAt, 'MMM d, yyyy')}
+                    Paid: {format(parseLocalDate(order.paidAt), 'MMM d, yyyy')}
                   </span>
                 </div>
               )}
