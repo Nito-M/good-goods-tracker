@@ -29,7 +29,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [quantity, setQuantity] = useState<number | "">("");
   const [quantityUnit, setQuantityUnit] = useState("pcs");
   const [price, setPrice] = useState<number | "">(0);
-  const [gstRate, setGstRate] = useState<number | "">(0);
+  const [gstRate, setGstRate] = useState<number | "">(5);
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
@@ -87,7 +87,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
     setQuantity("");
     setQuantityUnit("pcs");
     setPrice(0);
-    setGstRate(0);
+    setGstRate(5);
     setLink("");
     setNotes("");
     setNeedByDate(undefined);
