@@ -28,7 +28,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState<number | "">("");
   const [quantityUnit, setQuantityUnit] = useState("pcs");
-  const [price, setPrice] = useState<number | "">(0);
+  const [price, setPrice] = useState<number | "">("");
   const [gstRate, setGstRate] = useState<number | "">(5);
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
@@ -86,7 +86,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
     setSku("");
     setQuantity("");
     setQuantityUnit("pcs");
-    setPrice(0);
+    setPrice("");
     setGstRate(5);
     setLink("");
     setNotes("");
