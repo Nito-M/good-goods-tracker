@@ -28,6 +28,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [quantityUnit, setQuantityUnit] = useState("pcs");
+  const [price, setPrice] = useState(0);
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
@@ -76,6 +77,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
     setSku("");
     setQuantity(1);
     setQuantityUnit("pcs");
+    setPrice(0);
     setLink("");
     setNotes("");
     setNeedByDate(undefined);
@@ -102,6 +104,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
         sku: sku.trim() || null,
         quantity,
         quantityUnit,
+        price,
         link: link.trim() || null,
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
@@ -196,8 +199,8 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
             />
           </div>
 
-          {/* Quantity */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Quantity and Price */}
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity *</Label>
               <Input
@@ -225,6 +228,18 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
                   <SelectItem value="pack">pack</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Unit Price ($)</Label>
+              <Input
+                id="price"
+                type="number"
+                min={0}
+                step={0.01}
+                value={price}
+                onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                placeholder="0.00"
+              />
             </div>
           </div>
 
