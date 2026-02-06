@@ -64,15 +64,6 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
   };
 
   const getStatusBadges = () => {
-    // When paid, show both "Picked Up" and "Paid" badges
-    if (sale.status === 'paid') {
-      return (
-        <>
-          <Badge variant="default">Picked Up</Badge>
-          <Badge className="bg-primary/80 text-primary-foreground">Paid</Badge>
-        </>
-      );
-    }
     const config = statusConfig[sale.status] || statusConfig.draft;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
