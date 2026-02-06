@@ -40,7 +40,7 @@ function createEmptyLineItem(): LineItem {
     selectedItemId: '',
     customSku: '',
     customName: '',
-    quantity: 1,
+    quantity: '' as unknown as number,
     unitCost: '',
   };
 }
@@ -160,12 +160,15 @@ export function AddPurchaseOrder() {
     if (inventoryItem) {
       return { sku: inventoryItem.sku, itemName: inventoryItem.name };
     }
-    return { sku: lineItem.customSku, itemName: lineItem.customName };
+    // For custom items, generate SKU from item name if not provided
+    const generatedSku = lineItem.customName ? lineItem.customName.toUpperCase().replace(/\s+/g, '-').slice(0, 20) : '';
+    return { sku: lineItem.customSku || generatedSku, itemName: lineItem.customName };
   };
 
   const isLineItemValid = (lineItem: LineItem) => {
-    const { sku, itemName } = getItemDetails(lineItem);
-    return sku && itemName && lineItem.quantity >= 1;
+    const { itemName } = getItemDetails(lineItem);
+    const qty = typeof lineItem.quantity === 'number' ? lineItem.quantity : 0;
+    return itemName && qty >= 1;
   };
 
   const isFormValid = () => {
@@ -299,7 +302,7 @@ export function AddPurchaseOrder() {
                   {lineItem.selectedItemId === 'custom' && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">Custom by SKU frame</p>
+                        <p className="text-xs text-muted-foreground">Custom Item</p>
                         <Button
                           type="button"
                           variant="link"
@@ -310,18 +313,7 @@ export function AddPurchaseOrder() {
                           Switch to inventory
                         </Button>
                       </div>
-                      <div className="grid grid-cols-[1fr_1fr_100px_120px_100px_40px] gap-3 items-end">
-                        <div className="space-y-1">
-                          <Label className="text-xs">SKU *</Label>
-                          <Input
-                            value={lineItem.customSku}
-                            onChange={(e) =>
-                              updateLineItem(lineItem.id, { customSku: e.target.value })
-                            }
-                            placeholder="SKU"
-                            className="h-9"
-                          />
-                        </div>
+                      <div className="grid grid-cols-[1fr_100px_120px_100px_40px] gap-3 items-end">
                         <div className="space-y-1">
                           <Label className="text-xs">Item Name *</Label>
                           <Input
@@ -338,12 +330,13 @@ export function AddPurchaseOrder() {
                           <Input
                             type="number"
                             min={1}
-                            value={lineItem.quantity}
+                            value={lineItem.quantity === ('' as unknown as number) ? '' : lineItem.quantity}
                             onChange={(e) =>
                               updateLineItem(lineItem.id, {
-                                quantity: parseInt(e.target.value) || 1,
+                                quantity: e.target.value === '' ? ('' as unknown as number) : parseInt(e.target.value) || 0,
                               })
                             }
+                            placeholder=""
                             className="h-9"
                           />
                         </div>
@@ -432,12 +425,13 @@ export function AddPurchaseOrder() {
                         <Input
                           type="number"
                           min={1}
-                          value={lineItem.quantity}
+                          value={lineItem.quantity === ('' as unknown as number) ? '' : lineItem.quantity}
                           onChange={(e) =>
                             updateLineItem(lineItem.id, {
-                              quantity: parseInt(e.target.value) || 1,
+                              quantity: e.target.value === '' ? ('' as unknown as number) : parseInt(e.target.value) || 0,
                             })
                           }
+                          placeholder=""
                           className="h-9"
                         />
                       </div>
