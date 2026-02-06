@@ -34,6 +34,7 @@ interface DbInventoryItem {
   created_at: string;
   updated_at: string;
   user_id: string;
+  deleted_at: string | null;
 }
 
 function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
@@ -89,6 +90,7 @@ function inventoryItemToDb(
     created_at: now,
     updated_at: now,
     user_id: userId,
+    deleted_at: null,
   };
 }
 
@@ -110,22 +112,26 @@ export function useInventory() {
       return;
     }
 
-    // First, load from IndexedDB for instant display
+    // First, load from IndexedDB for instant display (filter out deleted items)
     try {
       const localItems = await getAll('inventory_items', user.id);
       if (localItems.length > 0) {
-        setItems((localItems as unknown as DbInventoryItem[]).map(dbToInventoryItem));
+        const activeItems = (localItems as unknown as DbInventoryItem[]).filter(
+          (item) => !item.deleted_at
+        );
+        setItems(activeItems.map(dbToInventoryItem));
         setLoading(false);
       }
     } catch (error) {
       console.error('Error loading from IndexedDB:', error);
     }
 
-    // If online, fetch from server and update local
+    // If online, fetch from server and update local (only active items)
     if (isOnline) {
       const { data, error } = await supabase
         .from('inventory_items')
         .select('*')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -322,37 +328,88 @@ export function useInventory() {
     toast({ title: 'Item updated successfully' });
   };
 
-  const deleteItem = async (id: string) => {
-    // Delete locally first
-    await deleteFromDb('inventory_items', id);
+  const checkUnreceivedPOs = async (itemId: string, sku: string): Promise<{ blocked: boolean; poNumbers: string[] }> => {
+    if (!user) return { blocked: false, poNumbers: [] };
+
+    // Check for unreceived POs that contain this item
+    const { data: unreceived } = await supabase
+      .from('purchase_orders')
+      .select('po_number, items, sku')
+      .eq('user_id', user.id)
+      .eq('status', 'ordered');
+
+    if (!unreceived || unreceived.length === 0) {
+      return { blocked: false, poNumbers: [] };
+    }
+
+    const blockingPOs: string[] = [];
+    for (const po of unreceived) {
+      // Check if the PO contains this SKU (either in items array or legacy sku field)
+      const items = po.items as Array<{ sku: string }> | null;
+      const hasItem = items?.some((item) => item.sku === sku) || po.sku === sku;
+      if (hasItem) {
+        blockingPOs.push(po.po_number || 'Unnamed PO');
+      }
+    }
+
+    return { blocked: blockingPOs.length > 0, poNumbers: blockingPOs };
+  };
+
+  const deleteItem = async (id: string): Promise<{ success: boolean; error?: string; poNumbers?: string[] }> => {
+    const item = items.find((i) => i.id === id);
+    if (!item) {
+      return { success: false, error: 'Item not found' };
+    }
+
+    // Check for unreceived POs
+    const { blocked, poNumbers } = await checkUnreceivedPOs(id, item.sku);
+    if (blocked) {
+      return { 
+        success: false, 
+        error: 'Cannot delete item - it is on unreceived purchase orders',
+        poNumbers,
+      };
+    }
+
+    // Soft delete - set deleted_at timestamp
+    const deletedAt = new Date().toISOString();
+
+    // Update locally first
+    const localItem = await getAll('inventory_items', user?.id).then(
+      (items) => items.find((i) => (i as { id: string }).id === id)
+    );
+    if (localItem) {
+      await put('inventory_items', { ...localItem, deleted_at: deletedAt });
+    }
     setItems((prev) => prev.filter((item) => item.id !== id));
 
     if (isOnline) {
       const { error } = await supabase
         .from('inventory_items')
-        .delete()
+        .update({ deleted_at: deletedAt })
         .eq('id', id);
 
       if (error) {
         await addToSyncQueue({
           table: 'inventory_items',
-          operation: 'delete',
-          data: { id },
+          operation: 'update',
+          data: { id, deleted_at: deletedAt },
         });
         toast({ title: 'Delete saved offline', description: 'Will sync when back online' });
-        return;
+        return { success: true };
       }
     } else {
       await addToSyncQueue({
         table: 'inventory_items',
-        operation: 'delete',
-        data: { id },
+        operation: 'update',
+        data: { id, deleted_at: deletedAt },
       });
       toast({ title: 'Delete saved offline', description: 'Will sync when back online' });
-      return;
+      return { success: true };
     }
 
-    toast({ title: 'Item deleted successfully' });
+    toast({ title: 'Item deleted successfully', description: 'Historical records preserved' });
+    return { success: true };
   };
 
   return {

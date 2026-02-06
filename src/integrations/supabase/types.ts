@@ -82,6 +82,7 @@ export type Database = {
           colors: string[] | null
           cost: number
           created_at: string
+          deleted_at: string | null
           description: string | null
           dimensions_height: number
           dimensions_length: number
@@ -104,6 +105,7 @@ export type Database = {
           colors?: string[] | null
           cost?: number
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           dimensions_height?: number
           dimensions_length?: number
@@ -126,6 +128,7 @@ export type Database = {
           colors?: string[] | null
           cost?: number
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           dimensions_height?: number
           dimensions_length?: number
