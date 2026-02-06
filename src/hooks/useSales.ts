@@ -571,6 +571,16 @@ export function useSales() {
       const sale = sales.find((s) => s.id === saleId);
       if (!sale) throw new Error('Sale not found');
 
+      // Prevent marking as picked_up if already paid (inventory was never reduced, so shouldn't reduce now)
+      if (status === 'picked_up' && sale.status === 'paid') {
+        toast({
+          title: 'Cannot mark as picked up',
+          description: 'This invoice is already marked as paid. Inventory was not reduced.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // If marking as picked_up, perform inventory reduction and FIFO allocation
       if (status === 'picked_up' && sale.status !== 'picked_up') {
         // Get sale items
