@@ -1,4 +1,4 @@
-import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil, Eye } from 'lucide-react';
+import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil, Eye, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,18 +37,18 @@ interface SaleCardProps {
   onPreviewInvoice: () => void;
   onEdit: (sale: Sale) => void;
   onStatusChange?: (id: string, status: SaleStatus) => void;
+  onTogglePickedUp?: (id: string) => void;
 }
 
-const statusConfig: Record<SaleStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Draft', variant: 'secondary' },
   pending: { label: 'Pending', variant: 'outline' },
-  picked_up: { label: 'Picked Up', variant: 'default' },
   paid: { label: 'Paid', variant: 'default' },
   overdue: { label: 'Overdue', variant: 'destructive' },
   cancelled: { label: 'Cancelled', variant: 'secondary' },
 };
 
-export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange }: SaleCardProps) {
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp }: SaleCardProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -63,9 +64,32 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
     });
   };
 
+  const isPickedUp = !!sale.pickedUpAt;
+
   const getStatusBadges = () => {
-    const config = statusConfig[sale.status] || statusConfig.draft;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    const badges = [];
+    
+    // Show picked up badge if picked up
+    if (isPickedUp) {
+      badges.push(
+        <Badge key="picked_up" variant="default" className="bg-primary">
+          <Package className="h-3 w-3 mr-1" />
+          Picked Up
+        </Badge>
+      );
+    }
+    
+    // Show payment status badge (excluding picked_up from the dropdown statuses)
+    if (sale.status !== 'picked_up') {
+      const config = statusConfig[sale.status as Exclude<SaleStatus, 'picked_up'>] || statusConfig.pending;
+      badges.push(
+        <Badge key="status" variant={config.variant}>
+          {config.label}
+        </Badge>
+      );
+    }
+    
+    return badges.length > 0 ? badges : <Badge variant="outline">Pending</Badge>;
   };
 
   return (
@@ -90,10 +114,27 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          {/* Status Selector */}
+          {/* Picked Up Checkbox */}
+          {onTogglePickedUp && sale.status !== 'cancelled' && (
+            <div className="flex items-center gap-2 px-2 py-1 rounded-md border bg-muted/50">
+              <Checkbox
+                id={`picked-up-${sale.id}`}
+                checked={isPickedUp}
+                onCheckedChange={() => onTogglePickedUp(sale.id)}
+              />
+              <label
+                htmlFor={`picked-up-${sale.id}`}
+                className="text-sm font-medium cursor-pointer"
+              >
+                Picked Up
+              </label>
+            </div>
+          )}
+          
+          {/* Status Selector (for payment status only) */}
           {onStatusChange && sale.status !== 'cancelled' && (
             <Select
-              value={sale.status}
+              value={sale.status === 'picked_up' ? 'pending' : sale.status}
               onValueChange={(value: SaleStatus) => onStatusChange(sale.id, value)}
             >
               <SelectTrigger className="w-[120px] h-8">
@@ -102,7 +143,6 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="picked_up">Picked Up</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
@@ -132,8 +172,8 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                 <AlertDialogHeader>
                   <AlertDialogTitle>Revert Sale?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will mark {sale.invoiceNumber} as reverted and restore all
-                    items back to inventory.
+                    This will mark {sale.invoiceNumber} as reverted
+                    {isPickedUp && ' and restore all items back to inventory'}.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -160,16 +200,22 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                       This will permanently delete <strong>{sale.invoiceNumber}</strong>. 
                       This action cannot be undone.
                     </p>
-                    <div className="bg-muted/50 rounded-md p-3 text-sm space-y-1">
-                      <p className="font-medium text-foreground">The following will happen:</p>
-                      <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                        <li>Inventory quantities will be restored</li>
-                        <li>PO allocations (FIFO tracking) will be cleared</li>
-                        {sale.status === 'paid' && (
-                          <li>Bank transaction (profit) will be reversed</li>
-                        )}
-                      </ul>
-                    </div>
+                    {(isPickedUp || sale.status === 'paid') && (
+                      <div className="bg-muted/50 rounded-md p-3 text-sm space-y-1">
+                        <p className="font-medium text-foreground">The following will happen:</p>
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                          {isPickedUp && (
+                            <>
+                              <li>Inventory quantities will be restored</li>
+                              <li>PO allocations (FIFO tracking) will be cleared</li>
+                            </>
+                          )}
+                          {sale.status === 'paid' && (
+                            <li>Bank transaction (profit) will be reversed</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -235,13 +281,13 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               <span>Total</span>
               <span>{formatCurrency(sale.total)}</span>
             </div>
-            {(sale.status === 'picked_up' || sale.status === 'paid') && sale.totalCost > 0 && (
+            {isPickedUp && sale.totalCost > 0 && (
               <div className="flex justify-between text-sm pt-2 border-t mt-2">
                 <span className="text-muted-foreground">Cost</span>
                 <span>{formatCurrency(sale.totalCost)}</span>
               </div>
             )}
-            {(sale.status === 'picked_up' || sale.status === 'paid') && sale.totalCost > 0 && (
+            {isPickedUp && sale.totalCost > 0 && (
               <div className="flex justify-between font-bold text-green-600">
                 <span>Profit</span>
                 <span>{formatCurrency(sale.totalProfit)}</span>

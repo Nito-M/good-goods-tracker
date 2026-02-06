@@ -63,6 +63,7 @@ export function useSales() {
             vendorAddress: sale.vendors?.address,
             invoiceNumber: sale.invoice_number,
             status: sale.status as Sale['status'],
+            pickedUpAt: sale.picked_up_at,
             subtotal: Number(sale.subtotal),
             totalCost,
             totalProfit,
@@ -318,7 +319,7 @@ export function useSales() {
 
       // Only restore inventory/allocations if the sale was picked up (inventory was reduced)
       // and wasn't already reverted (cancelled)
-      const wasPickedUp = sale.status === 'picked_up' || sale.status === 'paid';
+      const wasPickedUp = !!sale.pickedUpAt;
       const needsRestoration = sale.status !== 'cancelled' && wasPickedUp;
 
       // Get sale items for inventory restoration and PO allocation cleanup
@@ -398,9 +399,8 @@ export function useSales() {
         return;
       }
 
-      // Only restore inventory if it was actually reduced (picked_up or paid status)
-      // Inventory is reduced when marked as 'picked_up', so only those need restoration
-      const wasPickedUp = sale.status === 'picked_up' || sale.status === 'paid';
+      // Only restore inventory if it was actually picked up (pickedUpAt is set)
+      const wasPickedUp = !!sale.pickedUpAt;
 
       // Get sale items to find their IDs for deleting allocations
       const { data: saleItems } = await supabase
@@ -442,10 +442,10 @@ export function useSales() {
         .delete()
         .eq('sale_id', id);
 
-      // Update sale status to cancelled
+      // Update sale status to cancelled and clear picked_up_at
       const { error } = await supabase
         .from('sales')
-        .update({ status: 'cancelled' })
+        .update({ status: 'cancelled', picked_up_at: null })
         .eq('id', id);
 
       if (error) throw error;
@@ -460,7 +460,7 @@ export function useSales() {
       // Update local state
       setSales((prev) =>
         prev.map((s) =>
-          s.id === id ? { ...s, status: 'cancelled' as const } : s
+          s.id === id ? { ...s, status: 'cancelled' as const, pickedUpAt: null } : s
         )
       );
     } catch (error: unknown) {
@@ -566,14 +566,66 @@ export function useSales() {
     }
   };
 
-  const updateStatus = async (saleId: string, status: SaleStatus, addProfitToBank?: (saleId: string, profit: number, invoiceNumber: string) => Promise<boolean>) => {
+  const togglePickedUp = async (saleId: string) => {
     try {
       const sale = sales.find((s) => s.id === saleId);
       if (!sale) throw new Error('Sale not found');
 
-      // If marking as picked_up (even after paid), perform inventory reduction and FIFO allocation
-      if (status === 'picked_up' && sale.status !== 'picked_up') {
-        // Get sale items
+      const isCurrentlyPickedUp = !!sale.pickedUpAt;
+
+      if (isCurrentlyPickedUp) {
+        // Un-picking: restore inventory and clear allocations
+        const { data: saleItems } = await supabase
+          .from('sale_items')
+          .select('id, inventory_item_id, quantity')
+          .eq('sale_id', saleId);
+
+        if (saleItems) {
+          for (const saleItem of saleItems) {
+            // Delete PO allocations
+            await supabase
+              .from('po_item_allocations')
+              .delete()
+              .eq('sale_item_id', saleItem.id);
+
+            // Restore inventory
+            if (saleItem.inventory_item_id) {
+              const { data: currentItem } = await supabase
+                .from('inventory_items')
+                .select('quantity')
+                .eq('id', saleItem.inventory_item_id)
+                .single();
+
+              if (currentItem) {
+                await supabase
+                  .from('inventory_items')
+                  .update({ quantity: currentItem.quantity + saleItem.quantity })
+                  .eq('id', saleItem.inventory_item_id);
+              }
+            }
+          }
+        }
+
+        // Clear picked_up_at
+        const { error } = await supabase
+          .from('sales')
+          .update({ picked_up_at: null })
+          .eq('id', saleId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Pickup reversed',
+          description: 'Items restored to inventory',
+        });
+
+        setSales((prev) =>
+          prev.map((s) =>
+            s.id === saleId ? { ...s, pickedUpAt: null } : s
+          )
+        );
+      } else {
+        // Marking as picked up: reduce inventory and allocate from POs
         const { data: saleItems } = await supabase
           .from('sale_items')
           .select('id, sku, quantity, inventory_item_id')
@@ -617,6 +669,45 @@ export function useSales() {
             }
           }
         }
+
+        const pickedUpAt = new Date().toISOString();
+        const { error } = await supabase
+          .from('sales')
+          .update({ picked_up_at: pickedUpAt })
+          .eq('id', saleId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Marked as picked up',
+          description: 'Inventory reduced and allocations recorded',
+        });
+
+        setSales((prev) =>
+          prev.map((s) =>
+            s.id === saleId ? { ...s, pickedUpAt } : s
+          )
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Error toggling picked up:', error);
+      toast({
+        title: 'Error updating pickup status',
+        description: 'Unable to update. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const updateStatus = async (saleId: string, status: SaleStatus, addProfitToBank?: (saleId: string, profit: number, invoiceNumber: string) => Promise<boolean>) => {
+    try {
+      const sale = sales.find((s) => s.id === saleId);
+      if (!sale) throw new Error('Sale not found');
+
+      // Don't allow setting status to picked_up - use togglePickedUp instead
+      if (status === 'picked_up') {
+        await togglePickedUp(saleId);
+        return;
       }
 
       const { error } = await supabase
@@ -635,7 +726,7 @@ export function useSales() {
 
       toast({
         title: 'Status updated',
-        description: `Invoice status changed to ${status === 'picked_up' ? 'Picked Up' : status}`,
+        description: `Invoice status changed to ${status}`,
       });
 
       // Update local state
@@ -660,6 +751,7 @@ export function useSales() {
     createSale,
     updateSale,
     updateStatus,
+    togglePickedUp,
     deleteSale,
     revertSale,
     refetch: fetchSales,
