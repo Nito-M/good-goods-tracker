@@ -26,10 +26,10 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [itemName, setItemName] = useState("");
   const [sku, setSku] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number | "">("");
   const [quantityUnit, setQuantityUnit] = useState("pcs");
-  const [price, setPrice] = useState(0);
-  const [gstRate, setGstRate] = useState(0);
+  const [price, setPrice] = useState<number | "">(0);
+  const [gstRate, setGstRate] = useState<number | "">(0);
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
@@ -39,8 +39,11 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [selectedRequester, setSelectedRequester] = useState<string>("");
 
   // Calculate price breakdown
-  const subtotal = quantity * price;
-  const gstAmount = subtotal * (gstRate / 100);
+  const qty = typeof quantity === 'number' ? quantity : 0;
+  const unitPrice = typeof price === 'number' ? price : 0;
+  const gst = typeof gstRate === 'number' ? gstRate : 0;
+  const subtotal = qty * unitPrice;
+  const gstAmount = subtotal * (gst / 100);
   const totalPrice = subtotal + gstAmount;
 
   const handleItemSelect = (value: string) => {
@@ -81,7 +84,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
     setSelectedItemId("");
     setItemName("");
     setSku("");
-    setQuantity(1);
+    setQuantity("");
     setQuantityUnit("pcs");
     setPrice(0);
     setGstRate(0);
@@ -109,10 +112,10 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
         inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
         itemName: itemName.trim(),
         sku: sku.trim() || null,
-        quantity,
+        quantity: qty || 1,
         quantityUnit,
-        price,
-        gstRate,
+        price: unitPrice,
+        gstRate: gst,
         link: link.trim() || null,
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
@@ -210,14 +213,14 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
           {/* Quantity, Unit Price, and GST */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
+              <Label htmlFor="quantity">Quantity</Label>
               <Input
                 id="quantity"
                 type="number"
                 min={1}
                 value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                required
+                onChange={(e) => setQuantity(e.target.value ? parseInt(e.target.value) : "")}
+                placeholder="Enter quantity"
               />
             </div>
             <div className="space-y-2">
@@ -241,19 +244,19 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Unit Price ($)</Label>
+              <Label htmlFor="price">Unit Price ($) <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Input
                 id="price"
                 type="number"
                 min={0}
                 step={0.01}
                 value={price}
-                onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setPrice(e.target.value ? parseFloat(e.target.value) : 0)}
                 placeholder="0.00"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="gstRate">GST Rate (%)</Label>
+              <Label htmlFor="gstRate">GST Rate (%) <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Input
                 id="gstRate"
                 type="number"
@@ -261,28 +264,28 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
                 max={100}
                 step={0.1}
                 value={gstRate}
-                onChange={(e) => setGstRate(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setGstRate(e.target.value ? parseFloat(e.target.value) : 0)}
                 placeholder="0"
               />
             </div>
           </div>
 
           {/* Price Breakdown */}
-          {price > 0 && (
+          {unitPrice > 0 && (
             <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal ({quantity} × ${price.toFixed(2)})</span>
-                <span className="font-medium">${subtotal.toFixed(2)}</span>
+                <span className="text-muted-foreground">Subtotal ({qty || 1} × ${unitPrice.toFixed(2)})</span>
+                <span className="font-medium">${((qty || 1) * unitPrice).toFixed(2)}</span>
               </div>
-              {gstRate > 0 && (
+              {gst > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">GST ({gstRate}%)</span>
-                  <span className="font-medium">${gstAmount.toFixed(2)}</span>
+                  <span className="text-muted-foreground">GST ({gst}%)</span>
+                  <span className="font-medium">${(((qty || 1) * unitPrice) * (gst / 100)).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-2">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-green-600">${totalPrice.toFixed(2)}</span>
+                <span className="font-bold text-green-600">${(((qty || 1) * unitPrice) * (1 + gst / 100)).toFixed(2)}</span>
               </div>
             </div>
           )}
