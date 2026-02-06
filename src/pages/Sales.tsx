@@ -57,6 +57,7 @@ import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 interface CartItem {
   inventoryItem: InventoryItem;
   quantity: number;
+  customPrice?: number; // Custom price after markup
 }
 
 export function Sales() {
@@ -83,6 +84,7 @@ export function Sales() {
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
   const [taxRate, setTaxRate] = useState(5);
   const [discountRate, setDiscountRate] = useState(0);
+  const [markupPercent, setMarkupPercent] = useState<number | ''>('');
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,6 +93,20 @@ export function Sales() {
   const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
+
+  // Apply markup to all cart items when markup changes
+  useEffect(() => {
+    if (markupPercent === '' || markupPercent === 0) {
+      // Clear custom prices when no markup
+      setCart(prev => prev.map(c => ({ ...c, customPrice: undefined })));
+    } else {
+      // Apply markup to cost for each item
+      setCart(prev => prev.map(c => ({
+        ...c,
+        customPrice: c.inventoryItem.cost * (1 + (markupPercent as number) / 100)
+      })));
+    }
+  }, [markupPercent]);
 
   const handleSaveSale = async (saleId: string, data: any) => {
     await updateSale(saleId, data);
@@ -134,7 +150,11 @@ export function Sales() {
             : c
         );
       }
-      return [...prev, { inventoryItem: item, quantity: 1 }];
+      // Apply markup if set
+      const customPrice = markupPercent !== '' && markupPercent > 0
+        ? item.cost * (1 + markupPercent / 100)
+        : undefined;
+      return [...prev, { inventoryItem: item, quantity: 1, customPrice }];
     });
   };
 
@@ -159,9 +179,12 @@ export function Sales() {
     setCart((prev) => prev.filter((c) => c.inventoryItem.id !== itemId));
   };
 
+  // Get price for cart item (custom or default)
+  const getItemPrice = (c: CartItem) => c.customPrice ?? c.inventoryItem.price;
+
   const subtotal = useMemo(
     () =>
-      cart.reduce((sum, c) => sum + c.quantity * c.inventoryItem.price, 0),
+      cart.reduce((sum, c) => sum + c.quantity * getItemPrice(c), 0),
     [cart]
   );
 
@@ -183,7 +206,7 @@ export function Sales() {
         itemName: c.inventoryItem.name,
         sku: c.inventoryItem.sku,
         quantity: c.quantity,
-        unitPrice: c.inventoryItem.price,
+        unitPrice: getItemPrice(c),
         unitCost: c.inventoryItem.cost,
       })),
       taxRate,
@@ -199,6 +222,7 @@ export function Sales() {
       setCustomInvoiceNumber('');
       setTaxRate(0);
       setDiscountRate(0);
+      setMarkupPercent('');
       setNotes('');
     }
 
@@ -378,7 +402,7 @@ export function Sales() {
                                 {c.inventoryItem.name}
                               </TableCell>
                               <TableCell>
-                                {formatCurrency(c.inventoryItem.price)}
+                                {formatCurrency(getItemPrice(c))}
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
@@ -428,7 +452,7 @@ export function Sales() {
                               </TableCell>
                               <TableCell className="text-right">
                                 {formatCurrency(
-                                  c.quantity * c.inventoryItem.price
+                                  c.quantity * getItemPrice(c)
                                 )}
                               </TableCell>
                               <TableCell>
@@ -506,6 +530,22 @@ export function Sales() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Markup %</Label>
+                      <Input
+                        type="number"
+                        value={markupPercent}
+                        onChange={(e) =>
+                          setMarkupPercent(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)
+                        }
+                        placeholder="Leave blank for default pricing"
+                        min={0}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Applied to item cost. Leave blank to use inventory price.
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
