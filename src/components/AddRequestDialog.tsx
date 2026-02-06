@@ -206,7 +206,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
               id="sku"
               value={sku}
               onChange={(e) => setSku(e.target.value)}
-              placeholder="Enter SKU (optional)"
+              placeholder="Enter SKU"
             />
           </div>
 

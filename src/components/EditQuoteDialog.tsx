@@ -171,7 +171,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
               <Label>Customer</Label>
             <Select value={vendorId || 'none'} onValueChange={(val) => setVendorId(val === 'none' ? '' : val)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select customer (optional)" />
+                  <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No customer</SelectItem>

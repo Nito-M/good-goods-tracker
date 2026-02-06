@@ -534,7 +534,7 @@ export function AddPurchaseOrder() {
                 </Label>
                 <Select value={requestId} onValueChange={setRequestId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a request (optional)" />
+                    <SelectValue placeholder="Select a request" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">-- No Request --</SelectItem>

@@ -210,7 +210,7 @@ export function EditRequestDialog({
               id="editSku"
               value={sku}
               onChange={(e) => setSku(e.target.value)}
-              placeholder="Enter SKU (optional)"
+              placeholder="Enter SKU"
             />
           </div>
 
