@@ -16,6 +16,7 @@ import {
   Download,
   DollarSign,
   Banknote,
+  ClipboardList,
 } from 'lucide-react';
 
 interface PurchaseOrderCardProps {
@@ -156,6 +157,12 @@ export function PurchaseOrderCard({
                 <div className="flex items-center gap-2 col-span-2">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   <span>Vendor: {order.vendorName}</span>
+                </div>
+              )}
+              {order.requestNumber && (
+                <div className="flex items-center gap-2 col-span-2">
+                  <ClipboardList className="h-4 w-4 text-primary" />
+                  <span className="text-primary font-medium">Request: {order.requestNumber}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">

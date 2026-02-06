@@ -15,8 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
+import { useRequests } from '@/hooks/useRequests';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface VendorPrice {
@@ -49,6 +50,7 @@ export function AddPurchaseOrder() {
   const { createOrder } = usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
+  const { requests } = useRequests();
 
   const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
   const [poNumber, setPoNumber] = useState('');
@@ -57,6 +59,7 @@ export function AddPurchaseOrder() {
   );
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
+  const [requestId, setRequestId] = useState<string>('');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -190,6 +193,7 @@ export function AddPurchaseOrder() {
         notes: notes || undefined,
         vendorId: vendorId || null,
         poNumber: poNumber || undefined,
+        requestId: requestId && requestId !== 'none' ? requestId : null,
       },
       pdfFile,
       imageFile
@@ -520,6 +524,32 @@ export function AddPurchaseOrder() {
                     onChange={(e) => setOrderedAt(e.target.value)}
                   />
                 </div>
+              </div>
+
+              {/* Request Selection */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Link to Request
+                </Label>
+                <Select value={requestId} onValueChange={setRequestId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a request (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- No Request --</SelectItem>
+                    {requests
+                      .filter(r => r.status === 'approved' || r.status === 'pending')
+                      .map((request) => (
+                        <SelectItem key={request.id} value={request.id}>
+                          {request.requestNumber} - {request.itemName} ({request.quantity} {request.quantityUnit})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Optionally link this PO to an existing request
+                </p>
               </div>
 
               <div className="space-y-2">
