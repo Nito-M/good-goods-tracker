@@ -14,6 +14,7 @@ import { AddPurchaseOrder } from "./pages/AddPurchaseOrder";
 import { Sales } from "./pages/Sales";
 import { Quotes } from "./pages/Quotes";
 import { Requests } from "./pages/Requests";
+import { Calendar } from "./pages/Calendar";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
 import NotFound from "./pages/NotFound";
@@ -175,6 +176,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Requests />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Calendar />
               </AppLayout>
             </ProtectedRoute>
           }
