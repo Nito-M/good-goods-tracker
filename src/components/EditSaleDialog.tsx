@@ -181,7 +181,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
               <Label>Customer</Label>
             <Select value={vendorId || 'none'} onValueChange={(val) => setVendorId(val === 'none' ? '' : val)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select customer (optional)" />
+                  <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No customer</SelectItem>

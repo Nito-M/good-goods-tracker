@@ -137,7 +137,7 @@ export function Bank() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="deposit-description">Description (optional)</Label>
+                      <Label htmlFor="deposit-description">Description <span className="text-sky-400 font-normal">(optional)</span></Label>
                       <Input
                         id="deposit-description"
                         placeholder="e.g., Initial capital"
@@ -181,7 +181,7 @@ export function Bank() {
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="withdraw-description">Description (optional)</Label>
+                      <Label htmlFor="withdraw-description">Description <span className="text-sky-400 font-normal">(optional)</span></Label>
                       <Input
                         id="withdraw-description"
                         placeholder="e.g., Business expense"

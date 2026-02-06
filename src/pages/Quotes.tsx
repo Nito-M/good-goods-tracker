@@ -495,7 +495,7 @@ export function Quotes() {
                                       <Badge variant="secondary">{c.sku}</Badge>
                                     ) : (
                                       <Input
-                                        placeholder="SKU (optional)"
+                                        placeholder="SKU"
                                         value={c.sku}
                                         onChange={(e) => updateCartItem(c.id, { sku: e.target.value })}
                                       />
@@ -594,7 +594,7 @@ export function Quotes() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Quote Number (optional)</Label>
+                      <Label>Quote Number <span className="text-sky-400 font-normal">(optional)</span></Label>
                       <Input
                         placeholder="Auto-generated if left empty"
                         value={customQuoteNumber}
@@ -612,7 +612,7 @@ export function Quotes() {
                         onValueChange={setSelectedVendorId}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select customer (optional)" />
+                          <SelectValue placeholder="Select customer" />
                         </SelectTrigger>
                         <SelectContent>
                           {vendors.map((vendor) => (

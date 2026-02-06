@@ -339,7 +339,7 @@ export function EditPurchaseOrderDialog({
             <Label htmlFor="vendor">Vendor</Label>
             <Select value={vendorId} onValueChange={setVendorId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a vendor (optional)" />
+                <SelectValue placeholder="Select a vendor" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">-- No Vendor --</SelectItem>
