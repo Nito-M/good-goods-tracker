@@ -248,7 +248,7 @@ export function EditRequestDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="editPrice">Unit Price ($) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="editPrice">Unit Price ($) <span className="text-sky-400 font-normal">(optional)</span></Label>
               <Input
                 id="editPrice"
                 type="number"
@@ -260,7 +260,7 @@ export function EditRequestDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="editGstRate">GST Rate (%) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Label htmlFor="editGstRate">GST Rate (%) <span className="text-sky-400 font-normal">(optional)</span></Label>
               <Input
                 id="editGstRate"
                 type="number"
