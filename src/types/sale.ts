@@ -25,6 +25,7 @@ export interface Sale {
   vendorAddress?: string;
   invoiceNumber: string;
   status: SaleStatus;
+  pickedUpAt: string | null;
   subtotal: number;
   totalCost: number;
   totalProfit: number;

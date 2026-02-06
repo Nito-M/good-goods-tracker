@@ -62,7 +62,7 @@ interface CartItem {
 
 export function Sales() {
   const { signOut } = useAuth();
-  const { sales, loading, createSale, updateSale, updateStatus, deleteSale, revertSale } = useSales();
+  const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -761,6 +761,7 @@ export function Sales() {
                                   onPreviewInvoice={() => setPreviewSale(sale)}
                                   onEdit={setEditingSale}
                                   onStatusChange={(id, status) => updateStatus(id, status, addSaleRevenue)}
+                                  onTogglePickedUp={togglePickedUp}
                                 />
                               ))}
                             </AccordionContent>
