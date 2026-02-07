@@ -40,6 +40,7 @@ function AppContent() {
     addItem,
     updateItem,
     deleteItem,
+    uploadItemImage,
   } = useInventory();
 
   const { allCategories } = useCategories();
@@ -99,6 +100,7 @@ function AppContent() {
                   onUpdate={updateItem}
                   onDelete={deleteItem}
                   items={allItems}
+                  uploadItemImage={uploadItemImage}
                 />
               </AppLayout>
             </ProtectedRoute>
@@ -115,6 +117,7 @@ function AppContent() {
                   onUpdate={updateItem}
                   onDelete={deleteItem}
                   items={allItems}
+                  uploadItemImage={uploadItemImage}
                 />
               </AppLayout>
             </ProtectedRoute>

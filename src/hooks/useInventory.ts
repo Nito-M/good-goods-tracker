@@ -31,6 +31,7 @@ interface DbInventoryItem {
   dimensions_unit: string;
   colors: string[];
   description: string | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -58,6 +59,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     },
     colors: db.colors || [],
     description: db.description || '',
+    imageUrl: db.image_url,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
   };
@@ -87,6 +89,7 @@ function inventoryItemToDb(
     dimensions_unit: item.dimensions.unit,
     colors: item.colors,
     description: item.description || null,
+    image_url: item.imageUrl || null,
     created_at: now,
     updated_at: now,
     user_id: userId,
@@ -230,6 +233,7 @@ export function useInventory() {
         dimensions_unit: item.dimensions.unit,
         colors: item.colors,
         description: item.description,
+        image_url: item.imageUrl || null,
         user_id: user.id,
       });
 
@@ -282,6 +286,7 @@ export function useInventory() {
     }
     if (updates.colors !== undefined) dbUpdates.colors = updates.colors;
     if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
     dbUpdates.updated_at = new Date().toISOString();
 
     // Get current item from local DB and merge updates
@@ -412,6 +417,77 @@ export function useInventory() {
     return { success: true };
   };
 
+  const uploadItemImage = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('item-images')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        toast({
+          title: 'Upload failed',
+          description: 'Could not upload image. Please try again.',
+          variant: 'destructive',
+        });
+        return null;
+      }
+
+      // Create signed URL
+      const { data, error: signedUrlError } = await supabase.storage
+        .from('item-images')
+        .createSignedUrl(fileName, 3600); // 1 hour expiry
+
+      if (signedUrlError || !data) {
+        console.error('Error creating signed URL:', signedUrlError);
+        return null;
+      }
+
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
+  const getItemImageUrl = async (imagePath: string | null | undefined): Promise<string | null> => {
+    if (!imagePath || !user) return null;
+
+    // If it's already a signed URL (temporary), regenerate it
+    if (imagePath.startsWith('http')) {
+      // Extract the file path from the URL if possible
+      const match = imagePath.match(/item-images\/([^?]+)/);
+      if (match) {
+        const filePath = match[1];
+        const { data, error } = await supabase.storage
+          .from('item-images')
+          .createSignedUrl(filePath, 3600);
+        
+        if (!error && data) {
+          return data.signedUrl;
+        }
+      }
+      return imagePath; // Return as-is if we can't parse it
+    }
+
+    // It's a storage path, generate signed URL
+    const { data, error } = await supabase.storage
+      .from('item-images')
+      .createSignedUrl(imagePath, 3600);
+
+    if (error || !data) {
+      console.error('Error getting signed URL:', error);
+      return null;
+    }
+
+    return data.signedUrl;
+  };
+
   return {
     items: filteredItems,
     allItems: items,
@@ -424,5 +500,7 @@ export function useInventory() {
     addItem,
     updateItem,
     deleteItem,
+    uploadItemImage,
+    getItemImageUrl,
   };
 }
