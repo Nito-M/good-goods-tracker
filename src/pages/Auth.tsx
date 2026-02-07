@@ -71,22 +71,57 @@ export function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    const { error } = await signUp(signUpEmail, signUpPassword, signUpDisplayName);
-    setLoading(false);
-
-    if (error) {
+    
+    if (!signUpEmail || !signUpDisplayName) {
       toast({
-        title: 'Sign up failed',
-        description: 'Unable to create account. Please check your details and try again.',
+        title: 'Missing information',
+        description: 'Please enter your name and email address.',
         variant: 'destructive',
       });
-    } else {
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-signup-request`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            email: signUpEmail,
+            displayName: signUpDisplayName,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to submit request');
+      }
+
       toast({
-        title: 'Check your email',
-        description: 'We sent you a confirmation link to verify your account.',
+        title: 'Request submitted!',
+        description: 'We will contact you as soon as possible to complete your signup.',
+      });
+      
+      // Clear the form
+      setSignUpEmail('');
+      setSignUpDisplayName('');
+      setSignUpPassword('');
+    } catch (error) {
+      console.error('Signup request error:', error);
+      toast({
+        title: 'Request failed',
+        description: 'Unable to submit your request. Please try again.',
+        variant: 'destructive',
       });
     }
+    
+    setLoading(false);
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -346,22 +381,13 @@ export function Auth() {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder=""
-                      value={signUpPassword}
-                      onChange={(e) => setSignUpPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Account
+                    Request Access
                   </Button>
+                  <p className="text-sm text-muted-foreground text-center">
+                    After submitting your request, we will contact you as soon as possible to complete your signup.
+                  </p>
                 </form>
               </TabsContent>
             </Tabs>
