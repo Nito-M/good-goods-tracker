@@ -26,8 +26,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ItemVendorPricing } from '@/components/ItemVendorPricing';
+import { MultiImageUploader } from '@/components/MultiImageUploader';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrices';
+import { useItemImages } from '@/hooks/useItemImages';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
@@ -60,6 +62,14 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   // Vendor and pricing hooks
   const { vendors } = useVendors();
   const { prices: existingPrices, upsertPrice, deletePrice } = useItemVendorPrices(editItem?.id);
+  
+  // Multi-image support for editing mode
+  const { 
+    images: itemImages, 
+    uploadImage: uploadItemImageToGallery, 
+    deleteImage: deleteItemImage, 
+    setPrimaryImage 
+  } = useItemImages(editItem?.id);
 
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
@@ -301,58 +311,69 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
 
               {/* Image Upload */}
               <div className="space-y-2">
-                <Label>Product Image</Label>
-                <div className="flex items-start gap-4">
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview}
-                        alt="Product preview"
-                        className="w-24 h-24 object-cover rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => setShowImageViewer(true)}
+                <Label>Product Images</Label>
+                {isEditing ? (
+                  /* Multi-image uploader for editing mode */
+                  <MultiImageUploader
+                    images={itemImages}
+                    onUpload={uploadItemImageToGallery}
+                    onDelete={deleteItemImage}
+                    onSetPrimary={setPrimaryImage}
+                  />
+                ) : (
+                  /* Single image upload for new items (will be converted to multi after save) */
+                  <div className="flex items-start gap-4">
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img
+                          src={imagePreview}
+                          alt="Product preview"
+                          className="w-24 h-24 object-cover rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setShowImageViewer(true)}
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6"
+                          onClick={handleRemoveImage}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
                       />
                       <Button
                         type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute -top-2 -right-2 h-6 w-6"
-                        onClick={handleRemoveImage}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage}
+                        className="gap-2"
                       >
-                        <X className="h-3 w-3" />
+                        <Upload className="h-4 w-4" />
+                        {imagePreview ? 'Change Image' : 'Upload Image'}
                       </Button>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG up to 5MB. Add more images after saving.
+                      </p>
                     </div>
-                  ) : (
-                    <div
-                      className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingImage}
-                      className="gap-2"
-                    >
-                      <Upload className="h-4 w-4" />
-                      {imagePreview ? 'Change Image' : 'Upload Image'}
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                      PNG, JPG up to 5MB
-                    </p>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

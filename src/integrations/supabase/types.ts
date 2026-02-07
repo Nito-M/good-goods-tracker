@@ -151,6 +151,44 @@ export type Database = {
         }
         Relationships: []
       }
+      item_images: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          image_url: string
+          is_primary: boolean
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url: string
+          is_primary?: boolean
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url?: string
+          is_primary?: boolean
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_images_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_vendor_prices: {
         Row: {
           created_at: string
