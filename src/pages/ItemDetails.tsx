@@ -18,9 +18,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { ItemPurchaseHistory } from '@/components/ItemPurchaseHistory';
+import { ItemImageGallery } from '@/components/ItemImageGallery';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { useVendors } from '@/hooks/useVendors';
 import { useLastPurchase } from '@/hooks/useLastPurchase';
+import { useItemImages } from '@/hooks/useItemImages';
 import { useToast } from '@/hooks/use-toast';
 
 interface ItemDetailsProps {
@@ -37,10 +39,11 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   
   const item = items.find((i) => i.id === id);
   
-  // Fetch vendor prices and vendors for this item
+  // Fetch vendor prices, vendors, images, and last purchase for this item
   const { prices: vendorPrices } = useItemVendorPrices(item?.id);
   const { vendors } = useVendors();
   const { lastPurchase } = useLastPurchase(item?.sku);
+  const { images: itemImages } = useItemImages(item?.id);
 
   const getVendorName = (vendorId: string) => {
     return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
@@ -199,6 +202,20 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
           <h1 className="text-3xl font-bold text-card-foreground">{item.name}</h1>
           <p className="text-muted-foreground mt-1">SKU: {item.sku}</p>
         </div>
+
+        {/* Product Images Gallery */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Product Images</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ItemImageGallery 
+              images={itemImages} 
+              itemName={item.name}
+              fallbackImageUrl={item.imageUrl}
+            />
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Pricing & Stock Card */}
