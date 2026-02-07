@@ -298,7 +298,7 @@ export function Auth() {
                     <Input
                       id="signin-password"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder=""
                       value={signInPassword}
                       onChange={(e) => setSignInPassword(e.target.value)}
                       required
@@ -363,7 +363,7 @@ export function Auth() {
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder=""
                       value={signUpPassword}
                       onChange={(e) => setSignUpPassword(e.target.value)}
                       required
