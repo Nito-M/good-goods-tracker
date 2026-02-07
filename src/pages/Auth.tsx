@@ -31,7 +31,6 @@ export function Auth() {
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpDisplayName, setSignUpDisplayName] = useState('');
-  const [signUpBirthYear, setSignUpBirthYear] = useState('');
 
   // Forgot password state
   const [resetEmail, setResetEmail] = useState('');
@@ -72,19 +71,8 @@ export function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const birthYear = signUpBirthYear ? parseInt(signUpBirthYear, 10) : undefined;
-    if (signUpBirthYear && (isNaN(birthYear!) || birthYear! < 1900 || birthYear! > new Date().getFullYear())) {
-      toast({
-        title: 'Invalid birth year',
-        description: 'Please enter a valid birth year.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setLoading(true);
-    const { error } = await signUp(signUpEmail, signUpPassword, signUpDisplayName, birthYear);
+    const { error } = await signUp(signUpEmail, signUpPassword, signUpDisplayName);
     setLoading(false);
 
     if (error) {
@@ -369,21 +357,6 @@ export function Auth() {
                       required
                       minLength={6}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-birthyear">Birth Year</Label>
-                    <Input
-                      id="signup-birthyear"
-                      type="number"
-                      placeholder="1990"
-                      value={signUpBirthYear}
-                      onChange={(e) => setSignUpBirthYear(e.target.value)}
-                      min={1900}
-                      max={new Date().getFullYear()}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      For your protection — this helps verify your identity if you forget your password.
-                    </p>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
