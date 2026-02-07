@@ -19,6 +19,7 @@ import { Notes } from "./pages/Notes";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
 import NotFound from "./pages/NotFound";
+import { ResetPassword } from "./pages/ResetPassword";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -50,6 +51,7 @@ function AppContent() {
     <>
       <Routes>
         <Route path="/auth" element={<Auth />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/"
           element={

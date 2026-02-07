@@ -136,26 +136,43 @@ export function Auth() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth`,
-    });
-    setLoading(false);
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            email: resetEmail,
+            redirectUrl: `${window.location.origin}/reset-password`,
+          }),
+        }
+      );
 
-    if (error) {
+      if (!response.ok) {
+        throw new Error('Failed to send reset email');
+      }
+
+      toast({
+        title: 'Check your email',
+        description: 'If an account exists, we sent you a password reset link.',
+      });
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error) {
       console.error('Password reset error:', error);
       toast({
         title: 'Reset failed',
         description: 'Unable to send reset email. Please try again.',
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Check your email',
-        description: 'We sent you a password reset link.',
-      });
-      setShowForgotPassword(false);
-      setResetEmail('');
     }
+    
+    setLoading(false);
   };
 
   // Branding/Feature section component
