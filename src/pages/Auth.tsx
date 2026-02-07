@@ -17,15 +17,21 @@ export function Auth() {
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  // Sign In form state
-  const [signInEmail, setSignInEmail] = useState('');
+  // Sign In form state - load remembered email
+  const [signInEmail, setSignInEmail] = useState(() => {
+    const remembered = localStorage.getItem('remembered_email');
+    return remembered || '';
+  });
   const [signInPassword, setSignInPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(() => {
+    return !!localStorage.getItem('remembered_email');
+  });
 
   // Sign Up form state
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpDisplayName, setSignUpDisplayName] = useState('');
+  const [signUpBirthYear, setSignUpBirthYear] = useState('');
 
   // Forgot password state
   const [resetEmail, setResetEmail] = useState('');
@@ -48,8 +54,14 @@ export function Auth() {
     const { error } = await signIn(signInEmail, signInPassword, rememberMe);
     setLoading(false);
 
-    if (error) {
-      console.error('Sign in error:', error);
+    if (!error) {
+      // Save or clear remembered email based on checkbox
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', signInEmail);
+      } else {
+        localStorage.removeItem('remembered_email');
+      }
+    } else {
       toast({
         title: 'Sign in failed',
         description: 'Invalid email or password. Please try again.',
@@ -60,12 +72,22 @@ export function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const birthYear = signUpBirthYear ? parseInt(signUpBirthYear, 10) : undefined;
+    if (signUpBirthYear && (isNaN(birthYear!) || birthYear! < 1900 || birthYear! > new Date().getFullYear())) {
+      toast({
+        title: 'Invalid birth year',
+        description: 'Please enter a valid birth year.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signUp(signUpEmail, signUpPassword, signUpDisplayName);
+    const { error } = await signUp(signUpEmail, signUpPassword, signUpDisplayName, birthYear);
     setLoading(false);
 
     if (error) {
-      console.error('Sign up error:', error);
       toast({
         title: 'Sign up failed',
         description: 'Unable to create account. Please check your details and try again.',
@@ -347,6 +369,21 @@ export function Auth() {
                       required
                       minLength={6}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-birthyear">Birth Year</Label>
+                    <Input
+                      id="signup-birthyear"
+                      type="number"
+                      placeholder="1990"
+                      value={signUpBirthYear}
+                      onChange={(e) => setSignUpBirthYear(e.target.value)}
+                      min={1900}
+                      max={new Date().getFullYear()}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      For your protection — this helps verify your identity if you forget your password.
+                    </p>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
