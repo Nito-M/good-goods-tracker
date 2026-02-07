@@ -30,6 +30,7 @@ export interface InventoryItem {
   dimensions: Dimensions;
   colors: string[];
   description: string;
+  imageUrl?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
-import { Eye } from 'lucide-react';
+import { Eye, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -33,6 +33,7 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="font-semibold text-card-foreground w-12"></TableHead>
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
             <TableHead className="font-semibold text-card-foreground">Category</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
@@ -45,7 +46,7 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                 No items found.
               </TableCell>
             </TableRow>
@@ -57,6 +58,19 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
                   key={item.id}
                   className="transition-colors hover:bg-muted/30"
                 >
+                  <TableCell className="w-12">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-10 h-10 object-cover rounded-md border border-border"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium text-card-foreground">{item.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="font-normal">

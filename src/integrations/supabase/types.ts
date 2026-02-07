@@ -89,6 +89,7 @@ export type Database = {
           dimensions_unit: string
           dimensions_width: number
           id: string
+          image_url: string | null
           min_stock: number
           name: string
           price: number
@@ -112,6 +113,7 @@ export type Database = {
           dimensions_unit?: string
           dimensions_width?: number
           id?: string
+          image_url?: string | null
           min_stock?: number
           name: string
           price?: number
@@ -135,6 +137,7 @@ export type Database = {
           dimensions_unit?: string
           dimensions_width?: number
           id?: string
+          image_url?: string | null
           min_stock?: number
           name?: string
           price?: number

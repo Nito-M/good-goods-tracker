@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InventoryItem, Dimensions, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
-import { ArrowLeft, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Trash2, Save, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,7 @@ import { ItemVendorPricing } from '@/components/ItemVendorPricing';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrices';
 import { useToast } from '@/hooks/use-toast';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
 interface VendorPriceEntry {
   vendorId: string;
@@ -43,16 +44,18 @@ interface AddItemPageProps {
   onUpdate?: (id: string, updates: Partial<InventoryItem>) => void;
   onDelete?: (id: string) => void;
   items: InventoryItem[];
+  uploadItemImage?: (file: File) => Promise<string | null>;
 }
 
 const DEFAULT_DIMENSIONS: Dimensions = { length: 0, width: 0, height: 0, unit: 'in' };
 
-export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: AddItemPageProps) {
+export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, uploadItemImage }: AddItemPageProps) {
   const navigate = useNavigate();
   const { id } = useParams();
   const editItem = id ? items.find(item => item.id === id) : null;
   const isEditing = !!editItem;
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Vendor and pricing hooks
   const { vendors } = useVendors();
@@ -72,6 +75,11 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
   const [colors, setColors] = useState('');
   const [description, setDescription] = useState('');
   const [vendorPrices, setVendorPrices] = useState<VendorPriceEntry[]>([]);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
 
   useEffect(() => {
     if (editItem) {
@@ -88,6 +96,10 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
       setDimensions(editItem.dimensions);
       setColors(editItem.colors.join(', '));
       setDescription(editItem.description);
+      if (editItem.imageUrl) {
+        setImageUrl(editItem.imageUrl);
+        setImagePreview(editItem.imageUrl);
+      }
     }
   }, [editItem]);
 
@@ -105,8 +117,39 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
     }
   }, [isEditing, existingPrices, vendorPrices.length]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setImageUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    let finalImageUrl = imageUrl;
+
+    // Upload new image if selected
+    if (imageFile && uploadItemImage) {
+      setUploadingImage(true);
+      const uploadedUrl = await uploadItemImage(imageFile);
+      setUploadingImage(false);
+      if (uploadedUrl) {
+        finalImageUrl = uploadedUrl;
+      }
+    }
     
     const itemData = {
       name,
@@ -122,6 +165,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
       dimensions,
       colors: colors.split(',').map((c) => c.trim()).filter(Boolean),
       description,
+      imageUrl: finalImageUrl,
     };
 
     if (editItem && onUpdate) {
@@ -216,41 +260,99 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Product Name</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter product name"
-                  required
-                />
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter product name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input
+                    id="sku"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    placeholder="e.g. ELEC-001"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
+              {/* Image Upload */}
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
-                <Input
-                  id="sku"
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                  placeholder="e.g. ELEC-001"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Product Image</Label>
+                <div className="flex items-start gap-4">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Product preview"
+                        className="w-24 h-24 object-cover rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setShowImageViewer(true)}
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {imagePreview ? 'Change Image' : 'Upload Image'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG up to 5MB
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -443,6 +545,14 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items }: A
           />
         </form>
       </main>
+
+      {/* Image Viewer Dialog */}
+      <ImageViewerDialog
+        imageUrl={imagePreview}
+        alt={name || 'Product image'}
+        open={showImageViewer}
+        onOpenChange={setShowImageViewer}
+      />
     </div>
   );
 }
