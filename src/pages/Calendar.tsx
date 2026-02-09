@@ -55,25 +55,36 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // Check if an event occurs on a given day based on recurrence
 function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
-  const eventDate = new Date(event.eventDate + "T12:00:00");
-  
-  if (isSameDay(eventDate, day)) return true;
-  if (day < eventDate) return false;
+  // Parse event date as local noon to avoid timezone issues
+  const [ey, em, ed] = event.eventDate.split("-").map(Number);
+  const eventDate = new Date(ey, em - 1, ed, 12, 0, 0);
+  // Normalize the calendar day to noon as well for consistent differencing
+  const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12, 0, 0);
+
+  if (
+    eventDate.getFullYear() === normalizedDay.getFullYear() &&
+    eventDate.getMonth() === normalizedDay.getMonth() &&
+    eventDate.getDate() === normalizedDay.getDate()
+  )
+    return true;
+  if (normalizedDay < eventDate) return false;
 
   // Cap recurrence at 1 year from the event start date
-  const oneYearLater = new Date(eventDate);
-  oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
-  if (day > oneYearLater) return false;
+  const oneYearLater = new Date(ey + 1, em - 1, ed, 12, 0, 0);
+  if (normalizedDay > oneYearLater) return false;
+
+  // Use Math.round to avoid fractional day issues from DST
+  const daysDiff = Math.round((normalizedDay.getTime() - eventDate.getTime()) / (1000 * 60 * 60 * 24));
 
   switch (event.recurrence) {
     case "daily":
       return true;
     case "weekly":
-      return eventDate.getDay() === day.getDay() && differenceInDays(day, eventDate) % 7 === 0;
+      return daysDiff % 7 === 0;
     case "biweekly":
-      return eventDate.getDay() === day.getDay() && differenceInDays(day, eventDate) % 14 === 0;
+      return daysDiff % 14 === 0;
     case "yearly":
-      return getMonth(eventDate) === getMonth(day) && getDate(eventDate) === getDate(day);
+      return eventDate.getMonth() === normalizedDay.getMonth() && eventDate.getDate() === normalizedDay.getDate();
     default:
       return false;
   }
