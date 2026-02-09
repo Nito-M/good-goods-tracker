@@ -212,6 +212,13 @@ serve(async (req: Request) => {
 
       case "create_user": {
         if (!actionEmail) throw new Error("Missing email");
+
+        // Org admins must specify an org they admin, and can only add as member
+        if (!isSuperAdmin) {
+          if (!orgId) throw new Error("Organization is required");
+          if (!orgAdminOrgIds.includes(orgId)) throw new Error("You can only add users to your own organization");
+        }
+
         const tempPassword = actionPassword || crypto.randomUUID().slice(0, 16);
 
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
