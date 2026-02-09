@@ -432,6 +432,9 @@ export type Database = {
       purchase_orders: {
         Row: {
           created_at: string
+          discount_amount: number
+          discount_type: string
+          discount_value: number
           id: string
           image_url: string | null
           item_name: string
@@ -452,6 +455,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_amount?: number
+          discount_type?: string
+          discount_value?: number
           id?: string
           image_url?: string | null
           item_name: string
@@ -472,6 +478,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_amount?: number
+          discount_type?: string
+          discount_value?: number
           id?: string
           image_url?: string | null
           item_name?: string

@@ -222,6 +222,9 @@ export function AddPurchaseOrder() {
         poNumber: poNumber || undefined,
         requestId: requestId && requestId !== 'none' ? requestId : null,
         status,
+        discountType,
+        discountValue: parseFloat(discountValue) || 0,
+        discountAmount,
       },
       pdfFile,
       imageFile

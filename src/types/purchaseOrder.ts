@@ -21,6 +21,9 @@ export interface PurchaseOrder {
   receivedAt: Date | null;
   paidAt: Date | null;
   notes: string | null;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  discountAmount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +45,9 @@ export interface DbPurchaseOrder {
   received_at: string | null;
   paid_at: string | null;
   notes: string | null;
+  discount_type: string;
+  discount_value: number;
+  discount_amount: number;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +75,9 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     receivedAt: db.received_at ? new Date(db.received_at) : null,
     paidAt: db.paid_at ? new Date(db.paid_at) : null,
     notes: db.notes,
+    discountType: (db.discount_type as 'percentage' | 'fixed') || 'percentage',
+    discountValue: db.discount_value || 0,
+    discountAmount: db.discount_amount || 0,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
   };
