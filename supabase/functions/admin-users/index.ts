@@ -58,7 +58,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const { action, userId, role, pageKeys } = await req.json();
+    const { action, userId, role, pageKeys, email: actionEmail, password: actionPassword } = await req.json();
 
     switch (action) {
       case "list_users": {
@@ -163,6 +163,22 @@ serve(async (req: Request) => {
           .eq("user_id", userId);
 
         return new Response(JSON.stringify({ success: true, isActive: newStatus }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "create_user": {
+        if (!actionEmail) throw new Error("Missing email");
+        const tempPassword = actionPassword || crypto.randomUUID().slice(0, 16);
+
+        const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+          email: actionEmail,
+          password: tempPassword,
+          email_confirm: true,
+        });
+        if (createError) throw createError;
+
+        return new Response(JSON.stringify({ success: true, userId: newUser.user.id, tempPassword }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
