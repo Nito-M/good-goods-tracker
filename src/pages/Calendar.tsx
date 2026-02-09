@@ -3,6 +3,7 @@ import { useRequests } from "@/hooks/useRequests";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { AddCalendarEventDialog } from "@/components/AddCalendarEventDialog";
+import { EditCalendarEventDialog } from "@/components/EditCalendarEventDialog";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
 import { Request, RequestStatus } from "@/types/request";
@@ -75,12 +76,13 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
 
 export function Calendar() {
   const { requests, updateRequest, uploadImage } = useRequests();
-  const { events, createEvent, deleteEvent } = useCalendarEvents();
+  const { events, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
   const { allItems } = useInventory();
   const { profile } = useProfile();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
 
   const parseLocalDate = (dateString: string): Date => {
@@ -273,7 +275,8 @@ export function Calendar() {
                     {selectedDateEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="p-3 border rounded-lg"
+                        className="p-3 border rounded-lg cursor-pointer hover:bg-accent transition-colors"
+                        onClick={() => setEditingEvent(event)}
                       >
                         <div className="flex items-start gap-2">
                           <div className={cn("w-3 h-3 rounded-full mt-1 shrink-0", event.color)} />
@@ -295,7 +298,7 @@ export function Calendar() {
                             size="icon"
                             variant="ghost"
                             className="h-6 w-6 shrink-0"
-                            onClick={() => deleteEvent(event.id)}
+                            onClick={(e) => { e.stopPropagation(); deleteEvent(event.id); }}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -381,6 +384,12 @@ export function Calendar() {
         onOpenChange={setAddEventOpen}
         selectedDate={selectedDate}
         onSave={createEvent}
+      />
+      <EditCalendarEventDialog
+        event={editingEvent}
+        open={!!editingEvent}
+        onOpenChange={(open) => !open && setEditingEvent(null)}
+        onSave={updateEvent}
       />
     </div>
   );
