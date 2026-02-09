@@ -36,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 2. Initial load - get session, then set loading false
     const initializeAuth = async () => {
       try {
-        // Race getSession against a timeout — if it hangs (stale token refresh), we just move on
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
         
@@ -47,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Timeout fired — nuke all auth state so user sees login
         if (!result || !('data' in result)) {
           console.warn('Auth init timed out — clearing stale session');
+          // Force-clear stored token that's causing the hang
+          try { localStorage.removeItem('sb-awzfdkhntiucfmuorbbr-auth-token'); } catch {}
           await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
           setSession(null);
           setUser(null);
