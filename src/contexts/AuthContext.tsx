@@ -28,8 +28,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (session) {
         // Check if user wanted to be remembered
-        // sessionStorage clears when browser closes, so if marker is gone but session exists,
-        // user didn't want to be remembered and browser was restarted
         const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
         const rememberMe = localStorage.getItem('remember_me');
         
@@ -40,10 +38,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(null);
           setUser(null);
         } else {
-          // Either remember me is true, or this is a continuing session
-          sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
-          setSession(session);
-          setUser(session?.user ?? null);
+          // Validate the session is still valid server-side
+          const { data: { user }, error } = await supabase.auth.getUser();
+          if (error || !user) {
+            // Session is stale/expired - clean up
+            await supabase.auth.signOut();
+            localStorage.removeItem('remember_me');
+            setSession(null);
+            setUser(null);
+          } else {
+            sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
+            setSession(session);
+            setUser(user);
+          }
         }
       } else {
         setSession(null);
