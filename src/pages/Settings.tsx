@@ -18,7 +18,7 @@ import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
-import { ALL_PAGES } from '@/hooks/usePagePermissions';
+import { ALL_PAGES, usePagePermissions } from '@/hooks/usePagePermissions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -55,6 +55,7 @@ export function Settings() {
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { users: adminUsers, loading: adminUsersLoading, isAdmin, isOrgAdmin, organizations, setRole, setPagePermissions, toggleActive, deleteUser, createUser, createOrg, deleteOrg, addOrgMember, removeOrgMember, setOrgMemberRole } = useAdminUsers();
+  const { isAdmin: isSuperAdmin } = usePagePermissions();
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
@@ -334,7 +335,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-4xl ${(isAdmin || isOrgAdmin) ? 'grid-cols-7' : 'grid-cols-5'}`}>
+          <TabsList className={`grid w-full max-w-4xl ${isSuperAdmin ? 'grid-cols-7' : (isAdmin || isOrgAdmin) ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -355,7 +356,7 @@ export function Settings() {
               <Tags className="h-4 w-4" />
               Categories
             </TabsTrigger>
-            {isAdmin && (
+            {isSuperAdmin && (
               <TabsTrigger value="organizations" className="gap-2">
                 <Building className="h-4 w-4" />
                 Orgs
@@ -897,7 +898,7 @@ export function Settings() {
           </TabsContent>
 
           {/* Organizations Tab */}
-          {isAdmin && (
+          {isSuperAdmin && (
             <TabsContent value="organizations" className="mt-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
