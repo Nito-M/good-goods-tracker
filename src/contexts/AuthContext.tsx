@@ -36,17 +36,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 2. Initial load - get session, then set loading false
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        // Race getSession against a timeout — if it hangs (stale token refresh), we just move on
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+        
+        const result = await Promise.race([sessionPromise, timeoutPromise]);
+        
         if (!isMounted) return;
 
+        // Timeout fired — nuke all auth state so user sees login
+        if (!result || !('data' in result)) {
+          console.warn('Auth init timed out — clearing stale session');
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+          setSession(null);
+          setUser(null);
+          return;
+        }
+
+        const currentSession = result.data.session;
+
         if (currentSession?.user) {
-          // Check remember-me preference
           const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
           const rememberMe = localStorage.getItem('remember_me');
 
           if (!sessionMarker && rememberMe === 'false') {
-            // Browser was closed and user didn't want to be remembered
-            await supabase.auth.signOut().catch(() => {});
+            await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
             localStorage.removeItem('remember_me');
             if (isMounted) {
               setSession(null);
@@ -60,20 +74,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
         } else {
-          // No session - clean state
           if (isMounted) {
             setSession(null);
             setUser(null);
           }
         }
       } catch {
-        // Any error - just show login
         if (isMounted) {
+          // On any error, sign out locally so user isn't stuck
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
           setSession(null);
           setUser(null);
         }
       } finally {
-        // ALWAYS set loading false, no matter what happened
         if (isMounted) setLoading(false);
       }
     };
