@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, Users, Shield, ShieldCheck, UserX, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,8 @@ import { InvoiceLayoutEditor } from '@/components/InvoiceLayoutEditor';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +52,8 @@ export function Settings() {
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { users: adminUsers, loading: adminUsersLoading, isAdmin, setRole, toggleActive, deleteUser } = useAdminUsers();
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
   // Save theme to database when changed
   const handleThemeChange = async (newTheme: string) => {
@@ -315,7 +319,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5">
+          <TabsList className={`grid w-full max-w-3xl ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -336,6 +340,12 @@ export function Settings() {
               <Tags className="h-4 w-4" />
               Categories
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="users" className="gap-2">
+                <Users className="h-4 w-4" />
+                Users
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* General Tab */}
@@ -864,6 +874,89 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Users Tab (Admin only) */}
+          {isAdmin && (
+            <TabsContent value="users" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    User Management
+                  </CardTitle>
+                  <CardDescription>View and manage all registered users</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {adminUsersLoading ? (
+                    <div className="text-muted-foreground py-8 text-center">Loading users...</div>
+                  ) : adminUsers.length === 0 ? (
+                    <div className="text-muted-foreground py-8 text-center">No users found.</div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {adminUsers.map((u) => (
+                        <div key={u.id} className="flex items-center justify-between py-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium truncate">{u.displayName || 'No name'}</span>
+                              {u.roles.includes('admin') && (
+                                <Badge variant="default" className="text-xs gap-1">
+                                  <ShieldCheck className="h-3 w-3" />
+                                  Admin
+                                </Badge>
+                              )}
+                              {!u.isActive && (
+                                <Badge variant="destructive" className="text-xs">Deactivated</Badge>
+                              )}
+                              {!u.emailConfirmedAt && (
+                                <Badge variant="outline" className="text-xs">Unconfirmed</Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">{u.email}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              Joined {new Date(u.createdAt).toLocaleDateString()}
+                              {u.lastSignIn && ` • Last sign in ${new Date(u.lastSignIn).toLocaleDateString()}`}
+                            </div>
+                          </div>
+                          {u.id !== user?.id && (
+                            <div className="flex items-center gap-2 ml-4">
+                              <Select
+                                value={u.roles.includes('admin') ? 'admin' : 'user'}
+                                onValueChange={(val) => setRole(u.id, val as 'admin' | 'user')}
+                              >
+                                <SelectTrigger className="w-28">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="user">User</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => toggleActive(u.id)}
+                                title={u.isActive ? 'Deactivate user' : 'Activate user'}
+                              >
+                                {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => setDeleteUserId(u.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
 
@@ -984,6 +1077,30 @@ export function Settings() {
               onClick={() => {
                 if (deleteCategoryId) deleteCategory(deleteCategoryId);
                 setDeleteCategoryId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={!!deleteUserId} onOpenChange={() => setDeleteUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user account and all their data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteUserId) deleteUser(deleteUserId);
+                setDeleteUserId(null);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
