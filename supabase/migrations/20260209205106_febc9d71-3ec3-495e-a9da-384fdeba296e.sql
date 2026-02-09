@@ -1,0 +1,1 @@
+ALTER TABLE public.organizations ADD COLUMN requester_names text[] DEFAULT '{}'::text[];

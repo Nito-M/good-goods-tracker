@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRequests } from "@/hooks/useRequests";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
+import { useOrgRequesterNames } from "@/hooks/useOrgRequesterNames";
 import { AddRequestDialog } from "@/components/AddRequestDialog";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { RequestCard } from "@/components/RequestCard";
@@ -26,6 +27,7 @@ export function Requests() {
   const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
+  const { requesterNames } = useOrgRequesterNames();
   const { signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
@@ -114,7 +116,7 @@ export function Requests() {
         <div className="flex items-center gap-2">
           <AddRequestDialog
             items={allItems}
-            requesterNames={profile?.requesterNames || []}
+            requesterNames={requesterNames}
             onSave={addRequest}
             onUploadImage={uploadImage}
           />
@@ -160,7 +162,7 @@ export function Requests() {
       <EditRequestDialog
         request={editingRequest}
         items={allItems}
-        requesterNames={profile?.requesterNames || []}
+        requesterNames={requesterNames}
         open={!!editingRequest}
         onOpenChange={(open) => !open && setEditingRequest(null)}
         onSave={updateRequest}

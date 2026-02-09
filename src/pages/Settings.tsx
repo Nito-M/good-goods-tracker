@@ -18,6 +18,7 @@ import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { useOrgRequesterNames } from '@/hooks/useOrgRequesterNames';
 import { ALL_PAGES, usePagePermissions } from '@/hooks/usePagePermissions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +57,7 @@ export function Settings() {
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { users: adminUsers, loading: adminUsersLoading, isAdmin, isOrgAdmin, organizations, setRole, setPagePermissions, toggleActive, deleteUser, createUser, createOrg, deleteOrg, addOrgMember, removeOrgMember, setOrgMemberRole } = useAdminUsers();
   const { isAdmin: isSuperAdmin } = usePagePermissions();
+  const { requesterNames: orgRequesterNames, updateRequesterNames: updateOrgRequesterNames } = useOrgRequesterNames();
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
@@ -146,6 +148,13 @@ export function Settings() {
   const [requesterName, setRequesterName] = useState('');
   const [requesterNames, setRequesterNames] = useState<string[]>([]);
   const [newRequesterName, setNewRequesterName] = useState('');
+
+  // Sync org requester names
+  useEffect(() => {
+    if (orgRequesterNames.length > 0) {
+      setRequesterNames(orgRequesterNames);
+    }
+  }, [orgRequesterNames]);
   // Load profile data into form
   useEffect(() => {
     if (profile) {
@@ -476,7 +485,7 @@ export function Settings() {
                   e.preventDefault();
                   if (!newRequesterName.trim()) return;
                   const updated = [...requesterNames, newRequesterName.trim()];
-                  const success = await updateProfile({ requesterNames: updated });
+                  const success = await updateOrgRequesterNames(updated);
                   if (success) {
                     setRequesterNames(updated);
                     setNewRequesterName('');
@@ -511,7 +520,7 @@ export function Settings() {
                           size="icon"
                           onClick={async () => {
                             const updated = requesterNames.filter((_, i) => i !== index);
-                            const success = await updateProfile({ requesterNames: updated });
+                            const success = await updateOrgRequesterNames(updated);
                             if (success) {
                               setRequesterNames(updated);
                             }
