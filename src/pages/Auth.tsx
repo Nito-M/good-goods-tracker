@@ -188,10 +188,8 @@ export function Auth() {
       
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-foreground/20 backdrop-blur-sm">
-            <Box className="h-6 w-6" />
-          </div>
-          <span className="text-2xl font-bold">Inventory Manager</span>
+          <img src="/nol_logo.png" alt="Zumy Logo" className="h-12 w-12 rounded-xl object-contain" />
+          <span className="text-2xl font-bold">Zumy</span>
         </div>
         <p className="text-primary-foreground/80 text-lg">
           Streamline your business operations
@@ -242,11 +240,7 @@ export function Auth() {
         </div>
       </div>
 
-      <div className="relative z-10">
-        <p className="text-primary-foreground/60 text-sm">
-          Trusted by businesses worldwide to manage their inventory efficiently.
-        </p>
-      </div>
+      <div className="relative z-10" />
     </div>
   );
 
@@ -258,9 +252,7 @@ export function Auth() {
           <Card className="w-full max-w-md border-0 shadow-none lg:shadow-lg lg:border">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4 lg:hidden">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-                  <Box className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <img src="/nol_logo.png" alt="Zumy Logo" className="h-12 w-12 rounded-xl object-contain" />
               </div>
               <CardTitle className="text-2xl">Reset Password</CardTitle>
               <CardDescription>Enter your email to receive a reset link</CardDescription>
@@ -306,9 +298,7 @@ export function Auth() {
         <Card className="w-full max-w-md border-0 shadow-none lg:shadow-lg lg:border">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4 lg:hidden">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-                <Box className="h-6 w-6 text-primary-foreground" />
-              </div>
+              <img src="/nol_logo.png" alt="Zumy Logo" className="h-12 w-12 rounded-xl object-contain" />
             </div>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>Sign in to manage your inventory</CardDescription>
