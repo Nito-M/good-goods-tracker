@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarEvent, CreateCalendarEventInput } from "@/types/calendarEvent";
+import { CalendarEvent, CreateCalendarEventInput, RecurrenceType } from "@/types/calendarEvent";
 
 export function useCalendarEvents() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -63,6 +63,25 @@ export function useCalendarEvents() {
     }
   };
 
+  const updateEvent = async (id: string, updates: { title: string; description?: string; recurrence: RecurrenceType; color: string }) => {
+    try {
+      const { error } = await supabase
+        .from("calendar_events")
+        .update({
+          title: updates.title,
+          description: updates.description || null,
+          recurrence: updates.recurrence,
+          color: updates.color,
+        })
+        .eq("id", id);
+      if (error) throw error;
+      toast({ title: "Event updated" });
+      fetchEvents();
+    } catch {
+      toast({ title: "Error updating event", variant: "destructive" });
+    }
+  };
+
   const deleteEvent = async (id: string) => {
     try {
       const { error } = await supabase.from("calendar_events").delete().eq("id", id);
@@ -74,5 +93,5 @@ export function useCalendarEvents() {
     }
   };
 
-  return { events, loading, createEvent, deleteEvent, refetch: fetchEvents };
+  return { events, loading, createEvent, updateEvent, deleteEvent, refetch: fetchEvents };
 }
