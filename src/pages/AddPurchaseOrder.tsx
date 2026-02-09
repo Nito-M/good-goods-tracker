@@ -195,8 +195,12 @@ export function AddPurchaseOrder() {
     return vendorId && vendorId !== 'none' && lineItems.every(isLineItemValid);
   };
 
+  const isDraftValid = () => {
+    return lineItems.some(isLineItemValid);
+  };
+
   const handleSave = async (status: 'draft' | 'ordered' = 'ordered') => {
-    if (!isFormValid()) return;
+    if (status === 'draft' ? !isDraftValid() : !isFormValid()) return;
 
     setSaving(true);
 
@@ -736,7 +740,7 @@ export function AddPurchaseOrder() {
             <Link to="/purchase-orders">
               <Button variant="outline">Cancel</Button>
             </Link>
-            <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving || !isFormValid()}>
+            <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving || !isDraftValid()}>
               {saving ? 'Saving...' : 'Save as Draft'}
             </Button>
             <Button onClick={() => handleSave('ordered')} disabled={saving || !isFormValid()}>
