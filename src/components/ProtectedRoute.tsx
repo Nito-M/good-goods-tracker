@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePagePermissions } from '@/hooks/usePagePermissions';
+import { usePagePermissions, ALL_PAGES } from '@/hooks/usePagePermissions';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
-  const { isUrlAllowed, loading: permissionsLoading } = usePagePermissions();
+  const { isUrlAllowed, allowedPages, loading: permissionsLoading } = usePagePermissions();
   const location = useLocation();
 
   if (loading || permissionsLoading) {
@@ -25,7 +25,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isUrlAllowed(location.pathname)) {
-    return <Navigate to="/" replace />;
+    // Find the first allowed page to redirect to (avoid infinite loop on /)
+    const firstAllowed = ALL_PAGES.find(p => allowedPages.has(p.key) && p.url !== location.pathname);
+    if (firstAllowed) {
+      return <Navigate to={firstAllowed.url} replace />;
+    }
+    return <Navigate to="/auth" replace />;
   }
 
   return <>{children}</>;
