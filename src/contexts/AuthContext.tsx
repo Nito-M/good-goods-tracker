@@ -24,35 +24,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // First, do the initial session check with "remember me" logic
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // Check if user wanted to be remembered
+      try {
+        // Validate server-side first to catch stale/expired tokens
+        const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !validatedUser) {
+          // No valid user - clean up any stale local session data
+          await supabase.auth.signOut().catch(() => {});
+          localStorage.removeItem('remember_me');
+          sessionStorage.removeItem(SESSION_ACTIVE_KEY);
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          setInitialCheckDone(true);
+          return;
+        }
+
+        // User is valid - now check remember me preference
         const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
         const rememberMe = localStorage.getItem('remember_me');
         
         if (!sessionMarker && rememberMe === 'false') {
-          // Browser was closed and user didn't want to be remembered - sign out
-          await supabase.auth.signOut();
+          // Browser was closed and user didn't want to be remembered
+          await supabase.auth.signOut().catch(() => {});
           localStorage.removeItem('remember_me');
           setSession(null);
           setUser(null);
         } else {
-          // Validate the session is still valid server-side
-          const { data: { user }, error } = await supabase.auth.getUser();
-          if (error || !user) {
-            // Session is stale/expired - clean up
-            await supabase.auth.signOut();
-            localStorage.removeItem('remember_me');
-            setSession(null);
-            setUser(null);
-          } else {
-            sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
-            setSession(session);
-            setUser(user);
-          }
+          // Get the current session for the session object
+          const { data: { session } } = await supabase.auth.getSession();
+          sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
+          setSession(session);
+          setUser(validatedUser);
         }
-      } else {
+      } catch (err) {
+        // Any unexpected error - fail safe by clearing state
+        await supabase.auth.signOut().catch(() => {});
+        localStorage.removeItem('remember_me');
+        sessionStorage.removeItem(SESSION_ACTIVE_KEY);
         setSession(null);
         setUser(null);
       }
