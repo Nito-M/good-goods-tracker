@@ -355,7 +355,7 @@ export function Settings() {
               <Tags className="h-4 w-4" />
               Categories
             </TabsTrigger>
-            {(isAdmin || isOrgAdmin) && (
+            {isAdmin && (
               <TabsTrigger value="organizations" className="gap-2">
                 <Building className="h-4 w-4" />
                 Orgs
@@ -897,7 +897,7 @@ export function Settings() {
           </TabsContent>
 
           {/* Organizations Tab */}
-          {(isAdmin || isOrgAdmin) && (
+          {isAdmin && (
             <TabsContent value="organizations" className="mt-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
