@@ -1061,7 +1061,7 @@ export function Settings() {
                     </CardTitle>
                     <CardDescription>View and manage all registered users. Click a user to configure page access.</CardDescription>
                   </div>
-                  <Button onClick={() => { setNewUserEmail(''); setNewUserPassword(''); setCreatedTempPassword(null); setSelectedOrgForNewUser(''); setAddUserDialogOpen(true); }} className="gap-2">
+                  <Button onClick={() => { setNewUserEmail(''); setNewUserPassword(''); setCreatedTempPassword(null); setSelectedOrgForNewUser(!isAdmin && organizations.length > 0 ? organizations[0].id : ''); setAddUserDialogOpen(true); }} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add User
                   </Button>
@@ -1112,34 +1112,40 @@ export function Settings() {
                             </div>
                             {u.id !== user?.id && (
                               <div className="flex items-center gap-2 ml-4">
-                                <Select
-                                  value={u.roles.includes('admin') ? 'admin' : 'user'}
-                                  onValueChange={(val) => setRole(u.id, val as 'admin' | 'user')}
-                                >
-                                  <SelectTrigger className="w-28">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="user">User</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => toggleActive(u.id)}
-                                  title={u.isActive ? 'Deactivate user' : 'Activate user'}
-                                >
-                                  {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                  onClick={() => setDeleteUserId(u.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                {isAdmin && (
+                                  <Select
+                                    value={u.roles.includes('admin') ? 'admin' : 'user'}
+                                    onValueChange={(val) => setRole(u.id, val as 'admin' | 'user')}
+                                  >
+                                    <SelectTrigger className="w-28">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="user">User</SelectItem>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                                {isAdmin && (
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => toggleActive(u.id)}
+                                    title={u.isActive ? 'Deactivate user' : 'Activate user'}
+                                  >
+                                    {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                                  </Button>
+                                )}
+                                {isAdmin && (
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                    onClick={() => setDeleteUserId(u.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1426,7 +1432,7 @@ export function Settings() {
                 />
                 <p className="text-xs text-muted-foreground">If left blank, a temporary password will be generated.</p>
               </div>
-              {organizations.length > 0 && (
+              {isAdmin && organizations.length > 0 && (
                 <div className="space-y-2">
                   <Label>Add to Organization (optional)</Label>
                   <Select value={selectedOrgForNewUser} onValueChange={setSelectedOrgForNewUser}>
@@ -1440,6 +1446,22 @@ export function Settings() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+              {!isAdmin && organizations.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Organization</Label>
+                  <Select value={selectedOrgForNewUser} onValueChange={setSelectedOrgForNewUser}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select organization" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {organizations.map((org) => (
+                        <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">New users will be added to this organization.</p>
                 </div>
               )}
               <DialogFooter>
