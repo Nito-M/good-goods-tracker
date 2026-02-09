@@ -182,12 +182,14 @@ export function Settings() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signedUrlData, error: signError } = await supabase.storage
         .from('logos')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 31536000); // 1 year expiry
 
-      setLogoUrl(publicUrl);
-      await updateProfile({ logoUrl: publicUrl });
+      if (signError || !signedUrlData?.signedUrl) throw signError;
+
+      setLogoUrl(signedUrlData.signedUrl);
+      await updateProfile({ logoUrl: signedUrlData.signedUrl });
     } catch (error) {
       console.error('Error uploading logo:', error);
     } finally {
