@@ -43,8 +43,10 @@ export function PurchaseOrderCard({
   const TAX_RATE = 0.05;
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
-  const taxAmount = subtotal * TAX_RATE;
-  const totalCost = subtotal + taxAmount;
+  const discountAmount = order.discountAmount || 0;
+  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = afterDiscount * TAX_RATE;
+  const totalCost = afterDiscount + taxAmount;
 
   // Format date using local date components (avoids UTC timezone shift)
   const formatLocalDate = (dateValue: Date | string) => {
@@ -144,6 +146,12 @@ export function PurchaseOrderCard({
                   <span>Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>Discount{order.discountType === 'percentage' && order.discountValue > 0 ? ` (${order.discountValue}%)` : ''}</span>
+                    <span>-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>Tax (5%)</span>
                   <span>{formatCurrency(taxAmount)}</span>

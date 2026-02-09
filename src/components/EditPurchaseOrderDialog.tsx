@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Percent, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -33,6 +35,9 @@ interface EditPurchaseOrderDialogProps {
       notes?: string;
       vendorId?: string | null;
       poNumber?: string;
+      discountType?: 'percentage' | 'fixed';
+      discountValue?: number;
+      discountAmount?: number;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -89,6 +94,8 @@ export function EditPurchaseOrderDialog({
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+  const [discountValue, setDiscountValue] = useState<string>('');
 
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +108,8 @@ export function EditPurchaseOrderDialog({
       setOrderedAt(order.orderedAt.toISOString().split('T')[0]);
       setNotes(order.notes || '');
       setVendorId(order.vendorId || '');
+      setDiscountType(order.discountType || 'percentage');
+      setDiscountValue(order.discountValue ? order.discountValue.toString() : '');
       setPdfFile(null);
       setImageFile(null);
     }
@@ -154,6 +163,14 @@ export function EditPurchaseOrderDialog({
     const [year, month, day] = orderedAt.split('-').map(Number);
     const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
 
+    // Calculate discount amount
+    const subtotalCents = items.reduce((sum, item) => sum + Math.round((item.unitCost || 0) * item.quantity * 100), 0);
+    const subtotal = subtotalCents / 100;
+    const parsedDiscountValue = parseFloat(discountValue) || 0;
+    const computedDiscountAmount = discountType === 'percentage'
+      ? Math.round(subtotalCents * parsedDiscountValue / 100) / 100
+      : parsedDiscountValue;
+
     await onSave(
       order.id,
       {
@@ -162,6 +179,9 @@ export function EditPurchaseOrderDialog({
         notes: notes || undefined,
         vendorId: vendorId || null,
         poNumber: poNumber || undefined,
+        discountType,
+        discountValue: parsedDiscountValue,
+        discountAmount: computedDiscountAmount,
       },
       pdfFile,
       imageFile
@@ -465,6 +485,36 @@ export function EditPurchaseOrderDialog({
                 Upload New Image
               </Button>
             )}
+          </div>
+
+          {/* Discount */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label>Discount</Label>
+              <ToggleGroup
+                type="single"
+                value={discountType}
+                onValueChange={(val) => val && setDiscountType(val as 'percentage' | 'fixed')}
+                className="h-7"
+              >
+                <ToggleGroupItem value="percentage" className="h-7 w-7 p-0">
+                  <Percent className="h-3 w-3" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="fixed" className="h-7 w-7 p-0">
+                  <DollarSign className="h-3 w-3" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            <Input
+              type="number"
+              min={0}
+              step={discountType === 'percentage' ? '1' : '0.01'}
+              max={discountType === 'percentage' ? 100 : undefined}
+              value={discountValue}
+              onChange={(e) => setDiscountValue(e.target.value)}
+              placeholder={discountType === 'percentage' ? '0%' : '$0.00'}
+              className="w-32"
+            />
           </div>
 
           {/* Notes */}

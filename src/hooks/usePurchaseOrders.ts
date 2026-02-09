@@ -124,6 +124,9 @@ export function usePurchaseOrders() {
       poNumber?: string;
       requestId?: string | null;
       status?: 'draft' | 'ordered';
+      discountType?: 'percentage' | 'fixed';
+      discountValue?: number;
+      discountAmount?: number;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -194,6 +197,9 @@ export function usePurchaseOrders() {
       pdf_url: pdfUrl,
       image_url: imageUrl,
       status: order.status || 'ordered',
+      discount_type: order.discountType || 'percentage',
+      discount_value: order.discountValue || 0,
+      discount_amount: order.discountAmount || 0,
     }]);
 
     if (error) {
@@ -326,6 +332,9 @@ export function usePurchaseOrders() {
       notes?: string;
       vendorId?: string | null;
       poNumber?: string;
+      discountType?: 'percentage' | 'fixed';
+      discountValue?: number;
+      discountAmount?: number;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -391,6 +400,9 @@ export function usePurchaseOrders() {
       ordered_at: validation.data.orderedAt.toISOString(),
       notes: validation.data.notes || null,
       vendor_id: validation.data.vendorId !== undefined ? validation.data.vendorId : undefined,
+      discount_type: updates.discountType || 'percentage',
+      discount_value: updates.discountValue || 0,
+      discount_amount: updates.discountAmount || 0,
     };
 
     if (pdfUrl) updateData.pdf_url = pdfUrl;
@@ -423,7 +435,8 @@ export function usePurchaseOrders() {
     if (order?.paidAt) {
       const TAX_RATE = 0.05;
       const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
-      const totalCost = subtotal + (subtotal * TAX_RATE);
+      const afterDiscount = Math.max(0, subtotal - (order.discountAmount || 0));
+      const totalCost = afterDiscount + (afterDiscount * TAX_RATE);
       
       if (totalCost > 0) {
         const poLabel = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
@@ -490,7 +503,8 @@ export function usePurchaseOrders() {
     // Calculate total cost
     const TAX_RATE = 0.05;
     const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
-    const totalCost = subtotal + (subtotal * TAX_RATE);
+    const afterDiscount = Math.max(0, subtotal - (order.discountAmount || 0));
+    const totalCost = afterDiscount + (afterDiscount * TAX_RATE);
 
     // Withdraw from bank if function provided and there's a cost
     if (withdrawFromBank && totalCost > 0) {
