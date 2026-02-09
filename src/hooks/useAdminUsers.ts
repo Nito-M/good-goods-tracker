@@ -8,6 +8,7 @@ export interface AdminUser {
   displayName: string | null;
   isActive: boolean;
   roles: string[];
+  pagePermissions: string[];
   createdAt: string;
   lastSignIn: string | null;
   emailConfirmedAt: string | null;
@@ -62,6 +63,16 @@ export function useAdminUsers() {
     }
   };
 
+  const setPagePermissions = async (userId: string, pageKeys: string[]) => {
+    try {
+      await callAdminFunction({ action: 'set_page_permissions', userId, pageKeys });
+      toast({ title: 'Permissions updated', description: 'Page access updated successfully' });
+      await fetchUsers();
+    } catch (error: any) {
+      toast({ title: 'Error', description: 'Failed to update permissions', variant: 'destructive' });
+    }
+  };
+
   const toggleActive = async (userId: string) => {
     try {
       await callAdminFunction({ action: 'toggle_active', userId });
@@ -82,5 +93,5 @@ export function useAdminUsers() {
     }
   };
 
-  return { users, loading, isAdmin, fetchUsers, setRole, toggleActive, deleteUser };
+  return { users, loading, isAdmin, fetchUsers, setRole, setPagePermissions, toggleActive, deleteUser };
 }
