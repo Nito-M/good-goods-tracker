@@ -60,6 +60,11 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
   if (isSameDay(eventDate, day)) return true;
   if (day < eventDate) return false;
 
+  // Cap recurrence at 1 year from the event start date
+  const oneYearLater = new Date(eventDate);
+  oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+  if (day > oneYearLater) return false;
+
   switch (event.recurrence) {
     case "daily":
       return true;
