@@ -129,9 +129,9 @@ export function useAdminUsers() {
     }
   };
 
-  const createUser = async (email: string, password?: string, orgId?: string, orgRole?: string): Promise<{ userId?: string; tempPassword?: string }> => {
+  const createUser = async (email: string, password?: string, orgId?: string, orgRole?: string, displayName?: string): Promise<{ userId?: string; tempPassword?: string }> => {
     try {
-      const data = await callAdminFunction({ action: 'create_user', email, password, orgId, orgRole });
+      const data = await callAdminFunction({ action: 'create_user', email, password, orgId, orgRole, displayName });
       toast({ title: 'User created', description: `User ${email} has been added` });
       await fetchUsers();
       await fetchOrganizations();

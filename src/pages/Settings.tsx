@@ -60,6 +60,7 @@ export function Settings() {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserDisplayName, setNewUserDisplayName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [createdTempPassword, setCreatedTempPassword] = useState<string | null>(null);
   const [addingUser, setAddingUser] = useState(false);
@@ -1062,7 +1063,7 @@ export function Settings() {
                     </CardTitle>
                     <CardDescription>View and manage all registered users. Click a user to configure page access.</CardDescription>
                   </div>
-                  <Button onClick={() => { setNewUserEmail(''); setNewUserPassword(''); setCreatedTempPassword(null); setSelectedOrgForNewUser(!isAdmin && organizations.length > 0 ? organizations[0].id : ''); setAddUserDialogOpen(true); }} className="gap-2">
+                  <Button onClick={() => { setNewUserEmail(''); setNewUserDisplayName(''); setNewUserPassword(''); setCreatedTempPassword(null); setSelectedOrgForNewUser(!isSuperAdmin && organizations.length > 0 ? organizations[0].id : ''); setAddUserDialogOpen(true); }} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add User
                   </Button>
@@ -1403,7 +1404,7 @@ export function Settings() {
               onSubmit={async (e) => {
                 e.preventDefault();
                 setAddingUser(true);
-                const result = await createUser(newUserEmail, newUserPassword || undefined, selectedOrgForNewUser || undefined);
+                const result = await createUser(newUserEmail, newUserPassword || undefined, selectedOrgForNewUser || undefined, undefined, newUserDisplayName || undefined);
                 setAddingUser(false);
                 if (result.tempPassword) {
                   setCreatedTempPassword(result.tempPassword);
@@ -1423,6 +1424,16 @@ export function Settings() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="new-user-display-name">Display Name</Label>
+                <Input
+                  id="new-user-display-name"
+                  type="text"
+                  value={newUserDisplayName}
+                  onChange={(e) => setNewUserDisplayName(e.target.value)}
+                  placeholder="John Doe"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="new-user-password">Password (optional)</Label>
                 <Input
                   id="new-user-password"
@@ -1433,7 +1444,7 @@ export function Settings() {
                 />
                 <p className="text-xs text-muted-foreground">If left blank, a temporary password will be generated.</p>
               </div>
-              {isAdmin && organizations.length > 0 && (
+              {isSuperAdmin && organizations.length > 0 && (
                 <div className="space-y-2">
                   <Label>Add to Organization (optional)</Label>
                   <Select value={selectedOrgForNewUser} onValueChange={setSelectedOrgForNewUser}>
@@ -1449,7 +1460,7 @@ export function Settings() {
                   </Select>
                 </div>
               )}
-              {!isAdmin && organizations.length > 0 && (
+              {!isSuperAdmin && organizations.length > 0 && (
                 <div className="space-y-2">
                   <Label>Organization</Label>
                   <Select value={selectedOrgForNewUser} onValueChange={setSelectedOrgForNewUser}>
