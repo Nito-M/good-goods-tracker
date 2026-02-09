@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle } from "lucide-react";
+import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, LogOut } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const STATUS_CONFIG: Record<RequestStatus, { label: string; icon: React.ReactNode }> = {
   pending: { label: "Pending", icon: <Clock className="h-4 w-4" /> },
@@ -24,6 +26,7 @@ export function Requests() {
   const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
+  const { signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
@@ -108,12 +111,17 @@ export function Requests() {
             Track item requests and custom orders
           </p>
         </div>
-        <AddRequestDialog
-          items={allItems}
-          requesterNames={profile?.requesterNames || []}
-          onSave={addRequest}
-          onUploadImage={uploadImage}
-        />
+        <div className="flex items-center gap-2">
+          <AddRequestDialog
+            items={allItems}
+            requesterNames={profile?.requesterNames || []}
+            onSave={addRequest}
+            onUploadImage={uploadImage}
+          />
+          <Button variant="outline" size="icon" onClick={signOut} title="Sign out">
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
