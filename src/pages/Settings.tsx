@@ -54,9 +54,14 @@ export function Settings() {
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
-  const { users: adminUsers, loading: adminUsersLoading, isAdmin, setRole, setPagePermissions, toggleActive, deleteUser } = useAdminUsers();
+  const { users: adminUsers, loading: adminUsersLoading, isAdmin, setRole, setPagePermissions, toggleActive, deleteUser, createUser } = useAdminUsers();
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [createdTempPassword, setCreatedTempPassword] = useState<string | null>(null);
+  const [addingUser, setAddingUser] = useState(false);
 
   // Save theme to database when changed
   const handleThemeChange = async (newTheme: string) => {
@@ -882,12 +887,18 @@ export function Settings() {
           {isAdmin && (
             <TabsContent value="users" className="mt-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    User Management
-                  </CardTitle>
-                  <CardDescription>View and manage all registered users. Click a user to configure page access.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      User Management
+                    </CardTitle>
+                    <CardDescription>View and manage all registered users. Click a user to configure page access.</CardDescription>
+                  </div>
+                  <Button onClick={() => { setNewUserEmail(''); setNewUserPassword(''); setCreatedTempPassword(null); setAddUserDialogOpen(true); }} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add User
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {adminUsersLoading ? (
@@ -1174,6 +1185,84 @@ export function Settings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add User</DialogTitle>
+          </DialogHeader>
+          {createdTempPassword ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                User created successfully. Share the temporary password below with the user so they can sign in.
+              </p>
+              <div className="space-y-2">
+                <Label>Temporary Password</Label>
+                <div className="flex items-center gap-2">
+                  <Input value={createdTempPassword} readOnly className="font-mono" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdTempPassword);
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setAddUserDialogOpen(false)}>Done</Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setAddingUser(true);
+                const result = await createUser(newUserEmail, newUserPassword || undefined);
+                setAddingUser(false);
+                if (result.tempPassword) {
+                  setCreatedTempPassword(result.tempPassword);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="new-user-email">Email *</Label>
+                <Input
+                  id="new-user-email"
+                  type="email"
+                  value={newUserEmail}
+                  onChange={(e) => setNewUserEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-user-password">Password (optional)</Label>
+                <Input
+                  id="new-user-password"
+                  type="text"
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
+                  placeholder="Leave blank to auto-generate"
+                />
+                <p className="text-xs text-muted-foreground">If left blank, a temporary password will be generated.</p>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAddUserDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={addingUser}>
+                  {addingUser ? 'Creating...' : 'Add User'}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

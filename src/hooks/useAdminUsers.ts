@@ -93,5 +93,17 @@ export function useAdminUsers() {
     }
   };
 
-  return { users, loading, isAdmin, fetchUsers, setRole, setPagePermissions, toggleActive, deleteUser };
+  const createUser = async (email: string, password?: string): Promise<{ userId?: string; tempPassword?: string }> => {
+    try {
+      const data = await callAdminFunction({ action: 'create_user', email, password });
+      toast({ title: 'User created', description: `User ${email} has been added` });
+      await fetchUsers();
+      return { userId: data.userId, tempPassword: data.tempPassword };
+    } catch (error: any) {
+      toast({ title: 'Error', description: error?.message || 'Failed to create user', variant: 'destructive' });
+      return {};
+    }
+  };
+
+  return { users, loading, isAdmin, fetchUsers, setRole, setPagePermissions, toggleActive, deleteUser, createUser };
 }
