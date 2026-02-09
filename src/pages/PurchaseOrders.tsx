@@ -20,7 +20,7 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 export function PurchaseOrders() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { orders, loading, updateOrder, markAsReceived, markAsPaid, deleteOrder } =
+  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder } =
     usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
@@ -31,6 +31,12 @@ export function PurchaseOrders() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
+
+  const handleMarkOrdered = async (orderId: string) => {
+    setProcessingId(orderId);
+    await markAsOrdered(orderId);
+    setProcessingId(null);
+  };
 
   const handleMarkReceived = async (orderId: string) => {
     setProcessingId(orderId);
@@ -84,6 +90,7 @@ export function PurchaseOrders() {
     });
   }, [orders, searchQuery, vendors]);
 
+  const draftOrders = filteredOrders.filter((o) => o.status === 'draft').sort(sortByPoNumber);
   const orderedOrders = filteredOrders.filter((o) => o.status === 'ordered').sort(sortByPoNumber);
   const receivedOrders = filteredOrders.filter((o) => o.status === 'received').sort(sortByPoNumber);
 
@@ -148,7 +155,7 @@ export function PurchaseOrders() {
             </Button>
           </div>
         ) : (
-          <Tabs defaultValue="ordered" className="space-y-6">
+          <Tabs defaultValue="draft" className="space-y-6">
             {/* Search bar for purchase orders */}
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -162,6 +169,14 @@ export function PurchaseOrders() {
             </div>
             
             <TabsList>
+              <TabsTrigger value="draft" className="gap-2">
+                Drafts
+                {draftOrders.length > 0 && (
+                  <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-yellow-500 text-white">
+                    {draftOrders.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="ordered" className="gap-2">
                 Ordered
                 {orderedOrders.length > 0 && (
@@ -180,6 +195,28 @@ export function PurchaseOrders() {
               </TabsTrigger>
             </TabsList>
 
+            <TabsContent value="draft" className="space-y-4">
+              {draftOrders.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No draft orders
+                </p>
+              ) : (
+                draftOrders.map((order) => (
+                  <PurchaseOrderCard
+                    key={order.id}
+                    order={order}
+                    onMarkOrdered={handleMarkOrdered}
+                    onMarkReceived={handleMarkReceived}
+                    onMarkPaid={handleMarkPaid}
+                    onDelete={deleteOrder}
+                    onEdit={handleEdit}
+                    onDownload={handleDownload}
+                    loading={processingId === order.id}
+                  />
+                ))
+              )}
+            </TabsContent>
+
             <TabsContent value="ordered" className="space-y-4">
               {orderedOrders.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
@@ -190,6 +227,7 @@ export function PurchaseOrders() {
                   <PurchaseOrderCard
                     key={order.id}
                     order={order}
+                    onMarkOrdered={handleMarkOrdered}
                     onMarkReceived={handleMarkReceived}
                     onMarkPaid={handleMarkPaid}
                     onDelete={deleteOrder}
@@ -211,6 +249,7 @@ export function PurchaseOrders() {
                   <PurchaseOrderCard
                     key={order.id}
                     order={order}
+                    onMarkOrdered={handleMarkOrdered}
                     onMarkReceived={handleMarkReceived}
                     onMarkPaid={handleMarkPaid}
                     onDelete={deleteOrder}

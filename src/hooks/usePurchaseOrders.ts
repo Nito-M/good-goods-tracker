@@ -123,6 +123,7 @@ export function usePurchaseOrders() {
       vendorId?: string | null;
       poNumber?: string;
       requestId?: string | null;
+      status?: 'draft' | 'ordered';
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -192,7 +193,7 @@ export function usePurchaseOrders() {
       request_id: order.requestId || null,
       pdf_url: pdfUrl,
       image_url: imageUrl,
-      status: 'ordered',
+      status: order.status || 'ordered',
     }]);
 
     if (error) {
@@ -523,11 +524,36 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const markAsOrdered = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order || order.status !== 'draft') return false;
+
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ status: 'ordered' })
+      .eq('id', orderId);
+
+    if (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: 'Error placing order',
+        description: 'Unable to update order. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    toast({ title: 'Order placed successfully' });
+    fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
     createOrder,
     updateOrder,
+    markAsOrdered,
     markAsReceived,
     markAsPaid,
     deleteOrder,

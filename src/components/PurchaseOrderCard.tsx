@@ -21,6 +21,7 @@ import {
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
+  onMarkOrdered?: (id: string) => void;
   onMarkReceived: (id: string) => void;
   onMarkPaid: (id: string) => void;
   onDelete: (id: string) => void;
@@ -31,6 +32,7 @@ interface PurchaseOrderCardProps {
 
 export function PurchaseOrderCard({
   order,
+  onMarkOrdered,
   onMarkReceived,
   onMarkPaid,
   onDelete,
@@ -91,14 +93,16 @@ export function PurchaseOrderCard({
               </div>
               <div className="flex flex-col gap-1 items-end">
                 <Badge
-                  variant={order.status === 'received' ? 'default' : 'secondary'}
+                  variant={order.status === 'received' ? 'default' : order.status === 'draft' ? 'outline' : 'secondary'}
                   className={
                     order.status === 'received'
                       ? 'bg-green-600 hover:bg-green-700'
+                      : order.status === 'draft'
+                      ? 'border-yellow-500 text-yellow-600'
                       : ''
                   }
                 >
-                  {order.status === 'received' ? 'Received' : 'Ordered'}
+                  {order.status === 'received' ? 'Received' : order.status === 'draft' ? 'Draft' : 'Ordered'}
                 </Badge>
                 {order.paidAt ? (
                   <Badge variant="outline" className="border-blue-500 text-blue-600">
@@ -210,6 +214,17 @@ export function PurchaseOrderCard({
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2 pt-2">
+              {order.status === 'draft' && onMarkOrdered && (
+                <Button
+                  size="sm"
+                  onClick={() => onMarkOrdered(order.id)}
+                  disabled={loading}
+                  className="gap-2"
+                >
+                  <Package className="h-4 w-4" />
+                  Place Order
+                </Button>
+              )}
               {order.status === 'ordered' && (
                 <Button
                   size="sm"
