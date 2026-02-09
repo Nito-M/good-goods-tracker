@@ -74,7 +74,7 @@ serve(async (req: Request) => {
     }
 
     const body = await req.json();
-    const { action, userId, role, pageKeys, email: actionEmail, password: actionPassword, orgId, orgName, orgRole } = body;
+    const { action, userId, role, pageKeys, email: actionEmail, password: actionPassword, orgId, orgName, orgRole, displayName } = body;
 
     switch (action) {
       case "list_users": {
@@ -227,6 +227,11 @@ serve(async (req: Request) => {
           email_confirm: true,
         });
         if (createError) throw createError;
+
+        // Set display name on profile if provided
+        if (displayName) {
+          await adminClient.from("profiles").update({ display_name: displayName }).eq("user_id", newUser.user.id);
+        }
 
         // If orgId provided, add user to that organization
         if (orgId) {
