@@ -28,6 +28,27 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Pre-React cleanup: clear stale Supabase auth tokens before the app loads
+      // This prevents infinite loading when expired refresh tokens hang the auth client
+      (function() {
+        try {
+          var key = 'sb-awzfdkhntiucfmuorbbr-auth-token';
+          var raw = localStorage.getItem(key);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            var expiry = parsed && parsed.expires_at;
+            // If token is expired or has no refresh_token, nuke it
+            if (!parsed || !parsed.refresh_token || (expiry && expiry * 1000 < Date.now())) {
+              localStorage.removeItem(key);
+            }
+          }
+        } catch (e) {
+          // Corrupt data - remove it
+          localStorage.removeItem('sb-awzfdkhntiucfmuorbbr-auth-token');
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
