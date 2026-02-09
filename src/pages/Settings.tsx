@@ -57,7 +57,7 @@ export function Settings() {
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { users: adminUsers, loading: adminUsersLoading, isAdmin, isOrgAdmin, organizations, setRole, setPagePermissions, toggleActive, deleteUser, createUser, createOrg, deleteOrg, addOrgMember, removeOrgMember, setOrgMemberRole } = useAdminUsers();
   const { isAdmin: isSuperAdmin } = usePagePermissions();
-  const { requesterNames: orgRequesterNames, updateRequesterNames: updateOrgRequesterNames } = useOrgRequesterNames();
+  const { requesters: orgRequesters, addRequester: addOrgRequester, updateRequester: updateOrgRequester, deleteRequester: deleteOrgRequester } = useOrgRequesterNames();
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
@@ -145,16 +145,8 @@ export function Settings() {
   const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
 
   // Requester settings state
-  const [requesterName, setRequesterName] = useState('');
-  const [requesterNames, setRequesterNames] = useState<string[]>([]);
   const [newRequesterName, setNewRequesterName] = useState('');
-
-  // Sync org requester names
-  useEffect(() => {
-    if (orgRequesterNames.length > 0) {
-      setRequesterNames(orgRequesterNames);
-    }
-  }, [orgRequesterNames]);
+  const [newRequesterUserId, setNewRequesterUserId] = useState<string>('');
   // Load profile data into form
   useEffect(() => {
     if (profile) {
@@ -172,9 +164,6 @@ export function Settings() {
       setQuoteThankYouNote(profile.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(profile.quoteValidityDays || null);
       setQuoteLayout(profile.quoteLayout || profile.invoiceLayout || defaultInvoiceLayout);
-      // Requester settings
-      setRequesterName(profile.requesterName || '');
-      setRequesterNames(profile.requesterNames || []);
     }
   }, [profile]);
 
@@ -484,52 +473,98 @@ export function Settings() {
                 <form onSubmit={async (e) => {
                   e.preventDefault();
                   if (!newRequesterName.trim()) return;
-                  const updated = [...requesterNames, newRequesterName.trim()];
-                  const success = await updateOrgRequesterNames(updated);
+                  const success = await addOrgRequester(newRequesterName.trim(), newRequesterUserId || null);
                   if (success) {
-                    setRequesterNames(updated);
                     setNewRequesterName('');
+                    setNewRequesterUserId('');
                   }
-                }} className="flex gap-2">
-                  <Input
-                    placeholder="Enter requester name"
-                    value={newRequesterName}
-                    onChange={(e) => setNewRequesterName(e.target.value)}
-                  />
-                  <Button type="submit" disabled={!newRequesterName.trim()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
+                }} className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter requester name"
+                      value={newRequesterName}
+                      onChange={(e) => setNewRequesterName(e.target.value)}
+                    />
+                    <Button type="submit" disabled={!newRequesterName.trim()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Link to user (optional)</Label>
+                    <Select value={newRequesterUserId} onValueChange={setNewRequesterUserId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a user to link" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No user linked</SelectItem>
+                        {adminUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.displayName || u.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </form>
 
                 {/* List of requesters */}
-                {requesterNames.length === 0 ? (
+                {orgRequesters.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-4 text-center">
                     No requesters added yet. Add names above to allow selection when creating requests.
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {requesterNames.map((name, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                      >
-                        <span className="font-medium">{name}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={async () => {
-                            const updated = requesterNames.filter((_, i) => i !== index);
-                            const success = await updateOrgRequesterNames(updated);
-                            if (success) {
-                              setRequesterNames(updated);
-                            }
-                          }}
+                    {orgRequesters.map((requester) => {
+                      const linkedUser = adminUsers.find((u) => u.id === requester.linkedUserId);
+                      return (
+                        <div
+                          key={requester.id}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-card"
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
+                          <div className="space-y-1">
+                            <span className="font-medium">{requester.name}</span>
+                            {linkedUser ? (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {linkedUser.displayName || linkedUser.email}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Not linked to any user</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Select
+                              value={requester.linkedUserId || 'none'}
+                              onValueChange={async (val) => {
+                                await updateOrgRequester(requester.id, {
+                                  linkedUserId: val === 'none' ? null : val,
+                                });
+                              }}
+                            >
+                              <SelectTrigger className="w-36 h-8 text-xs">
+                                <SelectValue placeholder="Link user" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">No user</SelectItem>
+                                {adminUsers.map((u) => (
+                                  <SelectItem key={u.id} value={u.id}>
+                                    {u.displayName || u.email}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => deleteOrgRequester(requester.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
