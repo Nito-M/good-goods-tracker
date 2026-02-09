@@ -22,46 +22,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
-    // First, do the initial session check with "remember me" logic
     const initializeAuth = async () => {
+      // Clear any obviously corrupt Supabase storage before even trying
       try {
-        // Validate server-side first to catch stale/expired tokens
-        const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !validatedUser) {
-          // No valid user - clean up any stale local session data
+        const storedSession = localStorage.getItem('sb-awzfdkhntiucfmuorbbr-auth-token');
+        if (storedSession) {
+          const parsed = JSON.parse(storedSession);
+          // If the stored token has no refresh_token or it's empty, nuke it immediately
+          if (!parsed?.refresh_token && !parsed?.currentSession?.refresh_token) {
+            localStorage.removeItem('sb-awzfdkhntiucfmuorbbr-auth-token');
+          }
+        }
+      } catch {
+        // Corrupt JSON - remove it
+        localStorage.removeItem('sb-awzfdkhntiucfmuorbbr-auth-token');
+      }
+
+      // Race the auth check against a timeout to prevent infinite loading
+      const timeoutPromise = new Promise<'timeout'>((resolve) => 
+        setTimeout(() => resolve('timeout'), 5000)
+      );
+
+      const authCheckPromise = (async () => {
+        try {
+          const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError || !validatedUser) {
+            await supabase.auth.signOut().catch(() => {});
+            localStorage.removeItem('remember_me');
+            sessionStorage.removeItem(SESSION_ACTIVE_KEY);
+            setSession(null);
+            setUser(null);
+            return;
+          }
+
+          const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
+          const rememberMe = localStorage.getItem('remember_me');
+          
+          if (!sessionMarker && rememberMe === 'false') {
+            await supabase.auth.signOut().catch(() => {});
+            localStorage.removeItem('remember_me');
+            setSession(null);
+            setUser(null);
+          } else {
+            const { data: { session } } = await supabase.auth.getSession();
+            sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
+            setSession(session);
+            setUser(validatedUser);
+          }
+        } catch {
           await supabase.auth.signOut().catch(() => {});
           localStorage.removeItem('remember_me');
           sessionStorage.removeItem(SESSION_ACTIVE_KEY);
           setSession(null);
           setUser(null);
-          setLoading(false);
-          setInitialCheckDone(true);
-          return;
         }
+      })();
 
-        // User is valid - now check remember me preference
-        const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
-        const rememberMe = localStorage.getItem('remember_me');
-        
-        if (!sessionMarker && rememberMe === 'false') {
-          // Browser was closed and user didn't want to be remembered
-          await supabase.auth.signOut().catch(() => {});
-          localStorage.removeItem('remember_me');
-          setSession(null);
-          setUser(null);
-        } else {
-          // Get the current session for the session object
-          const { data: { session } } = await supabase.auth.getSession();
-          sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
-          setSession(session);
-          setUser(validatedUser);
-        }
-      } catch (err) {
-        // Any unexpected error - fail safe by clearing state
-        await supabase.auth.signOut().catch(() => {});
+      const result = await Promise.race([authCheckPromise, timeoutPromise]);
+      
+      if (result === 'timeout') {
+        // Auth hung - force clear everything and show login
+        console.warn('Auth initialization timed out - clearing stale session');
+        localStorage.removeItem('sb-awzfdkhntiucfmuorbbr-auth-token');
         localStorage.removeItem('remember_me');
         sessionStorage.removeItem(SESSION_ACTIVE_KEY);
+        await supabase.auth.signOut().catch(() => {});
         setSession(null);
         setUser(null);
       }
