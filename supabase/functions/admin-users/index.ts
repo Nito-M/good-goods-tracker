@@ -219,30 +219,63 @@ serve(async (req: Request) => {
           if (!orgAdminOrgIds.includes(orgId)) throw new Error("You can only add users to your own organization");
         }
 
-        const tempPassword = actionPassword || crypto.randomUUID().slice(0, 16);
+        // Check if user already exists
+        const { data: existingUsers } = await adminClient.auth.admin.listUsers();
+        const existingUser = existingUsers?.users.find((u) => u.email === actionEmail);
 
-        const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-          email: actionEmail,
-          password: tempPassword,
-          email_confirm: true,
-        });
-        if (createError) throw createError;
+        let finalUserId: string;
+        let tempPassword: string | null = null;
 
-        // Set display name on profile if provided
-        if (displayName) {
-          await adminClient.from("profiles").update({ display_name: displayName }).eq("user_id", newUser.user.id);
-        }
+        if (existingUser) {
+          // User exists — just add to org if orgId provided
+          finalUserId = existingUser.id;
 
-        // If orgId provided, add user to that organization
-        if (orgId) {
-          await adminClient.from("organization_members").insert({
-            organization_id: orgId,
-            user_id: newUser.user.id,
-            role: orgRole || "member",
+          // Update display name if provided
+          if (displayName) {
+            await adminClient.from("profiles").update({ display_name: displayName }).eq("user_id", finalUserId);
+          }
+        } else {
+          // Create new user
+          tempPassword = actionPassword || crypto.randomUUID().slice(0, 16);
+
+          const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+            email: actionEmail,
+            password: tempPassword,
+            email_confirm: true,
           });
+          if (createError) throw createError;
+
+          finalUserId = newUser.user.id;
+
+          // Set display name on profile if provided
+          if (displayName) {
+            await adminClient.from("profiles").update({ display_name: displayName }).eq("user_id", finalUserId);
+          }
         }
 
-        return new Response(JSON.stringify({ success: true, userId: newUser.user.id, tempPassword }), {
+        // If orgId provided, add user to that organization (skip if already a member)
+        if (orgId) {
+          const { data: existingMembership } = await adminClient
+            .from("organization_members")
+            .select("id")
+            .eq("organization_id", orgId)
+            .eq("user_id", finalUserId)
+            .maybeSingle();
+
+          if (!existingMembership) {
+            await adminClient.from("organization_members").insert({
+              organization_id: orgId,
+              user_id: finalUserId,
+              role: orgRole || "member",
+            });
+          }
+        }
+
+        const message = existingUser
+          ? `Existing user added to organization`
+          : `New user created`;
+
+        return new Response(JSON.stringify({ success: true, userId: finalUserId, tempPassword, message }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
