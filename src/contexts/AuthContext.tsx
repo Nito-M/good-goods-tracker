@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         // Race getSession against a timeout — if it hangs (stale token refresh), we just move on
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
         
         const result = await Promise.race([sessionPromise, timeoutPromise]);
         
