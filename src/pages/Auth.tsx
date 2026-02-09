@@ -187,7 +187,7 @@ export function Auth() {
       </div>
       
       <div className="relative z-10">
-        <span className="text-2xl font-bold">Zumy</span>
+        <span className="text-2xl font-bold">Zumy 😊</span>
         <p className="text-primary-foreground/80 text-lg">
           Streamline your business operations
         </p>
