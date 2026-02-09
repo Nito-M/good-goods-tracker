@@ -21,7 +21,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Verify the calling user
     const userClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -39,7 +38,6 @@ serve(async (req: Request) => {
 
     const callerUserId = claimsData.claims.sub;
 
-    // Use service role client for admin operations
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -60,33 +58,36 @@ serve(async (req: Request) => {
       });
     }
 
-    const { action, userId, role } = await req.json();
+    const { action, userId, role, pageKeys } = await req.json();
 
     switch (action) {
       case "list_users": {
-        // Get all auth users
         const { data: authUsers, error: authError } = await adminClient.auth.admin.listUsers();
         if (authError) throw authError;
 
-        // Get all profiles
         const { data: profiles } = await adminClient
           .from("profiles")
           .select("user_id, display_name, is_active, created_at");
 
-        // Get all roles
         const { data: roles } = await adminClient
           .from("user_roles")
           .select("user_id, role");
 
+        const { data: allPermissions } = await adminClient
+          .from("user_page_permissions")
+          .select("user_id, page_key");
+
         const users = authUsers.users.map((u) => {
           const profile = profiles?.find((p) => p.user_id === u.id);
           const userRoles = roles?.filter((r) => r.user_id === u.id).map((r) => r.role) || [];
+          const userPages = allPermissions?.filter((p) => p.user_id === u.id).map((p) => p.page_key) || [];
           return {
             id: u.id,
             email: u.email,
             displayName: profile?.display_name || null,
             isActive: profile?.is_active ?? true,
             roles: userRoles,
+            pagePermissions: userPages,
             createdAt: u.created_at,
             lastSignIn: u.last_sign_in_at,
             emailConfirmedAt: u.email_confirmed_at,
@@ -107,12 +108,37 @@ serve(async (req: Request) => {
             { onConflict: "user_id,role" }
           );
         } else {
-          // Remove admin role
           await adminClient
             .from("user_roles")
             .delete()
             .eq("user_id", userId)
             .eq("role", "admin");
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "set_page_permissions": {
+        if (!userId || !Array.isArray(pageKeys)) throw new Error("Missing userId or pageKeys");
+
+        // Delete existing permissions for user
+        await adminClient
+          .from("user_page_permissions")
+          .delete()
+          .eq("user_id", userId);
+
+        // Insert new permissions (if any)
+        if (pageKeys.length > 0) {
+          const rows = pageKeys.map((key: string) => ({
+            user_id: userId,
+            page_key: key,
+          }));
+          const { error } = await adminClient
+            .from("user_page_permissions")
+            .insert(rows);
+          if (error) throw error;
         }
 
         return new Response(JSON.stringify({ success: true }), {
@@ -136,11 +162,6 @@ serve(async (req: Request) => {
           .update({ is_active: newStatus })
           .eq("user_id", userId);
 
-        // If deactivating, sign user out by updating their auth metadata
-        if (!newStatus) {
-          // We can't force sign-out directly, but we'll track via is_active
-        }
-
         return new Response(JSON.stringify({ success: true, isActive: newStatus }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -148,7 +169,6 @@ serve(async (req: Request) => {
 
       case "delete_user": {
         if (!userId) throw new Error("Missing userId");
-        // Prevent self-deletion
         if (userId === callerUserId) {
           return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
             status: 400,

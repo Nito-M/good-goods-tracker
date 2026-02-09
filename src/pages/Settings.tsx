@@ -18,6 +18,8 @@ import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { ALL_PAGES } from '@/hooks/usePagePermissions';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -52,8 +54,9 @@ export function Settings() {
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
-  const { users: adminUsers, loading: adminUsersLoading, isAdmin, setRole, toggleActive, deleteUser } = useAdminUsers();
+  const { users: adminUsers, loading: adminUsersLoading, isAdmin, setRole, setPagePermissions, toggleActive, deleteUser } = useAdminUsers();
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
   // Save theme to database when changed
   const handleThemeChange = async (newTheme: string) => {
@@ -884,7 +887,7 @@ export function Settings() {
                     <Users className="h-5 w-5" />
                     User Management
                   </CardTitle>
-                  <CardDescription>View and manage all registered users</CardDescription>
+                  <CardDescription>View and manage all registered users. Click a user to configure page access.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {adminUsersLoading ? (
@@ -894,59 +897,121 @@ export function Settings() {
                   ) : (
                     <div className="divide-y divide-border">
                       {adminUsers.map((u) => (
-                        <div key={u.id} className="flex items-center justify-between py-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium truncate">{u.displayName || 'No name'}</span>
-                              {u.roles.includes('admin') && (
-                                <Badge variant="default" className="text-xs gap-1">
-                                  <ShieldCheck className="h-3 w-3" />
-                                  Admin
-                                </Badge>
-                              )}
-                              {!u.isActive && (
-                                <Badge variant="destructive" className="text-xs">Deactivated</Badge>
-                              )}
-                              {!u.emailConfirmedAt && (
-                                <Badge variant="outline" className="text-xs">Unconfirmed</Badge>
-                              )}
+                        <div key={u.id} className="py-4">
+                          <div className="flex items-center justify-between">
+                            <div
+                              className="flex-1 min-w-0 cursor-pointer"
+                              onClick={() => setExpandedUserId(expandedUserId === u.id ? null : u.id)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium truncate">{u.displayName || 'No name'}</span>
+                                {u.roles.includes('admin') && (
+                                  <Badge variant="default" className="text-xs gap-1">
+                                    <ShieldCheck className="h-3 w-3" />
+                                    Admin
+                                  </Badge>
+                                )}
+                                {!u.isActive && (
+                                  <Badge variant="destructive" className="text-xs">Deactivated</Badge>
+                                )}
+                                {!u.emailConfirmedAt && (
+                                  <Badge variant="outline" className="text-xs">Unconfirmed</Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">{u.email}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                Joined {new Date(u.createdAt).toLocaleDateString()}
+                                {u.lastSignIn && ` • Last sign in ${new Date(u.lastSignIn).toLocaleDateString()}`}
+                              </div>
                             </div>
-                            <div className="text-sm text-muted-foreground">{u.email}</div>
-                            <div className="text-xs text-muted-foreground mt-0.5">
-                              Joined {new Date(u.createdAt).toLocaleDateString()}
-                              {u.lastSignIn && ` • Last sign in ${new Date(u.lastSignIn).toLocaleDateString()}`}
-                            </div>
+                            {u.id !== user?.id && (
+                              <div className="flex items-center gap-2 ml-4">
+                                <Select
+                                  value={u.roles.includes('admin') ? 'admin' : 'user'}
+                                  onValueChange={(val) => setRole(u.id, val as 'admin' | 'user')}
+                                >
+                                  <SelectTrigger className="w-28">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="user">User</SelectItem>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => toggleActive(u.id)}
+                                  title={u.isActive ? 'Deactivate user' : 'Activate user'}
+                                >
+                                  {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                  onClick={() => setDeleteUserId(u.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                          {u.id !== user?.id && (
-                            <div className="flex items-center gap-2 ml-4">
-                              <Select
-                                value={u.roles.includes('admin') ? 'admin' : 'user'}
-                                onValueChange={(val) => setRole(u.id, val as 'admin' | 'user')}
-                              >
-                                <SelectTrigger className="w-28">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="user">User</SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => toggleActive(u.id)}
-                                title={u.isActive ? 'Deactivate user' : 'Activate user'}
-                              >
-                                {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                onClick={() => setDeleteUserId(u.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+
+                          {/* Page Permissions (expandable) */}
+                          {expandedUserId === u.id && !u.roles.includes('admin') && (
+                            <div className="mt-3 pt-3 border-t border-border/50">
+                              <Label className="text-sm font-medium mb-2 block">Page Access</Label>
+                              <p className="text-xs text-muted-foreground mb-3">
+                                {u.pagePermissions.length === 0
+                                  ? 'No restrictions set — user can access all pages. Check specific pages to restrict access to only those pages.'
+                                  : 'User can only access the checked pages.'}
+                              </p>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                                {ALL_PAGES.map((page) => {
+                                  const isChecked = u.pagePermissions.length === 0
+                                    ? true
+                                    : u.pagePermissions.includes(page.key);
+                                  return (
+                                    <label
+                                      key={page.key}
+                                      className="flex items-center gap-2 text-sm cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
+                                    >
+                                      <Checkbox
+                                        checked={isChecked}
+                                        onCheckedChange={(checked) => {
+                                          let newPerms: string[];
+                                          if (u.pagePermissions.length === 0) {
+                                            // Currently unrestricted, user unchecked one page
+                                            if (!checked) {
+                                              newPerms = ALL_PAGES.filter(p => p.key !== page.key).map(p => p.key);
+                                            } else {
+                                              return; // Already all checked
+                                            }
+                                          } else {
+                                            if (checked) {
+                                              newPerms = [...u.pagePermissions, page.key];
+                                            } else {
+                                              newPerms = u.pagePermissions.filter(k => k !== page.key);
+                                            }
+                                          }
+                                          // If all pages selected, clear permissions (unrestricted)
+                                          if (newPerms.length === ALL_PAGES.length) {
+                                            newPerms = [];
+                                          }
+                                          setPagePermissions(u.id, newPerms);
+                                        }}
+                                      />
+                                      {page.label}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {expandedUserId === u.id && u.roles.includes('admin') && (
+                            <div className="mt-3 pt-3 border-t border-border/50">
+                              <p className="text-xs text-muted-foreground">Admins have access to all pages.</p>
                             </div>
                           )}
                         </div>
