@@ -55,10 +55,8 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // Check if an event occurs on a given day based on recurrence
 function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
-  // Parse event date as local noon to avoid timezone issues
   const [ey, em, ed] = event.eventDate.split("-").map(Number);
   const eventDate = new Date(ey, em - 1, ed, 12, 0, 0);
-  // Normalize the calendar day to noon as well for consistent differencing
   const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12, 0, 0);
 
   if (
@@ -69,11 +67,6 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
     return true;
   if (normalizedDay < eventDate) return false;
 
-  // Cap recurrence at 1 year from the event start date
-  const oneYearLater = new Date(ey + 1, em - 1, ed, 12, 0, 0);
-  if (normalizedDay > oneYearLater) return false;
-
-  // Use Math.round to avoid fractional day issues from DST
   const daysDiff = Math.round((normalizedDay.getTime() - eventDate.getTime()) / (1000 * 60 * 60 * 24));
 
   switch (event.recurrence) {
@@ -139,8 +132,12 @@ export function Calendar() {
     return getEventsForDay(selectedDate);
   }, [selectedDate, events]);
 
+  const maxMonth = addMonths(new Date(), 12);
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const goToNextMonth = () => {
+    const next = addMonths(currentMonth, 1);
+    if (next <= maxMonth) setCurrentMonth(next);
+  };
   const goToToday = () => {
     setCurrentMonth(new Date());
     setSelectedDate(new Date());
