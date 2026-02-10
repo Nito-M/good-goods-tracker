@@ -257,12 +257,12 @@ function JobDetail({ job, onBack, onEdit, formatCurrency }: JobDetailProps) {
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="h-5 w-5" /></Button>
               <div className="flex flex-col">
+                <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Job Details</h1>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-mono text-muted-foreground">{job.jobNumber}</span>
                   <Badge className={statusColors[job.status] || ''}>{job.status}</Badge>
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight text-card-foreground">{job.title}</h1>
-                {job.description && <p className="text-sm text-muted-foreground">{job.description}</p>}
+                <p className="text-sm text-muted-foreground">{job.title}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
