@@ -229,6 +229,16 @@ function AppContent() {
           }
         />
         <Route
+          path="/jobs/link/:linkId"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Jobs />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/jobs/:jobId"
           element={
             <ProtectedRoute>

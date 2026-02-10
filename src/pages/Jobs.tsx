@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
-// useInventory removed – inventory browsing now on dedicated page
+import { useJobSidebarLinks } from '@/hooks/useJobSidebarLinks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,8 +26,13 @@ const statusColors: Record<string, string> = {
 export function Jobs() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const { jobId: urlJobId } = useParams<{ jobId?: string }>();
+  const { jobId: urlJobId, linkId } = useParams<{ jobId?: string; linkId?: string }>();
   const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob } = useJobs();
+  const { links } = useJobSidebarLinks();
+
+  // Resolve page title from sidebar link
+  const sidebarLink = linkId ? links.find(l => l.id === linkId) : null;
+  const pageTitle = sidebarLink?.label || 'Jobs';
 
   const [selectedJobId, setSelectedJobId] = useState<string | null>(urlJobId || null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -125,7 +130,7 @@ export function Jobs() {
                 <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
               </Link>
               <div className="flex flex-col">
-                <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Jobs</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-card-foreground">{pageTitle}</h1>
                 <p className="text-sm text-muted-foreground font-medium tracking-wide">Manage jobs and assign inventory items</p>
               </div>
             </div>
