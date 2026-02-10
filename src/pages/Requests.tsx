@@ -3,8 +3,6 @@ import { useRequests } from "@/hooks/useRequests";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
 import { useOrgRequesterNames } from "@/hooks/useOrgRequesterNames";
-import { usePagePermissions } from "@/hooks/usePagePermissions";
-import { useUserOrganization } from "@/hooks/useUserOrganization";
 import { AddRequestDialog } from "@/components/AddRequestDialog";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { RequestCard } from "@/components/RequestCard";
@@ -29,23 +27,14 @@ export function Requests() {
   const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
-  const { requesterNames, myRequesterName } = useOrgRequesterNames();
-  const { isAdmin } = usePagePermissions();
-  const { organization } = useUserOrganization();
-  const isOrgAdmin = organization?.role === 'owner' || organization?.role === 'admin';
-  const canSeeAll = isAdmin || isOrgAdmin;
+  const { requesterNames } = useOrgRequesterNames();
   const { signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
 
-  // Filter requests: admins see all, regular members only see their linked requester name
-  const visibleRequests = canSeeAll
-    ? requests
-    : requests.filter((r) => myRequesterName && r.requesterName === myRequesterName);
-
   const getFilteredRequests = (status: RequestStatus) => {
-    return visibleRequests.filter((request) => {
+    return requests.filter((request) => {
       const matchesSearch =
         request.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (request.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
@@ -55,7 +44,7 @@ export function Requests() {
   };
 
   const getStatusCount = (status: RequestStatus) => {
-    return visibleRequests.filter((r) => r.status === status).length;
+    return requests.filter((r) => r.status === status).length;
   };
 
   const handleStatusChange = async (id: string, status: RequestStatus) => {
@@ -127,7 +116,7 @@ export function Requests() {
         <div className="flex items-center gap-2">
           <AddRequestDialog
             items={allItems}
-            requesterNames={canSeeAll ? requesterNames : (myRequesterName ? [myRequesterName] : [])}
+            requesterNames={requesterNames}
             onSave={addRequest}
             onUploadImage={uploadImage}
           />
@@ -173,7 +162,7 @@ export function Requests() {
       <EditRequestDialog
         request={editingRequest}
         items={allItems}
-        requesterNames={canSeeAll ? requesterNames : (myRequesterName ? [myRequesterName] : [])}
+        requesterNames={requesterNames}
         open={!!editingRequest}
         onOpenChange={(open) => !open && setEditingRequest(null)}
         onSave={updateRequest}

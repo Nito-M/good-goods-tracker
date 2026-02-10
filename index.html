@@ -28,27 +28,6 @@
 
   <body>
     <div id="root"></div>
-    <script>
-      // Pre-React cleanup: aggressively clear stale Supabase auth tokens
-      (function() {
-        try {
-          var key = 'sb-awzfdkhntiucfmuorbbr-auth-token';
-          var raw = localStorage.getItem(key);
-          if (raw) {
-            var parsed = JSON.parse(raw);
-            // Remove if: no data, no access_token, no refresh_token, or expired
-            if (!parsed || !parsed.access_token || !parsed.refresh_token || 
-                (parsed.expires_at && parsed.expires_at * 1000 < Date.now())) {
-              localStorage.removeItem(key);
-              sessionStorage.removeItem('session_active_marker');
-            }
-          }
-        } catch (e) {
-          localStorage.removeItem('sb-awzfdkhntiucfmuorbbr-auth-token');
-          sessionStorage.removeItem('session_active_marker');
-        }
-      })();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

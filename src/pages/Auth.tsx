@@ -187,7 +187,12 @@ export function Auth() {
       </div>
       
       <div className="relative z-10">
-        <span className="text-2xl font-bold">Zumy 😊</span>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-foreground/20 backdrop-blur-sm">
+            <Box className="h-6 w-6" />
+          </div>
+          <span className="text-2xl font-bold">Inventory Manager</span>
+        </div>
         <p className="text-primary-foreground/80 text-lg">
           Streamline your business operations
         </p>
@@ -237,7 +242,11 @@ export function Auth() {
         </div>
       </div>
 
-      <div className="relative z-10" />
+      <div className="relative z-10">
+        <p className="text-primary-foreground/60 text-sm">
+          Trusted by businesses worldwide to manage their inventory efficiently.
+        </p>
+      </div>
     </div>
   );
 
@@ -248,6 +257,11 @@ export function Auth() {
         <div className="w-full lg:w-1/2 flex items-center justify-center bg-background px-4 py-12">
           <Card className="w-full max-w-md border-0 shadow-none lg:shadow-lg lg:border">
             <CardHeader className="text-center">
+              <div className="flex justify-center mb-4 lg:hidden">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+                  <Box className="h-6 w-6 text-primary-foreground" />
+                </div>
+              </div>
               <CardTitle className="text-2xl">Reset Password</CardTitle>
               <CardDescription>Enter your email to receive a reset link</CardDescription>
             </CardHeader>
@@ -291,6 +305,11 @@ export function Auth() {
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-background px-4 py-12">
         <Card className="w-full max-w-md border-0 shadow-none lg:shadow-lg lg:border">
           <CardHeader className="text-center">
+            <div className="flex justify-center mb-4 lg:hidden">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+                <Box className="h-6 w-6 text-primary-foreground" />
+              </div>
+            </div>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>Sign in to manage your inventory</CardDescription>
           </CardHeader>
@@ -325,7 +344,20 @@ export function Auth() {
                       required
                     />
                   </div>
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="remember-me" 
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      />
+                      <Label 
+                        htmlFor="remember-me" 
+                        className="text-sm font-normal cursor-pointer text-muted-foreground"
+                      >
+                        Remember me
+                      </Label>
+                    </div>
                     <Button
                       type="button"
                       variant="link"

@@ -19,86 +19,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    // 1. Set up the ongoing auth state listener FIRST (Supabase requirement)
-    //    This handles sign-in, sign-out, token refresh AFTER initial load
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        if (!isMounted) return;
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-      }
-    );
-
-    // 2. Initial load - get session, then set loading false
+    // First, do the initial session check with "remember me" logic
     const initializeAuth = async () => {
-      try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Check if user wanted to be remembered
+        // sessionStorage clears when browser closes, so if marker is gone but session exists,
+        // user didn't want to be remembered and browser was restarted
+        const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
+        const rememberMe = localStorage.getItem('remember_me');
         
-        const result = await Promise.race([sessionPromise, timeoutPromise]);
-        
-        if (!isMounted) return;
-
-        // Timeout fired — nuke all auth state so user sees login
-        if (!result || !('data' in result)) {
-          console.warn('Auth init timed out — clearing stale session');
-          // Force-clear stored token that's causing the hang
-          try { localStorage.removeItem('sb-awzfdkhntiucfmuorbbr-auth-token'); } catch {}
-          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+        if (!sessionMarker && rememberMe === 'false') {
+          // Browser was closed and user didn't want to be remembered - sign out
+          await supabase.auth.signOut();
+          localStorage.removeItem('remember_me');
           setSession(null);
           setUser(null);
-          return;
-        }
-
-        const currentSession = result.data.session;
-
-        if (currentSession?.user) {
-          const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
-          const rememberMe = localStorage.getItem('remember_me');
-
-          if (!sessionMarker && rememberMe === 'false') {
-            await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-            localStorage.removeItem('remember_me');
-            if (isMounted) {
-              setSession(null);
-              setUser(null);
-            }
-          } else {
-            sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
-            if (isMounted) {
-              setSession(currentSession);
-              setUser(currentSession.user);
-            }
-          }
         } else {
-          if (isMounted) {
-            setSession(null);
-            setUser(null);
-          }
+          // Either remember me is true, or this is a continuing session
+          sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
+          setSession(session);
+          setUser(session?.user ?? null);
         }
-      } catch {
-        if (isMounted) {
-          // On any error, sign out locally so user isn't stuck
-          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-          setSession(null);
-          setUser(null);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+      } else {
+        setSession(null);
+        setUser(null);
       }
+      
+      setLoading(false);
+      setInitialCheckDone(true);
     };
 
     initializeAuth();
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
   }, []);
+
+  useEffect(() => {
+    // Only set up the auth state listener AFTER the initial check is done
+    if (!initialCheckDone) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [initialCheckDone]);
 
   const signUp = async (email: string, password: string, displayName: string, birthYear?: number) => {
     const { error } = await supabase.auth.signUp({
