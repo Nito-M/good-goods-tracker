@@ -1,7 +1,6 @@
 import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
-import { usePagePermissions } from "@/hooks/usePagePermissions";
 
 import {
   Sidebar,
@@ -19,23 +18,22 @@ import {
 import { Button } from "@/components/ui/button";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home, pageKey: "dashboard" },
-  { title: "Items", url: "/items", icon: Package, pageKey: "items" },
-  { title: "Sales", url: "/sales", icon: ShoppingCart, pageKey: "sales" },
-  { title: "Quotes", url: "/quotes", icon: FileText, pageKey: "quotes" },
-  { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList, pageKey: "purchase-orders" },
-  { title: "Requests", url: "/requests", icon: ListTodo, pageKey: "requests" },
-  { title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
-  { title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
-  { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
-  { title: "Settings", url: "/settings", icon: Settings, pageKey: "settings" },
+  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Items", url: "/items", icon: Package },
+  { title: "Sales", url: "/sales", icon: ShoppingCart },
+  { title: "Quotes", url: "/quotes", icon: FileText },
+  { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
+  { title: "Requests", url: "/requests", icon: ListTodo },
+  { title: "Calendar", url: "/calendar", icon: CalendarDays },
+  { title: "Notes", url: "/notes", icon: StickyNote },
+  { title: "Bank", url: "/bank", icon: Wallet },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { isPageAllowed } = usePagePermissions();
 
   const isActive = (path: string) => {
     if (path === "/items") {
@@ -43,8 +41,6 @@ export function AppSidebar() {
     }
     return location.pathname === path;
   };
-
-  const visibleItems = menuItems.filter(item => isPageAllowed(item.pageKey));
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
@@ -68,7 +64,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleItems.map((item) => (
+              {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

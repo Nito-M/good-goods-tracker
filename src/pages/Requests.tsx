@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useRequests } from "@/hooks/useRequests";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
-import { useOrgRequesterNames } from "@/hooks/useOrgRequesterNames";
 import { AddRequestDialog } from "@/components/AddRequestDialog";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { RequestCard } from "@/components/RequestCard";
@@ -10,10 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, LogOut } from "lucide-react";
+import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 
 const STATUS_CONFIG: Record<RequestStatus, { label: string; icon: React.ReactNode }> = {
   pending: { label: "Pending", icon: <Clock className="h-4 w-4" /> },
@@ -27,8 +24,6 @@ export function Requests() {
   const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
-  const { requesterNames } = useOrgRequesterNames();
-  const { signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
@@ -113,17 +108,12 @@ export function Requests() {
             Track item requests and custom orders
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <AddRequestDialog
-            items={allItems}
-            requesterNames={requesterNames}
-            onSave={addRequest}
-            onUploadImage={uploadImage}
-          />
-          <Button variant="outline" size="icon" onClick={signOut} title="Sign out">
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+        <AddRequestDialog
+          items={allItems}
+          requesterNames={profile?.requesterNames || []}
+          onSave={addRequest}
+          onUploadImage={uploadImage}
+        />
       </div>
 
       {/* Search */}
@@ -162,7 +152,7 @@ export function Requests() {
       <EditRequestDialog
         request={editingRequest}
         items={allItems}
-        requesterNames={requesterNames}
+        requesterNames={profile?.requesterNames || []}
         open={!!editingRequest}
         onOpenChange={(open) => !open && setEditingRequest(null)}
         onSave={updateRequest}

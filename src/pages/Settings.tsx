@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, Users, Shield, ShieldCheck, UserX, UserCheck, Building } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -17,11 +17,6 @@ import { InvoiceLayoutEditor } from '@/components/InvoiceLayoutEditor';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
 import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
-import { useAdminUsers } from '@/hooks/useAdminUsers';
-import { useOrgRequesterNames } from '@/hooks/useOrgRequesterNames';
-import { ALL_PAGES, usePagePermissions } from '@/hooks/usePagePermissions';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -55,24 +50,6 @@ export function Settings() {
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
-  const { users: adminUsers, loading: adminUsersLoading, isAdmin, isOrgAdmin, organizations, setRole, setPagePermissions, toggleActive, deleteUser, createUser, createOrg, deleteOrg, addOrgMember, removeOrgMember, setOrgMemberRole } = useAdminUsers();
-  const { isAdmin: isSuperAdmin } = usePagePermissions();
-  const { requesterNames: orgRequesterNames, updateRequesterNames: updateOrgRequesterNames } = useOrgRequesterNames();
-  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
-  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
-  const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserDisplayName, setNewUserDisplayName] = useState('');
-  const [newUserPassword, setNewUserPassword] = useState('');
-  const [createdTempPassword, setCreatedTempPassword] = useState<string | null>(null);
-  const [addingUser, setAddingUser] = useState(false);
-  const [selectedOrgForNewUser, setSelectedOrgForNewUser] = useState<string>('');
-  // Org management state
-  const [newOrgName, setNewOrgName] = useState('');
-  const [creatingOrg, setCreatingOrg] = useState(false);
-  const [expandedOrgId, setExpandedOrgId] = useState<string | null>(null);
-  const [addMemberUserId, setAddMemberUserId] = useState<string>('');
-  const [deleteOrgId, setDeleteOrgId] = useState<string | null>(null);
 
   // Save theme to database when changed
   const handleThemeChange = async (newTheme: string) => {
@@ -148,13 +125,6 @@ export function Settings() {
   const [requesterName, setRequesterName] = useState('');
   const [requesterNames, setRequesterNames] = useState<string[]>([]);
   const [newRequesterName, setNewRequesterName] = useState('');
-
-  // Sync org requester names
-  useEffect(() => {
-    if (orgRequesterNames.length > 0) {
-      setRequesterNames(orgRequesterNames);
-    }
-  }, [orgRequesterNames]);
   // Load profile data into form
   useEffect(() => {
     if (profile) {
@@ -345,7 +315,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-4xl ${isSuperAdmin ? 'grid-cols-7' : (isAdmin || isOrgAdmin) ? 'grid-cols-6' : 'grid-cols-5'}`}>
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -366,18 +336,6 @@ export function Settings() {
               <Tags className="h-4 w-4" />
               Categories
             </TabsTrigger>
-            {isSuperAdmin && (
-              <TabsTrigger value="organizations" className="gap-2">
-                <Building className="h-4 w-4" />
-                Orgs
-              </TabsTrigger>
-            )}
-            {(isAdmin || isOrgAdmin) && (
-              <TabsTrigger value="users" className="gap-2">
-                <Users className="h-4 w-4" />
-                Users
-              </TabsTrigger>
-            )}
           </TabsList>
 
           {/* General Tab */}
@@ -485,7 +443,7 @@ export function Settings() {
                   e.preventDefault();
                   if (!newRequesterName.trim()) return;
                   const updated = [...requesterNames, newRequesterName.trim()];
-                  const success = await updateOrgRequesterNames(updated);
+                  const success = await updateProfile({ requesterNames: updated });
                   if (success) {
                     setRequesterNames(updated);
                     setNewRequesterName('');
@@ -520,7 +478,7 @@ export function Settings() {
                           size="icon"
                           onClick={async () => {
                             const updated = requesterNames.filter((_, i) => i !== index);
-                            const success = await updateOrgRequesterNames(updated);
+                            const success = await updateProfile({ requesterNames: updated });
                             if (success) {
                               setRequesterNames(updated);
                             }
@@ -906,325 +864,6 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* Organizations Tab */}
-          {isSuperAdmin && (
-            <TabsContent value="organizations" className="mt-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building className="h-5 w-5" />
-                      Organizations
-                    </CardTitle>
-                    <CardDescription>Create and manage workspaces. Each organization has its own users and shared data.</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {/* Create new org (super admin only) */}
-                  {isAdmin && (
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        if (!newOrgName.trim()) return;
-                        setCreatingOrg(true);
-                        await createOrg(newOrgName.trim());
-                        setNewOrgName('');
-                        setCreatingOrg(false);
-                      }}
-                      className="flex gap-2 mb-6"
-                    >
-                      <Input
-                        value={newOrgName}
-                        onChange={(e) => setNewOrgName(e.target.value)}
-                        placeholder="New organization name..."
-                        className="max-w-xs"
-                      />
-                      <Button type="submit" disabled={creatingOrg || !newOrgName.trim()}>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Create
-                      </Button>
-                    </form>
-                  )}
-
-                  {organizations.length === 0 ? (
-                    <div className="text-muted-foreground py-8 text-center">No organizations yet. Create one to get started.</div>
-                  ) : (
-                    <div className="space-y-4">
-                      {organizations.map((org) => (
-                        <Card key={org.id} className="border">
-                          <CardHeader className="py-3 px-4 cursor-pointer" onClick={() => setExpandedOrgId(expandedOrgId === org.id ? null : org.id)}>
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <CardTitle className="text-base">{org.name}</CardTitle>
-                                <CardDescription className="text-xs">{org.members.length} member{org.members.length !== 1 ? 's' : ''}</CardDescription>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isAdmin && (
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                    onClick={(e) => { e.stopPropagation(); setDeleteOrgId(org.id); }}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </CardHeader>
-
-                          {expandedOrgId === org.id && (
-                            <CardContent className="pt-0 px-4 pb-4">
-                              {/* Members list */}
-                              <div className="space-y-2 mb-4">
-                                <Label className="text-sm font-medium">Members</Label>
-                                {org.members.length === 0 ? (
-                                  <p className="text-sm text-muted-foreground">No members yet.</p>
-                                ) : (
-                                  <div className="divide-y divide-border">
-                                    {org.members.map((member) => (
-                                      <div key={member.userId} className="flex items-center justify-between py-2">
-                                        <div>
-                                          <span className="text-sm font-medium">{member.displayName || member.email}</span>
-                                          <span className="text-xs text-muted-foreground ml-2">{member.email}</span>
-                                          <Badge variant="outline" className="ml-2 text-xs">{member.role}</Badge>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Select
-                                            value={member.role}
-                                            onValueChange={(val) => setOrgMemberRole(org.id, member.userId, val)}
-                                          >
-                                            <SelectTrigger className="w-24 h-7 text-xs">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="member">Member</SelectItem>
-                                              <SelectItem value="admin">Admin</SelectItem>
-                                              <SelectItem value="owner">Owner</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                          <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-7 w-7 text-destructive"
-                                            onClick={() => removeOrgMember(org.id, member.userId)}
-                                          >
-                                            <X className="h-3 w-3" />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Add existing user to org */}
-                              <div className="flex gap-2">
-                                <Select value={addMemberUserId} onValueChange={setAddMemberUserId}>
-                                  <SelectTrigger className="max-w-xs">
-                                    <SelectValue placeholder="Select a user to add..." />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {adminUsers
-                                      .filter((u) => !org.members.some((m) => m.userId === u.id))
-                                      .map((u) => (
-                                        <SelectItem key={u.id} value={u.id}>
-                                          {u.displayName || u.email}
-                                        </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                                </Select>
-                                <Button
-                                  variant="outline"
-                                  disabled={!addMemberUserId}
-                                  onClick={async () => {
-                                    if (addMemberUserId) {
-                                      await addOrgMember(org.id, addMemberUserId);
-                                      setAddMemberUserId('');
-                                    }
-                                  }}
-                                >
-                                  <Plus className="h-4 w-4 mr-1" />
-                                  Add
-                                </Button>
-                              </div>
-                            </CardContent>
-                          )}
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-
-          {/* Users Tab (Admin only) */}
-          {(isAdmin || isOrgAdmin) && (
-            <TabsContent value="users" className="mt-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      User Management
-                    </CardTitle>
-                    <CardDescription>View and manage all registered users. Click a user to configure page access.</CardDescription>
-                  </div>
-                  <Button onClick={() => { setNewUserEmail(''); setNewUserDisplayName(''); setNewUserPassword(''); setCreatedTempPassword(null); setSelectedOrgForNewUser(!isSuperAdmin && organizations.length > 0 ? organizations[0].id : ''); setAddUserDialogOpen(true); }} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add User
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {adminUsersLoading ? (
-                    <div className="text-muted-foreground py-8 text-center">Loading users...</div>
-                  ) : adminUsers.length === 0 ? (
-                    <div className="text-muted-foreground py-8 text-center">No users found.</div>
-                  ) : (
-                    <div className="divide-y divide-border">
-                      {adminUsers.map((u) => (
-                        <div key={u.id} className="py-4">
-                          <div className="flex items-center justify-between">
-                            <div
-                              className="flex-1 min-w-0 cursor-pointer"
-                              onClick={() => setExpandedUserId(expandedUserId === u.id ? null : u.id)}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium truncate">{u.displayName || 'No name'}</span>
-                                {u.roles.includes('admin') && (
-                                  <Badge variant="default" className="text-xs gap-1">
-                                    <ShieldCheck className="h-3 w-3" />
-                                    Admin
-                                  </Badge>
-                                )}
-                                {!u.isActive && (
-                                  <Badge variant="destructive" className="text-xs">Deactivated</Badge>
-                                )}
-                                {!u.emailConfirmedAt && (
-                                  <Badge variant="outline" className="text-xs">Unconfirmed</Badge>
-                                )}
-                              </div>
-                              <div className="text-sm text-muted-foreground">{u.email}</div>
-                              {u.organizations && u.organizations.length > 0 && (
-                                <div className="flex gap-1 mt-0.5 flex-wrap">
-                                  {u.organizations.map((org) => (
-                                    <Badge key={org.organizationId} variant="secondary" className="text-xs">
-                                      {org.organizationName} ({org.role})
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="text-xs text-muted-foreground mt-0.5">
-                                Joined {new Date(u.createdAt).toLocaleDateString()}
-                                {u.lastSignIn && ` • Last sign in ${new Date(u.lastSignIn).toLocaleDateString()}`}
-                              </div>
-                            </div>
-                            {u.id !== user?.id && (
-                              <div className="flex items-center gap-2 ml-4">
-                                {isAdmin && (
-                                  <Select
-                                    value={u.roles.includes('admin') ? 'admin' : 'user'}
-                                    onValueChange={(val) => setRole(u.id, val as 'admin' | 'user')}
-                                  >
-                                    <SelectTrigger className="w-28">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="user">User</SelectItem>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                {isAdmin && (
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => toggleActive(u.id)}
-                                    title={u.isActive ? 'Deactivate user' : 'Activate user'}
-                                  >
-                                    {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                                  </Button>
-                                )}
-                                {isAdmin && (
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                    onClick={() => setDeleteUserId(u.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Page Permissions (expandable) */}
-                          {expandedUserId === u.id && !u.roles.includes('admin') && (
-                            <div className="mt-3 pt-3 border-t border-border/50">
-                              <Label className="text-sm font-medium mb-2 block">Page Access</Label>
-                              <p className="text-xs text-muted-foreground mb-3">
-                                {u.pagePermissions.length === 0
-                                  ? 'No restrictions set — user can access all pages. Check specific pages to restrict access to only those pages.'
-                                  : 'User can only access the checked pages.'}
-                              </p>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                                {ALL_PAGES.map((page) => {
-                                  const isChecked = u.pagePermissions.length === 0
-                                    ? true
-                                    : u.pagePermissions.includes(page.key);
-                                  return (
-                                    <label
-                                      key={page.key}
-                                      className="flex items-center gap-2 text-sm cursor-pointer py-1 px-2 rounded hover:bg-muted/50"
-                                    >
-                                      <Checkbox
-                                        checked={isChecked}
-                                        onCheckedChange={(checked) => {
-                                          let newPerms: string[];
-                                          if (u.pagePermissions.length === 0) {
-                                            // Currently unrestricted, user unchecked one page
-                                            if (!checked) {
-                                              newPerms = ALL_PAGES.filter(p => p.key !== page.key).map(p => p.key);
-                                            } else {
-                                              return; // Already all checked
-                                            }
-                                          } else {
-                                            if (checked) {
-                                              newPerms = [...u.pagePermissions, page.key];
-                                            } else {
-                                              newPerms = u.pagePermissions.filter(k => k !== page.key);
-                                            }
-                                          }
-                                          // If all pages selected, clear permissions (unrestricted)
-                                          if (newPerms.length === ALL_PAGES.length) {
-                                            newPerms = [];
-                                          }
-                                          setPagePermissions(u.id, newPerms);
-                                        }}
-                                      />
-                                      {page.label}
-                                    </label>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                          {expandedUserId === u.id && u.roles.includes('admin') && (
-                            <div className="mt-3 pt-3 border-t border-border/50">
-                              <p className="text-xs text-muted-foreground">Admins have access to all pages.</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
         </Tabs>
       </main>
 
@@ -1345,174 +984,6 @@ export function Settings() {
               onClick={() => {
                 if (deleteCategoryId) deleteCategory(deleteCategoryId);
                 setDeleteCategoryId(null);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete User Confirmation */}
-      <AlertDialog open={!!deleteUserId} onOpenChange={() => setDeleteUserId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete User?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user account and all their data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteUserId) deleteUser(deleteUserId);
-                setDeleteUserId(null);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Add User Dialog */}
-      <Dialog open={addUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add User</DialogTitle>
-          </DialogHeader>
-          {createdTempPassword ? (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                User created successfully. Share the temporary password below with the user so they can sign in.
-              </p>
-              <div className="space-y-2">
-                <Label>Temporary Password</Label>
-                <div className="flex items-center gap-2">
-                  <Input value={createdTempPassword} readOnly className="font-mono" />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(createdTempPassword);
-                    }}
-                  >
-                    Copy
-                  </Button>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={() => setAddUserDialogOpen(false)}>Done</Button>
-              </DialogFooter>
-            </div>
-          ) : (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setAddingUser(true);
-                const result = await createUser(newUserEmail, newUserPassword || undefined, selectedOrgForNewUser || undefined, undefined, newUserDisplayName || undefined);
-                setAddingUser(false);
-                if (result.tempPassword) {
-                  setCreatedTempPassword(result.tempPassword);
-                }
-              }}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="new-user-email">Email *</Label>
-                <Input
-                  id="new-user-email"
-                  type="email"
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                  placeholder="user@example.com"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-user-display-name">Display Name</Label>
-                <Input
-                  id="new-user-display-name"
-                  type="text"
-                  value={newUserDisplayName}
-                  onChange={(e) => setNewUserDisplayName(e.target.value)}
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-user-password">Password (optional)</Label>
-                <Input
-                  id="new-user-password"
-                  type="text"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
-                  placeholder="Leave blank to auto-generate"
-                />
-                <p className="text-xs text-muted-foreground">If left blank, a temporary password will be generated.</p>
-              </div>
-              {isSuperAdmin && organizations.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Add to Organization (optional)</Label>
-                  <Select value={selectedOrgForNewUser} onValueChange={setSelectedOrgForNewUser}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="No organization" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No organization</SelectItem>
-                      {organizations.map((org) => (
-                        <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {!isSuperAdmin && organizations.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Organization</Label>
-                  <Select value={selectedOrgForNewUser} onValueChange={setSelectedOrgForNewUser}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select organization" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {organizations.map((org) => (
-                        <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">New users will be added to this organization.</p>
-                </div>
-              )}
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setAddUserDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={addingUser}>
-                  {addingUser ? 'Creating...' : 'Add User'}
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Org Confirmation */}
-      <AlertDialog open={!!deleteOrgId} onOpenChange={() => setDeleteOrgId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Organization?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this organization and remove all member associations. User accounts and their data will not be deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteOrgId) deleteOrg(deleteOrgId);
-                setDeleteOrgId(null);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
