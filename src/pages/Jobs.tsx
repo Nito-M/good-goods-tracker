@@ -39,6 +39,7 @@ export function Jobs() {
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formStatus, setFormStatus] = useState('open');
+  const [formJobNumber, setFormJobNumber] = useState('');
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
@@ -63,6 +64,7 @@ export function Jobs() {
     setFormTitle(job.title);
     setFormDescription(job.description || '');
     setFormStatus(job.status);
+    setFormJobNumber(job.jobNumber || '');
     setEditingJob(job);
   };
 
@@ -74,11 +76,15 @@ export function Jobs() {
 
   const handleUpdate = async () => {
     if (!editingJob || !formTitle.trim()) return;
-    const ok = await updateJob(editingJob.id, {
+    const updates: Record<string, string | undefined> = {
       title: formTitle.trim(),
       description: formDescription.trim() || undefined,
       status: formStatus,
-    });
+    };
+    if (formJobNumber.trim() !== (editingJob.jobNumber || '')) {
+      updates.job_number = formJobNumber.trim() || undefined;
+    }
+    const ok = await updateJob(editingJob.id, updates);
     if (ok) setEditingJob(null);
   };
 
@@ -203,6 +209,7 @@ export function Jobs() {
           </DialogHeader>
           <div className="space-y-4">
             <div><Label>Title *</Label><Input value={formTitle} onChange={e => setFormTitle(e.target.value)} /></div>
+            <div><Label>Job Number</Label><Input value={formJobNumber} onChange={e => setFormJobNumber(e.target.value)} placeholder="e.g. JOB-0001" /></div>
             <div><Label>Description</Label><Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} /></div>
             <div>
               <Label>Status</Label>
