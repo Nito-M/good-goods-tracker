@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
 import { OrganizationsSettings } from '@/components/OrganizationsSettings';
+import { UsersSettings } from '@/components/UsersSettings';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,8 @@ import {
 export function Settings() {
   const { signOut, user } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { isOrgAdmin } = useIsOrgAdmin();
+  const showUsersTab = isAdmin || isOrgAdmin;
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
@@ -318,7 +322,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-3xl ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
+          <TabsList className={`grid w-full max-w-4xl ${isAdmin ? 'grid-cols-7' : showUsersTab ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -339,6 +343,12 @@ export function Settings() {
               <Tags className="h-4 w-4" />
               Categories
             </TabsTrigger>
+            {showUsersTab && (
+              <TabsTrigger value="users" className="gap-2">
+                <Users className="h-4 w-4" />
+                Users
+              </TabsTrigger>
+            )}
             {isAdmin && (
               <TabsTrigger value="organizations" className="gap-2">
                 <ShieldCheck className="h-4 w-4" />
@@ -873,6 +883,13 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Users Tab (Org Admin + Super Admin) */}
+          {showUsersTab && (
+            <TabsContent value="users" className="mt-6">
+              <UsersSettings />
+            </TabsContent>
+          )}
 
           {/* Organizations Tab (Super Admin only) */}
           {isAdmin && (
