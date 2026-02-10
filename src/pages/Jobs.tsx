@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
 import { useInventory } from '@/hooks/useInventory';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -245,6 +245,7 @@ interface JobDetailProps {
 }
 
 function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobDetailProps) {
+  const navigate = useNavigate();
   const { items, loading, addItem, updateItem, removeItem } = useJobItems(job.id);
   const [itemSearch, setItemSearch] = useState('');
   const [showCustomDialog, setShowCustomDialog] = useState(false);
@@ -331,9 +332,14 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
                     <CardTitle>Add Items</CardTitle>
                     <CardDescription>Add from inventory or create a custom item</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setShowCustomDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />Custom Item
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => navigate('/items/new')}>
+                      <Plus className="h-4 w-4 mr-2" />New Inventory Item
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setShowCustomDialog(true)}>
+                      <Plus className="h-4 w-4 mr-2" />Custom Item
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
