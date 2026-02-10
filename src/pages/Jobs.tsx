@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
 import { useInventory } from '@/hooks/useInventory';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -245,15 +245,8 @@ interface JobDetailProps {
 }
 
 function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobDetailProps) {
-  const navigate = useNavigate();
   const { items, loading, addItem, updateItem, removeItem } = useJobItems(job.id);
   const [itemSearch, setItemSearch] = useState('');
-  const [showCustomDialog, setShowCustomDialog] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customSku, setCustomSku] = useState('');
-  const [customQty, setCustomQty] = useState(1);
-  const [customPrice, setCustomPrice] = useState(0);
-  const [customNotes, setCustomNotes] = useState('');
 
   const filteredInventory = useMemo(() => {
     if (!itemSearch) return inventoryItems;
@@ -264,6 +257,7 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
   }, [inventoryItems, itemSearch]);
 
   const handleAddItem = async (inv: import('@/types/inventory').InventoryItem) => {
+    // Check if already added
     const existing = items.find(i => i.inventoryItemId === inv.id);
     if (existing) {
       await updateItem(existing.id, { quantity: existing.quantity + 1 });
@@ -276,26 +270,6 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
       quantity: 1,
       unitPrice: inv.price,
     });
-  };
-
-  const handleAddCustom = async () => {
-    if (!customName.trim()) return;
-    const ok = await addItem({
-      inventoryItemId: null,
-      itemName: customName.trim(),
-      sku: customSku.trim(),
-      quantity: customQty,
-      unitPrice: customPrice,
-      notes: customNotes.trim() || undefined,
-    });
-    if (ok) {
-      setShowCustomDialog(false);
-      setCustomName('');
-      setCustomSku('');
-      setCustomQty(1);
-      setCustomPrice(0);
-      setCustomNotes('');
-    }
   };
 
   const totalValue = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
@@ -327,25 +301,13 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
           <div className="lg:col-span-2 space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Add Items</CardTitle>
-                    <CardDescription>Add from inventory or create a custom item</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigate('/items/new')}>
-                      <Plus className="h-4 w-4 mr-2" />New Inventory Item
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setShowCustomDialog(true)}>
-                      <Plus className="h-4 w-4 mr-2" />Custom Item
-                    </Button>
-                  </div>
-                </div>
+                <CardTitle>Add Items from Inventory</CardTitle>
+                <CardDescription>Search and add inventory items to this job</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search inventory by name or SKU..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="pl-10" />
+                  <Input placeholder="Search by name or SKU..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="pl-10" />
                 </div>
                 <div className="max-h-64 overflow-y-auto border rounded-md">
                   <Table>
@@ -391,7 +353,7 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
                 {loading ? (
                   <p className="text-muted-foreground text-center py-4">Loading...</p>
                 ) : items.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No items added yet. Select from inventory or add a custom item.</p>
+                  <p className="text-muted-foreground text-center py-4">No items added yet. Select items from inventory above.</p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -407,13 +369,8 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
                     <TableBody>
                       {items.map(item => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {item.itemName}
-                              {!item.inventoryItemId && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Custom</Badge>}
-                            </div>
-                          </TableCell>
-                          <TableCell>{item.sku ? <Badge variant="secondary">{item.sku}</Badge> : <span className="text-muted-foreground">—</span>}</TableCell>
+                          <TableCell className="font-medium">{item.itemName}</TableCell>
+                          <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
                           <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
@@ -470,44 +427,6 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
           </div>
         </div>
       </main>
-
-      {/* Custom Item Dialog */}
-      <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Custom Item</DialogTitle>
-            <DialogDescription>Add an item that isn't in your inventory.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Item Name *</Label>
-              <Input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="e.g. Labour, Shipping, etc." />
-            </div>
-            <div>
-              <Label>SKU</Label>
-              <Input value={customSku} onChange={e => setCustomSku(e.target.value)} placeholder="Optional" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Quantity</Label>
-                <Input type="number" value={customQty} onChange={e => setCustomQty(Math.max(1, parseInt(e.target.value) || 1))} min={1} />
-              </div>
-              <div>
-                <Label>Unit Price ($)</Label>
-                <Input type="number" value={customPrice} onChange={e => setCustomPrice(parseFloat(e.target.value) || 0)} min={0} step="0.01" />
-              </div>
-            </div>
-            <div>
-              <Label>Notes</Label>
-              <Textarea value={customNotes} onChange={e => setCustomNotes(e.target.value)} placeholder="Optional notes" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCustomDialog(false)}>Cancel</Button>
-            <Button onClick={handleAddCustom} disabled={!customName.trim()}>Add Item</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

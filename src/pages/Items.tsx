@@ -1,3 +1,6 @@
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
 import { InventoryItem } from '@/types/inventory';
@@ -23,16 +26,20 @@ export const Items = ({
   categories,
   onDelete,
 }: ItemsProps) => {
-  
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center">
+          <div className="flex h-16 items-center justify-between">
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
               Items & Inventory
             </h1>
+            <Button onClick={() => navigate('/items/new')} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
           </div>
         </div>
       </header>
