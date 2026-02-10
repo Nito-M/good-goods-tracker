@@ -19,6 +19,7 @@ import { Notes } from "./pages/Notes";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
 import { Jobs } from "./pages/Jobs";
+import { JobAddItems } from "./pages/JobAddItems";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { useInventory } from "@/hooks/useInventory";
@@ -224,6 +225,24 @@ function AppContent() {
               <AppLayout>
                 <Jobs />
               </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:jobId"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Jobs />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:jobId/add-items"
+          element={
+            <ProtectedRoute>
+              <JobAddItems />
             </ProtectedRoute>
           }
         />

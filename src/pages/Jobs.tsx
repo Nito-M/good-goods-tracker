@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
-import { useInventory } from '@/hooks/useInventory';
-import { Link } from 'react-router-dom';
+// useInventory removed – inventory browsing now on dedicated page
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -25,10 +25,11 @@ const statusColors: Record<string, string> = {
 
 export function Jobs() {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const { jobId: urlJobId } = useParams<{ jobId?: string }>();
   const { jobs, loading, createJob, updateJob, deleteJob } = useJobs();
-  const { allItems: inventoryItems } = useInventory();
 
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(urlJobId || null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
@@ -95,7 +96,6 @@ export function Jobs() {
     return (
       <JobDetail
         job={selectedJob}
-        inventoryItems={inventoryItems}
         onBack={() => setSelectedJobId(null)}
         onEdit={() => openEdit(selectedJob)}
         formatCurrency={formatCurrency}
@@ -238,39 +238,14 @@ export function Jobs() {
 // ─── Job Detail View ────────────────────────────────────────────────────────
 interface JobDetailProps {
   job: Job;
-  inventoryItems: import('@/types/inventory').InventoryItem[];
   onBack: () => void;
   onEdit: () => void;
   formatCurrency: (v: number) => string;
 }
 
-function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobDetailProps) {
-  const { items, loading, addItem, updateItem, removeItem } = useJobItems(job.id);
-  const [itemSearch, setItemSearch] = useState('');
-
-  const filteredInventory = useMemo(() => {
-    if (!itemSearch) return inventoryItems;
-    const q = itemSearch.toLowerCase();
-    return inventoryItems.filter(i =>
-      i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)
-    );
-  }, [inventoryItems, itemSearch]);
-
-  const handleAddItem = async (inv: import('@/types/inventory').InventoryItem) => {
-    // Check if already added
-    const existing = items.find(i => i.inventoryItemId === inv.id);
-    if (existing) {
-      await updateItem(existing.id, { quantity: existing.quantity + 1 });
-      return;
-    }
-    await addItem({
-      inventoryItemId: inv.id,
-      itemName: inv.name,
-      sku: inv.sku,
-      quantity: 1,
-      unitPrice: inv.price,
-    });
-  };
+function JobDetail({ job, onBack, onEdit, formatCurrency }: JobDetailProps) {
+  const navigate = useNavigate();
+  const { items, loading, updateItem, removeItem } = useJobItems(job.id);
 
   const totalValue = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
 
@@ -290,61 +265,20 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
                 {job.description && <p className="text-sm text-muted-foreground">{job.description}</p>}
               </div>
             </div>
-            <Button variant="outline" onClick={onEdit}><Edit className="h-4 w-4 mr-2" />Edit Job</Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => navigate(`/jobs/${job.id}/add-items`)}>
+                <PackagePlus className="h-4 w-4 mr-2" />Add Items
+              </Button>
+              <Button variant="outline" onClick={onEdit}><Edit className="h-4 w-4 mr-2" />Edit Job</Button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Inventory Selection */}
-          <div className="lg:col-span-2 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Items from Inventory</CardTitle>
-                <CardDescription>Search and add inventory items to this job</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search by name or SKU..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="pl-10" />
-                </div>
-                <div className="max-h-64 overflow-y-auto border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>SKU</TableHead>
-                        <TableHead className="text-right">Stock</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInventory.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No items found</TableCell></TableRow>
-                      ) : (
-                        filteredInventory.map(item => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.name}</TableCell>
-                            <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
-                            <TableCell className="text-right">{item.quantity}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                            <TableCell>
-                              <Button size="sm" variant="ghost" onClick={() => handleAddItem(item)}>
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Job Items */}
+          {/* Job Items */}
+          <div className="lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Job Items ({items.length})</CardTitle>
@@ -353,7 +287,14 @@ function JobDetail({ job, inventoryItems, onBack, onEdit, formatCurrency }: JobD
                 {loading ? (
                   <p className="text-muted-foreground text-center py-4">Loading...</p>
                 ) : items.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No items added yet. Select items from inventory above.</p>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <PackagePlus className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No items assigned</h3>
+                    <p className="text-muted-foreground mb-4">Add inventory items to this job</p>
+                    <Button onClick={() => navigate(`/jobs/${job.id}/add-items`)}>
+                      <PackagePlus className="h-4 w-4 mr-2" />Add Items
+                    </Button>
+                  </div>
                 ) : (
                   <Table>
                     <TableHeader>
