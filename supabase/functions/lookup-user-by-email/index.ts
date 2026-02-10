@@ -3,12 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -16,7 +16,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const authHeader = req.headers.get("Authorization")!;
 
-    // Verify the caller is an admin
+    // Verify the caller
     const supabaseClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -28,8 +28,9 @@ serve(async (req) => {
       });
     }
 
-    // Check admin role
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Check if super admin OR org admin
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
@@ -37,7 +38,17 @@ serve(async (req) => {
       .eq("role", "admin")
       .maybeSingle();
 
-    if (!roleData) {
+    const { data: orgAdminData } = await adminClient
+      .from("organization_members")
+      .select("role")
+      .eq("user_id", user.id)
+      .in("role", ["owner", "admin"])
+      .limit(1);
+
+    const isSuperAdmin = !!roleData;
+    const isOrgAdmin = orgAdminData && orgAdminData.length > 0;
+
+    if (!isSuperAdmin && !isOrgAdmin) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
