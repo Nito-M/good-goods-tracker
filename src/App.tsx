@@ -18,6 +18,7 @@ import { Calendar } from "./pages/Calendar";
 import { Notes } from "./pages/Notes";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
+import { Jobs } from "./pages/Jobs";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { useInventory } from "@/hooks/useInventory";
@@ -212,6 +213,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Settings />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Jobs />
               </AppLayout>
             </ProtectedRoute>
           }
