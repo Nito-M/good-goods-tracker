@@ -242,11 +242,6 @@ export function Auth() {
         </div>
       </div>
 
-      <div className="relative z-10">
-        <p className="text-primary-foreground/60 text-sm">
-          Trusted by businesses worldwide to manage their inventory efficiently.
-        </p>
-      </div>
     </div>
   );
 
