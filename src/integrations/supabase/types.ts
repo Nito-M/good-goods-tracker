@@ -273,6 +273,90 @@ export type Database = {
           },
         ]
       }
+      job_items: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string | null
+          item_name: string
+          job_id: string
+          notes: string | null
+          quantity: number
+          sku: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name: string
+          job_id: string
+          notes?: string | null
+          quantity?: number
+          sku?: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name?: string
+          job_id?: string
+          notes?: string | null
+          quantity?: number
+          sku?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          job_number: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          job_number?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          job_number?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           color: string | null
