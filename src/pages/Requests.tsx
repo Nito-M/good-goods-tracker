@@ -97,15 +97,19 @@ export function Requests() {
 
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredRequests.map((request) => (
-          <RequestCard
-            key={request.id}
-            request={request}
-            onStatusChange={isAdminUser ? handleStatusChange : undefined}
-            onDelete={isAdminUser ? handleDelete : undefined}
-            onEdit={isAdminUser ? handleEdit : undefined}
-          />
-        ))}
+        {filteredRequests.map((request) => {
+          const isOwnRequest = linkedName && request.requesterName === linkedName;
+          const canManage = isAdminUser || isOwnRequest;
+          return (
+            <RequestCard
+              key={request.id}
+              request={request}
+              onStatusChange={isAdminUser ? handleStatusChange : undefined}
+              onDelete={canManage ? handleDelete : undefined}
+              onEdit={canManage ? handleEdit : undefined}
+            />
+          );
+        })}
       </div>
     );
   };

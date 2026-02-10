@@ -360,18 +360,19 @@ export function useInventory() {
     return { blocked: blockingPOs.length > 0, poNumbers: blockingPOs };
   };
 
-  const deleteItem = async (id: string): Promise<{ success: boolean; error?: string; poNumbers?: string[] }> => {
+  const deleteItem = async (id: string, forceDelete?: boolean): Promise<{ success: boolean; error?: string; poNumbers?: string[]; warning?: boolean }> => {
     const item = items.find((i) => i.id === id);
     if (!item) {
       return { success: false, error: 'Item not found' };
     }
 
-    // Check for unreceived POs
+    // Check for unreceived POs - warn but don't block
     const { blocked, poNumbers } = await checkUnreceivedPOs(id, item.sku);
-    if (blocked) {
+    if (blocked && !forceDelete) {
       return { 
         success: false, 
-        error: 'Cannot delete item - it is on unreceived purchase orders',
+        warning: true,
+        error: 'This item is on unreceived purchase orders. Delete anyway?',
         poNumbers,
       };
     }
