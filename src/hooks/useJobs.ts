@@ -109,11 +109,11 @@ export function useJobItems(jobId: string | null) {
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
-  const addItem = async (item: { inventoryItemId: string; itemName: string; sku: string; quantity: number; unitPrice: number; notes?: string }) => {
+  const addItem = async (item: { inventoryItemId?: string | null; itemName: string; sku: string; quantity: number; unitPrice: number; notes?: string }) => {
     if (!jobId) return false;
     const { error } = await supabase.from('job_items').insert({
       job_id: jobId,
-      inventory_item_id: item.inventoryItemId,
+      inventory_item_id: item.inventoryItemId || null,
       item_name: item.itemName,
       sku: item.sku,
       quantity: item.quantity,
