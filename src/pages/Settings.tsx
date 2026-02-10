@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck } from 'lucide-react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { OrganizationsSettings } from '@/components/OrganizationsSettings';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -45,6 +47,7 @@ import {
 
 export function Settings() {
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
@@ -315,7 +318,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5">
+          <TabsList className={`grid w-full max-w-3xl ${isAdmin ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -336,6 +339,12 @@ export function Settings() {
               <Tags className="h-4 w-4" />
               Categories
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="organizations" className="gap-2">
+                <ShieldCheck className="h-4 w-4" />
+                Orgs
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* General Tab */}
@@ -864,6 +873,13 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Organizations Tab (Super Admin only) */}
+          {isAdmin && (
+            <TabsContent value="organizations" className="mt-6">
+              <OrganizationsSettings />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
 
