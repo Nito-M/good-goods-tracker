@@ -131,7 +131,7 @@ export function AppSidebar() {
                         {links.map(link => (
                           <div key={link.id} className="flex items-center group">
                             <NavLink
-                              to={link.jobId ? `/jobs/${link.jobId}` : '/jobs'}
+                              to={`/jobs/link/${link.id}`}
                               className="flex-1 text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
                               activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
                             >
