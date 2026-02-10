@@ -2,113 +2,73 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-const SESSION_ACTIVE_KEY = "session_active_marker";
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (
-    email: string,
-    password: string,
-    displayName: string,
-    birthYear?: number,
-  ) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function clearAuthStorage() {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith("sb-") || key.includes("supabase"))) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach((key) => localStorage.removeItem(key));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
-    // First, do the initial session check with "remember me" logic
-    const initializeAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session) {
-        // Check if user wanted to be remembered
-        // sessionStorage clears when browser closes, so if marker is gone but session exists,
-        // user didn't want to be remembered and browser was restarted
-        const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
-        const rememberMe = localStorage.getItem("remember_me");
-
-        if (!sessionMarker && rememberMe === "false") {
-          // Browser was closed and user didn't want to be remembered - sign out
-          await supabase.auth.signOut();
-          localStorage.removeItem("remember_me");
-          setSession(null);
-          setUser(null);
-        } else {
-          // Either remember me is true, or this is a continuing session
-          sessionStorage.setItem(SESSION_ACTIVE_KEY, "true");
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
-      } else {
-        setSession(null);
-        setUser(null);
-      }
-
-      setLoading(false);
-      setInitialCheckDone(true);
-    };
-
-    initializeAuth();
-  }, []);
-
-  useEffect(() => {
-    // Only set up the auth state listener AFTER the initial check is done
-    if (!initialCheckDone) return;
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
     });
 
+    const initSession = async () => {
+      try {
+        const sessionCheck = supabase.auth.getSession().then(({ data: { session } }) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+        });
+        const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
+        await Promise.race([sessionCheck, timeout]);
+      } catch {
+        clearAuthStorage();
+        setSession(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initSession();
+
     return () => subscription.unsubscribe();
-  }, [initialCheckDone]);
+  }, []);
 
-  const signUp = async (email: string, password: string, displayName: string, birthYear?: number) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { display_name: displayName, birth_year: birthYear },
-      },
-    });
-    return { error };
-  };
-
-  const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
+  const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (!error) {
-      localStorage.setItem("remember_me", rememberMe ? "true" : "false");
-      sessionStorage.setItem(SESSION_ACTIVE_KEY, "true");
-    }
-
     return { error };
   };
 
   const signOut = async () => {
-    localStorage.removeItem("remember_me");
-    sessionStorage.removeItem(SESSION_ACTIVE_KEY);
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 
