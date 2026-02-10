@@ -51,7 +51,7 @@ export function useJobs() {
     return data;
   };
 
-  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string }) => {
+  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string }) => {
     const { error } = await supabase.from('jobs').update(updates).eq('id', id);
     if (error) {
       toast({ title: 'Error updating job', variant: 'destructive' });
