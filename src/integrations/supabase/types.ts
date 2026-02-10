@@ -324,6 +324,41 @@ export type Database = {
           },
         ]
       }
+      job_sidebar_links: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          job_id: string | null
+          label: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          job_id?: string | null
+          label: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          job_id?: string | null
+          label?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_sidebar_links_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           created_at: string
