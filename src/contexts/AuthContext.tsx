@@ -91,12 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
-    if (!session) redirect("/login"); // ❌ blocks first render
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (!error) {
-      // Store remember me preference
       localStorage.setItem("remember_me", rememberMe ? "true" : "false");
-      // Set session marker (will be cleared when browser closes)
       sessionStorage.setItem(SESSION_ACTIVE_KEY, "true");
     }
 
