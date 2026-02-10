@@ -27,7 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
-  onDelete: (id: string) => Promise<{ success: boolean; error?: string; poNumbers?: string[] }>;
+  onDelete: (id: string, forceDelete?: boolean) => Promise<{ success: boolean; error?: string; poNumbers?: string[]; warning?: boolean }>;
 }
 
 export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
@@ -83,10 +83,18 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
     navigate(`/items/edit/${item.id}`);
   };
 
-  const handleDelete = async () => {
-    const result = await onDelete(item.id);
+  const handleDelete = async (forceDelete?: boolean) => {
+    const result = await onDelete(item.id, forceDelete);
     if (result.success) {
       navigate('/items');
+    } else if (result.warning) {
+      // It's a warning about unreceived POs - ask user to confirm
+      const confirmForce = confirm(
+        `${result.error}\n\nAffected POs: ${result.poNumbers?.join(', ')}`
+      );
+      if (confirmForce) {
+        await handleDelete(true);
+      }
     } else if (result.error) {
       setDeleteError({ message: result.error, poNumbers: result.poNumbers });
       toast({
@@ -169,7 +177,7 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     {!deleteError && (
                       <AlertDialogAction
-                        onClick={handleDelete}
+                        onClick={() => handleDelete()}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
                         Delete Anyway
