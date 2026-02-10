@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRequests } from "@/hooks/useRequests";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
+import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { AddRequestDialog } from "@/components/AddRequestDialog";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { RequestCard } from "@/components/RequestCard";
@@ -24,12 +25,23 @@ export function Requests() {
   const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
+  const { linkedName, allOrgRequesterNames, isAdminUser } = useLinkedRequester();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
 
+  // For regular members, only show their own requester name; admins see all
+  const visibleRequesterNames = isAdminUser
+    ? (allOrgRequesterNames.length > 0 ? allOrgRequesterNames : profile?.requesterNames || [])
+    : linkedName ? [linkedName] : [];
+
+  // Filter requests: regular members only see requests matching their linked requester name
+  const visibleRequests = isAdminUser
+    ? requests
+    : requests.filter(r => r.requesterName === linkedName);
+
   const getFilteredRequests = (status: RequestStatus) => {
-    return requests.filter((request) => {
+    return visibleRequests.filter((request) => {
       const matchesSearch =
         request.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (request.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
@@ -39,7 +51,7 @@ export function Requests() {
   };
 
   const getStatusCount = (status: RequestStatus) => {
-    return requests.filter((r) => r.status === status).length;
+    return visibleRequests.filter((r) => r.status === status).length;
   };
 
   const handleStatusChange = async (id: string, status: RequestStatus) => {
@@ -89,9 +101,9 @@ export function Requests() {
           <RequestCard
             key={request.id}
             request={request}
-            onStatusChange={handleStatusChange}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
+            onStatusChange={isAdminUser ? handleStatusChange : undefined}
+            onDelete={isAdminUser ? handleDelete : undefined}
+            onEdit={isAdminUser ? handleEdit : undefined}
           />
         ))}
       </div>
@@ -110,7 +122,7 @@ export function Requests() {
         </div>
         <AddRequestDialog
           items={allItems}
-          requesterNames={profile?.requesterNames || []}
+          requesterNames={visibleRequesterNames}
           onSave={addRequest}
           onUploadImage={uploadImage}
         />
@@ -152,7 +164,7 @@ export function Requests() {
       <EditRequestDialog
         request={editingRequest}
         items={allItems}
-        requesterNames={profile?.requesterNames || []}
+        requesterNames={visibleRequesterNames}
         open={!!editingRequest}
         onOpenChange={(open) => !open && setEditingRequest(null)}
         onSave={updateRequest}

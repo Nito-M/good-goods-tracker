@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Users, UserPlus, Shield } from 'lucide-react';
+import { Plus, Trash2, Users, UserPlus, Shield, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,13 @@ const PAGE_KEYS = [
   { key: 'settings', label: 'Settings' },
 ];
 
+interface OrgRequester {
+  id: string;
+  name: string;
+  linked_user_id: string | null;
+  organization_id: string;
+}
+
 interface OrgUser {
   memberId: string;
   userId: string;
@@ -49,6 +57,7 @@ interface OrgUser {
   orgId: string;
   orgName: string;
   permissions: string[]; // page_keys the user has access to
+  linkedRequesterName: string | null;
 }
 
 export function UsersSettings() {
@@ -79,17 +88,18 @@ export function UsersSettings() {
   // Orgs the current user can manage
   const [managedOrgs, setManagedOrgs] = useState<{ id: string; name: string }[]>([]);
 
+  // Org requesters
+  const [orgRequesters, setOrgRequesters] = useState<OrgRequester[]>([]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
       // Get orgs the current user can manage
       let orgs: { id: string; name: string }[] = [];
       if (isAdmin) {
-        // Super admin sees all orgs
         const { data } = await supabase.from('organizations').select('id, name');
         orgs = data || [];
       } else {
-        // Org admin sees their orgs
         const { data } = await supabase
           .from('organizations')
           .select('id, name')
@@ -97,6 +107,17 @@ export function UsersSettings() {
         orgs = data || [];
       }
       setManagedOrgs(orgs);
+
+      const orgIdList = orgs.map(o => o.id);
+
+      // Fetch org requesters
+      if (orgIdList.length > 0) {
+        const { data: reqData } = await supabase
+          .from('org_requesters')
+          .select('id, name, linked_user_id, organization_id')
+          .in('organization_id', orgIdList);
+        setOrgRequesters(reqData || []);
+      }
 
       // Get all members of those orgs
       const allUsers: OrgUser[] = [];
@@ -108,27 +129,32 @@ export function UsersSettings() {
 
         if (!members) continue;
 
-        // Get profiles
         const userIds = members.map(m => m.user_id);
         const { data: profiles } = await supabase
           .from('profiles')
           .select('user_id, display_name')
           .in('user_id', userIds);
 
-        // Get permissions for these users
         const { data: permissions } = await supabase
           .from('user_page_permissions')
           .select('user_id, page_key')
           .in('user_id', userIds);
 
+        // Get requesters for this org
+        const { data: reqData } = await supabase
+          .from('org_requesters')
+          .select('name, linked_user_id')
+          .eq('organization_id', org.id);
+
         for (const member of members) {
-          // Skip if it's the current user viewing themselves
           if (member.user_id === user?.id) continue;
 
           const profile = profiles?.find(p => p.user_id === member.user_id);
           const userPerms = permissions
             ?.filter(p => p.user_id === member.user_id)
             .map(p => p.page_key) || [];
+
+          const linkedReq = reqData?.find(r => r.linked_user_id === member.user_id);
 
           allUsers.push({
             memberId: member.id,
@@ -138,6 +164,7 @@ export function UsersSettings() {
             orgId: org.id,
             orgName: org.name,
             permissions: userPerms,
+            linkedRequesterName: linkedReq?.name || null,
           });
         }
       }
@@ -297,6 +324,46 @@ export function UsersSettings() {
     }
   };
 
+  const handleLinkRequester = async (orgUser: OrgUser, requesterName: string | null) => {
+    try {
+      // Unlink any existing link for this user in this org
+      const existingLinked = orgRequesters.filter(
+        r => r.organization_id === orgUser.orgId && r.linked_user_id === orgUser.userId
+      );
+      for (const r of existingLinked) {
+        await supabase
+          .from('org_requesters')
+          .update({ linked_user_id: null })
+          .eq('id', r.id);
+      }
+
+      if (requesterName) {
+        // Find the requester record to link
+        const target = orgRequesters.find(
+          r => r.organization_id === orgUser.orgId && r.name === requesterName
+        );
+        if (target) {
+          await supabase
+            .from('org_requesters')
+            .update({ linked_user_id: orgUser.userId })
+            .eq('id', target.id);
+        }
+      }
+
+      toast({ title: 'Requester linked', description: requesterName ? `Linked to "${requesterName}"` : 'Unlinked' });
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error linking requester:', error);
+      toast({ title: 'Error', description: 'Failed to link requester.', variant: 'destructive' });
+    }
+  };
+
+  const getAvailableRequesters = (orgId: string, currentUserId: string) => {
+    return orgRequesters.filter(
+      r => r.organization_id === orgId && (r.linked_user_id === null || r.linked_user_id === currentUserId)
+    );
+  };
+
   if (loading) {
     return <div className="text-muted-foreground py-8 text-center">Loading users...</div>;
   }
@@ -340,7 +407,7 @@ export function UsersSettings() {
                   key={u.memberId}
                   className="flex items-center justify-between p-4 rounded-lg border bg-card"
                 >
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{u.displayName || 'Unknown'}</span>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
@@ -360,6 +427,24 @@ export function UsersSettings() {
                           </span>
                         ))
                       )}
+                    </div>
+                    {/* Requester linking */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <Link2 className="h-3 w-3 text-muted-foreground" />
+                      <Select
+                        value={u.linkedRequesterName || "__none__"}
+                        onValueChange={(val) => handleLinkRequester(u, val === "__none__" ? null : val)}
+                      >
+                        <SelectTrigger className="h-7 text-xs w-48">
+                          <SelectValue placeholder="Link requester" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">No requester linked</SelectItem>
+                          {getAvailableRequesters(u.orgId, u.userId).map(r => (
+                            <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
