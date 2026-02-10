@@ -27,12 +27,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
+    // First, do the initial session check with "remember me" logic
     const initializeAuth = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (session) {
+        // Check if user wanted to be remembered
         // sessionStorage clears when browser closes, so if marker is gone but session exists,
         // user didn't want to be remembered and browser was restarted
         const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
@@ -40,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!sessionMarker && rememberMe === "false") {
           // Browser was closed and user didn't want to be remembered - sign out
-          await supabase.auth.signOut();
+
           localStorage.removeItem("remember_me");
           setSession(null);
           setUser(null);
