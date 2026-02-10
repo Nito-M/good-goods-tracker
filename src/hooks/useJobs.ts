@@ -35,11 +35,11 @@ export function useJobs() {
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  const createJob = async (title: string, description?: string) => {
+  const createJob = async (title: string, description?: string, status?: string) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('jobs')
-      .insert({ title, description: description || null, user_id: user.id })
+      .insert({ title, description: description || null, user_id: user.id, status: status || 'open' })
       .select()
       .single();
     if (error) {
@@ -73,7 +73,33 @@ export function useJobs() {
     return true;
   };
 
-  return { jobs, loading, createJob, updateJob, deleteJob, refetch: fetchJobs };
+  const duplicateJob = async (job: Job) => {
+    if (!user) return null;
+    const newJob = await createJob(`${job.title} (Copy)`, job.description || undefined, job.status);
+    if (!newJob) return null;
+    // Copy job items
+    const { data: sourceItems } = await supabase
+      .from('job_items')
+      .select('*')
+      .eq('job_id', job.id);
+    if (sourceItems && sourceItems.length > 0) {
+      const copies = sourceItems.map(i => ({
+        job_id: newJob.id,
+        inventory_item_id: i.inventory_item_id,
+        item_name: i.item_name,
+        sku: i.sku,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+        notes: i.notes,
+      }));
+      await supabase.from('job_items').insert(copies);
+    }
+    await fetchJobs();
+    toast({ title: 'Job duplicated successfully' });
+    return newJob;
+  };
+
+  return { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, refetch: fetchJobs };
 }
 
 export function useJobItems(jobId: string | null) {

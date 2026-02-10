@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,7 @@ export function Jobs() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { jobId: urlJobId } = useParams<{ jobId?: string }>();
-  const { jobs, loading, createJob, updateJob, deleteJob } = useJobs();
+  const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob } = useJobs();
 
   const [selectedJobId, setSelectedJobId] = useState<string | null>(urlJobId || null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -92,12 +92,18 @@ export function Jobs() {
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
 
+  const handleDuplicate = async (job: Job) => {
+    const newJob = await duplicateJob(job);
+    if (newJob) setSelectedJobId(newJob.id);
+  };
+
   if (selectedJob) {
     return (
       <JobDetail
         job={selectedJob}
         onBack={() => setSelectedJobId(null)}
         onEdit={() => openEdit(selectedJob)}
+        onDuplicate={() => handleDuplicate(selectedJob)}
         formatCurrency={formatCurrency}
       />
     );
@@ -240,10 +246,11 @@ interface JobDetailProps {
   job: Job;
   onBack: () => void;
   onEdit: () => void;
+  onDuplicate: () => void;
   formatCurrency: (v: number) => string;
 }
 
-function JobDetail({ job, onBack, onEdit, formatCurrency }: JobDetailProps) {
+function JobDetail({ job, onBack, onEdit, onDuplicate, formatCurrency }: JobDetailProps) {
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem } = useJobItems(job.id);
 
@@ -269,6 +276,7 @@ function JobDetail({ job, onBack, onEdit, formatCurrency }: JobDetailProps) {
               <Button onClick={() => navigate(`/jobs/${job.id}/add-items`)}>
                 <PackagePlus className="h-4 w-4 mr-2" />Add Items
               </Button>
+              <Button variant="outline" onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" />Duplicate</Button>
               <Button variant="outline" onClick={onEdit}><Edit className="h-4 w-4 mr-2" />Edit Job</Button>
             </div>
           </div>
