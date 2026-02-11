@@ -27,7 +27,12 @@ export function usePagePermissions() {
 
   useEffect(() => {
     const fetch = async () => {
-      if (!user || adminLoading || orgAdminLoading) return;
+      if (adminLoading || orgAdminLoading) return;
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       // Admins and org admins bypass permissions
       if (isAdmin || isOrgAdmin) {
