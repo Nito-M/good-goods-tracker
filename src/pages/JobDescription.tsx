@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +71,40 @@ export function JobDescription() {
             )}
           </CardContent>
         </Card>
+
+        {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Customer</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {job.customerName && (
+                <div className="flex items-center gap-2 text-sm">
+                  <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span>{job.customerName}</span>
+                </div>
+              )}
+              {job.customerEmail && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <a href={`mailto:${job.customerEmail}`} className="text-primary hover:underline">{job.customerEmail}</a>
+                </div>
+              )}
+              {job.customerPhone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <a href={`tel:${job.customerPhone}`} className="text-primary hover:underline">{job.customerPhone}</a>
+                </div>
+              )}
+              {job.customerAddress && (
+                <div className="flex items-start gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <span className="whitespace-pre-line">{job.customerAddress}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );
