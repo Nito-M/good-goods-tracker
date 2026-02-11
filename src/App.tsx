@@ -20,6 +20,7 @@ import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
 import { Jobs } from "./pages/Jobs";
 import { CreateJob } from "./pages/CreateJob";
+import { AllJobItems } from "./pages/AllJobItems";
 import { JobAddItems } from "./pages/JobAddItems";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
@@ -235,6 +236,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <CreateJob />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/all-items"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AllJobItems />
               </AppLayout>
             </ProtectedRoute>
           }
