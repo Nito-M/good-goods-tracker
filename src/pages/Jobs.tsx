@@ -20,9 +20,24 @@ import { Job } from '@/types/job';
 const statusColors: Record<string, string> = {
   open: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   'in-progress': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  'in-production': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  'welding-done': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  'painting-done': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+  finished: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
   completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
 };
+
+const STATUS_OPTIONS = [
+  { value: 'open', label: 'Open' },
+  { value: 'in-progress', label: 'In Progress' },
+  { value: 'in-production', label: 'In Production' },
+  { value: 'welding-done', label: 'Welding Done' },
+  { value: 'painting-done', label: 'Painting Done' },
+  { value: 'finished', label: 'Finished' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
 
 export function Jobs() {
   const { signOut } = useAuth();
@@ -91,7 +106,7 @@ export function Jobs() {
 
   const handleCreate = async () => {
     if (!formTitle.trim()) return;
-    const result = await createJob(formTitle.trim(), formDescription.trim() || undefined, undefined, {
+    const result = await createJob(formTitle.trim(), formDescription.trim() || undefined, formStatus, {
       name: formCustomerName.trim() || undefined,
       email: formCustomerEmail.trim() || undefined,
       phone: formCustomerPhone.trim() || undefined,
@@ -172,6 +187,7 @@ export function Jobs() {
         onBack={() => setSelectedJobId(null)}
         onEdit={() => openEdit(selectedJob)}
         onDuplicate={() => handleDuplicate(selectedJob)}
+        onUpdateStatus={async (status: string) => { await updateJob(selectedJob.id, { status }); }}
         formatCurrency={formatCurrency}
       />
     );
@@ -281,6 +297,17 @@ export function Jobs() {
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             <div><Label>Title *</Label><Input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Job title" /></div>
             <div><Label>Description</Label><Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder="Optional description" /></div>
+            <div>
+              <Label>Status</Label>
+              <Select value={formStatus} onValueChange={setFormStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map(s => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="border-t pt-4">
               <p className="text-sm font-medium mb-3">Customer Details</p>
               <div className="space-y-3">
@@ -313,10 +340,9 @@ export function Jobs() {
               <Select value={formStatus} onValueChange={setFormStatus}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  {STATUS_OPTIONS.map(s => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -398,10 +424,11 @@ interface JobDetailProps {
   onBack: () => void;
   onEdit: () => void;
   onDuplicate: () => void;
+  onUpdateStatus: (status: string) => Promise<void>;
   formatCurrency: (v: number) => string;
 }
 
-function JobDetail({ job, onBack, onEdit, onDuplicate, formatCurrency }: JobDetailProps) {
+function JobDetail({ job, onBack, onEdit, onDuplicate, onUpdateStatus, formatCurrency }: JobDetailProps) {
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem } = useJobItems(job.id);
 
@@ -503,9 +530,23 @@ function JobDetail({ job, onBack, onEdit, onDuplicate, formatCurrency }: JobDeta
                   <span className="text-muted-foreground">Job Number</span>
                   <span className="font-mono">{job.jobNumber}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Status</span>
-                  <Badge className={statusColors[job.status] || ''}>{job.status}</Badge>
+                  <Select value={job.status} onValueChange={onUpdateStatus}>
+                    <SelectTrigger className="w-[160px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map(s => (
+                        <SelectItem key={s.value} value={s.value}>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block w-2 h-2 rounded-full ${statusColors[s.value]?.split(' ')[0] || 'bg-muted'}`} />
+                            {s.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Items</span>
