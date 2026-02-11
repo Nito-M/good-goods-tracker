@@ -15,7 +15,7 @@ export function useJobs() {
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('display_order', { ascending: true });
     if (error) {
       console.error('Error loading jobs:', error);
       toast({ title: 'Error loading jobs', variant: 'destructive' });
@@ -26,6 +26,7 @@ export function useJobs() {
         title: d.title,
         description: d.description,
         status: d.status,
+        displayOrder: d.display_order,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
       })));
@@ -99,7 +100,17 @@ export function useJobs() {
     return newJob;
   };
 
-  return { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, refetch: fetchJobs };
+  const reorderJobs = async (reorderedJobs: Job[]) => {
+    // Optimistic update
+    setJobs(reorderedJobs);
+    // Persist new order
+    const updates = reorderedJobs.map((j, i) => 
+      supabase.from('jobs').update({ display_order: i }).eq('id', j.id)
+    );
+    await Promise.all(updates);
+  };
+
+  return { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs, refetch: fetchJobs };
 }
 
 export function useJobItems(jobId: string | null) {

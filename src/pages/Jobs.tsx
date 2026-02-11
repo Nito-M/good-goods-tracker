@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,7 @@ export function Jobs() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { jobId: urlJobId, linkId } = useParams<{ jobId?: string; linkId?: string }>();
-  const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob } = useJobs();
+  const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs } = useJobs();
   const { links, removeLink } = useJobSidebarLinks();
 
   // Resolve page title from sidebar link
@@ -41,6 +41,8 @@ export function Jobs() {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
+  const [dragOverJobId, setDragOverJobId] = useState<string | null>(null);
 
   // Create/Edit form state
   const [formTitle, setFormTitle] = useState('');
@@ -104,6 +106,38 @@ export function Jobs() {
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
+
+  const handleDragStart = (jobId: string) => {
+    setDraggedJobId(jobId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, jobId: string) => {
+    e.preventDefault();
+    if (jobId !== draggedJobId) setDragOverJobId(jobId);
+  };
+
+  const handleDrop = (targetJobId: string) => {
+    if (!draggedJobId || draggedJobId === targetJobId) {
+      setDraggedJobId(null);
+      setDragOverJobId(null);
+      return;
+    }
+    const currentJobs = searchQuery ? jobs : [...jobs];
+    const fromIndex = currentJobs.findIndex(j => j.id === draggedJobId);
+    const toIndex = currentJobs.findIndex(j => j.id === targetJobId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const reordered = [...currentJobs];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    reorderJobs(reordered);
+    setDraggedJobId(null);
+    setDragOverJobId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedJobId(null);
+    setDragOverJobId(null);
+  };
 
   const handleDuplicate = async (job: Job) => {
     const newJob = await duplicateJob(job);
@@ -169,12 +203,27 @@ export function Jobs() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredJobs.map(job => (
-              <Card key={job.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedJobId(job.id)}>
+              <Card
+                key={job.id}
+                className={`cursor-pointer hover:shadow-md transition-all ${draggedJobId === job.id ? 'opacity-50 scale-95' : ''} ${dragOverJobId === job.id ? 'ring-2 ring-primary' : ''}`}
+                draggable={!searchQuery}
+                onDragStart={() => handleDragStart(job.id)}
+                onDragOver={e => handleDragOver(e, job.id)}
+                onDragLeave={() => setDragOverJobId(null)}
+                onDrop={() => handleDrop(job.id)}
+                onDragEnd={handleDragEnd}
+                onClick={() => setSelectedJobId(job.id)}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <CardDescription className="text-xs font-mono">{job.jobNumber}</CardDescription>
-                      <CardTitle className="text-lg">{job.title}</CardTitle>
+                    <div className="flex items-start gap-2">
+                      {!searchQuery && (
+                        <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5 cursor-grab shrink-0" />
+                      )}
+                      <div>
+                        <CardDescription className="text-xs font-mono">{job.jobNumber}</CardDescription>
+                        <CardTitle className="text-lg">{job.title}</CardTitle>
+                      </div>
                     </div>
                     <Badge className={statusColors[job.status] || ''}>{job.status}</Badge>
                   </div>

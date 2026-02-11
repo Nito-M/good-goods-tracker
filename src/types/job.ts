@@ -4,6 +4,7 @@ export interface Job {
   title: string;
   description: string | null;
   status: string;
+  displayOrder: number;
   createdAt: string;
   updatedAt: string;
 }
