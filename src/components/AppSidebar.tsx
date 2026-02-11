@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 import { useJobSidebarLinks } from "@/hooks/useJobSidebarLinks";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
@@ -39,6 +40,7 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { signOut } = useAuth();
   const { links, addLink } = useJobSidebarLinks();
   const { isPageAllowed } = usePagePermissions();
   const [jobsOpen, setJobsOpen] = useState(location.pathname.startsWith("/jobs"));
@@ -177,7 +179,16 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-2">
+      <SidebarFooter className="p-2 space-y-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={signOut}
+          className="w-full justify-start text-muted-foreground hover:text-destructive"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          {!collapsed && <span>Logout</span>}
+        </Button>
         <Button
           variant="ghost"
           size="sm"
