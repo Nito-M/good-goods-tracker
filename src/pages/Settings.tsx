@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
 import { OrganizationsSettings } from '@/components/OrganizationsSettings';
@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVendors, Vendor } from '@/hooks/useVendors';
+import { useCustomers, Customer } from '@/hooks/useCustomers';
 import { useCategories } from '@/hooks/useCategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +56,7 @@ export function Settings() {
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
+  const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
@@ -208,7 +210,17 @@ export function Settings() {
   // Search state
   const [vendorSearchQuery, setVendorSearchQuery] = useState('');
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
-  
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+
+  // Customer dialog state
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [customerName, setCustomerName] = useState('');
+  const [customerCompany, setCustomerCompany] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
   // Filtered vendors
   const filteredVendors = vendors.filter((vendor) => {
     if (!vendorSearchQuery) return true;
@@ -226,6 +238,56 @@ export function Settings() {
     if (!categorySearchQuery) return true;
     return cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase());
   });
+
+  // Filtered customers
+  const filteredCustomers = customers.filter((customer) => {
+    if (!customerSearchQuery) return true;
+    const query = customerSearchQuery.toLowerCase();
+    return (
+      customer.name.toLowerCase().includes(query) ||
+      customer.company?.toLowerCase().includes(query) ||
+      customer.email?.toLowerCase().includes(query) ||
+      customer.phone?.toLowerCase().includes(query) ||
+      customer.address?.toLowerCase().includes(query)
+    );
+  });
+
+  const openCustomerDialog = (customer?: Customer) => {
+    if (customer) {
+      setEditingCustomer(customer);
+      setCustomerName(customer.name);
+      setCustomerCompany(customer.company || '');
+      setCustomerPhone(customer.phone || '');
+      setCustomerEmail(customer.email || '');
+      setCustomerAddress(customer.address || '');
+    } else {
+      setEditingCustomer(null);
+      setCustomerName('');
+      setCustomerCompany('');
+      setCustomerPhone('');
+      setCustomerEmail('');
+      setCustomerAddress('');
+    }
+    setCustomerDialogOpen(true);
+  };
+
+  const handleSaveCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const customerData = {
+      name: customerName,
+      company: customerCompany || null,
+      phone: customerPhone || null,
+      email: customerEmail || null,
+      address: customerAddress || null,
+    };
+
+    if (editingCustomer) {
+      await updateCustomer(editingCustomer.id, customerData);
+    } else {
+      await addCustomer(customerData);
+    }
+    setCustomerDialogOpen(false);
+  };
 
   const openVendorDialog = (vendor?: Vendor) => {
     if (vendor) {
@@ -322,7 +384,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-4xl ${isAdmin ? 'grid-cols-7' : showUsersTab ? 'grid-cols-6' : 'grid-cols-5'}`}>
+          <TabsList className={`grid w-full max-w-4xl ${isAdmin ? 'grid-cols-8' : showUsersTab ? 'grid-cols-7' : 'grid-cols-6'}`}>
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -338,6 +400,10 @@ export function Settings() {
             <TabsTrigger value="vendors" className="gap-2">
               <Building2 className="h-4 w-4" />
               Vendors
+            </TabsTrigger>
+            <TabsTrigger value="customers" className="gap-2">
+              <Contact className="h-4 w-4" />
+              Customers
             </TabsTrigger>
             <TabsTrigger value="categories" className="gap-2">
               <Tags className="h-4 w-4" />
@@ -820,6 +886,69 @@ export function Settings() {
             </Card>
           </TabsContent>
 
+          {/* Customers Tab */}
+          <TabsContent value="customers" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Customers</CardTitle>
+                  <CardDescription>Manage your customer contacts</CardDescription>
+                </div>
+                <Button onClick={() => openCustomerDialog()} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Customer
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search customers..."
+                    value={customerSearchQuery}
+                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {customersLoading ? (
+                  <div className="text-muted-foreground py-8 text-center">Loading customers...</div>
+                ) : filteredCustomers.length === 0 ? (
+                  <div className="text-muted-foreground py-8 text-center">
+                    {customers.length === 0
+                      ? "No customers yet. Add your first customer to get started."
+                      : "No customers match your search."}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {filteredCustomers.map((customer) => (
+                      <div key={customer.id} className="flex items-center justify-between py-4">
+                        <div>
+                          <div className="font-medium">{customer.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {[customer.company, customer.email, customer.phone].filter(Boolean).join(' • ') || 'No contact info'}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openCustomerDialog(customer)}>
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => setDeleteCustomerId(customer.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Categories Tab */}
           <TabsContent value="categories" className="mt-6">
             <Card>
@@ -1017,6 +1146,97 @@ export function Settings() {
               onClick={() => {
                 if (deleteCategoryId) deleteCategory(deleteCategoryId);
                 setDeleteCategoryId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Customer Dialog */}
+      <Dialog open={customerDialogOpen} onOpenChange={setCustomerDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSaveCustomer} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="customer-name">Name *</Label>
+              <Input
+                id="customer-name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Customer name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-company">Company</Label>
+              <Input
+                id="customer-company"
+                value={customerCompany}
+                onChange={(e) => setCustomerCompany(e.target.value)}
+                placeholder="Company name"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customer-email">Email</Label>
+                <Input
+                  id="customer-email"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customer-phone">Phone</Label>
+                <Input
+                  id="customer-phone"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="+1 234 567 8900"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-address">Address</Label>
+              <Textarea
+                id="customer-address"
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                placeholder="Full address"
+                rows={2}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCustomerDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">{editingCustomer ? 'Save Changes' : 'Add Customer'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Customer Confirmation */}
+      <AlertDialog open={!!deleteCustomerId} onOpenChange={() => setDeleteCustomerId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Customer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the customer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteCustomerId) deleteCustomer(deleteCustomerId);
+                setDeleteCustomerId(null);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
