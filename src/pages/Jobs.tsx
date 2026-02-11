@@ -77,7 +77,6 @@ export function Jobs() {
 
   const [deletingLinkId, setDeletingLinkId] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(urlJobId || null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,15 +121,7 @@ export function Jobs() {
   }, [jobs, searchQuery]);
 
   const openCreate = () => {
-    setFormTitle('');
-    setFormDescription('');
-    setFormStatus('open');
-    setFormCustomerName('');
-    setFormCustomerEmail('');
-    setFormCustomerPhone('');
-    setFormCustomerAddress('');
-    setSelectedCustomerId('');
-    setShowCreateDialog(true);
+    navigate('/jobs/new');
   };
 
   const openEdit = (job: Job) => {
@@ -145,16 +136,6 @@ export function Jobs() {
     setEditingJob(job);
   };
 
-  const handleCreate = async () => {
-    if (!formTitle.trim()) return;
-    const result = await createJob(formTitle.trim(), formDescription.trim() || undefined, formStatus, {
-      name: formCustomerName.trim() || undefined,
-      email: formCustomerEmail.trim() || undefined,
-      phone: formCustomerPhone.trim() || undefined,
-      address: formCustomerAddress.trim() || undefined,
-    });
-    if (result) setShowCreateDialog(false);
-  };
 
   const handleUpdate = async () => {
     if (!editingJob || !formTitle.trim()) return;
@@ -329,59 +310,6 @@ export function Jobs() {
         )}
       </main>
 
-      {/* Create Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Job</DialogTitle>
-            <DialogDescription>Add a new job to track work and inventory usage.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            <div><Label>Title *</Label><Input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Job title" /></div>
-            <div><Label>Description</Label><Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder="Optional description" /></div>
-            <div>
-              <Label>Status</Label>
-              <Select value={formStatus} onValueChange={setFormStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map(s => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="border-t pt-4">
-              <p className="text-sm font-medium mb-3">Customer Details</p>
-              <div className="space-y-3">
-                {customers.length > 0 && (
-                  <div>
-                    <Label>Select Customer</Label>
-                    <Select value={selectedCustomerId} onValueChange={handleCustomerSelect}>
-                      <SelectTrigger><SelectValue placeholder="Choose a saved customer..." /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">— None —</SelectItem>
-                        {customers.map(c => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}{c.company ? ` (${c.company})` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div><Label>Customer Name</Label><Input value={formCustomerName} onChange={e => setFormCustomerName(e.target.value)} placeholder="Customer name" /></div>
-                <div><Label>Email</Label><Input type="email" value={formCustomerEmail} onChange={e => setFormCustomerEmail(e.target.value)} placeholder="customer@example.com" /></div>
-                <div><Label>Phone</Label><Input value={formCustomerPhone} onChange={e => setFormCustomerPhone(e.target.value)} placeholder="Phone number" /></div>
-                <div><Label>Address</Label><Textarea value={formCustomerAddress} onChange={e => setFormCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} /></div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={!formTitle.trim()}>Create Job</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={!!editingJob} onOpenChange={open => { if (!open) setEditingJob(null); }}>
