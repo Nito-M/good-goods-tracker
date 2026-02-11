@@ -1,37 +1,33 @@
 
-## Make Edit Job a Full Page
 
-### What changes
+## Auto-Expanding Description Textarea
 
-1. **New file: `src/pages/EditJob.tsx`** -- A full-page edit form mirroring the `CreateJob` layout, with:
-   - Full-width description textarea (visible without scrolling, larger rows)
-   - Same two-card layout (Job Details + Customer Details) as CreateJob
-   - Loads the existing job data from the database by job ID (from URL param)
-   - Includes a "Save Changes" button and "Cancel" link back to the job
-   - Customer auto-fill from saved customers list
+### Problem
+The description textarea has a fixed height (`rows={6}`), so longer text requires scrolling inside the box.
 
-2. **Update `src/App.tsx`** -- Add a new route `/jobs/:jobId/edit` pointing to the `EditJob` component, wrapped in `ProtectedRoute` and `AppLayout`.
+### Fix
+Update the `<Textarea>` for the description field in `src/pages/EditJob.tsx` to auto-resize based on content. This can be done by:
 
-3. **Update `src/pages/Jobs.tsx` (JobDetail component)** -- Replace the "Edit Job" button's `onClick` from opening a dialog to navigating to `/jobs/{jobId}/edit`. Remove all edit dialog state, the `openEdit` function, the `handleCustomerSelect` function, the `handleUpdate` function, and the Edit Dialog JSX (lines 514-566). The Delete button and its AlertDialog remain as-is.
+1. Adding a `className="resize-none overflow-hidden"` to prevent manual resize and hide the scrollbar
+2. Using a small `useEffect` (or an `onInput` handler) that sets `textarea.style.height = textarea.scrollHeight + "px"` whenever the content changes
 
 ### Technical Details
 
-**`src/pages/EditJob.tsx`** (new file):
-- Uses `useParams` to get `jobId`
-- Uses `useJobs` hook to get `updateJob` and the job list to find the current job
-- Pre-fills all form fields from the job data on mount
-- Description field uses `<Textarea rows={6}>` so the full text is visible
-- On save, calls `updateJob` then navigates back to `/jobs` (which will show the detail view)
-- Layout matches `CreateJob` exactly (max-w-3xl, same header style, same card structure)
+**File: `src/pages/EditJob.tsx`**
 
-**`src/pages/Jobs.tsx` cleanup**:
-- Remove state: `editOpen`, `formTitle`, `formDescription`, `formStatus`, `formJobNumber`, `formCustomerName`, `formCustomerEmail`, `formCustomerPhone`, `formCustomerAddress`, `selectedCustomerId`
-- Remove functions: `openEdit`, `handleCustomerSelect`, `handleUpdate`
-- Remove Edit Dialog JSX (lines 514-566)
-- Change Edit button to: `onClick={() => navigate(`/jobs/${job.id}/edit`)}`
-- Remove `customers` prop from `JobDetailProps` since it is no longer needed
-- Remove `customers` being passed to `JobDetail` from the parent
+- Add a `ref` to the description `Textarea`
+- Add a small effect that auto-sizes the textarea whenever `formDescription` changes:
+  ```typescript
+  const descRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = descRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+  }, [formDescription]);
+  ```
+- Update the Textarea to use `ref={descRef}` and add `className="resize-none overflow-hidden"` plus `rows={3}` as a minimum starting height
 
-**`src/App.tsx`**:
-- Import `EditJob`
-- Add route: `<Route path="/jobs/:jobId/edit" element={<ProtectedRoute><AppLayout><EditJob /></AppLayout></ProtectedRoute>} />`
+This is a small, self-contained change to one file. The textarea will grow to fit all content so nothing is hidden.
+
