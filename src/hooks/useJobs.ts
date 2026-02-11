@@ -27,6 +27,10 @@ export function useJobs() {
         description: d.description,
         status: d.status,
         displayOrder: d.display_order,
+        customerName: d.customer_name,
+        customerEmail: d.customer_email,
+        customerPhone: d.customer_phone,
+        customerAddress: d.customer_address,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
       })));
@@ -36,11 +40,20 @@ export function useJobs() {
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  const createJob = async (title: string, description?: string, status?: string) => {
+  const createJob = async (title: string, description?: string, status?: string, customer?: { name?: string; email?: string; phone?: string; address?: string }) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('jobs')
-      .insert({ title, description: description || null, user_id: user.id, status: status || 'open' })
+      .insert({
+        title,
+        description: description || null,
+        user_id: user.id,
+        status: status || 'open',
+        customer_name: customer?.name || null,
+        customer_email: customer?.email || null,
+        customer_phone: customer?.phone || null,
+        customer_address: customer?.address || null,
+      })
       .select()
       .single();
     if (error) {
@@ -52,7 +65,7 @@ export function useJobs() {
     return data;
   };
 
-  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string }) => {
+  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null }) => {
     const { error } = await supabase.from('jobs').update(updates).eq('id', id);
     if (error) {
       toast({ title: 'Error updating job', variant: 'destructive' });
@@ -76,7 +89,12 @@ export function useJobs() {
 
   const duplicateJob = async (job: Job) => {
     if (!user) return null;
-    const newJob = await createJob(`${job.title} (Copy)`, job.description || undefined, job.status);
+    const newJob = await createJob(`${job.title} (Copy)`, job.description || undefined, job.status, {
+      name: job.customerName || undefined,
+      email: job.customerEmail || undefined,
+      phone: job.customerPhone || undefined,
+      address: job.customerAddress || undefined,
+    });
     if (!newJob) return null;
     // Copy job items
     const { data: sourceItems } = await supabase

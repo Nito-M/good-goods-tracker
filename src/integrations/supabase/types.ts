@@ -362,6 +362,10 @@ export type Database = {
       jobs: {
         Row: {
           created_at: string
+          customer_address: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
           description: string | null
           display_order: number
           id: string
@@ -373,6 +377,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           description?: string | null
           display_order?: number
           id?: string
@@ -384,6 +392,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           description?: string | null
           display_order?: number
           id?: string
