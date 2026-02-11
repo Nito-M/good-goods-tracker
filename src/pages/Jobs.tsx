@@ -3,18 +3,16 @@ import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight,
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
 import { useJobSidebarLinks } from '@/hooks/useJobSidebarLinks';
-import { useCustomers } from '@/hooks/useCustomers';
+
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Job } from '@/types/job';
 
@@ -46,7 +44,7 @@ export function Jobs() {
   const { jobId: urlJobId, linkId } = useParams<{ jobId?: string; linkId?: string }>();
   const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs } = useJobs();
   const { links, removeLink } = useJobSidebarLinks();
-  const { customers } = useCustomers();
+  
 
   // Resolve page title from sidebar link
   const sidebarLink = linkId ? links.find(l => l.id === linkId) : null;
@@ -122,8 +120,6 @@ export function Jobs() {
         onDuplicate={() => handleDuplicate(selectedJob)}
         onUpdateStatus={async (status: string) => { await updateJob(selectedJob.id, { status }); }}
         onDelete={async () => { await deleteJob(selectedJob.id); setSelectedJobId(null); }}
-        updateJob={updateJob}
-        customers={customers}
         formatCurrency={formatCurrency}
       />
     );
@@ -268,70 +264,14 @@ interface JobDetailProps {
   onDuplicate: () => void;
   onUpdateStatus: (status: string) => Promise<void>;
   onDelete: () => Promise<void>;
-  updateJob: (id: string, updates: Record<string, any>) => Promise<boolean>;
-  customers: { id: string; name: string; company?: string | null; email?: string | null; phone?: string | null; address?: string | null }[];
   formatCurrency: (v: number) => string;
 }
 
-function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJob, customers, formatCurrency }: JobDetailProps) {
+function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatCurrency }: JobDetailProps) {
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem } = useJobItems(job.id);
 
-  // Edit dialog state
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [formTitle, setFormTitle] = useState('');
-  const [formDescription, setFormDescription] = useState('');
-  const [formStatus, setFormStatus] = useState('open');
-  const [formJobNumber, setFormJobNumber] = useState('');
-  const [formCustomerName, setFormCustomerName] = useState('');
-  const [formCustomerEmail, setFormCustomerEmail] = useState('');
-  const [formCustomerPhone, setFormCustomerPhone] = useState('');
-  const [formCustomerAddress, setFormCustomerAddress] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
-
-  const openEdit = () => {
-    setFormTitle(job.title);
-    setFormDescription(job.description || '');
-    setFormStatus(job.status);
-    setFormJobNumber(job.jobNumber || '');
-    setFormCustomerName(job.customerName || '');
-    setFormCustomerEmail(job.customerEmail || '');
-    setFormCustomerPhone(job.customerPhone || '');
-    setFormCustomerAddress(job.customerAddress || '');
-    setSelectedCustomerId('');
-    setEditOpen(true);
-  };
-
-  const handleCustomerSelect = (customerId: string) => {
-    setSelectedCustomerId(customerId);
-    if (customerId === 'none' || !customerId) return;
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      setFormCustomerName(customer.name || '');
-      setFormCustomerEmail(customer.email || '');
-      setFormCustomerPhone(customer.phone || '');
-      setFormCustomerAddress(customer.address || '');
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!formTitle.trim()) return;
-    const updates: Record<string, string | null | undefined> = {
-      title: formTitle.trim(),
-      description: formDescription.trim() || undefined,
-      status: formStatus,
-      customer_name: formCustomerName.trim() || null,
-      customer_email: formCustomerEmail.trim() || null,
-      customer_phone: formCustomerPhone.trim() || null,
-      customer_address: formCustomerAddress.trim() || null,
-    };
-    if (formJobNumber.trim() !== (job.jobNumber || '')) {
-      updates.job_number = formJobNumber.trim() || undefined;
-    }
-    const ok = await updateJob(job.id, updates);
-    if (ok) setEditOpen(false);
-  };
 
   const handleDelete = async () => {
     await onDelete();
@@ -361,7 +301,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                 <PackagePlus className="h-4 w-4 mr-2" />Add Items
               </Button>
               <Button variant="outline" onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" />Duplicate</Button>
-              <Button variant="outline" onClick={openEdit}><Edit className="h-4 w-4 mr-2" />Edit Job</Button>
+              <Button variant="outline" onClick={() => navigate(`/jobs/${job.id}/edit`)}><Edit className="h-4 w-4 mr-2" />Edit Job</Button>
               <Button variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>
             </div>
           </div>
@@ -510,60 +450,6 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
           </div>
         </div>
       </main>
-
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Job</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            <div><Label>Title *</Label><Input value={formTitle} onChange={e => setFormTitle(e.target.value)} /></div>
-            <div><Label>Job Number</Label><Input value={formJobNumber} onChange={e => setFormJobNumber(e.target.value)} placeholder="e.g. JOB-0001" /></div>
-            <div><Label>Description</Label><Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} /></div>
-            <div>
-              <Label>Status</Label>
-              <Select value={formStatus} onValueChange={setFormStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map(s => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="border-t pt-4">
-              <p className="text-sm font-medium mb-3">Customer Details</p>
-              <div className="space-y-3">
-                {customers.length > 0 && (
-                  <div>
-                    <Label>Select Customer</Label>
-                    <Select value={selectedCustomerId} onValueChange={handleCustomerSelect}>
-                      <SelectTrigger><SelectValue placeholder="Choose a saved customer..." /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">— None —</SelectItem>
-                        {customers.map(c => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}{c.company ? ` (${c.company})` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div><Label>Customer Name</Label><Input value={formCustomerName} onChange={e => setFormCustomerName(e.target.value)} placeholder="Customer name" /></div>
-                <div><Label>Email</Label><Input type="email" value={formCustomerEmail} onChange={e => setFormCustomerEmail(e.target.value)} placeholder="customer@example.com" /></div>
-                <div><Label>Phone</Label><Input value={formCustomerPhone} onChange={e => setFormCustomerPhone(e.target.value)} placeholder="Phone number" /></div>
-                <div><Label>Address</Label><Textarea value={formCustomerAddress} onChange={e => setFormCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} /></div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdate} disabled={!formTitle.trim()}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
