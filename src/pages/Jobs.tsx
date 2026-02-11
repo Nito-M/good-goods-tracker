@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { useJobSidebarLinks } from '@/hooks/useJobSidebarLinks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -28,12 +29,13 @@ export function Jobs() {
   const navigate = useNavigate();
   const { jobId: urlJobId, linkId } = useParams<{ jobId?: string; linkId?: string }>();
   const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob } = useJobs();
-  const { links } = useJobSidebarLinks();
+  const { links, removeLink } = useJobSidebarLinks();
 
   // Resolve page title from sidebar link
   const sidebarLink = linkId ? links.find(l => l.id === linkId) : null;
   const pageTitle = sidebarLink?.label || 'Jobs';
 
+  const [deletingLinkId, setDeletingLinkId] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(urlJobId || null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -186,6 +188,40 @@ export function Jobs() {
             ))}
           </div>
         )}
+
+        {/* Delete Subitem Section - only on subitem pages */}
+        {linkId && sidebarLink && (
+          <Card className="border-destructive/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Delete &quot;{sidebarLink.label}&quot;
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Warning</AlertTitle>
+                <AlertDescription>
+                  Deleting this subitem will:
+                  <ul className="list-disc ml-4 mt-2 space-y-1">
+                    <li>Permanently remove &quot;{sidebarLink.label}&quot; from the sidebar navigation</li>
+                    <li>Remove the custom page associated with this subitem</li>
+                    <li>This action <strong>cannot be undone</strong></li>
+                  </ul>
+                  <p className="mt-2 text-sm">Note: Your jobs and their assigned inventory items will <strong>not</strong> be affected.</p>
+                </AlertDescription>
+              </Alert>
+              <Button
+                variant="destructive"
+                onClick={() => setDeletingLinkId(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete this subitem
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </main>
 
       {/* Create Dialog */}
@@ -246,6 +282,33 @@ export function Jobs() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Subitem Confirmation */}
+      <AlertDialog open={deletingLinkId} onOpenChange={open => { if (!open) setDeletingLinkId(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Subitem?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove &quot;{sidebarLink?.label}&quot; from your sidebar. Your jobs and inventory items will not be affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (linkId) {
+                  await removeLink(linkId);
+                  navigate('/jobs');
+                }
+                setDeletingLinkId(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

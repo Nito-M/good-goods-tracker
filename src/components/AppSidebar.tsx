@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, X, ChevronDown } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useJobSidebarLinks } from "@/hooks/useJobSidebarLinks";
@@ -38,7 +38,7 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { links, addLink, removeLink } = useJobSidebarLinks();
+  const { links, addLink } = useJobSidebarLinks();
   const [jobsOpen, setJobsOpen] = useState(location.pathname.startsWith("/jobs"));
   const [addingLink, setAddingLink] = useState(false);
   const [newLinkLabel, setNewLinkLabel] = useState("");
@@ -129,23 +129,14 @@ export function AppSidebar() {
                     <CollapsibleContent>
                       <div className="ml-7 border-l border-border pl-2 mt-1 space-y-0.5">
                         {links.map(link => (
-                          <div key={link.id} className="flex items-center group">
-                            <NavLink
-                              to={`/jobs/link/${link.id}`}
-                              className="flex-1 text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
-                              activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
-                            >
-                              {link.label}
-                            </NavLink>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-5 w-5 opacity-0 group-hover:opacity-100 shrink-0"
-                              onClick={(e) => { e.preventDefault(); removeLink(link.id); }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
+                          <NavLink
+                            key={link.id}
+                            to={`/jobs/link/${link.id}`}
+                            className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                            activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
+                          >
+                            {link.label}
+                          </NavLink>
                         ))}
                         {addingLink ? (
                           <div className="flex items-center gap-1 px-1">
