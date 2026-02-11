@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,6 +49,10 @@ export function Jobs() {
   const [formDescription, setFormDescription] = useState('');
   const [formStatus, setFormStatus] = useState('open');
   const [formJobNumber, setFormJobNumber] = useState('');
+  const [formCustomerName, setFormCustomerName] = useState('');
+  const [formCustomerEmail, setFormCustomerEmail] = useState('');
+  const [formCustomerPhone, setFormCustomerPhone] = useState('');
+  const [formCustomerAddress, setFormCustomerAddress] = useState('');
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
@@ -66,6 +70,10 @@ export function Jobs() {
     setFormTitle('');
     setFormDescription('');
     setFormStatus('open');
+    setFormCustomerName('');
+    setFormCustomerEmail('');
+    setFormCustomerPhone('');
+    setFormCustomerAddress('');
     setShowCreateDialog(true);
   };
 
@@ -74,21 +82,34 @@ export function Jobs() {
     setFormDescription(job.description || '');
     setFormStatus(job.status);
     setFormJobNumber(job.jobNumber || '');
+    setFormCustomerName(job.customerName || '');
+    setFormCustomerEmail(job.customerEmail || '');
+    setFormCustomerPhone(job.customerPhone || '');
+    setFormCustomerAddress(job.customerAddress || '');
     setEditingJob(job);
   };
 
   const handleCreate = async () => {
     if (!formTitle.trim()) return;
-    const result = await createJob(formTitle.trim(), formDescription.trim() || undefined);
+    const result = await createJob(formTitle.trim(), formDescription.trim() || undefined, undefined, {
+      name: formCustomerName.trim() || undefined,
+      email: formCustomerEmail.trim() || undefined,
+      phone: formCustomerPhone.trim() || undefined,
+      address: formCustomerAddress.trim() || undefined,
+    });
     if (result) setShowCreateDialog(false);
   };
 
   const handleUpdate = async () => {
     if (!editingJob || !formTitle.trim()) return;
-    const updates: Record<string, string | undefined> = {
+    const updates: Record<string, string | null | undefined> = {
       title: formTitle.trim(),
       description: formDescription.trim() || undefined,
       status: formStatus,
+      customer_name: formCustomerName.trim() || null,
+      customer_email: formCustomerEmail.trim() || null,
+      customer_phone: formCustomerPhone.trim() || null,
+      customer_address: formCustomerAddress.trim() || null,
     };
     if (formJobNumber.trim() !== (editingJob.jobNumber || '')) {
       updates.job_number = formJobNumber.trim() || undefined;
@@ -229,6 +250,12 @@ export function Jobs() {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  {job.customerName && (
+                    <p className="text-sm text-foreground flex items-center gap-1.5 mb-1">
+                      <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      {job.customerName}
+                    </p>
+                  )}
                   {job.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{job.description}</p>}
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{new Date(job.createdAt).toLocaleDateString()}</span>
@@ -251,9 +278,18 @@ export function Jobs() {
             <DialogTitle>Create New Job</DialogTitle>
             <DialogDescription>Add a new job to track work and inventory usage.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             <div><Label>Title *</Label><Input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Job title" /></div>
             <div><Label>Description</Label><Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder="Optional description" /></div>
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium mb-3">Customer Details</p>
+              <div className="space-y-3">
+                <div><Label>Customer Name</Label><Input value={formCustomerName} onChange={e => setFormCustomerName(e.target.value)} placeholder="Customer name" /></div>
+                <div><Label>Email</Label><Input type="email" value={formCustomerEmail} onChange={e => setFormCustomerEmail(e.target.value)} placeholder="customer@example.com" /></div>
+                <div><Label>Phone</Label><Input value={formCustomerPhone} onChange={e => setFormCustomerPhone(e.target.value)} placeholder="Phone number" /></div>
+                <div><Label>Address</Label><Textarea value={formCustomerAddress} onChange={e => setFormCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} /></div>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
@@ -268,7 +304,7 @@ export function Jobs() {
           <DialogHeader>
             <DialogTitle>Edit Job</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             <div><Label>Title *</Label><Input value={formTitle} onChange={e => setFormTitle(e.target.value)} /></div>
             <div><Label>Job Number</Label><Input value={formJobNumber} onChange={e => setFormJobNumber(e.target.value)} placeholder="e.g. JOB-0001" /></div>
             <div><Label>Description</Label><Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} /></div>
@@ -283,6 +319,15 @@ export function Jobs() {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium mb-3">Customer Details</p>
+              <div className="space-y-3">
+                <div><Label>Customer Name</Label><Input value={formCustomerName} onChange={e => setFormCustomerName(e.target.value)} placeholder="Customer name" /></div>
+                <div><Label>Email</Label><Input type="email" value={formCustomerEmail} onChange={e => setFormCustomerEmail(e.target.value)} placeholder="customer@example.com" /></div>
+                <div><Label>Phone</Label><Input value={formCustomerPhone} onChange={e => setFormCustomerPhone(e.target.value)} placeholder="Phone number" /></div>
+                <div><Label>Address</Label><Textarea value={formCustomerAddress} onChange={e => setFormCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} /></div>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -479,6 +524,41 @@ function JobDetail({ job, onBack, onEdit, onDuplicate, formatCurrency }: JobDeta
                 </div>
               </CardContent>
             </Card>
+
+            {/* Customer Info Card */}
+            {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) && (
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="text-base">Customer</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {job.customerName && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span>{job.customerName}</span>
+                    </div>
+                  )}
+                  {job.customerEmail && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <a href={`mailto:${job.customerEmail}`} className="text-primary hover:underline">{job.customerEmail}</a>
+                    </div>
+                  )}
+                  {job.customerPhone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <a href={`tel:${job.customerPhone}`} className="text-primary hover:underline">{job.customerPhone}</a>
+                    </div>
+                  )}
+                  {job.customerAddress && (
+                    <div className="flex items-start gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <span className="whitespace-pre-line">{job.customerAddress}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

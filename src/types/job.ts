@@ -5,6 +5,10 @@ export interface Job {
   description: string | null;
   status: string;
   displayOrder: number;
+  customerName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  customerAddress: string | null;
   createdAt: string;
   updatedAt: string;
 }
