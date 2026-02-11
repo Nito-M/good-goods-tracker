@@ -1,40 +1,42 @@
 
-# Add Status Dropdown to Job Details
 
-## What Changes
+# Add Customers Tab to Settings
 
-Add a status dropdown directly in the Job Details view so users can quickly change a job's status without opening the Edit dialog. The dropdown will include the new production-oriented statuses:
+## Overview
+Add a new "Customers" tab in the Settings page where users can manage their customer contacts (name, company, phone, address, email). This creates a reusable customer list that can later be linked to Jobs.
 
-- Open
-- In Progress
-- In Production
-- Welding Done
-- Painting Done
-- Finished
-- Completed
-- Cancelled
+## Changes
 
-These same statuses will also be added to the Edit Job dialog's status dropdown for consistency.
+### 1. Database - Create `customers` table
+New table with columns:
+- `id` (uuid, PK)
+- `user_id` (uuid, NOT NULL)
+- `name` (text, NOT NULL)
+- `company` (text, nullable)
+- `phone` (text, nullable)
+- `email` (text, nullable)
+- `address` (text, nullable)
+- `created_at`, `updated_at` (timestamps)
 
-## Technical Details
+RLS policies following the existing pattern:
+- Users can CRUD their own customers
+- Org members can view org customers (using `users_share_org`)
 
-### 1. Update status colors map (Jobs.tsx, line ~20)
-Add color entries for the new statuses:
-- `in-production` - purple badge
-- `welding-done` - orange badge  
-- `painting-done` - teal badge
-- `finished` - emerald badge
+### 2. Hook - `src/hooks/useCustomers.ts`
+New hook following the same pattern as `useVendors` -- fetch, add, update, delete customers.
 
-### 2. Add status dropdown to Job Detail header area (Jobs.tsx, ~line 507)
-Replace the static Badge in the Job Summary card's "Status" row with a `Select` dropdown. When changed, it will call `updateJob` directly to persist the new status.
+### 3. Settings UI - `src/pages/Settings.tsx`
+- Add a "Customers" tab between Categories and Users
+- Tab content: searchable list of customers with Add/Edit/Delete
+- Add/Edit dialog with fields: Name, Company, Phone, Email, Address
+- Delete confirmation dialog
+- Follows the exact same UI pattern as the existing Vendors tab
 
-To do this, the `JobDetail` component needs access to `updateJob` from the `useJobs` hook. This will be passed as a new prop or the hook can be called directly inside `JobDetail`.
-
-### 3. Update the Edit Job dialog (Jobs.tsx, ~line 312)
-Add the new status options (`in-production`, `welding-done`, `painting-done`, `finished`) to the existing status `Select` in the Edit dialog.
-
-### 4. Update the Create Job dialog
-Add a status field to the Create dialog as well so users can set the initial status.
+### 4. Sidebar & Permissions
+No changes needed -- customers are managed within the existing Settings page, which already has its own permission controls.
 
 ### Files Modified
-- `src/pages/Jobs.tsx` - Add status options, dropdown in detail view, pass updateJob
+- New migration SQL (create `customers` table + RLS)
+- New: `src/hooks/useCustomers.ts`
+- Modified: `src/pages/Settings.tsx` (add Customers tab)
+
