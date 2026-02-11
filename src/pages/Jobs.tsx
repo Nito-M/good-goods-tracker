@@ -376,7 +376,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Job Number</span>
-                  <span className="font-mono">{job.jobNumber}</span>
+                  <button onClick={() => navigate(`/jobs/${job.id}/description`)} className="font-mono hover:underline cursor-pointer">{job.jobNumber}</button>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">Status</span>
