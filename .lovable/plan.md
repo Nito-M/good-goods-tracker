@@ -1,33 +1,26 @@
 
 
-## Auto-Expanding Description Textarea
+## Show Full Job Description When Clicking Job Number
 
-### Problem
-The description textarea has a fixed height (`rows={6}`), so longer text requires scrolling inside the box.
-
-### Fix
-Update the `<Textarea>` for the description field in `src/pages/EditJob.tsx` to auto-resize based on content. This can be done by:
-
-1. Adding a `className="resize-none overflow-hidden"` to prevent manual resize and hide the scrollbar
-2. Using a small `useEffect` (or an `onInput` handler) that sets `textarea.style.height = textarea.scrollHeight + "px"` whenever the content changes
+### What changes
+In the Job Detail header, make the job number clickable. When tapped, toggle the visibility of the full job description below the header info.
 
 ### Technical Details
 
-**File: `src/pages/EditJob.tsx`**
+**File: `src/pages/Jobs.tsx` (JobDetail component)**
 
-- Add a `ref` to the description `Textarea`
-- Add a small effect that auto-sizes the textarea whenever `formDescription` changes:
-  ```typescript
-  const descRef = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    const el = descRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = el.scrollHeight + 'px';
-    }
-  }, [formDescription]);
-  ```
-- Update the Textarea to use `ref={descRef}` and add `className="resize-none overflow-hidden"` plus `rows={3}` as a minimum starting height
+1. Add a `showDescription` boolean state: `const [showDescription, setShowDescription] = useState(false);`
 
-This is a small, self-contained change to one file. The textarea will grow to fit all content so nothing is hidden.
+2. Make the job number span clickable (line 293):
+   - Change from: `<span className="text-xs font-mono text-muted-foreground">{job.jobNumber}</span>`
+   - Change to: `<button onClick={() => setShowDescription(v => !v)} className="text-xs font-mono text-muted-foreground hover:underline cursor-pointer">{job.jobNumber}</button>`
 
+3. Add the description display right after the title line (after line 296), conditionally rendered:
+   ```tsx
+   {showDescription && job.description && (
+     <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{job.description}</p>
+   )}
+   ```
+   Using `whitespace-pre-wrap` so line breaks in the description are preserved and the full text is visible.
+
+This is a small change -- one new state variable, one element swap, and one conditional block, all within the existing `JobDetail` function.
