@@ -3,6 +3,7 @@ import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight,
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useJobSidebarLinks } from "@/hooks/useJobSidebarLinks";
+import { usePagePermissions } from "@/hooks/usePagePermissions";
 
 import {
   Sidebar,
@@ -22,16 +23,16 @@ import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Items", url: "/items", icon: Package },
-  { title: "Sales", url: "/sales", icon: ShoppingCart },
-  { title: "Quotes", url: "/quotes", icon: FileText },
-  { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
-  { title: "Requests", url: "/requests", icon: ListTodo },
-  { title: "Calendar", url: "/calendar", icon: CalendarDays },
-  { title: "Notes", url: "/notes", icon: StickyNote },
-  { title: "Bank", url: "/bank", icon: Wallet },
-  { title: "Settings", url: "/settings", icon: Settings },
+  { title: "Dashboard", url: "/", icon: Home, pageKey: "dashboard" },
+  { title: "Items", url: "/items", icon: Package, pageKey: "items" },
+  { title: "Sales", url: "/sales", icon: ShoppingCart, pageKey: "sales" },
+  { title: "Quotes", url: "/quotes", icon: FileText, pageKey: "quotes" },
+  { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList, pageKey: "purchase-orders" },
+  { title: "Requests", url: "/requests", icon: ListTodo, pageKey: "requests" },
+  { title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
+  { title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
+  { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
+  { title: "Settings", url: "/settings", icon: Settings, pageKey: "settings" },
 ];
 
 export function AppSidebar() {
@@ -39,9 +40,12 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { links, addLink } = useJobSidebarLinks();
+  const { isPageAllowed } = usePagePermissions();
   const [jobsOpen, setJobsOpen] = useState(location.pathname.startsWith("/jobs"));
   const [addingLink, setAddingLink] = useState(false);
   const [newLinkLabel, setNewLinkLabel] = useState("");
+
+  const filteredMenuItems = menuItems.filter(item => isPageAllowed(item.pageKey));
 
   const isActive = (path: string) => {
     if (path === "/items") {
@@ -79,7 +83,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {filteredMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
