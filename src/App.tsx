@@ -22,6 +22,7 @@ import { Jobs } from "./pages/Jobs";
 import { CreateJob } from "./pages/CreateJob";
 import { EditJob } from "./pages/EditJob";
 import { AllJobItems } from "./pages/AllJobItems";
+import { JobDescription } from "./pages/JobDescription";
 import { JobAddItems } from "./pages/JobAddItems";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
@@ -257,6 +258,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Jobs />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:jobId/description"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <JobDescription />
               </AppLayout>
             </ProtectedRoute>
           }
