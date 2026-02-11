@@ -1,22 +1,30 @@
-
-# Add Customer Dropdown to Job Create/Edit Dialogs
+# Add Combined Items List Button to Jobs Page
 
 ## Overview
-Add a dropdown at the top of the "Customer Details" section in both the Create and Edit Job dialogs. When a saved customer is selected, their name, email, phone, and address auto-fill the form fields. Users can still manually type or override values.
+
+Add a "View All Items" button in the Jobs page header that opens a dialog showing all items across all jobs combined. Items with the same SKU/name are aggregated, showing the total quantity needed across jobs.
 
 ## Changes
 
 ### File: `src/pages/Jobs.tsx`
 
-1. **Import `useCustomers` hook** to fetch the saved customers list.
+1. **Add a new state** `showAllItemsDialog` to control the dialog visibility.
+2. **Fetch all job (except finished Jobs), items**: Query `job_items` table for all items belonging to the user's jobs. This will be done with a `useEffect` that fetches from `supabase.from('job_items').select('*, jobs!inner(title, job_number)')` joining job info, when the dialog opens.
+3. **Aggregate items by SKU**: Group items by `inventory_item_id` (or by `item_name + sku` for items without an inventory link), summing quantities across jobs. Each aggregated row shows: item name, SKU, total quantity needed, unit price, and which jobs need it.
+4. **Add button in header** (line ~229, next to "New Job"): A `List` icon button labeled "All Items" that opens the dialog.
+5. **Add dialog**: A `Dialog` showing a `Table` with columns:
+  - Item Name
+  - SKU
+  - Total Qty
+  - Unit Price
+  - Jobs (comma-separated job numbers)
 
-2. **Add customer selection handler**: When a customer is selected from the dropdown, populate `formCustomerName`, `formCustomerEmail`, `formCustomerPhone`, and `formCustomerAddress` with the customer's data.
+### File: `src/hooks/useJobs.ts`
 
-3. **Create Job dialog (line ~311-318)**: Add a `Select` dropdown labeled "Select Customer" above the manual customer fields. Options include all saved customers (displayed as name + company if available). Selecting one auto-fills the fields below. A "None" option clears the selection.
+Add a new exported hook `useAllJobItems()` that fetches all job items with their job titles/numbers using a join query, avoiding the need to call `useJobItems` for each individual job.
 
-4. **Edit Job dialog (line ~349-356)**: Add the same customer dropdown above the manual fields.
+### No database changes needed
 
-5. **Reset the selected customer** when opening the create dialog (in `openCreate`).
+The `job_items` table already has all the data. We just need a query that fetches across all jobs.
 
-### No database or hook changes needed
-The `useCustomers` hook already exists and returns the customer list. The `customers` table is already set up.
+&nbsp;
