@@ -131,6 +131,41 @@ export function useJobs() {
   return { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs, refetch: fetchJobs };
 }
 
+export function useAllJobItems() {
+  const [items, setItems] = useState<(JobItem & { jobTitle: string; jobNumber: string | null })[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+
+  const fetchAllItems = useCallback(async () => {
+    if (!user) { setItems([]); return; }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('job_items')
+      .select('*, jobs!inner(title, job_number, status)')
+      .neq('jobs.status', 'finished');
+    if (error) {
+      console.error('Error loading all job items:', error);
+    } else {
+      setItems((data || []).map((d: any) => ({
+        id: d.id,
+        jobId: d.job_id,
+        inventoryItemId: d.inventory_item_id,
+        itemName: d.item_name,
+        sku: d.sku,
+        quantity: d.quantity,
+        unitPrice: Number(d.unit_price),
+        notes: d.notes,
+        createdAt: d.created_at,
+        jobTitle: d.jobs.title,
+        jobNumber: d.jobs.job_number,
+      })));
+    }
+    setLoading(false);
+  }, [user]);
+
+  return { items, loading, fetchAllItems };
+}
+
 export function useJobItems(jobId: string | null) {
   const [items, setItems] = useState<JobItem[]>([]);
   const [loading, setLoading] = useState(false);

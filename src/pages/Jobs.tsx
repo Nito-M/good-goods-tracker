@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
-import { useJobs, useJobItems } from '@/hooks/useJobs';
+import { useJobs, useJobItems, useAllJobItems } from '@/hooks/useJobs';
 import { useJobSidebarLinks } from '@/hooks/useJobSidebarLinks';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -47,6 +47,29 @@ export function Jobs() {
   const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs } = useJobs();
   const { links, removeLink } = useJobSidebarLinks();
   const { customers } = useCustomers();
+  const { items: allJobItems, loading: allItemsLoading, fetchAllItems } = useAllJobItems();
+  const [showAllItemsDialog, setShowAllItemsDialog] = useState(false);
+
+  const aggregatedItems = useMemo(() => {
+    const map = new Map<string, { itemName: string; sku: string; totalQty: number; unitPrice: number; jobs: string[] }>();
+    for (const item of allJobItems) {
+      const key = item.inventoryItemId || `${item.itemName}::${item.sku}`;
+      const existing = map.get(key);
+      const jobLabel = item.jobNumber || item.jobTitle;
+      if (existing) {
+        existing.totalQty += item.quantity;
+        if (!existing.jobs.includes(jobLabel)) existing.jobs.push(jobLabel);
+      } else {
+        map.set(key, { itemName: item.itemName, sku: item.sku, totalQty: item.quantity, unitPrice: item.unitPrice, jobs: [jobLabel] });
+      }
+    }
+    return Array.from(map.values());
+  }, [allJobItems]);
+
+  const handleOpenAllItems = () => {
+    setShowAllItemsDialog(true);
+    fetchAllItems();
+  };
 
   // Resolve page title from sidebar link
   const sidebarLink = linkId ? links.find(l => l.id === linkId) : null;
@@ -226,6 +249,7 @@ export function Jobs() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleOpenAllItems}><List className="h-4 w-4 mr-2" />All Items</Button>
               <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />New Job</Button>
               {linkId && sidebarLink && (
                 <Button variant="destructive" onClick={() => setDeletingLinkId(true)}>
@@ -464,6 +488,46 @@ export function Jobs() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* All Items Dialog */}
+      <Dialog open={showAllItemsDialog} onOpenChange={setShowAllItemsDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>All Job Items</DialogTitle>
+            <DialogDescription>Combined list of items across all active jobs (excluding finished).</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            {allItemsLoading ? (
+              <p className="text-muted-foreground text-center py-8">Loading items...</p>
+            ) : aggregatedItems.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No items found across jobs.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item Name</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead className="text-right">Total Qty</TableHead>
+                    <TableHead className="text-right">Unit Price</TableHead>
+                    <TableHead>Jobs</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {aggregatedItems.map((item, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{item.itemName}</TableCell>
+                      <TableCell className="font-mono text-xs">{item.sku}</TableCell>
+                      <TableCell className="text-right">{item.totalQty}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{item.jobs.join(', ')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
