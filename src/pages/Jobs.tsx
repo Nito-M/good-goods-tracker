@@ -272,7 +272,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
   const { items, loading, updateItem, removeItem } = useJobItems(job.id);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [showDescription, setShowDescription] = useState(false);
+  
 
   const handleDelete = async () => {
     await onDelete();
@@ -291,13 +291,10 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
               <div className="flex flex-col">
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Job Details</h1>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setShowDescription(v => !v)} className="text-xs font-mono text-muted-foreground hover:underline cursor-pointer">{job.jobNumber}</button>
+                  <button onClick={() => navigate(`/jobs/${job.id}/description`)} className="text-xs font-mono text-muted-foreground hover:underline cursor-pointer">{job.jobNumber}</button>
                   <Badge className={statusColors[job.status] || ''}>{job.status}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{job.title}</p>
-                {showDescription && job.description && (
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{job.description}</p>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
