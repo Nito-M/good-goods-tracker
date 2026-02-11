@@ -59,8 +59,8 @@ export function usePagePermissions() {
 
   const isRouteAllowed = (path: string): boolean => {
     if (allowedPages === null) return true;
-    // Settings and jobs are always allowed
-    if (path.startsWith('/settings') || path.startsWith('/jobs')) return true;
+    // Settings is always allowed
+    if (path.startsWith('/settings')) return true;
     
     for (const [pageKey, routes] of Object.entries(PAGE_KEY_TO_ROUTES)) {
       for (const route of routes) {
@@ -74,7 +74,7 @@ export function usePagePermissions() {
 
   const getFirstAllowedRoute = (): string => {
     if (allowedPages === null) return '/';
-    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'purchase-orders', 'requests', 'calendar', 'notes', 'bank', 'settings'];
+    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'purchase-orders', 'requests', 'calendar', 'notes', 'bank', 'jobs', 'settings'];
     for (const key of orderedKeys) {
       if (allowedPages.includes(key)) {
         return PAGE_KEY_TO_ROUTES[key]?.[0] || '/';

@@ -39,6 +39,7 @@ const PAGE_KEYS = [
   { key: 'calendar', label: 'Calendar' },
   { key: 'notes', label: 'Notes' },
   { key: 'bank', label: 'Bank' },
+  { key: 'jobs', label: 'Jobs' },
   { key: 'settings', label: 'Settings' },
 ];
 

@@ -105,6 +105,7 @@ export function AppSidebar() {
               ))}
 
               {/* Jobs with collapsible subitems */}
+              {isPageAllowed('jobs') && (
               <SidebarMenuItem>
                 <Collapsible open={jobsOpen} onOpenChange={setJobsOpen}>
                   <div className="flex items-center">
@@ -174,6 +175,7 @@ export function AppSidebar() {
                   )}
                 </Collapsible>
               </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
