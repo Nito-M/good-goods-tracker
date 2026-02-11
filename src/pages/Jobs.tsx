@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
 import { useJobSidebarLinks } from '@/hooks/useJobSidebarLinks';
+import { useCustomers } from '@/hooks/useCustomers';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +46,7 @@ export function Jobs() {
   const { jobId: urlJobId, linkId } = useParams<{ jobId?: string; linkId?: string }>();
   const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs } = useJobs();
   const { links, removeLink } = useJobSidebarLinks();
+  const { customers } = useCustomers();
 
   // Resolve page title from sidebar link
   const sidebarLink = linkId ? links.find(l => l.id === linkId) : null;
@@ -68,6 +70,21 @@ export function Jobs() {
   const [formCustomerEmail, setFormCustomerEmail] = useState('');
   const [formCustomerPhone, setFormCustomerPhone] = useState('');
   const [formCustomerAddress, setFormCustomerAddress] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+
+  const handleCustomerSelect = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    if (customerId === 'none' || !customerId) {
+      return;
+    }
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setFormCustomerName(customer.name || '');
+      setFormCustomerEmail(customer.email || '');
+      setFormCustomerPhone(customer.phone || '');
+      setFormCustomerAddress(customer.address || '');
+    }
+  };
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
@@ -89,6 +106,7 @@ export function Jobs() {
     setFormCustomerEmail('');
     setFormCustomerPhone('');
     setFormCustomerAddress('');
+    setSelectedCustomerId('');
     setShowCreateDialog(true);
   };
 
@@ -311,6 +329,22 @@ export function Jobs() {
             <div className="border-t pt-4">
               <p className="text-sm font-medium mb-3">Customer Details</p>
               <div className="space-y-3">
+                {customers.length > 0 && (
+                  <div>
+                    <Label>Select Customer</Label>
+                    <Select value={selectedCustomerId} onValueChange={handleCustomerSelect}>
+                      <SelectTrigger><SelectValue placeholder="Choose a saved customer..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {customers.map(c => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}{c.company ? ` (${c.company})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div><Label>Customer Name</Label><Input value={formCustomerName} onChange={e => setFormCustomerName(e.target.value)} placeholder="Customer name" /></div>
                 <div><Label>Email</Label><Input type="email" value={formCustomerEmail} onChange={e => setFormCustomerEmail(e.target.value)} placeholder="customer@example.com" /></div>
                 <div><Label>Phone</Label><Input value={formCustomerPhone} onChange={e => setFormCustomerPhone(e.target.value)} placeholder="Phone number" /></div>
@@ -349,6 +383,22 @@ export function Jobs() {
             <div className="border-t pt-4">
               <p className="text-sm font-medium mb-3">Customer Details</p>
               <div className="space-y-3">
+                {customers.length > 0 && (
+                  <div>
+                    <Label>Select Customer</Label>
+                    <Select value={selectedCustomerId} onValueChange={handleCustomerSelect}>
+                      <SelectTrigger><SelectValue placeholder="Choose a saved customer..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {customers.map(c => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}{c.company ? ` (${c.company})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div><Label>Customer Name</Label><Input value={formCustomerName} onChange={e => setFormCustomerName(e.target.value)} placeholder="Customer name" /></div>
                 <div><Label>Email</Label><Input type="email" value={formCustomerEmail} onChange={e => setFormCustomerEmail(e.target.value)} placeholder="customer@example.com" /></div>
                 <div><Label>Phone</Label><Input value={formCustomerPhone} onChange={e => setFormCustomerPhone(e.target.value)} placeholder="Phone number" /></div>
