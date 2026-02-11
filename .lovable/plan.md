@@ -1,31 +1,37 @@
 
-## Move Edit and Delete Buttons from Jobs List to Job Details
+## Make Edit Job a Full Page
 
 ### What changes
-1. **Remove Edit and Delete buttons from the job cards** on the Jobs list page (lines 280-283). The card will remain clickable to navigate into Job Details.
 
-2. **Remove the Edit Dialog and Delete AlertDialog** from the Jobs list component (lines 293-359), along with related state (`editingJob`, `deletingJobId`) and handlers (`openEdit`, `handleUpdate`, `handleDelete`, form state variables).
+1. **New file: `src/pages/EditJob.tsx`** -- A full-page edit form mirroring the `CreateJob` layout, with:
+   - Full-width description textarea (visible without scrolling, larger rows)
+   - Same two-card layout (Job Details + Customer Details) as CreateJob
+   - Loads the existing job data from the database by job ID (from URL param)
+   - Includes a "Save Changes" button and "Cancel" link back to the job
+   - Customer auto-fill from saved customers list
 
-3. **Add Edit and Delete functionality directly into the JobDetail component**:
-   - Add a "Delete" button next to the existing "Edit Job" button in the Job Details header
-   - Move the Edit Dialog and Delete AlertDialog into the JobDetail component
-   - The JobDetail component will manage its own edit form state and delete confirmation
+2. **Update `src/App.tsx`** -- Add a new route `/jobs/:jobId/edit` pointing to the `EditJob` component, wrapped in `ProtectedRoute` and `AppLayout`.
 
-4. **Update JobDetail props**: Replace the `onEdit` callback with direct edit/delete handling inside JobDetail. Add `onDelete` callback so the parent can handle navigation back to the list after deletion.
+3. **Update `src/pages/Jobs.tsx` (JobDetail component)** -- Replace the "Edit Job" button's `onClick` from opening a dialog to navigating to `/jobs/{jobId}/edit`. Remove all edit dialog state, the `openEdit` function, the `handleCustomerSelect` function, the `handleUpdate` function, and the Edit Dialog JSX (lines 514-566). The Delete button and its AlertDialog remain as-is.
 
 ### Technical Details
 
-**File: `src/pages/Jobs.tsx`**
+**`src/pages/EditJob.tsx`** (new file):
+- Uses `useParams` to get `jobId`
+- Uses `useJobs` hook to get `updateJob` and the job list to find the current job
+- Pre-fills all form fields from the job data on mount
+- Description field uses `<Textarea rows={6}>` so the full text is visible
+- On save, calls `updateJob` then navigates back to `/jobs` (which will show the detail view)
+- Layout matches `CreateJob` exactly (max-w-3xl, same header style, same card structure)
 
-- Remove state variables: `editingJob`, `deletingJobId`, `formTitle`, `formDescription`, `formStatus`, `formJobNumber`, `formCustomerName`, `formCustomerEmail`, `formCustomerPhone`, `formCustomerAddress`, `selectedCustomerId`
-- Remove functions: `openEdit`, `handleUpdate`, `handleDelete`, `handleCustomerSelect`
-- Remove the Edit and Delete buttons from the job card (lines 280-283)
-- Remove the Edit Dialog JSX (lines 293-345) and Delete AlertDialog JSX (lines 347-359)
-- Update `JobDetail` call: remove `onEdit`, add `onDelete` that clears `selectedJobId`
-- Pass `updateJob`, `deleteJob`, and `customers` as props to `JobDetail`
+**`src/pages/Jobs.tsx` cleanup**:
+- Remove state: `editOpen`, `formTitle`, `formDescription`, `formStatus`, `formJobNumber`, `formCustomerName`, `formCustomerEmail`, `formCustomerPhone`, `formCustomerAddress`, `selectedCustomerId`
+- Remove functions: `openEdit`, `handleCustomerSelect`, `handleUpdate`
+- Remove Edit Dialog JSX (lines 514-566)
+- Change Edit button to: `onClick={() => navigate(`/jobs/${job.id}/edit`)}`
+- Remove `customers` prop from `JobDetailProps` since it is no longer needed
+- Remove `customers` being passed to `JobDetail` from the parent
 
-**JobDetail component updates:**
-- Add internal state for edit dialog, delete confirmation, and form fields
-- Add Edit Dialog and Delete AlertDialog JSX (moved from parent)
-- Add a Delete button (red, with Trash2 icon) in the header alongside Edit Job
-- Handle customer selection within the component
+**`src/App.tsx`**:
+- Import `EditJob`
+- Add route: `<Route path="/jobs/:jobId/edit" element={<ProtectedRoute><AppLayout><EditJob /></AppLayout></ProtectedRoute>} />`
