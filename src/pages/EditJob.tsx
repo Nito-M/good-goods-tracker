@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, User, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,15 @@ export function EditJob() {
   const [formCustomerAddress, setFormCustomerAddress] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [saving, setSaving] = useState(false);
+  const descRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    }
+  }, [formDescription]);
 
   useEffect(() => {
     if (job) {
@@ -134,7 +143,7 @@ export function EditJob() {
             </div>
             <div>
               <Label>Description</Label>
-              <Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder="Job description" rows={6} />
+              <Textarea ref={descRef} value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder="Job description" rows={3} className="resize-none overflow-hidden" />
             </div>
             <div>
               <Label>Status</Label>
