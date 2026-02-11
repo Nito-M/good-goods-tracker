@@ -10,7 +10,7 @@ import { useJobSidebarLinks } from '@/hooks/useJobSidebarLinks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -138,6 +138,11 @@ export function Jobs() {
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />New Job</Button>
+              {linkId && sidebarLink && (
+                <Button variant="destructive" onClick={() => setDeletingLinkId(true)}>
+                  <Trash2 className="h-4 w-4 mr-2" />Delete Subitem
+                </Button>
+              )}
               <Button variant="outline" size="icon" onClick={signOut} title="Sign out"><LogOut className="h-4 w-4" /></Button>
             </div>
           </div>
@@ -187,40 +192,6 @@ export function Jobs() {
               </Card>
             ))}
           </div>
-        )}
-
-        {/* Delete Subitem Section - only on subitem pages */}
-        {linkId && sidebarLink && (
-          <Card className="border-destructive/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
-                Delete &quot;{sidebarLink.label}&quot;
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Warning</AlertTitle>
-                <AlertDescription>
-                  Deleting this subitem will:
-                  <ul className="list-disc ml-4 mt-2 space-y-1">
-                    <li>Permanently remove &quot;{sidebarLink.label}&quot; from the sidebar navigation</li>
-                    <li>Remove the custom page associated with this subitem</li>
-                    <li>This action <strong>cannot be undone</strong></li>
-                  </ul>
-                  <p className="mt-2 text-sm">Note: Your jobs and their assigned inventory items will <strong>not</strong> be affected.</p>
-                </AlertDescription>
-              </Alert>
-              <Button
-                variant="destructive"
-                onClick={() => setDeletingLinkId(true)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete this subitem
-              </Button>
-            </CardContent>
-          </Card>
         )}
       </main>
 
@@ -290,9 +261,20 @@ export function Jobs() {
       <AlertDialog open={deletingLinkId} onOpenChange={open => { if (!open) setDeletingLinkId(false); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Subitem?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove &quot;{sidebarLink?.label}&quot; from your sidebar. Your jobs and inventory items will not be affected.
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete &quot;{sidebarLink?.label}&quot;?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>Deleting this subitem will:</p>
+                <ul className="list-disc ml-4 space-y-1 text-sm">
+                  <li>Permanently remove &quot;{sidebarLink?.label}&quot; from the sidebar navigation</li>
+                  <li>Remove the custom page associated with this subitem</li>
+                  <li>This action <strong className="text-foreground">cannot be undone</strong></li>
+                </ul>
+                <p className="text-sm text-muted-foreground">Note: Your jobs and their assigned inventory items will not be affected.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -307,7 +289,7 @@ export function Jobs() {
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              Delete Anyway
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
