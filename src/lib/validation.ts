@@ -21,6 +21,17 @@ export const vendorSchema = z.object({
 
 export type VendorInput = z.infer<typeof vendorSchema>;
 
+// Customer validation
+export const customerSchema = z.object({
+  name: requiredName,
+  company: z.string().max(255, 'Company must be less than 255 characters').optional().nullable(),
+  phone: optionalPhone,
+  email: optionalEmail,
+  address: optionalAddress,
+});
+
+export type CustomerInput = z.infer<typeof customerSchema>;
+
 // Category validation
 export const categorySchema = z.object({
   name: z.string().min(1, 'Category name is required').max(100, 'Category name must be less than 100 characters').trim(),
