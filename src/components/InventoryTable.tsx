@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { Eye, ImageIcon } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
 interface InventoryTableProps {
   items: InventoryItem[];
@@ -24,7 +25,7 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
   const navigate = useNavigate();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const thumbnailMap = useItemThumbnails(itemIds);
-
+  const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -67,7 +68,11 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
                       <img
                         src={thumbnailMap.get(item.id) || item.imageUrl!}
                         alt={item.name}
-                        className="w-12 h-12 object-contain rounded-md border border-border"
+                        className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewerImage({ url: thumbnailMap.get(item.id) || item.imageUrl!, alt: item.name });
+                        }}
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
@@ -116,6 +121,12 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
           )}
         </TableBody>
       </Table>
+      <ImageViewerDialog
+        imageUrl={viewerImage?.url ?? null}
+        alt={viewerImage?.alt ?? ''}
+        open={!!viewerImage}
+        onOpenChange={(open) => { if (!open) setViewerImage(null); }}
+      />
     </div>
   );
 }
