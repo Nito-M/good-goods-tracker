@@ -62,16 +62,16 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
                   key={item.id}
                   className="transition-colors hover:bg-muted/30"
                 >
-                  <TableCell className="w-12">
+                  <TableCell className="w-14 py-1">
                     {(thumbnailMap.get(item.id) || item.imageUrl) ? (
                       <img
                         src={thumbnailMap.get(item.id) || item.imageUrl!}
                         alt={item.name}
-                        className="w-10 h-10 object-contain rounded-md border border-border"
+                        className="w-12 h-12 object-contain rounded-md border border-border"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-md border border-border bg-muted/50 flex items-center justify-center">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
                       </div>
                     )}
                   </TableCell>
