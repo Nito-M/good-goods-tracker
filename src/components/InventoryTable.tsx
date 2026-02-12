@@ -67,7 +67,7 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
                       <img
                         src={thumbnailMap.get(item.id) || item.imageUrl!}
                         alt={item.name}
-                        className="w-10 h-10 object-cover rounded-md border border-border"
+                        className="w-10 h-10 object-contain rounded-md border border-border"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-md border border-border bg-muted/50 flex items-center justify-center">
