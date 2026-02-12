@@ -1,34 +1,16 @@
 
 
-## Show Item Thumbnails on Inventory Page
+## Show Full Image in Inventory Table Thumbnails
 
 ### Problem
-The inventory table checks `item.imageUrl` for thumbnails, but images are stored in the `item_images` table (multi-image system). These two systems are disconnected, so thumbnails never appear.
+The current thumbnails use `object-cover`, which crops images to fill the 40x40px square. Users want to see the entire image.
 
 ### Solution
-Batch-fetch primary images from `item_images` for all visible items and display them in the inventory table.
+Change the image CSS from `object-cover` to `object-contain` in `src/components/InventoryTable.tsx`. This will fit the full image within the 40x40px thumbnail area without cropping, while keeping the same row height.
 
-### Changes
+### Change
+**File: `src/components/InventoryTable.tsx`** (line 66)
+- Change `className="w-10 h-10 object-cover rounded-md border border-border"` to `className="w-10 h-10 object-contain rounded-md border border-border"`
 
-**1. Create a new hook: `src/hooks/useItemThumbnails.ts`**
-- Accepts an array of item IDs
-- Queries `item_images` table for all primary images (`is_primary = true`) for those IDs in a single query
-- Returns a `Map<itemId, imageUrl>` for quick lookup
-- Refreshes when the item list changes
+One-line CSS change -- no other files affected.
 
-**2. Update `src/components/InventoryTable.tsx`**
-- Import and call `useItemThumbnails` with the list of item IDs
-- Replace `item.imageUrl` lookup with the thumbnail map
-- Fall back to `item.imageUrl` if no entry exists in `item_images`
-
-### Technical Details
-
-```
-InventoryTable
-  --> useItemThumbnails(itemIds)
-      --> SELECT image_url, item_id FROM item_images WHERE item_id IN (...) AND is_primary = true
-      --> Returns Map<string, string>
-  --> For each row: thumbnailMap.get(item.id) || item.imageUrl || placeholder icon
-```
-
-This approach avoids N+1 queries by fetching all thumbnails in one batch query. No database changes are needed.
