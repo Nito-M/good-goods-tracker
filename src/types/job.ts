@@ -9,6 +9,7 @@ export interface Job {
   customerEmail: string | null;
   customerPhone: string | null;
   customerAddress: string | null;
+  dueDate: string | null;
   createdAt: string;
   updatedAt: string;
 }

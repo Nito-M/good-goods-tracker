@@ -404,6 +404,7 @@ export type Database = {
           customer_phone: string | null
           description: string | null
           display_order: number
+          due_date: string | null
           id: string
           job_number: string | null
           status: string
@@ -419,6 +420,7 @@ export type Database = {
           customer_phone?: string | null
           description?: string | null
           display_order?: number
+          due_date?: string | null
           id?: string
           job_number?: string | null
           status?: string
@@ -434,6 +436,7 @@ export type Database = {
           customer_phone?: string | null
           description?: string | null
           display_order?: number
+          due_date?: string | null
           id?: string
           job_number?: string | null
           status?: string

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, MapPin } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +52,12 @@ export function JobDescription() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-muted-foreground">{job.jobNumber}</span>
                 <Badge className={statusColors[job.status] || ''}>{job.status}</Badge>
+                {job.dueDate && (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <CalendarClock className="h-3 w-3" />
+                    Due: {new Date(job.dueDate).toLocaleDateString()}
+                  </span>
+                )}
               </div>
             </div>
           </div>

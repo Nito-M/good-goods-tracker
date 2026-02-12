@@ -33,6 +33,7 @@ export function CreateJob() {
   const [formCustomerEmail, setFormCustomerEmail] = useState('');
   const [formCustomerPhone, setFormCustomerPhone] = useState('');
   const [formCustomerAddress, setFormCustomerAddress] = useState('');
+  const [formDueDate, setFormDueDate] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -56,7 +57,7 @@ export function CreateJob() {
       email: formCustomerEmail.trim() || undefined,
       phone: formCustomerPhone.trim() || undefined,
       address: formCustomerAddress.trim() || undefined,
-    });
+    }, formDueDate ? new Date(formDueDate).toISOString() : undefined);
     setSaving(false);
     if (result) navigate('/jobs');
   };
@@ -101,6 +102,10 @@ export function CreateJob() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Due Date</Label>
+              <Input type="date" value={formDueDate} onChange={e => setFormDueDate(e.target.value)} />
             </div>
           </CardContent>
         </Card>
