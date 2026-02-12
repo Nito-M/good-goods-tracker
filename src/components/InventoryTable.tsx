@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { Eye, ImageIcon } from 'lucide-react';
@@ -12,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 
 interface InventoryTableProps {
   items: InventoryItem[];
@@ -20,6 +22,8 @@ interface InventoryTableProps {
 
 export function InventoryTable({ items, onDelete }: InventoryTableProps) {
   const navigate = useNavigate();
+  const itemIds = useMemo(() => items.map((item) => item.id), [items]);
+  const thumbnailMap = useItemThumbnails(itemIds);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -59,9 +63,9 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
                   className="transition-colors hover:bg-muted/30"
                 >
                   <TableCell className="w-12">
-                    {item.imageUrl ? (
+                    {(thumbnailMap.get(item.id) || item.imageUrl) ? (
                       <img
-                        src={item.imageUrl}
+                        src={thumbnailMap.get(item.id) || item.imageUrl!}
                         alt={item.name}
                         className="w-10 h-10 object-cover rounded-md border border-border"
                       />
