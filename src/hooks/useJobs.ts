@@ -31,6 +31,7 @@ export function useJobs() {
         customerEmail: d.customer_email,
         customerPhone: d.customer_phone,
         customerAddress: d.customer_address,
+        dueDate: d.due_date,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
       })));
@@ -40,7 +41,7 @@ export function useJobs() {
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  const createJob = async (title: string, description?: string, status?: string, customer?: { name?: string; email?: string; phone?: string; address?: string }) => {
+  const createJob = async (title: string, description?: string, status?: string, customer?: { name?: string; email?: string; phone?: string; address?: string }, dueDate?: string) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('jobs')
@@ -53,6 +54,7 @@ export function useJobs() {
         customer_email: customer?.email || null,
         customer_phone: customer?.phone || null,
         customer_address: customer?.address || null,
+        due_date: dueDate || null,
       })
       .select()
       .single();
@@ -65,7 +67,7 @@ export function useJobs() {
     return data;
   };
 
-  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null }) => {
+  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null; due_date?: string | null }) => {
     const { error } = await supabase.from('jobs').update(updates).eq('id', id);
     if (error) {
       toast({ title: 'Error updating job', variant: 'destructive' });

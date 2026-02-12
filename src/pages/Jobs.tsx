@@ -208,6 +208,9 @@ export function Jobs() {
                   {job.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{job.description}</p>}
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{new Date(job.createdAt).toLocaleDateString()}</span>
+                    {job.dueDate && (
+                      <span className="text-xs text-muted-foreground">Due: {new Date(job.dueDate).toLocaleDateString()}</span>
+                    )}
                   </div>
                 </CardContent>
               </Card>
