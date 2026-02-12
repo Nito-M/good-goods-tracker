@@ -1,26 +1,34 @@
 
 
-## Show Full Job Description When Clicking Job Number
+## Show Item Thumbnails on Inventory Page
 
-### What changes
-In the Job Detail header, make the job number clickable. When tapped, toggle the visibility of the full job description below the header info.
+### Problem
+The inventory table checks `item.imageUrl` for thumbnails, but images are stored in the `item_images` table (multi-image system). These two systems are disconnected, so thumbnails never appear.
+
+### Solution
+Batch-fetch primary images from `item_images` for all visible items and display them in the inventory table.
+
+### Changes
+
+**1. Create a new hook: `src/hooks/useItemThumbnails.ts`**
+- Accepts an array of item IDs
+- Queries `item_images` table for all primary images (`is_primary = true`) for those IDs in a single query
+- Returns a `Map<itemId, imageUrl>` for quick lookup
+- Refreshes when the item list changes
+
+**2. Update `src/components/InventoryTable.tsx`**
+- Import and call `useItemThumbnails` with the list of item IDs
+- Replace `item.imageUrl` lookup with the thumbnail map
+- Fall back to `item.imageUrl` if no entry exists in `item_images`
 
 ### Technical Details
 
-**File: `src/pages/Jobs.tsx` (JobDetail component)**
+```
+InventoryTable
+  --> useItemThumbnails(itemIds)
+      --> SELECT image_url, item_id FROM item_images WHERE item_id IN (...) AND is_primary = true
+      --> Returns Map<string, string>
+  --> For each row: thumbnailMap.get(item.id) || item.imageUrl || placeholder icon
+```
 
-1. Add a `showDescription` boolean state: `const [showDescription, setShowDescription] = useState(false);`
-
-2. Make the job number span clickable (line 293):
-   - Change from: `<span className="text-xs font-mono text-muted-foreground">{job.jobNumber}</span>`
-   - Change to: `<button onClick={() => setShowDescription(v => !v)} className="text-xs font-mono text-muted-foreground hover:underline cursor-pointer">{job.jobNumber}</button>`
-
-3. Add the description display right after the title line (after line 296), conditionally rendered:
-   ```tsx
-   {showDescription && job.description && (
-     <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{job.description}</p>
-   )}
-   ```
-   Using `whitespace-pre-wrap` so line breaks in the description are preserved and the full text is visible.
-
-This is a small change -- one new state variable, one element swap, and one conditional block, all within the existing `JobDetail` function.
+This approach avoids N+1 queries by fetching all thumbnails in one batch query. No database changes are needed.
