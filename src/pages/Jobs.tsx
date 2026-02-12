@@ -411,6 +411,12 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                   <span>Total Value</span>
                   <span>{formatCurrency(totalValue)}</span>
                 </div>
+                {job.dueDate && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Due Date</span>
+                    <span>{new Date(job.dueDate).toLocaleDateString()}</span>
+                  </div>
+                )}
                 <div className="text-xs text-muted-foreground">
                   Created {new Date(job.createdAt).toLocaleDateString()}
                 </div>
