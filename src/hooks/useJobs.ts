@@ -15,7 +15,7 @@ export function useJobs() {
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
-      .order('display_order', { ascending: true });
+      .order('due_date', { ascending: true, nullsFirst: false });
     if (error) {
       console.error('Error loading jobs:', error);
       toast({ title: 'Error loading jobs', variant: 'destructive' });
