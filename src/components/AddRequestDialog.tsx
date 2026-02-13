@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Plus, Upload, X, Link as LinkIcon, CalendarIcon, User } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { InventoryItem } from "@/types/inventory";
 import { CreateRequestInput } from "@/types/request";
 
@@ -249,7 +249,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
                 id="price"
                 type="number"
                 min={0}
-                step={0.01}
+                step={0.00001}
                 value={price}
                 onChange={(e) => setPrice(e.target.value ? parseFloat(e.target.value) : 0)}
                 placeholder="0.00"
@@ -274,18 +274,18 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
           {unitPrice > 0 && (
             <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal ({qty || 1} × ${unitPrice.toFixed(2)})</span>
-                <span className="font-medium">${((qty || 1) * unitPrice).toFixed(2)}</span>
+                <span className="text-muted-foreground">Subtotal ({qty || 1} × {formatCurrency(unitPrice)})</span>
+                <span className="font-medium">{formatCurrency((qty || 1) * unitPrice)}</span>
               </div>
               {gst > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">GST ({gst}%)</span>
-                  <span className="font-medium">${(((qty || 1) * unitPrice) * (gst / 100)).toFixed(2)}</span>
+                  <span className="font-medium">{formatCurrency(((qty || 1) * unitPrice) * (gst / 100))}</span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-2">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-green-600">${(((qty || 1) * unitPrice) * (1 + gst / 100)).toFixed(2)}</span>
+                <span className="font-bold text-green-600">{formatCurrency(((qty || 1) * unitPrice) * (1 + gst / 100))}</span>
               </div>
             </div>
           )}

@@ -197,7 +197,7 @@ export function ItemVendorPricing({
                       <Input
                         type="number"
                         min="0"
-                        step="0.01"
+                        step="0.00001"
                         placeholder="0.00"
                         value={vp.price}
                         onChange={(e) => handlePriceChange(vp.vendorId, e.target.value)}

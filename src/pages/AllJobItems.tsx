@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAllJobItems } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { formatCurrency } from '@/lib/utils';
 
 export function AllJobItems() {
   const { items: allJobItems, loading, fetchAllItems } = useAllJobItems();
@@ -49,8 +50,6 @@ export function AllJobItems() {
     return Array.from(map.values());
   }, [allJobItems]);
 
-  const formatCurrency = (v: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
 
   return (
     <div className="min-h-screen bg-background">

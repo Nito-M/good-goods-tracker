@@ -31,6 +31,7 @@ import {
   DollarSign,
   Trash2,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 export function Bank() {
   const { transactions, balance, loading, addDeposit, addWithdrawal, deleteTransaction } = useBank();
@@ -63,12 +64,6 @@ export function Bank() {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const getTypeIcon = (type: TransactionType) => {
     switch (type) {
@@ -129,7 +124,7 @@ export function Bank() {
                       <Input
                         id="deposit-amount"
                         type="number"
-                        step="0.01"
+                        step="0.00001"
                         min="0"
                         placeholder="0.00"
                         value={amount}
@@ -169,7 +164,7 @@ export function Bank() {
                       <Input
                         id="withdraw-amount"
                         type="number"
-                        step="0.01"
+                        step="0.00001"
                         min="0"
                         max={balance}
                         placeholder="0.00"

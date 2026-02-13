@@ -417,7 +417,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   id="price"
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="0.00001"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="0.00"
@@ -430,7 +430,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   id="cost"
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="0.00001"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
                   placeholder="0.00"
