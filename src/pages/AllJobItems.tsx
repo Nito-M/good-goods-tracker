@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAllJobItems } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
@@ -14,6 +15,7 @@ export function AllJobItems() {
   const [inventoryQtys, setInventoryQtys] = useState<Record<string, number>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   const toggleCategory = (cat: string) => {
     setCollapsedCategories(prev => {
@@ -171,6 +173,7 @@ export function AllJobItems() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-10"></TableHead>
                             <TableHead>Item Name</TableHead>
                              <TableHead className="text-right">Total Qty</TableHead>
                              <TableHead className="text-right">In Stock</TableHead>
@@ -187,6 +190,18 @@ export function AllJobItems() {
                             return (
                               <>
                                 <TableRow key={rowKey} className="cursor-pointer" onClick={() => toggleRow(rowKey)}>
+                                   <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
+                                     <Checkbox
+                                       checked={checkedItems.has(rowKey)}
+                                       onCheckedChange={(checked) => {
+                                         setCheckedItems(prev => {
+                                           const next = new Set(prev);
+                                           if (checked) next.add(rowKey); else next.delete(rowKey);
+                                           return next;
+                                         });
+                                       }}
+                                     />
+                                   </TableCell>
                                    <TableCell className="font-medium">{item.itemName}</TableCell>
                                    <TableCell className="text-right">{item.totalQty}</TableCell>
                                    <TableCell className="text-right">{inStock}</TableCell>
@@ -201,7 +216,7 @@ export function AllJobItems() {
                                  </TableRow>
                                  {expandedRows.has(rowKey) && (
                                    <TableRow key={`${rowKey}-detail`}>
-                                     <TableCell colSpan={5} className="bg-muted/30 py-2 px-4">
+                                     <TableCell colSpan={6} className="bg-muted/30 py-2 px-4">
                                        <div className="space-y-1">
                                          <div className="text-xs">
                                            <span className="font-medium text-muted-foreground mr-1">SKU:</span>
