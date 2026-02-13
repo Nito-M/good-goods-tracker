@@ -385,9 +385,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
           {/* Job Items */}
-          <div className="lg:col-span-2">
+          <div>
             <Card>
               <CardHeader>
                 <CardTitle>Job Items ({items.length})</CardTitle>
@@ -426,7 +426,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="w-12"></TableHead>
+                                <TableHead className="w-18"></TableHead>
                                 <TableHead>Item</TableHead>
                                 <TableHead>SKU</TableHead>
                                 <TableHead>Price</TableHead>
@@ -441,16 +441,16 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                 const thumbUrl = item.inventoryItemId ? thumbnailMap.get(item.inventoryItemId) : undefined;
                                 return (
                                   <TableRow key={item.id}>
-                                    <TableCell className="w-14 py-1">
+                                    <TableCell className="w-18 py-1">
                                       {thumbUrl ? (
                                         <img
                                           src={thumbUrl}
                                           alt={item.itemName}
-                                          className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                                          className="w-16 h-16 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
                                           onClick={(e) => { e.stopPropagation(); setViewerImage({ url: thumbUrl, alt: item.itemName }); }}
                                         />
                                       ) : (
-                                        <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                                        <div className="w-16 h-16 rounded-md border border-border bg-muted/50 flex items-center justify-center">
                                           <ImageIcon className="h-5 w-5 text-muted-foreground" />
                                         </div>
                                       )}
