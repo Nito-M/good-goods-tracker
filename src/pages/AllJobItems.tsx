@@ -134,12 +134,15 @@ export function AllJobItems() {
                             <TableHead>Item Name</TableHead>
                              <TableHead className="text-right">Total Qty</TableHead>
                              <TableHead className="text-right">In Stock</TableHead>
+                             <TableHead className="text-right">Need</TableHead>
                              <TableHead className="text-right">Unit Price</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {items.map((item, i) => {
-                            const inStock = item.inventoryItemId ? inventoryQtys[item.inventoryItemId] ?? '—' : '—';
+                            const inStockNum = item.inventoryItemId ? inventoryQtys[item.inventoryItemId] : undefined;
+                            const inStock = inStockNum !== undefined ? inStockNum : '—';
+                            const need = inStockNum !== undefined ? Math.max(0, item.totalQty - inStockNum) : undefined;
                             const rowKey = `${category}-${i}`;
                             return (
                               <>
@@ -147,11 +150,18 @@ export function AllJobItems() {
                                    <TableCell className="font-medium">{item.itemName}</TableCell>
                                    <TableCell className="text-right">{item.totalQty}</TableCell>
                                    <TableCell className="text-right">{inStock}</TableCell>
+                                   <TableCell className="text-right">
+                                     {need === undefined ? '—' : need > 0 ? (
+                                       <span className="text-destructive font-medium">{need}</span>
+                                     ) : (
+                                       <span className="text-muted-foreground">0</span>
+                                     )}
+                                   </TableCell>
                                    <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
                                  </TableRow>
                                  {expandedRows.has(rowKey) && (
                                    <TableRow key={`${rowKey}-detail`}>
-                                     <TableCell colSpan={4} className="bg-muted/30 py-2 px-4">
+                                     <TableCell colSpan={5} className="bg-muted/30 py-2 px-4">
                                        <div className="space-y-1">
                                          <div className="text-xs">
                                            <span className="font-medium text-muted-foreground mr-1">SKU:</span>
