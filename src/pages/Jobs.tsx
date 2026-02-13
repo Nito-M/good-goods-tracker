@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -277,12 +277,32 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
   const inventoryItemIds = useMemo(
     () => items.map(i => i.inventoryItemId).filter((id): id is string => !!id),
     [items]
   );
   const thumbnailMap = useItemThumbnails(inventoryItemIds);
+
+  const groupedItems = useMemo(() => {
+    const groups: Record<string, typeof items> = {};
+    items.forEach(item => {
+      const cat = item.category || 'Uncategorized';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    });
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [items]);
+
+  const toggleCategory = (cat: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
 
   const handleDelete = async () => {
     await onDelete();
@@ -341,56 +361,77 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                   </div>
                 ) : (
                   <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12"></TableHead>
-                        <TableHead>Item</TableHead>
-                        <TableHead>SKU</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Qty</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map(item => {
-                        const thumbUrl = item.inventoryItemId ? thumbnailMap.get(item.inventoryItemId) : undefined;
-                        return (
-                        <TableRow key={item.id}>
-                          <TableCell className="w-14 py-1">
-                            {thumbUrl ? (
-                              <img
-                                src={thumbUrl}
-                                alt={item.itemName}
-                                className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
-                                onClick={(e) => { e.stopPropagation(); setViewerImage({ url: thumbUrl, alt: item.itemName }); }}
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
-                                <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="font-medium">{item.itemName}</TableCell>
-                          <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
-                          <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: Math.max(1, item.quantity - 1) })}><Minus className="h-3 w-3" /></Button>
-                              <Input type="number" className="w-14 text-center h-7" value={item.quantity} onChange={e => updateItem(item.id, { quantity: Math.max(1, parseInt(e.target.value) || 1) })} min={1} />
-                              <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-medium">{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
-                          <TableCell>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeItem(item.id)}><X className="h-3.5 w-3.5" /></Button>
-                          </TableCell>
-                        </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                  {groupedItems.map(([category, catItems]) => {
+                    const isCollapsed = collapsedCategories.has(category);
+                    const catTotal = catItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+                    return (
+                      <div key={category} className="border border-border rounded-lg mb-3 overflow-hidden">
+                        <button
+                          onClick={() => toggleCategory(category)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted transition-colors text-left"
+                        >
+                          <div className="flex items-center gap-2">
+                            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                            <span className="font-semibold text-sm">{category}</span>
+                            <Badge variant="secondary" className="text-xs">{catItems.length}</Badge>
+                          </div>
+                          <span className="text-sm font-medium text-muted-foreground">{formatCurrency(catTotal)}</span>
+                        </button>
+                        {!isCollapsed && (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-12"></TableHead>
+                                <TableHead>Item</TableHead>
+                                <TableHead>SKU</TableHead>
+                                <TableHead>Price</TableHead>
+                                <TableHead>Qty</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead></TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {catItems.map(item => {
+                                const thumbUrl = item.inventoryItemId ? thumbnailMap.get(item.inventoryItemId) : undefined;
+                                return (
+                                  <TableRow key={item.id}>
+                                    <TableCell className="w-14 py-1">
+                                      {thumbUrl ? (
+                                        <img
+                                          src={thumbUrl}
+                                          alt={item.itemName}
+                                          className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                                          onClick={(e) => { e.stopPropagation(); setViewerImage({ url: thumbUrl, alt: item.itemName }); }}
+                                        />
+                                      ) : (
+                                        <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                                          <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                        </div>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="font-medium">{item.itemName}</TableCell>
+                                    <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
+                                    <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-1">
+                                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: Math.max(1, item.quantity - 1) })}><Minus className="h-3 w-3" /></Button>
+                                        <Input type="number" className="w-14 text-center h-7" value={item.quantity} onChange={e => updateItem(item.id, { quantity: Math.max(1, parseInt(e.target.value) || 1) })} min={1} />
+                                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-medium">{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
+                                    <TableCell>
+                                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeItem(item.id)}><X className="h-3.5 w-3.5" /></Button>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        )}
+                      </div>
+                    );
+                  })}
                   <ImageViewerDialog
                     imageUrl={viewerImage?.url ?? null}
                     alt={viewerImage?.alt ?? ''}
