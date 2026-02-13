@@ -143,7 +143,7 @@ export function useAllJobItems() {
     setLoading(true);
     const { data, error } = await supabase
       .from('job_items')
-      .select('*, jobs!inner(title, job_number, status)')
+      .select('*, jobs!inner(title, job_number, status), inventory_items(category)')
       .neq('jobs.status', 'finished');
     if (error) {
       console.error('Error loading all job items:', error);
@@ -157,7 +157,7 @@ export function useAllJobItems() {
         quantity: d.quantity,
         unitPrice: Number(d.unit_price),
         notes: d.notes,
-        category: null,
+        category: d.inventory_items?.category ?? null,
         createdAt: d.created_at,
         jobTitle: d.jobs.title,
         jobNumber: d.jobs.job_number,
