@@ -1,49 +1,34 @@
 
 
-## Allow More Decimal Places in Prices (5 Decimals)
+## Add Save Button for Vendor Pricing
 
-### What Changes
-Update price formatting and input fields across the app to support up to 5 decimal places instead of the current 2.
+### Problem
+Vendor prices on items only save when the entire item form is submitted. If you add a vendor and forget to click "Save Changes", the vendor pricing is lost. Additionally, for new items, vendor prices can't be saved at all since the item ID doesn't exist yet.
 
-### Changes Overview
+### Solution
+Add a visible "Save Vendor Prices" button inside the Vendor Pricing section that saves immediately when clicked, giving clear feedback that vendor data has been persisted.
 
-**1. Create a shared `formatCurrency` utility** in `src/lib/utils.ts`
-- One reusable function with `minimumFractionDigits: 2` and `maximumFractionDigits: 5`
-- This means $1.50 still shows as $1.50, but $1.12345 shows all 5 digits
+### Changes
 
-**2. Replace all inline `formatCurrency` definitions** (found in ~15 files):
-- `src/components/InventoryTable.tsx`
-- `src/components/PurchaseOrderCard.tsx`
-- `src/components/EditSaleDialog.tsx`
-- `src/components/EditQuoteDialog.tsx`
-- `src/components/SaleCard.tsx`
-- `src/components/QuoteCard.tsx`
-- `src/components/RequestCard.tsx`
-- `src/pages/Bank.tsx`
-- `src/pages/Jobs.tsx`
-- `src/pages/JobAddItems.tsx`
-- `src/pages/AllJobItems.tsx`
-- `src/pages/ItemDetails.tsx`
-- `src/lib/invoiceGenerator.ts`
-- `src/lib/purchaseOrderGenerator.ts`
-- `src/lib/quoteGenerator.ts`
+**1. `src/components/ItemVendorPricing.tsx`**
+- Add a "Save" button that appears when there are unsaved changes (new vendors added, prices changed, or vendors removed)
+- Accept new props: `onSave` callback and `isSaving` loading state
+- Track dirty state by comparing current entries against existing prices
 
-Each file will import from `@/lib/utils` instead of defining its own.
+**2. `src/pages/AddItem.tsx`**
+- When editing: wire up the save button to immediately call `upsertPrice`/`deletePrice` for changed vendor prices without requiring the full form submit
+- The full form submit will still also save vendor prices (no change to existing behavior)
+- When creating a new item: show a message that vendor prices can be added after saving the item
 
-**3. Update number input `step` attributes** from `"0.01"` to `"0.00001"` in all price/cost input fields:
-- `src/pages/AddItem.tsx`
-- `src/pages/AddPurchaseOrder.tsx`
-- `src/components/AddRequestDialog.tsx`
-- `src/components/EditPurchaseOrderDialog.tsx`
-- `src/components/EditRequestDialog.tsx`
-- `src/components/EditQuoteDialog.tsx`
-- `src/components/EditSaleDialog.tsx`
-- `src/pages/Bank.tsx`
+### Technical Details
 
-**4. Keep Index.tsx dashboard** formatting at 0 decimals (it currently shows rounded totals intentionally).
+In `ItemVendorPricing.tsx`, add:
+- A new `onSave?: () => Promise<void>` prop
+- A `isSaving?: boolean` prop  
+- A "Save Vendor Prices" button rendered at the bottom of the vendor list when `onSave` is provided
+- The button shows a spinner when saving
 
-### Behavior
-- Prices display with a minimum of 2 and maximum of 5 decimal places (trailing zeros beyond 2 are trimmed)
-- Examples: `$5.00`, `$12.345`, `$0.00001`, `$99.12345`
-- Users can type up to 5 decimal places in all price inputs
+In `AddItem.tsx`, add a handler:
+- `handleSaveVendorPrices` that loops through `vendorPrices`, calls `upsertPrice` for each, deletes removed ones, and shows a toast on success
+- Pass this handler to `ItemVendorPricing` as the `onSave` prop (only in edit mode)
 
