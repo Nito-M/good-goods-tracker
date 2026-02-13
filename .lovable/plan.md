@@ -1,32 +1,27 @@
 
-
-## Add Item Thumbnails to Job Views
+## Add Collapsible Category Grouping to All Job Items
 
 ### What Changes
-Show inventory item thumbnail images in the job items tables -- both on the Job Detail page and the Add Items to Job page -- matching the pattern already used in the main Inventory Table.
+Apply the same collapsible-by-category pattern used in Job Detail to the All Job Items page, so items are grouped under expandable/collapsible category headers with item counts and subtotals.
 
 ### Files to Update
 
-**1. `src/pages/Jobs.tsx`** (JobDetail component, ~lines 272-365)
-- Import `useItemThumbnails`, `ImageViewerDialog`, and `ImageIcon`
-- Collect `inventoryItemId`s from job items and pass to `useItemThumbnails`
-- Add an image column header to the job items table
-- Add a thumbnail cell before the Item name, showing the primary image (or a placeholder icon)
-- Add `ImageViewerDialog` for full-size viewing on click
-- Update the empty-state `colSpan` from 6 to 7
+**1. `src/hooks/useJobs.ts`** (useAllJobItems function)
+- Join `inventory_items` table to fetch the `category` field for each item
+- Map the category into the returned item objects (currently hardcoded as `null`)
 
-**2. `src/pages/JobAddItems.tsx`** (~lines 108-140)
-- Import `useItemThumbnails`, `ImageViewerDialog`, and `ImageIcon`
-- Collect inventory item IDs and pass to `useItemThumbnails`
-- Add an image column header to the table
-- Add a thumbnail cell before the Item name for each row
-- Add `ImageViewerDialog` for full-size viewing on click
-- Update the empty-state `colSpan` from 5 to 6
+**2. `src/pages/AllJobItems.tsx`**
+- Add `category` to the aggregated item type
+- Group aggregated items by category using `useMemo`
+- Add `collapsedCategories` state (Set) and a `toggleCategory` function
+- Replace the flat table with collapsible category sections, each showing:
+  - Category name, item count badge, and subtotal
+  - A chevron icon that rotates when collapsed
+  - The existing table (Item Name, SKU, Total Qty, In Stock, Unit Price, Jobs) nested inside each section
+- Import `ChevronDown` from lucide-react and `Badge` from UI components
 
-### Pattern
-Follows the exact same thumbnail pattern from `InventoryTable.tsx`:
-- 48px thumbnails with `object-contain`
-- Placeholder icon when no image exists
-- Click to open full-size image viewer dialog
-- Uses `useItemThumbnails` hook to batch-fetch primary images
-
+### Visual Pattern
+Each category section will look identical to the Job Detail grouping:
+- A clickable header bar with category name, count badge, and subtotal
+- Expandable table rows underneath
+- Collapsed by default via chevron rotation
