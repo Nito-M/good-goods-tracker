@@ -1,46 +1,49 @@
 
 
-## Add "Reserve from Stock" Button to Job Items
+## Add Job Number Linking to Purchase Orders
 
-### What It Does
-Each item in the Job Detail view gets a **"Reserve"** button. When pressed:
-1. Checks if the inventory has enough stock for the item's quantity
-2. If yes: deducts the quantity from inventory stock and marks the job item as **"Reserved"**
-3. If no: shows a warning that there isn't enough stock
-4. Once reserved, the button changes to show "Reserved" status (with an option to unreserve/return to stock)
+### Overview
+Add the ability to associate a Purchase Order with a Job (JOB-XXXX), similar to how POs can already be linked to Requests (REQ-XXXX). The job number will appear on PO cards and be selectable during creation and editing.
 
 ### Database Change
+Add a nullable `job_id` column to the `purchase_orders` table:
 
-**Add a `reserved` boolean column to `job_items` table** (default `false`)
-
-```sql
-ALTER TABLE public.job_items ADD COLUMN reserved boolean NOT NULL DEFAULT false;
+```text
+ALTER TABLE public.purchase_orders ADD COLUMN job_id uuid;
 ```
 
-This is simpler than a full status field since we just need a toggle between reserved and not reserved.
+### Code Changes
 
-### File Changes
+**1. `src/types/purchaseOrder.ts`**
+- Add `jobId: string | null` and `jobNumber?: string | null` to the `PurchaseOrder` interface
+- Add `job_id: string | null` to the `DbPurchaseOrder` interface
+- Map the new field in `dbToPurchaseOrder()`
 
-**1. `src/types/job.ts`**
-- Add `reserved: boolean` to the `JobItem` interface
+**2. `src/hooks/usePurchaseOrders.ts`**
+- Fetch jobs (`id, job_number`) alongside vendors and requests in `fetchOrders()`
+- Build a job lookup map and pass `jobNumber` into `dbToPurchaseOrder()`
+- Accept `jobId` in `createOrder()` and `updateOrder()` parameters
+- Persist `job_id` on insert and update
 
-**2. `src/hooks/useJobs.ts`**
-- Map the new `reserved` field in the `useJobItems` hook fetch
-- Add a `reserveItem(jobItemId)` function that:
-  - Looks up the job item to get its `inventoryItemId` and `quantity`
-  - Fetches current inventory stock
-  - If stock >= quantity: updates inventory (stock - quantity) and sets `job_items.reserved = true`
-  - If stock < quantity: returns an error / shows toast
-- Add an `unreserveItem(jobItemId)` function that reverses the process (adds quantity back to stock, sets reserved = false)
+**3. `src/pages/AddPurchaseOrder.tsx`**
+- Import and use `useJobs` hook to get the jobs list
+- Add a Job selector dropdown in the "Order Details" section (similar to the existing Request selector)
+- Pass `jobId` through to `createOrder()`
 
-**3. `src/pages/Jobs.tsx` (JobDetail component)**
-- Add a "Reserve" button column to the job items table (or integrate into existing action column)
-- When `reserved = false` and item has an `inventoryItemId`: show a green "Reserve" button
-- When `reserved = true`: show a "Reserved" badge with an undo/return button
-- Items without a linked inventory item: show a disabled/greyed state
-- The button triggers `reserveItem` or `unreserveItem` from the hook
+**4. `src/components/EditPurchaseOrderDialog.tsx`**
+- Accept jobs list as a prop (or use `useJobs` directly)
+- Add a Job selector dropdown
+- Initialize from `order.jobId` and pass through on save
+- Update the `onSave` type to include `jobId`
 
-### Table Layout After Change
-| Thumb | Item | SKU | Price | Qty | Total | Status | Actions |
+**5. `src/components/PurchaseOrderCard.tsx`**
+- Display the linked job number in the details grid (next to Request), with a Briefcase icon
+- Format as "Job: JOB-XXXX"
 
-The "Status" area shows either a "Reserve" button or a "Reserved" badge with undo option.
+**6. `src/pages/PurchaseOrders.tsx`**
+- Pass jobs data to the Edit dialog if needed
+- Add job number to the search filter so users can search POs by job number
+
+**7. `src/lib/validation.ts`**
+- Add `jobId: z.string().uuid().optional().nullable()` to the `purchaseOrderSchema`
+
