@@ -645,6 +645,42 @@ export type Database = {
           },
         ]
       }
+      po_job_links: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          purchase_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          purchase_order_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          purchase_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_job_links_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_job_links_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -742,7 +778,6 @@ export type Database = {
           image_url: string | null
           item_name: string
           items: Json | null
-          job_id: string | null
           notes: string | null
           ordered_at: string
           paid_at: string | null
@@ -766,7 +801,6 @@ export type Database = {
           image_url?: string | null
           item_name: string
           items?: Json | null
-          job_id?: string | null
           notes?: string | null
           ordered_at?: string
           paid_at?: string | null
@@ -790,7 +824,6 @@ export type Database = {
           image_url?: string | null
           item_name?: string
           items?: Json | null
-          job_id?: string | null
           notes?: string | null
           ordered_at?: string
           paid_at?: string | null

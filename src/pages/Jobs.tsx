@@ -292,15 +292,20 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
   // Fetch ordered SKUs from POs linked to this job
   const fetchOrderedAndStock = useCallback(async () => {
     if (!job.id || items.length === 0) return;
-    // Fetch POs linked to this job with status draft or ordered
-    const { data: pos } = await supabase
-      .from('purchase_orders')
-      .select('items, sku')
-      .eq('job_id', job.id)
-      .in('status', ['draft', 'ordered']);
+    // Fetch PO IDs linked to this job via junction table
+    const { data: jobLinks } = await supabase
+      .from('po_job_links')
+      .select('purchase_order_id')
+      .eq('job_id', job.id);
+    const poIds = jobLinks?.map((l: { purchase_order_id: string }) => l.purchase_order_id) || [];
     const skus = new Set<string>();
-    if (pos) {
-      for (const po of pos) {
+    if (poIds.length > 0) {
+      const { data: pos } = await supabase
+        .from('purchase_orders')
+        .select('items, sku')
+        .in('id', poIds)
+        .in('status', ['draft', 'ordered']);
+      if (pos) for (const po of pos) {
         const poItems = po.items as unknown as PurchaseOrderItem[] | null;
         if (poItems && Array.isArray(poItems) && poItems.length > 0) {
           poItems.forEach(pi => { if (pi.sku) skus.add(pi.sku); });

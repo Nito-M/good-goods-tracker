@@ -173,10 +173,12 @@ export function PurchaseOrderCard({
                   <span className="text-primary font-medium">Request: {order.requestNumber}</span>
                 </div>
               )}
-              {order.jobNumber && (
-                <div className="flex items-center gap-2 col-span-2">
+              {order.jobNumbers && order.jobNumbers.length > 0 && (
+                <div className="flex items-center gap-2 col-span-2 flex-wrap">
                   <Briefcase className="h-4 w-4 text-primary" />
-                  <span className="text-primary font-medium">Job: {order.jobNumber}</span>
+                  {order.jobNumbers.map((jn, idx) => (
+                    <span key={idx} className="text-primary font-medium">Job: {jn}</span>
+                  ))}
                 </div>
               )}
               <div className="flex items-center gap-2">

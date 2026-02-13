@@ -24,8 +24,8 @@ export function usePurchaseOrders() {
       return;
     }
 
-    // Fetch orders, vendors, requests, and jobs in parallel
-    const [ordersResult, vendorsResult, requestsResult, jobsResult] = await Promise.all([
+    // Fetch orders, vendors, requests, jobs, and po_job_links in parallel
+    const [ordersResult, vendorsResult, requestsResult, jobsResult, jobLinksResult] = await Promise.all([
       supabase
         .from('purchase_orders')
         .select('*')
@@ -39,6 +39,9 @@ export function usePurchaseOrders() {
       supabase
         .from('jobs')
         .select('id, job_number'),
+      supabase
+        .from('po_job_links')
+        .select('purchase_order_id, job_id'),
     ]);
 
     if (ordersResult.error) {
@@ -80,15 +83,29 @@ export function usePurchaseOrders() {
       });
     }
 
+    // Build PO -> job IDs map from junction table
+    const poJobMap = new Map<string, string[]>();
+    if (jobLinksResult.data) {
+      for (const link of jobLinksResult.data) {
+        const poId = (link as { purchase_order_id: string; job_id: string }).purchase_order_id;
+        const jobId = (link as { purchase_order_id: string; job_id: string }).job_id;
+        if (!poJobMap.has(poId)) poJobMap.set(poId, []);
+        poJobMap.get(poId)!.push(jobId);
+      }
+    }
+
     setOrders(
-      (ordersResult.data as DbPurchaseOrder[]).map((db) =>
-        dbToPurchaseOrder(
+      (ordersResult.data as DbPurchaseOrder[]).map((db) => {
+        const jobIds = poJobMap.get(db.id) || [];
+        const jobNumbers = jobIds.map(jid => jobMap.get(jid)).filter(Boolean) as string[];
+        return dbToPurchaseOrder(
           db, 
           db.vendor_id ? vendorMap.get(db.vendor_id) : null,
           db.request_id ? requestMap.get(db.request_id) : null,
-          (db as unknown as { job_id: string | null }).job_id ? jobMap.get((db as unknown as { job_id: string | null }).job_id!) : null
-        )
-      )
+          jobIds,
+          jobNumbers,
+        );
+      })
     );
     setLoading(false);
   }, [toast, user]);
@@ -137,7 +154,7 @@ export function usePurchaseOrders() {
       vendorId?: string | null;
       poNumber?: string;
       requestId?: string | null;
-      jobId?: string | null;
+      jobIds?: string[];
       status?: 'draft' | 'ordered';
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
@@ -163,7 +180,7 @@ export function usePurchaseOrders() {
       vendorId: order.vendorId,
       poNumber: order.poNumber,
       requestId: order.requestId,
-      jobId: order.jobId,
+      jobIds: order.jobIds,
     });
     
     if (!validation.success) {
@@ -199,7 +216,7 @@ export function usePurchaseOrders() {
     const firstItem = validation.data.items[0];
     const totalQuantity = validation.data.items.reduce((sum, item) => sum + item.quantity, 0);
 
-    const { error } = await supabase.from('purchase_orders').insert([{
+    const { data: insertedPO, error } = await supabase.from('purchase_orders').insert([{
       user_id: user.id,
       po_number: validation.data.poNumber || null,
       sku: firstItem.sku,
@@ -210,14 +227,13 @@ export function usePurchaseOrders() {
       notes: validation.data.notes || null,
       vendor_id: validation.data.vendorId || null,
       request_id: order.requestId || null,
-      job_id: order.jobId || null,
       pdf_url: pdfUrl,
       image_url: imageUrl,
       status: order.status || 'ordered',
       discount_type: order.discountType || 'percentage',
       discount_value: order.discountValue || 0,
       discount_amount: order.discountAmount || 0,
-    }]);
+    }]).select('id').single();
 
     if (error) {
       console.error('Error creating purchase order:', error);
@@ -227,6 +243,14 @@ export function usePurchaseOrders() {
         variant: 'destructive',
       });
       return;
+    }
+
+    // Insert job links
+    const jobIds = order.jobIds || [];
+    if (insertedPO && jobIds.length > 0) {
+      await supabase.from('po_job_links').insert(
+        jobIds.map((jid: string) => ({ purchase_order_id: insertedPO.id, job_id: jid }))
+      );
     }
 
     toast({ title: 'Purchase order created successfully' });
@@ -348,7 +372,7 @@ export function usePurchaseOrders() {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
-      jobId?: string | null;
+      jobIds?: string[];
       poNumber?: string;
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
@@ -418,7 +442,6 @@ export function usePurchaseOrders() {
       ordered_at: validation.data.orderedAt.toISOString(),
       notes: validation.data.notes || null,
       vendor_id: validation.data.vendorId !== undefined ? validation.data.vendorId : undefined,
-      job_id: updates.jobId !== undefined ? (updates.jobId || null) : undefined,
       discount_type: updates.discountType || 'percentage',
       discount_value: updates.discountValue || 0,
       discount_amount: updates.discountAmount || 0,
@@ -440,6 +463,15 @@ export function usePurchaseOrders() {
         variant: 'destructive',
       });
       return;
+    }
+
+    // Update job links: delete old, insert new
+    const jobIds = updates.jobIds || [];
+    await supabase.from('po_job_links').delete().eq('purchase_order_id', orderId);
+    if (jobIds.length > 0) {
+      await supabase.from('po_job_links').insert(
+        jobIds.map((jid: string) => ({ purchase_order_id: orderId, job_id: jid }))
+      );
     }
 
     toast({ title: 'Purchase order updated successfully' });

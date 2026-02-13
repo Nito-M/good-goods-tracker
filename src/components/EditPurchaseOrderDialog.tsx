@@ -35,7 +35,7 @@ interface EditPurchaseOrderDialogProps {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
-      jobId?: string | null;
+      jobIds?: string[];
       poNumber?: string;
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
@@ -95,7 +95,7 @@ export function EditPurchaseOrderDialog({
   const [orderedAt, setOrderedAt] = useState('');
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
-  const [jobId, setJobId] = useState<string>('');
+  const [jobIds, setJobIds] = useState<string[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -113,7 +113,7 @@ export function EditPurchaseOrderDialog({
       setOrderedAt(order.orderedAt.toISOString().split('T')[0]);
       setNotes(order.notes || '');
       setVendorId(order.vendorId || '');
-      setJobId(order.jobId || '');
+      setJobIds(order.jobIds || []);
       setDiscountType(order.discountType || 'percentage');
       setDiscountValue(order.discountValue ? order.discountValue.toString() : '');
       setPdfFile(null);
@@ -184,7 +184,7 @@ export function EditPurchaseOrderDialog({
         orderedAt: localOrderedAt,
         notes: notes || undefined,
         vendorId: vendorId || null,
-        jobId: jobId && jobId !== 'none' ? jobId : null,
+        jobIds: jobIds,
         poNumber: poNumber || undefined,
         discountType,
         discountValue: parsedDiscountValue,
@@ -379,27 +379,36 @@ export function EditPurchaseOrderDialog({
             </Select>
           </div>
 
-          {/* Job Selection */}
+          {/* Job Selection - Multi-select */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
-              Link to Job
+              Link to Jobs
             </Label>
-            <Select value={jobId} onValueChange={setJobId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a job" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">-- No Job --</SelectItem>
-                {jobs
-                  .filter(j => j.status !== 'completed' && j.status !== 'cancelled')
-                  .map((job) => (
-                    <SelectItem key={job.id} value={job.id}>
-                      {job.jobNumber} - {job.title}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
+              {jobs
+                .filter(j => j.status !== 'completed' && j.status !== 'cancelled')
+                .map((job) => (
+                  <label key={job.id} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-muted/50 rounded p-1">
+                    <input
+                      type="checkbox"
+                      checked={jobIds.includes(job.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setJobIds(prev => [...prev, job.id]);
+                        } else {
+                          setJobIds(prev => prev.filter(id => id !== job.id));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span>{job.jobNumber} - {job.title}</span>
+                  </label>
+                ))}
+              {jobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled').length === 0 && (
+                <p className="text-sm text-muted-foreground">No active jobs</p>
+              )}
+            </div>
           </div>
 
           {/* Order Date */}
