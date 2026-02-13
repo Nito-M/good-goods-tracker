@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import { InvoiceSettings } from '@/types/sale';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/utils';
 
 export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: InvoiceSettings) {
   const doc = new jsPDF();
@@ -12,12 +13,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     return format(date, 'MMMM d, yyyy');
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const TAX_RATE = 0.05;
   const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);

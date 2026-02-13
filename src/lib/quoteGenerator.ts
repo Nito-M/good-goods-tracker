@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { Quote, QuoteSettings } from '@/types/quote';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
+import { formatCurrency } from '@/lib/utils';
 
 export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) => {
   const doc = new jsPDF();
@@ -127,8 +128,8 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.text(item.sku, layout.itemsTable.x + 70, y);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
       doc.text(qtyDisplay, layout.itemsTable.x + 100, y);
-      doc.text(`$${item.unitPrice.toFixed(2)}`, layout.itemsTable.x + 120, y);
-      doc.text(`$${item.totalPrice.toFixed(2)}`, layout.itemsTable.x + 150, y);
+      doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 120, y);
+      doc.text(formatCurrency(item.totalPrice), layout.itemsTable.x + 150, y);
       y += 7;
       
       // Add item notes if present
@@ -171,20 +172,20 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     };
     
     let offset = 0;
-    addTotalLine('Subtotal', `$${quote.subtotal.toFixed(2)}`, offset);
+    addTotalLine('Subtotal', formatCurrency(quote.subtotal), offset);
     offset += 6;
     
     if (quote.discountAmount > 0) {
-      addTotalLine(`Discount (${quote.discountRate}%)`, `-$${quote.discountAmount.toFixed(2)}`, offset);
+      addTotalLine(`Discount (${quote.discountRate}%)`, `-${formatCurrency(quote.discountAmount)}`, offset);
       offset += 6;
     }
     
     if (quote.taxAmount > 0) {
-      addTotalLine(`Tax (${quote.taxRate}%)`, `$${quote.taxAmount.toFixed(2)}`, offset);
+      addTotalLine(`Tax (${quote.taxRate}%)`, formatCurrency(quote.taxAmount), offset);
       offset += 6;
     }
     
-    addTotalLine('Total', `$${quote.total.toFixed(2)}`, offset + 2, true);
+    addTotalLine('Total', formatCurrency(quote.total), offset + 2, true);
   }
 
   // Notes

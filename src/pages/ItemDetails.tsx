@@ -24,6 +24,7 @@ import { useVendors } from '@/hooks/useVendors';
 import { useLastPurchase } from '@/hooks/useLastPurchase';
 import { useItemImages } from '@/hooks/useItemImages';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/utils';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
@@ -69,12 +70,6 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
     );
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const isLowStock = item.quantity <= item.minStock;
   const profitMargin = item.price > 0 ? ((item.price - item.cost) / item.price) * 100 : 0;

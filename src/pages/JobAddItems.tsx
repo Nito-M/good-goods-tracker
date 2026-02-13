@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useInventory } from '@/hooks/useInventory';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
 import { useNavigate, useParams } from 'react-router-dom';
+import { formatCurrency } from '@/lib/utils';
 
 export function JobAddItems() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -47,8 +48,6 @@ export function JobAddItems() {
     });
   };
 
-  const formatCurrency = (v: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
 
   return (
     <div className="min-h-screen bg-background">

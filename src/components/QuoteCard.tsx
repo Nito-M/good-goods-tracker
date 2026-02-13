@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Quote, QuoteSettings, QuoteStatus } from '@/types/quote';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
+import { formatCurrency } from '@/lib/utils';
 
 interface QuoteCardProps {
   quote: Quote;
@@ -46,12 +47,6 @@ interface QuoteCardProps {
 export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {

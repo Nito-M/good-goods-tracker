@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Upload, X, Link as LinkIcon, CalendarIcon, User } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { InventoryItem } from "@/types/inventory";
 import { Request, CreateRequestInput } from "@/types/request";
 
@@ -253,7 +253,7 @@ export function EditRequestDialog({
                 id="editPrice"
                 type="number"
                 min={0}
-                step={0.01}
+                step={0.00001}
                 value={price}
                 onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                 placeholder="0.00"
@@ -278,18 +278,18 @@ export function EditRequestDialog({
           {price > 0 && (
             <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal ({quantity} × ${price.toFixed(2)})</span>
-                <span className="font-medium">${subtotal.toFixed(2)}</span>
+                <span className="text-muted-foreground">Subtotal ({quantity} × {formatCurrency(price)})</span>
+                <span className="font-medium">{formatCurrency(subtotal)}</span>
               </div>
               {gstRate > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">GST ({gstRate}%)</span>
-                  <span className="font-medium">${gstAmount.toFixed(2)}</span>
+                  <span className="font-medium">{formatCurrency(gstAmount)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-2">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-green-600">${totalPrice.toFixed(2)}</span>
+                <span className="font-bold text-green-600">{formatCurrency(totalPrice)}</span>
               </div>
             </div>
           )}

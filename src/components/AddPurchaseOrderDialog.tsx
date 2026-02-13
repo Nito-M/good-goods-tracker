@@ -415,7 +415,7 @@ export function AddPurchaseOrderDialog({
                     <Input
                       type="number"
                       min={0}
-                      step="0.01"
+                      step="0.00001"
                       value={lineItem.unitCost}
                       onChange={(e) =>
                         updateLineItem(lineItem.id, {

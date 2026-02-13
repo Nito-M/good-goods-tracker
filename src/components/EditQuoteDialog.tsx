@@ -22,6 +22,7 @@ import {
 import { Quote, QuoteItem } from '@/types/quote';
 import { QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/utils';
 
 interface EditableQuoteItem {
   id: string;
@@ -119,12 +120,6 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const taxAmount = afterDiscount * (effectiveTaxRate / 100);
   const total = afterDiscount + taxAmount;
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const handleSave = async () => {
     if (!quote) return;
@@ -280,7 +275,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
                         <Label className="text-xs">Unit Price</Label>
                         <Input
                           type="number"
-                          step="0.01"
+                          step="0.00001"
                           value={item.unitPrice}
                           onChange={(e) => updateItem(item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
                         />

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { Sale, InvoiceSettings } from '@/types/sale';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
+import { formatCurrency } from '@/lib/utils';
 
 export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings) {
   const doc = new jsPDF();
@@ -10,12 +11,6 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   // Get layout or use defaults
   const layout: InvoiceLayout = settings?.layout || defaultInvoiceLayout;
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

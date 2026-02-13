@@ -18,6 +18,7 @@ import {
   Banknote,
   ClipboardList,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
@@ -59,12 +60,6 @@ export function PurchaseOrderCard({
     return new Date(year, month, day, 12, 0, 0);
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   return (
     <Card className="overflow-hidden">

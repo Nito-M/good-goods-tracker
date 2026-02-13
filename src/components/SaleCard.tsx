@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Sale, SaleStatus } from '@/types/sale';
+import { formatCurrency } from '@/lib/utils';
 
 interface SaleCardProps {
   sale: Sale;
@@ -49,12 +50,6 @@ const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; va
 };
 
 export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp }: SaleCardProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
 import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User, DollarSign, Hash } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
+import { formatCurrency } from "@/lib/utils";
 
 interface RequestCardProps {
   request: Request;
@@ -33,6 +34,7 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
   const subtotal = request.quantity * request.price;
   const gstAmount = subtotal * (request.gstRate / 100);
   const totalPrice = subtotal + gstAmount;
+  const fc = formatCurrency;
 
   return (
     <>
@@ -79,19 +81,20 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
                 <span className="text-sm text-muted-foreground">Quantity</span>
               </div>
               <span className="font-semibold">{request.quantity} <span className="text-sm font-normal text-muted-foreground">{request.quantityUnit}</span></span>
+
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Unit Price</span>
-              <span className="font-medium">${request.price.toFixed(2)}</span>
+              <span className="font-medium">{fc(request.price)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Subtotal ({request.quantity} × ${request.price.toFixed(2)})</span>
-              <span className="font-medium">${subtotal.toFixed(2)}</span>
+              <span className="text-sm text-muted-foreground">Subtotal ({request.quantity} × {fc(request.price)})</span>
+              <span className="font-medium">{fc(subtotal)}</span>
             </div>
             {request.gstRate > 0 && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">GST ({request.gstRate}%)</span>
-                <span className="font-medium">${gstAmount.toFixed(2)}</span>
+                <span className="font-medium">{fc(gstAmount)}</span>
               </div>
             )}
             <div className="flex items-center justify-between border-t pt-2">
@@ -99,7 +102,7 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <span className="font-semibold">Total</span>
               </div>
-              <span className="text-lg font-bold text-green-600">${totalPrice.toFixed(2)}</span>
+              <span className="text-lg font-bold text-green-600">{fc(totalPrice)}</span>
             </div>
           </div>
 

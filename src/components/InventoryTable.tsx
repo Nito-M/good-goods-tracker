@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
@@ -26,12 +26,6 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const thumbnailMap = useItemThumbnails(itemIds);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">

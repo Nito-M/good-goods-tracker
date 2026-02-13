@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Sale, SaleItem } from '@/types/sale';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/utils';
 
 interface EditableSaleItem {
   id: string;
@@ -110,12 +111,6 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
   const taxAmount = afterDiscount * (taxRate / 100);
   const total = afterDiscount + taxAmount;
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value);
-  };
 
   const handleSave = async () => {
     if (!sale) return;
@@ -269,7 +264,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                         <Label className="text-xs">Unit Price</Label>
                         <Input
                           type="number"
-                          step="0.01"
+                          step="0.00001"
                           value={item.unitPrice}
                           onChange={(e) => updateItem(item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
                         />
@@ -278,7 +273,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                         <Label className="text-xs">Unit Cost</Label>
                         <Input
                           type="number"
-                          step="0.01"
+                          step="0.00001"
                           value={item.unitCost}
                           onChange={(e) => updateItem(item.id, { unitCost: parseFloat(e.target.value) || 0 })}
                         />
