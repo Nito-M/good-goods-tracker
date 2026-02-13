@@ -132,9 +132,8 @@ export function AllJobItems() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Item Name</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead className="text-right">Total Qty</TableHead>
-                            <TableHead className="text-right">In Stock</TableHead>
+                             <TableHead className="text-right">Total Qty</TableHead>
+                             <TableHead className="text-right">In Stock</TableHead>
                              <TableHead className="text-right">Unit Price</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -145,21 +144,26 @@ export function AllJobItems() {
                             return (
                               <>
                                 <TableRow key={rowKey} className="cursor-pointer" onClick={() => toggleRow(rowKey)}>
-                                  <TableCell className="font-medium">{item.itemName}</TableCell>
-                                  <TableCell className="font-mono text-xs">{item.sku}</TableCell>
-                                  <TableCell className="text-right">{item.totalQty}</TableCell>
-                                  <TableCell className="text-right">{inStock}</TableCell>
-                                  <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
-                                </TableRow>
-                                {expandedRows.has(rowKey) && (
-                                  <TableRow key={`${rowKey}-detail`}>
-                                    <TableCell colSpan={5} className="bg-muted/30 py-2 px-4">
-                                      <div className="flex flex-wrap gap-1.5">
-                                        <span className="text-xs font-medium text-muted-foreground mr-1">Jobs:</span>
-                                        {item.jobs.map((job, j) => (
-                                          <Badge key={j} variant="secondary" className="text-xs">{job}</Badge>
-                                        ))}
-                                      </div>
+                                   <TableCell className="font-medium">{item.itemName}</TableCell>
+                                   <TableCell className="text-right">{item.totalQty}</TableCell>
+                                   <TableCell className="text-right">{inStock}</TableCell>
+                                   <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                                 </TableRow>
+                                 {expandedRows.has(rowKey) && (
+                                   <TableRow key={`${rowKey}-detail`}>
+                                     <TableCell colSpan={4} className="bg-muted/30 py-2 px-4">
+                                       <div className="space-y-1">
+                                         <div className="text-xs">
+                                           <span className="font-medium text-muted-foreground mr-1">SKU:</span>
+                                           <code className="font-mono">{item.sku}</code>
+                                         </div>
+                                         <div className="flex flex-wrap gap-1.5 items-center">
+                                           <span className="text-xs font-medium text-muted-foreground mr-1">Jobs:</span>
+                                           {item.jobs.map((job, j) => (
+                                             <Badge key={j} variant="secondary" className="text-xs">{job}</Badge>
+                                           ))}
+                                         </div>
+                                       </div>
                                     </TableCell>
                                   </TableRow>
                                 )}
