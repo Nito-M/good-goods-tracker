@@ -88,7 +88,7 @@ export function PurchaseOrders() {
       const matchesItems = order.items?.some(
         (item) => item.itemName?.toLowerCase().includes(query) || item.sku?.toLowerCase().includes(query)
       );
-      const matchesJob = order.jobNumber?.toLowerCase().includes(query);
+      const matchesJob = order.jobNumbers?.some(jn => jn.toLowerCase().includes(query));
       return matchesPO || matchesVendor || matchesItems || matchesJob;
     });
   }, [orders, searchQuery, vendors]);
