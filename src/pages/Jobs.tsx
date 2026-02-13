@@ -208,7 +208,7 @@ export function Jobs() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{new Date(job.createdAt).toLocaleDateString()}</span>
                     {job.dueDate && (
-                      <span className="text-xs text-muted-foreground">Due: {new Date(job.dueDate).toLocaleDateString()}</span>
+                      <span className="text-xs text-muted-foreground">Due: {(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}</span>
                     )}
                   </div>
                 </CardContent>
@@ -413,7 +413,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                 {job.dueDate && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Due Date</span>
-                    <span>{new Date(job.dueDate).toLocaleDateString()}</span>
+                    <span>{(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}</span>
                   </div>
                 )}
                 <div className="text-xs text-muted-foreground">

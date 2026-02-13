@@ -55,7 +55,7 @@ export function JobDescription() {
                 {job.dueDate && (
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarClock className="h-3 w-3" />
-                    Due: {new Date(job.dueDate).toLocaleDateString()}
+                    Due: {(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}
                   </span>
                 )}
               </div>
