@@ -429,9 +429,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                 <TableHead className="w-18"></TableHead>
                                 <TableHead>Item</TableHead>
                                 <TableHead>SKU</TableHead>
-                                <TableHead>Price</TableHead>
                                 <TableHead>Qty</TableHead>
-                                <TableHead className="text-right">Total</TableHead>
                                 <TableHead>Stock</TableHead>
                                 <TableHead></TableHead>
                               </TableRow>
@@ -455,9 +453,17 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                         </div>
                                       )}
                                     </TableCell>
-                                    <TableCell className="font-medium">{item.itemName}</TableCell>
+                                    <TableCell className="font-medium">
+                                      {item.inventoryItemId ? (
+                                        <button onClick={() => navigate(`/items/${item.inventoryItemId}`)} className="hover:underline text-primary text-left">
+                                          {item.itemName}
+                                        </button>
+                                      ) : (
+                                        <span>{item.itemName}</span>
+                                      )}
+                                    </TableCell>
                                     <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
-                                    <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                                    
                                     <TableCell>
                                       <div className="flex items-center gap-1">
                                         <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: Math.max(1, item.quantity - 1) })}><Minus className="h-3 w-3" /></Button>
@@ -465,7 +471,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                         <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
                                       </div>
                                     </TableCell>
-                                    <TableCell className="text-right font-medium">{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
+                                    
                                     <TableCell>
                                       <div className="flex items-center gap-1 flex-wrap">
                                         {item.reserved ? (
