@@ -1,21 +1,21 @@
 
-## Hide Jobs Column, Add Expandable Row to Show Jobs
+
+## Hide SKU Column, Show in Expandable Row
 
 ### What Changes
-Remove the "Jobs" column from the All Job Items table. Instead, make each item row clickable/expandable to reveal which jobs it belongs to.
+Remove the "SKU" column from the All Job Items table and display it in the expandable detail row alongside the Jobs list.
 
 ### File to Update
 
 **`src/pages/AllJobItems.tsx`**
 
-1. Remove the `<TableHead>Jobs</TableHead>` column header
-2. Remove the `<TableCell>` that displays `item.jobs.join(', ')`
-3. Add state to track which item row is expanded (`expandedRow: number | null`)
-4. Make each `<TableRow>` clickable with `cursor-pointer` styling
-5. When clicked, toggle an additional row below that displays the list of jobs as badges or a simple list
-6. The expanded detail row spans the full table width (`colSpan={5}`) and shows the job names
+1. Remove the `<TableHead>SKU</TableHead>` column header
+2. Remove the `<TableCell>` that displays `item.sku`
+3. Add the SKU to the expandable detail row, shown alongside the Jobs badges
+4. Update `colSpan` from 5 to 4 on the detail row
 
-### Interaction
-- Click a row to expand and see the jobs list underneath
-- Click again to collapse
-- Only one row expanded at a time (or multiple, depending on preference -- will use toggle per row)
+### Detail Row Layout
+When expanded, the row will show:
+- **SKU:** (mono-styled) followed by the SKU value
+- **Jobs:** followed by job name badges
+
