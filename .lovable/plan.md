@@ -1,35 +1,46 @@
 
 
-## Add Total Cost of Needed Items Summary by Category
+## Add "Reserve from Stock" Button to Job Items
 
-### What Changes
-Add a summary section at the top of the All Job Items page (above the category cards) showing the total cost of needed items per category, so you can quickly see how much you need to spend.
+### What It Does
+Each item in the Job Detail view gets a **"Reserve"** button. When pressed:
+1. Checks if the inventory has enough stock for the item's quantity
+2. If yes: deducts the quantity from inventory stock and marks the job item as **"Reserved"**
+3. If no: shows a warning that there isn't enough stock
+4. Once reserved, the button changes to show "Reserved" status (with an option to unreserve/return to stock)
 
-### Formula
-**Category Need Cost = SUM( need * unitPrice )** for each item in the category, where `need = Math.max(0, totalQty - inStock)` (only items with inventory data).
+### Database Change
 
-### File to Update
+**Add a `reserved` boolean column to `job_items` table** (default `false`)
 
-**`src/pages/AllJobItems.tsx`**
-
-1. Compute a summary from `groupedItems` and `inventoryQtys`: for each category, sum up `need * unitPrice` for all items where inventory data is available and need > 0.
-2. Also compute a grand total across all categories.
-3. Render a summary section between the header and the category cards:
-   - A row of small stat cards (or a compact list) showing each category name and its total need cost, styled with `formatCurrency`.
-   - A bold grand total line.
-4. Only show this summary when there are items and inventory data is loaded.
-
-### Layout
-```text
-+--------------------------------------------------+
-| Category A: $1,200  | Category B: $450  | ...    |
-|                              Grand Total: $1,650  |
-+--------------------------------------------------+
-| [Existing category cards with tables below]       |
+```sql
+ALTER TABLE public.job_items ADD COLUMN reserved boolean NOT NULL DEFAULT false;
 ```
 
-### Technical Details
-- Use a `useMemo` that iterates `groupedItems`, looks up each item's inventory qty from `inventoryQtys`, calculates need, and sums `need * unitPrice` per category.
-- Render as a `Card` with flex-wrap badges or stat blocks for each category.
-- Grand total highlighted with slightly larger/bolder text.
+This is simpler than a full status field since we just need a toggle between reserved and not reserved.
 
+### File Changes
+
+**1. `src/types/job.ts`**
+- Add `reserved: boolean` to the `JobItem` interface
+
+**2. `src/hooks/useJobs.ts`**
+- Map the new `reserved` field in the `useJobItems` hook fetch
+- Add a `reserveItem(jobItemId)` function that:
+  - Looks up the job item to get its `inventoryItemId` and `quantity`
+  - Fetches current inventory stock
+  - If stock >= quantity: updates inventory (stock - quantity) and sets `job_items.reserved = true`
+  - If stock < quantity: returns an error / shows toast
+- Add an `unreserveItem(jobItemId)` function that reverses the process (adds quantity back to stock, sets reserved = false)
+
+**3. `src/pages/Jobs.tsx` (JobDetail component)**
+- Add a "Reserve" button column to the job items table (or integrate into existing action column)
+- When `reserved = false` and item has an `inventoryItemId`: show a green "Reserve" button
+- When `reserved = true`: show a "Reserved" badge with an undo/return button
+- Items without a linked inventory item: show a disabled/greyed state
+- The button triggers `reserveItem` or `unreserveItem` from the hook
+
+### Table Layout After Change
+| Thumb | Item | SKU | Price | Qty | Total | Status | Actions |
+
+The "Status" area shows either a "Reserve" button or a "Reserved" badge with undo option.
