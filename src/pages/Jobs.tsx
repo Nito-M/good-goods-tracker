@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon, ChevronDown, Package, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,8 @@ import { Job } from '@/types/job';
 import { formatCurrency } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { PurchaseOrderItem } from '@/types/purchaseOrder';
 
 const statusColors: Record<string, string> = {
   open: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -278,12 +280,50 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [orderedSkus, setOrderedSkus] = useState<Set<string>>(new Set());
+  const [inventoryQtys, setInventoryQtys] = useState<Record<string, number>>({});
 
   const inventoryItemIds = useMemo(
     () => items.map(i => i.inventoryItemId).filter((id): id is string => !!id),
     [items]
   );
   const thumbnailMap = useItemThumbnails(inventoryItemIds);
+
+  // Fetch ordered SKUs from POs linked to this job
+  const fetchOrderedAndStock = useCallback(async () => {
+    if (!job.id || items.length === 0) return;
+    // Fetch POs linked to this job with status draft or ordered
+    const { data: pos } = await supabase
+      .from('purchase_orders')
+      .select('items, sku')
+      .eq('job_id', job.id)
+      .in('status', ['draft', 'ordered']);
+    const skus = new Set<string>();
+    if (pos) {
+      for (const po of pos) {
+        const poItems = po.items as unknown as PurchaseOrderItem[] | null;
+        if (poItems && Array.isArray(poItems) && poItems.length > 0) {
+          poItems.forEach(pi => { if (pi.sku) skus.add(pi.sku); });
+        } else if (po.sku) {
+          skus.add(po.sku);
+        }
+      }
+    }
+    setOrderedSkus(skus);
+
+    // Fetch inventory quantities for linked items
+    if (inventoryItemIds.length > 0) {
+      const { data: invData } = await supabase
+        .from('inventory_items')
+        .select('id, quantity')
+        .in('id', inventoryItemIds);
+      const qtyMap: Record<string, number> = {};
+      if (invData) invData.forEach(inv => { qtyMap[inv.id] = inv.quantity; });
+      setInventoryQtys(qtyMap);
+    }
+  }, [job.id, items, inventoryItemIds]);
+
+  useEffect(() => { fetchOrderedAndStock(); }, [fetchOrderedAndStock]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, typeof items> = {};
@@ -422,20 +462,28 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                     </TableCell>
                                     <TableCell className="text-right font-medium">{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
                                     <TableCell>
-                                      {item.reserved ? (
-                                        <div className="flex items-center gap-1">
-                                          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Reserved</Badge>
-                                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => unreserveItem(item.id)} title="Return to stock">
-                                            <Undo2 className="h-3 w-3" />
+                                      <div className="flex items-center gap-1 flex-wrap">
+                                        {item.reserved ? (
+                                          <>
+                                            <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Reserved</Badge>
+                                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => unreserveItem(item.id)} title="Return to stock">
+                                              <Undo2 className="h-3 w-3" />
+                                            </Button>
+                                          </>
+                                        ) : item.inventoryItemId ? (
+                                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => reserveItem(item.id)}>
+                                            <Package className="h-3 w-3 mr-1" />Reserve
                                           </Button>
-                                        </div>
-                                      ) : item.inventoryItemId ? (
-                                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => reserveItem(item.id)}>
-                                          <Package className="h-3 w-3 mr-1" />Reserve
-                                        </Button>
-                                      ) : (
-                                        <span className="text-xs text-muted-foreground">N/A</span>
-                                      )}
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground">N/A</span>
+                                        )}
+                                        {orderedSkus.has(item.sku) && (
+                                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Ordered</Badge>
+                                        )}
+                                        {item.inventoryItemId && (inventoryQtys[item.inventoryItemId] ?? 0) > 0 && (
+                                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">In Stock</Badge>
+                                        )}
+                                      </div>
                                     </TableCell>
                                     <TableCell>
                                       <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeItem(item.id)}><X className="h-3.5 w-3.5" /></Button>
