@@ -57,7 +57,7 @@ export function CreateJob() {
       email: formCustomerEmail.trim() || undefined,
       phone: formCustomerPhone.trim() || undefined,
       address: formCustomerAddress.trim() || undefined,
-    }, formDueDate ? new Date(formDueDate).toISOString() : undefined);
+    }, formDueDate ? (() => { const [y, m, d] = formDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : undefined);
     setSaving(false);
     if (result) navigate('/jobs');
   };
