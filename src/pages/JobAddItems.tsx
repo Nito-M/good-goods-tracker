@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Search, Plus, Check } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Check, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatCurrency } from '@/lib/utils';
+import { useItemThumbnails } from '@/hooks/useItemThumbnails';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
 export function JobAddItems() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -21,6 +23,10 @@ export function JobAddItems() {
   const { allCategories } = useCategories();
   const [itemSearch, setItemSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
+
+  const inventoryItemIds = useMemo(() => inventoryItems.map(i => i.id), [inventoryItems]);
+  const thumbnailMap = useItemThumbnails(inventoryItemIds);
 
   const job = jobs.find(j => j.id === jobId);
 
@@ -109,6 +115,7 @@ export function JobAddItems() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12"></TableHead>
                     <TableHead>Item</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead className="text-right">Stock</TableHead>
@@ -118,12 +125,27 @@ export function JobAddItems() {
                 </TableHeader>
                 <TableBody>
                   {filteredInventory.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No items found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No items found</TableCell></TableRow>
                   ) : (
                     filteredInventory.map(item => {
                       const isAdded = jobItemInventoryIds.has(item.id);
+                      const thumbUrl = thumbnailMap.get(item.id);
                       return (
                         <TableRow key={item.id}>
+                          <TableCell className="w-14 py-1">
+                            {thumbUrl ? (
+                              <img
+                                src={thumbUrl}
+                                alt={item.name}
+                                className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={(e) => { e.stopPropagation(); setViewerImage({ url: thumbUrl, alt: item.name }); }}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            )}
+                          </TableCell>
                           <TableCell className="font-medium">{item.name}</TableCell>
                           <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
                           <TableCell className="text-right">{item.quantity}</TableCell>
@@ -139,6 +161,12 @@ export function JobAddItems() {
                   )}
                 </TableBody>
               </Table>
+              <ImageViewerDialog
+                imageUrl={viewerImage?.url ?? null}
+                alt={viewerImage?.alt ?? ''}
+                open={!!viewerImage}
+                onOpenChange={(open) => { if (!open) setViewerImage(null); }}
+              />
             </div>
           </CardContent>
         </Card>
