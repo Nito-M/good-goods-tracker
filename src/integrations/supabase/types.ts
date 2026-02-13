@@ -742,6 +742,7 @@ export type Database = {
           image_url: string | null
           item_name: string
           items: Json | null
+          job_id: string | null
           notes: string | null
           ordered_at: string
           paid_at: string | null
@@ -765,6 +766,7 @@ export type Database = {
           image_url?: string | null
           item_name: string
           items?: Json | null
+          job_id?: string | null
           notes?: string | null
           ordered_at?: string
           paid_at?: string | null
@@ -788,6 +790,7 @@ export type Database = {
           image_url?: string | null
           item_name?: string
           items?: Json | null
+          job_id?: string | null
           notes?: string | null
           ordered_at?: string
           paid_at?: string | null

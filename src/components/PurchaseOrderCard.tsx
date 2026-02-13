@@ -17,6 +17,7 @@ import {
   DollarSign,
   Banknote,
   ClipboardList,
+  Briefcase,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -170,6 +171,12 @@ export function PurchaseOrderCard({
                 <div className="flex items-center gap-2 col-span-2">
                   <ClipboardList className="h-4 w-4 text-primary" />
                   <span className="text-primary font-medium">Request: {order.requestNumber}</span>
+                </div>
+              )}
+              {order.jobNumber && (
+                <div className="flex items-center gap-2 col-span-2">
+                  <Briefcase className="h-4 w-4 text-primary" />
+                  <span className="text-primary font-medium">Job: {order.jobNumber}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
