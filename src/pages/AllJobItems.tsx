@@ -60,10 +60,12 @@ export function AllJobItems() {
       const existing = map.get(key);
       const jobLabel = item.jobNumber || item.jobTitle;
       if (existing) {
-        existing.totalQty += item.quantity;
+        if (!item.reserved) {
+          existing.totalQty += item.quantity;
+        }
         if (!existing.jobs.includes(jobLabel)) existing.jobs.push(jobLabel);
       } else {
-        map.set(key, { itemName: item.itemName, sku: item.sku, totalQty: item.quantity, unitPrice: item.unitPrice, jobs: [jobLabel], inventoryItemId: item.inventoryItemId, category: item.category });
+        map.set(key, { itemName: item.itemName, sku: item.sku, totalQty: item.reserved ? 0 : item.quantity, unitPrice: item.unitPrice, jobs: [jobLabel], inventoryItemId: item.inventoryItemId, category: item.category });
       }
     }
     return Array.from(map.values());
