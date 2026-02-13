@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon, ChevronDown } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon, ChevronDown, Package, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -273,7 +273,7 @@ interface JobDetailProps {
 
 function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatCurrency }: JobDetailProps) {
   const navigate = useNavigate();
-  const { items, loading, updateItem, removeItem } = useJobItems(job.id);
+  const { items, loading, updateItem, removeItem, reserveItem, unreserveItem } = useJobItems(job.id);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
@@ -387,6 +387,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                 <TableHead>Price</TableHead>
                                 <TableHead>Qty</TableHead>
                                 <TableHead className="text-right">Total</TableHead>
+                                <TableHead>Stock</TableHead>
                                 <TableHead></TableHead>
                               </TableRow>
                             </TableHeader>
@@ -420,6 +421,22 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                       </div>
                                     </TableCell>
                                     <TableCell className="text-right font-medium">{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
+                                    <TableCell>
+                                      {item.reserved ? (
+                                        <div className="flex items-center gap-1">
+                                          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Reserved</Badge>
+                                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => unreserveItem(item.id)} title="Return to stock">
+                                            <Undo2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ) : item.inventoryItemId ? (
+                                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => reserveItem(item.id)}>
+                                          <Package className="h-3 w-3 mr-1" />Reserve
+                                        </Button>
+                                      ) : (
+                                        <span className="text-xs text-muted-foreground">N/A</span>
+                                      )}
+                                    </TableCell>
                                     <TableCell>
                                       <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeItem(item.id)}><X className="h-3.5 w-3.5" /></Button>
                                     </TableCell>

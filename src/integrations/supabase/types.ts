@@ -318,6 +318,7 @@ export type Database = {
           job_id: string
           notes: string | null
           quantity: number
+          reserved: boolean
           sku: string
           unit_price: number
         }
@@ -329,6 +330,7 @@ export type Database = {
           job_id: string
           notes?: string | null
           quantity?: number
+          reserved?: boolean
           sku?: string
           unit_price?: number
         }
@@ -340,6 +342,7 @@ export type Database = {
           job_id?: string
           notes?: string | null
           quantity?: number
+          reserved?: boolean
           sku?: string
           unit_price?: number
         }

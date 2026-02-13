@@ -158,6 +158,7 @@ export function useAllJobItems() {
         unitPrice: Number(d.unit_price),
         notes: d.notes,
         category: d.inventory_items?.category ?? null,
+        reserved: d.reserved ?? false,
         createdAt: d.created_at,
         jobTitle: d.jobs.title,
         jobNumber: d.jobs.job_number,
@@ -195,6 +196,7 @@ export function useJobItems(jobId: string | null) {
         unitPrice: Number(d.unit_price),
         notes: d.notes,
         category: d.inventory_items?.category ?? null,
+        reserved: d.reserved ?? false,
         createdAt: d.created_at,
       })));
     }
@@ -202,6 +204,89 @@ export function useJobItems(jobId: string | null) {
   }, [jobId]);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  const reserveItem = async (jobItemId: string) => {
+    const item = items.find(i => i.id === jobItemId);
+    if (!item || !item.inventoryItemId) {
+      toast({ title: 'Cannot reserve', description: 'Item is not linked to inventory', variant: 'destructive' });
+      return false;
+    }
+    if (item.reserved) return true;
+    // Check stock
+    const { data: inv, error: invErr } = await supabase
+      .from('inventory_items')
+      .select('quantity')
+      .eq('id', item.inventoryItemId)
+      .single();
+    if (invErr || !inv) {
+      toast({ title: 'Error checking stock', variant: 'destructive' });
+      return false;
+    }
+    if (inv.quantity < item.quantity) {
+      toast({ title: 'Not enough stock', description: `Available: ${inv.quantity}, Needed: ${item.quantity}`, variant: 'destructive' });
+      return false;
+    }
+    // Deduct stock
+    const { error: updErr } = await supabase
+      .from('inventory_items')
+      .update({ quantity: inv.quantity - item.quantity })
+      .eq('id', item.inventoryItemId);
+    if (updErr) {
+      toast({ title: 'Error updating stock', variant: 'destructive' });
+      return false;
+    }
+    // Mark reserved
+    const { error: resErr } = await supabase
+      .from('job_items')
+      .update({ reserved: true } as any)
+      .eq('id', jobItemId);
+    if (resErr) {
+      // Rollback stock
+      await supabase.from('inventory_items').update({ quantity: inv.quantity }).eq('id', item.inventoryItemId);
+      toast({ title: 'Error reserving item', variant: 'destructive' });
+      return false;
+    }
+    await fetchItems();
+    toast({ title: 'Item reserved from stock' });
+    return true;
+  };
+
+  const unreserveItem = async (jobItemId: string) => {
+    const item = items.find(i => i.id === jobItemId);
+    if (!item || !item.inventoryItemId || !item.reserved) return false;
+    // Get current stock
+    const { data: inv, error: invErr } = await supabase
+      .from('inventory_items')
+      .select('quantity')
+      .eq('id', item.inventoryItemId)
+      .single();
+    if (invErr || !inv) {
+      toast({ title: 'Error checking stock', variant: 'destructive' });
+      return false;
+    }
+    // Return stock
+    const { error: updErr } = await supabase
+      .from('inventory_items')
+      .update({ quantity: inv.quantity + item.quantity })
+      .eq('id', item.inventoryItemId);
+    if (updErr) {
+      toast({ title: 'Error returning stock', variant: 'destructive' });
+      return false;
+    }
+    // Unmark reserved
+    const { error: resErr } = await supabase
+      .from('job_items')
+      .update({ reserved: false } as any)
+      .eq('id', jobItemId);
+    if (resErr) {
+      await supabase.from('inventory_items').update({ quantity: inv.quantity }).eq('id', item.inventoryItemId);
+      toast({ title: 'Error unreserving item', variant: 'destructive' });
+      return false;
+    }
+    await fetchItems();
+    toast({ title: 'Item returned to stock' });
+    return true;
+  };
 
   const addItem = async (item: { inventoryItemId: string; itemName: string; sku: string; quantity: number; unitPrice: number; notes?: string }) => {
     if (!jobId) return false;
@@ -246,5 +331,5 @@ export function useJobItems(jobId: string | null) {
     return true;
   };
 
-  return { items, loading, addItem, updateItem, removeItem, refetch: fetchItems };
+  return { items, loading, addItem, updateItem, removeItem, reserveItem, unreserveItem, refetch: fetchItems };
 }
