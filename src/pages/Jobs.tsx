@@ -455,9 +455,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                     </TableCell>
                                     <TableCell className="font-medium">
                                       {item.inventoryItemId ? (
-                                        <button onClick={() => navigate(`/items/${item.inventoryItemId}`)} className="hover:underline text-primary text-left">
+                                        <Link to={`/items/${item.inventoryItemId}`} className="hover:underline text-primary">
                                           {item.itemName}
-                                        </button>
+                                        </Link>
                                       ) : (
                                         <span>{item.itemName}</span>
                                       )}
