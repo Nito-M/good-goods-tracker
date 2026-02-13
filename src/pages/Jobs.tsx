@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Job } from '@/types/job';
 import { formatCurrency } from '@/lib/utils';
+import { useItemThumbnails } from '@/hooks/useItemThumbnails';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
 const statusColors: Record<string, string> = {
   open: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -274,7 +276,13 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
   const { items, loading, updateItem, removeItem } = useJobItems(job.id);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  
+  const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
+
+  const inventoryItemIds = useMemo(
+    () => items.map(i => i.inventoryItemId).filter((id): id is string => !!id),
+    [items]
+  );
+  const thumbnailMap = useItemThumbnails(inventoryItemIds);
 
   const handleDelete = async () => {
     await onDelete();
@@ -332,9 +340,11 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                     </Button>
                   </div>
                 ) : (
+                  <>
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12"></TableHead>
                         <TableHead>Item</TableHead>
                         <TableHead>SKU</TableHead>
                         <TableHead>Price</TableHead>
@@ -344,8 +354,24 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {items.map(item => (
+                      {items.map(item => {
+                        const thumbUrl = item.inventoryItemId ? thumbnailMap.get(item.inventoryItemId) : undefined;
+                        return (
                         <TableRow key={item.id}>
+                          <TableCell className="w-14 py-1">
+                            {thumbUrl ? (
+                              <img
+                                src={thumbUrl}
+                                alt={item.itemName}
+                                className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={(e) => { e.stopPropagation(); setViewerImage({ url: thumbUrl, alt: item.itemName }); }}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            )}
+                          </TableCell>
                           <TableCell className="font-medium">{item.itemName}</TableCell>
                           <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
                           <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
@@ -361,9 +387,17 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeItem(item.id)}><X className="h-3.5 w-3.5" /></Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
+                  <ImageViewerDialog
+                    imageUrl={viewerImage?.url ?? null}
+                    alt={viewerImage?.alt ?? ''}
+                    open={!!viewerImage}
+                    onOpenChange={(open) => { if (!open) setViewerImage(null); }}
+                  />
+                  </>
                 )}
               </CardContent>
             </Card>
