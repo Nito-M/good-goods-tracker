@@ -1,26 +1,42 @@
 
 
-## Exclude Reserved Items from Total Quantity in All Job Items
+## Sort Items A-Z and Add Search in PO Item Selection
 
 ### Problem
-When items are reserved in a job, their quantity is already deducted from inventory stock. However, the "All Job Items" page still counts reserved items in the "Total Qty" column. This double-counts: stock is reduced AND the item is still listed as needed.
+When adding items to a Purchase Order, the inventory items in the dropdown are unsorted and there's no way to search/filter them, making it hard to find items quickly.
 
-### Fix in `src/pages/AllJobItems.tsx`
+### Changes in `src/pages/AddPurchaseOrder.tsx`
 
-**In the `aggregatedItems` aggregation logic (lines 56-70):** Only add non-reserved item quantities to `totalQty`. Reserved items should be skipped from the quantity sum since they've already been pulled from stock.
+**1. Sort items alphabetically (A-Z)**
+
+In the item selection dropdown (around line 434-446), sort `filteredInventoryItems` by name before rendering:
 
 ```tsx
-// Current: always adds quantity
-existing.totalQty += item.quantity;
-
-// Fixed: only add if not reserved
-if (!item.reserved) {
-  existing.totalQty += item.quantity;
-}
-
-// And for new entries:
-map.set(key, { ..., totalQty: item.reserved ? 0 : item.quantity, ... });
+filteredInventoryItems
+  .filter(item => !lineItems.some(li => li.id !== lineItem.id && li.selectedItemId === item.id))
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map(item => ...)
 ```
 
-Reserved items will still appear in the jobs list for the expanded detail row, but their quantities won't inflate the "Total Qty" or "Need" calculations. The job label is still collected regardless of reserved status so users can see which jobs reference the item.
+**2. Add search/filter capability to the item dropdown**
+
+Replace the `Select` component for item selection with a searchable combobox pattern using the existing `Command` (cmdk) component wrapped in a `Popover`. This gives users a search input at the top of the dropdown to filter items by name or SKU.
+
+- Import `Command`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandItem`, `CommandGroup` from `@/components/ui/command`
+- Import `Popover`, `PopoverContent`, `PopoverTrigger` from `@/components/ui/popover`
+- Replace each item `Select` with a Popover+Command combo that:
+  - Shows a trigger button displaying the selected item name (or "Select item...")
+  - Opens a popover with a search input and scrollable list
+  - Filters items by name or SKU as the user types
+  - Sorts results A-Z
+  - Still excludes already-selected items and includes "Custom Item" option
+
+### Also update `src/components/EditPurchaseOrderDialog.tsx`
+
+Apply the same A-Z sorting to the item selection dropdown in the edit dialog for consistency. (The edit dialog likely uses a similar Select for items.)
+
+### Technical Details
+- Uses existing `cmdk` library already installed and the `Command` UI components already in the project
+- No new dependencies needed
+- The combobox pattern is the standard shadcn/ui approach for searchable selects
 
