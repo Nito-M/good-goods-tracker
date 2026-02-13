@@ -24,5 +24,6 @@ export interface JobItem {
   unitPrice: number;
   notes: string | null;
   category: string | null;
+  reserved: boolean;
   createdAt: string;
 }
