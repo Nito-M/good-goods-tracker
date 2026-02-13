@@ -274,7 +274,7 @@ export function EditPurchaseOrderDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
-                      {inventoryItems.map((item) => (
+                      {[...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((item) => (
                         <SelectItem key={item.id} value={item.id}>
                           {item.name} ({item.sku})
                         </SelectItem>

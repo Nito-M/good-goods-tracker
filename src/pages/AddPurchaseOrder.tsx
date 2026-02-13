@@ -12,15 +12,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandItem, CommandGroup } from '@/components/ui/command';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useRequests } from '@/hooks/useRequests';
 import { useJobs } from '@/hooks/useJobs';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, ChevronsUpDown, Check } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface VendorPrice {
   itemId: string;
@@ -45,6 +48,74 @@ function createEmptyLineItem(): LineItem {
     quantity: '' as unknown as number,
     unitCost: '',
   };
+}
+
+function ItemSearchCombobox({
+  items,
+  selectedItemId,
+  onSelect,
+  inventoryItems,
+}: {
+  items: { id: string; name: string; sku: string }[];
+  selectedItemId: string;
+  onSelect: (value: string) => void;
+  inventoryItems: { id: string; name: string; sku: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedItem = inventoryItems.find((i) => i.id === selectedItemId);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="h-9 w-full justify-between font-normal"
+        >
+          <span className="truncate">
+            {selectedItem
+              ? `${selectedItem.name} (${selectedItem.sku})`
+              : 'Select item...'}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search items..." />
+          <CommandList>
+            <CommandEmpty>No items found.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="custom-item"
+                onSelect={() => {
+                  onSelect('custom');
+                  setOpen(false);
+                }}
+              >
+                <Check className={cn('mr-2 h-4 w-4', selectedItemId === 'custom' ? 'opacity-100' : 'opacity-0')} />
+                -- Custom Item --
+              </CommandItem>
+              {items.map((item) => (
+                <CommandItem
+                  key={item.id}
+                  value={`${item.name} ${item.sku}`}
+                  onSelect={() => {
+                    onSelect(item.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check className={cn('mr-2 h-4 w-4', selectedItemId === item.id ? 'opacity-100' : 'opacity-0')} />
+                  {item.name} ({item.sku})
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export function AddPurchaseOrder() {
@@ -416,41 +487,22 @@ export function AddPurchaseOrder() {
                     <div className="grid grid-cols-[1fr_100px_120px_100px_40px] gap-3 items-end">
                       <div className="space-y-1">
                         <Label className="text-xs">Item</Label>
-                        <Select
-                          value={lineItem.selectedItemId}
-                          onValueChange={(value) =>
+                        <ItemSearchCombobox
+                          items={filteredInventoryItems
+                            .filter((item) => !lineItems.some(
+                              (li) => li.id !== lineItem.id && li.selectedItemId === item.id
+                            ))
+                            .sort((a, b) => a.name.localeCompare(b.name))}
+                          selectedItemId={lineItem.selectedItemId}
+                          onSelect={(value) =>
                             updateLineItem(lineItem.id, {
                               selectedItemId: value,
                               customSku: '',
                               customName: '',
                             })
                           }
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Select item..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="custom">-- Custom Item --</SelectItem>
-                            {filteredInventoryItems.length > 0 ? (
-                              filteredInventoryItems
-                                .filter((item) => {
-                                  const alreadySelected = lineItems.some(
-                                    (li) => li.id !== lineItem.id && li.selectedItemId === item.id
-                                  );
-                                  return !alreadySelected;
-                                })
-                                .map((item) => (
-                                  <SelectItem key={item.id} value={item.id}>
-                                    {item.name} ({item.sku})
-                                  </SelectItem>
-                                ))
-                            ) : (
-                              <SelectItem value="no-items" disabled>
-                                No items with pricing
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
+                          inventoryItems={inventoryItems}
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Qty *</Label>
