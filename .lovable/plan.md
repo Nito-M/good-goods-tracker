@@ -1,15 +1,49 @@
 
 
-## Sort Jobs by Due Date
+## Fix Due Date Off-By-One Issue
 
-### What Changes
-Update the jobs query to sort by `due_date` instead of `display_order`, so jobs with the earliest due dates appear first. Jobs without a due date will appear at the end of the list.
+### Problem
+When you enter a due date like "March 15", it displays as "March 14". This happens because:
+1. The date input gives a string like `"2025-03-15"`
+2. `new Date("2025-03-15")` treats it as UTC midnight
+3. When displayed, your local timezone (behind UTC) shifts it back one day
+
+### Solution
+Apply the same local-noon date strategy already used elsewhere in the app: instead of `new Date(formDueDate).toISOString()`, construct the date at local noon so timezone offsets never shift the day.
 
 ### Changes
 
-**File: `src/hooks/useJobs.ts`** (line 18)
-- Change `.order('display_order', { ascending: true })` to `.order('due_date', { ascending: true, nullsFirst: false })`
-- This puts jobs with the soonest due date at the top, and jobs with no due date at the bottom
+**1. `src/pages/CreateJob.tsx`** (1 line)
+- Change: `new Date(formDueDate).toISOString()`
+- To: Parse the `YYYY-MM-DD` string and build a Date at local noon before calling `.toISOString()`
 
-Note: The existing drag-and-drop reorder functionality (which uses `display_order`) will no longer visually persist since the sort is now driven by due date. If you'd like to keep manual reordering as a secondary option, let me know.
+**2. `src/pages/EditJob.tsx`** (1 line)
+- Same fix for the `due_date` value in the update object
 
+**3. `src/pages/Jobs.tsx`** (2 spots displaying due dates)
+- Change `new Date(job.dueDate).toLocaleDateString()` to parse at local noon first, preventing the day shift on display
+
+**4. `src/pages/JobDescription.tsx`** (1 spot)
+- Same display fix for the due date shown in the job header
+
+### Technical Detail
+```typescript
+// Before (broken):
+new Date(formDueDate).toISOString()
+
+// After (fixed):
+const [y, m, d] = formDueDate.split('-').map(Number);
+new Date(y, m - 1, d, 12, 0, 0).toISOString()
+```
+
+For display:
+```typescript
+// Before (broken):
+new Date(job.dueDate).toLocaleDateString()
+
+// After (fixed):
+const dt = new Date(job.dueDate);
+new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString()
+```
+
+This matches the project's established date-handling pattern used in Purchase Orders, Sales, and Quotes.
