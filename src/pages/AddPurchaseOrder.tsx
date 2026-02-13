@@ -16,8 +16,9 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useRequests } from '@/hooks/useRequests';
+import { useJobs } from '@/hooks/useJobs';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Percent, DollarSign } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -52,6 +53,7 @@ export function AddPurchaseOrder() {
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { requests } = useRequests();
+  const { jobs } = useJobs();
 
   const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
   const [poNumber, setPoNumber] = useState('');
@@ -61,6 +63,7 @@ export function AddPurchaseOrder() {
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
   const [requestId, setRequestId] = useState<string>('');
+  const [jobId, setJobId] = useState<string>('');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -221,6 +224,7 @@ export function AddPurchaseOrder() {
         vendorId: vendorId || null,
         poNumber: poNumber || undefined,
         requestId: requestId && requestId !== 'none' ? requestId : null,
+        jobId: jobId && jobId !== 'none' ? jobId : null,
         status,
         discountType,
         discountValue: parseFloat(discountValue) || 0,
@@ -571,6 +575,32 @@ export function AddPurchaseOrder() {
                 </Select>
                 <p className="text-xs text-muted-foreground">
                   Optionally link this PO to an existing request
+                </p>
+              </div>
+
+              {/* Job Selection */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" />
+                  Link to Job
+                </Label>
+                <Select value={jobId} onValueChange={setJobId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a job" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- No Job --</SelectItem>
+                    {jobs
+                      .filter(j => j.status !== 'completed' && j.status !== 'cancelled')
+                      .map((job) => (
+                        <SelectItem key={job.id} value={job.id}>
+                          {job.jobNumber} - {job.title}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Optionally link this PO to an existing job
                 </p>
               </div>
 

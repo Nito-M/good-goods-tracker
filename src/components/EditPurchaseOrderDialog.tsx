@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Percent, DollarSign } from 'lucide-react';
+import { Percent, DollarSign, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,6 +21,7 @@ import {
 import { InventoryItem } from '@/types/inventory';
 import { PurchaseOrder, PurchaseOrderItem } from '@/types/purchaseOrder';
 import { Vendor } from '@/hooks/useVendors';
+import { Job } from '@/types/job';
 import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2 } from 'lucide-react';
 
 interface EditPurchaseOrderDialogProps {
@@ -34,6 +35,7 @@ interface EditPurchaseOrderDialogProps {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
+      jobId?: string | null;
       poNumber?: string;
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
@@ -44,6 +46,7 @@ interface EditPurchaseOrderDialogProps {
   ) => Promise<void>;
   inventoryItems: InventoryItem[];
   vendors: Vendor[];
+  jobs: Job[];
 }
 
 interface LineItem {
@@ -85,12 +88,14 @@ export function EditPurchaseOrderDialog({
   onSave,
   inventoryItems,
   vendors,
+  jobs,
 }: EditPurchaseOrderDialogProps) {
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [poNumber, setPoNumber] = useState('');
   const [orderedAt, setOrderedAt] = useState('');
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
+  const [jobId, setJobId] = useState<string>('');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -108,6 +113,7 @@ export function EditPurchaseOrderDialog({
       setOrderedAt(order.orderedAt.toISOString().split('T')[0]);
       setNotes(order.notes || '');
       setVendorId(order.vendorId || '');
+      setJobId(order.jobId || '');
       setDiscountType(order.discountType || 'percentage');
       setDiscountValue(order.discountValue ? order.discountValue.toString() : '');
       setPdfFile(null);
@@ -178,6 +184,7 @@ export function EditPurchaseOrderDialog({
         orderedAt: localOrderedAt,
         notes: notes || undefined,
         vendorId: vendorId || null,
+        jobId: jobId && jobId !== 'none' ? jobId : null,
         poNumber: poNumber || undefined,
         discountType,
         discountValue: parsedDiscountValue,
@@ -368,6 +375,29 @@ export function EditPurchaseOrderDialog({
                     {vendor.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Job Selection */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Link to Job
+            </Label>
+            <Select value={jobId} onValueChange={setJobId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a job" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- No Job --</SelectItem>
+                {jobs
+                  .filter(j => j.status !== 'completed' && j.status !== 'cancelled')
+                  .map((job) => (
+                    <SelectItem key={job.id} value={job.id}>
+                      {job.jobNumber} - {job.title}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>

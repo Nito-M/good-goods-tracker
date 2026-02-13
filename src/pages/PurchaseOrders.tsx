@@ -6,6 +6,7 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
+import { useJobs } from '@/hooks/useJobs';
 import { useBank } from '@/hooks/useBank';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
@@ -26,6 +27,7 @@ export function PurchaseOrders() {
   const { vendors } = useVendors();
   const { profile } = useProfile();
   const { addWithdrawal } = useBank();
+  const { jobs } = useJobs();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -86,7 +88,8 @@ export function PurchaseOrders() {
       const matchesItems = order.items?.some(
         (item) => item.itemName?.toLowerCase().includes(query) || item.sku?.toLowerCase().includes(query)
       );
-      return matchesPO || matchesVendor || matchesItems;
+      const matchesJob = order.jobNumber?.toLowerCase().includes(query);
+      return matchesPO || matchesVendor || matchesItems || matchesJob;
     });
   }, [orders, searchQuery, vendors]);
 
@@ -272,6 +275,7 @@ export function PurchaseOrders() {
           onSave={updateOrder}
           inventoryItems={inventoryItems}
           vendors={vendors}
+          jobs={jobs}
         />
       )}
     </div>

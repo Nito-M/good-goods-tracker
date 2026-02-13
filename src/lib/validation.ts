@@ -98,6 +98,7 @@ export const purchaseOrderSchema = z.object({
   vendorId: z.string().uuid().optional().nullable(),
   poNumber: z.string().max(50, 'PO number must be less than 50 characters').optional(),
   requestId: z.string().uuid().optional().nullable(),
+  jobId: z.string().uuid().optional().nullable(),
 });
 
 export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;

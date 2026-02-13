@@ -24,8 +24,8 @@ export function usePurchaseOrders() {
       return;
     }
 
-    // Fetch orders, vendors, and requests in parallel
-    const [ordersResult, vendorsResult, requestsResult] = await Promise.all([
+    // Fetch orders, vendors, requests, and jobs in parallel
+    const [ordersResult, vendorsResult, requestsResult, jobsResult] = await Promise.all([
       supabase
         .from('purchase_orders')
         .select('*')
@@ -36,6 +36,9 @@ export function usePurchaseOrders() {
       supabase
         .from('requests')
         .select('id, request_number'),
+      supabase
+        .from('jobs')
+        .select('id, job_number'),
     ]);
 
     if (ordersResult.error) {
@@ -67,12 +70,23 @@ export function usePurchaseOrders() {
       });
     }
 
+    // Create job lookup map
+    const jobMap = new Map<string, string>();
+    if (jobsResult.data) {
+      jobsResult.data.forEach((j: { id: string; job_number: string | null }) => {
+        if (j.job_number) {
+          jobMap.set(j.id, j.job_number);
+        }
+      });
+    }
+
     setOrders(
       (ordersResult.data as DbPurchaseOrder[]).map((db) =>
         dbToPurchaseOrder(
           db, 
           db.vendor_id ? vendorMap.get(db.vendor_id) : null,
-          db.request_id ? requestMap.get(db.request_id) : null
+          db.request_id ? requestMap.get(db.request_id) : null,
+          (db as unknown as { job_id: string | null }).job_id ? jobMap.get((db as unknown as { job_id: string | null }).job_id!) : null
         )
       )
     );
@@ -123,6 +137,7 @@ export function usePurchaseOrders() {
       vendorId?: string | null;
       poNumber?: string;
       requestId?: string | null;
+      jobId?: string | null;
       status?: 'draft' | 'ordered';
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
@@ -148,6 +163,7 @@ export function usePurchaseOrders() {
       vendorId: order.vendorId,
       poNumber: order.poNumber,
       requestId: order.requestId,
+      jobId: order.jobId,
     });
     
     if (!validation.success) {
@@ -194,6 +210,7 @@ export function usePurchaseOrders() {
       notes: validation.data.notes || null,
       vendor_id: validation.data.vendorId || null,
       request_id: order.requestId || null,
+      job_id: order.jobId || null,
       pdf_url: pdfUrl,
       image_url: imageUrl,
       status: order.status || 'ordered',
@@ -331,6 +348,7 @@ export function usePurchaseOrders() {
       orderedAt: Date;
       notes?: string;
       vendorId?: string | null;
+      jobId?: string | null;
       poNumber?: string;
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
@@ -400,6 +418,7 @@ export function usePurchaseOrders() {
       ordered_at: validation.data.orderedAt.toISOString(),
       notes: validation.data.notes || null,
       vendor_id: validation.data.vendorId !== undefined ? validation.data.vendorId : undefined,
+      job_id: updates.jobId !== undefined ? (updates.jobId || null) : undefined,
       discount_type: updates.discountType || 'percentage',
       discount_value: updates.discountValue || 0,
       discount_amount: updates.discountAmount || 0,
