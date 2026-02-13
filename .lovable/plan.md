@@ -1,49 +1,45 @@
 
 
-## Add Job Number Linking to Purchase Orders
+## Add "Ordered" and "In Stock" Indicators to Job Items
 
-### Overview
-Add the ability to associate a Purchase Order with a Job (JOB-XXXX), similar to how POs can already be linked to Requests (REQ-XXXX). The job number will appear on PO cards and be selectable during creation and editing.
+### What It Does
+Each line item in the Job Detail view will show status badges indicating:
+- **"Ordered"** badge (blue) -- if a Purchase Order linked to this job contains an item with a matching SKU
+- **"In Stock"** badge (green) -- if the linked inventory item currently has quantity > 0
 
-### Database Change
-Add a nullable `job_id` column to the `purchase_orders` table:
+These appear alongside the existing "Reserved" badge in the Stock column, giving a quick visual summary of each item's procurement status.
+
+### How It Works
+
+**Detecting "Ordered"**: Query `purchase_orders` where `job_id` matches the current job, then check if any PO's `items` array contains a SKU matching the job item's SKU. Only POs with status `ordered` or `draft` count (received POs have already been fulfilled).
+
+**Detecting "In Stock"**: Query `inventory_items` for the linked `inventory_item_id` and check if `quantity > 0`.
+
+### Visual Layout (Stock Column)
 
 ```text
-ALTER TABLE public.purchase_orders ADD COLUMN job_id uuid;
+| Stock                          |
+|--------------------------------|
+| [Reserved] [Ordered] [In Stock] |   <- can show multiple badges
+| [Reserve btn] [Ordered]         |   <- not yet reserved, but ordered
+| [Reserve btn] [In Stock]        |   <- in stock, not ordered
+| [Reserve btn]                   |   <- neither ordered nor in stock
 ```
 
-### Code Changes
+### Technical Changes
 
-**1. `src/types/purchaseOrder.ts`**
-- Add `jobId: string | null` and `jobNumber?: string | null` to the `PurchaseOrder` interface
-- Add `job_id: string | null` to the `DbPurchaseOrder` interface
-- Map the new field in `dbToPurchaseOrder()`
+**1. `src/pages/Jobs.tsx` (JobDetail component)**
 
-**2. `src/hooks/usePurchaseOrders.ts`**
-- Fetch jobs (`id, job_number`) alongside vendors and requests in `fetchOrders()`
-- Build a job lookup map and pass `jobNumber` into `dbToPurchaseOrder()`
-- Accept `jobId` in `createOrder()` and `updateOrder()` parameters
-- Persist `job_id` on insert and update
+- Add state for `orderedSkus` (a `Set<string>` of SKUs found in POs linked to this job)
+- Add state for `inventoryQtys` (a `Record<string, number>` mapping inventory_item_id to quantity)
+- On mount / when `job.id` changes, fetch:
+  - `purchase_orders` where `job_id = job.id` and `status` in ('draft', 'ordered') -- extract SKUs from the `items` JSON array
+  - `inventory_items` where `id` in (all inventoryItemIds from job items) -- get current quantities
+- In the table row, after the existing Reserve/Reserved UI, conditionally render:
+  - A blue "Ordered" badge if the item's SKU is in `orderedSkus`
+  - A green "In Stock" badge if `inventoryQtys[item.inventoryItemId] > 0`
 
-**3. `src/pages/AddPurchaseOrder.tsx`**
-- Import and use `useJobs` hook to get the jobs list
-- Add a Job selector dropdown in the "Order Details" section (similar to the existing Request selector)
-- Pass `jobId` through to `createOrder()`
+**2. No database changes required** -- all data already exists; we just need to query it.
 
-**4. `src/components/EditPurchaseOrderDialog.tsx`**
-- Accept jobs list as a prop (or use `useJobs` directly)
-- Add a Job selector dropdown
-- Initialize from `order.jobId` and pass through on save
-- Update the `onSave` type to include `jobId`
-
-**5. `src/components/PurchaseOrderCard.tsx`**
-- Display the linked job number in the details grid (next to Request), with a Briefcase icon
-- Format as "Job: JOB-XXXX"
-
-**6. `src/pages/PurchaseOrders.tsx`**
-- Pass jobs data to the Edit dialog if needed
-- Add job number to the search filter so users can search POs by job number
-
-**7. `src/lib/validation.ts`**
-- Add `jobId: z.string().uuid().optional().nullable()` to the `purchaseOrderSchema`
+**3. No hook changes required** -- the fetches will be local to the JobDetail component using direct Supabase queries, keeping the implementation simple and self-contained.
 
