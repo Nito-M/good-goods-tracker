@@ -13,11 +13,20 @@ export function AllJobItems() {
   const { items: allJobItems, loading, fetchAllItems } = useAllJobItems();
   const [inventoryQtys, setInventoryQtys] = useState<Record<string, number>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const toggleCategory = (cat: string) => {
     setCollapsedCategories(prev => {
       const next = new Set(prev);
       if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
+  };
+
+  const toggleRow = (key: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
   };
@@ -126,22 +135,35 @@ export function AllJobItems() {
                             <TableHead>SKU</TableHead>
                             <TableHead className="text-right">Total Qty</TableHead>
                             <TableHead className="text-right">In Stock</TableHead>
-                            <TableHead className="text-right">Unit Price</TableHead>
-                            <TableHead>Jobs</TableHead>
+                             <TableHead className="text-right">Unit Price</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {items.map((item, i) => {
                             const inStock = item.inventoryItemId ? inventoryQtys[item.inventoryItemId] ?? '—' : '—';
+                            const rowKey = `${category}-${i}`;
                             return (
-                              <TableRow key={i}>
-                                <TableCell className="font-medium">{item.itemName}</TableCell>
-                                <TableCell className="font-mono text-xs">{item.sku}</TableCell>
-                                <TableCell className="text-right">{item.totalQty}</TableCell>
-                                <TableCell className="text-right">{inStock}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{item.jobs.join(', ')}</TableCell>
-                              </TableRow>
+                              <>
+                                <TableRow key={rowKey} className="cursor-pointer" onClick={() => toggleRow(rowKey)}>
+                                  <TableCell className="font-medium">{item.itemName}</TableCell>
+                                  <TableCell className="font-mono text-xs">{item.sku}</TableCell>
+                                  <TableCell className="text-right">{item.totalQty}</TableCell>
+                                  <TableCell className="text-right">{inStock}</TableCell>
+                                  <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                                </TableRow>
+                                {expandedRows.has(rowKey) && (
+                                  <TableRow key={`${rowKey}-detail`}>
+                                    <TableCell colSpan={5} className="bg-muted/30 py-2 px-4">
+                                      <div className="flex flex-wrap gap-1.5">
+                                        <span className="text-xs font-medium text-muted-foreground mr-1">Jobs:</span>
+                                        {item.jobs.map((job, j) => (
+                                          <Badge key={j} variant="secondary" className="text-xs">{job}</Badge>
+                                        ))}
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </>
                             );
                           })}
                         </TableBody>
