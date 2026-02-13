@@ -79,6 +79,23 @@ export function AllJobItems() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [aggregatedItems]);
 
+  const needCostSummary = useMemo(() => {
+    const categories: { name: string; cost: number }[] = [];
+    let grandTotal = 0;
+    for (const [category, items] of groupedItems) {
+      let catCost = 0;
+      for (const item of items) {
+        if (item.inventoryItemId && inventoryQtys[item.inventoryItemId] !== undefined) {
+          const need = Math.max(0, item.totalQty - inventoryQtys[item.inventoryItemId]);
+          catCost += need * item.unitPrice;
+        }
+      }
+      categories.push({ name: category, cost: catCost });
+      grandTotal += catCost;
+    }
+    return { categories, grandTotal };
+  }, [groupedItems, inventoryQtys]);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -109,6 +126,25 @@ export function AllJobItems() {
             </CardContent>
           </Card>
         ) : (
+          <>
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              <div className="flex flex-wrap gap-4 items-center">
+                {needCostSummary.categories.map(c => (
+                  <div key={c.name} className="flex items-center gap-1.5">
+                    <span className="text-sm text-muted-foreground">{c.name}:</span>
+                    <span className="text-sm font-semibold text-card-foreground">{formatCurrency(c.cost)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 pt-3 border-t border-border flex justify-end">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Grand Total Needed:</span>
+                  <span className="text-lg font-bold text-card-foreground">{formatCurrency(needCostSummary.grandTotal)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <div className="space-y-4">
             {groupedItems.map(([category, items]) => {
               const isCollapsed = collapsedCategories.has(category);
@@ -188,6 +224,7 @@ export function AllJobItems() {
               );
             })}
           </div>
+          </>
         )}
       </main>
     </div>
