@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useInventory } from '@/hooks/useInventory';
+import { useCategories } from '@/hooks/useCategories';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatCurrency } from '@/lib/utils';
@@ -16,17 +18,25 @@ export function JobAddItems() {
   const { allItems: inventoryItems } = useInventory();
   const { jobs } = useJobs();
   const { items: jobItems, addItem, updateItem } = useJobItems(jobId || '');
+  const { allCategories } = useCategories();
   const [itemSearch, setItemSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   const job = jobs.find(j => j.id === jobId);
 
   const filteredInventory = useMemo(() => {
-    if (!itemSearch) return inventoryItems;
-    const q = itemSearch.toLowerCase();
-    return inventoryItems.filter(i =>
-      i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)
-    );
-  }, [inventoryItems, itemSearch]);
+    let filtered = inventoryItems;
+    if (categoryFilter && categoryFilter !== 'all') {
+      filtered = filtered.filter(i => i.category === categoryFilter);
+    }
+    if (itemSearch) {
+      const q = itemSearch.toLowerCase();
+      filtered = filtered.filter(i =>
+        i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [inventoryItems, itemSearch, categoryFilter]);
 
   const jobItemInventoryIds = useMemo(
     () => new Set(jobItems.map(i => i.inventoryItemId)),
@@ -78,9 +88,22 @@ export function JobAddItems() {
             <CardDescription>Search and add existing inventory items to this job</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by name or SKU..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="pl-10" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search by name or SKU..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="pl-10" />
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {allCategories.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="border rounded-md">
               <Table>
