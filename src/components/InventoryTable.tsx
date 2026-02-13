@@ -23,7 +23,8 @@ interface InventoryTableProps {
 
 export function InventoryTable({ items, onDelete }: InventoryTableProps) {
   const navigate = useNavigate();
-  const itemIds = useMemo(() => items.map((item) => item.id), [items]);
+  const sortedItems = useMemo(() => [...items].sort((a, b) => a.name.localeCompare(b.name)), [items]);
+  const itemIds = useMemo(() => sortedItems.map((item) => item.id), [sortedItems]);
   const thumbnailMap = useItemThumbnails(itemIds);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
 
@@ -49,7 +50,7 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
               </TableCell>
             </TableRow>
           ) : (
-            items.map((item) => {
+            sortedItems.map((item) => {
               const isLowStock = item.quantity <= item.minStock;
               return (
                 <TableRow
