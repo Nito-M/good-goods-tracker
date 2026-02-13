@@ -1,89 +1,18 @@
 
+## Make Job Items Section Wider
 
-## Allow Multiple Jobs Linked to One Purchase Order
+### Problem
+The Job Items table in the Job Detail view currently occupies 2 out of 3 columns (`lg:col-span-2` in a `lg:grid-cols-3` grid), which constrains the table width and makes thumbnails hard to see clearly.
 
-### Overview
-Change the PO-to-Job relationship from a single `job_id` column to a many-to-many relationship using a junction table `po_job_links`. This allows one PO to be associated with multiple jobs.
+### Solution
+Widen the Job Items section by adjusting the grid layout and increasing the thumbnail size.
 
-### Database Change
-Create a new junction table and migrate existing data:
+### Changes
 
-```text
--- Create junction table
-CREATE TABLE public.po_job_links (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  purchase_order_id uuid NOT NULL REFERENCES public.purchase_orders(id) ON DELETE CASCADE,
-  job_id uuid NOT NULL REFERENCES public.jobs(id) ON DELETE CASCADE,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(purchase_order_id, job_id)
-);
+**`src/pages/Jobs.tsx`**
 
--- Enable RLS
-ALTER TABLE public.po_job_links ENABLE ROW LEVEL SECURITY;
+1. Change the thumbnail size from `w-12 h-12` (48px) to `w-16 h-16` (64px) for both the image and the placeholder, and update the column header width accordingly (`w-14` to `w-18`).
 
--- RLS policies (access via the PO owner)
-CREATE POLICY "Users can view their own po job links" ON public.po_job_links
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM purchase_orders WHERE id = po_job_links.purchase_order_id AND user_id = auth.uid())
-  );
-CREATE POLICY "Users can insert their own po job links" ON public.po_job_links
-  FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM purchase_orders WHERE id = po_job_links.purchase_order_id AND user_id = auth.uid())
-  );
-CREATE POLICY "Users can delete their own po job links" ON public.po_job_links
-  FOR DELETE USING (
-    EXISTS (SELECT 1 FROM purchase_orders WHERE id = po_job_links.purchase_order_id AND user_id = auth.uid())
-  );
+2. Change the grid layout from `lg:grid-cols-3` with `lg:col-span-2` to `xl:grid-cols-[1fr_320px]` -- this gives the items table all remaining space while the sidebar stays a fixed 320px width. On smaller screens it stacks vertically.
 
--- Org member view policy
-CREATE POLICY "Org members can view org po job links" ON public.po_job_links
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM purchase_orders WHERE id = po_job_links.purchase_order_id AND users_share_org(auth.uid(), user_id))
-  );
-
--- Migrate existing data
-INSERT INTO public.po_job_links (purchase_order_id, job_id)
-SELECT id, job_id FROM public.purchase_orders WHERE job_id IS NOT NULL;
-
--- Drop the old column
-ALTER TABLE public.purchase_orders DROP COLUMN job_id;
-```
-
-### Code Changes
-
-**1. `src/types/purchaseOrder.ts`**
-- Change `jobId: string | null` to `jobIds: string[]` and `jobNumber?: string | null` to `jobNumbers?: string[]`
-- Remove `job_id` from `DbPurchaseOrder`
-- Update `dbToPurchaseOrder()` to accept arrays instead of single values
-
-**2. `src/hooks/usePurchaseOrders.ts`**
-- After fetching POs, also fetch `po_job_links` to build a map of `purchase_order_id -> job_id[]`
-- On `createOrder`: after inserting the PO, insert rows into `po_job_links` for each selected job
-- On `updateOrder`: delete existing `po_job_links` for this PO, then re-insert the new set
-- Pass `jobIds` array and resolved `jobNumbers` array into `dbToPurchaseOrder()`
-
-**3. `src/pages/AddPurchaseOrder.tsx`**
-- Change `jobId` state from `string` to `string[]`
-- Replace the single `<Select>` with a multi-select UI: render checkboxes or toggleable badges for each active job
-- Pass `jobIds` array to `createOrder()`
-
-**4. `src/components/EditPurchaseOrderDialog.tsx`**
-- Change `jobId` state from `string` to `string[]`
-- Replace single select with multi-select (same pattern as Add page)
-- Initialize from `order.jobIds` array
-- Pass `jobIds` array on save
-
-**5. `src/components/PurchaseOrderCard.tsx`**
-- Instead of showing one "Job: JOB-XXXX", loop through `order.jobNumbers` and display each as a badge/chip
-- Handle empty array (no jobs linked)
-
-**6. `src/pages/PurchaseOrders.tsx`**
-- Update search filter: check if any of the `jobNumbers` match the query
-- Pass jobs to EditDialog (already done)
-
-**7. `src/lib/validation.ts`**
-- Change `jobId` to `jobIds: z.array(z.string().uuid()).optional().default([])`
-
-**8. `src/pages/Jobs.tsx` (Ordered badge logic)**
-- Update the query: instead of `eq('job_id', job.id)`, query `po_job_links` where `job_id = job.id` to get PO IDs, then fetch those POs' items
-
+This keeps the sidebar at a reasonable fixed width while letting the items table stretch to use all available space.
