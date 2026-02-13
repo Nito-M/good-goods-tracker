@@ -1,27 +1,21 @@
 
-## Add Collapsible Category Grouping to All Job Items
+## Hide Jobs Column, Add Expandable Row to Show Jobs
 
 ### What Changes
-Apply the same collapsible-by-category pattern used in Job Detail to the All Job Items page, so items are grouped under expandable/collapsible category headers with item counts and subtotals.
+Remove the "Jobs" column from the All Job Items table. Instead, make each item row clickable/expandable to reveal which jobs it belongs to.
 
-### Files to Update
+### File to Update
 
-**1. `src/hooks/useJobs.ts`** (useAllJobItems function)
-- Join `inventory_items` table to fetch the `category` field for each item
-- Map the category into the returned item objects (currently hardcoded as `null`)
+**`src/pages/AllJobItems.tsx`**
 
-**2. `src/pages/AllJobItems.tsx`**
-- Add `category` to the aggregated item type
-- Group aggregated items by category using `useMemo`
-- Add `collapsedCategories` state (Set) and a `toggleCategory` function
-- Replace the flat table with collapsible category sections, each showing:
-  - Category name, item count badge, and subtotal
-  - A chevron icon that rotates when collapsed
-  - The existing table (Item Name, SKU, Total Qty, In Stock, Unit Price, Jobs) nested inside each section
-- Import `ChevronDown` from lucide-react and `Badge` from UI components
+1. Remove the `<TableHead>Jobs</TableHead>` column header
+2. Remove the `<TableCell>` that displays `item.jobs.join(', ')`
+3. Add state to track which item row is expanded (`expandedRow: number | null`)
+4. Make each `<TableRow>` clickable with `cursor-pointer` styling
+5. When clicked, toggle an additional row below that displays the list of jobs as badges or a simple list
+6. The expanded detail row spans the full table width (`colSpan={5}`) and shows the job names
 
-### Visual Pattern
-Each category section will look identical to the Job Detail grouping:
-- A clickable header bar with category name, count badge, and subtotal
-- Expandable table rows underneath
-- Collapsed by default via chevron rotation
+### Interaction
+- Click a row to expand and see the jobs list underneath
+- Click again to collapse
+- Only one row expanded at a time (or multiple, depending on preference -- will use toggle per row)
