@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Trash2, DollarSign, Store, ExternalLink, Link } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,8 @@ interface ItemVendorPricingProps {
   vendorPrices: VendorPriceEntry[];
   onVendorPricesChange: (prices: VendorPriceEntry[]) => void;
   isEditing: boolean;
+  onSave?: () => Promise<void>;
+  isSaving?: boolean;
 }
 
 export function ItemVendorPricing({
@@ -36,8 +38,28 @@ export function ItemVendorPricing({
   vendorPrices,
   onVendorPricesChange,
   isEditing,
+  onSave,
+  isSaving,
 }: ItemVendorPricingProps) {
   const [selectedVendor, setSelectedVendor] = useState<string>('');
+
+  // Track dirty state by comparing current entries against existing prices
+  const hasUnsavedChanges = useMemo(() => {
+    if (!isEditing) return false;
+    const existingVendorIds = existingPrices.map(p => p.vendor_id);
+    const currentVendorIds = vendorPrices.map(vp => vp.vendorId);
+    // Check for added or removed vendors
+    if (existingVendorIds.length !== currentVendorIds.length) return true;
+    if (existingVendorIds.some(id => !currentVendorIds.includes(id))) return true;
+    // Check for changed prices or links
+    for (const vp of vendorPrices) {
+      const existing = existingPrices.find(p => p.vendor_id === vp.vendorId);
+      if (!existing) return true;
+      if (String(existing.price) !== vp.price) return true;
+      if ((existing.link || '') !== (vp.link || '')) return true;
+    }
+    return false;
+  }, [isEditing, existingPrices, vendorPrices]);
 
   // Get vendors not already added
   const availableVendors = vendors.filter(
@@ -244,6 +266,29 @@ export function ItemVendorPricing({
         {vendors.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-2">
             No vendors available. Add vendors in the Vendors section first.
+          </p>
+        )}
+
+        {/* Save button for vendor prices */}
+        {onSave && hasUnsavedChanges && (
+          <Button
+            type="button"
+            onClick={onSave}
+            disabled={isSaving}
+            className="w-full gap-2"
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isSaving ? 'Saving...' : 'Save Vendor Prices'}
+          </Button>
+        )}
+
+        {!isEditing && vendorPrices.length > 0 && (
+          <p className="text-sm text-muted-foreground text-center py-2">
+            Vendor prices will be saved after the item is created.
           </p>
         )}
       </CardContent>

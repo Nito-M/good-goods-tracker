@@ -90,6 +90,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
+  const [isSavingVendors, setIsSavingVendors] = useState(false);
 
   useEffect(() => {
     if (editItem) {
@@ -213,6 +214,35 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     if (editItem && onDelete) {
       onDelete(editItem.id);
       navigate('/items');
+    }
+  };
+
+  const handleSaveVendorPrices = async () => {
+    if (!isEditing) return;
+    setIsSavingVendors(true);
+    try {
+      const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
+      const existingVendorIds = existingPrices.map((p) => p.vendor_id);
+
+      // Delete removed vendors
+      for (const vendorId of existingVendorIds) {
+        if (!currentVendorIds.includes(vendorId)) {
+          await deletePrice(vendorId);
+        }
+      }
+
+      // Upsert current vendor prices
+      for (const vp of vendorPrices) {
+        if (vp.price) {
+          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link);
+        }
+      }
+
+      toast({ title: 'Vendor prices saved successfully' });
+    } catch {
+      toast({ title: 'Error saving vendor prices', variant: 'destructive' });
+    } finally {
+      setIsSavingVendors(false);
     }
   };
 
@@ -563,6 +593,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             vendorPrices={vendorPrices}
             onVendorPricesChange={setVendorPrices}
             isEditing={isEditing}
+            onSave={isEditing ? handleSaveVendorPrices : undefined}
+            isSaving={isSavingVendors}
           />
         </form>
       </main>
