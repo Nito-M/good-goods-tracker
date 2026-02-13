@@ -90,8 +90,10 @@ export function AllJobItems() {
           catCost += need * item.unitPrice;
         }
       }
-      categories.push({ name: category, cost: catCost });
-      grandTotal += catCost;
+      if (catCost > 0) {
+        categories.push({ name: category, cost: catCost });
+        grandTotal += catCost;
+      }
     }
     return { categories, grandTotal };
   }, [groupedItems, inventoryQtys]);
