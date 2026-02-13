@@ -157,6 +157,7 @@ export function useAllJobItems() {
         quantity: d.quantity,
         unitPrice: Number(d.unit_price),
         notes: d.notes,
+        category: null,
         createdAt: d.created_at,
         jobTitle: d.jobs.title,
         jobNumber: d.jobs.job_number,
@@ -178,13 +179,13 @@ export function useJobItems(jobId: string | null) {
     setLoading(true);
     const { data, error } = await supabase
       .from('job_items')
-      .select('*')
+      .select('*, inventory_items(category)')
       .eq('job_id', jobId)
       .order('created_at', { ascending: true });
     if (error) {
       console.error('Error loading job items:', error);
     } else {
-      setItems((data || []).map(d => ({
+      setItems((data || []).map((d: any) => ({
         id: d.id,
         jobId: d.job_id,
         inventoryItemId: d.inventory_item_id,
@@ -193,6 +194,7 @@ export function useJobItems(jobId: string | null) {
         quantity: d.quantity,
         unitPrice: Number(d.unit_price),
         notes: d.notes,
+        category: d.inventory_items?.category ?? null,
         createdAt: d.created_at,
       })));
     }
