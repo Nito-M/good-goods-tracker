@@ -80,7 +80,7 @@ export function AllJobItems() {
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(item);
     });
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b)).map(([cat, items]) => [cat, [...items].sort((a, b) => a.itemName.localeCompare(b.itemName))] as const);
   }, [aggregatedItems]);
 
   const needCostSummary = useMemo(() => {
