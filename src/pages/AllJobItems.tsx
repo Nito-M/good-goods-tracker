@@ -1,8 +1,9 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, List } from 'lucide-react';
+import { ArrowLeft, List, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { useAllJobItems } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
@@ -11,6 +12,15 @@ import { formatCurrency } from '@/lib/utils';
 export function AllJobItems() {
   const { items: allJobItems, loading, fetchAllItems } = useAllJobItems();
   const [inventoryQtys, setInventoryQtys] = useState<Record<string, number>>({});
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+
+  const toggleCategory = (cat: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
+  };
 
   const fetchInventoryQtys = useCallback(async () => {
     const inventoryIds = [...new Set(allJobItems.map(i => i.inventoryItemId).filter(Boolean))] as string[];
@@ -35,7 +45,7 @@ export function AllJobItems() {
   }, [allJobItems, fetchInventoryQtys]);
 
   const aggregatedItems = useMemo(() => {
-    const map = new Map<string, { itemName: string; sku: string; totalQty: number; unitPrice: number; jobs: string[]; inventoryItemId: string | null }>();
+    const map = new Map<string, { itemName: string; sku: string; totalQty: number; unitPrice: number; jobs: string[]; inventoryItemId: string | null; category: string | null }>();
     for (const item of allJobItems) {
       const key = item.inventoryItemId || `${item.itemName}::${item.sku}`;
       const existing = map.get(key);
@@ -44,12 +54,21 @@ export function AllJobItems() {
         existing.totalQty += item.quantity;
         if (!existing.jobs.includes(jobLabel)) existing.jobs.push(jobLabel);
       } else {
-        map.set(key, { itemName: item.itemName, sku: item.sku, totalQty: item.quantity, unitPrice: item.unitPrice, jobs: [jobLabel], inventoryItemId: item.inventoryItemId });
+        map.set(key, { itemName: item.itemName, sku: item.sku, totalQty: item.quantity, unitPrice: item.unitPrice, jobs: [jobLabel], inventoryItemId: item.inventoryItemId, category: item.category });
       }
     }
     return Array.from(map.values());
   }, [allJobItems]);
 
+  const groupedItems = useMemo(() => {
+    const groups: Record<string, typeof aggregatedItems> = {};
+    aggregatedItems.forEach(item => {
+      const cat = item.category || 'Uncategorized';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    });
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [aggregatedItems]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,37 +100,58 @@ export function AllJobItems() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead className="text-right">Total Qty</TableHead>
-                    <TableHead className="text-right">In Stock</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
-                    <TableHead>Jobs</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {aggregatedItems.map((item, i) => {
-                    const inStock = item.inventoryItemId ? inventoryQtys[item.inventoryItemId] ?? '—' : '—';
-                    return (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">{item.itemName}</TableCell>
-                        <TableCell className="font-mono text-xs">{item.sku}</TableCell>
-                        <TableCell className="text-right">{item.totalQty}</TableCell>
-                        <TableCell className="text-right">{inStock}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{item.jobs.join(', ')}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {groupedItems.map(([category, items]) => {
+              const isCollapsed = collapsedCategories.has(category);
+              const subtotal = items.reduce((sum, i) => sum + i.totalQty * i.unitPrice, 0);
+              return (
+                <Card key={category}>
+                  <button
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                    onClick={() => toggleCategory(category)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+                      <span className="font-semibold text-card-foreground">{category}</span>
+                      <Badge variant="secondary">{items.length}</Badge>
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground">{formatCurrency(subtotal)}</span>
+                  </button>
+                  {!isCollapsed && (
+                    <CardContent className="p-0 border-t border-border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Item Name</TableHead>
+                            <TableHead>SKU</TableHead>
+                            <TableHead className="text-right">Total Qty</TableHead>
+                            <TableHead className="text-right">In Stock</TableHead>
+                            <TableHead className="text-right">Unit Price</TableHead>
+                            <TableHead>Jobs</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {items.map((item, i) => {
+                            const inStock = item.inventoryItemId ? inventoryQtys[item.inventoryItemId] ?? '—' : '—';
+                            return (
+                              <TableRow key={i}>
+                                <TableCell className="font-medium">{item.itemName}</TableCell>
+                                <TableCell className="font-mono text-xs">{item.sku}</TableCell>
+                                <TableCell className="text-right">{item.totalQty}</TableCell>
+                                <TableCell className="text-right">{inStock}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground">{item.jobs.join(', ')}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
         )}
       </main>
     </div>
