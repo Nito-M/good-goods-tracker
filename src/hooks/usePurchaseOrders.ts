@@ -25,7 +25,7 @@ export function usePurchaseOrders() {
     }
 
     // Fetch orders, vendors, requests, jobs, and po_job_links in parallel
-    const [ordersResult, vendorsResult, requestsResult, jobsResult, jobLinksResult] = await Promise.all([
+    const [ordersResult, vendorsResult, requestsResult, jobsResult, jobLinksResult, companiesResult] = await Promise.all([
       supabase
         .from('purchase_orders')
         .select('*')
@@ -42,6 +42,9 @@ export function usePurchaseOrders() {
       supabase
         .from('po_job_links')
         .select('purchase_order_id, job_id'),
+      supabase
+        .from('companies')
+        .select('id, name'),
     ]);
 
     if (ordersResult.error) {
@@ -94,16 +97,26 @@ export function usePurchaseOrders() {
       }
     }
 
+    // Create company lookup map
+    const companyMap = new Map<string, string>();
+    if (companiesResult.data) {
+      companiesResult.data.forEach((c: { id: string; name: string }) => {
+        companyMap.set(c.id, c.name);
+      });
+    }
+
     setOrders(
       (ordersResult.data as DbPurchaseOrder[]).map((db) => {
         const jobIds = poJobMap.get(db.id) || [];
         const jobNumbers = jobIds.map(jid => jobMap.get(jid)).filter(Boolean) as string[];
+        const companyId = (db as any).company_id;
         return dbToPurchaseOrder(
           db, 
           db.vendor_id ? vendorMap.get(db.vendor_id) : null,
           db.request_id ? requestMap.get(db.request_id) : null,
           jobIds,
           jobNumbers,
+          companyId ? companyMap.get(companyId) : null,
         );
       })
     );

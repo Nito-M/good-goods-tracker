@@ -26,6 +26,8 @@ export interface PurchaseOrder {
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   discountAmount: number;
+  companyId: string | null;
+  companyName?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,7 +56,7 @@ export interface DbPurchaseOrder {
   updated_at: string;
 }
 
-export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | null, requestNumber?: string | null, jobIds?: string[], jobNumbers?: string[]): PurchaseOrder {
+export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | null, requestNumber?: string | null, jobIds?: string[], jobNumbers?: string[], companyName?: string | null): PurchaseOrder {
   // Support both old format (single item) and new format (items array)
   const rawItems = db.items as PurchaseOrderItem[] | null;
   const items: PurchaseOrderItem[] = rawItems && Array.isArray(rawItems) && rawItems.length > 0
@@ -82,6 +84,8 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     discountType: (db.discount_type as 'percentage' | 'fixed') || 'percentage',
     discountValue: db.discount_value || 0,
     discountAmount: db.discount_amount || 0,
+    companyId: (db as any).company_id || null,
+    companyName,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
   };
