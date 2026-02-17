@@ -1,44 +1,32 @@
 
 
-## Add "Sales Orders" Sub-Page Under Sales
+## Sales Order Detail Page with "Convert to Job" Feature
 
-### Overview
-Create a new page that shows only **accepted quotes** from the existing quotes data, displayed in a clean table with the requested columns. It will appear as a sidebar sub-item under "Sales" alongside "Quotes".
+### What You'll Get
+- Clickable quote numbers on the Sales Orders table that navigate to a dedicated detail page
+- A full Sales Order detail page showing all quote info (customer, items, totals, notes)
+- A "Create Job from Sales Order" button that creates a new Job pre-filled with the quote's customer info and line items, then navigates to the Jobs page
 
-### What You'll See
-- A new "Sales Orders" link in the sidebar under the Sales section
-- A page with a searchable table showing accepted quotes with columns:
-  - Quote Number
-  - Customer Name (from the linked vendor/customer)
-  - Phone (from the vendor's contact phone)
-  - Email (from the vendor's contact email)
-  - Total Amount
-  - Date Accepted (the quote's `updated_at` timestamp when status changed to "accepted")
-  - Status (the quote status badge)
+### Changes
 
-"Salesperson" is skipped for now as requested.
+**`src/pages/SalesOrders.tsx`**
+- Make the Quote Number cell a clickable link (`<Link to={/sales-orders/${quote.id}}>`) styled as a text link
 
----
+**New file: `src/pages/SalesOrderDetail.tsx`**
+- Full page showing the accepted quote details:
+  - Header with back arrow to `/sales-orders` and the quote number as title
+  - Customer info card (name, phone, email, address from vendor)
+  - Items table listing all quote items (name, SKU, qty, unit price, total)
+  - Totals section (subtotal, discount, tax, total)
+  - Notes section if present
+- "Create Job" button in the header that:
+  - Calls `createJob()` with the quote's customer name/email/phone as customer details, and the quote number as the job title
+  - Adds all quote line items as job items via `addItem()` from `useJobItems`
+  - Navigates to the new job's page on success
 
-### Technical Details
+**`src/App.tsx`**
+- Add route `/sales-orders/:id` pointing to the new `SalesOrderDetail` component
 
-**New file: `src/pages/SalesOrders.tsx`**
-- Create a page component that uses the existing `useQuotes` hook
-- Filter quotes to only those with `status === 'accepted'`
-- Join vendor data (already fetched by `useQuotes` as `vendorName`) for customer name, and use `useVendors` for phone/email lookup
-- Include a search bar to filter by quote number or customer name
-- Display results in a `Table` component matching the existing UI patterns
+**`src/hooks/usePagePermissions.ts`**
+- Add `/sales-orders/:id` to the `sales-orders` route list so permissions carry over
 
-**Modified: `src/components/AppSidebar.tsx`**
-- Add "Sales Orders" as a second sub-item under the Sales collapsible section, alongside "Quotes"
-
-**Modified: `src/hooks/usePagePermissions.ts`**
-- Add `'sales-orders': ['/sales-orders']` to the `PAGE_KEY_TO_ROUTES` map
-- Add `'sales-orders'` to the `orderedKeys` list
-
-**Modified: `src/App.tsx`**
-- Import the new `SalesOrders` component
-- Add a new route `/sales-orders` wrapped in `ProtectedRoute` and `AppLayout`
-
-### No Database Changes Required
-This page reads from the existing `quotes` and `vendors` tables -- no new tables or migrations needed.
