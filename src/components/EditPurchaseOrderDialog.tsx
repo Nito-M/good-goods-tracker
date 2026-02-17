@@ -42,6 +42,7 @@ interface EditPurchaseOrderDialogProps {
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
       discountAmount?: number;
+      companyId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -194,6 +195,7 @@ export function EditPurchaseOrderDialog({
         discountType,
         discountValue: parsedDiscountValue,
         discountAmount: computedDiscountAmount,
+        companyId: companyId || null,
       },
       pdfFile,
       imageFile
