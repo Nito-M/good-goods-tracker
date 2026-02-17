@@ -125,11 +125,11 @@ export function CompaniesSettings() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signedData, error: signedError } = await supabase.storage
         .from('logos')
-        .getPublicUrl(filePath);
-
-      setLogoUrl(publicUrl);
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+      if (signedError || !signedData?.signedUrl) throw new Error('Failed to get signed URL');
+      setLogoUrl(signedData.signedUrl);
     } catch (error) {
       console.error('Error uploading logo:', error);
     } finally {
