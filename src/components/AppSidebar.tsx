@@ -42,7 +42,7 @@ export function AppSidebar() {
   const { links, addLink } = useJobSidebarLinks();
   const { isPageAllowed } = usePagePermissions();
   const [jobsOpen, setJobsOpen] = useState(location.pathname.startsWith("/jobs"));
-  const [salesOpen, setSalesOpen] = useState(location.pathname.startsWith("/sales") || location.pathname.startsWith("/quotes"));
+  const [salesOpen, setSalesOpen] = useState(location.pathname.startsWith("/sales") || location.pathname.startsWith("/quotes") || location.pathname.startsWith("/sales-orders"));
   const [addingLink, setAddingLink] = useState(false);
   const [newLinkLabel, setNewLinkLabel] = useState("");
 
@@ -144,6 +144,15 @@ export function AppSidebar() {
                             activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
                           >
                             Quotes
+                          </NavLink>
+                        )}
+                        {isPageAllowed('sales-orders') && (
+                          <NavLink
+                            to="/sales-orders"
+                            className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                            activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
+                          >
+                            Sales Orders
                           </NavLink>
                         )}
                       </div>
