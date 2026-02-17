@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart } from 'lucide-react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -39,12 +39,13 @@ interface QuoteCardProps {
   onEdit: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote) => void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
+  onPreview?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
   linkedInvoiceNumber?: string | null;
   linkedPoNumber?: string | null;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -163,6 +164,12 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
             <Pencil className="h-4 w-4 mr-2" />
             Edit
           </Button>
+          {onPreview && (
+            <Button variant="outline" size="sm" onClick={() => onPreview(quote)}>
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
             <Download className="h-4 w-4 mr-2" />
             PDF

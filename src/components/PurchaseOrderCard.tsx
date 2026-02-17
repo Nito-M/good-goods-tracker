@@ -18,6 +18,7 @@ import {
   Banknote,
   ClipboardList,
   Briefcase,
+  Eye,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -29,6 +30,7 @@ interface PurchaseOrderCardProps {
   onDelete: (id: string) => void;
   onEdit: (order: PurchaseOrder) => void;
   onDownload: (order: PurchaseOrder) => void;
+  onPreview?: (order: PurchaseOrder) => void;
   loading?: boolean;
 }
 
@@ -40,6 +42,7 @@ export function PurchaseOrderCard({
   onDelete,
   onEdit,
   onDownload,
+  onPreview,
   loading,
 }: PurchaseOrderCardProps) {
   const TAX_RATE = 0.05;
@@ -264,6 +267,17 @@ export function PurchaseOrderCard({
                 >
                   <Banknote className="h-4 w-4" />
                   Mark Paid
+                </Button>
+              )}
+              {onPreview && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onPreview(order)}
+                  className="gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  Preview
                 </Button>
               )}
               <Button
