@@ -24,6 +24,8 @@ import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, Clipb
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { CompanySelector } from '@/components/CompanySelector';
+import { useCompanies } from '@/hooks/useCompanies';
 
 interface VendorPrice {
   itemId: string;
@@ -141,6 +143,15 @@ export function AddPurchaseOrder() {
   const [saving, setSaving] = useState(false);
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [discountValue, setDiscountValue] = useState<string>('');
+  const [companyId, setCompanyId] = useState<string>('');
+  const { companies, defaultCompany } = useCompanies();
+
+  // Set default company on load
+  useEffect(() => {
+    if (defaultCompany && !companyId) {
+      setCompanyId(defaultCompany.id);
+    }
+  }, [defaultCompany]);
 
   // Calculate subtotal in cents for precision
   const subtotalCents = lineItems.reduce((sum, item) => {
@@ -343,6 +354,15 @@ export function AddPurchaseOrder() {
       {/* Main Content */}
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-6">
+          {/* Company Selector */}
+          {companies.length > 1 && (
+            <Card>
+              <CardContent className="pt-6">
+                <CompanySelector companies={companies} value={companyId} onChange={setCompanyId} />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Vendor Selection Card */}
           <Card>
             <CardHeader>

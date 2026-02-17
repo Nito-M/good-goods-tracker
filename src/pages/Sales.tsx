@@ -53,6 +53,7 @@ import { InvoicePreviewDialog } from '@/components/InvoicePreviewDialog';
 import { InventoryItem } from '@/types/inventory';
 import { InvoiceSettings, Sale } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
+import { useCompanies } from '@/hooks/useCompanies';
 
 interface CartItem {
   inventoryItem: InventoryItem;
@@ -67,8 +68,9 @@ export function Sales() {
   const { vendors } = useVendors();
   const { profile } = useProfile();
   const { addSaleRevenue } = useBank();
+  const { companies } = useCompanies();
 
-  // Build invoice settings from profile
+  // Build invoice settings from profile (fallback)
   const invoiceSettings: InvoiceSettings = useMemo(() => ({
     businessName: profile?.businessName || null,
     businessAddress: profile?.businessAddress || null,
@@ -79,6 +81,23 @@ export function Sales() {
     logoUrl: profile?.logoUrl || null,
     layout: profile?.invoiceLayout || null,
   }), [profile]);
+
+  const getSettingsForSale = (sale: Sale): InvoiceSettings => {
+    const companyId = (sale as any).companyId;
+    const company = companyId ? companies.find(c => c.id === companyId) : null;
+    if (company) {
+      return {
+        ...invoiceSettings,
+        businessName: company.name,
+        businessAddress: company.address,
+        businessPhone: company.phone,
+        businessEmail: company.email,
+        businessNumber: company.businessNumber,
+        logoUrl: company.logoUrl,
+      };
+    }
+    return invoiceSettings;
+  };
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
@@ -757,7 +776,7 @@ export function Sales() {
                                   sale={sale}
                                   onDelete={deleteSale}
                                   onRevert={revertSale}
-                                  onDownloadInvoice={() => generateInvoicePDF(sale, invoiceSettings)}
+                                  onDownloadInvoice={() => generateInvoicePDF(sale, getSettingsForSale(sale))}
                                   onPreviewInvoice={() => setPreviewSale(sale)}
                                   onEdit={setEditingSale}
                                   onStatusChange={(id, status) => updateStatus(id, status, addSaleRevenue)}
@@ -789,9 +808,9 @@ export function Sales() {
           open={!!previewSale}
           onOpenChange={(open) => !open && setPreviewSale(null)}
           sale={previewSale}
-          settings={invoiceSettings}
+          settings={getSettingsForSale(previewSale)}
           onDownload={() => {
-            generateInvoicePDF(previewSale, invoiceSettings);
+            generateInvoicePDF(previewSale, getSettingsForSale(previewSale));
             setPreviewSale(null);
           }}
         />

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { CompanySelector } from '@/components/CompanySelector';
+import { useCompanies } from '@/hooks/useCompanies';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +48,7 @@ interface EditSaleDialogProps {
     notes: string | null;
     paymentTerms: string;
     dueDate: string | null;
+    companyId: string | null;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
@@ -60,6 +63,8 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [dueDate, setDueDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [companyId, setCompanyId] = useState<string>('');
+  const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
     if (sale) {
@@ -79,8 +84,9 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       setNotes(sale.notes || '');
       setPaymentTerms(sale.paymentTerms || 'Due on receipt');
       setDueDate(sale.dueDate ? format(new Date(sale.dueDate), 'yyyy-MM-dd') : '');
+      setCompanyId((sale as any).companyId || defaultCompany?.id || '');
     }
-  }, [sale]);
+  }, [sale, defaultCompany]);
 
   const updateItem = (itemId: string, updates: Partial<EditableSaleItem>) => {
     setItems(prev => prev.map(item =>
@@ -128,6 +134,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       notes: notes || null,
       paymentTerms,
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+      companyId: companyId || null,
     });
     setIsSaving(false);
     onOpenChange(false);
@@ -144,6 +151,9 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Company Selector */}
+          <CompanySelector companies={companies} value={companyId} onChange={setCompanyId} />
+
           {/* Invoice Details */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

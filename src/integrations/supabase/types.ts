@@ -112,6 +112,48 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          address: string | null
+          business_number: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_default: boolean
+          logo_url: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          business_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_default?: boolean
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          business_number?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_default?: boolean
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -809,6 +851,7 @@ export type Database = {
       }
       purchase_orders: {
         Row: {
+          company_id: string | null
           created_at: string
           discount_amount: number
           discount_type: string
@@ -832,6 +875,7 @@ export type Database = {
           vendor_id: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           discount_amount?: number
           discount_type?: string
@@ -855,6 +899,7 @@ export type Database = {
           vendor_id?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           discount_amount?: number
           discount_type?: string
@@ -878,6 +923,13 @@ export type Database = {
           vendor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_orders_request_id_fkey"
             columns: ["request_id"]
@@ -957,6 +1009,7 @@ export type Database = {
       quotes: {
         Row: {
           attachment_url: string | null
+          company_id: string | null
           converted_to_invoice_id: string | null
           converted_to_po_id: string | null
           created_at: string
@@ -978,6 +1031,7 @@ export type Database = {
         }
         Insert: {
           attachment_url?: string | null
+          company_id?: string | null
           converted_to_invoice_id?: string | null
           converted_to_po_id?: string | null
           created_at?: string
@@ -999,6 +1053,7 @@ export type Database = {
         }
         Update: {
           attachment_url?: string | null
+          company_id?: string | null
           converted_to_invoice_id?: string | null
           converted_to_po_id?: string | null
           created_at?: string
@@ -1019,6 +1074,13 @@ export type Database = {
           vendor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quotes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotes_converted_to_invoice_id_fkey"
             columns: ["converted_to_invoice_id"]
@@ -1169,6 +1231,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          company_id: string | null
           created_at: string
           discount_amount: number
           discount_rate: number
@@ -1188,6 +1251,7 @@ export type Database = {
           vendor_id: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number
@@ -1207,6 +1271,7 @@ export type Database = {
           vendor_id?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number
@@ -1226,6 +1291,13 @@ export type Database = {
           vendor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_vendor_id_fkey"
             columns: ["vendor_id"]

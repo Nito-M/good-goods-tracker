@@ -78,6 +78,7 @@ export function useSales() {
             items: mappedItems,
             createdAt: sale.created_at,
             updatedAt: sale.updated_at,
+            companyId: (sale as any).company_id || null,
           };
         })
       );
@@ -492,6 +493,7 @@ export function useSales() {
       notes: string | null;
       paymentTerms: string;
       dueDate: string | null;
+      companyId?: string | null;
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -507,10 +509,7 @@ export function useSales() {
       const taxAmount = afterDiscount * (input.taxRate / 100);
       const total = afterDiscount + taxAmount;
 
-      // Update sale
-      const { error: saleError } = await supabase
-        .from('sales')
-        .update({
+      const updateData: Record<string, unknown> = {
           vendor_id: input.vendorId,
           invoice_number: input.invoiceNumber,
           subtotal,
@@ -522,7 +521,14 @@ export function useSales() {
           notes: input.notes,
           payment_terms: input.paymentTerms,
           due_date: input.dueDate,
-        })
+      };
+      if (input.companyId !== undefined) {
+        updateData.company_id = input.companyId;
+      }
+
+      const { error: saleError } = await supabase
+        .from('sales')
+        .update(updateData)
         .eq('id', saleId);
 
       if (saleError) throw saleError;

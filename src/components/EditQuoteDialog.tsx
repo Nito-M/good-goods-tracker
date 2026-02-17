@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { CompanySelector } from '@/components/CompanySelector';
+import { useCompanies } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,6 +51,7 @@ interface EditQuoteDialogProps {
     notes: string | null;
     paymentTerms: string;
     validUntil: string | null;
+    companyId: string | null;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
@@ -63,6 +66,8 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [validUntil, setValidUntil] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [companyId, setCompanyId] = useState<string>('');
+  const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
     if (quote) {
@@ -84,8 +89,9 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       setNotes(quote.notes || '');
       setPaymentTerms(quote.paymentTerms || 'Due on receipt');
       setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
+      setCompanyId((quote as any).companyId || defaultCompany?.id || '');
     }
-  }, [quote]);
+  }, [quote, defaultCompany]);
 
   const updateItem = (itemId: string, updates: Partial<EditableQuoteItem>) => {
     setItems(prev => prev.map(item =>
@@ -137,6 +143,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       notes: notes || null,
       paymentTerms,
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
+      companyId: companyId || null,
     });
     setIsSaving(false);
     onOpenChange(false);
@@ -153,6 +160,9 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Company Selector */}
+          <CompanySelector companies={companies} value={companyId} onChange={setCompanyId} />
+
           {/* Quote Details */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
