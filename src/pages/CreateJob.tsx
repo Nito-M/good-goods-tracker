@@ -17,7 +17,7 @@ const STATUS_OPTIONS = [
   { value: 'welding-done', label: 'Welding Done' },
   { value: 'painting-done', label: 'Painting Done' },
   { value: 'finished', label: 'Finished' },
-  
+  { value: 'on-hold', label: 'On Hold' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
 

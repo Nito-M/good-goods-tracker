@@ -144,7 +144,8 @@ export function useAllJobItems() {
     const { data, error } = await supabase
       .from('job_items')
       .select('*, jobs!inner(title, job_number, status), inventory_items(category)')
-      .neq('jobs.status', 'finished');
+      .neq('jobs.status', 'finished')
+      .neq('jobs.status', 'on-hold');
     if (error) {
       console.error('Error loading all job items:', error);
     } else {
