@@ -31,7 +31,7 @@ export function CompanyDetail() {
   const { companies, loading, updateCompany, deleteCompany } = useCompanies();
   const { user } = useAuth();
 
-  const [editingSection, setEditingSection] = useState<'info' | 'invoice' | 'quote' | null>(null);
+  const [editingSection, setEditingSection] = useState<'info' | 'invoice' | 'quote' | 'po' | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Form state
@@ -55,6 +55,11 @@ export function CompanyDetail() {
   const [quoteThankYouNote, setQuoteThankYouNote] = useState('Thank you for considering our services!');
   const [quoteValidityDays, setQuoteValidityDays] = useState(30);
 
+  // PO settings
+  const [poPrefix, setPoPrefix] = useState('PO');
+  const [poNextNumber, setPoNextNumber] = useState(1);
+  const [poThankYouNote, setPoThankYouNote] = useState('Thank you for your order!');
+
 
   const company = companies.find((c) => c.id === id);
 
@@ -74,6 +79,9 @@ export function CompanyDetail() {
       setInvoiceLayout(company.invoiceLayout || defaultInvoiceLayout);
       setQuoteThankYouNote(company.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(company.quoteValidityDays || 30);
+      setPoPrefix(company.poPrefix || 'PO');
+      setPoNextNumber(company.poNextNumber || 1);
+      setPoThankYouNote(company.poThankYouNote || 'Thank you for your order!');
     }
   }, [company]);
 
@@ -135,6 +143,16 @@ export function CompanyDetail() {
     setEditingSection(null);
   };
 
+  const handleSavePO = async () => {
+    if (!company) return;
+    await updateCompany(company.id, {
+      poPrefix: poPrefix || 'PO',
+      poNextNumber,
+      poThankYouNote,
+    });
+    setEditingSection(null);
+  };
+
   const handleDelete = async () => {
     if (!company) return;
     await deleteCompany(company.id);
@@ -156,6 +174,9 @@ export function CompanyDetail() {
       setInvoiceLayout(company.invoiceLayout || defaultInvoiceLayout);
       setQuoteThankYouNote(company.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(company.quoteValidityDays || 30);
+      setPoPrefix(company.poPrefix || 'PO');
+      setPoNextNumber(company.poNextNumber || 1);
+      setPoThankYouNote(company.poThankYouNote || 'Thank you for your order!');
     }
     setEditingSection(null);
   };
@@ -428,7 +449,71 @@ export function CompanyDetail() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation */}
+      {/* Purchase Order Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Purchase Order Settings</CardTitle>
+            {editingSection === 'po' ? (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={cancelEditing}>Cancel</Button>
+                <Button size="sm" onClick={handleSavePO}>Save</Button>
+              </div>
+            ) : (
+              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setEditingSection('po')}>
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editingSection === 'po' ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>PO Number Format</Label>
+                <div className="flex items-center gap-2">
+                  <div className="space-y-1">
+                    <Input
+                      value={poPrefix}
+                      onChange={(e) => setPoPrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                      placeholder="PO"
+                      className="w-24 text-center font-medium"
+                    />
+                    <p className="text-xs text-muted-foreground text-center">Prefix</p>
+                  </div>
+                  <span className="text-lg text-muted-foreground font-bold mt-[-1rem]">-</span>
+                  <div className="space-y-1">
+                    <Input
+                      type="number"
+                      value={poNextNumber}
+                      onChange={(e) => setPoNextNumber(Math.max(1, parseInt(e.target.value) || 1))}
+                      min={1}
+                      className="w-20 text-center font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground text-center">Next #</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Next PO: {poPrefix || 'PO'}-{String(poNextNumber).padStart(4, '0')}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Thank You Note</Label>
+                <Textarea value={poThankYouNote} onChange={(e) => setPoThankYouNote(e.target.value)} rows={2} />
+              </div>
+              <p className="text-xs text-muted-foreground">Layout is shared with invoices — edit it in Invoice Settings above.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-[120px_1fr] gap-y-2 text-sm">
+              <span className="text-muted-foreground">Next PO</span>
+              <span className="font-mono">{company.poPrefix}-{String(company.poNextNumber).padStart(4, '0')}</span>
+              <span className="text-muted-foreground">Thank You</span>
+              <span>{company.poThankYouNote}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

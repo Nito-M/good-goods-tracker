@@ -20,6 +20,9 @@ export interface Company {
   quoteThankYouNote: string;
   quoteValidityDays: number;
   quoteLayout: any | null;
+  poPrefix: string;
+  poNextNumber: number;
+  poThankYouNote: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +42,9 @@ export interface CompanyInput {
   quoteThankYouNote?: string;
   quoteValidityDays?: number;
   quoteLayout?: any | null;
+  poPrefix?: string;
+  poNextNumber?: number;
+  poThankYouNote?: string;
 }
 
 export function useCompanies() {
@@ -84,6 +90,9 @@ export function useCompanies() {
         quoteThankYouNote: c.quote_thank_you_note || 'Thank you for considering our services!',
         quoteValidityDays: c.quote_validity_days || 30,
         quoteLayout: c.quote_layout,
+        poPrefix: c.po_prefix || 'PO',
+        poNextNumber: c.po_next_number || 1,
+        poThankYouNote: c.po_thank_you_note || 'Thank you for your order!',
         createdAt: c.created_at,
         updatedAt: c.updated_at,
       }))
@@ -122,6 +131,9 @@ export function useCompanies() {
       quote_thank_you_note: input.quoteThankYouNote || 'Thank you for considering our services!',
       quote_validity_days: input.quoteValidityDays || 30,
       quote_layout: input.quoteLayout || null,
+      po_prefix: input.poPrefix || 'PO',
+      po_next_number: input.poNextNumber || 1,
+      po_thank_you_note: input.poThankYouNote || 'Thank you for your order!',
     });
 
     if (error) {
@@ -159,6 +171,9 @@ export function useCompanies() {
     if (input.quoteThankYouNote !== undefined) updateData.quote_thank_you_note = input.quoteThankYouNote;
     if (input.quoteValidityDays !== undefined) updateData.quote_validity_days = input.quoteValidityDays;
     if (input.quoteLayout !== undefined) updateData.quote_layout = input.quoteLayout;
+    if (input.poPrefix !== undefined) updateData.po_prefix = input.poPrefix;
+    if (input.poNextNumber !== undefined) updateData.po_next_number = input.poNextNumber;
+    if (input.poThankYouNote !== undefined) updateData.po_thank_you_note = input.poThankYouNote;
 
     const { error } = await supabase
       .from('companies')
