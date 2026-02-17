@@ -367,7 +367,7 @@ export function CompanyDetail() {
                 <Textarea value={invoiceThankYouNote} onChange={(e) => setInvoiceThankYouNote(e.target.value)} rows={2} />
               </div>
               <div className="space-y-2 pt-2 border-t">
-                <InvoiceLayoutEditor layout={invoiceLayout} onChange={setInvoiceLayout} logoUrl={logoUrl} businessName={name} />
+                <InvoiceLayoutEditor layout={invoiceLayout} onChange={setInvoiceLayout} logoUrl={logoUrl} businessName={name} businessAddress={address} businessPhone={phone} businessEmail={email} documentType="invoice" thankYouNote={invoiceThankYouNote} />
               </div>
             </div>
           ) : (
@@ -417,7 +417,7 @@ export function CompanyDetail() {
                 <Textarea value={quoteThankYouNote} onChange={(e) => setQuoteThankYouNote(e.target.value)} rows={2} />
               </div>
               <div className="space-y-2 pt-2 border-t">
-                <InvoiceLayoutEditor layout={quoteLayout} onChange={setQuoteLayout} logoUrl={logoUrl} businessName={name} />
+                <InvoiceLayoutEditor layout={quoteLayout} onChange={setQuoteLayout} logoUrl={logoUrl} businessName={name} businessAddress={address} businessPhone={phone} businessEmail={email} documentType="quote" thankYouNote={quoteThankYouNote} />
               </div>
             </div>
           ) : (
