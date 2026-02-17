@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Star, Upload, X, Building2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,7 @@ import { cn } from '@/lib/utils';
 export function CompaniesSettings() {
   const { companies, loading, addCompany, updateCompany, deleteCompany } = useCompanies();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
@@ -193,7 +195,11 @@ export function CompaniesSettings() {
       ) : (
         <div className="grid gap-3">
           {companies.map((company) => (
-            <Card key={company.id} className="hover:shadow-sm transition-shadow">
+            <Card
+              key={company.id}
+              className="hover:shadow-sm transition-shadow cursor-pointer"
+              onClick={() => navigate(`/settings/company/${company.id}`)}
+            >
               <CardContent className="py-4 flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   {company.logoUrl && (
@@ -217,26 +223,23 @@ export function CompaniesSettings() {
                       {company.address && <p className="truncate">{company.address}</p>}
                       {company.phone && <p>{company.phone}</p>}
                       {company.email && <p>{company.email}</p>}
-                      {company.businessNumber && <p>Business #: {company.businessNumber}</p>}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       Invoice: {company.invoicePrefix}-{String(company.invoiceNextNumber).padStart(4, '0')} · Quote validity: {company.quoteValidityDays}d
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button variant="outline" size="sm" onClick={() => openDialog(company)}>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive"
-                    onClick={() => setDeleteId(company.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteId(company.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           ))}
