@@ -151,8 +151,8 @@ export function SalesOrderDetail() {
             <p className="text-sm text-muted-foreground">Sales Order</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Label htmlFor="jobNumber" className="text-sm whitespace-nowrap flex items-center gap-1">
               <Hash className="h-3.5 w-3.5" />Job #
             </Label>
@@ -161,20 +161,21 @@ export function SalesOrderDetail() {
               value={jobNumber}
               onChange={(e) => setJobNumber(e.target.value)}
               placeholder="Auto"
-              className="w-32 h-9"
+              className="w-24 h-9"
             />
           </div>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
+                size="sm"
                 className={cn(
-                  "w-[160px] justify-start text-left font-normal h-9",
+                  "justify-start text-left font-normal h-9",
                   !dueDate && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                {dueDate ? format(dueDate, "PPP") : <span>Due date</span>}
+                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                {dueDate ? format(dueDate, "MMM d, yyyy") : <span>Due date</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
@@ -187,32 +188,32 @@ export function SalesOrderDetail() {
               />
             </PopoverContent>
           </Popover>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button disabled={creating}>
-              {creating ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <ChevronDown className="h-4 w-4 mr-2" />
-              )}
-              Actions
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleCreateJob}>
-              <Briefcase className="h-4 w-4 mr-2" />
-              Create Job
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
-              <Clock className="h-4 w-4 mr-2" />
-              In Progress
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Mark as Complete
-            </DropdownMenuItem>
-           </DropdownMenuContent>
-        </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" disabled={creating} className="h-9">
+                {creating ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 mr-1.5" />
+                )}
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleCreateJob}>
+                <Briefcase className="h-4 w-4 mr-2" />
+                Create Job
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
+                <Clock className="h-4 w-4 mr-2" />
+                In Progress
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Mark as Complete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
