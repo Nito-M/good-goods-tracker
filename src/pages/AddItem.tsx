@@ -26,10 +26,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ItemVendorPricing } from '@/components/ItemVendorPricing';
+import { ItemTagSelector } from '@/components/ItemTagSelector';
 import { MultiImageUploader } from '@/components/MultiImageUploader';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrices';
 import { useItemImages } from '@/hooks/useItemImages';
+import { useItemTags } from '@/hooks/useItemTags';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
@@ -62,7 +64,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   // Vendor and pricing hooks
   const { vendors } = useVendors();
   const { prices: existingPrices, upsertPrice, deletePrice } = useItemVendorPrices(editItem?.id);
-  
+  const { selectedTagIds, setTagsForItem } = useItemTags(editItem?.id);
   // Multi-image support for editing mode
   const { 
     images: itemImages, 
@@ -91,7 +93,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [isSavingVendors, setIsSavingVendors] = useState(false);
-
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   useEffect(() => {
     if (editItem) {
       setName(editItem.name);
@@ -113,6 +115,13 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       }
     }
   }, [editItem]);
+
+  // Sync pending tags from loaded item tags
+  useEffect(() => {
+    if (isEditing && selectedTagIds.length > 0) {
+      setPendingTagIds(selectedTagIds);
+    }
+  }, [isEditing, selectedTagIds]);
 
   // Initialize vendor prices from existing data when editing
   useEffect(() => {
@@ -199,6 +208,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
           await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link);
         }
       }
+      // Save tags for existing item
+      await setTagsForItem(pendingTagIds);
       
       toast({ title: 'Item updated successfully' });
     } else {
@@ -585,6 +596,12 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
               </div>
             </CardContent>
           </Card>
+
+          {/* Tags */}
+          <ItemTagSelector
+            selectedTagIds={pendingTagIds}
+            onTagsChange={setPendingTagIds}
+          />
 
           {/* Vendor Pricing */}
           <ItemVendorPricing

@@ -23,6 +23,9 @@ import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { useVendors } from '@/hooks/useVendors';
 import { useLastPurchase } from '@/hooks/useLastPurchase';
 import { useItemImages } from '@/hooks/useItemImages';
+import { useItemTags } from '@/hooks/useItemTags';
+import { useTagCategories } from '@/hooks/useTagCategories';
+import { useTags } from '@/hooks/useTags';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 
@@ -45,6 +48,9 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   const { vendors } = useVendors();
   const { lastPurchase } = useLastPurchase(item?.sku);
   const { images: itemImages } = useItemImages(item?.id);
+  const { selectedTagIds } = useItemTags(item?.id);
+  const { tagCategories } = useTagCategories();
+  const { tags, getTagsByCategory } = useTags();
 
   const getVendorName = (vendorId: string) => {
     return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
@@ -204,6 +210,25 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
           </div>
           <h1 className="text-3xl font-bold text-card-foreground">{item.name}</h1>
           <p className="text-muted-foreground mt-1">SKU: {item.sku}</p>
+          {/* Tags */}
+          {selectedTagIds.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {tagCategories.map((tc) => {
+                const categoryTags = getTagsByCategory(tc.id).filter((t) => selectedTagIds.includes(t.id));
+                if (categoryTags.length === 0) return null;
+                return (
+                  <div key={tc.id} className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground font-medium">{tc.name}:</span>
+                    {categoryTags.map((tag) => (
+                      <Badge key={tag.id} variant="outline" className="text-xs">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Product Images Gallery */}

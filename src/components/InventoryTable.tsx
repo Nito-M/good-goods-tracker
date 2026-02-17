@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
+import { useBulkItemTags } from '@/hooks/useItemTags';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
 interface InventoryTableProps {
@@ -26,6 +27,7 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.name.localeCompare(b.name)), [items]);
   const itemIds = useMemo(() => sortedItems.map((item) => item.id), [sortedItems]);
   const thumbnailMap = useItemThumbnails(itemIds);
+  const { getTagsForItem } = useBulkItemTags(itemIds);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
 
   return (
@@ -78,7 +80,27 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
                     className="font-medium text-card-foreground cursor-pointer hover:underline"
                     onClick={() => navigate(`/item/${item.id}`)}
                   >
-                    {item.name}
+                    <div>
+                      {item.name}
+                      {(() => {
+                        const itemTags = getTagsForItem(item.id);
+                        if (itemTags.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {itemTags.slice(0, 3).map((t, i) => (
+                              <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
+                                {t.name}
+                              </Badge>
+                            ))}
+                            {itemTags.length > 3 && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                +{itemTags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="font-normal">

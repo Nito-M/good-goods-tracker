@@ -1,9 +1,13 @@
+import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
 import { InventoryItem } from '@/types/inventory';
+import { useTagCategories } from '@/hooks/useTagCategories';
+import { useTags } from '@/hooks/useTags';
+import { useBulkItemTags } from '@/hooks/useItemTags';
 
 interface ItemsProps {
   items: InventoryItem[];
@@ -27,6 +31,34 @@ export const Items = ({
   onDelete,
 }: ItemsProps) => {
   const navigate = useNavigate();
+  const [tagFilter, setTagFilter] = useState('all');
+  
+  const { tagCategories } = useTagCategories();
+  const { tags } = useTags();
+  const itemIds = useMemo(() => items.map((item) => item.id), [items]);
+  const { getTagsForItem, itemTagsMap } = useBulkItemTags(itemIds);
+
+  // Build tag options for filter dropdown
+  const tagOptions = useMemo(() => {
+    return tags.map((tag) => {
+      const cat = tagCategories.find((tc) => tc.id === tag.tag_category_id);
+      return {
+        id: tag.id,
+        name: tag.name,
+        categoryName: cat?.name || '',
+      };
+    });
+  }, [tags, tagCategories]);
+
+  // Filter items by tag
+  const filteredItems = useMemo(() => {
+    if (tagFilter === 'all') return items;
+    return items.filter((item) => {
+      const tagIds = itemTagsMap.get(item.id) || [];
+      return tagIds.includes(tagFilter);
+    });
+  }, [items, tagFilter, itemTagsMap]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -54,6 +86,9 @@ export const Items = ({
             categoryFilter={categoryFilter}
             onCategoryChange={setCategoryFilter}
             categories={categories}
+            tagFilter={tagFilter}
+            onTagChange={setTagFilter}
+            tagOptions={tagOptions}
           />
         </div>
 
@@ -64,7 +99,7 @@ export const Items = ({
           </div>
         ) : (
           <InventoryTable
-            items={items}
+            items={filteredItems}
             onDelete={onDelete}
           />
         )}
