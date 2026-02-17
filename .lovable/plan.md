@@ -1,32 +1,21 @@
 
 
-## Link Invoice and Quote Layouts
+## Make Quotes a Subitem Under Sales
 
-### What You Want
-Right now, each company has two separate layout editors — one for invoices and one for quotes. You want a single shared layout so that when you position elements (logo, business info, items table, etc.) for one document type, the same positions apply to the other.
+### What Changes
+In the sidebar, "Quotes" will be removed as a standalone menu item and instead appear as a nested subitem under "Sales", using the same collapsible pattern that "Jobs" already uses.
 
-### What Will Change
+### How It Works
+- Remove `{ title: "Quotes", ... }` from the `menuItems` array
+- Replace the simple "Sales" menu item with a collapsible section (like Jobs)
+- The collapsible will have "Sales" as the parent link (`/sales`) and "Quotes" as a nested child link (`/quotes`)
+- The collapsible auto-opens when the user is on `/sales` or `/quotes`
+- Respects existing page permissions -- Sales section only shows if `sales` is allowed, Quotes subitem only shows if `quotes` is allowed
 
-**1. Company Detail Page (`src/pages/CompanyDetail.tsx`)**
-- Remove the separate `quoteLayout` state — use `invoiceLayout` as the single shared layout
-- When saving quote settings, also save the shared layout
-- Show only one layout editor (in the Invoice Settings section), with a note that it applies to both invoices and quotes
-- Remove the layout editor from the Quote Settings section
+### File to Modify
+- `src/components/AppSidebar.tsx`
+  - Remove Quotes from `menuItems` array
+  - Remove Sales from `menuItems` array (it becomes a custom collapsible block)
+  - Add a new collapsible Sales section (between Items and Purchase Orders) with a "Quotes" subitem, following the same pattern as the Jobs collapsible
+  - Add `salesOpen` state initialized from current path
 
-**2. Save Logic**
-- When saving invoice settings, save the layout to both `invoiceLayout` and `quoteLayout` fields so the database stays in sync
-- When saving quote settings, also sync the layout from the shared state
-
-**3. Fix Crash-Safe Layout Merging (4 files)**
-Apply the `{ ...defaultInvoiceLayout, ...(layout || {}) }` spread pattern consistently in:
-- `src/components/InvoicePreviewDialog.tsx` (line 27)
-- `src/lib/invoiceGenerator.ts` (line 12)
-- `src/lib/quoteGenerator.ts` (line 8)
-
-These currently use `settings.layout || defaultInvoiceLayout` which crashes if the layout object exists but is missing some keys.
-
-### Files to Modify
-- `src/pages/CompanyDetail.tsx` — unify layout state, single editor, sync both fields on save
-- `src/components/InvoicePreviewDialog.tsx` — safe layout merge
-- `src/lib/invoiceGenerator.ts` — safe layout merge
-- `src/lib/quoteGenerator.ts` — safe layout merge
