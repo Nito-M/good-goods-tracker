@@ -26,6 +26,7 @@ import { JobDescription } from "./pages/JobDescription";
 import { JobAddItems } from "./pages/JobAddItems";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
+import { CompanyDetail } from "./pages/CompanyDetail";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -218,6 +219,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Settings />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/company/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <CompanyDetail />
               </AppLayout>
             </ProtectedRoute>
           }
