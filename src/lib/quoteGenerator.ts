@@ -5,7 +5,7 @@ import { formatCurrency } from '@/lib/utils';
 
 export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) => {
   const doc = new jsPDF();
-  const layout: InvoiceLayout = settings.layout || defaultInvoiceLayout;
+  const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings.layout || {}) };
   
   // Load logo if available
   let logoLoaded = false;

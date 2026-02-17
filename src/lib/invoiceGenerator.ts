@@ -9,7 +9,7 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   const pageHeight = doc.internal.pageSize.getHeight();
   
   // Get layout or use defaults
-  const layout: InvoiceLayout = settings?.layout || defaultInvoiceLayout;
+  const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) };
 
 
   const formatDate = (dateString: string) => {

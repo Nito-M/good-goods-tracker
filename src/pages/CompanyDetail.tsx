@@ -54,7 +54,6 @@ export function CompanyDetail() {
   // Quote settings
   const [quoteThankYouNote, setQuoteThankYouNote] = useState('Thank you for considering our services!');
   const [quoteValidityDays, setQuoteValidityDays] = useState(30);
-  const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
 
 
   const company = companies.find((c) => c.id === id);
@@ -75,7 +74,6 @@ export function CompanyDetail() {
       setInvoiceLayout(company.invoiceLayout || defaultInvoiceLayout);
       setQuoteThankYouNote(company.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(company.quoteValidityDays || 30);
-      setQuoteLayout(company.quoteLayout || defaultInvoiceLayout);
     }
   }, [company]);
 
@@ -123,6 +121,7 @@ export function CompanyDetail() {
       invoiceNextNumber,
       invoiceThankYouNote,
       invoiceLayout,
+      quoteLayout: invoiceLayout,
     });
     setEditingSection(null);
   };
@@ -132,7 +131,6 @@ export function CompanyDetail() {
     await updateCompany(company.id, {
       quoteThankYouNote,
       quoteValidityDays,
-      quoteLayout,
     });
     setEditingSection(null);
   };
@@ -158,7 +156,6 @@ export function CompanyDetail() {
       setInvoiceLayout(company.invoiceLayout || defaultInvoiceLayout);
       setQuoteThankYouNote(company.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(company.quoteValidityDays || 30);
-      setQuoteLayout(company.quoteLayout || defaultInvoiceLayout);
     }
     setEditingSection(null);
   };
@@ -368,6 +365,7 @@ export function CompanyDetail() {
                 <Textarea value={invoiceThankYouNote} onChange={(e) => setInvoiceThankYouNote(e.target.value)} rows={2} />
               </div>
               <div className="space-y-2 pt-2 border-t">
+                <p className="text-xs text-muted-foreground">This layout applies to both invoices and quotes.</p>
                 <InvoiceLayoutEditor layout={invoiceLayout} onChange={setInvoiceLayout} logoUrl={logoUrl} businessName={name} businessAddress={address} businessPhone={phone} businessEmail={email} documentType="invoice" thankYouNote={invoiceThankYouNote} />
               </div>
             </div>
@@ -417,9 +415,7 @@ export function CompanyDetail() {
                 <Label>Thank You Note</Label>
                 <Textarea value={quoteThankYouNote} onChange={(e) => setQuoteThankYouNote(e.target.value)} rows={2} />
               </div>
-              <div className="space-y-2 pt-2 border-t">
-                <InvoiceLayoutEditor layout={quoteLayout} onChange={setQuoteLayout} logoUrl={logoUrl} businessName={name} businessAddress={address} businessPhone={phone} businessEmail={email} documentType="quote" thankYouNote={quoteThankYouNote} />
-              </div>
+              <p className="text-xs text-muted-foreground">Layout is shared with invoices — edit it in Invoice Settings above.</p>
             </div>
           ) : (
             <div className="grid grid-cols-[120px_1fr] gap-y-2 text-sm">
