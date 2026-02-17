@@ -1,42 +1,30 @@
 
 
-## Sort Items A-Z and Add Search in PO Item Selection
+## Add "On Hold" Job Status
 
-### Problem
-When adding items to a Purchase Order, the inventory items in the dropdown are unsorted and there's no way to search/filter them, making it hard to find items quickly.
+### What it does
+Adds a new **"On Hold"** status for jobs you don't want to work on right away. Items from on-hold jobs will be excluded from the "All Job Items" view, keeping your material planning focused on active work only.
 
-### Changes in `src/pages/AddPurchaseOrder.tsx`
+### Changes
 
-**1. Sort items alphabetically (A-Z)**
+**1. Add "On Hold" status option to job status dropdowns**
+- Update `src/pages/CreateJob.tsx`, `src/pages/EditJob.tsx`, and the status dropdown in the job detail view to include "on-hold" as a selectable status.
 
-In the item selection dropdown (around line 434-446), sort `filteredInventoryItems` by name before rendering:
+**2. Style the status badge**
+- Add an "on-hold" entry to all `statusColors` maps across the app (Jobs list, Job Detail, Job Description pages) with a gray/neutral color theme (e.g., gray-100/gray-800) to visually distinguish it from active statuses.
 
-```tsx
-filteredInventoryItems
-  .filter(item => !lineItems.some(li => li.id !== lineItem.id && li.selectedItemId === item.id))
-  .sort((a, b) => a.name.localeCompare(b.name))
-  .map(item => ...)
-```
-
-**2. Add search/filter capability to the item dropdown**
-
-Replace the `Select` component for item selection with a searchable combobox pattern using the existing `Command` (cmdk) component wrapped in a `Popover`. This gives users a search input at the top of the dropdown to filter items by name or SKU.
-
-- Import `Command`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandItem`, `CommandGroup` from `@/components/ui/command`
-- Import `Popover`, `PopoverContent`, `PopoverTrigger` from `@/components/ui/popover`
-- Replace each item `Select` with a Popover+Command combo that:
-  - Shows a trigger button displaying the selected item name (or "Select item...")
-  - Opens a popover with a search input and scrollable list
-  - Filters items by name or SKU as the user types
-  - Sorts results A-Z
-  - Still excludes already-selected items and includes "Custom Item" option
-
-### Also update `src/components/EditPurchaseOrderDialog.tsx`
-
-Apply the same A-Z sorting to the item selection dropdown in the edit dialog for consistency. (The edit dialog likely uses a similar Select for items.)
+**3. Exclude on-hold jobs from All Job Items**
+- Update the `useAllJobItems` hook query to also filter out `on-hold` jobs (alongside the existing `finished` filter), so their items don't appear in the material planning view.
 
 ### Technical Details
-- Uses existing `cmdk` library already installed and the `Command` UI components already in the project
-- No new dependencies needed
-- The combobox pattern is the standard shadcn/ui approach for searchable selects
+
+- In `src/hooks/useJobs.ts`, the `useAllJobItems` query currently has `.neq('jobs.status', 'finished')`. This will be updated to also exclude `on-hold` by adding `.neq('jobs.status', 'on-hold')`.
+- Status color: `'on-hold': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'`
+- Files to update:
+  - `src/hooks/useJobs.ts` (exclude on-hold from all items query)
+  - `src/pages/Jobs.tsx` (status color map)
+  - `src/pages/JobDescription.tsx` (status color map)
+  - `src/pages/CreateJob.tsx` (status select options)
+  - `src/pages/EditJob.tsx` (status select options + color map)
+  - Any job detail page with status dropdown
 
