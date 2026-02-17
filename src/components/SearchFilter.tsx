@@ -8,12 +8,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+interface TagOption {
+  id: string;
+  name: string;
+  categoryName: string;
+}
+
 interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   categoryFilter: string;
   onCategoryChange: (value: string) => void;
   categories: string[];
+  tagFilter?: string;
+  onTagChange?: (value: string) => void;
+  tagOptions?: TagOption[];
 }
 
 export function SearchFilter({
@@ -22,6 +31,9 @@ export function SearchFilter({
   categoryFilter,
   onCategoryChange,
   categories,
+  tagFilter,
+  onTagChange,
+  tagOptions,
 }: SearchFilterProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
@@ -47,6 +59,21 @@ export function SearchFilter({
           ))}
         </SelectContent>
       </Select>
+      {tagOptions && tagOptions.length > 0 && onTagChange && (
+        <Select value={tagFilter || 'all'} onValueChange={onTagChange}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="All Tags" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tags</SelectItem>
+            {tagOptions.map((tag) => (
+              <SelectItem key={tag.id} value={tag.id}>
+                {tag.categoryName}: {tag.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

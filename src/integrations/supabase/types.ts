@@ -261,6 +261,45 @@ export type Database = {
           },
         ]
       }
+      item_tags: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          tag_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          tag_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          tag_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_tags_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_vendor_prices: {
         Row: {
           created_at: string
@@ -1192,6 +1231,59 @@ export type Database = {
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tag_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          tag_category_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          tag_category_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          tag_category_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tags_tag_category_id_fkey"
+            columns: ["tag_category_id"]
+            isOneToOne: false
+            referencedRelation: "tag_categories"
             referencedColumns: ["id"]
           },
         ]
