@@ -24,7 +24,7 @@ export function InvoicePreviewDialog({
   settings,
   onDownload,
 }: InvoicePreviewDialogProps) {
-  const layout: InvoiceLayout = settings?.layout || defaultInvoiceLayout;
+  const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
