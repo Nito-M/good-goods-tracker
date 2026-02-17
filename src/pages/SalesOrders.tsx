@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useVendors } from '@/hooks/useVendors';
 import { Search, FileText } from 'lucide-react';
@@ -96,7 +97,11 @@ export function SalesOrders() {
                 const { phone, email } = getVendorDetails(quote.vendorId);
                 return (
                   <TableRow key={quote.id}>
-                    <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link to={`/sales-orders/${quote.id}`} className="text-primary hover:underline">
+                        {quote.quoteNumber}
+                      </Link>
+                    </TableCell>
                     <TableCell>{quote.vendorName || '—'}</TableCell>
                     <TableCell>{phone}</TableCell>
                     <TableCell>{email}</TableCell>
