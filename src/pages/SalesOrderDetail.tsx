@@ -1,11 +1,15 @@
 import { useState, useMemo } from 'react';
+import { format } from 'date-fns';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +38,7 @@ export function SalesOrderDetail() {
   const { toast } = useToast();
   const [creating, setCreating] = useState(false);
   const [jobNumber, setJobNumber] = useState('');
+  const [dueDate, setDueDate] = useState<Date | undefined>();
 
   const loading = quotesLoading || vendorsLoading;
 
@@ -73,7 +78,7 @@ export function SalesOrderDetail() {
           phone: vendor?.contact_phone || undefined,
           address: vendor?.address || undefined,
         },
-        undefined,
+        dueDate ? dueDate.toISOString() : undefined,
         jobNumber || undefined
       );
 
@@ -159,6 +164,29 @@ export function SalesOrderDetail() {
               className="w-32 h-9"
             />
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-[160px] justify-start text-left font-normal h-9",
+                  !dueDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                {dueDate ? format(dueDate, "PPP") : <span>Due date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={dueDate}
+                onSelect={setDueDate}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button disabled={creating}>
