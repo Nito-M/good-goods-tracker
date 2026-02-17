@@ -1,50 +1,58 @@
 
 
-## Add In-Browser Preview for POs, Invoices, and Quotes
+## Move Invoice and Quote Settings into Company Settings
 
-### What it does
-Adds an "eye" preview button to Purchase Order cards and Quote cards (Invoice/Sale cards already have this), opening a dialog that shows a visual representation of the document without downloading a PDF. Each preview dialog includes a "Download PDF" button for when users do want the file.
+### What changes
+Currently, invoice settings (prefix, next number, thank you note, layout) and quote settings (validity days, thank you note, layout) are stored globally in the user's profile. This plan moves those settings into each company, so different companies can have different invoice numbering, layouts, and branding.
 
-### Changes
+### Database Changes
 
-**1. New file: `src/components/PurchaseOrderPreviewDialog.tsx`**
-- A dialog that renders the PO content in an A4-style layout matching the PDF generator output
-- Shows: logo, business info, PO number, dates, vendor, items table, totals (with 5% tax), notes
-- Includes a "Download PDF" button
-- Mirrors the structure of the existing `InvoicePreviewDialog`
+**Add columns to `companies` table:**
 
-**2. New file: `src/components/QuotePreviewDialog.tsx`**
-- A dialog that renders the Quote content in an A4-style layout matching the PDF generator output
-- Shows: logo, business info, quote number, dates, validity, vendor/"Quote For", items table (with quantity units and item notes), totals (discount + tax), notes, footer
-- Includes a "Download PDF" button
+| Column | Type | Default |
+|--------|------|---------|
+| invoice_prefix | text | 'INV' |
+| invoice_next_number | integer | 1 |
+| invoice_thank_you_note | text | 'Thank you for your business!' |
+| invoice_layout | jsonb | (default layout) |
+| quote_thank_you_note | text | 'Thank you for considering our services!' |
+| quote_validity_days | integer | 30 |
+| quote_layout | jsonb | (default layout) |
 
-**3. Modified: `src/components/PurchaseOrderCard.tsx`**
-- Add an "Eye" icon preview button next to the existing Download button
-- Add `onPreview` callback prop
-- When clicked, opens the PO preview dialog
+**Data migration**: Copy existing profile-level invoice/quote settings into each user's companies so nothing is lost.
 
-**4. Modified: `src/pages/PurchaseOrders.tsx`**
-- Import the new `PurchaseOrderPreviewDialog`
-- Add state for the preview PO (`previewOrder`)
-- Pass `onPreview` handler to `PurchaseOrderCard`
-- Render the preview dialog
-- Build invoice settings from profile/company for the preview
+### UI Changes
 
-**5. Modified: `src/components/QuoteCard.tsx`**
-- Add an "Eye" icon preview button next to the existing Download button
-- Add `onPreview` callback prop
-- When clicked, opens the Quote preview dialog
+**1. Company Add/Edit Dialog (CompaniesSettings.tsx)**
+- Expand the dialog with collapsible sections for "Invoice Settings" and "Quote Settings"
+- Invoice Settings section: prefix, next number, thank you note, layout editor
+- Quote Settings section: validity days, thank you note, layout editor
+- The logo already exists per company -- it will be used on documents
 
-**6. Modified: `src/pages/Quotes.tsx`**
-- Import the new `QuotePreviewDialog`
-- Add state for the preview quote (`previewQuote`)
-- Pass `onPreview` handler to `QuoteCard`
-- Render the preview dialog
+**2. Settings page (Settings.tsx)**
+- Remove the standalone "Invoice" and "Quote" tabs entirely since all that configuration now lives inside each company
+- Remove the business info fields from the Invoice tab (already in companies)
+- Remove the logo upload from the Invoice tab (already in companies)
+
+**3. PDF generation**
+- Update `InvoiceSettings` type to include all the new per-company fields
+- When generating invoices/POs/quotes, pull settings from the selected company instead of the profile
+- Falls back to profile settings if no company is selected (backward compatibility)
+
+### Modified Files
+- Database migration (new columns on companies, data migration)
+- `src/hooks/useCompanies.ts` -- add new fields to Company/CompanyInput interfaces
+- `src/components/CompaniesSettings.tsx` -- expand dialog with invoice/quote settings sections
+- `src/pages/Settings.tsx` -- remove Invoice and Quote tabs
+- `src/types/sale.ts` -- update InvoiceSettings with layout fields
+- `src/pages/Sales.tsx` -- build settings from company data
+- `src/pages/PurchaseOrders.tsx` -- build settings from company data
+- `src/pages/Quotes.tsx` -- build settings from company data
 
 ### Technical Details
+- The company edit dialog will use collapsible/accordion sections to keep the form manageable
+- The InvoiceLayoutEditor component is reused inside the company dialog
+- Profile-level invoice/quote settings remain in the database for backward compatibility but are no longer editable from the UI
+- When a document has no company selected, the system falls back to profile-level settings
+- The `invoice_next_number` is tracked per company, so each company can have its own invoice sequence
 
-- The preview dialogs replicate the PDF layout using HTML/CSS (same approach as the existing `InvoicePreviewDialog`)
-- A4 dimensions (210mm x 297mm) with 0.7 scale transform for fitting in the dialog
-- Company info is resolved the same way as for PDF generation -- using the linked company or falling back to profile business info
-- No database changes required
-- The existing Invoice preview already works via `SaleCard` -- no changes needed there
