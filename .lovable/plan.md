@@ -1,52 +1,49 @@
 
 
-## Make the Invoice/Quote Layout Editor More Realistic
+## Fix Logo Upload for Companies
 
-### What changes
-Replace the current abstract colored-box layout editor with a realistic document preview that mimics the actual PDF output. Instead of generic labeled rectangles, the canvas will show sample text content matching what the real PDF generators render -- business name, address, "INVOICE" title, sample line items in a table, totals, notes, and footer text.
+### Problem
+The `logos` storage bucket is **private**, but the code uses `getPublicUrl()` which only works for public buckets. Additionally, there is no SELECT (read) policy on the logos bucket, so even signed URLs would fail without that fix.
 
-### Visual Design
+### Solution
 
-**Current state**: Colored rectangles with labels like "Logo", "Business Info", "Items Table" -- hard to visualize what the actual document will look like.
+**1. Database Migration -- Add a SELECT policy to the logos storage bucket**
 
-**New state**: A miniature A4 preview that renders:
-- **Logo**: Shows the actual company logo image (or a placeholder icon if none uploaded)
-- **Business Info**: Shows the real company name, address, phone, email in small text (right-aligned by default)
-- **Invoice/Quote Title**: Shows "INVOICE" or "QUOTE" in large bold text
-- **Invoice Details**: Shows sample "Invoice #: INV-0001", "Date: Feb 17, 2026", "Status: PENDING"
-- **Bill To**: Shows "Bill To:" header with sample customer name and address lines
-- **Items Table**: Shows a mini table header (Item / SKU / Qty / Price / Total) with 2-3 sample rows of grey lines
-- **Totals**: Shows Subtotal, Tax, Total lines right-aligned
-- **Notes**: Shows "Notes:" with sample grey text lines
-- **Footer**: Shows the actual thank-you note text
+Add a storage RLS policy allowing authenticated users to read logos from the bucket (logos are branding assets displayed in documents):
 
-All elements remain draggable. Hidden elements appear faded. The canvas keeps the same A4 proportions.
+```sql
+CREATE POLICY "Anyone can view logos"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'logos');
+```
 
-### Changes to InvoiceLayoutEditor
+**2. Code Change -- Use signed URLs instead of public URLs**
 
-1. **New props**: Add `title` prop (`"Invoice Layout"` or `"Quote Layout"`), `documentType` prop (`"invoice"` or `"quote"`), plus existing `businessName`, `logoUrl`, and new props for `businessAddress`, `businessPhone`, `businessEmail`, `thankYouNote`
-2. **Realistic element rendering**: Replace the simple label+icon content inside each draggable box with styled miniature content that matches the PDF:
-   - Use tiny font sizes (5-7px) and proper text hierarchy
-   - Show actual company data where available
-   - Render sample table rows as thin grey bars for the items table
-   - Show the real thank-you note in the footer
-3. **Slightly reduce scale**: Keep 2x scale (420x594px) but ensure elements render proportionally to the real PDF
-4. **Remove element color borders in favor of subtle dashed outlines** that only appear on hover or when selected, keeping the preview clean
-5. **Keep visibility toggles panel** on the side with the same functionality
+Update `src/pages/CompanyDetail.tsx` and `src/components/CompaniesSettings.tsx` to replace `getPublicUrl()` with `createSignedUrl()` using a 1-year expiry (consistent with how other branding assets work in the app).
 
-### Changes to CompanyDetail.tsx
+In the `handleLogoUpload` function, change:
+```typescript
+// Before (broken)
+const { data: { publicUrl } } = supabase.storage
+  .from('logos')
+  .getPublicUrl(filePath);
+setLogoUrl(publicUrl);
 
-- Pass additional props to `InvoiceLayoutEditor`: `documentType`, `businessAddress`, `businessPhone`, `businessEmail`, `thankYouNote`
-- For invoice section: pass `documentType="invoice"` and `thankYouNote={invoiceThankYouNote}`
-- For quote section: pass `documentType="quote"` and `thankYouNote={quoteThankYouNote}`
+// After (fixed)
+const { data: signedData, error: signedError } = await supabase.storage
+  .from('logos')
+  .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year
 
-### Technical Details
+if (signedError || !signedData?.signedUrl) throw new Error('Failed to get signed URL');
+setLogoUrl(signedData.signedUrl);
+```
 
-**Files to modify:**
-- `src/components/InvoiceLayoutEditor.tsx` -- major rewrite of element rendering
-- `src/pages/CompanyDetail.tsx` -- pass new props to layout editors
+This change applies to both files that have the logo upload handler:
+- `src/pages/CompanyDetail.tsx` (line 93-96)
+- `src/components/CompaniesSettings.tsx` (line 109-112)
 
-**No database changes needed.**
-
-The draggable element content will be rendered using small React elements inside each positioned div. The company logo will use an `<img>` tag with `object-contain`. Sample data (item rows, addresses) uses placeholder grey text. Real company data (name, address, phone, email, thank-you note) is shown where available, making the preview actually useful for seeing how the final document will look.
+### Files to modify
+- **Database migration** -- add SELECT policy on logos bucket
+- **`src/pages/CompanyDetail.tsx`** -- switch to signed URL
+- **`src/components/CompaniesSettings.tsx`** -- switch to signed URL
 
