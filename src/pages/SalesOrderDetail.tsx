@@ -110,6 +110,12 @@ export function SalesOrderDetail() {
         }
       }
 
+      // Link job to quote
+      await supabase
+        .from('quotes')
+        .update({ converted_to_job_id: job.id } as any)
+        .eq('id', quote.id);
+
       navigate(`/jobs/${job.id}`);
     } catch (err) {
       console.error('Error creating job:', err);
@@ -147,7 +153,18 @@ export function SalesOrderDetail() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{quote.quoteNumber}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground">{quote.quoteNumber}</h1>
+              {quote.convertedToJobId && (
+                <Link
+                  to={`/jobs/${quote.convertedToJobId}`}
+                  className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <Briefcase className="h-3 w-3" />
+                  Job Created
+                </Link>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">Sales Order</p>
           </div>
         </div>

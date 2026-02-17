@@ -37,6 +37,7 @@ export interface Quote {
   attachmentUrl: string | null;
   convertedToInvoiceId: string | null;
   convertedToPoId: string | null;
+  convertedToJobId: string | null;
   companyId?: string | null;
   items: QuoteItem[];
   createdAt: string;
