@@ -1,53 +1,32 @@
 
 
-## Wire Up Company Selection for Invoices and Quotes
+## Link Invoice and Quote Layouts
 
-### Problem
-When you create a sale (invoice) or quote, the company you've set up -- with its logo, name, address, phone, email -- is never actually attached to the document. The PDF always falls back to your profile-level settings, ignoring your company configurations.
-
-### Root Causes
-1. The Sales and Quotes creation forms have no company selector dropdown
-2. The `company_id` is never saved when creating sales or quotes
-3. The Quote type and hook don't map `company_id` at all when fetching data
-4. The `CreateSaleInput` and `CreateQuoteInput` types are missing a `companyId` field
+### What You Want
+Right now, each company has two separate layout editors — one for invoices and one for quotes. You want a single shared layout so that when you position elements (logo, business info, items table, etc.) for one document type, the same positions apply to the other.
 
 ### What Will Change
 
-**1. Add Company Selector to Sales page (`src/pages/Sales.tsx`)**
-- Add a `CompanySelector` dropdown in the sale creation form (next to the vendor selector)
-- Track `selectedCompanyId` state, defaulting to the default company
-- Pass `companyId` when calling `createSale()`
+**1. Company Detail Page (`src/pages/CompanyDetail.tsx`)**
+- Remove the separate `quoteLayout` state — use `invoiceLayout` as the single shared layout
+- When saving quote settings, also save the shared layout
+- Show only one layout editor (in the Invoice Settings section), with a note that it applies to both invoices and quotes
+- Remove the layout editor from the Quote Settings section
 
-**2. Add Company Selector to Quotes page (`src/pages/Quotes.tsx`)**
-- Same as above -- add `CompanySelector` in the quote creation form
-- Track `selectedCompanyId`, pass it when calling `createQuote()`
+**2. Save Logic**
+- When saving invoice settings, save the layout to both `invoiceLayout` and `quoteLayout` fields so the database stays in sync
+- When saving quote settings, also sync the layout from the shared state
 
-**3. Update `CreateSaleInput` type (`src/types/sale.ts`)**
-- Add optional `companyId?: string | null` field
+**3. Fix Crash-Safe Layout Merging (4 files)**
+Apply the `{ ...defaultInvoiceLayout, ...(layout || {}) }` spread pattern consistently in:
+- `src/components/InvoicePreviewDialog.tsx` (line 27)
+- `src/lib/invoiceGenerator.ts` (line 12)
+- `src/lib/quoteGenerator.ts` (line 8)
 
-**4. Update `CreateQuoteInput` type (`src/types/quote.ts`)**
-- Add optional `companyId?: string | null` field
-
-**5. Update `useSales` hook (`src/hooks/useSales.ts`)**
-- In `createSale()`: include `company_id: input.companyId` in the insert call
-
-**6. Update `useQuotes` hook (`src/hooks/useQuotes.ts`)**
-- In `createQuote()`: include `company_id: input.companyId` in the insert call
-- In `fetchQuotes()`: map `company_id` to `companyId` (currently missing)
-
-**7. Update Quote type (`src/types/quote.ts`)**
-- Add `companyId?: string | null` to the `Quote` interface (for consistency with Sale)
-
-### Result
-After these changes, when you select a company while creating an invoice or quote, the PDF will show that company's logo, name, address, and contact info instead of the generic profile fallback.
+These currently use `settings.layout || defaultInvoiceLayout` which crashes if the layout object exists but is missing some keys.
 
 ### Files to Modify
-- `src/types/sale.ts` -- add `companyId` to `CreateSaleInput`
-- `src/types/quote.ts` -- add `companyId` to `Quote` and `CreateQuoteInput`
-- `src/hooks/useSales.ts` -- save `company_id` on create
-- `src/hooks/useQuotes.ts` -- save `company_id` on create, map on fetch
-- `src/pages/Sales.tsx` -- add CompanySelector, track state, pass to createSale
-- `src/pages/Quotes.tsx` -- add CompanySelector, track state, pass to createQuote
-
-No database changes needed -- the `company_id` column already exists on both `sales` and `quotes` tables.
-
+- `src/pages/CompanyDetail.tsx` — unify layout state, single editor, sync both fields on save
+- `src/components/InvoicePreviewDialog.tsx` — safe layout merge
+- `src/lib/invoiceGenerator.ts` — safe layout merge
+- `src/lib/quoteGenerator.ts` — safe layout merge
