@@ -161,6 +161,12 @@ export function PurchaseOrderCard({
 
             {/* Details grid */}
             <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
+              {order.companyName && (
+                <div className="flex items-center gap-2 col-span-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span>Company: {order.companyName}</span>
+                </div>
+              )}
               {order.vendorName && (
                 <div className="flex items-center gap-2 col-span-2">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
