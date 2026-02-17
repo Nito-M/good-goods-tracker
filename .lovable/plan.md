@@ -1,49 +1,53 @@
 
 
-## Fix Logo Upload for Companies
+## Wire Up Company Selection for Invoices and Quotes
 
 ### Problem
-The `logos` storage bucket is **private**, but the code uses `getPublicUrl()` which only works for public buckets. Additionally, there is no SELECT (read) policy on the logos bucket, so even signed URLs would fail without that fix.
+When you create a sale (invoice) or quote, the company you've set up -- with its logo, name, address, phone, email -- is never actually attached to the document. The PDF always falls back to your profile-level settings, ignoring your company configurations.
 
-### Solution
+### Root Causes
+1. The Sales and Quotes creation forms have no company selector dropdown
+2. The `company_id` is never saved when creating sales or quotes
+3. The Quote type and hook don't map `company_id` at all when fetching data
+4. The `CreateSaleInput` and `CreateQuoteInput` types are missing a `companyId` field
 
-**1. Database Migration -- Add a SELECT policy to the logos storage bucket**
+### What Will Change
 
-Add a storage RLS policy allowing authenticated users to read logos from the bucket (logos are branding assets displayed in documents):
+**1. Add Company Selector to Sales page (`src/pages/Sales.tsx`)**
+- Add a `CompanySelector` dropdown in the sale creation form (next to the vendor selector)
+- Track `selectedCompanyId` state, defaulting to the default company
+- Pass `companyId` when calling `createSale()`
 
-```sql
-CREATE POLICY "Anyone can view logos"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'logos');
-```
+**2. Add Company Selector to Quotes page (`src/pages/Quotes.tsx`)**
+- Same as above -- add `CompanySelector` in the quote creation form
+- Track `selectedCompanyId`, pass it when calling `createQuote()`
 
-**2. Code Change -- Use signed URLs instead of public URLs**
+**3. Update `CreateSaleInput` type (`src/types/sale.ts`)**
+- Add optional `companyId?: string | null` field
 
-Update `src/pages/CompanyDetail.tsx` and `src/components/CompaniesSettings.tsx` to replace `getPublicUrl()` with `createSignedUrl()` using a 1-year expiry (consistent with how other branding assets work in the app).
+**4. Update `CreateQuoteInput` type (`src/types/quote.ts`)**
+- Add optional `companyId?: string | null` field
 
-In the `handleLogoUpload` function, change:
-```typescript
-// Before (broken)
-const { data: { publicUrl } } = supabase.storage
-  .from('logos')
-  .getPublicUrl(filePath);
-setLogoUrl(publicUrl);
+**5. Update `useSales` hook (`src/hooks/useSales.ts`)**
+- In `createSale()`: include `company_id: input.companyId` in the insert call
 
-// After (fixed)
-const { data: signedData, error: signedError } = await supabase.storage
-  .from('logos')
-  .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year
+**6. Update `useQuotes` hook (`src/hooks/useQuotes.ts`)**
+- In `createQuote()`: include `company_id: input.companyId` in the insert call
+- In `fetchQuotes()`: map `company_id` to `companyId` (currently missing)
 
-if (signedError || !signedData?.signedUrl) throw new Error('Failed to get signed URL');
-setLogoUrl(signedData.signedUrl);
-```
+**7. Update Quote type (`src/types/quote.ts`)**
+- Add `companyId?: string | null` to the `Quote` interface (for consistency with Sale)
 
-This change applies to both files that have the logo upload handler:
-- `src/pages/CompanyDetail.tsx` (line 93-96)
-- `src/components/CompaniesSettings.tsx` (line 109-112)
+### Result
+After these changes, when you select a company while creating an invoice or quote, the PDF will show that company's logo, name, address, and contact info instead of the generic profile fallback.
 
-### Files to modify
-- **Database migration** -- add SELECT policy on logos bucket
-- **`src/pages/CompanyDetail.tsx`** -- switch to signed URL
-- **`src/components/CompaniesSettings.tsx`** -- switch to signed URL
+### Files to Modify
+- `src/types/sale.ts` -- add `companyId` to `CreateSaleInput`
+- `src/types/quote.ts` -- add `companyId` to `Quote` and `CreateQuoteInput`
+- `src/hooks/useSales.ts` -- save `company_id` on create
+- `src/hooks/useQuotes.ts` -- save `company_id` on create, map on fetch
+- `src/pages/Sales.tsx` -- add CompanySelector, track state, pass to createSale
+- `src/pages/Quotes.tsx` -- add CompanySelector, track state, pass to createQuote
+
+No database changes needed -- the `company_id` column already exists on both `sales` and `quotes` tables.
 
