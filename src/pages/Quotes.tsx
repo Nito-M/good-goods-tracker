@@ -68,6 +68,8 @@ interface CartItem {
   notes: string;
 }
 
+import { useCompanies } from '@/hooks/useCompanies';
+
 export function Quotes() {
   const { signOut } = useAuth();
   const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder } = useQuotes();
@@ -76,6 +78,7 @@ export function Quotes() {
   const { profile } = useProfile();
   const { sales } = useSales();
   const { orders: purchaseOrders } = usePurchaseOrders();
+  const { companies } = useCompanies();
 
   // Build lookup maps for linked documents
   const invoiceNumberMap = useMemo(() => {
@@ -96,7 +99,7 @@ export function Quotes() {
     return map;
   }, [purchaseOrders]);
 
-  // Build quote settings from profile
+  // Build quote settings from profile (fallback)
   const quoteSettings: QuoteSettings = useMemo(() => ({
     businessName: profile?.businessName || null,
     businessAddress: profile?.businessAddress || null,
@@ -108,6 +111,25 @@ export function Quotes() {
     layout: profile?.quoteLayout || profile?.invoiceLayout || null,
     validityDays: profile?.quoteValidityDays || null,
   }), [profile]);
+
+  const getQuoteSettingsForQuote = (quote: Quote): QuoteSettings => {
+    const companyId = (quote as any).companyId;
+    const company = companyId ? companies.find(c => c.id === companyId) : null;
+    if (company) {
+      return {
+        businessName: company.name,
+        businessAddress: company.address,
+        businessPhone: company.phone,
+        businessEmail: company.email,
+        businessNumber: company.businessNumber,
+        logoUrl: company.logoUrl,
+        thankYouNote: company.quoteThankYouNote || quoteSettings.thankYouNote,
+        layout: company.quoteLayout || quoteSettings.layout,
+        validityDays: company.quoteValidityDays || quoteSettings.validityDays,
+      };
+    }
+    return quoteSettings;
+  };
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
@@ -793,7 +815,7 @@ export function Quotes() {
                                 onConvertToInvoice={convertToInvoice}
                                 onConvertToPurchaseOrder={convertToPurchaseOrder}
                                 onPreview={setPreviewQuote}
-                                quoteSettings={quoteSettings}
+                                quoteSettings={getQuoteSettingsForQuote(quote)}
                                 linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
                                 linkedPoNumber={quote.convertedToPoId ? poNumberMap.get(quote.convertedToPoId) : null}
                               />
@@ -822,9 +844,9 @@ export function Quotes() {
           open={!!previewQuote}
           onOpenChange={(open) => !open && setPreviewQuote(null)}
           quote={previewQuote}
-          settings={quoteSettings}
+          settings={getQuoteSettingsForQuote(previewQuote)}
           onDownload={() => {
-            generateQuotePDF(previewQuote, quoteSettings);
+            generateQuotePDF(previewQuote, getQuoteSettingsForQuote(previewQuote));
           }}
         />
       )}

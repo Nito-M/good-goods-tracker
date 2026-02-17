@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Star, Upload, X, Building2 } from 'lucide-react';
+import { Plus, Trash2, Star, Upload, X, Building2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,9 +23,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useCompanies, Company, CompanyInput } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { InvoiceLayoutEditor } from '@/components/InvoiceLayoutEditor';
+import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
+import { cn } from '@/lib/utils';
 
 export function CompaniesSettings() {
   const { companies, loading, addCompany, updateCompany, deleteCompany } = useCompanies();
@@ -35,6 +43,7 @@ export function CompaniesSettings() {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Basic fields
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
@@ -44,6 +53,21 @@ export function CompaniesSettings() {
   const [isDefault, setIsDefault] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Invoice settings
+  const [invoicePrefix, setInvoicePrefix] = useState('INV');
+  const [invoiceNextNumber, setInvoiceNextNumber] = useState(1);
+  const [invoiceThankYouNote, setInvoiceThankYouNote] = useState('Thank you for your business!');
+  const [invoiceLayout, setInvoiceLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
+
+  // Quote settings
+  const [quoteThankYouNote, setQuoteThankYouNote] = useState('Thank you for considering our services!');
+  const [quoteValidityDays, setQuoteValidityDays] = useState(30);
+  const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
+
+  // Collapsible state
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
 
   const openDialog = (company?: Company) => {
     if (company) {
@@ -55,6 +79,13 @@ export function CompaniesSettings() {
       setBusinessNumber(company.businessNumber || '');
       setLogoUrl(company.logoUrl || '');
       setIsDefault(company.isDefault);
+      setInvoicePrefix(company.invoicePrefix || 'INV');
+      setInvoiceNextNumber(company.invoiceNextNumber || 1);
+      setInvoiceThankYouNote(company.invoiceThankYouNote || 'Thank you for your business!');
+      setInvoiceLayout(company.invoiceLayout || defaultInvoiceLayout);
+      setQuoteThankYouNote(company.quoteThankYouNote || 'Thank you for considering our services!');
+      setQuoteValidityDays(company.quoteValidityDays || 30);
+      setQuoteLayout(company.quoteLayout || defaultInvoiceLayout);
     } else {
       setEditingCompany(null);
       setName('');
@@ -64,7 +95,16 @@ export function CompaniesSettings() {
       setBusinessNumber('');
       setLogoUrl('');
       setIsDefault(companies.length === 0);
+      setInvoicePrefix('INV');
+      setInvoiceNextNumber(1);
+      setInvoiceThankYouNote('Thank you for your business!');
+      setInvoiceLayout(defaultInvoiceLayout);
+      setQuoteThankYouNote('Thank you for considering our services!');
+      setQuoteValidityDays(30);
+      setQuoteLayout(defaultInvoiceLayout);
     }
+    setInvoiceOpen(false);
+    setQuoteOpen(false);
     setDialogOpen(true);
   };
 
@@ -107,6 +147,13 @@ export function CompaniesSettings() {
       businessNumber: businessNumber || null,
       logoUrl: logoUrl || null,
       isDefault,
+      invoicePrefix: invoicePrefix || 'INV',
+      invoiceNextNumber,
+      invoiceThankYouNote,
+      invoiceLayout,
+      quoteThankYouNote,
+      quoteValidityDays,
+      quoteLayout,
     };
 
     if (editingCompany) {
@@ -172,6 +219,9 @@ export function CompaniesSettings() {
                       {company.email && <p>{company.email}</p>}
                       {company.businessNumber && <p>Business #: {company.businessNumber}</p>}
                     </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Invoice: {company.invoicePrefix}-{String(company.invoiceNextNumber).padStart(4, '0')} · Quote validity: {company.quoteValidityDays}d
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -195,7 +245,7 @@ export function CompaniesSettings() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCompany ? 'Edit Company' : 'Add Company'}</DialogTitle>
           </DialogHeader>
@@ -261,6 +311,102 @@ export function CompaniesSettings() {
               />
               <Label htmlFor="is-default">Set as default company</Label>
             </div>
+
+            {/* Invoice Settings Collapsible */}
+            <Collapsible open={invoiceOpen} onOpenChange={setInvoiceOpen}>
+              <CollapsibleTrigger asChild>
+                <Button type="button" variant="outline" className="w-full justify-between">
+                  Invoice Settings
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", invoiceOpen && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>Invoice Number Format</Label>
+                  <div className="flex items-center gap-2">
+                    <div className="space-y-1">
+                      <Input
+                        value={invoicePrefix}
+                        onChange={(e) => setInvoicePrefix(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                        placeholder="INV"
+                        className="w-24 text-center font-medium"
+                      />
+                      <p className="text-xs text-muted-foreground text-center">Prefix</p>
+                    </div>
+                    <span className="text-lg text-muted-foreground font-bold mt-[-1rem]">-</span>
+                    <div className="space-y-1">
+                      <Input
+                        type="number"
+                        value={invoiceNextNumber}
+                        onChange={(e) => setInvoiceNextNumber(Math.max(1, parseInt(e.target.value) || 1))}
+                        min={1}
+                        className="w-20 text-center font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground text-center">Next #</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Next invoice: {invoicePrefix || 'INV'}-{String(invoiceNextNumber).padStart(4, '0')}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Thank You Note</Label>
+                  <Textarea
+                    value={invoiceThankYouNote}
+                    onChange={(e) => setInvoiceThankYouNote(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2 pt-2 border-t">
+                  <InvoiceLayoutEditor
+                    layout={invoiceLayout}
+                    onChange={setInvoiceLayout}
+                    logoUrl={logoUrl}
+                    businessName={name}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Quote Settings Collapsible */}
+            <Collapsible open={quoteOpen} onOpenChange={setQuoteOpen}>
+              <CollapsibleTrigger asChild>
+                <Button type="button" variant="outline" className="w-full justify-between">
+                  Quote Settings
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", quoteOpen && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>Default Validity Period (days)</Label>
+                  <Input
+                    type="number"
+                    value={quoteValidityDays}
+                    onChange={(e) => setQuoteValidityDays(parseInt(e.target.value) || 30)}
+                    min={1}
+                    max={365}
+                    className="w-32"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Thank You Note</Label>
+                  <Textarea
+                    value={quoteThankYouNote}
+                    onChange={(e) => setQuoteThankYouNote(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2 pt-2 border-t">
+                  <InvoiceLayoutEditor
+                    layout={quoteLayout}
+                    onChange={setQuoteLayout}
+                    logoUrl={logoUrl}
+                    businessName={name}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={!name.trim()}>

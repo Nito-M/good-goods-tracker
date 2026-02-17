@@ -119,10 +119,17 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          invoice_layout: Json | null
+          invoice_next_number: number
+          invoice_prefix: string
+          invoice_thank_you_note: string
           is_default: boolean
           logo_url: string | null
           name: string
           phone: string | null
+          quote_layout: Json | null
+          quote_thank_you_note: string
+          quote_validity_days: number
           updated_at: string
           user_id: string
         }
@@ -132,10 +139,17 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          invoice_layout?: Json | null
+          invoice_next_number?: number
+          invoice_prefix?: string
+          invoice_thank_you_note?: string
           is_default?: boolean
           logo_url?: string | null
           name: string
           phone?: string | null
+          quote_layout?: Json | null
+          quote_thank_you_note?: string
+          quote_validity_days?: number
           updated_at?: string
           user_id: string
         }
@@ -145,10 +159,17 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          invoice_layout?: Json | null
+          invoice_next_number?: number
+          invoice_prefix?: string
+          invoice_thank_you_note?: string
           is_default?: boolean
           logo_url?: string | null
           name?: string
           phone?: string | null
+          quote_layout?: Json | null
+          quote_thank_you_note?: string
+          quote_validity_days?: number
           updated_at?: string
           user_id?: string
         }
