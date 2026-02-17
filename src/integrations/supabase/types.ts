@@ -127,6 +127,9 @@ export type Database = {
           logo_url: string | null
           name: string
           phone: string | null
+          po_next_number: number
+          po_prefix: string
+          po_thank_you_note: string
           quote_layout: Json | null
           quote_thank_you_note: string
           quote_validity_days: number
@@ -147,6 +150,9 @@ export type Database = {
           logo_url?: string | null
           name: string
           phone?: string | null
+          po_next_number?: number
+          po_prefix?: string
+          po_thank_you_note?: string
           quote_layout?: Json | null
           quote_thank_you_note?: string
           quote_validity_days?: number
@@ -167,6 +173,9 @@ export type Database = {
           logo_url?: string | null
           name?: string
           phone?: string | null
+          po_next_number?: number
+          po_prefix?: string
+          po_thank_you_note?: string
           quote_layout?: Json | null
           quote_thank_you_note?: string
           quote_validity_days?: number
