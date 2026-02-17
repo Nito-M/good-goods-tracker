@@ -1,197 +1,246 @@
 import jsPDF from 'jspdf';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import { InvoiceSettings } from '@/types/sale';
+import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 
 export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: InvoiceSettings) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = 20;
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-  const formatDate = (date: Date) => {
-    return format(date, 'MMMM d, yyyy');
-  };
-
+  const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) };
 
   const TAX_RATE = 0.05;
   const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
 
-  // Add logo if available (top left, 160x160 max)
-  if (settings?.logoUrl) {
+  const formatDate = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return format(d, 'MMMM d, yyyy');
+  };
+
+  const getXPosition = (elementX: number, align?: string) => {
+    if (align === 'right') return pageWidth - 20;
+    if (align === 'center') return pageWidth / 2;
+    return elementX;
+  };
+
+  let flowY = 20;
+
+  // Add logo if available and visible
+  if (settings?.logoUrl && layout.logo.visible) {
     try {
       const img = await loadImage(settings.logoUrl);
-      const maxSize = 160 * 0.352778; // Convert 160px to mm (approx 56mm)
+      const maxSize = 160 * 0.352778;
       let imgWidth = maxSize;
       let imgHeight = maxSize;
-      
-      // Maintain aspect ratio
+
       const aspectRatio = img.width / img.height;
       if (aspectRatio > 1) {
         imgHeight = imgWidth / aspectRatio;
       } else {
         imgWidth = imgHeight * aspectRatio;
       }
-      
-      doc.addImage(img, 'PNG', 20, y, imgWidth, imgHeight);
-      y = 20 + imgHeight + 5;
+
+      doc.addImage(img, 'PNG', layout.logo.x, layout.logo.y, imgWidth, imgHeight);
+      flowY = Math.max(flowY, layout.logo.y + imgHeight + 5);
     } catch (error) {
       console.error('Failed to load logo:', error);
     }
   }
 
-  // Business Info (right side)
-  if (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail || settings?.businessNumber) {
+  // Business Info
+  if (layout.businessInfo.visible && (settings?.businessName || settings?.businessAddress || settings?.businessPhone || settings?.businessEmail || settings?.businessNumber)) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    let businessY = 20;
-    
+    const align = layout.businessInfo.align || 'right';
+    const xPos = getXPosition(layout.businessInfo.x, align);
+    let businessY = layout.businessInfo.y;
+
     if (settings.businessName) {
       doc.setFont('helvetica', 'bold');
-      doc.text(settings.businessName, pageWidth - 20, businessY, { align: 'right' });
+      doc.text(settings.businessName, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
       businessY += 5;
       doc.setFont('helvetica', 'normal');
     }
     if (settings.businessAddress) {
       const addressLines = settings.businessAddress.split('\n');
       addressLines.forEach((line) => {
-        doc.text(line, pageWidth - 20, businessY, { align: 'right' });
+        doc.text(line, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
         businessY += 5;
       });
     }
     if (settings.businessPhone) {
-      doc.text(settings.businessPhone, pageWidth - 20, businessY, { align: 'right' });
+      doc.text(settings.businessPhone, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
       businessY += 5;
     }
     if (settings.businessEmail) {
-      doc.text(settings.businessEmail, pageWidth - 20, businessY, { align: 'right' });
+      doc.text(settings.businessEmail, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
       businessY += 5;
     }
     if (settings.businessNumber) {
-      doc.text(`Business #: ${settings.businessNumber}`, pageWidth - 20, businessY, { align: 'right' });
+      doc.text(`Business #: ${settings.businessNumber}`, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
+      businessY += 5;
     }
-    
-    y = Math.max(y, businessY + 10);
+
+    flowY = Math.max(flowY, businessY + 5);
   }
 
-  // Header
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PURCHASE ORDER', pageWidth / 2, y, { align: 'center' });
-  y += 15;
-
-  // PO Info
-  const poNumber = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`PO Number: ${poNumber}`, 20, y);
-  doc.text(`Order Date: ${formatDate(order.orderedAt)}`, pageWidth - 20, y, {
-    align: 'right',
-  });
-  y += 7;
-  doc.text(`Status: ${order.status.toUpperCase()}`, 20, y);
-  if (order.receivedAt) {
-    doc.text(`Received: ${formatDate(order.receivedAt)}`, pageWidth - 20, y, {
-      align: 'right',
-    });
-  }
-  y += 15;
-
-  // Vendor Info
-  if (order.vendorName) {
+  // Title
+  if (layout.invoiceTitle.visible) {
+    const titleY = layout.invoiceTitle.y > 0 ? layout.invoiceTitle.y : flowY;
+    doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Vendor:', 20, y);
-    y += 6;
+    const titleAlign = layout.invoiceTitle.align || 'center';
+    doc.text('PURCHASE ORDER', getXPosition(layout.invoiceTitle.x, titleAlign), titleY, {
+      align: titleAlign as 'left' | 'center' | 'right',
+    });
+    flowY = Math.max(flowY, titleY + 15);
+  }
+
+  // PO Details
+  if (layout.invoiceDetails.visible) {
+    const detailsY = layout.invoiceDetails.y > 0 ? layout.invoiceDetails.y : flowY;
+    const poNumber = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(order.vendorName, 20, y);
-    y += 10;
-  }
-
-  // Items Table Header
-  doc.setFillColor(240, 240, 240);
-  doc.rect(20, y - 4, pageWidth - 40, 8, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.text('Item', 22, y);
-  doc.text('SKU', 80, y);
-  doc.text('Qty', 115, y);
-  if (hasAnyCost) {
-    doc.text('Unit Cost', 135, y);
-    doc.text('Total', pageWidth - 22, y, { align: 'right' });
-  }
-  y += 10;
-
-  // Items
-  doc.setFont('helvetica', 'normal');
-  order.items.forEach((item) => {
-    if (y > 260) {
-      doc.addPage();
-      y = 20;
+    doc.text(`PO Number: ${poNumber}`, layout.invoiceDetails.x, detailsY);
+    doc.text(`Order Date: ${formatDate(order.orderedAt)}`, pageWidth - 20, detailsY, { align: 'right' });
+    doc.text(`Status: ${order.status.toUpperCase()}`, layout.invoiceDetails.x, detailsY + 7);
+    if (order.receivedAt) {
+      doc.text(`Received: ${formatDate(order.receivedAt)}`, pageWidth - 20, detailsY + 7, { align: 'right' });
     }
-    
-    const itemName =
-      item.itemName.length > 30
-        ? item.itemName.substring(0, 30) + '...'
-        : item.itemName;
-    doc.text(itemName, 22, y);
-    doc.text(item.sku, 80, y);
-    doc.text(item.quantity.toString(), 115, y);
+    flowY = Math.max(flowY, detailsY + 20);
+  }
+
+  // Vendor (Bill To)
+  if (layout.billTo.visible && order.vendorName) {
+    const billToY = layout.billTo.y > 0 ? layout.billTo.y : flowY;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Vendor:', layout.billTo.x, billToY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.vendorName, layout.billTo.x, billToY + 6);
+    flowY = Math.max(flowY, billToY + 16);
+  }
+
+  // Items Table
+  if (layout.itemsTable.visible) {
+    const tableY = layout.itemsTable.y > 0 ? layout.itemsTable.y : flowY;
+    let y = tableY;
+
+    // Table Header
+    doc.setFillColor(240, 240, 240);
+    doc.rect(layout.itemsTable.x, y - 4, pageWidth - layout.itemsTable.x - 20, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text('Item', layout.itemsTable.x + 2, y);
+    doc.text('SKU', layout.itemsTable.x + 60, y);
+    doc.text('Qty', layout.itemsTable.x + 95, y);
     if (hasAnyCost) {
-      const unitCost = item.unitCost || 0;
-      doc.text(formatCurrency(unitCost), 135, y);
-      doc.text(formatCurrency(unitCost * item.quantity), pageWidth - 22, y, { align: 'right' });
+      doc.text('Unit Cost', layout.itemsTable.x + 115, y);
+      doc.text('Total', pageWidth - 22, y, { align: 'right' });
     }
-    y += 7;
-  });
+    y += 10;
 
-  // Line
-  y += 5;
-  doc.setDrawColor(200, 200, 200);
-  doc.line(20, y, pageWidth - 20, y);
-  y += 10;
+    // Items
+    doc.setFont('helvetica', 'normal');
+    order.items.forEach((item) => {
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+
+      const itemName = item.itemName.length > 25
+        ? item.itemName.substring(0, 25) + '...'
+        : item.itemName;
+      doc.text(itemName, layout.itemsTable.x + 2, y);
+      doc.text(item.sku, layout.itemsTable.x + 60, y);
+      doc.text(item.quantity.toString(), layout.itemsTable.x + 95, y);
+      if (hasAnyCost) {
+        const unitCost = item.unitCost || 0;
+        doc.text(formatCurrency(unitCost), layout.itemsTable.x + 115, y);
+        doc.text(formatCurrency(unitCost * item.quantity), pageWidth - 22, y, { align: 'right' });
+      }
+      y += 7;
+    });
+
+    // Line
+    y += 5;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(layout.itemsTable.x, y, pageWidth - 20, y);
+    y += 10;
+
+    flowY = y;
+  }
 
   // Totals
-  const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
-  const taxAmount = subtotal * TAX_RATE;
-  const totalCost = subtotal + taxAmount;
-  
-  doc.setFont('helvetica', 'bold');
-  doc.text('Total Items:', pageWidth - 70, y);
-  doc.text(totalQuantity.toString(), pageWidth - 22, y, { align: 'right' });
-  
-  if (hasAnyCost) {
-    y += 7;
-    doc.text('Subtotal:', pageWidth - 70, y);
-    doc.text(formatCurrency(subtotal), pageWidth - 22, y, { align: 'right' });
-    y += 7;
-    doc.text('Tax (5%):', pageWidth - 70, y);
-    doc.text(formatCurrency(taxAmount), pageWidth - 22, y, { align: 'right' });
-    y += 7;
-    doc.setFontSize(11);
-    doc.text('Total:', pageWidth - 70, y);
-    doc.text(formatCurrency(totalCost), pageWidth - 22, y, { align: 'right' });
+  if (layout.totals.visible) {
+    const totalsY = layout.totals.y > 0 ? layout.totals.y : flowY;
+    let y = totalsY;
+    const totalsX = pageWidth - 70;
+    const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+    const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+    const discountAmount = order.discountAmount || 0;
+    const afterDiscount = Math.max(0, subtotal - discountAmount);
+    const taxAmount = afterDiscount * TAX_RATE;
+    const totalCost = afterDiscount + taxAmount;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Total Items:', totalsX, y);
+    doc.text(totalQuantity.toString(), pageWidth - 22, y, { align: 'right' });
+
+    if (hasAnyCost) {
+      y += 7;
+      doc.text('Subtotal:', totalsX, y);
+      doc.text(formatCurrency(subtotal), pageWidth - 22, y, { align: 'right' });
+
+      if (discountAmount > 0) {
+        y += 7;
+        doc.setTextColor(34, 139, 34);
+        doc.text(`Discount${order.discountType === 'percentage' && order.discountValue > 0 ? ` (${order.discountValue}%)` : ''}:`, totalsX, y);
+        doc.text(`-${formatCurrency(discountAmount)}`, pageWidth - 22, y, { align: 'right' });
+        doc.setTextColor(0, 0, 0);
+      }
+
+      y += 7;
+      doc.text('Tax (5%):', totalsX, y);
+      doc.text(formatCurrency(taxAmount), pageWidth - 22, y, { align: 'right' });
+
+      y += 3;
+      y += 7;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('TOTAL:', totalsX, y);
+      doc.text(formatCurrency(totalCost), pageWidth - 22, y, { align: 'right' });
+    }
+
+    flowY = Math.max(flowY, y + 10);
   }
 
   // Notes
-  if (order.notes) {
-    y += 20;
+  if (layout.notes.visible && order.notes) {
+    const notesY = layout.notes.y > 0 ? layout.notes.y : flowY + 10;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('Notes:', 20, y);
-    y += 6;
+    doc.text('Notes:', layout.notes.x, notesY);
     doc.setFont('helvetica', 'normal');
-    
-    const splitNotes = doc.splitTextToSize(order.notes, pageWidth - 40);
-    doc.text(splitNotes, 20, y);
+
+    const splitNotes = doc.splitTextToSize(order.notes, pageWidth - layout.notes.x - 20);
+    doc.text(splitNotes, layout.notes.x, notesY + 6);
   }
 
   // Footer
-  const footerY = doc.internal.pageSize.getHeight() - 20;
-  doc.setFontSize(8);
-  doc.setTextColor(128, 128, 128);
-  doc.text('Generated by Inventory Management System', pageWidth / 2, footerY, {
-    align: 'center',
-  });
+  if (layout.footer.visible) {
+    const footerText = 'Generated by Inventory Management System';
+    const footerY = layout.footer.y > 0 ? layout.footer.y : pageHeight - 20;
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    const footerAlign = layout.footer.align || 'center';
+    doc.text(footerText, getXPosition(layout.footer.x, footerAlign), footerY, {
+      align: footerAlign as 'left' | 'center' | 'right',
+    });
+  }
 
   // Save the PDF
   const fileName = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
