@@ -112,9 +112,15 @@ export function SalesOrders() {
                       {format(new Date(quote.updatedAt), 'MMM d, yyyy')}
                     </TableCell>
                     <TableCell>
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        Accepted
-                      </Badge>
+                      {quote.convertedToJobId ? (
+                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                          Job Created
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                          Accepted
+                        </Badge>
+                      )}
                     </TableCell>
                   </TableRow>
                 );
