@@ -5,9 +5,15 @@ import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -34,6 +40,21 @@ export function SalesOrderDetail() {
     if (!quote?.vendorId) return null;
     return vendors.find((v) => v.id === quote.vendorId) || null;
   }, [quote, vendors]);
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!quote) return;
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ status: newStatus })
+        .eq('id', quote.id);
+      if (error) throw error;
+      toast({ title: `Status updated to ${newStatus.replace('_', ' ')}` });
+    } catch (err) {
+      console.error('Error updating status:', err);
+      toast({ title: 'Error updating status', variant: 'destructive' });
+    }
+  };
 
   const handleCreateJob = async () => {
     if (!quote) return;
@@ -120,14 +141,32 @@ export function SalesOrderDetail() {
             <p className="text-sm text-muted-foreground">Sales Order</p>
           </div>
         </div>
-        <Button onClick={handleCreateJob} disabled={creating}>
-          {creating ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Briefcase className="h-4 w-4 mr-2" />
-          )}
-          Create Job
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button disabled={creating}>
+              {creating ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <ChevronDown className="h-4 w-4 mr-2" />
+              )}
+              Actions
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleCreateJob}>
+              <Briefcase className="h-4 w-4 mr-2" />
+              Create Job
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
+              <Clock className="h-4 w-4 mr-2" />
+              In Progress
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Mark as Complete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Customer Info */}
