@@ -26,8 +26,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 const menuItems = [
   { title: "Dashboard", url: "/", icon: Home, pageKey: "dashboard" },
   { title: "Items", url: "/items", icon: Package, pageKey: "items" },
-  { title: "Sales", url: "/sales", icon: ShoppingCart, pageKey: "sales" },
-  { title: "Quotes", url: "/quotes", icon: FileText, pageKey: "quotes" },
   { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList, pageKey: "purchase-orders" },
   { title: "Requests", url: "/requests", icon: ListTodo, pageKey: "requests" },
   { title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
@@ -44,6 +42,7 @@ export function AppSidebar() {
   const { links, addLink } = useJobSidebarLinks();
   const { isPageAllowed } = usePagePermissions();
   const [jobsOpen, setJobsOpen] = useState(location.pathname.startsWith("/jobs"));
+  const [salesOpen, setSalesOpen] = useState(location.pathname.startsWith("/sales") || location.pathname.startsWith("/quotes"));
   const [addingLink, setAddingLink] = useState(false);
   const [newLinkLabel, setNewLinkLabel] = useState("");
 
@@ -52,6 +51,9 @@ export function AppSidebar() {
   const isActive = (path: string) => {
     if (path === "/items") {
       return location.pathname === "/items" || location.pathname.startsWith("/item/");
+    }
+    if (path === "/sales") {
+      return location.pathname === "/sales";
     }
     return location.pathname === path;
   };
@@ -103,6 +105,53 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Sales with Quotes subitem */}
+              {isPageAllowed('sales') && (
+              <SidebarMenuItem>
+                <Collapsible open={salesOpen} onOpenChange={setSalesOpen}>
+                  <div className="flex items-center">
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname.startsWith("/sales") || location.pathname.startsWith("/quotes")}
+                      tooltip="Sales"
+                      className="flex-1"
+                    >
+                      <NavLink
+                        to="/sales"
+                        className="flex items-center gap-3"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        <span>Sales</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                    {!collapsed && (
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                          <ChevronDown className={`h-3 w-3 transition-transform ${salesOpen ? '' : '-rotate-90'}`} />
+                        </Button>
+                      </CollapsibleTrigger>
+                    )}
+                  </div>
+                  {!collapsed && (
+                    <CollapsibleContent>
+                      <div className="ml-7 border-l border-border pl-2 mt-1 space-y-0.5">
+                        {isPageAllowed('quotes') && (
+                          <NavLink
+                            to="/quotes"
+                            className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                            activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
+                          >
+                            Quotes
+                          </NavLink>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  )}
+                </Collapsible>
+              </SidebarMenuItem>
+              )}
 
               {/* Jobs with collapsible subitems */}
               {isPageAllowed('jobs') && (
