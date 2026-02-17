@@ -87,13 +87,14 @@ export function Sales() {
     const company = companyId ? companies.find(c => c.id === companyId) : null;
     if (company) {
       return {
-        ...invoiceSettings,
         businessName: company.name,
         businessAddress: company.address,
         businessPhone: company.phone,
         businessEmail: company.email,
         businessNumber: company.businessNumber,
         logoUrl: company.logoUrl,
+        thankYouNote: company.invoiceThankYouNote || invoiceSettings.thankYouNote,
+        layout: company.invoiceLayout || invoiceSettings.layout,
       };
     }
     return invoiceSettings;

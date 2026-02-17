@@ -69,8 +69,9 @@ export function PurchaseOrders() {
         businessPhone: company.phone,
         businessEmail: company.email,
         businessNumber: company.businessNumber,
-        thankYouNote: profile?.invoiceThankYouNote || null,
+        thankYouNote: company.invoiceThankYouNote || null,
         logoUrl: company.logoUrl,
+        layout: company.invoiceLayout || null,
       };
     }
     return profile ? {
@@ -81,6 +82,7 @@ export function PurchaseOrders() {
       businessNumber: profile.businessNumber,
       thankYouNote: profile.invoiceThankYouNote,
       logoUrl: profile.logoUrl,
+      layout: profile.invoiceLayout || null,
     } : undefined;
   };
 

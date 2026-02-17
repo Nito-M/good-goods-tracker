@@ -13,6 +13,13 @@ export interface Company {
   businessNumber: string | null;
   logoUrl: string | null;
   isDefault: boolean;
+  invoicePrefix: string;
+  invoiceNextNumber: number;
+  invoiceThankYouNote: string;
+  invoiceLayout: any | null;
+  quoteThankYouNote: string;
+  quoteValidityDays: number;
+  quoteLayout: any | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +32,13 @@ export interface CompanyInput {
   businessNumber?: string | null;
   logoUrl?: string | null;
   isDefault?: boolean;
+  invoicePrefix?: string;
+  invoiceNextNumber?: number;
+  invoiceThankYouNote?: string;
+  invoiceLayout?: any | null;
+  quoteThankYouNote?: string;
+  quoteValidityDays?: number;
+  quoteLayout?: any | null;
 }
 
 export function useCompanies() {
@@ -63,6 +77,13 @@ export function useCompanies() {
         businessNumber: c.business_number,
         logoUrl: c.logo_url,
         isDefault: c.is_default,
+        invoicePrefix: c.invoice_prefix || 'INV',
+        invoiceNextNumber: c.invoice_next_number || 1,
+        invoiceThankYouNote: c.invoice_thank_you_note || 'Thank you for your business!',
+        invoiceLayout: c.invoice_layout,
+        quoteThankYouNote: c.quote_thank_you_note || 'Thank you for considering our services!',
+        quoteValidityDays: c.quote_validity_days || 30,
+        quoteLayout: c.quote_layout,
         createdAt: c.created_at,
         updatedAt: c.updated_at,
       }))
@@ -94,6 +115,13 @@ export function useCompanies() {
       business_number: input.businessNumber || null,
       logo_url: input.logoUrl || null,
       is_default: input.isDefault || false,
+      invoice_prefix: input.invoicePrefix || 'INV',
+      invoice_next_number: input.invoiceNextNumber || 1,
+      invoice_thank_you_note: input.invoiceThankYouNote || 'Thank you for your business!',
+      invoice_layout: input.invoiceLayout || null,
+      quote_thank_you_note: input.quoteThankYouNote || 'Thank you for considering our services!',
+      quote_validity_days: input.quoteValidityDays || 30,
+      quote_layout: input.quoteLayout || null,
     });
 
     if (error) {
@@ -124,6 +152,13 @@ export function useCompanies() {
     if (input.businessNumber !== undefined) updateData.business_number = input.businessNumber || null;
     if (input.logoUrl !== undefined) updateData.logo_url = input.logoUrl || null;
     if (input.isDefault !== undefined) updateData.is_default = input.isDefault;
+    if (input.invoicePrefix !== undefined) updateData.invoice_prefix = input.invoicePrefix;
+    if (input.invoiceNextNumber !== undefined) updateData.invoice_next_number = input.invoiceNextNumber;
+    if (input.invoiceThankYouNote !== undefined) updateData.invoice_thank_you_note = input.invoiceThankYouNote;
+    if (input.invoiceLayout !== undefined) updateData.invoice_layout = input.invoiceLayout;
+    if (input.quoteThankYouNote !== undefined) updateData.quote_thank_you_note = input.quoteThankYouNote;
+    if (input.quoteValidityDays !== undefined) updateData.quote_validity_days = input.quoteValidityDays;
+    if (input.quoteLayout !== undefined) updateData.quote_layout = input.quoteLayout;
 
     const { error } = await supabase
       .from('companies')
