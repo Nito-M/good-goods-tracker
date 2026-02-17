@@ -1,21 +1,28 @@
 
 
-## Make Quotes a Subitem Under Sales
+## Fix PO Preview to Match Invoice/Quote Layout
 
-### What Changes
-In the sidebar, "Quotes" will be removed as a standalone menu item and instead appear as a nested subitem under "Sales", using the same collapsible pattern that "Jobs" already uses.
+### The Problem
+The PO PDF **generator** (`purchaseOrderGenerator.ts`) was already updated to use the shared layout, but the **in-browser preview dialog** (`PurchaseOrderPreviewDialog.tsx`) was never updated. It ignores all layout visibility settings, so sections that should be hidden still show, making it look different from invoices/quotes.
 
-### How It Works
-- Remove `{ title: "Quotes", ... }` from the `menuItems` array
-- Replace the simple "Sales" menu item with a collapsible section (like Jobs)
-- The collapsible will have "Sales" as the parent link (`/sales`) and "Quotes" as a nested child link (`/quotes`)
-- The collapsible auto-opens when the user is on `/sales` or `/quotes`
-- Respects existing page permissions -- Sales section only shows if `sales` is allowed, Quotes subitem only shows if `quotes` is allowed
+### What Will Change
 
-### File to Modify
-- `src/components/AppSidebar.tsx`
-  - Remove Quotes from `menuItems` array
-  - Remove Sales from `menuItems` array (it becomes a custom collapsible block)
-  - Add a new collapsible Sales section (between Items and Purchase Orders) with a "Quotes" subitem, following the same pattern as the Jobs collapsible
-  - Add `salesOpen` state initialized from current path
+**`src/components/PurchaseOrderPreviewDialog.tsx`**
+- Import `InvoiceLayout` and `defaultInvoiceLayout`
+- Apply the safe merge: `const layout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) }`
+- Wrap each section with layout visibility checks to match the invoice preview:
+  - Logo: only render when `layout.logo.visible`
+  - Business Info: only render when `layout.businessInfo.visible`
+  - Title: only render when `layout.invoiceTitle.visible`
+  - PO Details: only render when `layout.invoiceDetails.visible`
+  - Vendor: only render when `layout.billTo.visible`
+  - Items Table: only render when `layout.itemsTable.visible`
+  - Totals: only render when `layout.totals.visible`
+  - Notes: only render when `layout.notes.visible`
+  - Footer: only render when `layout.footer.visible`
+
+This mirrors exactly what `InvoicePreviewDialog.tsx` already does, ensuring both the preview and the downloaded PDF respect the same layout settings.
+
+### Files to Modify
+- `src/components/PurchaseOrderPreviewDialog.tsx` -- add layout import, merge, and visibility checks on all sections
 
