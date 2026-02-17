@@ -85,8 +85,6 @@ export function SalesOrders() {
               <TableRow>
                 <TableHead>Quote Number</TableHead>
                 <TableHead>Customer Name</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Email</TableHead>
                 <TableHead className="text-right">Total Amount</TableHead>
                 <TableHead>Date Accepted</TableHead>
                 <TableHead>Status</TableHead>
@@ -94,7 +92,6 @@ export function SalesOrders() {
             </TableHeader>
             <TableBody>
               {acceptedQuotes.map((quote) => {
-                const { phone, email } = getVendorDetails(quote.vendorId);
                 return (
                   <TableRow key={quote.id}>
                     <TableCell className="font-medium">
@@ -103,8 +100,6 @@ export function SalesOrders() {
                       </Link>
                     </TableCell>
                     <TableCell>{quote.vendorName || '—'}</TableCell>
-                    <TableCell>{phone}</TableCell>
-                    <TableCell>{email}</TableCell>
                     <TableCell className="text-right">
                       ${quote.total.toFixed(2)}
                     </TableCell>
