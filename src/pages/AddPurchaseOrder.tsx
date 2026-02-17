@@ -311,6 +311,7 @@ export function AddPurchaseOrder() {
         discountType,
         discountValue: parseFloat(discountValue) || 0,
         discountAmount,
+        companyId: companyId || null,
       },
       pdfFile,
       imageFile

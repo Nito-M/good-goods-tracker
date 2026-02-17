@@ -172,6 +172,7 @@ export function usePurchaseOrders() {
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
       discountAmount?: number;
+      companyId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -246,6 +247,7 @@ export function usePurchaseOrders() {
       discount_type: order.discountType || 'percentage',
       discount_value: order.discountValue || 0,
       discount_amount: order.discountAmount || 0,
+      company_id: order.companyId || null,
     }]).select('id').single();
 
     if (error) {
@@ -390,6 +392,7 @@ export function usePurchaseOrders() {
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
       discountAmount?: number;
+      companyId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -458,6 +461,7 @@ export function usePurchaseOrders() {
       discount_type: updates.discountType || 'percentage',
       discount_value: updates.discountValue || 0,
       discount_amount: updates.discountAmount || 0,
+      company_id: updates.companyId !== undefined ? (updates.companyId || null) : undefined,
     };
 
     if (pdfUrl) updateData.pdf_url = pdfUrl;
