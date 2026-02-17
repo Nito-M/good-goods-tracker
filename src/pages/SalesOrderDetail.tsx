@@ -5,8 +5,10 @@ import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
@@ -31,6 +33,7 @@ export function SalesOrderDetail() {
   const { createJob } = useJobs();
   const { toast } = useToast();
   const [creating, setCreating] = useState(false);
+  const [jobNumber, setJobNumber] = useState('');
 
   const loading = quotesLoading || vendorsLoading;
 
@@ -69,7 +72,9 @@ export function SalesOrderDetail() {
           email: vendor?.contact_email || undefined,
           phone: vendor?.contact_phone || undefined,
           address: vendor?.address || undefined,
-        }
+        },
+        undefined,
+        jobNumber || undefined
       );
 
       if (!job) {
@@ -141,6 +146,19 @@ export function SalesOrderDetail() {
             <p className="text-sm text-muted-foreground">Sales Order</p>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="jobNumber" className="text-sm whitespace-nowrap flex items-center gap-1">
+              <Hash className="h-3.5 w-3.5" />Job #
+            </Label>
+            <Input
+              id="jobNumber"
+              value={jobNumber}
+              onChange={(e) => setJobNumber(e.target.value)}
+              placeholder="Auto"
+              className="w-32 h-9"
+            />
+          </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button disabled={creating}>
@@ -165,8 +183,9 @@ export function SalesOrderDetail() {
               <CheckCircle className="h-4 w-4 mr-2" />
               Mark as Complete
             </DropdownMenuItem>
-          </DropdownMenuContent>
+           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
 
       {/* Customer Info */}
