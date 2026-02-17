@@ -66,6 +66,7 @@ export function useQuotes() {
             attachmentUrl: (quote as any).attachment_url || null,
             convertedToInvoiceId: (quote as any).converted_to_invoice_id || null,
             convertedToPoId: (quote as any).converted_to_po_id || null,
+            companyId: (quote as any).company_id || null,
             items: mappedItems,
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
@@ -121,6 +122,7 @@ export function useQuotes() {
           notes: input.notes,
           payment_terms: input.paymentTerms,
           valid_until: input.validUntil,
+          company_id: input.companyId || null,
         })
         .select()
         .single();

@@ -69,6 +69,7 @@ interface CartItem {
 }
 
 import { useCompanies } from '@/hooks/useCompanies';
+import { CompanySelector } from '@/components/CompanySelector';
 
 export function Quotes() {
   const { signOut } = useAuth();
@@ -145,6 +146,14 @@ export function Quotes() {
   const [validUntilInitialized, setValidUntilInitialized] = useState(false);
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+
+  const { defaultCompany } = useCompanies();
+  useEffect(() => {
+    if (defaultCompany && !selectedCompanyId) {
+      setSelectedCompanyId(defaultCompany.id);
+    }
+  }, [defaultCompany]);
 
   const handleSaveQuote = async (quoteId: string, data: any) => {
     await updateQuote(quoteId, data);
@@ -285,6 +294,7 @@ export function Quotes() {
       notes: notes || null,
       paymentTerms,
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
+      companyId: selectedCompanyId || null,
     });
 
     if (quote) {
@@ -294,6 +304,7 @@ export function Quotes() {
       setTaxRate(null);
       setDiscountRate(null);
       setNotes('');
+      setSelectedCompanyId(defaultCompany?.id || '');
       setValidUntilInitialized(false);
       if (quoteSettings.validityDays) {
         const defaultDate = addDays(new Date(), quoteSettings.validityDays);
@@ -657,6 +668,12 @@ export function Quotes() {
                         onChange={(e) => setValidUntil(e.target.value)}
                       />
                     </div>
+
+                    <CompanySelector
+                      companies={companies}
+                      value={selectedCompanyId}
+                      onChange={setSelectedCompanyId}
+                    />
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">

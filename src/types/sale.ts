@@ -58,6 +58,7 @@ export interface CreateSaleInput {
   notes: string | null;
   paymentTerms: string;
   dueDate: string | null;
+  companyId?: string | null;
 }
 
 export interface InvoiceSettings {
