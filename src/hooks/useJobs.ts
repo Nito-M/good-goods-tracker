@@ -41,21 +41,25 @@ export function useJobs() {
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  const createJob = async (title: string, description?: string, status?: string, customer?: { name?: string; email?: string; phone?: string; address?: string }, dueDate?: string) => {
+  const createJob = async (title: string, description?: string, status?: string, customer?: { name?: string; email?: string; phone?: string; address?: string }, dueDate?: string, jobNumber?: string) => {
     if (!user) return null;
+    const insertData: Record<string, unknown> = {
+      title,
+      description: description || null,
+      user_id: user.id,
+      status: status || 'open',
+      customer_name: customer?.name || null,
+      customer_email: customer?.email || null,
+      customer_phone: customer?.phone || null,
+      customer_address: customer?.address || null,
+      due_date: dueDate || null,
+    };
+    if (jobNumber && jobNumber.trim()) {
+      insertData.job_number = jobNumber.trim();
+    }
     const { data, error } = await supabase
       .from('jobs')
-      .insert({
-        title,
-        description: description || null,
-        user_id: user.id,
-        status: status || 'open',
-        customer_name: customer?.name || null,
-        customer_email: customer?.email || null,
-        customer_phone: customer?.phone || null,
-        customer_address: customer?.address || null,
-        due_date: dueDate || null,
-      })
+      .insert(insertData as any)
       .select()
       .single();
     if (error) {

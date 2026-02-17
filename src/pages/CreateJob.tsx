@@ -35,6 +35,7 @@ export function CreateJob() {
   const [formCustomerAddress, setFormCustomerAddress] = useState('');
   const [formDueDate, setFormDueDate] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [formJobNumber, setFormJobNumber] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleCustomerSelect = (customerId: string) => {
@@ -57,7 +58,7 @@ export function CreateJob() {
       email: formCustomerEmail.trim() || undefined,
       phone: formCustomerPhone.trim() || undefined,
       address: formCustomerAddress.trim() || undefined,
-    }, formDueDate ? (() => { const [y, m, d] = formDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : undefined);
+    }, formDueDate ? (() => { const [y, m, d] = formDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : undefined, formJobNumber.trim() || undefined);
     setSaving(false);
     if (result) navigate('/jobs');
   };
@@ -84,6 +85,10 @@ export function CreateJob() {
             <CardTitle>Job Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <Label>Job Number</Label>
+              <Input value={formJobNumber} onChange={e => setFormJobNumber(e.target.value)} placeholder="Auto-generated if left empty" />
+            </div>
             <div>
               <Label>Title *</Label>
               <Input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Job title" />
