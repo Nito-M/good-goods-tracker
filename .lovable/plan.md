@@ -1,34 +1,44 @@
 
-## Save and Use the Selected Company on Purchase Orders
 
-### The Problem
-The Company Selector exists on both the Create and Edit PO forms, but the selected `companyId` is never actually saved to the database. So every PO ends up with `company_id: null`, and the PDF always falls back to the default company.
+## Add "Sales Orders" Sub-Page Under Sales
 
-### Root Cause
-Three places need fixing:
+### Overview
+Create a new page that shows only **accepted quotes** from the existing quotes data, displayed in a clean table with the requested columns. It will appear as a sidebar sub-item under "Sales" alongside "Quotes".
 
-1. **Create PO** (`src/pages/AddPurchaseOrder.tsx`) -- `companyId` is not passed to `createOrder()`
-2. **`createOrder` in hook** (`src/hooks/usePurchaseOrders.ts`) -- doesn't accept or insert `company_id`
-3. **`updateOrder` in hook** (`src/hooks/usePurchaseOrders.ts`) -- doesn't accept or save `company_id`
-4. **Edit PO dialog** (`src/components/EditPurchaseOrderDialog.tsx`) -- `companyId` is not passed in the `onSave()` call
+### What You'll See
+- A new "Sales Orders" link in the sidebar under the Sales section
+- A page with a searchable table showing accepted quotes with columns:
+  - Quote Number
+  - Customer Name (from the linked vendor/customer)
+  - Phone (from the vendor's contact phone)
+  - Email (from the vendor's contact email)
+  - Total Amount
+  - Date Accepted (the quote's `updated_at` timestamp when status changed to "accepted")
+  - Status (the quote status badge)
 
-### Changes
+"Salesperson" is skipped for now as requested.
 
-**`src/hooks/usePurchaseOrders.ts`**
-- Add `companyId?: string | null` to the `createOrder` parameter type
-- Include `company_id: order.companyId || null` in the insert query
-- Add `companyId?: string | null` to the `updateOrder` updates parameter type
-- Include `company_id` in the update query
+---
 
-**`src/pages/AddPurchaseOrder.tsx`**
-- Pass `companyId` into the `createOrder()` call
+### Technical Details
 
-**`src/components/EditPurchaseOrderDialog.tsx`**
-- Add `companyId` to the `onSave` type signature
-- Pass `companyId` in the `onSave()` call
+**New file: `src/pages/SalesOrders.tsx`**
+- Create a page component that uses the existing `useQuotes` hook
+- Filter quotes to only those with `status === 'accepted'`
+- Join vendor data (already fetched by `useQuotes` as `vendorName`) for customer name, and use `useVendors` for phone/email lookup
+- Include a search bar to filter by quote number or customer name
+- Display results in a `Table` component matching the existing UI patterns
 
-**`src/pages/PurchaseOrders.tsx`**
-- Update the `EditPurchaseOrderDialog` `onSave` type to include `companyId`
+**Modified: `src/components/AppSidebar.tsx`**
+- Add "Sales Orders" as a second sub-item under the Sales collapsible section, alongside "Quotes"
 
-### Result
-When you select a company on a PO, that company's logo, name, address, and contact info will appear on the PDF -- not just the default company.
+**Modified: `src/hooks/usePagePermissions.ts`**
+- Add `'sales-orders': ['/sales-orders']` to the `PAGE_KEY_TO_ROUTES` map
+- Add `'sales-orders'` to the `orderedKeys` list
+
+**Modified: `src/App.tsx`**
+- Import the new `SalesOrders` component
+- Add a new route `/sales-orders` wrapped in `ProtectedRoute` and `AppLayout`
+
+### No Database Changes Required
+This page reads from the existing `quotes` and `vendors` tables -- no new tables or migrations needed.
