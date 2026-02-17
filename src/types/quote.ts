@@ -37,6 +37,7 @@ export interface Quote {
   attachmentUrl: string | null;
   convertedToInvoiceId: string | null;
   convertedToPoId: string | null;
+  companyId?: string | null;
   items: QuoteItem[];
   createdAt: string;
   updatedAt: string;
@@ -60,6 +61,7 @@ export interface CreateQuoteInput {
   notes: string | null;
   paymentTerms: string;
   validUntil: string | null;
+  companyId?: string | null;
 }
 
 export interface QuoteSettings {

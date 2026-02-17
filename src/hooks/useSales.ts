@@ -254,6 +254,7 @@ export function useSales() {
           notes: input.notes,
           payment_terms: input.paymentTerms,
           due_date: input.dueDate,
+          company_id: input.companyId || null,
         })
         .select()
         .single();

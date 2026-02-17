@@ -54,6 +54,7 @@ import { InventoryItem } from '@/types/inventory';
 import { InvoiceSettings, Sale } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { useCompanies } from '@/hooks/useCompanies';
+import { CompanySelector } from '@/components/CompanySelector';
 
 interface CartItem {
   inventoryItem: InventoryItem;
@@ -113,6 +114,15 @@ export function Sales() {
   const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+
+  // Default to default company
+  const { defaultCompany } = useCompanies();
+  useEffect(() => {
+    if (defaultCompany && !selectedCompanyId) {
+      setSelectedCompanyId(defaultCompany.id);
+    }
+  }, [defaultCompany]);
 
   // Calculate markup price with proper precision (avoid floating-point errors)
   const calculateMarkupPrice = (cost: number, markup: number): number => {
@@ -248,6 +258,7 @@ export function Sales() {
       notes: notes || null,
       paymentTerms,
       dueDate: null,
+      companyId: selectedCompanyId || null,
     });
 
     if (sale) {
@@ -258,6 +269,7 @@ export function Sales() {
       setDiscountRate(0);
       setMarkupPercent('');
       setNotes('');
+      setSelectedCompanyId(defaultCompany?.id || '');
     }
 
     setIsProcessing(false);
@@ -565,6 +577,12 @@ export function Sales() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <CompanySelector
+                      companies={companies}
+                      value={selectedCompanyId}
+                      onChange={setSelectedCompanyId}
+                    />
 
                     <div className="space-y-2">
                       <Label>Markup %</Label>
