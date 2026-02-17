@@ -50,6 +50,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
 import { EditQuoteDialog } from '@/components/EditQuoteDialog';
+import { QuotePreviewDialog } from '@/components/QuotePreviewDialog';
+import { generateQuotePDF } from '@/lib/quoteGenerator';
 
 import { InventoryItem, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { QuoteSettings, Quote } from '@/types/quote';
@@ -120,6 +122,7 @@ export function Quotes() {
   const [validUntil, setValidUntil] = useState<string>('');
   const [validUntilInitialized, setValidUntilInitialized] = useState(false);
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
 
   const handleSaveQuote = async (quoteId: string, data: any) => {
     await updateQuote(quoteId, data);
@@ -789,6 +792,7 @@ export function Quotes() {
                                 onEdit={setEditingQuote}
                                 onConvertToInvoice={convertToInvoice}
                                 onConvertToPurchaseOrder={convertToPurchaseOrder}
+                                onPreview={setPreviewQuote}
                                 quoteSettings={quoteSettings}
                                 linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
                                 linkedPoNumber={quote.convertedToPoId ? poNumberMap.get(quote.convertedToPoId) : null}
@@ -812,6 +816,18 @@ export function Quotes() {
         onSave={handleSaveQuote}
         vendors={vendors}
       />
+
+      {previewQuote && (
+        <QuotePreviewDialog
+          open={!!previewQuote}
+          onOpenChange={(open) => !open && setPreviewQuote(null)}
+          quote={previewQuote}
+          settings={quoteSettings}
+          onDownload={() => {
+            generateQuotePDF(previewQuote, quoteSettings);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -8,12 +8,13 @@ import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
 import { useJobs } from '@/hooks/useJobs';
 import { useBank } from '@/hooks/useBank';
+import { useCompanies } from '@/hooks/useCompanies';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
+import { PurchaseOrderPreviewDialog } from '@/components/PurchaseOrderPreviewDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
-
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PurchaseOrder } from '@/types/purchaseOrder';
@@ -28,8 +29,10 @@ export function PurchaseOrders() {
   const { profile } = useProfile();
   const { addWithdrawal } = useBank();
   const { jobs } = useJobs();
+  const { companies } = useCompanies();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
+  const [previewOrder, setPreviewOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
@@ -57,8 +60,20 @@ export function PurchaseOrders() {
     setEditDialogOpen(true);
   };
 
-  const handleDownload = async (order: PurchaseOrder) => {
-    const settings = profile ? {
+  const getSettingsForOrder = (order: PurchaseOrder) => {
+    const company = order.companyId ? companies.find(c => c.id === order.companyId) : null;
+    if (company) {
+      return {
+        businessName: company.name,
+        businessAddress: company.address,
+        businessPhone: company.phone,
+        businessEmail: company.email,
+        businessNumber: company.businessNumber,
+        thankYouNote: profile?.invoiceThankYouNote || null,
+        logoUrl: company.logoUrl,
+      };
+    }
+    return profile ? {
       businessName: profile.businessName,
       businessAddress: profile.businessAddress,
       businessPhone: profile.businessPhone,
@@ -67,8 +82,15 @@ export function PurchaseOrders() {
       thankYouNote: profile.invoiceThankYouNote,
       logoUrl: profile.logoUrl,
     } : undefined;
-    
+  };
+
+  const handleDownload = async (order: PurchaseOrder) => {
+    const settings = getSettingsForOrder(order);
     await generatePurchaseOrderPDF(order, settings);
+  };
+
+  const handlePreview = (order: PurchaseOrder) => {
+    setPreviewOrder(order);
   };
 
   // Sort by PO number descending (highest first)
@@ -214,6 +236,7 @@ export function PurchaseOrders() {
                     onDelete={deleteOrder}
                     onEdit={handleEdit}
                     onDownload={handleDownload}
+                    onPreview={handlePreview}
                     loading={processingId === order.id}
                   />
                 ))
@@ -236,6 +259,7 @@ export function PurchaseOrders() {
                     onDelete={deleteOrder}
                     onEdit={handleEdit}
                     onDownload={handleDownload}
+                    onPreview={handlePreview}
                     loading={processingId === order.id}
                   />
                 ))
@@ -258,6 +282,7 @@ export function PurchaseOrders() {
                     onDelete={deleteOrder}
                     onEdit={handleEdit}
                     onDownload={handleDownload}
+                    onPreview={handlePreview}
                     loading={processingId === order.id}
                   />
                 ))
@@ -276,6 +301,16 @@ export function PurchaseOrders() {
           inventoryItems={inventoryItems}
           vendors={vendors}
           jobs={jobs}
+        />
+      )}
+
+      {previewOrder && (
+        <PurchaseOrderPreviewDialog
+          open={!!previewOrder}
+          onOpenChange={(open) => !open && setPreviewOrder(null)}
+          order={previewOrder}
+          settings={getSettingsForOrder(previewOrder)}
+          onDownload={() => handleDownload(previewOrder)}
         />
       )}
     </div>
