@@ -1,58 +1,52 @@
 
 
-## Move Invoice and Quote Settings into Company Settings
+## Make the Invoice/Quote Layout Editor More Realistic
 
 ### What changes
-Currently, invoice settings (prefix, next number, thank you note, layout) and quote settings (validity days, thank you note, layout) are stored globally in the user's profile. This plan moves those settings into each company, so different companies can have different invoice numbering, layouts, and branding.
+Replace the current abstract colored-box layout editor with a realistic document preview that mimics the actual PDF output. Instead of generic labeled rectangles, the canvas will show sample text content matching what the real PDF generators render -- business name, address, "INVOICE" title, sample line items in a table, totals, notes, and footer text.
 
-### Database Changes
+### Visual Design
 
-**Add columns to `companies` table:**
+**Current state**: Colored rectangles with labels like "Logo", "Business Info", "Items Table" -- hard to visualize what the actual document will look like.
 
-| Column | Type | Default |
-|--------|------|---------|
-| invoice_prefix | text | 'INV' |
-| invoice_next_number | integer | 1 |
-| invoice_thank_you_note | text | 'Thank you for your business!' |
-| invoice_layout | jsonb | (default layout) |
-| quote_thank_you_note | text | 'Thank you for considering our services!' |
-| quote_validity_days | integer | 30 |
-| quote_layout | jsonb | (default layout) |
+**New state**: A miniature A4 preview that renders:
+- **Logo**: Shows the actual company logo image (or a placeholder icon if none uploaded)
+- **Business Info**: Shows the real company name, address, phone, email in small text (right-aligned by default)
+- **Invoice/Quote Title**: Shows "INVOICE" or "QUOTE" in large bold text
+- **Invoice Details**: Shows sample "Invoice #: INV-0001", "Date: Feb 17, 2026", "Status: PENDING"
+- **Bill To**: Shows "Bill To:" header with sample customer name and address lines
+- **Items Table**: Shows a mini table header (Item / SKU / Qty / Price / Total) with 2-3 sample rows of grey lines
+- **Totals**: Shows Subtotal, Tax, Total lines right-aligned
+- **Notes**: Shows "Notes:" with sample grey text lines
+- **Footer**: Shows the actual thank-you note text
 
-**Data migration**: Copy existing profile-level invoice/quote settings into each user's companies so nothing is lost.
+All elements remain draggable. Hidden elements appear faded. The canvas keeps the same A4 proportions.
 
-### UI Changes
+### Changes to InvoiceLayoutEditor
 
-**1. Company Add/Edit Dialog (CompaniesSettings.tsx)**
-- Expand the dialog with collapsible sections for "Invoice Settings" and "Quote Settings"
-- Invoice Settings section: prefix, next number, thank you note, layout editor
-- Quote Settings section: validity days, thank you note, layout editor
-- The logo already exists per company -- it will be used on documents
+1. **New props**: Add `title` prop (`"Invoice Layout"` or `"Quote Layout"`), `documentType` prop (`"invoice"` or `"quote"`), plus existing `businessName`, `logoUrl`, and new props for `businessAddress`, `businessPhone`, `businessEmail`, `thankYouNote`
+2. **Realistic element rendering**: Replace the simple label+icon content inside each draggable box with styled miniature content that matches the PDF:
+   - Use tiny font sizes (5-7px) and proper text hierarchy
+   - Show actual company data where available
+   - Render sample table rows as thin grey bars for the items table
+   - Show the real thank-you note in the footer
+3. **Slightly reduce scale**: Keep 2x scale (420x594px) but ensure elements render proportionally to the real PDF
+4. **Remove element color borders in favor of subtle dashed outlines** that only appear on hover or when selected, keeping the preview clean
+5. **Keep visibility toggles panel** on the side with the same functionality
 
-**2. Settings page (Settings.tsx)**
-- Remove the standalone "Invoice" and "Quote" tabs entirely since all that configuration now lives inside each company
-- Remove the business info fields from the Invoice tab (already in companies)
-- Remove the logo upload from the Invoice tab (already in companies)
+### Changes to CompanyDetail.tsx
 
-**3. PDF generation**
-- Update `InvoiceSettings` type to include all the new per-company fields
-- When generating invoices/POs/quotes, pull settings from the selected company instead of the profile
-- Falls back to profile settings if no company is selected (backward compatibility)
-
-### Modified Files
-- Database migration (new columns on companies, data migration)
-- `src/hooks/useCompanies.ts` -- add new fields to Company/CompanyInput interfaces
-- `src/components/CompaniesSettings.tsx` -- expand dialog with invoice/quote settings sections
-- `src/pages/Settings.tsx` -- remove Invoice and Quote tabs
-- `src/types/sale.ts` -- update InvoiceSettings with layout fields
-- `src/pages/Sales.tsx` -- build settings from company data
-- `src/pages/PurchaseOrders.tsx` -- build settings from company data
-- `src/pages/Quotes.tsx` -- build settings from company data
+- Pass additional props to `InvoiceLayoutEditor`: `documentType`, `businessAddress`, `businessPhone`, `businessEmail`, `thankYouNote`
+- For invoice section: pass `documentType="invoice"` and `thankYouNote={invoiceThankYouNote}`
+- For quote section: pass `documentType="quote"` and `thankYouNote={quoteThankYouNote}`
 
 ### Technical Details
-- The company edit dialog will use collapsible/accordion sections to keep the form manageable
-- The InvoiceLayoutEditor component is reused inside the company dialog
-- Profile-level invoice/quote settings remain in the database for backward compatibility but are no longer editable from the UI
-- When a document has no company selected, the system falls back to profile-level settings
-- The `invoice_next_number` is tracked per company, so each company can have its own invoice sequence
+
+**Files to modify:**
+- `src/components/InvoiceLayoutEditor.tsx` -- major rewrite of element rendering
+- `src/pages/CompanyDetail.tsx` -- pass new props to layout editors
+
+**No database changes needed.**
+
+The draggable element content will be rendered using small React elements inside each positioned div. The company logo will use an `<img>` tag with `object-contain`. Sample data (item rows, addresses) uses placeholder grey text. Real company data (name, address, phone, email, thank-you note) is shown where available, making the preview actually useful for seeing how the final document will look.
 
