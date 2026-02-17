@@ -1,28 +1,34 @@
 
-
-## Fix PO Preview to Match Invoice/Quote Layout
+## Save and Use the Selected Company on Purchase Orders
 
 ### The Problem
-The PO PDF **generator** (`purchaseOrderGenerator.ts`) was already updated to use the shared layout, but the **in-browser preview dialog** (`PurchaseOrderPreviewDialog.tsx`) was never updated. It ignores all layout visibility settings, so sections that should be hidden still show, making it look different from invoices/quotes.
+The Company Selector exists on both the Create and Edit PO forms, but the selected `companyId` is never actually saved to the database. So every PO ends up with `company_id: null`, and the PDF always falls back to the default company.
 
-### What Will Change
+### Root Cause
+Three places need fixing:
 
-**`src/components/PurchaseOrderPreviewDialog.tsx`**
-- Import `InvoiceLayout` and `defaultInvoiceLayout`
-- Apply the safe merge: `const layout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) }`
-- Wrap each section with layout visibility checks to match the invoice preview:
-  - Logo: only render when `layout.logo.visible`
-  - Business Info: only render when `layout.businessInfo.visible`
-  - Title: only render when `layout.invoiceTitle.visible`
-  - PO Details: only render when `layout.invoiceDetails.visible`
-  - Vendor: only render when `layout.billTo.visible`
-  - Items Table: only render when `layout.itemsTable.visible`
-  - Totals: only render when `layout.totals.visible`
-  - Notes: only render when `layout.notes.visible`
-  - Footer: only render when `layout.footer.visible`
+1. **Create PO** (`src/pages/AddPurchaseOrder.tsx`) -- `companyId` is not passed to `createOrder()`
+2. **`createOrder` in hook** (`src/hooks/usePurchaseOrders.ts`) -- doesn't accept or insert `company_id`
+3. **`updateOrder` in hook** (`src/hooks/usePurchaseOrders.ts`) -- doesn't accept or save `company_id`
+4. **Edit PO dialog** (`src/components/EditPurchaseOrderDialog.tsx`) -- `companyId` is not passed in the `onSave()` call
 
-This mirrors exactly what `InvoicePreviewDialog.tsx` already does, ensuring both the preview and the downloaded PDF respect the same layout settings.
+### Changes
 
-### Files to Modify
-- `src/components/PurchaseOrderPreviewDialog.tsx` -- add layout import, merge, and visibility checks on all sections
+**`src/hooks/usePurchaseOrders.ts`**
+- Add `companyId?: string | null` to the `createOrder` parameter type
+- Include `company_id: order.companyId || null` in the insert query
+- Add `companyId?: string | null` to the `updateOrder` updates parameter type
+- Include `company_id` in the update query
 
+**`src/pages/AddPurchaseOrder.tsx`**
+- Pass `companyId` into the `createOrder()` call
+
+**`src/components/EditPurchaseOrderDialog.tsx`**
+- Add `companyId` to the `onSave` type signature
+- Pass `companyId` in the `onSave()` call
+
+**`src/pages/PurchaseOrders.tsx`**
+- Update the `EditPurchaseOrderDialog` `onSave` type to include `companyId`
+
+### Result
+When you select a company on a PO, that company's logo, name, address, and contact info will appear on the PDF -- not just the default company.
