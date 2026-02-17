@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
 import { OrganizationsSettings } from '@/components/OrganizationsSettings';
 import { UsersSettings } from '@/components/UsersSettings';
 import { TagsSettings } from '@/components/TagsSettings';
+import { CompaniesSettings } from '@/components/CompaniesSettings';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -385,10 +386,14 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-4xl ${isAdmin ? 'grid-cols-9' : showUsersTab ? 'grid-cols-8' : 'grid-cols-7'}`}>
+          <TabsList className={`grid w-full max-w-4xl ${isAdmin ? 'grid-cols-10' : showUsersTab ? 'grid-cols-9' : 'grid-cols-8'}`}>
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
+            </TabsTrigger>
+            <TabsTrigger value="companies" className="gap-2">
+              <Briefcase className="h-4 w-4" />
+              Companies
             </TabsTrigger>
             <TabsTrigger value="invoice" className="gap-2">
               <FileText className="h-4 w-4" />
@@ -427,6 +432,11 @@ export function Settings() {
               </TabsTrigger>
             )}
           </TabsList>
+
+          {/* Companies Tab */}
+          <TabsContent value="companies" className="mt-6">
+            <CompaniesSettings />
+          </TabsContent>
 
           {/* General Tab */}
           <TabsContent value="general" className="mt-6">

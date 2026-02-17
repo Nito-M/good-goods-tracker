@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Percent, DollarSign, Briefcase } from 'lucide-react';
+import { CompanySelector } from '@/components/CompanySelector';
+import { useCompanies } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -101,6 +103,8 @@ export function EditPurchaseOrderDialog({
   const [saving, setSaving] = useState(false);
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [discountValue, setDiscountValue] = useState<string>('');
+  const [companyId, setCompanyId] = useState<string>('');
+  const { companies, defaultCompany } = useCompanies();
 
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -118,6 +122,7 @@ export function EditPurchaseOrderDialog({
       setDiscountValue(order.discountValue ? order.discountValue.toString() : '');
       setPdfFile(null);
       setImageFile(null);
+      setCompanyId((order as any).companyId || defaultCompany?.id || '');
     }
   }, [order, open, inventoryItems]);
 
@@ -219,6 +224,9 @@ export function EditPurchaseOrderDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Company Selector */}
+          <CompanySelector companies={companies} value={companyId} onChange={setCompanyId} />
+
           {/* Line Items */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
