@@ -1041,6 +1041,7 @@ export type Database = {
           attachment_url: string | null
           company_id: string | null
           converted_to_invoice_id: string | null
+          converted_to_job_id: string | null
           converted_to_po_id: string | null
           created_at: string
           discount_amount: number
@@ -1063,6 +1064,7 @@ export type Database = {
           attachment_url?: string | null
           company_id?: string | null
           converted_to_invoice_id?: string | null
+          converted_to_job_id?: string | null
           converted_to_po_id?: string | null
           created_at?: string
           discount_amount?: number
@@ -1085,6 +1087,7 @@ export type Database = {
           attachment_url?: string | null
           company_id?: string | null
           converted_to_invoice_id?: string | null
+          converted_to_job_id?: string | null
           converted_to_po_id?: string | null
           created_at?: string
           discount_amount?: number
@@ -1116,6 +1119,13 @@ export type Database = {
             columns: ["converted_to_invoice_id"]
             isOneToOne: false
             referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_converted_to_job_id_fkey"
+            columns: ["converted_to_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
           {
