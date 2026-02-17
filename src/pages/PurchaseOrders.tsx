@@ -61,7 +61,9 @@ export function PurchaseOrders() {
   };
 
   const getSettingsForOrder = (order: PurchaseOrder) => {
-    const company = order.companyId ? companies.find(c => c.id === order.companyId) : null;
+    const company = order.companyId
+      ? companies.find(c => c.id === order.companyId)
+      : companies.find(c => c.isDefault) || companies[0] || null;
     if (company) {
       return {
         businessName: company.name,
