@@ -1,85 +1,50 @@
 
 
-## Multi-Company Support for Invoices, POs, and Quotes
+## Add In-Browser Preview for POs, Invoices, and Quotes
 
 ### What it does
-Allows users to create and manage multiple companies in Settings. When generating an Invoice, Purchase Order, or Quote, users can select which company's details to use. The selected company's name, address, phone, email, business number, and logo will appear on the generated PDF.
+Adds an "eye" preview button to Purchase Order cards and Quote cards (Invoice/Sale cards already have this), opening a dialog that shows a visual representation of the document without downloading a PDF. Each preview dialog includes a "Download PDF" button for when users do want the file.
 
-### Database Changes
+### Changes
 
-**New `companies` table**
+**1. New file: `src/components/PurchaseOrderPreviewDialog.tsx`**
+- A dialog that renders the PO content in an A4-style layout matching the PDF generator output
+- Shows: logo, business info, PO number, dates, vendor, items table, totals (with 5% tax), notes
+- Includes a "Download PDF" button
+- Mirrors the structure of the existing `InvoicePreviewDialog`
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| user_id | uuid | Owner |
-| name | text | Company name |
-| address | text | Nullable |
-| phone | text | Nullable |
-| email | text | Nullable |
-| business_number | text | Nullable |
-| logo_url | text | Nullable |
-| is_default | boolean | Default false -- one company can be the default |
-| created_at | timestamptz | Auto |
-| updated_at | timestamptz | Auto |
+**2. New file: `src/components/QuotePreviewDialog.tsx`**
+- A dialog that renders the Quote content in an A4-style layout matching the PDF generator output
+- Shows: logo, business info, quote number, dates, validity, vendor/"Quote For", items table (with quantity units and item notes), totals (discount + tax), notes, footer
+- Includes a "Download PDF" button
 
-RLS policies following the existing pattern (user owns data, org members can view).
+**3. Modified: `src/components/PurchaseOrderCard.tsx`**
+- Add an "Eye" icon preview button next to the existing Download button
+- Add `onPreview` callback prop
+- When clicked, opens the PO preview dialog
 
-**Migration of existing data**: A migration will copy the current profile business info into a new company record so users don't lose their existing setup.
+**4. Modified: `src/pages/PurchaseOrders.tsx`**
+- Import the new `PurchaseOrderPreviewDialog`
+- Add state for the preview PO (`previewOrder`)
+- Pass `onPreview` handler to `PurchaseOrderCard`
+- Render the preview dialog
+- Build invoice settings from profile/company for the preview
 
-**New columns on existing tables**:
-- `sales.company_id` (uuid, nullable, FK to companies)
-- `purchase_orders.company_id` (uuid, nullable, FK to companies)
-- `quotes.company_id` (uuid, nullable, FK to companies)
+**5. Modified: `src/components/QuoteCard.tsx`**
+- Add an "Eye" icon preview button next to the existing Download button
+- Add `onPreview` callback prop
+- When clicked, opens the Quote preview dialog
 
-### UI Changes
-
-**1. Settings -- new "Companies" tab**
-- List of user's companies with add/edit/delete
-- Each company card shows name, address, phone, email, business number
-- Logo upload per company
-- Ability to set one as default
-- The existing "Invoice" tab business info section will remain but show a note that company-level info is now managed in the Companies tab
-
-**2. Invoice/Sale creation (EditSaleDialog)**
-- Add a company selector dropdown at the top
-- Defaults to the user's default company (or first company)
-- Selected company_id is saved with the sale
-
-**3. Purchase Order creation (AddPurchaseOrder / EditPurchaseOrderDialog)**
-- Add a company selector dropdown
-- Selected company_id is saved with the PO
-
-**4. Quote creation (EditQuoteDialog)**
-- Add a company selector dropdown
-- Selected company_id is saved with the quote
-
-**5. PDF generation**
-- `invoiceGenerator.ts`, `purchaseOrderGenerator.ts`, `quoteGenerator.ts` will use the selected company's info instead of profile business info
-- Falls back to profile business info if no company is selected
-
-### New Files
-- `src/hooks/useCompanies.ts` -- CRUD hook for companies
-- Supabase migration for the companies table and FK columns
-
-### Modified Files
-- `src/pages/Settings.tsx` -- add Companies tab
-- `src/components/EditSaleDialog.tsx` -- add company selector
-- `src/pages/AddPurchaseOrder.tsx` -- add company selector
-- `src/components/EditPurchaseOrderDialog.tsx` -- add company selector
-- `src/components/EditQuoteDialog.tsx` -- add company selector
-- `src/lib/invoiceGenerator.ts` -- use company info
-- `src/lib/purchaseOrderGenerator.ts` -- use company info
-- `src/lib/quoteGenerator.ts` -- use company info
-- `src/types/sale.ts` -- add companyId to Sale type
-- `src/types/purchaseOrder.ts` -- add companyId
-- `src/types/quote.ts` -- add companyId
+**6. Modified: `src/pages/Quotes.tsx`**
+- Import the new `QuotePreviewDialog`
+- Add state for the preview quote (`previewQuote`)
+- Pass `onPreview` handler to `QuoteCard`
+- Render the preview dialog
 
 ### Technical Details
 
-- The existing profile business info is migrated into a default company record via a database migration
-- When only one company exists, it auto-selects without requiring user action
-- The company selector only appears when the user has more than one company
-- PDF generators receive company info as part of the settings object, with fallback to profile-level business info for backward compatibility
-- RLS policies follow the standard pattern: users CRUD their own, org members can SELECT
-
+- The preview dialogs replicate the PDF layout using HTML/CSS (same approach as the existing `InvoicePreviewDialog`)
+- A4 dimensions (210mm x 297mm) with 0.7 scale transform for fitting in the dialog
+- Company info is resolved the same way as for PDF generation -- using the linked company or falling back to profile business info
+- No database changes required
+- The existing Invoice preview already works via `SaleCard` -- no changes needed there
