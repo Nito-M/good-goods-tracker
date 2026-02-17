@@ -25,7 +25,10 @@ export function QuotePreviewDialog({
   settings,
   onDownload,
 }: QuotePreviewDialogProps) {
-  const layout: InvoiceLayout = settings.layout || defaultInvoiceLayout;
+  const layout: InvoiceLayout = {
+    ...defaultInvoiceLayout,
+    ...(settings.layout || {}),
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
