@@ -5,211 +5,259 @@ import { formatCurrency } from '@/lib/utils';
 
 export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) => {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings.layout || {}) };
-  
-  // Load logo if available
-  let logoLoaded = false;
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const getXPosition = (elementX: number, align?: string) => {
+    if (align === 'right') return pageWidth - 20;
+    if (align === 'center') return pageWidth / 2;
+    return elementX;
+  };
+
+  let flowY = 20;
+
+  // Add logo if available and visible
   if (settings.logoUrl && layout.logo.visible) {
     try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => {
-          try {
-            const maxWidth = 40;
-            const maxHeight = 40;
-            const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-            const width = img.width * ratio;
-            const height = img.height * ratio;
-            doc.addImage(img, 'PNG', layout.logo.x, layout.logo.y, width, height);
-            logoLoaded = true;
-          } catch (e) {
-            console.error('Error adding logo to PDF:', e);
-          }
-          resolve();
-        };
-        img.onerror = () => {
-          console.error('Error loading logo image');
-          resolve();
-        };
-        img.src = settings.logoUrl!;
-      });
-    } catch (e) {
-      console.error('Error processing logo:', e);
-    }
-  }
+      const img = await loadImage(settings.logoUrl);
+      const maxSize = 160 * 0.352778;
+      let imgWidth = maxSize;
+      let imgHeight = maxSize;
 
-  // Business info
-  if (layout.businessInfo.visible) {
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    const businessLines = [
-      settings.businessName,
-      settings.businessAddress,
-      settings.businessPhone,
-      settings.businessEmail,
-      settings.businessNumber ? `Business #: ${settings.businessNumber}` : null,
-    ].filter(Boolean) as string[];
-    
-    const align = layout.businessInfo.align || 'right';
-    businessLines.forEach((line, i) => {
-      if (align === 'right') {
-        doc.text(line, layout.businessInfo.x, layout.businessInfo.y + (i * 5), { align: 'right' });
-      } else if (align === 'center') {
-        doc.text(line, layout.businessInfo.x, layout.businessInfo.y + (i * 5), { align: 'center' });
+      const aspectRatio = img.width / img.height;
+      if (aspectRatio > 1) {
+        imgHeight = imgWidth / aspectRatio;
       } else {
-        doc.text(line, layout.businessInfo.x, layout.businessInfo.y + (i * 5));
+        imgWidth = imgHeight * aspectRatio;
       }
-    });
+
+      doc.addImage(img, 'PNG', layout.logo.x, layout.logo.y, imgWidth, imgHeight);
+      flowY = Math.max(flowY, layout.logo.y + imgHeight + 5);
+    } catch (error) {
+      console.error('Failed to load logo:', error);
+    }
   }
 
-  // Quote title
-  if (layout.invoiceTitle?.visible !== false) {
-    const titleY = layout.invoiceTitle?.y || 60;
-    const titleX = layout.invoiceTitle?.x || 105;
-    const titleAlign = layout.invoiceTitle?.align || 'center';
+  // Business Info
+  if (layout.businessInfo.visible && (settings.businessName || settings.businessAddress || settings.businessPhone || settings.businessEmail || settings.businessNumber)) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const align = layout.businessInfo.align || 'right';
+    const xPos = getXPosition(layout.businessInfo.x, align);
+    let businessY = layout.businessInfo.y;
+
+    if (settings.businessName) {
+      doc.setFont('helvetica', 'bold');
+      doc.text(settings.businessName, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
+      businessY += 5;
+      doc.setFont('helvetica', 'normal');
+    }
+    if (settings.businessAddress) {
+      const addressLines = settings.businessAddress.split('\n');
+      addressLines.forEach((line) => {
+        doc.text(line, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
+        businessY += 5;
+      });
+    }
+    if (settings.businessPhone) {
+      doc.text(settings.businessPhone, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
+      businessY += 5;
+    }
+    if (settings.businessEmail) {
+      doc.text(settings.businessEmail, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
+      businessY += 5;
+    }
+    if (settings.businessNumber) {
+      doc.text(`Business #: ${settings.businessNumber}`, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
+      businessY += 5;
+    }
+
+    flowY = Math.max(flowY, businessY + 5);
+  }
+
+  // Quote Title
+  if (layout.invoiceTitle.visible) {
+    const titleY = layout.invoiceTitle.y > 0 ? layout.invoiceTitle.y : flowY;
     doc.setFontSize(24);
-    doc.setTextColor(0);
-    doc.text('QUOTE', titleX, titleY, { align: titleAlign as 'center' | 'left' | 'right' });
+    doc.setFont('helvetica', 'bold');
+    const titleAlign = layout.invoiceTitle.align || 'center';
+    doc.text('QUOTE', getXPosition(layout.invoiceTitle.x, titleAlign), titleY, {
+      align: titleAlign as 'left' | 'center' | 'right',
+    });
+    flowY = Math.max(flowY, titleY + 15);
   }
 
-  // Quote details
-  if (layout.invoiceDetails?.visible !== false) {
-    const detailsY = layout.invoiceDetails?.y || 75;
-    const detailsX = layout.invoiceDetails?.x || 20;
+  // Quote Details
+  if (layout.invoiceDetails.visible) {
+    const detailsY = layout.invoiceDetails.y > 0 ? layout.invoiceDetails.y : flowY;
     doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Quote #: ${quote.quoteNumber}`, detailsX, detailsY);
-    doc.text(`Date: ${new Date(quote.createdAt).toLocaleDateString()}`, detailsX, detailsY + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Quote #: ${quote.quoteNumber}`, layout.invoiceDetails.x, detailsY);
+    doc.text(`Date: ${formatDate(quote.createdAt)}`, pageWidth - 20, detailsY, { align: 'right' });
+    
+    let detailLineY = detailsY + 7;
     if (quote.validUntil) {
-      doc.text(`Valid Until: ${new Date(quote.validUntil).toLocaleDateString()}`, detailsX, detailsY + 10);
+      doc.text(`Valid Until: ${formatDate(quote.validUntil)}`, layout.invoiceDetails.x, detailLineY);
     }
-    doc.text(`Terms: ${quote.paymentTerms}`, detailsX, detailsY + (quote.validUntil ? 15 : 10));
+    doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailLineY, { align: 'right' });
+    detailLineY += 7;
+    doc.text(`Status: ${quote.status.toUpperCase()}`, layout.invoiceDetails.x, detailLineY);
+    
+    flowY = Math.max(flowY, detailLineY + 10);
   }
 
-  // Bill To
-  if (layout.billTo.visible) {
-    doc.setFontSize(10);
-    doc.setTextColor(0);
-    doc.text('Quote For:', layout.billTo.x, layout.billTo.y);
-    doc.setTextColor(100);
-    if (quote.vendorName) {
-      doc.text(quote.vendorName, layout.billTo.x, layout.billTo.y + 6);
-    }
+  // Quote For (Bill To)
+  if (layout.billTo.visible && quote.vendorName) {
+    const billToY = layout.billTo.y > 0 ? layout.billTo.y : flowY;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Quote For:', layout.billTo.x, billToY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(quote.vendorName, layout.billTo.x, billToY + 6);
+
+    let vendorY = billToY + 12;
     if (quote.vendorAddress) {
       const addressLines = quote.vendorAddress.split('\n');
-      addressLines.forEach((line, i) => {
-        doc.text(line, layout.billTo.x, layout.billTo.y + 12 + (i * 5));
+      addressLines.forEach((line) => {
+        doc.text(line, layout.billTo.x, vendorY);
+        vendorY += 5;
       });
     }
+    flowY = Math.max(flowY, vendorY + 10);
   }
 
-  // Items table
+  // Items Table
   if (layout.itemsTable.visible) {
-    const tableY = layout.itemsTable.y;
-    doc.setFontSize(10);
-    doc.setTextColor(0);
-    
-    // Table header
-    doc.setFillColor(245, 245, 245);
-    doc.rect(layout.itemsTable.x, tableY - 5, 170, 8, 'F');
-    doc.text('Item', layout.itemsTable.x + 2, tableY);
-    doc.text('SKU', layout.itemsTable.x + 70, tableY);
-    doc.text('Qty', layout.itemsTable.x + 100, tableY);
-    doc.text('Price', layout.itemsTable.x + 120, tableY);
-    doc.text('Total', layout.itemsTable.x + 150, tableY);
-    
-    // Table rows
-    let y = tableY + 8;
+    const tableY = layout.itemsTable.y > 0 ? layout.itemsTable.y : flowY;
+    let y = tableY;
+
+    // Table Header
+    doc.setFillColor(240, 240, 240);
+    doc.rect(layout.itemsTable.x, y - 4, pageWidth - layout.itemsTable.x - 20, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text('Item', layout.itemsTable.x + 2, y);
+    doc.text('SKU', layout.itemsTable.x + 60, y);
+    doc.text('Qty', layout.itemsTable.x + 95, y);
+    doc.text('Unit Price', layout.itemsTable.x + 115, y);
+    doc.text('Total', pageWidth - 22, y, { align: 'right' });
+    y += 10;
+
+    // Items
+    doc.setFont('helvetica', 'normal');
     quote.items.forEach((item) => {
-      doc.setTextColor(0);
-      doc.text(item.itemName.substring(0, 30), layout.itemsTable.x + 2, y);
-      doc.setTextColor(100);
-      doc.text(item.sku, layout.itemsTable.x + 70, y);
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+
+      const itemName = item.itemName.length > 25
+        ? item.itemName.substring(0, 25) + '...'
+        : item.itemName;
+      doc.text(itemName, layout.itemsTable.x + 2, y);
+      doc.text(item.sku, layout.itemsTable.x + 60, y);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
-      doc.text(qtyDisplay, layout.itemsTable.x + 100, y);
-      doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 120, y);
-      doc.text(formatCurrency(item.totalPrice), layout.itemsTable.x + 150, y);
+      doc.text(qtyDisplay, layout.itemsTable.x + 95, y);
+      doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 115, y);
+      doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
       y += 7;
-      
-      // Add item notes if present
+
       if (item.notes) {
         doc.setFontSize(8);
-        doc.setTextColor(120);
-        const noteLines = doc.splitTextToSize(`Note: ${item.notes}`, 165);
+        doc.setTextColor(120, 120, 120);
+        const noteLines = doc.splitTextToSize(`Note: ${item.notes}`, pageWidth - layout.itemsTable.x - 24);
         doc.text(noteLines, layout.itemsTable.x + 4, y);
         y += noteLines.length * 4 + 2;
         doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
       }
     });
+
+    // Line
+    y += 5;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(layout.itemsTable.x, y, pageWidth - 20, y);
+    y += 10;
+
+    flowY = y;
   }
 
   // Totals
   if (layout.totals.visible) {
-    const totalsY = layout.totals.y === -1 
-      ? layout.itemsTable.y + 8 + (quote.items.length * 7) + 15
-      : layout.totals.y;
-    const totalsX = layout.totals.x;
-    const align = layout.totals.align || 'right';
-    
+    const totalsY = layout.totals.y > 0 ? layout.totals.y : flowY;
+    let y = totalsY;
+    const totalsX = pageWidth - 70;
+
     doc.setFontSize(10);
-    doc.setTextColor(100);
-    
-    const addTotalLine = (label: string, value: string, yOffset: number, isBold = false) => {
-      if (isBold) {
-        doc.setTextColor(0);
-        doc.setFontSize(12);
-      }
-      if (align === 'right') {
-        doc.text(`${label}: ${value}`, totalsX, totalsY + yOffset, { align: 'right' });
-      } else {
-        doc.text(`${label}: ${value}`, totalsX, totalsY + yOffset);
-      }
-      if (isBold) {
-        doc.setTextColor(100);
-        doc.setFontSize(10);
-      }
-    };
-    
-    let offset = 0;
-    addTotalLine('Subtotal', formatCurrency(quote.subtotal), offset);
-    offset += 6;
-    
+    doc.setFont('helvetica', 'normal');
+    doc.text('Subtotal:', totalsX, y);
+    doc.text(formatCurrency(quote.subtotal), pageWidth - 22, y, { align: 'right' });
+    y += 7;
+
     if (quote.discountAmount > 0) {
-      addTotalLine(`Discount (${quote.discountRate}%)`, `-${formatCurrency(quote.discountAmount)}`, offset);
-      offset += 6;
+      doc.setTextColor(34, 139, 34);
+      doc.text(`Discount (${quote.discountRate}%):`, totalsX, y);
+      doc.text(`-${formatCurrency(quote.discountAmount)}`, pageWidth - 22, y, { align: 'right' });
+      doc.setTextColor(0, 0, 0);
+      y += 7;
     }
-    
+
     if (quote.taxAmount > 0) {
-      addTotalLine(`Tax (${quote.taxRate}%)`, formatCurrency(quote.taxAmount), offset);
-      offset += 6;
+      doc.text(`Tax (${quote.taxRate}%):`, totalsX, y);
+      doc.text(formatCurrency(quote.taxAmount), pageWidth - 22, y, { align: 'right' });
+      y += 7;
     }
-    
-    addTotalLine('Total', formatCurrency(quote.total), offset + 2, true);
+
+    y += 3;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('TOTAL:', totalsX, y);
+    doc.text(formatCurrency(quote.total), pageWidth - 22, y, { align: 'right' });
+
+    flowY = Math.max(flowY, y + 10);
   }
 
   // Notes
   if (layout.notes.visible && quote.notes) {
-    const notesY = layout.notes.y === -1 
-      ? layout.itemsTable.y + 8 + (quote.items.length * 7) + 60
-      : layout.notes.y;
+    const notesY = layout.notes.y > 0 ? layout.notes.y : flowY + 10;
     doc.setFontSize(10);
-    doc.setTextColor(0);
+    doc.setFont('helvetica', 'bold');
     doc.text('Notes:', layout.notes.x, notesY);
-    doc.setTextColor(100);
-    const noteLines = doc.splitTextToSize(quote.notes, 170);
-    doc.text(noteLines, layout.notes.x, notesY + 6);
+    doc.setFont('helvetica', 'normal');
+
+    const splitNotes = doc.splitTextToSize(quote.notes, pageWidth - layout.notes.x - 20);
+    doc.text(splitNotes, layout.notes.x, notesY + 6);
   }
 
   // Footer
-  if (layout.footer.visible && settings.thankYouNote) {
-    const footerY = layout.footer.y === -1 ? 280 : layout.footer.y;
+  if (layout.footer.visible) {
+    const thankYouNote = settings.thankYouNote || 'Thank you for considering our services!';
+    const footerY = layout.footer.y > 0 ? layout.footer.y : pageHeight - 20;
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
     const footerAlign = layout.footer.align || 'center';
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(settings.thankYouNote, layout.footer.x, footerY, { align: footerAlign as 'center' | 'left' | 'right' });
+    doc.text(thankYouNote, getXPosition(layout.footer.x, footerAlign), footerY, {
+      align: footerAlign as 'left' | 'center' | 'right',
+    });
   }
 
   // Save the PDF
   doc.save(`${quote.quoteNumber}.pdf`);
 };
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
