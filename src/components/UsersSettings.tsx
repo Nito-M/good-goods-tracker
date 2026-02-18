@@ -40,7 +40,7 @@ const PAGE_KEYS = [
   { key: 'notes', label: 'Notes' },
   { key: 'bank', label: 'Bank' },
   { key: 'jobs', label: 'Jobs' },
-  { key: 'assemblies', label: 'Trailer Assemblies' },
+  { key: 'assemblies', label: 'Assemblies' },
   { key: 'settings', label: 'Settings' },
 ];
 

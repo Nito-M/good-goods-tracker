@@ -31,7 +31,7 @@ const menuItems = [
   { title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
   { title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
   { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
-  { title: "Trailer Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
+  { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
   { title: "Settings", url: "/settings", icon: Settings, pageKey: "settings" },
 ];
 
