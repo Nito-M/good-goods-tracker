@@ -1425,6 +1425,61 @@ export type Database = {
           },
         ]
       }
+      so_item_job_links: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string | null
+          quote_id: string
+          quote_item_id: string
+          status: string
+          unit_index: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          quote_id: string
+          quote_item_id: string
+          status?: string
+          unit_index?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          quote_id?: string
+          quote_item_id?: string
+          status?: string
+          unit_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "so_item_job_links_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "so_item_job_links_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "so_item_job_links_quote_item_id_fkey"
+            columns: ["quote_item_id"]
+            isOneToOne: false
+            referencedRelation: "quote_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tag_categories: {
         Row: {
           created_at: string
