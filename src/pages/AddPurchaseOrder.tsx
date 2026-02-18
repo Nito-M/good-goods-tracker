@@ -451,13 +451,14 @@ export function AddPurchaseOrder() {
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">Qty *</Label>
-                          <Input
+                        <Input
                             type="number"
-                            min={1}
+                            min={0.01}
+                            step="0.01"
                             value={lineItem.quantity === ('' as unknown as number) ? '' : lineItem.quantity}
                             onChange={(e) =>
                               updateLineItem(lineItem.id, {
-                                quantity: e.target.value === '' ? ('' as unknown as number) : parseInt(e.target.value) || 0,
+                                quantity: e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value) || 0,
                               })
                             }
                             placeholder=""
@@ -529,11 +530,12 @@ export function AddPurchaseOrder() {
                         <Label className="text-xs">Qty *</Label>
                         <Input
                           type="number"
-                          min={1}
+                          min={0.01}
+                          step="0.01"
                           value={lineItem.quantity === ('' as unknown as number) ? '' : lineItem.quantity}
                           onChange={(e) =>
                             updateLineItem(lineItem.id, {
-                              quantity: e.target.value === '' ? ('' as unknown as number) : parseInt(e.target.value) || 0,
+                              quantity: e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value) || 0,
                             })
                           }
                           placeholder=""

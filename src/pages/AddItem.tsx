@@ -204,11 +204,11 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       name,
       sku,
       category,
-      quantity: parseInt(quantity) || 0,
+      quantity: parseFloat(quantity) || 0,
       quantityUnit,
       price: parseFloat(price) || 0,
       cost: parseFloat(cost) || 0,
-      minStock: parseInt(minStock) || 0,
+      minStock: parseFloat(minStock) || 0,
       weight: parseFloat(weight) || 0,
       weightUnit,
       dimensions,
@@ -459,10 +459,11 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity</Label>
                 <div className="flex gap-2">
-                  <Input
+                   <Input
                     id="quantity"
                     type="number"
                     min="0"
+                    step="0.01"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     placeholder="0"
@@ -515,6 +516,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   id="minStock"
                   type="number"
                   min="0"
+                  step="0.01"
                   value={minStock}
                   onChange={(e) => setMinStock(e.target.value)}
                   placeholder="0"

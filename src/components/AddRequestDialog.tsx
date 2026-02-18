@@ -217,9 +217,10 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
               <Input
                 id="quantity"
                 type="number"
-                min={1}
+                min={0.01}
+                step="0.01"
                 value={quantity}
-                onChange={(e) => setQuantity(e.target.value ? parseInt(e.target.value) : "")}
+                onChange={(e) => setQuantity(e.target.value ? parseFloat(e.target.value) : "")}
                 placeholder="Enter quantity"
               />
             </div>

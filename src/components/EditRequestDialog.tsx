@@ -221,9 +221,10 @@ export function EditRequestDialog({
               <Input
                 id="editQuantity"
                 type="number"
-                min={1}
+                min={0.01}
+                step="0.01"
                 value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                onChange={(e) => setQuantity(parseFloat(e.target.value) || 1)}
                 required
               />
             </div>

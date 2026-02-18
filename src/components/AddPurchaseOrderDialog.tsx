@@ -401,11 +401,12 @@ export function AddPurchaseOrderDialog({
                     <Label>Quantity *</Label>
                     <Input
                       type="number"
-                      min={1}
+                      min={0.01}
+                      step="0.01"
                       value={lineItem.quantity}
                       onChange={(e) =>
                         updateLineItem(lineItem.id, {
-                          quantity: parseInt(e.target.value) || 1,
+                          quantity: parseFloat(e.target.value) || 1,
                         })
                       }
                     />

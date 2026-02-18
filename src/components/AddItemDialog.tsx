@@ -87,11 +87,11 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
       name,
       sku,
       category,
-      quantity: parseInt(quantity) || 0,
+      quantity: parseFloat(quantity) || 0,
       quantityUnit,
       price: parseFloat(price) || 0,
       cost: parseFloat(cost) || 0,
-      minStock: parseInt(minStock) || 0,
+      minStock: parseFloat(minStock) || 0,
       weight: parseFloat(weight) || 0,
       weightUnit,
       dimensions,
@@ -165,6 +165,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
                     id="quantity"
                     type="number"
                     min="0"
+                    step="0.01"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     placeholder="0"
@@ -220,6 +221,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
                   id="minStock"
                   type="number"
                   min="0"
+                  step="0.01"
                   value={minStock}
                   onChange={(e) => setMinStock(e.target.value)}
                   placeholder="0"
