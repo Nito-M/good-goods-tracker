@@ -11,6 +11,7 @@ export interface Assembly {
   selling_price: number;
   status: string;
   status_notes: string | null;
+  type: string;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +48,7 @@ export function useAssemblies() {
           ...d,
           status: d.status ?? 'not_finished',
           status_notes: d.status_notes ?? null,
+          type: d.type ?? 'General',
         })) as Assembly[]
       );
     }
@@ -57,11 +59,11 @@ export function useAssemblies() {
     fetchAssemblies();
   }, [user]);
 
-  const createAssembly = async (name: string, description?: string): Promise<Assembly | null> => {
+  const createAssembly = async (name: string, description?: string, type?: string): Promise<Assembly | null> => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('assemblies')
-      .insert({ user_id: user.id, name, description: description || null })
+      .insert({ user_id: user.id, name, description: description || null, type: type || 'General' })
       .select()
       .single();
     if (error) {
@@ -72,7 +74,7 @@ export function useAssemblies() {
     return data as Assembly;
   };
 
-  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => {
+  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => {
     const { error } = await supabase
       .from('assemblies')
       .update(updates)
