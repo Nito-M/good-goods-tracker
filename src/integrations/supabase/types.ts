@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      assemblies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      assembly_items: {
+        Row: {
+          assembly_id: string
+          created_at: string
+          id: string
+          inventory_item_id: string | null
+          item_name: string
+          notes: string | null
+          quantity: number
+          sku: string
+        }
+        Insert: {
+          assembly_id: string
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name: string
+          notes?: string | null
+          quantity?: number
+          sku?: string
+        }
+        Update: {
+          assembly_id?: string
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name?: string
+          notes?: string | null
+          quantity?: number
+          sku?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assembly_items_assembly_id_fkey"
+            columns: ["assembly_id"]
+            isOneToOne: false
+            referencedRelation: "assemblies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assembly_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_transactions: {
         Row: {
           amount: number

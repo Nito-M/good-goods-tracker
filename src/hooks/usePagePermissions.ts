@@ -17,6 +17,7 @@ const PAGE_KEY_TO_ROUTES: Record<string, string[]> = {
   bank: ['/bank'],
   settings: ['/settings'],
   jobs: ['/jobs'],
+  assemblies: ['/assemblies'],
 };
 
 export function usePagePermissions() {
@@ -80,7 +81,7 @@ export function usePagePermissions() {
 
   const getFirstAllowedRoute = (): string => {
     if (allowedPages === null) return '/';
-    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'bank', 'jobs', 'settings'];
+    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'bank', 'jobs', 'assemblies', 'settings'];
     for (const key of orderedKeys) {
       if (allowedPages.includes(key)) {
         return PAGE_KEY_TO_ROUTES[key]?.[0] || '/';

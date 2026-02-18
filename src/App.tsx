@@ -26,6 +26,7 @@ import { EditJob } from "./pages/EditJob";
 import { AllJobItems } from "./pages/AllJobItems";
 import { JobDescription } from "./pages/JobDescription";
 import { JobAddItems } from "./pages/JobAddItems";
+import { Assemblies } from "./pages/Assemblies";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { CompanyDetail } from "./pages/CompanyDetail";
@@ -339,6 +340,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Bank />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assemblies"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Assemblies />
               </AppLayout>
             </ProtectedRoute>
           }
