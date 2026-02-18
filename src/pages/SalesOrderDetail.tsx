@@ -154,59 +154,73 @@ export function SalesOrderDetail() {
     }
   };
 
-  // Create a job for one specific expanded item
+  // Helper: get or create the single job for this sales order
+  const getOrCreateOrderJob = async (): Promise<string | null> => {
+    // If a job already exists for this order, reuse it
+    if (quote!.convertedToJobId) return quote!.convertedToJobId;
+
+    const job = await createJob(
+      quote!.quoteNumber,                   // Job title = SO number
+      quote!.notes || undefined,
+      'open',
+      {
+        name: quote!.vendorName || undefined,
+        email: vendor?.contact_email || undefined,
+        phone: vendor?.contact_phone || undefined,
+        address: vendor?.address || undefined,
+      },
+      dueDate ? dueDate.toISOString() : undefined,
+      jobNumber || undefined
+    );
+    if (!job) return null;
+
+    // Link the job to the quote
+    await supabase
+      .from('quotes')
+      .update({ converted_to_job_id: job.id } as any)
+      .eq('id', quote!.id);
+
+    return job.id;
+  };
+
+  // Add a single item to the shared job and record its link
+  const addItemToJob = async (item: ExpandedItem, jobId: string) => {
+    // Avoid duplicate job_items for this item
+    if (!itemLinks[item.linkKey]?.jobId) {
+      await supabase.from('job_items').insert({
+        job_id: jobId,
+        inventory_item_id: item.inventoryItemId || null,
+        item_name: item.itemName,
+        sku: item.sku || '',
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        notes: item.notes || null,
+      });
+    }
+
+    await (supabase.from('so_item_job_links' as any) as any).upsert(
+      {
+        quote_id: quote!.id,
+        quote_item_id: item.quoteItemId,
+        unit_index: item.unitIndex,
+        job_id: jobId,
+        status: itemLinks[item.linkKey]?.status ?? 'open',
+      },
+      { onConflict: 'quote_item_id,unit_index' }
+    );
+  };
+
+  // Create job for one item (adds it to the shared SO job)
   const handleCreateJobForItem = async (item: ExpandedItem) => {
     if (!quote) return;
     setCreatingJobFor(item.linkKey);
     try {
-      const job = await createJob(
-        item.itemName,
-        item.notes || undefined,
-        'open',
-        {
-          name: quote.vendorName || undefined,
-          email: vendor?.contact_email || undefined,
-          phone: vendor?.contact_phone || undefined,
-          address: vendor?.address || undefined,
-        },
-        dueDate ? dueDate.toISOString() : undefined,
-        jobNumber || undefined
-      );
+      const jobId = await getOrCreateOrderJob();
+      if (!jobId) return;
 
-      if (!job) return;
+      await addItemToJob(item, jobId);
 
-      // Add item to job
-      await supabase.from('job_items').insert({
-        job_id: job.id,
-        inventory_item_id: item.inventoryItemId || null,
-        item_name: item.itemName,
-        sku: item.sku || '',
-        quantity: 1,
-        unit_price: item.unitPrice,
-        notes: item.notes || null,
-      });
-
-      // Record the link with 'open' status
-      await (supabase.from('so_item_job_links' as any) as any).upsert(
-        {
-          quote_id: quote.id,
-          quote_item_id: item.quoteItemId,
-          unit_index: item.unitIndex,
-          job_id: job.id,
-          status: 'open',
-        },
-        { onConflict: 'quote_item_id,unit_index' }
-      );
-
-      // Link first-ever job to quote for the badge
-      if (!quote.convertedToJobId) {
-        await supabase
-          .from('quotes')
-          .update({ converted_to_job_id: job.id } as any)
-          .eq('id', quote.id);
-      }
-
-      toast({ title: 'Job created', description: item.itemName });
+      toast({ title: 'Item added to job', description: item.itemName });
       await fetchItemLinks();
     } catch (err) {
       console.error('Error creating job for item:', err);
@@ -216,66 +230,21 @@ export function SalesOrderDetail() {
     }
   };
 
-  // Create jobs for ALL items at once (bulk)
+  // Add ALL items to one shared job
   const handleCreateAllJobs = async () => {
     if (!quote || expandedItems.length === 0) return;
     setCreating(true);
     try {
-      let firstJobId: string | null = null;
+      const jobId = await getOrCreateOrderJob();
+      if (!jobId) return;
 
-      for (let i = 0; i < expandedItems.length; i++) {
-        const item = expandedItems[i];
-        // Skip items that already have a job
-        if (itemLinks[item.linkKey]?.jobId) continue;
-
-        const job = await createJob(
-          item.itemName,
-          item.notes || undefined,
-          'open',
-          {
-            name: quote.vendorName || undefined,
-            email: vendor?.contact_email || undefined,
-            phone: vendor?.contact_phone || undefined,
-            address: vendor?.address || undefined,
-          },
-          dueDate ? dueDate.toISOString() : undefined,
-          i === 0 && !firstJobId ? (jobNumber || undefined) : undefined
-        );
-
-        if (!job) continue;
-        if (!firstJobId) firstJobId = job.id;
-
-        await supabase.from('job_items').insert({
-          job_id: job.id,
-          inventory_item_id: item.inventoryItemId || null,
-          item_name: item.itemName,
-          sku: item.sku || '',
-          quantity: 1,
-          unit_price: item.unitPrice,
-          notes: item.notes || null,
-        });
-
-        await (supabase.from('so_item_job_links' as any) as any).upsert(
-          {
-            quote_id: quote.id,
-            quote_item_id: item.quoteItemId,
-            unit_index: item.unitIndex,
-            job_id: job.id,
-            status: 'open',
-          },
-          { onConflict: 'quote_item_id,unit_index' }
-        );
-      }
-
-      if (firstJobId && !quote.convertedToJobId) {
-        await supabase
-          .from('quotes')
-          .update({ converted_to_job_id: firstJobId } as any)
-          .eq('id', quote.id);
+      for (const item of expandedItems) {
+        if (itemLinks[item.linkKey]?.jobId) continue; // already linked
+        await addItemToJob(item, jobId);
       }
 
       await fetchItemLinks();
-      if (firstJobId) navigate(`/jobs/${firstJobId}`);
+      navigate(`/jobs/${jobId}`);
     } catch (err) {
       console.error('Error creating jobs:', err);
       toast({ title: 'Error creating jobs', variant: 'destructive' });
@@ -559,7 +528,7 @@ export function SalesOrderDetail() {
                         )}
                       </TableCell>
 
-                      {/* Per-item create job / view job */}
+                      {/* Per-item: add to shared job / linked indicator */}
                       <TableCell className="text-center">
                         {link?.jobId ? (
                           <Link
@@ -582,7 +551,7 @@ export function SalesOrderDetail() {
                             ) : (
                               <Plus className="h-3 w-3 mr-1" />
                             )}
-                            Create Job
+                            {quote.convertedToJobId ? 'Add to Job' : 'Create Job'}
                           </Button>
                         )}
                       </TableCell>
