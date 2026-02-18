@@ -229,7 +229,7 @@ export function AddPurchaseOrder() {
   };
 
   const filteredInventoryItems = vendorId && vendorId !== 'none'
-    ? inventoryItems.filter(item => vendorPrices.some(vp => vp.itemId === item.id))
+    ? [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name))
     : [];
 
   const updateLineItem = (id: string, updates: Partial<LineItem>) => {
@@ -385,9 +385,6 @@ export function AddPurchaseOrder() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Select a vendor to see available items with pricing
-                </p>
               </div>
             </CardContent>
           </Card>
