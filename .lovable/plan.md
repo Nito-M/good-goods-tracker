@@ -1,70 +1,88 @@
 
-## Allow Saving Pictures When Creating an Item
+## Allow Decimal Quantities Everywhere
 
-### Current Situation
+### What's Changing
 
-When creating a new item (`/items/new`), the form shows a basic single-image uploader. The image gets stored as a URL on the `inventory_items` table (`image_url` column). Multi-image support via the `item_images` table only works in edit mode because it requires an existing item ID.
-
-The note "Add more images after saving." confirms this limitation was known.
-
-### Goal
-
-Allow users to upload one or more images **while creating** a new item, with those images ending up in the proper `item_images` gallery table.
+Currently all quantity fields are restricted to whole numbers (`integer` in the database, `parseInt` in code, and `.int()` in validation). This change allows values like `1.5`, `2.75`, `0.5`, etc. across all forms and modules.
 
 ---
 
-### How It Will Work
+### Database Migration
 
-The approach is a two-phase save:
+Seven columns need to be changed from `INTEGER` to `NUMERIC` (which supports decimals):
 
-1. **User selects images** on the create form — images are held in local state as `File` objects (no upload yet).
-2. **User clicks "Add Item"** — the item is saved first to get its new `id`, then the staged images are uploaded to the `item_images` table using that ID.
-
-This requires `addItem` to **return the new item's ID**, which it currently does not.
-
----
-
-### Technical Changes
-
-**1. `src/hooks/useInventory.ts`**
-- Modify `addItem` to return the newly created item's `id` (already generated as `dbItem.id` before the insert — just return it).
-
-**2. `src/pages/AddItem.tsx`**
-- Replace the current single-image upload section (for new items) with the same `MultiImageUploader` component used in edit mode.
-- Add a `pendingImageFiles` state (`File[]`) to hold staged files locally.
-- Create a lightweight wrapper that mimics the `ItemImage` shape for preview purposes using `URL.createObjectURL`, so the uploader can show thumbnails before the item is saved.
-- On form submit (`handleSubmit`):
-  - Call `onSave(itemData)` and receive back the new item ID.
-  - Loop through `pendingImageFiles` and call `uploadItemImageToGallery(file, isPrimary)` for each, using the real `useItemImages` hook initialized with the new item ID.
-- Since `useItemImages` needs an `itemId` to upload, the upload step happens post-save using the returned ID.
-
-**3. `src/components/MultiImageUploader.tsx`** (minor tweak)
-- The uploader currently calls `onUpload(file)` which triggers the actual DB/storage upload. For the create flow, we need it to **stage** files instead of uploading immediately.
-- Add an optional `stagingMode` prop. When true, `onUpload` is replaced by a local staging handler that adds `File` objects to an array and shows previews using object URLs. Delete removes from staged array.
-
-**4. `src/App.tsx`**
-- Update the `AddItemPage` route to pass the `addItem` return value properly (the `onSave` prop). The `AddItemPage` `onSave` prop type will need to change to `() => Promise<string | null>` or similar so the ID can be passed back.
-
----
-
-### User Experience
-
-- On `/items/new`, the "Product Images" section will show the full multi-image upload widget (same as edit mode).
-- Users can add multiple photos before clicking "Add Item."
-- Preview thumbnails appear immediately.
-- On save, images upload in sequence and are attached to the new item automatically.
-- After saving, the user is navigated to `/items` as before.
-- A toast will confirm success.
-
----
-
-### Summary of File Changes
-
-| File | Change |
+| Table | Column |
 |---|---|
-| `src/hooks/useInventory.ts` | Return new item ID from `addItem` |
-| `src/pages/AddItem.tsx` | Stage files locally; upload after item is created |
-| `src/components/MultiImageUploader.tsx` | Add `stagingMode` prop for pre-save previews |
-| `src/App.tsx` | Ensure `onSave` callback handles returned ID |
+| `inventory_items` | `quantity` |
+| `inventory_items` | `min_stock` |
+| `job_items` | `quantity` |
+| `purchase_orders` | `quantity` |
+| `quote_items` | `quantity` |
+| `requests` | `quantity` |
+| `sale_items` | `quantity` |
 
-No database migrations are needed — the `item_images` table already exists and supports this use case.
+The migration will be:
+```sql
+ALTER TABLE public.inventory_items ALTER COLUMN quantity TYPE NUMERIC;
+ALTER TABLE public.inventory_items ALTER COLUMN min_stock TYPE NUMERIC;
+ALTER TABLE public.purchase_orders ALTER COLUMN quantity TYPE NUMERIC;
+ALTER TABLE public.quote_items ALTER COLUMN quantity TYPE NUMERIC;
+ALTER TABLE public.sale_items ALTER COLUMN quantity TYPE NUMERIC;
+ALTER TABLE public.requests ALTER COLUMN quantity TYPE NUMERIC;
+ALTER TABLE public.job_items ALTER COLUMN quantity TYPE NUMERIC;
+```
+
+Existing whole-number data is fully compatible — `INTEGER` values convert to `NUMERIC` without any data loss.
+
+---
+
+### Code Changes
+
+**`src/lib/validation.ts`**
+- Remove `.int()` from `inventoryItemSchema.quantity` and `minStock`
+- Remove `.int()` from `purchaseOrderItemSchema.quantity`
+- Remove `.int()` from `saleItemSchema.quantity`
+
+**`src/pages/AddItem.tsx`**
+- Change `parseInt(quantity)` → `parseFloat(quantity)` for quantity
+- Change `parseInt(minStock)` → `parseFloat(minStock)` for minStock
+- Add `step="0.01"` to the Quantity and Min Stock Level inputs
+
+**`src/components/AddItemDialog.tsx`**
+- Same `parseInt` → `parseFloat` changes for quantity and minStock
+- Add `step="0.01"` to their inputs
+
+**`src/components/EditSaleDialog.tsx`**
+- Change `parseInt(e.target.value)` → `parseFloat(e.target.value)` for item quantity
+- Add `step="0.01"` to the quantity input
+
+**`src/components/EditPurchaseOrderDialog.tsx`**
+- Change `parseInt(e.target.value)` → `parseFloat(e.target.value)` for line item quantity
+- Add `step="0.01"` to the quantity input
+
+**`src/components/AddPurchaseOrderDialog.tsx`**
+- Same `parseInt` → `parseFloat` and `step="0.01"` change
+
+**`src/pages/AddPurchaseOrder.tsx`**
+- Same `parseInt` → `parseFloat` changes (two instances)
+- Add `step="0.01"` to quantity inputs
+
+**`src/components/AddRequestDialog.tsx`**
+- Change `parseInt(e.target.value)` → `parseFloat(e.target.value)` for quantity
+- Add `step="0.01"` to the quantity input
+
+**`src/components/EditRequestDialog.tsx`**
+- Same `parseInt` → `parseFloat` and `step="0.01"` change
+
+**`src/pages/Jobs.tsx`**
+- Change the quantity stepper buttons to use `parseFloat` and increment/decrement by `0.01` steps
+- Add `step="0.01"` to the inline quantity input
+
+---
+
+### Summary
+
+- 1 database migration (7 column type changes)
+- 10 code files updated (parseInt → parseFloat, add step="0.01")
+- No data loss — all existing integer quantities remain valid
+- No UI layout changes — only numeric behavior is affected
