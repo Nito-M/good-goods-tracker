@@ -56,6 +56,21 @@ export function SalesOrderDetail() {
 
   const quote = useMemo(() => quotes.find((q) => q.id === id), [quotes, id]);
 
+  // Expand items by quantity so each unit becomes its own row/job
+  const expandedItems = useMemo(() => {
+    if (!quote) return [];
+    return quote.items.flatMap((item) => {
+      const count = Math.max(1, Math.round(item.quantity));
+      if (count <= 1) return [{ ...item }];
+      return Array.from({ length: count }, (_, i) => ({
+        ...item,
+        id: `${item.id}-${i}`,
+        quantity: 1,
+        totalPrice: item.unitPrice,
+      }));
+    });
+  }, [quote]);
+
   const vendor = useMemo(() => {
     if (!quote?.vendorId) return null;
     return vendors.find((v) => v.id === quote.vendorId) || null;
@@ -93,13 +108,13 @@ export function SalesOrderDetail() {
   };
 
   const handleCreateJob = async () => {
-    if (!quote || quote.items.length === 0) return;
+    if (!quote || expandedItems.length === 0) return;
     setCreating(true);
     try {
       let firstJobId: string | null = null;
 
-      for (let i = 0; i < quote.items.length; i++) {
-        const item = quote.items[i];
+      for (let i = 0; i < expandedItems.length; i++) {
+        const item = expandedItems[i];
 
         const job = await createJob(
           item.itemName,
@@ -331,7 +346,7 @@ export function SalesOrderDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {quote.items.map((item) => (
+                {expandedItems.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       <div>
