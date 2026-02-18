@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
@@ -6,7 +6,7 @@ import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,33 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+interface ItemLink {
+  id: string;
+  jobId: string | null;
+  status: string;
+}
+
+type ExpandedItem = {
+  id: string;
+  quoteItemId: string;
+  unitIndex: number;
+  linkKey: string;
+  itemName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  notes: string | null;
+  inventoryItemId: string | null;
+};
+
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  pending:     { label: 'Pending',     className: 'bg-muted text-muted-foreground' },
+  open:        { label: 'Open',        className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  in_progress: { label: 'In Progress', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  completed:   { label: 'Completed',   className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+};
+
 export function SalesOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -47,26 +75,37 @@ export function SalesOrderDetail() {
   const { vendors, loading: vendorsLoading } = useVendors();
   const { createJob } = useJobs();
   const { toast } = useToast();
+
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [jobNumber, setJobNumber] = useState('');
   const [dueDate, setDueDate] = useState<Date | undefined>();
 
-  const loading = quotesLoading || vendorsLoading;
+  // Per-item link state
+  const [itemLinks, setItemLinks] = useState<Record<string, ItemLink>>({});
+  const [creatingJobFor, setCreatingJobFor] = useState<string | null>(null);
+  const [updatingStatusFor, setUpdatingStatusFor] = useState<string | null>(null);
 
+  const loading = quotesLoading || vendorsLoading;
   const quote = useMemo(() => quotes.find((q) => q.id === id), [quotes, id]);
 
   // Expand items by quantity so each unit becomes its own row/job
-  const expandedItems = useMemo(() => {
+  const expandedItems = useMemo<ExpandedItem[]>(() => {
     if (!quote) return [];
     return quote.items.flatMap((item) => {
       const count = Math.max(1, Math.round(item.quantity));
-      if (count <= 1) return [{ ...item }];
       return Array.from({ length: count }, (_, i) => ({
-        ...item,
-        id: `${item.id}-${i}`,
+        id: count > 1 ? `${item.id}-${i}` : item.id,
+        quoteItemId: item.id,
+        unitIndex: i,
+        linkKey: `${item.id}-${i}`,
+        itemName: item.itemName,
+        sku: item.sku,
         quantity: 1,
+        unitPrice: item.unitPrice,
         totalPrice: item.unitPrice,
+        notes: item.notes,
+        inventoryItemId: item.inventoryItemId,
       }));
     });
   }, [quote]);
@@ -76,21 +115,29 @@ export function SalesOrderDetail() {
     return vendors.find((v) => v.id === quote.vendorId) || null;
   }, [quote, vendors]);
 
-  const handleDelete = async () => {
+  // Fetch per-item job links from DB
+  const fetchItemLinks = useCallback(async () => {
     if (!quote) return;
-    setDeleting(true);
-    try {
-      const { error } = await supabase.from('quotes').delete().eq('id', quote.id);
-      if (error) throw error;
-      toast({ title: 'Sales order deleted' });
-      navigate('/sales-orders');
-    } catch (err) {
-      console.error('Error deleting sales order:', err);
-      toast({ title: 'Error deleting sales order', variant: 'destructive' });
-    } finally {
-      setDeleting(false);
+    const { data } = await supabase
+      .from('so_item_job_links' as any)
+      .select('*')
+      .eq('quote_id', quote.id);
+    if (data) {
+      const map: Record<string, ItemLink> = {};
+      (data as any[]).forEach((link) => {
+        map[`${link.quote_item_id}-${link.unit_index}`] = {
+          id: link.id,
+          jobId: link.job_id,
+          status: link.status,
+        };
+      });
+      setItemLinks(map);
     }
-  };
+  }, [quote]);
+
+  useEffect(() => {
+    fetchItemLinks();
+  }, [fetchItemLinks]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!quote) return;
@@ -107,7 +154,70 @@ export function SalesOrderDetail() {
     }
   };
 
-  const handleCreateJob = async () => {
+  // Create a job for one specific expanded item
+  const handleCreateJobForItem = async (item: ExpandedItem) => {
+    if (!quote) return;
+    setCreatingJobFor(item.linkKey);
+    try {
+      const job = await createJob(
+        item.itemName,
+        item.notes || undefined,
+        'open',
+        {
+          name: quote.vendorName || undefined,
+          email: vendor?.contact_email || undefined,
+          phone: vendor?.contact_phone || undefined,
+          address: vendor?.address || undefined,
+        },
+        dueDate ? dueDate.toISOString() : undefined,
+        jobNumber || undefined
+      );
+
+      if (!job) return;
+
+      // Add item to job
+      await supabase.from('job_items').insert({
+        job_id: job.id,
+        inventory_item_id: item.inventoryItemId || null,
+        item_name: item.itemName,
+        sku: item.sku || '',
+        quantity: 1,
+        unit_price: item.unitPrice,
+        notes: item.notes || null,
+      });
+
+      // Record the link with 'open' status
+      await (supabase.from('so_item_job_links' as any) as any).upsert(
+        {
+          quote_id: quote.id,
+          quote_item_id: item.quoteItemId,
+          unit_index: item.unitIndex,
+          job_id: job.id,
+          status: 'open',
+        },
+        { onConflict: 'quote_item_id,unit_index' }
+      );
+
+      // Link first-ever job to quote for the badge
+      if (!quote.convertedToJobId) {
+        await supabase
+          .from('quotes')
+          .update({ converted_to_job_id: job.id } as any)
+          .eq('id', quote.id);
+      }
+
+      toast({ title: 'Job created', description: item.itemName });
+      await fetchItemLinks();
+    } catch (err) {
+      console.error('Error creating job for item:', err);
+      toast({ title: 'Error creating job', variant: 'destructive' });
+    } finally {
+      setCreatingJobFor(null);
+    }
+  };
+
+  // Create jobs for ALL items at once (bulk)
+  const handleCreateAllJobs = async () => {
     if (!quote || expandedItems.length === 0) return;
     setCreating(true);
     try {
@@ -115,6 +225,8 @@ export function SalesOrderDetail() {
 
       for (let i = 0; i < expandedItems.length; i++) {
         const item = expandedItems[i];
+        // Skip items that already have a job
+        if (itemLinks[item.linkKey]?.jobId) continue;
 
         const job = await createJob(
           item.itemName,
@@ -127,43 +239,85 @@ export function SalesOrderDetail() {
             address: vendor?.address || undefined,
           },
           dueDate ? dueDate.toISOString() : undefined,
-          i === 0 ? (jobNumber || undefined) : undefined
+          i === 0 && !firstJobId ? (jobNumber || undefined) : undefined
         );
 
         if (!job) continue;
+        if (!firstJobId) firstJobId = job.id;
 
-        if (i === 0) firstJobId = job.id;
-
-        // Add only this item to this job
-        const { error } = await supabase.from('job_items').insert({
+        await supabase.from('job_items').insert({
           job_id: job.id,
           inventory_item_id: item.inventoryItemId || null,
           item_name: item.itemName,
           sku: item.sku || '',
-          quantity: item.quantity,
+          quantity: 1,
           unit_price: item.unitPrice,
           notes: item.notes || null,
         });
 
-        if (error) {
-          console.error('Error adding job item:', error);
-        }
+        await (supabase.from('so_item_job_links' as any) as any).upsert(
+          {
+            quote_id: quote.id,
+            quote_item_id: item.quoteItemId,
+            unit_index: item.unitIndex,
+            job_id: job.id,
+            status: 'open',
+          },
+          { onConflict: 'quote_item_id,unit_index' }
+        );
       }
 
-      // Link quote to first job for the "Job Created" badge
-      if (firstJobId) {
+      if (firstJobId && !quote.convertedToJobId) {
         await supabase
           .from('quotes')
           .update({ converted_to_job_id: firstJobId } as any)
           .eq('id', quote.id);
-
-        navigate(`/jobs/${firstJobId}`);
       }
+
+      await fetchItemLinks();
+      if (firstJobId) navigate(`/jobs/${firstJobId}`);
     } catch (err) {
       console.error('Error creating jobs:', err);
       toast({ title: 'Error creating jobs', variant: 'destructive' });
     } finally {
       setCreating(false);
+    }
+  };
+
+  // Update the status of a specific item link
+  const handleUpdateItemStatus = async (linkKey: string, newStatus: string) => {
+    const link = itemLinks[linkKey];
+    if (!link) return;
+    setUpdatingStatusFor(linkKey);
+    try {
+      await (supabase.from('so_item_job_links' as any) as any)
+        .update({ status: newStatus })
+        .eq('id', link.id);
+      setItemLinks((prev) => ({
+        ...prev,
+        [linkKey]: { ...prev[linkKey], status: newStatus },
+      }));
+    } catch (err) {
+      console.error('Error updating item status:', err);
+      toast({ title: 'Error updating status', variant: 'destructive' });
+    } finally {
+      setUpdatingStatusFor(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!quote) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from('quotes').delete().eq('id', quote.id);
+      if (error) throw error;
+      toast({ title: 'Sales order deleted' });
+      navigate('/sales-orders');
+    } catch (err) {
+      console.error('Error deleting sales order:', err);
+      toast({ title: 'Error deleting sales order', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -259,9 +413,9 @@ export function SalesOrderDetail() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleCreateJob}>
+              <DropdownMenuItem onClick={handleCreateAllJobs}>
                 <Briefcase className="h-4 w-4 mr-2" />
-                Create Job
+                Create All Jobs
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
                 <Clock className="h-4 w-4 mr-2" />
@@ -334,34 +488,107 @@ export function SalesOrderDetail() {
           <CardTitle className="text-lg">Items</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-lg">
+          <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Item Name</TableHead>
                   <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
                   <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Job</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expandedItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <span>{item.itemName}</span>
-                        {item.notes && (
-                          <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
+                {expandedItems.map((item) => {
+                  const link = itemLinks[item.linkKey];
+                  const statusKey = link?.status ?? 'pending';
+                  const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
+                  const isCreatingThis = creatingJobFor === item.linkKey;
+                  const isUpdatingThis = updatingStatusFor === item.linkKey;
+
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <span>{item.itemName}</span>
+                          {item.notes && (
+                            <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{item.sku || '—'}</TableCell>
+                      <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
+
+                      {/* Per-item status */}
+                      <TableCell className="text-center">
+                        {link ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                disabled={isUpdatingThis}
+                                className={cn(
+                                  'inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-opacity cursor-pointer',
+                                  statusCfg.className,
+                                  isUpdatingThis && 'opacity-50'
+                                )}
+                              >
+                                {isUpdatingThis && <Loader2 className="h-3 w-3 animate-spin" />}
+                                {statusCfg.label}
+                                <ChevronDown className="h-3 w-3 ml-0.5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="center">
+                              {Object.entries(STATUS_CONFIG)
+                                .filter(([k]) => k !== 'pending')
+                                .map(([key, cfg]) => (
+                                  <DropdownMenuItem
+                                    key={key}
+                                    onClick={() => handleUpdateItemStatus(item.linkKey, key)}
+                                  >
+                                    <span className={cn('inline-block w-2 h-2 rounded-full mr-2', cfg.className)} />
+                                    {cfg.label}
+                                  </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          <span className={cn('inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full', statusCfg.className)}>
+                            {statusCfg.label}
+                          </span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{item.sku || '—'}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${item.totalPrice.toFixed(2)}</TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+
+                      {/* Per-item create job / view job */}
+                      <TableCell className="text-center">
+                        {link?.jobId ? (
+                          <Link
+                            to={`/jobs/${link.jobId}`}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                          >
+                            <Briefcase className="h-3.5 w-3.5" />
+                            View Job
+                          </Link>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs px-2"
+                            disabled={isCreatingThis || !!creatingJobFor}
+                            onClick={() => handleCreateJobForItem(item)}
+                          >
+                            {isCreatingThis ? (
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            ) : (
+                              <Plus className="h-3 w-3 mr-1" />
+                            )}
+                            Create Job
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
