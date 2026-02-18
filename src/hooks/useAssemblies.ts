@@ -154,3 +154,48 @@ export function useAssemblyItems(assemblyId: string | null) {
 
   return { items, loading, addItem, updateItem, removeItem };
 }
+
+export interface AssemblySummary {
+  totalCost: number;
+  itemCount: number;
+  hasCustomItems: boolean;
+}
+
+export function useAssemblySummaries(assemblyIds: string[]) {
+  const { user } = useAuth();
+  const [summaries, setSummaries] = useState<Map<string, AssemblySummary>>(new Map());
+  const [loading, setLoading] = useState(false);
+
+  const fetchSummaries = async () => {
+    if (!user || assemblyIds.length === 0) { setSummaries(new Map()); return; }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('assembly_items')
+      .select(`
+        assembly_id,
+        quantity,
+        inventory_item_id,
+        inventory_items ( cost )
+      `)
+      .in('assembly_id', assemblyIds);
+
+    if (!error && data) {
+      const map = new Map<string, AssemblySummary>();
+      for (const row of data as any[]) {
+        const existing = map.get(row.assembly_id) || { totalCost: 0, itemCount: 0, hasCustomItems: false };
+        const cost = row.inventory_items?.cost ?? 0;
+        existing.totalCost += row.quantity * cost;
+        existing.itemCount += 1;
+        if (!row.inventory_item_id) existing.hasCustomItems = true;
+        map.set(row.assembly_id, existing);
+      }
+      setSummaries(map);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchSummaries(); }, [assemblyIds.join(','), user?.id]);
+
+  return { summaries, loading, refetch: fetchSummaries };
+}
+

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X } from 'lucide-react';
-import { useAssemblies, useAssemblyItems } from '@/hooks/useAssemblies';
+import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
+import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -187,13 +188,17 @@ function AddItemForm({
 function AssemblyDetail({
   assembly,
   inventoryItems,
+  summary,
   onDelete,
   onUpdate,
+  onItemsChanged,
 }: {
   assembly: Assembly;
   inventoryItems: { id: string; name: string; sku: string }[];
+  summary?: AssemblySummary;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null }) => Promise<void>;
+  onItemsChanged?: () => void;
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -257,6 +262,16 @@ function AssemblyDetail({
               {assembly.description && (
                 <p className="text-sm text-muted-foreground mt-1">{assembly.description}</p>
               )}
+              {summary && summary.itemCount > 0 && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{summary.itemCount} item{summary.itemCount !== 1 ? 's' : ''}</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-sm font-semibold text-foreground">{formatCurrency(summary.totalCost)}</span>
+                  {summary.hasCustomItems && (
+                    <span className="text-xs text-muted-foreground italic">(custom items excluded from cost)</span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex gap-2 shrink-0">
               <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); }}>
@@ -291,7 +306,7 @@ function AssemblyDetail({
         {showAddForm && (
           <AddItemForm
             inventoryItems={inventoryItems}
-            onAdd={addItem}
+            onAdd={async (item) => { const ok = await addItem(item); if (ok) onItemsChanged?.(); return ok; }}
             onCancel={() => setShowAddForm(false)}
           />
         )}
@@ -368,7 +383,7 @@ function AssemblyDetail({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { removeItem(deleteItemId!); setDeleteItemId(null); }}
+              onClick={() => { removeItem(deleteItemId!); setDeleteItemId(null); onItemsChanged?.(); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Remove
@@ -383,6 +398,7 @@ function AssemblyDetail({
 export function Assemblies() {
   const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly } = useAssemblies();
   const { allItems: inventoryItems } = useInventory();
+  const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -411,6 +427,7 @@ export function Assemblies() {
       setCreateOpen(false);
       setNewName('');
       setNewDesc('');
+      setTimeout(refetchSummaries, 300);
     }
   };
 
@@ -452,23 +469,31 @@ export function Assemblies() {
               <p className="text-xs">No assemblies yet</p>
             </div>
           ) : (
-            filtered.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => setSelectedId(a.id)}
-                className={cn(
-                  'w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors',
-                  selectedId === a.id
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                    : 'hover:bg-muted/50 text-foreground'
-                )}
-              >
-                <p className="font-medium truncate">{a.name}</p>
-                {a.description && (
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>
-                )}
-              </button>
-            ))
+            filtered.map((a) => {
+              const s = summaries.get(a.id);
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => setSelectedId(a.id)}
+                  className={cn(
+                    'w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors',
+                    selectedId === a.id
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      : 'hover:bg-muted/50 text-foreground'
+                  )}
+                >
+                  <p className="font-medium truncate">{a.name}</p>
+                  {a.description && (
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>
+                  )}
+                  {s && s.itemCount > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span>
+                    </p>
+                  )}
+                </button>
+              );
+            })
           )}
         </div>
       </div>
@@ -480,8 +505,10 @@ export function Assemblies() {
             key={selectedAssembly.id}
             assembly={selectedAssembly}
             inventoryItems={sortedInventory}
+            summary={summaries.get(selectedAssembly.id)}
             onDelete={(id) => setDeleteId(id)}
             onUpdate={updateAssembly}
+            onItemsChanged={refetchSummaries}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
