@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare } from 'lucide-react';
 import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
 import { formatCurrency } from '@/lib/utils';
@@ -197,7 +197,7 @@ function AssemblyDetail({
   inventoryItems: { id: string; name: string; sku: string }[];
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number }) => Promise<void>;
+  onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
   onItemsChanged?: () => void;
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
@@ -213,6 +213,9 @@ function AssemblyDetail({
   const [editingPrice, setEditingPrice] = useState(false);
   const [priceInput, setPriceInput] = useState(String(assembly.selling_price ?? 0));
   const [savingPrice, setSavingPrice] = useState(false);
+  const [editingStatusNotes, setEditingStatusNotes] = useState(false);
+  const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
+  const [savingStatus, setSavingStatus] = useState(false);
 
   const handleSaveMeta = async () => {
     setSavingMeta(true);
@@ -230,6 +233,23 @@ function AssemblyDetail({
     await onUpdate(assembly.id, { selling_price: parseFloat(priceInput) || 0 });
     setSavingPrice(false);
     setEditingPrice(false);
+  };
+
+  const isFinished = assembly.status === 'finished';
+
+  const handleToggleStatus = async () => {
+    setSavingStatus(true);
+    const newStatus = isFinished ? 'not_finished' : 'finished';
+    await onUpdate(assembly.id, { status: newStatus, status_notes: newStatus === 'finished' ? null : assembly.status_notes });
+    setSavingStatus(false);
+    setEditingStatusNotes(false);
+  };
+
+  const handleSaveStatusNotes = async () => {
+    setSavingStatus(true);
+    await onUpdate(assembly.id, { status_notes: statusNotesInput.trim() || null });
+    setSavingStatus(false);
+    setEditingStatusNotes(false);
   };
 
   const startEditQty = (item: { id: string; quantity: number }) => {
@@ -359,7 +379,73 @@ function AssemblyDetail({
         )}
       </div>
 
+      {/* Status bar */}
+      <div className={`px-6 py-3 border-b flex flex-col gap-2 ${isFinished ? 'bg-primary/10' : 'bg-muted/60'}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            {isFinished ? (
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+            ) : (
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className={`text-sm font-medium ${isFinished ? 'text-primary' : 'text-foreground'}`}>
+              {isFinished ? 'Finished' : 'Not Finished'}
+            </span>
+            {!isFinished && assembly.status_notes && !editingStatusNotes && (
+              <span className="text-xs text-muted-foreground truncate max-w-[200px]">{assembly.status_notes}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!isFinished && !editingStatusNotes && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                onClick={() => { setStatusNotesInput(assembly.status_notes || ''); setEditingStatusNotes(true); }}
+              >
+                <MessageSquare className="h-3 w-3" />
+                {assembly.status_notes ? 'Edit note' : 'Add note'}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant={isFinished ? 'outline' : 'default'}
+              className="h-7 text-xs gap-1"
+              disabled={savingStatus}
+              onClick={handleToggleStatus}
+            >
+              {isFinished ? (
+                <><Clock className="h-3 w-3" />Mark Not Finished</>
+              ) : (
+                <><CheckCircle2 className="h-3 w-3" />Mark Finished</>
+              )}
+            </Button>
+          </div>
+        </div>
+        {editingStatusNotes && (
+          <div className="flex gap-2 items-start">
+            <Textarea
+              value={statusNotesInput}
+              onChange={(e) => setStatusNotesInput(e.target.value)}
+              placeholder="Why is this not finished? (e.g. waiting on parts, needs revision...)"
+              rows={2}
+              className="text-sm flex-1"
+              autoFocus
+            />
+            <div className="flex flex-col gap-1">
+              <Button size="sm" className="h-7" onClick={handleSaveStatusNotes} disabled={savingStatus}>
+                <Check className="h-3 w-3" />
+              </Button>
+              <Button size="sm" variant="outline" className="h-7" onClick={() => setEditingStatusNotes(false)}>
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Items list */}
+
       <div className="flex-1 overflow-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
@@ -551,9 +637,19 @@ export function Assemblies() {
                       : 'hover:bg-muted/50 text-foreground'
                   )}
                 >
-                  <p className="font-medium truncate">{a.name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-medium truncate flex-1">{a.name}</p>
+                    {a.status === 'finished' ? (
+                      <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+                    ) : (
+                      <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                    )}
+                  </div>
                   {a.description && (
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>
+                  )}
+                  {!a.description && a.status === 'not_finished' && a.status_notes && (
+                    <p className="text-xs text-muted-foreground truncate mt-0.5 italic">{a.status_notes}</p>
                   )}
                   {(s && s.itemCount > 0) || a.selling_price > 0 ? (
                     <p className="text-xs text-muted-foreground mt-0.5">
