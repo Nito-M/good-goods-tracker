@@ -6,7 +6,18 @@ import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -37,6 +48,7 @@ export function SalesOrderDetail() {
   const { createJob } = useJobs();
   const { toast } = useToast();
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [jobNumber, setJobNumber] = useState('');
   const [dueDate, setDueDate] = useState<Date | undefined>();
 
@@ -48,6 +60,22 @@ export function SalesOrderDetail() {
     if (!quote?.vendorId) return null;
     return vendors.find((v) => v.id === quote.vendorId) || null;
   }, [quote, vendors]);
+
+  const handleDelete = async () => {
+    if (!quote) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from('quotes').delete().eq('id', quote.id);
+      if (error) throw error;
+      toast({ title: 'Sales order deleted' });
+      navigate('/sales-orders');
+    } catch (err) {
+      console.error('Error deleting sales order:', err);
+      toast({ title: 'Error deleting sales order', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleStatusChange = async (newStatus: string) => {
     if (!quote) return;
@@ -230,6 +258,27 @@ export function SalesOrderDetail() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 text-destructive hover:text-destructive" disabled={deleting}>
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Sales Order?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete sales order <strong>{quote.quoteNumber}</strong>. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
