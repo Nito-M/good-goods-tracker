@@ -1,78 +1,71 @@
 
-## Trailer Assemblies Page
+## Assembly Summary with Total Price
 
-### What This Feature Does
+### What's Changing
 
-A new top-level section called **Trailer Assemblies** will be added to the sidebar. Users can:
-- Create named assemblies (e.g. "16ft Flatbed Trailer", "Dump Trailer Kit")
-- Add inventory items to each assembly with quantities
-- View the full parts list per assembly
+Each assembly card in the left panel will show a summary including:
+- Assembly name
+- Description (if any)
+- Item count
+- Total cost of all items (quantity × unit cost from inventory)
 
-Think of it like a "bill of materials" — a template that lists which items and how many of each are needed to build a specific trailer type.
+The selected assembly's right panel header will also display the total prominently.
 
----
+### How the Total Is Calculated
 
-### How It Works
+Each `assembly_item` links to an `inventory_item` via `inventory_item_id`. The `inventory_items` table has a `cost` column. The total is:
 
-An **assembly** is a named template. Each assembly has **assembly items** — references to inventory items with a quantity. This is completely separate from Jobs; assemblies are reusable templates, not one-off work orders.
-
----
-
-### Database Changes
-
-Two new tables will be created:
-
-**`assemblies`** — stores each named assembly
-- `id`, `user_id`, `name`, `description`, `created_at`, `updated_at`
-
-**`assembly_items`** — stores items within each assembly
-- `id`, `assembly_id`, `inventory_item_id` (nullable for custom items), `item_name`, `sku`, `quantity`, `notes`, `created_at`
-
-RLS policies will mirror the existing pattern: users can CRUD their own records, and org members can view org records.
-
----
-
-### Files to Create / Modify
-
-**New Files:**
-- `src/hooks/useAssemblies.ts` — data hooks for assemblies and assembly items (fetch, create, update, delete)
-- `src/pages/Assemblies.tsx` — the main page with a two-panel layout:
-  - Left panel: list of assemblies with a create button
-  - Right panel: items in the selected assembly with add/remove/edit capability, and a searchable item picker
-
-**Modified Files:**
-- `src/components/AppSidebar.tsx` — add "Trailer Assemblies" as a new top-level nav item with a `Layers` icon
-- `src/App.tsx` — add a route `/assemblies` pointing to `<Assemblies />`
-- `src/hooks/usePagePermissions.ts` — register `assemblies` page key with its route
-- `src/components/UsersSettings.tsx` — add `assemblies` to the `PAGE_KEYS` list so admins can toggle permission
-
----
-
-### UI Layout
-
-The Assemblies page follows the same two-panel master/detail pattern as the Jobs page:
-
-```text
-+-----------------------------+------------------------------------------+
-| Assemblies                  | [Selected Assembly Name]                 |
-|                             |                                          |
-| [+ New Assembly]  [Search]  | Description...                           |
-|                             |                                          |
-| > 16ft Flatbed Trailer      | [+ Add Item]  (searchable combobox)      |
-|   Dump Trailer Kit          |                                          |
-|   Gooseneck Standard        | Item Name       SKU    Qty   [Remove]    |
-|                             | Axle Hub 5-bolt  AH-01   2              |
-|                             | Coupler 2-5/16   CP-02   1              |
-+-----------------------------+------------------------------------------+
+```
+Total = SUM(assembly_item.quantity × inventory_item.cost)
 ```
 
-Items are added with the same searchable combobox pattern already used in the PO page (Popover + Command + CommandInput), so the UX is consistent.
+For custom items (where `inventory_item_id` is null), no cost is added since there's no inventory record to pull cost from. These will be excluded from the total with a note shown if any custom items exist.
 
----
+### Data Approach
+
+Rather than fetching all assembly items individually for every assembly in the list, a single efficient query will be added to `useAssemblies` that fetches all assembly items with their joined inventory cost in one go. This avoids N+1 queries and keeps the sidebar fast.
+
+The query will look like:
+```sql
+SELECT assembly_id, SUM(ai.quantity * COALESCE(ii.cost, 0)) as total_cost, COUNT(*) as item_count
+FROM assembly_items ai
+LEFT JOIN inventory_items ii ON ai.inventory_item_id = ii.id
+GROUP BY assembly_id
+```
+
+This will be done client-side using a single Supabase select with a join.
+
+### Files to Modify
+
+**`src/hooks/useAssemblies.ts`**
+- Add a new `useAssemblySummaries` hook that fetches all assembly items joined with their inventory cost in a single query
+- Returns a `Map<assemblyId, { totalCost: number; itemCount: number }>` for O(1) lookup
+
+**`src/pages/Assemblies.tsx`**
+- Use `useAssemblySummaries` in the main `Assemblies` component
+- Update the left panel assembly list buttons to show item count and total cost badge
+- Update the right panel `AssemblyDetail` header to show total cost prominently (using `formatCurrency` from `src/lib/utils.ts`)
+- Pass the summary data down as a prop
+
+### UI Changes
+
+Left panel — each assembly entry:
+```
+> 16ft Flatbed Trailer
+  Standard flatbed build        ← description
+  12 items · $4,823.50          ← item count + total cost
+```
+
+Right panel header — selected assembly:
+```
+[Assembly Name]          [Edit] [Delete]
+Description text...
+                  Total: $4,823.50  (12 items)
+```
 
 ### Technical Notes
 
-- No migration needed for `assemblies` — a new migration SQL file will be created
-- The `assembly_items.inventory_item_id` is nullable to allow custom (non-inventory) items, matching the pattern used in `job_items`
-- The item search combobox reuses the same Popover/Command pattern added to `AddPurchaseOrderDialog.tsx` — consistent UX, no new dependencies
-- The page key `'assemblies'` integrates into the existing permission system, so admins can restrict access per-user if needed
+- Uses `formatCurrency` from `src/lib/utils.ts` for consistent 2–5 decimal display
+- The join uses `inventory_item_id` which is nullable; a `LEFT JOIN` ensures custom items still appear in the count but contribute $0 to cost
+- No database changes required — all existing columns are already available
+- Summary data re-fetches automatically when assemblies refresh
