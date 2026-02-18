@@ -8,6 +8,7 @@ import {
   Minus,
   Receipt,
   Search,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,6 +71,22 @@ interface CartItem {
 
 import { useCompanies } from '@/hooks/useCompanies';
 import { CompanySelector } from '@/components/CompanySelector';
+import { useAssemblies } from '@/hooks/useAssemblies';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 
 export function Quotes() {
   const { signOut } = useAuth();
@@ -80,6 +97,7 @@ export function Quotes() {
   const { sales } = useSales();
   const { orders: purchaseOrders } = usePurchaseOrders();
   const { companies } = useCompanies();
+  const { assemblies } = useAssemblies();
 
   // Build lookup maps for linked documents
   const invoiceNumberMap = useMemo(() => {
@@ -147,6 +165,7 @@ export function Quotes() {
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
@@ -232,6 +251,22 @@ export function Quotes() {
       unitCost: 0,
       notes: '',
     }]);
+  };
+
+  const addAssemblyToCart = (assembly: { id: string; name: string; description: string | null; selling_price: number }) => {
+    const cartId = `assembly-${assembly.id}-${Date.now()}`;
+    setCart((prev) => [...prev, {
+      id: cartId,
+      inventoryItemId: null,
+      itemName: assembly.name,
+      sku: 'ASSEMBLY',
+      quantity: 1,
+      quantityUnit: 'pcs' as QuantityUnit,
+      unitPrice: assembly.selling_price,
+      unitCost: 0,
+      notes: assembly.description || '',
+    }]);
+    setShowAssemblyPicker(false);
   };
 
   const updateCartItem = (itemId: string, updates: Partial<CartItem>) => {
@@ -493,12 +528,18 @@ export function Quotes() {
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                       <CardTitle>Quote Items ({cart.length} items)</CardTitle>
-                      <CardDescription>Add items from inventory or create custom items</CardDescription>
+                      <CardDescription>Add items from inventory, assemblies, or create custom items</CardDescription>
                     </div>
-                    <Button variant="outline" size="sm" onClick={addCustomItem}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Custom Item
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setShowAssemblyPicker(true)}>
+                        <Layers className="h-4 w-4 mr-1" />
+                        Assembly
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={addCustomItem}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Custom Item
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {cart.length === 0 ? (
@@ -630,7 +671,7 @@ export function Quotes() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Quote Number <span className="text-sky-400 font-normal">(optional)</span></Label>
+                      <Label>Quote Number <span className="text-primary/70 font-normal">(optional)</span></Label>
                       <Input
                         placeholder="Auto-generated if left empty"
                         value={customQuoteNumber}
@@ -867,6 +908,56 @@ export function Quotes() {
           }}
         />
       )}
+
+      {/* Assembly Picker Dialog */}
+      <Dialog open={showAssemblyPicker} onOpenChange={setShowAssemblyPicker}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5" />
+              Add Assembly to Quote
+            </DialogTitle>
+            <DialogDescription>
+              Select an assembly to add as a line item. The selling price (MSRP) will be used as the unit price.
+            </DialogDescription>
+          </DialogHeader>
+          {assemblies.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8 text-sm">
+              No assemblies found. Create assemblies first from the Assemblies page.
+            </p>
+          ) : (
+            <Command>
+              <CommandInput placeholder="Search assemblies..." />
+              <CommandList className="max-h-80">
+                <CommandEmpty>No assemblies found.</CommandEmpty>
+                <CommandGroup>
+                  {assemblies.map((assembly) => (
+                    <CommandItem
+                      key={assembly.id}
+                      value={`${assembly.name} ${assembly.description || ''}`}
+                      onSelect={() => addAssemblyToCart(assembly)}
+                      className="flex flex-col items-start gap-1 py-3 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-medium">{assembly.name}</span>
+                        <span className="text-sm font-semibold text-primary ml-4">
+                          {assembly.selling_price > 0
+                            ? `MSRP: ${formatCurrency(assembly.selling_price)}`
+                            : <span className="text-muted-foreground font-normal text-xs">No MSRP set</span>
+                          }
+                        </span>
+                      </div>
+                      {assembly.description && (
+                        <span className="text-xs text-muted-foreground line-clamp-2">{assembly.description}</span>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
