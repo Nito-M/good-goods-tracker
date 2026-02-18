@@ -9,6 +9,8 @@ export interface Assembly {
   name: string;
   description: string | null;
   selling_price: number;
+  status: string;
+  status_notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -40,7 +42,13 @@ export function useAssemblies() {
     if (error) {
       console.error('Error fetching assemblies:', error);
     } else {
-      setAssemblies((data as Assembly[]) || []);
+      setAssemblies(
+        (data || []).map((d: any) => ({
+          ...d,
+          status: d.status ?? 'not_finished',
+          status_notes: d.status_notes ?? null,
+        })) as Assembly[]
+      );
     }
     setLoading(false);
   };
@@ -64,7 +72,7 @@ export function useAssemblies() {
     return data as Assembly;
   };
 
-  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number }) => {
+  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => {
     const { error } = await supabase
       .from('assemblies')
       .update(updates)
