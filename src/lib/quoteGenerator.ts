@@ -185,6 +185,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
 
+    let isFirstItem = true;
     quote.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, 55);
       const rowHeight = Math.max(nameLines.length, 1) * LINE_HEIGHT;
@@ -197,13 +198,14 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
         itemTotalHeight += noteLines.length * NOTE_LINE_HEIGHT + 2;
       }
 
-      // Page break BEFORE the item if it won't fit
-      if (y + itemTotalHeight > safeBottom) {
+      // Page break BEFORE the item if it won't fit (skip for first item to guarantee at least one item on page 1)
+      if (!isFirstItem && y + itemTotalHeight > safeBottom) {
         y = addPageWithHeader(true, tableX);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
       }
+      isFirstItem = false;
 
       doc.text(nameLines, tableX + 2, y);
       doc.text(item.sku, tableX + 60, y);
