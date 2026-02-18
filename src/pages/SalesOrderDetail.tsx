@@ -285,7 +285,14 @@ export function SalesOrderDetail() {
               <TableBody>
                 {quote.items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.itemName}</TableCell>
+                    <TableCell className="font-medium">
+                      <div>
+                        <span>{item.itemName}</span>
+                        {item.notes && (
+                          <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{item.sku || '—'}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
                     <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
