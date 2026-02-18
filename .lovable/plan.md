@@ -1,70 +1,78 @@
 
-## Allow Item Search When Adding Items to a Purchase Order
+## Trailer Assemblies Page
 
-### What's Changing
+### What This Feature Does
 
-There are two places where items are added to a PO:
-1. **`AddPurchaseOrder.tsx`** — the full-page PO creation form (used via `/purchase-orders/new`)
-2. **`AddPurchaseOrderDialog.tsx`** — the dialog used from the PO list page
+A new top-level section called **Trailer Assemblies** will be added to the sidebar. Users can:
+- Create named assemblies (e.g. "16ft Flatbed Trailer", "Dump Trailer Kit")
+- Add inventory items to each assembly with quantities
+- View the full parts list per assembly
 
-Both need search-enabled item selection.
+Think of it like a "bill of materials" — a template that lists which items and how many of each are needed to build a specific trailer type.
 
 ---
 
-### Problem 1: AddPurchaseOrder.tsx (full page)
+### How It Works
 
-An `ItemSearchCombobox` already exists here with a `CommandInput` search box. However, `filteredInventoryItems` is defined as:
+An **assembly** is a named template. Each assembly has **assembly items** — references to inventory items with a quantity. This is completely separate from Jobs; assemblies are reusable templates, not one-off work orders.
 
-```js
-const filteredInventoryItems = vendorId && vendorId !== 'none'
-  ? inventoryItems.filter(item => vendorPrices.some(vp => vp.itemId === item.id))
-  : [];
+---
+
+### Database Changes
+
+Two new tables will be created:
+
+**`assemblies`** — stores each named assembly
+- `id`, `user_id`, `name`, `description`, `created_at`, `updated_at`
+
+**`assembly_items`** — stores items within each assembly
+- `id`, `assembly_id`, `inventory_item_id` (nullable for custom items), `item_name`, `sku`, `quantity`, `notes`, `created_at`
+
+RLS policies will mirror the existing pattern: users can CRUD their own records, and org members can view org records.
+
+---
+
+### Files to Create / Modify
+
+**New Files:**
+- `src/hooks/useAssemblies.ts` — data hooks for assemblies and assembly items (fetch, create, update, delete)
+- `src/pages/Assemblies.tsx` — the main page with a two-panel layout:
+  - Left panel: list of assemblies with a create button
+  - Right panel: items in the selected assembly with add/remove/edit capability, and a searchable item picker
+
+**Modified Files:**
+- `src/components/AppSidebar.tsx` — add "Trailer Assemblies" as a new top-level nav item with a `Layers` icon
+- `src/App.tsx` — add a route `/assemblies` pointing to `<Assemblies />`
+- `src/hooks/usePagePermissions.ts` — register `assemblies` page key with its route
+- `src/components/UsersSettings.tsx` — add `assemblies` to the `PAGE_KEYS` list so admins can toggle permission
+
+---
+
+### UI Layout
+
+The Assemblies page follows the same two-panel master/detail pattern as the Jobs page:
+
+```text
++-----------------------------+------------------------------------------+
+| Assemblies                  | [Selected Assembly Name]                 |
+|                             |                                          |
+| [+ New Assembly]  [Search]  | Description...                           |
+|                             |                                          |
+| > 16ft Flatbed Trailer      | [+ Add Item]  (searchable combobox)      |
+|   Dump Trailer Kit          |                                          |
+|   Gooseneck Standard        | Item Name       SKU    Qty   [Remove]    |
+|                             | Axle Hub 5-bolt  AH-01   2              |
+|                             | Coupler 2-5/16   CP-02   1              |
++-----------------------------+------------------------------------------+
 ```
 
-This means only items that have a vendor-specific price set will appear in the combobox. If a vendor is selected but an item has no vendor price, it is invisible — the combobox shows nothing to search.
-
-**Fix**: Show all inventory items in the combobox regardless of vendor pricing. Vendor pricing is still applied automatically when a match exists — but all items become searchable and selectable.
-
-```js
-// Before:
-const filteredInventoryItems = vendorId && vendorId !== 'none'
-  ? inventoryItems.filter(item => vendorPrices.some(vp => vp.itemId === item.id))
-  : [];
-
-// After:
-const filteredInventoryItems = vendorId && vendorId !== 'none'
-  ? [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name))
-  : [];
-```
-
-This keeps the vendor-price auto-fill logic intact (it still checks `vendorPrices` on select), but all items become visible and searchable.
+Items are added with the same searchable combobox pattern already used in the PO page (Popover + Command + CommandInput), so the UX is consistent.
 
 ---
 
-### Problem 2: AddPurchaseOrderDialog.tsx (dialog)
+### Technical Notes
 
-The dialog uses a plain `<Select>` dropdown for item selection — no search. With many inventory items, this is unusable.
-
-**Fix**: Replace the `<Select>` with the same `ItemSearchCombobox` pattern (Popover + Command + CommandInput) that the full page already uses. This adds a searchable combobox with:
-- Type-to-filter by item name or SKU
-- "Custom Item" option
-- All inventory items listed (sorted A-Z), not restricted to vendor-priced ones
-- Vendor price auto-applied when an item is selected and a match exists
-
----
-
-### Files Changed
-
-**`src/pages/AddPurchaseOrder.tsx`**
-- Change `filteredInventoryItems` to include all inventory items (not just vendor-priced ones), still sorted A-Z
-- Remove the hint text "Select a vendor to see available items with pricing" (since all items now show)
-
-**`src/components/AddPurchaseOrderDialog.tsx`**
-- Add imports: `Popover`, `PopoverContent`, `PopoverTrigger`, `Command`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandItem`, `CommandGroup`, `ChevronsUpDown`, `Check`, `cn`
-- Add an `ItemSearchCombobox` component at the top of the file
-- Replace the `<Select>` item picker in each line item with the new `ItemSearchCombobox`
-- Change `filteredInventoryItems` to include all inventory items sorted A-Z
-
----
-
-### No Database Changes Required
+- No migration needed for `assemblies` — a new migration SQL file will be created
+- The `assembly_items.inventory_item_id` is nullable to allow custom (non-inventory) items, matching the pattern used in `job_items`
+- The item search combobox reuses the same Popover/Command pattern added to `AddPurchaseOrderDialog.tsx` — consistent UX, no new dependencies
+- The page key `'assemblies'` integrates into the existing permission system, so admins can restrict access per-user if needed
