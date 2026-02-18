@@ -64,11 +64,11 @@ export const inventoryItemSchema = z.object({
   name: z.string().min(1, 'Name is required').max(500, 'Name must be less than 500 characters'),
   sku: z.string().min(1, 'SKU is required').max(100, 'SKU must be less than 100 characters'),
   category: z.string().min(1, 'Category is required').max(100, 'Category must be less than 100 characters'),
-  quantity: z.number().int('Quantity must be a whole number').min(0, 'Quantity cannot be negative'),
+  quantity: z.number().min(0, 'Quantity cannot be negative'),
   quantityUnit: z.enum(['pcs', 'ft', 'm', 'yd', 'in'], { errorMap: () => ({ message: 'Invalid quantity unit' }) }).optional().default('pcs'),
   price: z.number().min(0, 'Price cannot be negative'),
   cost: z.number().min(0, 'Cost cannot be negative'),
-  minStock: z.number().int('Min stock must be a whole number').min(0, 'Min stock cannot be negative'),
+  minStock: z.number().min(0, 'Min stock cannot be negative'),
   weight: z.number().min(0, 'Weight cannot be negative'),
   weightUnit: z.enum(['lb', 'kg'], { errorMap: () => ({ message: 'Invalid weight unit' }) }),
   dimensions: z.object({
@@ -87,7 +87,7 @@ export type InventoryItemInput = z.infer<typeof inventoryItemSchema>;
 export const purchaseOrderItemSchema = z.object({
   sku: z.string().min(1, 'SKU is required').max(100),
   itemName: z.string().min(1, 'Item name is required').max(500),
-  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  quantity: z.number().min(1, 'Quantity must be at least 1'),
   unitCost: z.number().min(0, 'Unit cost cannot be negative').optional(),
 });
 
@@ -108,7 +108,7 @@ export const saleItemSchema = z.object({
   inventoryItemId: z.string().uuid('Invalid inventory item'),
   itemName: z.string().min(1).max(500),
   sku: z.string().min(1).max(100),
-  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+  quantity: z.number().min(1, 'Quantity must be at least 1'),
   unitPrice: z.number().min(0, 'Price cannot be negative'),
   unitCost: z.number().min(0, 'Cost cannot be negative'),
 });
