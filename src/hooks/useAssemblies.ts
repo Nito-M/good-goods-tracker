@@ -8,6 +8,7 @@ export interface Assembly {
   user_id: string;
   name: string;
   description: string | null;
+  selling_price: number;
   created_at: string;
   updated_at: string;
 }
@@ -63,7 +64,7 @@ export function useAssemblies() {
     return data as Assembly;
   };
 
-  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null }) => {
+  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number }) => {
     const { error } = await supabase
       .from('assemblies')
       .update(updates)
