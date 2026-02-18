@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InventoryItem, Dimensions, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
-import { ArrowLeft, Trash2, Save, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Trash2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ItemVendorPricing } from '@/components/ItemVendorPricing';
 import { ItemTagSelector } from '@/components/ItemTagSelector';
-import { MultiImageUploader } from '@/components/MultiImageUploader';
+import { MultiImageUploader, StagedImage } from '@/components/MultiImageUploader';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrices';
 import { useItemImages } from '@/hooks/useItemImages';
@@ -44,7 +44,7 @@ interface VendorPriceEntry {
 
 interface AddItemPageProps {
   categories: string[];
-  onSave: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onSave: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
   onUpdate?: (id: string, updates: Partial<InventoryItem>) => void;
   onDelete?: (id: string) => void;
   items: InventoryItem[];
@@ -94,6 +94,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [isSavingVendors, setIsSavingVendors] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  // Staged images for new item creation (before saving)
+  const [stagedImages, setStagedImages] = useState<StagedImage[]>([]);
   useEffect(() => {
     if (editItem) {
       setName(editItem.name);
@@ -141,7 +143,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
     }
@@ -155,6 +156,34 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       fileInputRef.current.value = '';
     }
   };
+
+  // Staging mode handlers for new item creation
+  const handleStageFiles = useCallback((files: File[]) => {
+    setStagedImages(prev => {
+      const newStaged = files.map((file, i) => ({
+        id: crypto.randomUUID(),
+        image_url: URL.createObjectURL(file),
+        is_primary: prev.length === 0 && i === 0,
+        file,
+      }));
+      return [...prev, ...newStaged];
+    });
+  }, []);
+
+  const handleRemoveStaged = useCallback((id: string) => {
+    setStagedImages(prev => {
+      const filtered = prev.filter(img => img.id !== id);
+      // If we removed the primary, make the first one primary
+      if (filtered.length > 0 && !filtered.some(img => img.is_primary)) {
+        return filtered.map((img, i) => ({ ...img, is_primary: i === 0 }));
+      }
+      return filtered;
+    });
+  }, []);
+
+  const handleSetStagedPrimary = useCallback((id: string) => {
+    setStagedImages(prev => prev.map(img => ({ ...img, is_primary: img.id === id })));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,13 +242,55 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       
       toast({ title: 'Item updated successfully' });
     } else {
-      onSave(itemData);
-      // Note: For new items, vendor prices will be added after item is created
-      // This would require returning the new item ID from onSave
+      // Two-phase save: create item first, then upload staged images
+      const newItemId = await onSave(itemData);
+      
+      if (newItemId && stagedImages.length > 0) {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          for (let i = 0; i < stagedImages.length; i++) {
+            const staged = stagedImages[i];
+            const fileExt = staged.file.name.split('.').pop();
+            const fileName = `${user.id}/${newItemId}/${Date.now()}-${i}.${fileExt}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('item-images')
+              .upload(fileName, staged.file);
+            
+            if (uploadError) {
+              console.error('Error uploading staged image:', uploadError);
+              continue;
+            }
+            
+            const { data: signedData } = await supabase.storage
+              .from('item-images')
+              .createSignedUrl(fileName, 60 * 60 * 24 * 365);
+            
+            if (!signedData?.signedUrl) continue;
+            
+            if (staged.is_primary) {
+              await supabase
+                .from('item_images')
+                .update({ is_primary: false })
+                .eq('item_id', newItemId);
+            }
+            
+            await supabase.from('item_images').insert({
+              item_id: newItemId,
+              user_id: user.id,
+              image_url: signedData.signedUrl,
+              display_order: i,
+              is_primary: staged.is_primary,
+            });
+          }
+        }
+      }
     }
     
     navigate('/items');
   };
+
 
   const handleDelete = () => {
     if (editItem && onDelete) {
@@ -362,58 +433,18 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                     onSetPrimary={setPrimaryImage}
                   />
                 ) : (
-                  /* Single image upload for new items (will be converted to multi after save) */
-                  <div className="flex items-start gap-4">
-                    {imagePreview ? (
-                      <div className="relative">
-                        <img
-                          src={imagePreview}
-                          alt="Product preview"
-                          className="w-24 h-24 object-cover rounded-lg border border-border cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => setShowImageViewer(true)}
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-6 w-6"
-                          onClick={handleRemoveImage}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingImage}
-                        className="gap-2"
-                      >
-                        <Upload className="h-4 w-4" />
-                        {imagePreview ? 'Change Image' : 'Upload Image'}
-                      </Button>
-                      <p className="text-xs text-muted-foreground">
-                        PNG, JPG up to 5MB. Add more images after saving.
-                      </p>
-                    </div>
-                  </div>
+                  /* Staging mode for new items — previews shown, upload happens after save */
+                  <MultiImageUploader
+                    images={[]}
+                    onUpload={async () => null}
+                    onDelete={async () => {}}
+                    onSetPrimary={async () => {}}
+                    stagingMode
+                    stagedImages={stagedImages}
+                    onStageFiles={handleStageFiles}
+                    onRemoveStaged={handleRemoveStaged}
+                    onSetStagedPrimary={handleSetStagedPrimary}
+                  />
                 )}
               </div>
             </CardContent>

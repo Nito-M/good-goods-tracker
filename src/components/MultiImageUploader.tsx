@@ -5,13 +5,28 @@ import { cn } from '@/lib/utils';
 import { ItemImage } from '@/hooks/useItemImages';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
+interface StagedImage {
+  id: string;
+  image_url: string;
+  is_primary: boolean;
+  file: File;
+}
+
 interface MultiImageUploaderProps {
   images: ItemImage[];
   onUpload: (file: File, isPrimary?: boolean) => Promise<string | null>;
   onDelete: (imageId: string) => Promise<void>;
   onSetPrimary: (imageId: string) => Promise<void>;
   disabled?: boolean;
+  // Staging mode: used on create form — files are held locally, not uploaded immediately
+  stagingMode?: boolean;
+  stagedImages?: StagedImage[];
+  onStageFiles?: (files: File[]) => void;
+  onRemoveStaged?: (id: string) => void;
+  onSetStagedPrimary?: (id: string) => void;
 }
+
+export type { StagedImage };
 
 export function MultiImageUploader({
   images,
@@ -19,6 +34,11 @@ export function MultiImageUploader({
   onDelete,
   onSetPrimary,
   disabled = false,
+  stagingMode = false,
+  stagedImages = [],
+  onStageFiles,
+  onRemoveStaged,
+  onSetStagedPrimary,
 }: MultiImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -29,16 +49,21 @@ export function MultiImageUploader({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setUploading(true);
-    try {
-      for (let i = 0; i < files.length; i++) {
-        await onUpload(files[i], images.length === 0 && i === 0);
+    if (stagingMode && onStageFiles) {
+      onStageFiles(Array.from(files));
+    } else {
+      setUploading(true);
+      try {
+        for (let i = 0; i < files.length; i++) {
+          await onUpload(files[i], images.length === 0 && i === 0);
+        }
+      } finally {
+        setUploading(false);
       }
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -50,8 +75,57 @@ export function MultiImageUploader({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        {/* Existing Images */}
-        {images.map((image) => (
+        {/* Staged Images (create mode) */}
+        {stagingMode && stagedImages.map((image) => (
+          <div
+            key={image.id}
+            className={cn(
+              "relative w-24 h-24 rounded-lg overflow-hidden border-2 group",
+              image.is_primary ? "border-primary ring-2 ring-primary/20" : "border-border"
+            )}
+          >
+            <img
+              src={image.image_url}
+              alt="Product"
+              className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => handleImageClick(image.image_url)}
+            />
+            {image.is_primary && (
+              <div className="absolute top-1 left-1">
+                <Star className="h-4 w-4 text-primary fill-primary drop-shadow-md" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+              {!image.is_primary && onSetStagedPrimary && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => { e.stopPropagation(); onSetStagedPrimary(image.id); }}
+                  title="Set as primary"
+                >
+                  <Star className="h-3 w-3" />
+                </Button>
+              )}
+              {onRemoveStaged && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={(e) => { e.stopPropagation(); onRemoveStaged(image.id); }}
+                  title="Remove image"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Existing Images (edit mode) */}
+        {!stagingMode && images.map((image) => (
           <div
             key={image.id}
             className={cn(
