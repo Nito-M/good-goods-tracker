@@ -101,18 +101,22 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     const detailsY = layout.invoiceDetails.y > 0 ? layout.invoiceDetails.y : flowY;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
+
+    // LEFT: Quote #, Date, Valid Until
     doc.text(`Quote #: ${quote.quoteNumber}`, layout.invoiceDetails.x, detailsY);
-    doc.text(`Date: ${formatDate(quote.createdAt)}`, pageWidth - 20, detailsY, { align: 'right' });
-    
-    let detailLineY = detailsY + 7;
+    let leftY = detailsY + 7;
+    doc.text(`Date: ${formatDate(quote.createdAt)}`, layout.invoiceDetails.x, leftY);
+    leftY += 7;
     if (quote.validUntil) {
-      doc.text(`Valid Until: ${formatDate(quote.validUntil)}`, layout.invoiceDetails.x, detailLineY);
+      doc.text(`Valid Until: ${formatDate(quote.validUntil)}`, layout.invoiceDetails.x, leftY);
+      leftY += 7;
     }
-    doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailLineY, { align: 'right' });
-    detailLineY += 7;
-    doc.text(`Status: ${quote.status.toUpperCase()}`, layout.invoiceDetails.x, detailLineY);
-    
-    flowY = Math.max(flowY, detailLineY + 10);
+
+    // RIGHT: Terms, Status
+    doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailsY, { align: 'right' });
+    doc.text(`Status: ${quote.status.toUpperCase()}`, pageWidth - 20, detailsY + 7, { align: 'right' });
+
+    flowY = Math.max(flowY, leftY + 3);
   }
 
   // Quote For (Bill To)
@@ -146,7 +150,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.text('Item', layout.itemsTable.x + 2, y);
     doc.text('SKU', layout.itemsTable.x + 60, y);
     doc.text('Qty', layout.itemsTable.x + 95, y);
-    doc.text('Unit Price', layout.itemsTable.x + 115, y);
+    doc.text('Price', layout.itemsTable.x + 115, y);
     doc.text('Total', pageWidth - 22, y, { align: 'right' });
     y += 10;
 
@@ -158,16 +162,16 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
         y = 20;
       }
 
-      const itemName = item.itemName.length > 25
-        ? item.itemName.substring(0, 25) + '...'
-        : item.itemName;
-      doc.text(itemName, layout.itemsTable.x + 2, y);
+      const nameLines = doc.splitTextToSize(item.itemName, 55);
+      const rowHeight = Math.max(nameLines.length, 1) * 7;
+
+      doc.text(nameLines, layout.itemsTable.x + 2, y);
       doc.text(item.sku, layout.itemsTable.x + 60, y);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
       doc.text(qtyDisplay, layout.itemsTable.x + 95, y);
       doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 115, y);
       doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
-      y += 7;
+      y += rowHeight;
 
       if (item.notes) {
         doc.setFontSize(8);
