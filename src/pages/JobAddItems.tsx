@@ -88,12 +88,13 @@ export function JobAddItems() {
     try {
       const { data: asmItems, error } = await supabase
         .from('assembly_items')
-        .select('*')
+        .select('*, inventory_items(price)')
         .eq('assembly_id', assemblyId);
 
       if (error) throw error;
 
-      for (const asmItem of asmItems ?? []) {
+      for (const asmItem of (asmItems ?? []) as any[]) {
+        const inventoryPrice: number = asmItem.inventory_items?.price ?? 0;
         const existing = jobItems.find(
           ji => ji.inventoryItemId && ji.inventoryItemId === asmItem.inventory_item_id
         );
@@ -106,7 +107,7 @@ export function JobAddItems() {
             itemName: asmItem.item_name,
             sku: asmItem.sku || '',
             quantity: asmItem.quantity,
-            unitPrice: 0,
+            unitPrice: inventoryPrice,
             notes: asmItem.notes ?? undefined,
           });
         }
