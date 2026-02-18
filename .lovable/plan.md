@@ -1,57 +1,61 @@
 
-## Make PDF Match the Quote Preview
+## Guarantee at Least One Item Renders on Page 1
 
-### What's Different Today
+### The Root Cause
 
-Comparing `QuotePreviewDialog.tsx` (what you see) vs `quoteGenerator.ts` (what gets downloaded), there are several mismatches:
+After rendering the logo, business info, title, quote details, and bill-to block, `flowY` can be large enough that by the time the items table header is drawn, `y` is near `safeBottom`. The current page-break check (line 201) then fires immediately for the **first item**, sending it to page 2 and leaving page 1 with nothing but the header block.
 
-**1. Item name truncation**
-- Preview: shows the full item name (no truncation)
-- PDF: cuts off at 25 characters and appends `...`
-
-**2. Quote Details layout order**
-- Preview: Quote #, Date, Valid Until on the LEFT; Terms, Status on the RIGHT
-- PDF: Quote #, Date on LEFT; Valid Until on LEFT; Terms on RIGHT; Status back on LEFT — the status ends up on the wrong side
-
-**3. Column header label**
-- Preview: "Price" (4th column)
-- PDF: "Unit Price" (longer, slightly inconsistent)
-
-**4. Item notes rendering**
-- Both show notes, but the PDF note wrapping uses a fixed width that may not match the preview's natural column flow
-
-**5. Quantity display**
-- Preview: `{item.quantity} {item.quantityUnit}` (e.g. "5 pcs")
-- PDF: `${item.quantity} ${item.quantityUnit}` — this is actually correct already
-
-### Files to Modify
-
-**`src/lib/quoteGenerator.ts`** — the only file that needs changing:
-
-1. **Remove item name truncation** — change the 25-char limit to use `doc.splitTextToSize` with a sensible column width (same technique used for notes), so long names wrap instead of being cut
-2. **Fix Quote Details layout** — reorder so Status appears on the right side to match the preview:
-   - LEFT column: Quote #, Date, Valid Until
-   - RIGHT column: Terms, Status
-3. **Fix column header** — rename "Unit Price" → "Price" to match the preview header
-4. **Improve item name wrapping** — instead of truncating, use `splitTextToSize` with the item name column width (~55mm), and advance `y` by the number of wrapped lines × line height, so nothing overlaps
-
-### How Item Name Wrapping Will Work
-
-Currently the item name column is roughly 55mm wide (from `x+2` to `x+60`). The fix will:
 ```
-const nameLines = doc.splitTextToSize(item.itemName, 55);
-doc.text(nameLines, x + 2, y);
-// advance y by nameLines.length * lineHeight before drawing next row
+Page 1 height = 297mm
+safeBottom    = 277mm  (297 - 20)
+
+Example flowY after header sections = ~170mm
+Table header adds ~10mm → y = 180mm
+First item (2 lines + note) = ~20mm → 180 + 20 = 200mm  ✓ fits
 ```
 
-This mirrors exactly how the preview renders it — the HTML table cell just wraps naturally.
+But with a large logo + long business address + bill-to address, flowY can reach 220mm+, so `y = 230` and the very first item check `230 + 20 > 277` triggers a page break.
 
-### No Other Files Change
+### The Fix — Two-Part Change in `src/lib/quoteGenerator.ts`
 
-The preview dialog (`QuotePreviewDialog.tsx`) is already correct. Only the PDF generator needs updating to match it.
+**Part 1: Track whether this is the first item**
 
-### Technical Notes
+Introduce a `isFirstItem` flag. When it's `true`, skip the page-break check regardless of `y`. This guarantees the first item always renders on page 1.
 
-- `doc.splitTextToSize(text, maxWidthMm)` is the jsPDF built-in for word-wrapping — same function already used for notes
-- Row height calculation will use `Math.max(nameLines.length, 1) * 7` to account for multi-line names
-- The separator line between header and rows and the grey fill rect will still render cleanly since they use column positions, not row positions
+```typescript
+let isFirstItem = true;
+
+quote.items.forEach((item) => {
+  // ... calculate nameLines, rowHeight, noteLines, itemTotalHeight ...
+
+  // Only check page break after the first item has been placed
+  if (!isFirstItem && y + itemTotalHeight > safeBottom) {
+    y = addPageWithHeader(true, tableX);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+  }
+
+  isFirstItem = false;
+
+  // ... render the item ...
+});
+```
+
+**Part 2: After the first item, enforce the overflow safety for the rest**
+
+After the first item is rendered, the normal overflow logic continues to work for items 2, 3, etc. — so subsequent items still get proper page breaks.
+
+### What This Does NOT Change
+
+- All other pagination logic (separator line, totals, notes, footer on every page) stays exactly the same.
+- The table header on page 1 and repeated headers on overflow pages are unchanged.
+- Multi-line item name wrapping and note rendering are unchanged.
+
+### File to Modify
+
+- `src/lib/quoteGenerator.ts` — one small change inside the `quote.items.forEach` loop (lines 188–224).
+
+### Edge Case Considered
+
+If the first item itself is extremely tall (e.g. 100 lines of notes), it will overflow the bottom of page 1. This is unavoidable without splitting a single item across pages, which is a separate concern. The guarantee is "the first item starts on page 1", not "the first item fully fits on page 1" — which matches user expectation.
