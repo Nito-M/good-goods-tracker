@@ -65,31 +65,34 @@ export function SalesOrderDetail() {
   };
 
   const handleCreateJob = async () => {
-    if (!quote) return;
+    if (!quote || quote.items.length === 0) return;
     setCreating(true);
     try {
-      const job = await createJob(
-        `${quote.quoteNumber} - ${quote.vendorName || 'Sales Order'}`,
-        quote.notes || undefined,
-        'open',
-        {
-          name: quote.vendorName || undefined,
-          email: vendor?.contact_email || undefined,
-          phone: vendor?.contact_phone || undefined,
-          address: vendor?.address || undefined,
-        },
-        dueDate ? dueDate.toISOString() : undefined,
-        jobNumber || undefined
-      );
+      let firstJobId: string | null = null;
 
-      if (!job) {
-        setCreating(false);
-        return;
-      }
+      for (let i = 0; i < quote.items.length; i++) {
+        const item = quote.items[i];
 
-      // Add quote items as job items
-      if (quote.items.length > 0) {
-        const jobItems = quote.items.map((item) => ({
+        const job = await createJob(
+          item.itemName,
+          item.notes || undefined,
+          'open',
+          {
+            name: quote.vendorName || undefined,
+            email: vendor?.contact_email || undefined,
+            phone: vendor?.contact_phone || undefined,
+            address: vendor?.address || undefined,
+          },
+          dueDate ? dueDate.toISOString() : undefined,
+          i === 0 ? (jobNumber || undefined) : undefined
+        );
+
+        if (!job) continue;
+
+        if (i === 0) firstJobId = job.id;
+
+        // Add only this item to this job
+        const { error } = await supabase.from('job_items').insert({
           job_id: job.id,
           inventory_item_id: item.inventoryItemId || null,
           item_name: item.itemName,
@@ -97,29 +100,25 @@ export function SalesOrderDetail() {
           quantity: item.quantity,
           unit_price: item.unitPrice,
           notes: item.notes || null,
-        }));
+        });
 
-        const { error } = await supabase.from('job_items').insert(jobItems);
         if (error) {
-          console.error('Error adding job items:', error);
-          toast({
-            title: 'Job created but items failed',
-            description: 'The job was created but some items could not be added.',
-            variant: 'destructive',
-          });
+          console.error('Error adding job item:', error);
         }
       }
 
-      // Link job to quote
-      await supabase
-        .from('quotes')
-        .update({ converted_to_job_id: job.id } as any)
-        .eq('id', quote.id);
+      // Link quote to first job for the "Job Created" badge
+      if (firstJobId) {
+        await supabase
+          .from('quotes')
+          .update({ converted_to_job_id: firstJobId } as any)
+          .eq('id', quote.id);
 
-      navigate(`/jobs/${job.id}`);
+        navigate(`/jobs/${firstJobId}`);
+      }
     } catch (err) {
-      console.error('Error creating job:', err);
-      toast({ title: 'Error creating job', variant: 'destructive' });
+      console.error('Error creating jobs:', err);
+      toast({ title: 'Error creating jobs', variant: 'destructive' });
     } finally {
       setCreating(false);
     }
