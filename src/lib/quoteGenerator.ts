@@ -3,10 +3,15 @@ import { Quote, QuoteSettings } from '@/types/quote';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 import { formatCurrency } from '@/lib/utils';
 
+const PAGE_MARGIN_BOTTOM = 20; // mm from bottom edge where we trigger a new page
+const LINE_HEIGHT = 7;
+const NOTE_LINE_HEIGHT = 4;
+
 export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
+  const safeBottom = pageHeight - PAGE_MARGIN_BOTTOM;
   const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings.layout || {}) };
 
   const formatDate = (dateString: string) => {
@@ -21,6 +26,26 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     if (align === 'right') return pageWidth - 20;
     if (align === 'center') return pageWidth / 2;
     return elementX;
+  };
+
+  /** Add a new page and reset y, re-drawing the table header if inside items block */
+  const addPageWithHeader = (insideTable: boolean, tableX: number): number => {
+    doc.addPage();
+    let y = 20;
+    if (insideTable) {
+      doc.setFillColor(240, 240, 240);
+      doc.rect(tableX, y - 4, pageWidth - tableX - 20, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('Item', tableX + 2, y);
+      doc.text('SKU', tableX + 60, y);
+      doc.text('Qty', tableX + 95, y);
+      doc.text('Price', tableX + 115, y);
+      doc.text('Total', pageWidth - 22, y, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      y += 10;
+    }
+    return y;
   };
 
   let flowY = 20;
@@ -140,60 +165,86 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
 
   // Items Table
   if (layout.itemsTable.visible) {
+    const tableX = layout.itemsTable.x;
     const tableY = layout.itemsTable.y > 0 ? layout.itemsTable.y : flowY;
     let y = tableY;
 
-    // Table Header
+    // Table Header (first page)
     doc.setFillColor(240, 240, 240);
-    doc.rect(layout.itemsTable.x, y - 4, pageWidth - layout.itemsTable.x - 20, 8, 'F');
+    doc.rect(tableX, y - 4, pageWidth - tableX - 20, 8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.text('Item', layout.itemsTable.x + 2, y);
-    doc.text('SKU', layout.itemsTable.x + 60, y);
-    doc.text('Qty', layout.itemsTable.x + 95, y);
-    doc.text('Price', layout.itemsTable.x + 115, y);
+    doc.setFontSize(10);
+    doc.text('Item', tableX + 2, y);
+    doc.text('SKU', tableX + 60, y);
+    doc.text('Qty', tableX + 95, y);
+    doc.text('Price', tableX + 115, y);
     doc.text('Total', pageWidth - 22, y, { align: 'right' });
     y += 10;
 
     // Items
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+
     quote.items.forEach((item) => {
-      if (y > 260) {
-        doc.addPage();
-        y = 20;
+      const nameLines = doc.splitTextToSize(item.itemName, 55);
+      const rowHeight = Math.max(nameLines.length, 1) * LINE_HEIGHT;
+
+      // Calculate total height this item needs (name rows + optional note rows)
+      let itemTotalHeight = rowHeight;
+      let noteLines: string[] = [];
+      if (item.notes) {
+        noteLines = doc.splitTextToSize(`Note: ${item.notes}`, pageWidth - tableX - 24);
+        itemTotalHeight += noteLines.length * NOTE_LINE_HEIGHT + 2;
       }
 
-      const nameLines = doc.splitTextToSize(item.itemName, 55);
-      const rowHeight = Math.max(nameLines.length, 1) * 7;
+      // Page break BEFORE the item if it won't fit
+      if (y + itemTotalHeight > safeBottom) {
+        y = addPageWithHeader(true, tableX);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+      }
 
-      doc.text(nameLines, layout.itemsTable.x + 2, y);
-      doc.text(item.sku, layout.itemsTable.x + 60, y);
+      doc.text(nameLines, tableX + 2, y);
+      doc.text(item.sku, tableX + 60, y);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
-      doc.text(qtyDisplay, layout.itemsTable.x + 95, y);
-      doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 115, y);
+      doc.text(qtyDisplay, tableX + 95, y);
+      doc.text(formatCurrency(item.unitPrice), tableX + 115, y);
       doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
       y += rowHeight;
 
-      if (item.notes) {
+      if (item.notes && noteLines.length > 0) {
         doc.setFontSize(8);
         doc.setTextColor(120, 120, 120);
-        const noteLines = doc.splitTextToSize(`Note: ${item.notes}`, pageWidth - layout.itemsTable.x - 24);
-        doc.text(noteLines, layout.itemsTable.x + 4, y);
-        y += noteLines.length * 4 + 2;
+        doc.text(noteLines, tableX + 4, y);
+        y += noteLines.length * NOTE_LINE_HEIGHT + 2;
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
       }
     });
 
-    // Line
+    // Separator line
     y += 5;
+    // Page break before separator + totals if needed (need ~40mm for totals block)
+    if (y + 40 > safeBottom) {
+      doc.addPage();
+      y = 20;
+    }
     doc.setDrawColor(200, 200, 200);
-    doc.line(layout.itemsTable.x, y, pageWidth - 20, y);
+    doc.line(tableX, y, pageWidth - 20, y);
     y += 10;
 
     flowY = y;
   }
 
-  // Totals
+  // Totals — estimate height needed
+  const totalsLineCount = 1 + (quote.discountAmount > 0 ? 1 : 0) + (quote.taxAmount > 0 ? 1 : 0) + 1;
+  const totalsHeight = totalsLineCount * 7 + 10;
+  if (flowY + totalsHeight > safeBottom) {
+    doc.addPage();
+    flowY = 20;
+  }
+
   if (layout.totals.visible) {
     const totalsY = layout.totals.y > 0 ? layout.totals.y : flowY;
     let y = totalsY;
@@ -228,28 +279,39 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     flowY = Math.max(flowY, y + 10);
   }
 
-  // Notes
+  // Notes — check if they fit
   if (layout.notes.visible && quote.notes) {
+    const splitNotes = doc.splitTextToSize(quote.notes, pageWidth - layout.notes.x - 20);
+    const notesHeight = splitNotes.length * LINE_HEIGHT + 12;
+    if (flowY + notesHeight > safeBottom) {
+      doc.addPage();
+      flowY = 20;
+    }
+
     const notesY = layout.notes.y > 0 ? layout.notes.y : flowY + 10;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Notes:', layout.notes.x, notesY);
     doc.setFont('helvetica', 'normal');
-
-    const splitNotes = doc.splitTextToSize(quote.notes, pageWidth - layout.notes.x - 20);
     doc.text(splitNotes, layout.notes.x, notesY + 6);
+    flowY = Math.max(flowY, notesY + notesHeight);
   }
 
-  // Footer
+  // Footer — always on the last page at the bottom
   if (layout.footer.visible) {
     const thankYouNote = settings.thankYouNote || 'Thank you for considering our services!';
-    const footerY = layout.footer.y > 0 ? layout.footer.y : pageHeight - 20;
-    doc.setFontSize(8);
-    doc.setTextColor(128, 128, 128);
-    const footerAlign = layout.footer.align || 'center';
-    doc.text(thankYouNote, getXPosition(layout.footer.x, footerAlign), footerY, {
-      align: footerAlign as 'left' | 'center' | 'right',
-    });
+    const totalPages = (doc.internal as any).getNumberOfPages?.() ?? doc.getNumberOfPages();
+    // Draw footer on every page
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      const footerY = pageHeight - 10;
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      const footerAlign = layout.footer.align || 'center';
+      doc.text(thankYouNote, getXPosition(layout.footer.x, footerAlign), footerY, {
+        align: footerAlign as 'left' | 'center' | 'right',
+      });
+    }
   }
 
   // Save the PDF
