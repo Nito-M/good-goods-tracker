@@ -1,84 +1,106 @@
 
-## Add Assembly Support to the "Add Items to Job" Page
+## Change: Each Sales Order Item Creates Its Own Job (Titled by Item Name)
+
+### The Problem
+
+Currently, when you press "Create Job" on a single item in a Sales Order:
+1. A **shared job** is created titled with the SO number (e.g. `SO-001`)
+2. The item is then added as a **job_items row** inside that shared job
+
+The user wants the opposite: pressing "Create Job" on an item should create a **new job titled with the item name** itself, with no items inserted into `job_items` at all. The item name becomes the job title, not a row inside the job.
+
+Similarly, "Create All Jobs" should create **one separate job per item**, each titled with that item's name.
 
 ### What Changes
 
-The `JobAddItems` page currently only lets users pick individual inventory items. The request is to add a second section — an "Add from Assembly" tab/section — where the user can browse assemblies and, with one button press, add all the internal sub-items of that assembly as individual job items.
+Only **`src/pages/SalesOrderDetail.tsx`** needs to be modified. No database schema changes are required.
 
-### How It Works
+#### Per-item "Create Job" (`handleCreateJobForItem`)
+- Currently: calls `getOrCreateOrderJob()` (creates/reuses one shared SO-level job), then calls `addItemToJob()` (inserts a `job_items` row).
+- After: creates a **new dedicated job** titled `item.itemName`, passing the item notes as the job description. Does **not** insert any `job_items` row. Records the link in `so_item_job_links` pointing to the new job.
 
-1. A new **"Assemblies" tab** is added alongside the existing "Inventory Items" tab on the `JobAddItems` page.
-2. The assemblies list shows each assembly name, description, item count, and total cost.
-3. Each assembly row has an **"Add All Items" button**.
-4. When clicked, every sub-item inside that assembly (`assembly_items`) is inserted into `job_items` for this job — one row per sub-item, preserving name, SKU, quantity, and `inventory_item_id` links.
-5. If a job item with the same `inventory_item_id` already exists, the quantities are **summed** (for linked items). Custom assembly items (no `inventory_item_id`) are always appended as new rows.
+#### "Create All Jobs" (`handleCreateAllJobs`)
+- Currently: creates one shared job for the whole SO, adds all items as rows.
+- After: iterates through each unlinked item and creates **one separate job per item**, each titled with the item name. Does not insert any `job_items` rows. Navigates to the Jobs list page after (since there's no single job to navigate to).
 
-### Files to Modify
+#### `getOrCreateOrderJob` / `addItemToJob`
+- These helpers become unnecessary and will be removed/replaced with the simpler per-item job creation logic.
 
-- **`src/pages/JobAddItems.tsx`** — Add Tabs UI, import `useAssemblies` and `useAssemblyItems`, implement `handleAddAssembly` logic.
+#### Button Label
+- Remove the conditional `'Add to Job'` vs `'Create Job'` text — it will always say `'Create Job'` since every press makes a new job.
 
-### Technical Detail
-
-The `useAssemblies` hook already fetches all assemblies. The `useAssemblyItems` hook fetches items for a specific assembly. To add an assembly's items to a job, we need to:
-
-1. Fetch assembly items for the selected assembly (via a one-off supabase query to avoid having to mount a hook per assembly).
-2. Loop through each assembly item and call `addItem` or `updateItem` depending on whether the item already exists in the job.
-
-Since hooks can't be called conditionally, the add logic will do a direct Supabase query for the assembly items inside the handler function (same pattern used throughout the codebase), rather than relying on the `useAssemblyItems` hook.
-
-### Logic Sketch
+### Logic After the Change
 
 ```typescript
-const handleAddAssembly = async (assemblyId: string) => {
-  setAddingAssembly(assemblyId);
-  
-  // Fetch assembly's sub-items directly
-  const { data: asmItems } = await supabase
-    .from('assembly_items')
-    .select('*')
-    .eq('assembly_id', assemblyId);
-
-  for (const asmItem of asmItems ?? []) {
-    // Check if this inventory item is already in the job
-    const existing = jobItems.find(
-      ji => ji.inventoryItemId && ji.inventoryItemId === asmItem.inventory_item_id
+const handleCreateJobForItem = async (item: ExpandedItem) => {
+  setCreatingJobFor(item.linkKey);
+  try {
+    // Each item gets its OWN job titled with the item name
+    const job = await createJob(
+      item.itemName,              // <-- Job title = item name
+      item.notes || undefined,    // <-- Job description = item notes
+      'open',
+      {
+        name: quote!.vendorName || undefined,
+        email: vendor?.contact_email || undefined,
+        phone: vendor?.contact_phone || undefined,
+        address: vendor?.address || undefined,
+      },
+      dueDate ? dueDate.toISOString() : undefined,
+      jobNumber || undefined
     );
+    if (!job) return;
 
-    if (existing && asmItem.inventory_item_id) {
-      // Increment quantity on the existing job item
-      await updateItem(existing.id, { quantity: existing.quantity + asmItem.quantity });
-    } else {
-      // Add as a new job item
-      await addItem({
-        inventoryItemId: asmItem.inventory_item_id ?? undefined,
-        itemName: asmItem.item_name,
-        sku: asmItem.sku || '',
-        quantity: asmItem.quantity,
-        unitPrice: 0, // Assembly items don't have a unit price; user can edit after
-        notes: asmItem.notes ?? undefined,
-      });
-    }
+    // Record the link (no job_items row inserted)
+    await supabase.from('so_item_job_links').upsert({
+      quote_id: quote!.id,
+      quote_item_id: item.quoteItemId,
+      unit_index: item.unitIndex,
+      job_id: job.id,
+      status: 'open',
+    }, { onConflict: 'quote_item_id,unit_index' });
+
+    toast({ title: 'Job created', description: item.itemName });
+    await fetchItemLinks();
+  } finally {
+    setCreatingJobFor(null);
   }
+};
 
-  toast({ title: 'Assembly items added to job' });
-  setAddingAssembly(null);
+const handleCreateAllJobs = async () => {
+  setCreating(true);
+  try {
+    for (const item of expandedItems) {
+      if (itemLinks[item.linkKey]?.jobId) continue; // skip already-linked
+
+      const job = await createJob(
+        item.itemName,
+        item.notes || undefined,
+        'open',
+        { name: quote!.vendorName || undefined, ... },
+        dueDate ? dueDate.toISOString() : undefined,
+        // no jobNumber here since each job is separate
+      );
+      if (!job) continue;
+
+      await supabase.from('so_item_job_links').upsert({
+        quote_id: quote!.id,
+        quote_item_id: item.quoteItemId,
+        unit_index: item.unitIndex,
+        job_id: job.id,
+        status: 'open',
+      }, { onConflict: 'quote_item_id,unit_index' });
+    }
+    await fetchItemLinks();
+    navigate('/jobs'); // go to jobs list since multiple jobs were created
+  } finally {
+    setCreating(false);
+  }
 };
 ```
 
-### UI Layout
+### Also: Remove the `converted_to_job_id` link on the quote
+Since jobs are now per-item (not a single shared order-level job), the `convertedToJobId` field on the quote is no longer updated. The "Job Created" badge in the header will instead be driven by whether any `so_item_job_links` exist for this order.
 
-The page gains a **Tabs** component (using the existing `@radix-ui/react-tabs` / shadcn Tabs):
-
-```
-[ Inventory Items ]  [ Assemblies ]
-┌─────────────────────────────────────┐
-│  Assembly Name          3 items     │
-│  Description text       Cost: $120  │  [Add All Items]
-├─────────────────────────────────────┤
-│  Assembly Name 2        5 items     │  [Add All Items]
-└─────────────────────────────────────┘
-```
-
-### No Database Changes
-
-All required tables (`assemblies`, `assembly_items`, `job_items`) already exist. No migrations needed.
+### Files to Modify
+- **`src/pages/SalesOrderDetail.tsx`** — Rewrite `handleCreateJobForItem` and `handleCreateAllJobs`, remove `getOrCreateOrderJob` and `addItemToJob` helpers, update button label and header badge logic.
