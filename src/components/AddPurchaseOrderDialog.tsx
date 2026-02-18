@@ -16,11 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandItem, CommandGroup } from '@/components/ui/command';
 import { InventoryItem } from '@/types/inventory';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
 import { Vendor } from '@/hooks/useVendors';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2 } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ChevronsUpDown, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface VendorPrice {
   itemId: string;
@@ -63,6 +66,76 @@ function createEmptyLineItem(): LineItem {
     quantity: 1,
     unitCost: '',
   };
+}
+
+function ItemSearchCombobox({
+  items,
+  selectedItemId,
+  onSelect,
+  inventoryItems,
+}: {
+  items: { id: string; name: string; sku: string }[];
+  selectedItemId: string;
+  onSelect: (value: string) => void;
+  inventoryItems: { id: string; name: string; sku: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedItem = inventoryItems.find((i) => i.id === selectedItemId);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          <span className="truncate">
+            {selectedItemId === 'custom'
+              ? '-- Custom Item --'
+              : selectedItem
+              ? `${selectedItem.name} (${selectedItem.sku})`
+              : 'Select item...'}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search items..." />
+          <CommandList>
+            <CommandEmpty>No items found.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="custom-item"
+                onSelect={() => {
+                  onSelect('custom');
+                  setOpen(false);
+                }}
+              >
+                <Check className={cn('mr-2 h-4 w-4', selectedItemId === 'custom' ? 'opacity-100' : 'opacity-0')} />
+                -- Custom Item --
+              </CommandItem>
+              {items.map((item) => (
+                <CommandItem
+                  key={item.id}
+                  value={`${item.name} ${item.sku}`}
+                  onSelect={() => {
+                    onSelect(item.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check className={cn('mr-2 h-4 w-4', selectedItemId === item.id ? 'opacity-100' : 'opacity-0')} />
+                  {item.name} ({item.sku})
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export function AddPurchaseOrderDialog({
@@ -108,11 +181,9 @@ export function AddPurchaseOrderDialog({
     fetchVendorPrices();
   }, [vendorId]);
 
-  // Update line item prices when vendor prices are fetched or line items change
   const applyVendorPrices = (selectedVendorId: string) => {
     if (!selectedVendorId || selectedVendorId === 'none') return;
 
-    // Fetch and apply prices for the selected vendor
     supabase
       .from('item_vendor_prices')
       .select('item_id, price')
@@ -135,21 +206,19 @@ export function AddPurchaseOrderDialog({
 
   const handleVendorChange = (newVendorId: string) => {
     setVendorId(newVendorId);
-    // Reset line items when vendor changes (keep only custom items or clear them)
     setLineItems(prev => prev.map(item => {
       if (item.selectedItemId === 'custom') {
-        return item; // Keep custom items as-is
+        return item;
       }
-      // Clear inventory item selections since they may not belong to new vendor
       return createEmptyLineItem();
     }));
     applyVendorPrices(newVendorId);
   };
 
-  // Filter inventory items to only show those with pricing for the selected vendor
+  // All inventory items sorted A-Z (not restricted to vendor-priced ones)
   const filteredInventoryItems = vendorId && vendorId !== 'none'
-    ? inventoryItems.filter(item => vendorPrices.some(vp => vp.itemId === item.id))
-    : [];
+    ? [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name))
+    : [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name));
 
   const updateLineItem = (id: string, updates: Partial<LineItem>) => {
     setLineItems((prev) =>
@@ -208,7 +277,6 @@ export function AddPurchaseOrderDialog({
       return { sku, itemName, quantity: lineItem.quantity, unitCost };
     });
 
-    // Parse date as local time to avoid timezone offset issues
     const [year, month, day] = orderedAt.split('-').map(Number);
     const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
 
@@ -260,12 +328,12 @@ export function AddPurchaseOrderDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Vendor Selection - FIRST */}
+          {/* Vendor Selection */}
           <div className="space-y-2">
-            <Label htmlFor="vendor">Vendor *</Label>
+            <Label htmlFor="vendor">Vendor</Label>
             <Select value={vendorId} onValueChange={handleVendorChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a vendor first" />
+                <SelectValue placeholder="Select a vendor (optional)" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">-- No Vendor --</SelectItem>
@@ -276,9 +344,6 @@ export function AddPurchaseOrderDialog({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
-              Select a vendor to see available items with pricing
-            </p>
           </div>
 
           {/* Line Items */}
@@ -291,20 +356,13 @@ export function AddPurchaseOrderDialog({
                 size="sm"
                 onClick={addLineItem}
                 className="gap-2"
-                disabled={!vendorId || vendorId === 'none'}
               >
                 <Plus className="h-4 w-4" />
                 Add Item
               </Button>
             </div>
 
-            {(!vendorId || vendorId === 'none') && (
-              <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg bg-muted/30">
-                Please select a vendor first to add items
-              </p>
-            )}
-
-            {vendorId && vendorId !== 'none' && lineItems.map((lineItem, index) => (
+            {lineItems.map((lineItem, index) => (
               <div
                 key={lineItem.id}
                 className="p-4 rounded-lg border bg-muted/30 space-y-3"
@@ -328,39 +386,22 @@ export function AddPurchaseOrderDialog({
 
                 <div className="space-y-2">
                   <Label>Select from Inventory</Label>
-                  <Select
-                    value={lineItem.selectedItemId}
-                    onValueChange={(value) =>
+                  <ItemSearchCombobox
+                    items={filteredInventoryItems.filter(
+                      (item) => !lineItems.some(
+                        (li) => li.id !== lineItem.id && li.selectedItemId === item.id
+                      )
+                    )}
+                    selectedItemId={lineItem.selectedItemId}
+                    onSelect={(value) =>
                       updateLineItem(lineItem.id, {
                         selectedItemId: value,
                         customSku: '',
                         customName: '',
                       })
                     }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an item or enter custom below" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="custom">-- Enter Custom Item --</SelectItem>
-                      {filteredInventoryItems.length > 0 ? (
-                        [...filteredInventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.name} ({item.sku})
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no-items" disabled>
-                          No items with pricing for this vendor
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {filteredInventoryItems.length === 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      No inventory items have pricing set for this vendor. Use custom item or add vendor pricing to items.
-                    </p>
-                  )}
+                    inventoryItems={inventoryItems}
+                  />
                 </div>
 
                 {(!lineItem.selectedItemId || lineItem.selectedItemId === 'custom') && (
@@ -388,13 +429,12 @@ export function AddPurchaseOrderDialog({
                   </div>
                 )}
 
-                {lineItem.selectedItemId &&
-                  lineItem.selectedItemId !== 'custom' && (
-                    <div className="p-2 rounded bg-muted text-sm">
-                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.name} (
-                      {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.sku})
-                    </div>
-                  )}
+                {lineItem.selectedItemId && lineItem.selectedItemId !== 'custom' && (
+                  <div className="p-2 rounded bg-muted text-sm">
+                    {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.name} (
+                    {inventoryItems.find((i) => i.id === lineItem.selectedItemId)?.sku})
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
@@ -444,8 +484,6 @@ export function AddPurchaseOrderDialog({
               Leave empty to auto-generate
             </p>
           </div>
-
-          {/* Vendor Selection moved to top */}
 
           {/* Order Date */}
           <div className="space-y-2">
