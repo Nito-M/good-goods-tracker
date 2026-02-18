@@ -186,14 +186,14 @@ export function useInventory() {
     return { totalItems, totalValue, lowStockCount: lowStockItems.length, lowStockItems };
   }, [items]);
 
-  const addItem = async (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addItem = async (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
     if (!user) {
       toast({
         title: 'Not authenticated',
         description: 'Please sign in to add items.',
         variant: 'destructive',
       });
-      return;
+      return null;
     }
 
     // Validate input
@@ -245,7 +245,7 @@ export function useInventory() {
           data: dbItem as unknown as Record<string, unknown>,
         });
         toast({ title: 'Item saved offline', description: 'Will sync when back online' });
-        return;
+        return dbItem.id;
       }
     } else {
       // Queue for sync
@@ -255,10 +255,11 @@ export function useInventory() {
         data: dbItem as unknown as Record<string, unknown>,
       });
       toast({ title: 'Item saved offline', description: 'Will sync when back online' });
-      return;
+      return dbItem.id;
     }
 
     toast({ title: 'Item added successfully' });
+    return dbItem.id;
   };
 
   const updateItem = async (id: string, updates: Partial<InventoryItem>) => {
