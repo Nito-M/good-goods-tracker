@@ -1,0 +1,1 @@
+ALTER TABLE public.assemblies ADD COLUMN selling_price numeric NOT NULL DEFAULT 0;
