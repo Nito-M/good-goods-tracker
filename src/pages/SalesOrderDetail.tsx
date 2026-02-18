@@ -154,73 +154,38 @@ export function SalesOrderDetail() {
     }
   };
 
-  // Helper: get or create the single job for this sales order
-  const getOrCreateOrderJob = async (): Promise<string | null> => {
-    // If a job already exists for this order, reuse it
-    if (quote!.convertedToJobId) return quote!.convertedToJobId;
-
-    const job = await createJob(
-      quote!.quoteNumber,                   // Job title = SO number
-      quote!.notes || undefined,
-      'open',
-      {
-        name: quote!.vendorName || undefined,
-        email: vendor?.contact_email || undefined,
-        phone: vendor?.contact_phone || undefined,
-        address: vendor?.address || undefined,
-      },
-      dueDate ? dueDate.toISOString() : undefined,
-      jobNumber || undefined
-    );
-    if (!job) return null;
-
-    // Link the job to the quote
-    await supabase
-      .from('quotes')
-      .update({ converted_to_job_id: job.id } as any)
-      .eq('id', quote!.id);
-
-    return job.id;
-  };
-
-  // Add a single item to the shared job and record its link
-  const addItemToJob = async (item: ExpandedItem, jobId: string) => {
-    // Avoid duplicate job_items for this item
-    if (!itemLinks[item.linkKey]?.jobId) {
-      await supabase.from('job_items').insert({
-        job_id: jobId,
-        inventory_item_id: item.inventoryItemId || null,
-        item_name: item.itemName,
-        sku: item.sku || '',
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        notes: item.notes || null,
-      });
-    }
-
-    await (supabase.from('so_item_job_links' as any) as any).upsert(
-      {
-        quote_id: quote!.id,
-        quote_item_id: item.quoteItemId,
-        unit_index: item.unitIndex,
-        job_id: jobId,
-        status: itemLinks[item.linkKey]?.status ?? 'open',
-      },
-      { onConflict: 'quote_item_id,unit_index' }
-    );
-  };
-
-  // Create job for one item (adds it to the shared SO job)
+  // Create a dedicated job for one item (item name = job title)
   const handleCreateJobForItem = async (item: ExpandedItem) => {
     if (!quote) return;
     setCreatingJobFor(item.linkKey);
     try {
-      const jobId = await getOrCreateOrderJob();
-      if (!jobId) return;
+      const job = await createJob(
+        item.itemName,
+        item.notes || undefined,
+        'open',
+        {
+          name: quote.vendorName || undefined,
+          email: vendor?.contact_email || undefined,
+          phone: vendor?.contact_phone || undefined,
+          address: vendor?.address || undefined,
+        },
+        dueDate ? dueDate.toISOString() : undefined,
+        jobNumber || undefined
+      );
+      if (!job) return;
 
-      await addItemToJob(item, jobId);
+      await (supabase.from('so_item_job_links' as any) as any).upsert(
+        {
+          quote_id: quote.id,
+          quote_item_id: item.quoteItemId,
+          unit_index: item.unitIndex,
+          job_id: job.id,
+          status: 'open',
+        },
+        { onConflict: 'quote_item_id,unit_index' }
+      );
 
-      toast({ title: 'Item added to job', description: item.itemName });
+      toast({ title: 'Job created', description: item.itemName });
       await fetchItemLinks();
     } catch (err) {
       console.error('Error creating job for item:', err);
@@ -230,21 +195,42 @@ export function SalesOrderDetail() {
     }
   };
 
-  // Add ALL items to one shared job
+  // Create one separate job per unlinked item
   const handleCreateAllJobs = async () => {
     if (!quote || expandedItems.length === 0) return;
     setCreating(true);
     try {
-      const jobId = await getOrCreateOrderJob();
-      if (!jobId) return;
-
       for (const item of expandedItems) {
         if (itemLinks[item.linkKey]?.jobId) continue; // already linked
-        await addItemToJob(item, jobId);
+
+        const job = await createJob(
+          item.itemName,
+          item.notes || undefined,
+          'open',
+          {
+            name: quote.vendorName || undefined,
+            email: vendor?.contact_email || undefined,
+            phone: vendor?.contact_phone || undefined,
+            address: vendor?.address || undefined,
+          },
+          dueDate ? dueDate.toISOString() : undefined,
+        );
+        if (!job) continue;
+
+        await (supabase.from('so_item_job_links' as any) as any).upsert(
+          {
+            quote_id: quote.id,
+            quote_item_id: item.quoteItemId,
+            unit_index: item.unitIndex,
+            job_id: job.id,
+            status: 'open',
+          },
+          { onConflict: 'quote_item_id,unit_index' }
+        );
       }
 
       await fetchItemLinks();
-      navigate(`/jobs/${jobId}`);
+      navigate('/jobs');
     } catch (err) {
       console.error('Error creating jobs:', err);
       toast({ title: 'Error creating jobs', variant: 'destructive' });
@@ -320,13 +306,13 @@ export function SalesOrderDetail() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-foreground">{quote.quoteNumber}</h1>
-              {quote.convertedToJobId && (
+              {Object.keys(itemLinks).length > 0 && (
                 <Link
-                  to={`/jobs/${quote.convertedToJobId}`}
+                  to="/jobs"
                   className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                 >
                   <Briefcase className="h-3 w-3" />
-                  Job Created
+                  Jobs Created
                 </Link>
               )}
             </div>
@@ -551,7 +537,7 @@ export function SalesOrderDetail() {
                             ) : (
                               <Plus className="h-3 w-3 mr-1" />
                             )}
-                            {quote.convertedToJobId ? 'Add to Job' : 'Create Job'}
+                            Create Job
                           </Button>
                         )}
                       </TableCell>
