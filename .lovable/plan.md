@@ -1,109 +1,84 @@
 
-## Create One Job Per Item When Converting a Sales Order
+## Add Assembly Support to the "Add Items to Job" Page
 
 ### What Changes
 
-Currently, clicking "Create Job" on a Sales Order creates a single job with all quote items bundled inside it. The new behaviour will create one separate job per item on the quote, where each job:
-- Has the item name as its title
-- Uses the item's description/notes as the job description
-- Contains just that one item in its job_items list
-- Inherits the customer info, due date, and quote number context
+The `JobAddItems` page currently only lets users pick individual inventory items. The request is to add a second section — an "Add from Assembly" tab/section — where the user can browse assemblies and, with one button press, add all the internal sub-items of that assembly as individual job items.
 
-### File to Modify
+### How It Works
 
-**`src/pages/SalesOrderDetail.tsx`** — only the `handleCreateJob` function changes.
+1. A new **"Assemblies" tab** is added alongside the existing "Inventory Items" tab on the `JobAddItems` page.
+2. The assemblies list shows each assembly name, description, item count, and total cost.
+3. Each assembly row has an **"Add All Items" button**.
+4. When clicked, every sub-item inside that assembly (`assembly_items`) is inserted into `job_items` for this job — one row per sub-item, preserving name, SKU, quantity, and `inventory_item_id` links.
+5. If a job item with the same `inventory_item_id` already exists, the quantities are **summed** (for linked items). Custom assembly items (no `inventory_item_id`) are always appended as new rows.
 
-### Logic Changes
+### Files to Modify
 
-**Before** (one job, all items):
-```
-1. createJob(quoteTitle, ...)
-2. insert ALL quote items into job_items for that one job
-3. link quote → job
-```
+- **`src/pages/JobAddItems.tsx`** — Add Tabs UI, import `useAssemblies` and `useAssemblyItems`, implement `handleAddAssembly` logic.
 
-**After** (one job per item):
-```
-For each quote item:
-  1. createJob(item.itemName, item.notes, ...)
-  2. insert just that single item into job_items
-  3. on the last item: link quote → first created job (for the "Job Created" badge)
-```
+### Technical Detail
 
-The `jobNumber` input field will be used as a **prefix** for the first job; subsequent jobs auto-generate their numbers. For example, if the user types `JOB-500`, the first item gets `JOB-500` and the rest auto-generate sequentially.
+The `useAssemblies` hook already fetches all assemblies. The `useAssemblyItems` hook fetches items for a specific assembly. To add an assembly's items to a job, we need to:
 
-The `dueDate` and customer info (name, phone, email, address) are copied to every job created.
+1. Fetch assembly items for the selected assembly (via a one-off supabase query to avoid having to mount a hook per assembly).
+2. Loop through each assembly item and call `addItem` or `updateItem` depending on whether the item already exists in the job.
 
-### Detailed Code Plan
+Since hooks can't be called conditionally, the add logic will do a direct Supabase query for the assembly items inside the handler function (same pattern used throughout the codebase), rather than relying on the `useAssemblyItems` hook.
 
-Inside `handleCreateJob`:
+### Logic Sketch
 
 ```typescript
-const handleCreateJob = async () => {
-  if (!quote || quote.items.length === 0) return;
-  setCreating(true);
-  try {
-    let firstJobId: string | null = null;
+const handleAddAssembly = async (assemblyId: string) => {
+  setAddingAssembly(assemblyId);
+  
+  // Fetch assembly's sub-items directly
+  const { data: asmItems } = await supabase
+    .from('assembly_items')
+    .select('*')
+    .eq('assembly_id', assemblyId);
 
-    for (let i = 0; i < quote.items.length; i++) {
-      const item = quote.items[i];
+  for (const asmItem of asmItems ?? []) {
+    // Check if this inventory item is already in the job
+    const existing = jobItems.find(
+      ji => ji.inventoryItemId && ji.inventoryItemId === asmItem.inventory_item_id
+    );
 
-      const job = await createJob(
-        item.itemName,                         // title = item name
-        item.notes || undefined,               // description = item notes/description
-        'open',
-        {
-          name: quote.vendorName || undefined,
-          email: vendor?.contact_email || undefined,
-          phone: vendor?.contact_phone || undefined,
-          address: vendor?.address || undefined,
-        },
-        dueDate ? dueDate.toISOString() : undefined,
-        i === 0 ? (jobNumber || undefined) : undefined  // only apply manual # to first job
-      );
-
-      if (!job) continue;
-
-      if (i === 0) firstJobId = job.id;
-
-      // Add only this item to this job
-      await supabase.from('job_items').insert({
-        job_id: job.id,
-        inventory_item_id: item.inventoryItemId || null,
-        item_name: item.itemName,
-        sku: item.sku || '',
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        notes: item.notes || null,
+    if (existing && asmItem.inventory_item_id) {
+      // Increment quantity on the existing job item
+      await updateItem(existing.id, { quantity: existing.quantity + asmItem.quantity });
+    } else {
+      // Add as a new job item
+      await addItem({
+        inventoryItemId: asmItem.inventory_item_id ?? undefined,
+        itemName: asmItem.item_name,
+        sku: asmItem.sku || '',
+        quantity: asmItem.quantity,
+        unitPrice: 0, // Assembly items don't have a unit price; user can edit after
+        notes: asmItem.notes ?? undefined,
       });
     }
-
-    // Link quote to first job for the "Job Created" badge
-    if (firstJobId) {
-      await supabase
-        .from('quotes')
-        .update({ converted_to_job_id: firstJobId } as any)
-        .eq('id', quote.id);
-
-      navigate(`/jobs/${firstJobId}`);
-    }
-  } catch (err) {
-    console.error('Error creating jobs:', err);
-    toast({ title: 'Error creating jobs', variant: 'destructive' });
-  } finally {
-    setCreating(false);
   }
+
+  toast({ title: 'Assembly items added to job' });
+  setAddingAssembly(null);
 };
 ```
 
-### Edge Cases Handled
+### UI Layout
 
-- If a quote has 1 item, behaviour is identical to before (one job created).
-- If `createJob` fails for one item, it logs and continues rather than aborting all jobs.
-- The `jobNumber` input only applies to the first job; subsequent jobs auto-number via the database trigger (JOB-XXXX).
-- The "Job Created" badge on the sales order links to the first job created.
-- Navigation goes to the first job after all jobs are created.
+The page gains a **Tabs** component (using the existing `@radix-ui/react-tabs` / shadcn Tabs):
 
-### No Database Changes Needed
+```
+[ Inventory Items ]  [ Assemblies ]
+┌─────────────────────────────────────┐
+│  Assembly Name          3 items     │
+│  Description text       Cost: $120  │  [Add All Items]
+├─────────────────────────────────────┤
+│  Assembly Name 2        5 items     │  [Add All Items]
+└─────────────────────────────────────┘
+```
 
-The `jobs` and `job_items` tables already support this — no migrations required.
+### No Database Changes
+
+All required tables (`assemblies`, `assembly_items`, `job_items`) already exist. No migrations needed.
