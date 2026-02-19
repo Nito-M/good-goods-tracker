@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import {
   FileText,
@@ -21,6 +22,7 @@ import {
   Eye,
   CreditCard,
   ChevronDown,
+  ImageIcon,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -50,6 +52,7 @@ export function PurchaseOrderCard({
   bankCardName,
 }: PurchaseOrderCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
 
   const TAX_RATE = 0.05;
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -68,7 +71,8 @@ export function PurchaseOrderCard({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <>
+      <Card className="overflow-hidden">
       <CardContent className="p-0">
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           {/* Always-visible header */}
@@ -116,6 +120,15 @@ export function PurchaseOrderCard({
                       <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Unpaid</Badge>
                     )}
                   </div>
+                  {order.imageUrl && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setImageViewerOpen(true); }}
+                      className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      title="View image"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                    </button>
+                  )}
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                 </div>
               </div>
@@ -302,5 +315,13 @@ export function PurchaseOrderCard({
         </Collapsible>
       </CardContent>
     </Card>
+
+    <ImageViewerDialog
+      imageUrl={order.imageUrl}
+      alt={order.poNumber || 'Purchase Order'}
+      open={imageViewerOpen}
+      onOpenChange={setImageViewerOpen}
+    />
+  </>
   );
 }
