@@ -1,0 +1,1 @@
+ALTER TABLE public.purchase_orders ADD COLUMN IF NOT EXISTS bank_card_id uuid NULL REFERENCES public.bank_cards(id) ON DELETE SET NULL;

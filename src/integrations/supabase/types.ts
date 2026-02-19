@@ -1001,6 +1001,7 @@ export type Database = {
       }
       purchase_orders: {
         Row: {
+          bank_card_id: string | null
           company_id: string | null
           created_at: string
           discount_amount: number
@@ -1025,6 +1026,7 @@ export type Database = {
           vendor_id: string | null
         }
         Insert: {
+          bank_card_id?: string | null
           company_id?: string | null
           created_at?: string
           discount_amount?: number
@@ -1049,6 +1051,7 @@ export type Database = {
           vendor_id?: string | null
         }
         Update: {
+          bank_card_id?: string | null
           company_id?: string | null
           created_at?: string
           discount_amount?: number
@@ -1073,6 +1076,13 @@ export type Database = {
           vendor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_orders_bank_card_id_fkey"
+            columns: ["bank_card_id"]
+            isOneToOne: false
+            referencedRelation: "bank_cards"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_orders_company_id_fkey"
             columns: ["company_id"]

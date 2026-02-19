@@ -19,8 +19,9 @@ import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useRequests } from '@/hooks/useRequests';
 import { useJobs } from '@/hooks/useJobs';
+import { useBankCards } from '@/hooks/useBankCards';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, ChevronsUpDown, Check } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, ChevronsUpDown, Check, CreditCard } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -127,6 +128,7 @@ export function AddPurchaseOrder() {
   const { vendors } = useVendors();
   const { requests } = useRequests();
   const { jobs } = useJobs();
+  const { cards: bankCards } = useBankCards();
 
   const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
   const [poNumber, setPoNumber] = useState('');
@@ -137,6 +139,7 @@ export function AddPurchaseOrder() {
   const [vendorId, setVendorId] = useState<string>('');
   const [requestId, setRequestId] = useState<string>('');
   const [jobIds, setJobIds] = useState<string[]>([]);
+  const [bankCardId, setBankCardId] = useState<string>('');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -312,6 +315,7 @@ export function AddPurchaseOrder() {
         discountValue: parseFloat(discountValue) || 0,
         discountAmount,
         companyId: companyId || null,
+        bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
       },
       pdfFile,
       imageFile
@@ -684,6 +688,32 @@ export function AddPurchaseOrder() {
                   Optionally link this PO to one or more jobs
                 </p>
               </div>
+
+              {/* Bank Card Selection */}
+              {bankCards.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Link to Bank Card
+                  </Label>
+                  <Select value={bankCardId} onValueChange={setBankCardId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="No card linked" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-- No Card --</SelectItem>
+                      {bankCards.map((card) => (
+                        <SelectItem key={card.id} value={card.id}>
+                          {card.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Optionally link this PO to a bank card
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>

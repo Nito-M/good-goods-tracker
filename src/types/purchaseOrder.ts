@@ -29,6 +29,7 @@ export interface PurchaseOrder {
   discountAmount: number;
   companyId: string | null;
   companyName?: string | null;
+  bankCardId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,6 +88,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     discountAmount: db.discount_amount || 0,
     companyId: (db as any).company_id || null,
     companyName,
+    bankCardId: (db as any).bank_card_id || null,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
   };
