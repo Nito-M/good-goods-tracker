@@ -79,9 +79,12 @@ export function useBulkItemTags(itemIds: string[]) {
   const [tagsMap, setTagsMap] = useState<Map<string, { name: string; category_id: string }>>(new Map());
   const { user } = useAuth();
 
+  const itemIdsKey = itemIds.join(',');
+
   useEffect(() => {
     if (!user || itemIds.length === 0) {
       setItemTagsMap(new Map());
+      setTagsMap(new Map());
       return;
     }
 
@@ -106,25 +109,28 @@ export function useBulkItemTags(itemIds: string[]) {
         map.set(it.item_id, existing);
         allTagIds.add(it.tag_id);
       }
-      setItemTagsMap(map);
 
-      // Fetch tag details
+      // Fetch tag details first, then update both maps atomically
+      let tMap = new Map<string, { name: string; category_id: string }>();
       if (allTagIds.size > 0) {
         const { data: tagsData } = await supabase
           .from('tags')
           .select('id, name, tag_category_id')
           .in('id', Array.from(allTagIds));
 
-        const tMap = new Map<string, { name: string; category_id: string }>();
         for (const t of tagsData || []) {
           tMap.set(t.id, { name: t.name, category_id: t.tag_category_id });
         }
-        setTagsMap(tMap);
       }
+
+      // Set both maps together to avoid race condition where itemTagsMap is set
+      // but tagsMap is still empty, causing getTagsForItem to return nothing
+      setItemTagsMap(map);
+      setTagsMap(tMap);
     };
 
     fetchBulk();
-  }, [user, itemIds.join(',')]);
+  }, [user, itemIdsKey]);
 
   const getTagsForItem = (itemId: string) => {
     const tagIds = itemTagsMap.get(itemId) || [];
