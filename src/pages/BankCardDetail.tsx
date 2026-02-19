@@ -1,8 +1,17 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBank, TransactionType } from '@/hooks/useBank';
-import { useBankCards, BankCard } from '@/hooks/useBankCards';
+import { useBankCards } from '@/hooks/useBankCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -21,19 +30,38 @@ import {
   DollarSign,
   CreditCard,
   Trash2,
+  Plus,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 export function BankCardDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { transactions, loading: txLoading, deleteTransaction } = useBank();
-  const { cards, loading: cardsLoading } = useBankCards();
+  const { transactions, loading: txLoading, deleteTransaction, addCardDeposit } = useBank();
+  const { cards, loading: cardsLoading, refetch: refetchCards } = useBankCards();
+
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositDescription, setDepositDescription] = useState('');
+  const [depositing, setDepositing] = useState(false);
 
   const card = cards.find((c) => c.id === id);
   const cardTx = transactions.filter((t) => t.bankCardId === id);
-
   const loading = txLoading || cardsLoading;
+
+  const handleDeposit = async () => {
+    const amount = parseFloat(depositAmount);
+    if (!id || isNaN(amount) || amount <= 0) return;
+    setDepositing(true);
+    const ok = await addCardDeposit(id, amount, depositDescription || undefined);
+    if (ok) {
+      await refetchCards();
+      setDepositOpen(false);
+      setDepositAmount('');
+      setDepositDescription('');
+    }
+    setDepositing(false);
+  };
 
   const getTypeIcon = (type: TransactionType) => {
     switch (type) {
@@ -82,6 +110,42 @@ export function BankCardDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Deposit Dialog */}
+      <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Deposit to {card.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Amount</label>
+              <Input
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Description (optional)</label>
+              <Input
+                placeholder="e.g. Monthly funding"
+                value={depositDescription}
+                onChange={(e) => setDepositDescription(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDepositOpen(false)}>Cancel</Button>
+            <Button onClick={handleDeposit} disabled={depositing || !depositAmount}>
+              {depositing ? 'Adding...' : 'Add Deposit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center gap-4">
@@ -89,6 +153,11 @@ export function BankCardDetail() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">{card.name}</h1>
+            <div className="ml-auto">
+              <Button onClick={() => setDepositOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" /> Add Deposit
+              </Button>
+            </div>
           </div>
         </div>
       </header>
