@@ -39,6 +39,7 @@ interface VendorPriceEntry {
   vendorId: string;
   price: string;
   link?: string;
+  vendorSku?: string;
   isNew?: boolean;
 }
 
@@ -133,6 +134,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
           vendorId: p.vendor_id,
           price: String(p.price),
           link: p.link || '',
+          vendorSku: p.vendor_sku || '',
           isNew: false,
         }))
       );
@@ -234,63 +236,34 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       // Upsert current vendor prices
       for (const vp of vendorPrices) {
         if (vp.price) {
-          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link);
+          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
         }
       }
-      // Save tags for existing item
-      await setTagsForItem(pendingTagIds);
-      
-      toast({ title: 'Item updated successfully' });
     } else {
-      // Two-phase save: create item first, then upload staged images
+      // Creating a new item
       const newItemId = await onSave(itemData);
       
-      if (newItemId && stagedImages.length > 0) {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          for (let i = 0; i < stagedImages.length; i++) {
-            const staged = stagedImages[i];
-            const fileExt = staged.file.name.split('.').pop();
-            const fileName = `${user.id}/${newItemId}/${Date.now()}-${i}.${fileExt}`;
-            
-            const { error: uploadError } = await supabase.storage
-              .from('item-images')
-              .upload(fileName, staged.file);
-            
-            if (uploadError) {
-              console.error('Error uploading staged image:', uploadError);
-              continue;
-            }
-            
-            const { data: signedData } = await supabase.storage
-              .from('item-images')
-              .createSignedUrl(fileName, 60 * 60 * 24 * 365);
-            
-            if (!signedData?.signedUrl) continue;
-            
-            if (staged.is_primary) {
-              await supabase
-                .from('item_images')
-                .update({ is_primary: false })
-                .eq('item_id', newItemId);
-            }
-            
-            await supabase.from('item_images').insert({
-              item_id: newItemId,
-              user_id: user.id,
-              image_url: signedData.signedUrl,
-              display_order: i,
-              is_primary: staged.is_primary,
-            });
+      if (newItemId) {
+        // Upload staged images
+        for (const staged of stagedImages) {
+          if (staged.file) {
+            await uploadItemImageToGallery(staged.file, staged.is_primary);
           }
         }
+        // Save vendor prices for new item
+        for (const vp of vendorPrices) {
+          if (vp.price) {
+            await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
+          }
+        }
+        // Save tags
+        if (pendingTagIds.length > 0) {
+          await setTagsForItem(pendingTagIds);
+        }
+        navigate(`/items/edit/${newItemId}`);
       }
     }
-    
-    navigate('/items');
   };
-
 
   const handleDelete = () => {
     if (editItem && onDelete) {
@@ -300,26 +273,21 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   };
 
   const handleSaveVendorPrices = async () => {
-    if (!isEditing) return;
+    if (!editItem) return;
     setIsSavingVendors(true);
     try {
       const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
       const existingVendorIds = existingPrices.map((p) => p.vendor_id);
-
-      // Delete removed vendors
       for (const vendorId of existingVendorIds) {
         if (!currentVendorIds.includes(vendorId)) {
           await deletePrice(vendorId);
         }
       }
-
-      // Upsert current vendor prices
       for (const vp of vendorPrices) {
         if (vp.price) {
-          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link);
+          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
         }
       }
-
       toast({ title: 'Vendor prices saved successfully' });
     } catch {
       toast({ title: 'Error saving vendor prices', variant: 'destructive' });
@@ -327,7 +295,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setIsSavingVendors(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}

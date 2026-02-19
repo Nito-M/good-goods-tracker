@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,6 +14,7 @@ interface VendorPriceEntry {
   vendorId: string;
   price: string;
   link?: string;
+  vendorSku?: string;
   isNew?: boolean;
 }
 
@@ -46,12 +47,13 @@ export function ItemVendorPricing({
     // Check for added or removed vendors
     if (existingVendorIds.length !== currentVendorIds.length) return true;
     if (existingVendorIds.some(id => !currentVendorIds.includes(id))) return true;
-    // Check for changed prices or links
+    // Check for changed prices, links, or vendor SKUs
     for (const vp of vendorPrices) {
       const existing = existingPrices.find(p => p.vendor_id === vp.vendorId);
       if (!existing) return true;
       if (String(existing.price) !== vp.price) return true;
       if ((existing.link || '') !== (vp.link || '')) return true;
+      if ((existing.vendor_sku || '') !== (vp.vendorSku || '')) return true;
     }
     return false;
   }, [isEditing, existingPrices, vendorPrices]);
@@ -73,6 +75,7 @@ export function ItemVendorPricing({
         vendorId: selectedVendor,
         price: existingPrice ? String(existingPrice.price) : '',
         link: existingPrice?.link || '',
+        vendorSku: existingPrice?.vendor_sku || '',
         isNew: !existingPrice,
       },
     ]);
@@ -91,6 +94,14 @@ export function ItemVendorPricing({
     onVendorPricesChange(
       vendorPrices.map((vp) =>
         vp.vendorId === vendorId ? { ...vp, link } : vp
+      )
+    );
+  };
+
+  const handleVendorSkuChange = (vendorId: string, vendorSku: string) => {
+    onVendorPricesChange(
+      vendorPrices.map((vp) =>
+        vp.vendorId === vendorId ? { ...vp, vendorSku } : vp
       )
     );
   };
@@ -249,6 +260,16 @@ export function ItemVendorPricing({
                         placeholder="0.00"
                         value={vp.price}
                         onChange={(e) => handlePriceChange(vp.vendorId, e.target.value)}
+                        className="pl-7"
+                      />
+                    </div>
+                    <div className="relative w-32">
+                      <Hash className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Vendor SKU"
+                        value={vp.vendorSku || ''}
+                        onChange={(e) => handleVendorSkuChange(vp.vendorId, e.target.value)}
                         className="pl-7"
                       />
                     </div>
