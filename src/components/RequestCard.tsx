@@ -119,7 +119,11 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
           {/* Card Selector — visible to all, always shown after request is created */}
           {cards.length > 0 && onCardChange && (
             <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+              {request.bankCardId ? (
+                <div className={`h-5 w-5 rounded-full bg-gradient-to-br ${cards.find(c => c.id === request.bankCardId)?.color ?? 'from-gray-600 to-gray-800'} shrink-0`} />
+              ) : (
+                <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+              )}
               <Select
                 value={request.bankCardId ?? ""}
                 onValueChange={(val) => onCardChange(val || null)}
@@ -130,7 +134,10 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
                 <SelectContent>
                   {cards.map((card) => (
                     <SelectItem key={card.id} value={card.id}>
-                      {card.name}
+                      <div className="flex items-center gap-2">
+                        <div className={`h-3 w-3 rounded-full bg-gradient-to-br ${card.color} shrink-0`} />
+                        {card.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -138,12 +145,15 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
             </div>
           )}
           {/* Show selected card name (read-only when no onCardChange) */}
-          {!onCardChange && request.bankCardId && cards.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CreditCard className="h-4 w-4" />
-              <span>{cards.find(c => c.id === request.bankCardId)?.name ?? 'Card'}</span>
-            </div>
-          )}
+          {!onCardChange && request.bankCardId && cards.length > 0 && (() => {
+            const card = cards.find(c => c.id === request.bankCardId);
+            return card ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className={`h-4 w-4 rounded-full bg-gradient-to-br ${card.color} shrink-0`} />
+                <span>{card.name}</span>
+              </div>
+            ) : null;
+          })()}
 
           {/* Status Selector */}
           <div className="flex items-center gap-2">
