@@ -580,52 +580,64 @@ export function usePurchaseOrders() {
 
     const poLabel = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
 
-    // If a bank card is linked, deduct from that card's balance
-    if (order.bankCardId && totalCost > 0) {
-      // Fetch current card balance
-      const { data: cardData, error: cardFetchError } = await supabase
-        .from('bank_cards')
-        .select('balance, name')
-        .eq('id', order.bankCardId)
-        .single();
+    if (totalCost > 0) {
+      // If a bank card is linked, also deduct from that card's balance
+      if (order.bankCardId) {
+        const { data: cardData, error: cardFetchError } = await supabase
+          .from('bank_cards')
+          .select('balance, name')
+          .eq('id', order.bankCardId)
+          .single();
 
-      if (cardFetchError || !cardData) {
-        toast({
-          title: 'Error fetching card',
-          description: 'Could not load the linked bank card. Please try again.',
-          variant: 'destructive',
-        });
-        return false;
+        if (cardFetchError || !cardData) {
+          toast({
+            title: 'Error fetching card',
+            description: 'Could not load the linked bank card. Please try again.',
+            variant: 'destructive',
+          });
+          return false;
+        }
+
+        const newBalance = Number(cardData.balance) - totalCost;
+        if (newBalance < 0) {
+          toast({
+            title: 'Insufficient card funds',
+            description: `"${cardData.name}" doesn't have enough balance for this payment.`,
+            variant: 'destructive',
+          });
+          return false;
+        }
+
+        const { error: cardUpdateError } = await supabase
+          .from('bank_cards')
+          .update({ balance: newBalance })
+          .eq('id', order.bankCardId);
+
+        if (cardUpdateError) {
+          toast({
+            title: 'Error updating card balance',
+            description: 'Unable to deduct from card. Please try again.',
+            variant: 'destructive',
+          });
+          return false;
+        }
       }
 
-      const newBalance = Number(cardData.balance) - totalCost;
-      if (newBalance < 0) {
-        toast({
-          title: 'Insufficient card funds',
-          description: `"${cardData.name}" doesn't have enough balance for this payment.`,
-          variant: 'destructive',
+      // Always record a withdrawal in the bank transaction ledger
+      if (withdrawFromBank) {
+        const cardSuffix = order.bankCardId ? ' (card)' : '';
+        const success = await withdrawFromBank(totalCost, `Payment for ${poLabel}${cardSuffix}`);
+        if (!success) {
+          return false;
+        }
+      } else {
+        // Directly insert a bank transaction if no withdrawFromBank helper passed
+        await supabase.from('bank_transactions').insert({
+          user_id: user!.id,
+          type: 'withdrawal',
+          amount: totalCost,
+          description: `Payment for ${poLabel}${order.bankCardId ? ' (card)' : ''}`,
         });
-        return false;
-      }
-
-      const { error: cardUpdateError } = await supabase
-        .from('bank_cards')
-        .update({ balance: newBalance })
-        .eq('id', order.bankCardId);
-
-      if (cardUpdateError) {
-        toast({
-          title: 'Error updating card balance',
-          description: 'Unable to deduct from card. Please try again.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-    } else if (withdrawFromBank && totalCost > 0) {
-      // No card linked — fall back to general bank withdrawal
-      const success = await withdrawFromBank(totalCost, `Payment for ${poLabel}`);
-      if (!success) {
-        return false;
       }
     }
 
@@ -647,7 +659,9 @@ export function usePurchaseOrders() {
       return false;
     }
 
-    const cardMsg = order.bankCardId ? 'card charged' : (totalCost > 0 ? `$${totalCost.toFixed(2)} withdrawn from bank` : '');
+    const cardMsg = order.bankCardId
+      ? `$${totalCost.toFixed(2)} charged to card & recorded in bank`
+      : totalCost > 0 ? `$${totalCost.toFixed(2)} withdrawn from bank` : '';
     toast({ title: 'Order marked as paid', description: cardMsg });
     fetchOrders();
     return true;
