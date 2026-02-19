@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
-import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User, DollarSign, Hash } from "lucide-react";
+import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User, DollarSign, Hash, FileText } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
 
@@ -155,6 +155,20 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
                 <span className="text-white opacity-0 hover:opacity-100 text-sm font-medium">Click to view</span>
               </div>
             </div>
+          )}
+
+          {/* PDF Attachment */}
+          {request.pdfUrl && (
+            <a
+              href={request.pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:underline bg-primary/5 border border-primary/20 rounded-md px-3 py-2 w-full"
+            >
+              <FileText className="h-4 w-4 shrink-0" />
+              <span className="truncate">View PDF Attachment</span>
+              <ExternalLink className="h-3 w-3 shrink-0 ml-auto" />
+            </a>
           )}
 
           {/* Link */}

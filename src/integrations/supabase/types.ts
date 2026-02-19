@@ -1245,6 +1245,7 @@ export type Database = {
           link: string | null
           need_by_date: string | null
           notes: string | null
+          pdf_url: string | null
           price: number | null
           quantity: number
           quantity_unit: string
@@ -1265,6 +1266,7 @@ export type Database = {
           link?: string | null
           need_by_date?: string | null
           notes?: string | null
+          pdf_url?: string | null
           price?: number | null
           quantity?: number
           quantity_unit?: string
@@ -1285,6 +1287,7 @@ export type Database = {
           link?: string | null
           need_by_date?: string | null
           notes?: string | null
+          pdf_url?: string | null
           price?: number | null
           quantity?: number
           quantity_unit?: string

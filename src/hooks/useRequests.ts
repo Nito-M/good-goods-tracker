@@ -37,6 +37,7 @@ export function useRequests() {
         link: r.link,
         notes: r.notes,
         imageUrl: r.image_url,
+        pdfUrl: (r as any).pdf_url ?? null,
         needByDate: r.need_by_date,
         requesterName: r.requester_name,
         status: r.status as RequestStatus,
@@ -82,6 +83,7 @@ export function useRequests() {
           link: input.link || null,
           notes: input.notes || null,
           image_url: input.imageUrl || null,
+          pdf_url: input.pdfUrl || null,
           need_by_date: input.needByDate || null,
           requester_name: requesterName,
           status: "pending",
@@ -105,6 +107,7 @@ export function useRequests() {
         link: data.link,
         notes: data.notes,
         imageUrl: data.image_url,
+        pdfUrl: (data as any).pdf_url ?? null,
         needByDate: data.need_by_date,
         requesterName: data.requester_name,
         status: data.status as RequestStatus,
@@ -143,6 +146,7 @@ export function useRequests() {
       if (updates.link !== undefined) dbUpdates.link = updates.link;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
+      if (updates.pdfUrl !== undefined) dbUpdates.pdf_url = updates.pdfUrl;
       if (updates.needByDate !== undefined) dbUpdates.need_by_date = updates.needByDate;
       if (updates.requesterName !== undefined) dbUpdates.requester_name = updates.requesterName;
 
@@ -272,6 +276,39 @@ export function useRequests() {
     }
   };
 
+  const uploadPdf = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const fileName = `${user.id}/${Date.now()}_${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("request-images")
+        .upload(fileName, file, { contentType: "application/pdf" });
+
+      if (uploadError) throw uploadError;
+
+      const { data, error: signedUrlError } = await supabase.storage
+        .from("request-images")
+        .createSignedUrl(fileName, 3600 * 24 * 7); // 7 day expiry
+
+      if (signedUrlError || !data) {
+        console.error("Error creating signed URL:", signedUrlError);
+        return null;
+      }
+
+      return data.signedUrl;
+    } catch (error: any) {
+      console.error("Error uploading PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload PDF",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   return {
     requests,
     loading,
@@ -280,6 +317,8 @@ export function useRequests() {
     updateStatus,
     deleteRequest,
     uploadImage,
+    uploadPdf,
     refetch: fetchRequests,
   };
 }
+
