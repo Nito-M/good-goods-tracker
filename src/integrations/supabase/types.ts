@@ -1238,6 +1238,7 @@ export type Database = {
         Row: {
           created_at: string
           extra_cost: number
+          extra_cost_label: string
           gst_rate: number | null
           id: string
           image_url: string | null
@@ -1260,6 +1261,7 @@ export type Database = {
         Insert: {
           created_at?: string
           extra_cost?: number
+          extra_cost_label?: string
           gst_rate?: number | null
           id?: string
           image_url?: string | null
@@ -1282,6 +1284,7 @@ export type Database = {
         Update: {
           created_at?: string
           extra_cost?: number
+          extra_cost_label?: string
           gst_rate?: number | null
           id?: string
           image_url?: string | null

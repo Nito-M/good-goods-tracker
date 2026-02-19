@@ -33,7 +33,8 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
   // Calculate price breakdown
   const subtotal = request.quantity * request.price;
   const gstAmount = subtotal * (request.gstRate / 100);
-  const totalPrice = subtotal + gstAmount;
+  const extraCost = request.extraCost || 0;
+  const totalPrice = subtotal + gstAmount + extraCost;
   const fc = formatCurrency;
 
   return (
@@ -95,6 +96,12 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">GST ({request.gstRate}%)</span>
                 <span className="font-medium">{fc(gstAmount)}</span>
+              </div>
+            )}
+            {extraCost > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{request.extraCostLabel || "Extra Cost"}</span>
+                <span className="font-medium">{fc(extraCost)}</span>
               </div>
             )}
             <div className="flex items-center justify-between border-t pt-2">
