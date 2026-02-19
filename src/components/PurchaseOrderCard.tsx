@@ -121,21 +121,31 @@ export function PurchaseOrderCard({
             {order.items.length > 1 && (
               <div className="border-t pt-3 space-y-1.5">
                 {[...order.items].sort((a, b) => a.itemName.localeCompare(b.itemName)).map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground py-1 border-b border-dashed last:border-b-0">
-                    <Package className="h-3 w-3 shrink-0" />
-                    <span className="flex-1 truncate">{item.itemName}</span>
-                    <span className="text-foreground font-medium">x{item.quantity}</span>
-                    {item.unitCost !== undefined && (
-                      <span className="text-muted-foreground">@ {formatCurrency(item.unitCost)}</span>
-                    )}
-                    {item.unitCost !== undefined && (
-                      <span className="text-foreground font-medium min-w-[80px] text-right">
-                        {formatCurrency(item.unitCost * item.quantity)}
-                      </span>
+                  <div key={idx} className="py-1 border-b border-dashed last:border-b-0">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Package className="h-3 w-3 shrink-0" />
+                      <span className="flex-1 truncate">{item.itemName}</span>
+                      <span className="text-foreground font-medium">x{item.quantity}</span>
+                      {item.unitCost !== undefined && (
+                        <span className="text-muted-foreground">@ {formatCurrency(item.unitCost)}</span>
+                      )}
+                      {item.unitCost !== undefined && (
+                        <span className="text-foreground font-medium min-w-[80px] text-right">
+                          {formatCurrency(item.unitCost * item.quantity)}
+                        </span>
+                      )}
+                    </div>
+                    {item.notes && (
+                      <p className="text-xs text-muted-foreground mt-0.5 ml-5 italic">{item.notes}</p>
                     )}
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* Single item notes */}
+            {order.items.length === 1 && order.items[0].notes && (
+              <p className="text-sm text-muted-foreground italic">{order.items[0].notes}</p>
             )}
 
             {/* Pricing section */}

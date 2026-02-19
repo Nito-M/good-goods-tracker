@@ -55,6 +55,7 @@ interface LineItem {
   customName: string;
   quantity: number;
   unitCost: string;
+  itemNotes: string;
 }
 
 function createEmptyLineItem(): LineItem {
@@ -65,6 +66,7 @@ function createEmptyLineItem(): LineItem {
     customName: '',
     quantity: 1,
     unitCost: '',
+    itemNotes: '',
   };
 }
 
@@ -274,7 +276,7 @@ export function AddPurchaseOrderDialog({
     const items: PurchaseOrderItem[] = lineItems.map((lineItem) => {
       const { sku, itemName } = getItemDetails(lineItem);
       const unitCost = lineItem.unitCost ? parseFloat(lineItem.unitCost) : undefined;
-      return { sku, itemName, quantity: lineItem.quantity, unitCost };
+      return { sku, itemName, quantity: lineItem.quantity, unitCost, notes: lineItem.itemNotes || undefined };
     });
 
     const [year, month, day] = orderedAt.split('-').map(Number);
@@ -466,6 +468,16 @@ export function AddPurchaseOrderDialog({
                       placeholder="0.00"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Item Notes</Label>
+                  <Textarea
+                    value={lineItem.itemNotes}
+                    onChange={(e) => updateLineItem(lineItem.id, { itemNotes: e.target.value })}
+                    placeholder="Notes for this item (optional)"
+                    className="min-h-[60px] resize-none"
+                  />
                 </div>
               </div>
             ))}

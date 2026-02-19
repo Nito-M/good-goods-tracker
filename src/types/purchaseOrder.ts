@@ -3,6 +3,7 @@ export interface PurchaseOrderItem {
   itemName: string;
   quantity: number;
   unitCost?: number;
+  notes?: string;
 }
 
 export interface PurchaseOrder {
