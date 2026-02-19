@@ -623,21 +623,36 @@ export function usePurchaseOrders() {
         }
       }
 
-      // Always record a withdrawal in the bank transaction ledger
+      // Always record a withdrawal in the bank transaction ledger (tagged with card if applicable)
+      const cardSuffix = order.bankCardId ? ' (card)' : '';
+      const txDescription = `Payment for ${poLabel}${cardSuffix}`;
       if (withdrawFromBank) {
-        const cardSuffix = order.bankCardId ? ' (card)' : '';
-        const success = await withdrawFromBank(totalCost, `Payment for ${poLabel}${cardSuffix}`);
+        const success = await withdrawFromBank(totalCost, txDescription);
         if (!success) {
           return false;
         }
+        // Tag the most recently inserted withdrawal with the card id if applicable
+        if (order.bankCardId) {
+          const { data: latestTx } = await supabase
+            .from('bank_transactions')
+            .select('id')
+            .eq('user_id', user!.id)
+            .eq('type', 'withdrawal')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          if (latestTx) {
+            await supabase.from('bank_transactions').update({ bank_card_id: order.bankCardId } as any).eq('id', latestTx.id);
+          }
+        }
       } else {
-        // Directly insert a bank transaction if no withdrawFromBank helper passed
         await supabase.from('bank_transactions').insert({
           user_id: user!.id,
           type: 'withdrawal',
           amount: totalCost,
-          description: `Payment for ${poLabel}${order.bankCardId ? ' (card)' : ''}`,
-        });
+          description: txDescription,
+          bank_card_id: order.bankCardId || null,
+        } as any);
       }
     }
 
