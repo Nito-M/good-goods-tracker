@@ -183,6 +183,51 @@ export function useItemImages(itemId: string | undefined) {
     }
   };
 
+  const uploadImageForItem = async (targetItemId: string, file: File, isPrimary: boolean = false): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${targetItemId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('item-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: signedData } = await supabase.storage
+        .from('item-images')
+        .createSignedUrl(fileName, 60 * 60 * 24 * 365);
+
+      if (!signedData?.signedUrl) throw new Error('Failed to get signed URL');
+
+      const { data, error } = await supabase
+        .from('item_images')
+        .insert({
+          item_id: targetItemId,
+          user_id: user.id,
+          image_url: signedData.signedUrl,
+          display_order: 0,
+          is_primary: isPrimary,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return signedData.signedUrl;
+    } catch (error) {
+      console.error('Error uploading image for item:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload image. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
   const primaryImage = images.find(img => img.is_primary) || images[0];
 
   return {
@@ -190,6 +235,7 @@ export function useItemImages(itemId: string | undefined) {
     loading,
     primaryImage,
     uploadImage,
+    uploadImageForItem,
     deleteImage,
     setPrimaryImage,
     reorderImages,
