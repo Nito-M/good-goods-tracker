@@ -11,19 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, CreditCard } from "lucide-react";
+import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
-import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const STATUS_CONFIG: Record<RequestStatus, { label: string; icon: React.ReactNode }> = {
   pending: { label: "Pending", icon: <Clock className="h-4 w-4" /> },
@@ -34,19 +24,15 @@ const STATUS_CONFIG: Record<RequestStatus, { label: string; icon: React.ReactNod
 };
 
 export function Requests() {
-  const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage, uploadPdf } = useRequests();
+  const { requests, loading, addRequest, updateRequest, updateStatus, updateCardId, deleteRequest, uploadImage, uploadPdf } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
   const { linkedName, allOrgRequesterNames, isAdminUser } = useLinkedRequester();
   const { cards } = useBankCards();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
-
-  // Card selection dialog state
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
-  const [pendingApproveId, setPendingApproveId] = useState<string | null>(null);
-  const [selectedCardId, setSelectedCardId] = useState<string>("");
 
   // For regular members, only show their own requester name; admins see all
   const visibleRequesterNames = isAdminUser
@@ -74,28 +60,17 @@ export function Requests() {
 
   const handleStatusChange = async (id: string, status: RequestStatus) => {
     if (status === 'approved') {
-      // Require card selection before approving
-      setPendingApproveId(id);
-      setSelectedCardId(cards.length === 1 ? cards[0].id : "");
-      setApproveDialogOpen(true);
-      return;
+      const req = requests.find(r => r.id === id);
+      if (!req?.bankCardId) {
+        toast({
+          title: "Card required",
+          description: "Please select a bank card on this request before approving it.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     await updateStatus(id, status);
-  };
-
-  const handleConfirmApprove = async () => {
-    if (!pendingApproveId || !selectedCardId) return;
-    // Update status and store bank_card_id on the request
-    const { error } = await supabase
-      .from('requests')
-      .update({ status: 'approved', bank_card_id: selectedCardId } as any)
-      .eq('id', pendingApproveId);
-    if (!error) {
-      await updateStatus(pendingApproveId, 'approved');
-    }
-    setApproveDialogOpen(false);
-    setPendingApproveId(null);
-    setSelectedCardId("");
   };
 
   const handleDelete = async (id: string) => {
@@ -144,7 +119,9 @@ export function Requests() {
             <RequestCard
               key={request.id}
               request={request}
+              cards={cards}
               onStatusChange={isAdminUser ? handleStatusChange : undefined}
+              onCardChange={(cardId) => updateCardId(request.id, cardId)}
               onDelete={canManage ? handleDelete : undefined}
               onEdit={canManage ? handleEdit : undefined}
             />
@@ -216,47 +193,6 @@ export function Requests() {
         onUploadImage={uploadImage}
         onUploadPdf={uploadPdf}
       />
-
-      {/* Card Selection Dialog for Approve */}
-      <Dialog open={approveDialogOpen} onOpenChange={(open) => { if (!open) { setApproveDialogOpen(false); setPendingApproveId(null); setSelectedCardId(""); } }}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              Select a Card to Approve
-            </DialogTitle>
-            <DialogDescription>
-              Choose which card this request will be charged to before approving.
-            </DialogDescription>
-          </DialogHeader>
-          {cards.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-2">
-              No bank cards found. Please add a card in the Bank section first.
-            </p>
-          ) : (
-            <Select value={selectedCardId} onValueChange={setSelectedCardId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a card..." />
-              </SelectTrigger>
-              <SelectContent>
-                {cards.map((card) => (
-                  <SelectItem key={card.id} value={card.id}>
-                    {card.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setApproveDialogOpen(false); setPendingApproveId(null); setSelectedCardId(""); }}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirmApprove} disabled={!selectedCardId || cards.length === 0}>
-              Approve
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

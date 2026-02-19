@@ -1286,6 +1286,7 @@ export type Database = {
       }
       requests: {
         Row: {
+          bank_card_id: string | null
           created_at: string
           extra_cost: number
           extra_cost_label: string
@@ -1309,6 +1310,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bank_card_id?: string | null
           created_at?: string
           extra_cost?: number
           extra_cost_label?: string
@@ -1332,6 +1334,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bank_card_id?: string | null
           created_at?: string
           extra_cost?: number
           extra_cost_label?: string
@@ -1355,6 +1358,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "requests_bank_card_id_fkey"
+            columns: ["bank_card_id"]
+            isOneToOne: false
+            referencedRelation: "bank_cards"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "requests_inventory_item_id_fkey"
             columns: ["inventory_item_id"]

@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
-import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User, DollarSign, Hash, FileText } from "lucide-react";
+import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User, DollarSign, Hash, FileText, CreditCard } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
+import { BankCard } from "@/hooks/useBankCards";
 import { formatCurrency } from "@/lib/utils";
 
 interface RequestCardProps {
   request: Request;
+  cards?: BankCard[];
   onStatusChange?: (id: string, status: RequestStatus) => void;
+  onCardChange?: (cardId: string | null) => void;
   onDelete?: (id: string) => void;
   onEdit?: (request: Request) => void;
 }
@@ -25,7 +28,7 @@ const statusColors: Record<RequestStatus, string> = {
   cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
-export function RequestCard({ request, onStatusChange, onDelete, onEdit }: RequestCardProps) {
+export function RequestCard({ request, cards = [], onStatusChange, onCardChange, onDelete, onEdit }: RequestCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const isOverdue = request.needByDate && new Date(request.needByDate) < new Date() && request.status !== 'received' && request.status !== 'cancelled';
@@ -112,6 +115,35 @@ export function RequestCard({ request, onStatusChange, onDelete, onEdit }: Reque
               <span className="text-lg font-bold text-green-600">{fc(totalPrice)}</span>
             </div>
           </div>
+
+          {/* Card Selector — visible to all, always shown after request is created */}
+          {cards.length > 0 && onCardChange && (
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Select
+                value={request.bankCardId ?? ""}
+                onValueChange={(val) => onCardChange(val || null)}
+              >
+                <SelectTrigger className="flex-1 h-8 text-sm">
+                  <SelectValue placeholder="Select card..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {cards.map((card) => (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {/* Show selected card name (read-only when no onCardChange) */}
+          {!onCardChange && request.bankCardId && cards.length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CreditCard className="h-4 w-4" />
+              <span>{cards.find(c => c.id === request.bankCardId)?.name ?? 'Card'}</span>
+            </div>
+          )}
 
           {/* Status Selector */}
           <div className="flex items-center gap-2">
