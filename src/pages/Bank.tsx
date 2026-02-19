@@ -45,24 +45,73 @@ const CARD_COLORS = [
   { label: 'Gray', value: 'from-gray-600 to-gray-800' },
 ];
 
-function BankCardVisual({ card, onEdit, onDelete }: { card: BankCard; onEdit: () => void; onDelete: () => void }) {
+function BankCardVisual({ card, transactions, onEdit, onDelete }: { 
+  card: BankCard; 
+  transactions: import('@/hooks/useBank').BankTransaction[];
+  onEdit: () => void; 
+  onDelete: () => void; 
+}) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className={`relative rounded-2xl bg-gradient-to-br ${card.color} p-5 text-white shadow-lg min-w-[220px] flex-1`}>
-      <div className="flex items-start justify-between mb-6">
-        <CreditCard className="h-7 w-7 opacity-80" />
-        <div className="flex gap-1">
-          <button onClick={onEdit} className="p-1 rounded hover:bg-white/20 transition-colors">
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
-          <button onClick={onDelete} className="p-1 rounded hover:bg-white/20 transition-colors">
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+    <div className="flex-1 min-w-[280px] max-w-sm space-y-2">
+      <div
+        className={`relative rounded-2xl bg-gradient-to-br ${card.color} p-5 text-white shadow-lg cursor-pointer select-none`}
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <div className="flex items-start justify-between mb-6">
+          <CreditCard className="h-7 w-7 opacity-80" />
+          <div className="flex gap-1">
+            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1 rounded hover:bg-white/20 transition-colors">
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 rounded hover:bg-white/20 transition-colors">
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
+        <div className="text-2xl font-bold tracking-tight mb-1">
+          {formatCurrency(card.balance)}
+        </div>
+        <div className="text-sm font-medium opacity-80 truncate">{card.name}</div>
+        {transactions.length > 0 && (
+          <div className="mt-3 text-xs opacity-70 flex items-center gap-1">
+            <DollarSign className="h-3 w-3" />
+            {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} — click to {expanded ? 'hide' : 'view'}
+          </div>
+        )}
       </div>
-      <div className="text-2xl font-bold tracking-tight mb-1">
-        {formatCurrency(card.balance)}
-      </div>
-      <div className="text-sm font-medium opacity-80 truncate">{card.name}</div>
+
+      {expanded && transactions.length > 0 && (
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Date</TableHead>
+                <TableHead className="text-xs">Description</TableHead>
+                <TableHead className="text-right text-xs">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((t) => (
+                <TableRow key={t.id}>
+                  <TableCell className="text-xs whitespace-nowrap py-2">
+                    {format(new Date(t.createdAt), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="text-xs py-2">{t.description || '-'}</TableCell>
+                  <TableCell className={`text-right text-xs font-medium py-2 ${t.type === 'withdrawal' ? 'text-destructive' : 'text-success'}`}>
+                    {t.type === 'withdrawal' ? '-' : '+'}{formatCurrency(t.amount)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {expanded && transactions.length === 0 && (
+        <p className="text-xs text-muted-foreground text-center py-2">No transactions for this card yet.</p>
+      )}
     </div>
   );
 }
@@ -268,6 +317,7 @@ export function Bank() {
                     <BankCardVisual
                       key={card.id}
                       card={card}
+                      transactions={transactions.filter(t => t.bankCardId === card.id)}
                       onEdit={() => setEditCard(card)}
                       onDelete={() => deleteCard(card.id)}
                     />

@@ -12,6 +12,7 @@ export interface BankTransaction {
   type: TransactionType;
   description: string | null;
   saleId: string | null;
+  bankCardId: string | null;
   createdAt: string;
 }
 
@@ -48,6 +49,7 @@ export function useBank() {
         type: t.type as TransactionType,
         description: t.description,
         saleId: t.sale_id,
+        bankCardId: (t as any).bank_card_id ?? null,
         createdAt: t.created_at,
       }));
 
