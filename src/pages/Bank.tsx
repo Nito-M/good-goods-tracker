@@ -46,7 +46,28 @@ const CARD_COLORS = [
   { label: 'Red', value: 'from-red-600 to-red-800' },
   { label: 'Orange', value: 'from-orange-500 to-orange-700' },
   { label: 'Gray', value: 'from-gray-600 to-gray-800' },
+  { label: 'Teal', value: 'from-teal-500 to-teal-700' },
+  { label: 'Cyan', value: 'from-cyan-500 to-cyan-700' },
+  { label: 'Indigo', value: 'from-indigo-600 to-indigo-800' },
+  { label: 'Violet', value: 'from-violet-600 to-violet-800' },
+  { label: 'Fuchsia', value: 'from-fuchsia-600 to-fuchsia-800' },
+  { label: 'Pink', value: 'from-pink-500 to-pink-700' },
+  { label: 'Rose', value: 'from-rose-500 to-rose-700' },
+  { label: 'Amber', value: 'from-amber-500 to-amber-700' },
+  { label: 'Yellow', value: 'from-yellow-500 to-yellow-700' },
+  { label: 'Lime', value: 'from-lime-500 to-lime-700' },
+  { label: 'Sky', value: 'from-sky-500 to-sky-700' },
+  { label: 'Slate', value: 'from-slate-600 to-slate-800' },
+  { label: 'Zinc', value: 'from-zinc-600 to-zinc-800' },
+  { label: 'Stone', value: 'from-stone-600 to-stone-800' },
+  { label: 'Midnight', value: 'from-blue-900 to-indigo-950' },
+  { label: 'Forest', value: 'from-green-700 to-emerald-900' },
+  { label: 'Sunset', value: 'from-orange-500 to-pink-600' },
+  { label: 'Ocean', value: 'from-cyan-600 to-blue-800' },
+  { label: 'Lavender', value: 'from-purple-400 to-indigo-600' },
+  { label: 'Crimson', value: 'from-red-700 to-rose-900' },
 ];
+
 
 function BankCardVisual({ card, transactions, onEdit, onDelete }: { 
   card: BankCard; 
