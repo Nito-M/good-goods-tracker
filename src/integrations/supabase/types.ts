@@ -469,6 +469,7 @@ export type Database = {
           updated_at: string
           user_id: string
           vendor_id: string
+          vendor_sku: string | null
         }
         Insert: {
           created_at?: string
@@ -479,6 +480,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           vendor_id: string
+          vendor_sku?: string | null
         }
         Update: {
           created_at?: string
@@ -489,6 +491,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vendor_id?: string
+          vendor_sku?: string | null
         }
         Relationships: [
           {

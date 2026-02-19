@@ -9,6 +9,7 @@ export interface ItemVendorPrice {
   vendor_id: string;
   price: number;
   link: string | null;
+  vendor_sku: string | null;
   updated_at: string;
   created_at: string;
 }
@@ -46,7 +47,7 @@ export function useItemVendorPrices(itemId?: string) {
     fetchPrices();
   }, [fetchPrices]);
 
-  const upsertPrice = async (vendorId: string, price: number, link?: string) => {
+  const upsertPrice = async (vendorId: string, price: number, link?: string, vendorSku?: string) => {
     if (!user || !itemId) return false;
 
     // Check if record exists
@@ -55,7 +56,7 @@ export function useItemVendorPrices(itemId?: string) {
     if (existing) {
       const { error } = await supabase
         .from('item_vendor_prices')
-        .update({ price, link: link || null, updated_at: new Date().toISOString() })
+        .update({ price, link: link || null, vendor_sku: vendorSku || null, updated_at: new Date().toISOString() })
         .eq('id', existing.id);
 
       if (error) {
@@ -75,6 +76,7 @@ export function useItemVendorPrices(itemId?: string) {
           vendor_id: vendorId,
           price,
           link: link || null,
+          vendor_sku: vendorSku || null,
           user_id: user.id,
         });
 
