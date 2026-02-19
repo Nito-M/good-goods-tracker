@@ -72,7 +72,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     uploadImage: uploadItemImageToGallery, 
     uploadImageForItem,
     deleteImage: deleteItemImage, 
-    setPrimaryImage 
+    setPrimaryImage,
+    reorderImages,
   } = useItemImages(editItem?.id);
 
   const [name, setName] = useState('');
@@ -186,6 +187,10 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
 
   const handleSetStagedPrimary = useCallback((id: string) => {
     setStagedImages(prev => prev.map(img => ({ ...img, is_primary: img.id === id })));
+  }, []);
+
+  const handleReorderStaged = useCallback((reordered: StagedImage[]) => {
+    setStagedImages(reordered);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -399,6 +404,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                     onUpload={uploadItemImageToGallery}
                     onDelete={deleteItemImage}
                     onSetPrimary={setPrimaryImage}
+                    onReorder={reorderImages}
                   />
                 ) : (
                   /* Staging mode for new items — previews shown, upload happens after save */
@@ -412,6 +418,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                     onStageFiles={handleStageFiles}
                     onRemoveStaged={handleRemoveStaged}
                     onSetStagedPrimary={handleSetStagedPrimary}
+                    onReorderStaged={handleReorderStaged}
                   />
                 )}
               </div>
