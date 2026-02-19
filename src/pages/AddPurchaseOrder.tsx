@@ -232,7 +232,9 @@ export function AddPurchaseOrder() {
   };
 
   const filteredInventoryItems = vendorId && vendorId !== 'none'
-    ? [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name))
+    ? [...inventoryItems]
+        .filter(item => vendorPrices.some(vp => vp.itemId === item.id))
+        .sort((a, b) => a.name.localeCompare(b.name))
     : [];
 
   const updateLineItem = (id: string, updates: Partial<LineItem>) => {
