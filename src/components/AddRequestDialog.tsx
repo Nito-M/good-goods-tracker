@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Upload, X, Link as LinkIcon, CalendarIcon, User } from "lucide-react";
+import { Plus, Upload, X, Link as LinkIcon, CalendarIcon, User, Check, ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { cn, formatCurrency } from "@/lib/utils";
 import { InventoryItem } from "@/types/inventory";
@@ -37,6 +38,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedRequester, setSelectedRequester] = useState<string>("");
+  const [itemSearchOpen, setItemSearchOpen] = useState(false);
 
   // Calculate price breakdown
   const qty = typeof quantity === 'number' ? quantity : 0;
@@ -172,19 +174,53 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage 
           {/* Item Selection */}
           <div className="space-y-2">
             <Label>Item</Label>
-            <Select value={selectedItemId} onValueChange={handleItemSelect}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select an item or create custom" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="custom">Custom Item</SelectItem>
-                {items.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name} ({item.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={itemSearchOpen} onOpenChange={setItemSearchOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={itemSearchOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  <span className="truncate">
+                    {selectedItemId === "custom"
+                      ? "Custom Item"
+                      : selectedItemId
+                      ? items.find((i) => i.id === selectedItemId)?.name + " (" + items.find((i) => i.id === selectedItemId)?.sku + ")"
+                      : "Select an item or create custom"}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                <Command>
+                  <CommandInput placeholder="Search items..." />
+                  <CommandList>
+                    <CommandEmpty>No items found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="custom"
+                        onSelect={() => { handleItemSelect("custom"); setItemSearchOpen(false); }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", selectedItemId === "custom" ? "opacity-100" : "opacity-0")} />
+                        Custom Item
+                      </CommandItem>
+                      {items.map((item) => (
+                        <CommandItem
+                          key={item.id}
+                          value={`${item.name} ${item.sku}`}
+                          onSelect={() => { handleItemSelect(item.id); setItemSearchOpen(false); }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", selectedItemId === item.id ? "opacity-100" : "opacity-0")} />
+                          <span>{item.name}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">({item.sku})</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Item Name */}
