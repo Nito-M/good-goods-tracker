@@ -33,6 +33,8 @@ import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrice
 import { useItemImages } from '@/hooks/useItemImages';
 import { useItemTags } from '@/hooks/useItemTags';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 
 interface VendorPriceEntry {
@@ -60,6 +62,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const editItem = id ? items.find(item => item.id === id) : null;
   const isEditing = !!editItem;
   const { toast } = useToast();
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Vendor and pricing hooks
@@ -246,6 +249,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
           await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
         }
       }
+
+      // Fix 1: Save tag changes in edit mode
+      await setTagsForItem(pendingTagIds);
     } else {
       // Creating a new item
       const newItemId = await onSave(itemData);
@@ -263,9 +269,18 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
           }
         }
-        // Save tags
-        if (pendingTagIds.length > 0) {
-          await setTagsForItem(pendingTagIds);
+        // Fix 2: Insert tags directly with newItemId (hook closure has undefined itemId for new items)
+        if (pendingTagIds.length > 0 && user) {
+          const { error } = await supabase.from('item_tags').insert(
+            pendingTagIds.map((tagId) => ({
+              item_id: newItemId,
+              tag_id: tagId,
+              user_id: user.id,
+            }))
+          );
+          if (error) {
+            console.error('Error saving tags for new item:', error);
+          }
         }
         navigate('/items');
       }
