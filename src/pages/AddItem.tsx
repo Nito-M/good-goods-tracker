@@ -227,6 +227,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
 
     if (editItem && onUpdate) {
       onUpdate(editItem.id, itemData);
+      navigate(`/item/${editItem.id}`);
       
       // Handle vendor price updates
       const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
