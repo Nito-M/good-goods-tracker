@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Percent, DollarSign, Briefcase } from 'lucide-react';
+import { Percent, DollarSign, Briefcase, CreditCard } from 'lucide-react';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useBankCards } from '@/hooks/useBankCards';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -43,6 +44,7 @@ interface EditPurchaseOrderDialogProps {
       discountValue?: number;
       discountAmount?: number;
       companyId?: string | null;
+      bankCardId?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -108,7 +110,9 @@ export function EditPurchaseOrderDialog({
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [discountValue, setDiscountValue] = useState<string>('');
   const [companyId, setCompanyId] = useState<string>('');
+  const [bankCardId, setBankCardId] = useState<string>('');
   const { companies, defaultCompany } = useCompanies();
+  const { cards: bankCards } = useBankCards();
 
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -127,6 +131,7 @@ export function EditPurchaseOrderDialog({
       setPdfFile(null);
       setImageFile(null);
       setCompanyId((order as any).companyId || defaultCompany?.id || '');
+      setBankCardId(order.bankCardId || '');
     }
   }, [order, open, inventoryItems]);
 
@@ -199,6 +204,7 @@ export function EditPurchaseOrderDialog({
         discountValue: parsedDiscountValue,
         discountAmount: computedDiscountAmount,
         companyId: companyId || null,
+        bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
       },
       pdfFile,
       imageFile
@@ -579,6 +585,29 @@ export function EditPurchaseOrderDialog({
               className="w-32"
             />
           </div>
+
+          {/* Bank Card */}
+          {bankCards.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Link to Bank Card
+              </Label>
+              <Select value={bankCardId || 'none'} onValueChange={setBankCardId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No card linked" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- No Card --</SelectItem>
+                  {bankCards.map((card) => (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-2">
