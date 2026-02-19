@@ -1,7 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { ImageIcon } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 import { Badge } from '@/components/ui/badge';
 import {
@@ -22,9 +31,18 @@ interface InventoryTableProps {
   onDelete: (id: string) => void;
 }
 
+const PAGE_SIZE = 40;
+
 export function InventoryTable({ items, onDelete }: InventoryTableProps) {
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => { setCurrentPage(1); }, [items]);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.name.localeCompare(b.name)), [items]);
+  const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
+  const pagedItems = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return sortedItems.slice(start, start + PAGE_SIZE);
+  }, [sortedItems, currentPage]);
   const itemIds = useMemo(() => sortedItems.map((item) => item.id), [sortedItems]);
   const thumbnailMap = useItemThumbnails(itemIds);
   const { getTagsForItem } = useBulkItemTags(itemIds);
@@ -52,7 +70,7 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
               </TableCell>
             </TableRow>
           ) : (
-            sortedItems.map((item) => {
+            pagedItems.map((item) => {
               const isLowStock = item.quantity <= item.minStock;
               return (
                 <TableRow
@@ -132,6 +150,53 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
           )}
         </TableBody>
       </Table>
+      {totalPages > 1 && (
+        <div className="border-t border-border px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, sortedItems.length)} of {sortedItems.length} items
+          </p>
+          <Pagination className="w-auto mx-0">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
+                  if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                  acc.push(page);
+                  return acc;
+                }, [])
+                .map((page, idx) =>
+                  page === 'ellipsis' ? (
+                    <PaginationItem key={`e-${idx}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={page === currentPage}
+                        onClick={() => setCurrentPage(page as number)}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
       <ImageViewerDialog
         imageUrl={viewerImage?.url ?? null}
         alt={viewerImage?.alt ?? ''}
