@@ -22,7 +22,7 @@ const STATUS_CONFIG: Record<RequestStatus, { label: string; icon: React.ReactNod
 };
 
 export function Requests() {
-  const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage } = useRequests();
+  const { requests, loading, addRequest, updateRequest, updateStatus, deleteRequest, uploadImage, uploadPdf } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
   const { linkedName, allOrgRequesterNames, isAdminUser } = useLinkedRequester();
@@ -129,6 +129,7 @@ export function Requests() {
           requesterNames={visibleRequesterNames}
           onSave={addRequest}
           onUploadImage={uploadImage}
+          onUploadPdf={uploadPdf}
         />
       </div>
 
@@ -173,6 +174,7 @@ export function Requests() {
         onOpenChange={(open) => !open && setEditingRequest(null)}
         onSave={updateRequest}
         onUploadImage={uploadImage}
+        onUploadPdf={uploadPdf}
       />
     </div>
   );

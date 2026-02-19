@@ -14,6 +14,7 @@ export interface Request {
   link: string | null;
   notes: string | null;
   imageUrl: string | null;
+  pdfUrl: string | null;
   needByDate: string | null;
   requesterName: string | null;
   status: RequestStatus;
@@ -32,6 +33,7 @@ export interface CreateRequestInput {
   link: string | null;
   notes: string | null;
   imageUrl: string | null;
+  pdfUrl?: string | null;
   needByDate: string | null;
   requesterName: string | null;
 }

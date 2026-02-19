@@ -80,7 +80,7 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
 }
 
 export function Calendar() {
-  const { requests, updateRequest, uploadImage } = useRequests();
+  const { requests, updateRequest, uploadImage, uploadPdf } = useRequests();
   const { events, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
   const { allItems } = useInventory();
   const { profile } = useProfile();
@@ -383,6 +383,7 @@ export function Calendar() {
         onOpenChange={(open) => !open && setEditingRequest(null)}
         onSave={updateRequest}
         onUploadImage={uploadImage}
+        onUploadPdf={uploadPdf}
       />
       <AddCalendarEventDialog
         open={addEventOpen}
