@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useBank, TransactionType } from '@/hooks/useBank';
+import { useBankCards, BankCard } from '@/hooks/useBankCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,64 +31,140 @@ import {
   ArrowDownCircle,
   DollarSign,
   Trash2,
+  CreditCard,
+  Pencil,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
+const CARD_COLORS = [
+  { label: 'Blue', value: 'from-blue-600 to-blue-800' },
+  { label: 'Purple', value: 'from-purple-600 to-purple-800' },
+  { label: 'Green', value: 'from-emerald-600 to-emerald-800' },
+  { label: 'Red', value: 'from-red-600 to-red-800' },
+  { label: 'Orange', value: 'from-orange-500 to-orange-700' },
+  { label: 'Gray', value: 'from-gray-600 to-gray-800' },
+];
+
+function BankCardVisual({ card, onEdit, onDelete }: { card: BankCard; onEdit: () => void; onDelete: () => void }) {
+  return (
+    <div className={`relative rounded-2xl bg-gradient-to-br ${card.color} p-5 text-white shadow-lg min-w-[220px] flex-1`}>
+      <div className="flex items-start justify-between mb-6">
+        <CreditCard className="h-7 w-7 opacity-80" />
+        <div className="flex gap-1">
+          <button onClick={onEdit} className="p-1 rounded hover:bg-white/20 transition-colors">
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={onDelete} className="p-1 rounded hover:bg-white/20 transition-colors">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="text-2xl font-bold tracking-tight mb-1">
+        {formatCurrency(card.balance)}
+      </div>
+      <div className="text-sm font-medium opacity-80 truncate">{card.name}</div>
+    </div>
+  );
+}
+
+interface CardFormProps {
+  initial?: { name: string; balance: string; color: string };
+  onSave: (name: string, balance: number, color: string) => void;
+  onCancel: () => void;
+  saveLabel?: string;
+}
+
+function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFormProps) {
+  const [name, setName] = useState(initial?.name ?? '');
+  const [balance, setBalance] = useState(initial?.balance ?? '');
+  const [color, setColor] = useState(initial?.color ?? CARD_COLORS[0].value);
+
+  const handleSave = () => {
+    if (!name.trim()) return;
+    onSave(name.trim(), parseFloat(balance) || 0, color);
+  };
+
+  return (
+    <div className="space-y-4 pt-2">
+      <div className="space-y-2">
+        <Label>Card Name</Label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Business Visa" />
+      </div>
+      <div className="space-y-2">
+        <Label>Balance ($)</Label>
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          value={balance}
+          onChange={(e) => setBalance(e.target.value)}
+          placeholder="0.00"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Color</Label>
+        <div className="flex gap-2 flex-wrap">
+          {CARD_COLORS.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => setColor(c.value)}
+              className={`w-8 h-8 rounded-full bg-gradient-to-br ${c.value} border-2 transition-all ${
+                color === c.value ? 'border-foreground scale-110' : 'border-transparent'
+              }`}
+              title={c.label}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="flex gap-2 pt-2">
+        <Button variant="outline" onClick={onCancel} className="flex-1">Cancel</Button>
+        <Button onClick={handleSave} className="flex-1">{saveLabel}</Button>
+      </div>
+    </div>
+  );
+}
+
 export function Bank() {
   const { transactions, balance, loading, addDeposit, addWithdrawal, deleteTransaction } = useBank();
+  const { cards, addCard, updateCard, deleteCard } = useBankCards();
+
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [addCardOpen, setAddCardOpen] = useState(false);
+  const [editCard, setEditCard] = useState<BankCard | null>(null);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
 
   const handleDeposit = async () => {
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) return;
-
     const success = await addDeposit(numAmount, description || undefined);
-    if (success) {
-      setDepositOpen(false);
-      setAmount('');
-      setDescription('');
-    }
+    if (success) { setDepositOpen(false); setAmount(''); setDescription(''); }
   };
 
   const handleWithdraw = async () => {
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) return;
-
     const success = await addWithdrawal(numAmount, description || undefined);
-    if (success) {
-      setWithdrawOpen(false);
-      setAmount('');
-      setDescription('');
-    }
+    if (success) { setWithdrawOpen(false); setAmount(''); setDescription(''); }
   };
-
 
   const getTypeIcon = (type: TransactionType) => {
     switch (type) {
-      case 'deposit':
-        return <ArrowUpCircle className="h-4 w-4 text-success" />;
-      case 'withdrawal':
-        return <ArrowDownCircle className="h-4 w-4 text-destructive" />;
-      case 'sale_profit':
-        return <TrendingUp className="h-4 w-4 text-primary" />;
+      case 'deposit': return <ArrowUpCircle className="h-4 w-4 text-success" />;
+      case 'withdrawal': return <ArrowDownCircle className="h-4 w-4 text-destructive" />;
+      case 'sale_profit': return <TrendingUp className="h-4 w-4 text-primary" />;
     }
   };
 
   const getTypeBadge = (type: TransactionType) => {
     switch (type) {
-      case 'deposit':
-        return <Badge variant="outline" className="bg-success/10 text-success border-success/30">Deposit</Badge>;
-      case 'withdrawal':
-        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Withdrawal</Badge>;
-      case 'sale_profit':
-        return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Sale Profit</Badge>;
+      case 'deposit': return <Badge variant="outline" className="bg-success/10 text-success border-success/30">Deposit</Badge>;
+      case 'withdrawal': return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Withdrawal</Badge>;
+      case 'sale_profit': return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Sale Profit</Badge>;
     }
   };
 
-  // Calculate totals by type
   const totals = transactions.reduce(
     (acc, t) => {
       if (t.type === 'deposit') acc.deposits += t.amount;
@@ -103,90 +180,67 @@ export function Bank() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
-              Bank
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Bank</h1>
             <div className="flex gap-2">
-              <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
+              {/* Add Card */}
+              <Dialog open={addCardOpen} onOpenChange={setAddCardOpen}>
                 <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Deposit
+                  <Button variant="outline">
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Add Card
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Deposit</DialogTitle>
-                  </DialogHeader>
+                  <DialogHeader><DialogTitle>Add Bank Card</DialogTitle></DialogHeader>
+                  <CardForm
+                    onSave={async (name, bal, color) => {
+                      const ok = await addCard(name, bal, color);
+                      if (ok) setAddCardOpen(false);
+                    }}
+                    onCancel={() => setAddCardOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+
+              {/* Deposit */}
+              <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="h-4 w-4 mr-2" />Deposit</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Add Deposit</DialogTitle></DialogHeader>
                   <div className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="deposit-amount">Amount</Label>
-                      <Input
-                        id="deposit-amount"
-                        type="number"
-                        step="0.00001"
-                        min="0"
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                      />
+                      <Input id="deposit-amount" type="number" step="0.00001" min="0" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="deposit-description">Description <span className="text-sky-400 font-normal">(optional)</span></Label>
-                      <Input
-                        id="deposit-description"
-                        placeholder="e.g., Initial capital"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
+                      <Input id="deposit-description" placeholder="e.g., Initial capital" value={description} onChange={(e) => setDescription(e.target.value)} />
                     </div>
-                    <Button onClick={handleDeposit} className="w-full">
-                      Add Deposit
-                    </Button>
+                    <Button onClick={handleDeposit} className="w-full">Add Deposit</Button>
                   </div>
                 </DialogContent>
               </Dialog>
 
+              {/* Withdraw */}
               <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Minus className="h-4 w-4 mr-2" />
-                    Withdraw
-                  </Button>
+                  <Button variant="outline"><Minus className="h-4 w-4 mr-2" />Withdraw</Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Withdraw Funds</DialogTitle>
-                  </DialogHeader>
+                  <DialogHeader><DialogTitle>Withdraw Funds</DialogTitle></DialogHeader>
                   <div className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="withdraw-amount">Amount</Label>
-                      <Input
-                        id="withdraw-amount"
-                        type="number"
-                        step="0.00001"
-                        min="0"
-                        max={balance}
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Available: {formatCurrency(balance)}
-                      </p>
+                      <Input id="withdraw-amount" type="number" step="0.00001" min="0" max={balance} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                      <p className="text-xs text-muted-foreground">Available: {formatCurrency(balance)}</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="withdraw-description">Description <span className="text-sky-400 font-normal">(optional)</span></Label>
-                      <Input
-                        id="withdraw-description"
-                        placeholder="e.g., Business expense"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
+                      <Input id="withdraw-description" placeholder="e.g., Business expense" value={description} onChange={(e) => setDescription(e.target.value)} />
                     </div>
-                    <Button onClick={handleWithdraw} className="w-full">
-                      Withdraw
-                    </Button>
+                    <Button onClick={handleWithdraw} className="w-full">Withdraw</Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -195,125 +249,156 @@ export function Bank() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground">Loading bank...</div>
           </div>
         ) : (
           <>
-            {/* Balance Cards */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-              <Card className="border-primary/30 bg-primary/5">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-                  <Wallet className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">
-                    {formatCurrency(balance)}
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Bank Cards Section */}
+            {cards.length > 0 && (
+              <section>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-muted-foreground" />
+                  My Cards
+                </h2>
+                <div className="flex gap-4 flex-wrap">
+                  {cards.map((card) => (
+                    <BankCardVisual
+                      key={card.id}
+                      card={card}
+                      onEdit={() => setEditCard(card)}
+                      onDelete={() => deleteCard(card.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
+            {/* Edit Card Dialog */}
+            {editCard && (
+              <Dialog open={!!editCard} onOpenChange={(o) => { if (!o) setEditCard(null); }}>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Edit Card</DialogTitle></DialogHeader>
+                  <CardForm
+                    initial={{ name: editCard.name, balance: String(editCard.balance), color: editCard.color }}
+                    saveLabel="Save Changes"
+                    onSave={async (name, bal, color) => {
+                      await updateCard(editCard.id, { name, balance: bal, color });
+                      setEditCard(null);
+                    }}
+                    onCancel={() => setEditCard(null)}
+                  />
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Main Bank Overview */}
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-muted-foreground" />
+                Overall Bank
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+                    <Wallet className="h-4 w-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-primary">{formatCurrency(balance)}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Deposits</CardTitle>
+                    <ArrowUpCircle className="h-4 w-4 text-success" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-success">{formatCurrency(totals.deposits)}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Profits</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(totals.profits)}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Withdrawals</CardTitle>
+                    <ArrowDownCircle className="h-4 w-4 text-destructive" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-destructive">{formatCurrency(totals.withdrawals)}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Transaction History */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Deposits</CardTitle>
-                  <ArrowUpCircle className="h-4 w-4 text-success" />
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Transaction History
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-success">
-                    {formatCurrency(totals.deposits)}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Profits</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(totals.profits)}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Withdrawals</CardTitle>
-                  <ArrowDownCircle className="h-4 w-4 text-destructive" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-destructive">
-                    {formatCurrency(totals.withdrawals)}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Transaction History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Transaction History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {transactions.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No transactions yet. Add a deposit to get started.
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {transactions.map((t) => (
-                        <TableRow key={t.id}>
-                          <TableCell className="whitespace-nowrap">
-                            {format(new Date(t.createdAt), 'MMM d, yyyy h:mm a')}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getTypeIcon(t.type)}
-                              {getTypeBadge(t.type)}
-                            </div>
-                          </TableCell>
-                          <TableCell>{t.description || '-'}</TableCell>
-                          <TableCell className={`text-right font-medium ${
-                            t.type === 'withdrawal' ? 'text-destructive' : 'text-success'
-                          }`}>
-                            {t.type === 'withdrawal' ? '-' : '+'}
-                            {formatCurrency(t.amount)}
-                          </TableCell>
-                          <TableCell>
-                            {t.type !== 'sale_profit' && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => deleteTransaction(t.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                              </Button>
-                            )}
-                          </TableCell>
+                  {transactions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No transactions yet. Add a deposit to get started.
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {transactions.map((t) => (
+                          <TableRow key={t.id}>
+                            <TableCell className="whitespace-nowrap">
+                              {format(new Date(t.createdAt), 'MMM d, yyyy h:mm a')}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getTypeIcon(t.type)}
+                                {getTypeBadge(t.type)}
+                              </div>
+                            </TableCell>
+                            <TableCell>{t.description || '-'}</TableCell>
+                            <TableCell className={`text-right font-medium ${
+                              t.type === 'withdrawal' ? 'text-destructive' : 'text-success'
+                            }`}>
+                              {t.type === 'withdrawal' ? '-' : '+'}{formatCurrency(t.amount)}
+                            </TableCell>
+                            <TableCell>
+                              {t.type !== 'sale_profit' && (
+                                <Button variant="ghost" size="icon" onClick={() => deleteTransaction(t.id)}>
+                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
           </>
         )}
       </main>
