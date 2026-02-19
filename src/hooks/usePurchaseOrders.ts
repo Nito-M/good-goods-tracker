@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem } from '@/types/purchaseOrder';
+import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem, PoAttachment } from '@/types/purchaseOrder';
 import { purchaseOrderSchema, validateInput } from '@/lib/validation';
 import { updateVendorPriceFromPO } from '@/hooks/useItemVendorPrices';
 
@@ -24,8 +24,8 @@ export function usePurchaseOrders() {
       return;
     }
 
-    // Fetch orders, vendors, requests, jobs, and po_job_links in parallel
-    const [ordersResult, vendorsResult, requestsResult, jobsResult, jobLinksResult, companiesResult] = await Promise.all([
+    // Fetch orders, vendors, requests, jobs, po_job_links, companies, and attachments in parallel
+    const [ordersResult, vendorsResult, requestsResult, jobsResult, jobLinksResult, companiesResult, attachmentsResult] = await Promise.all([
       supabase
         .from('purchase_orders')
         .select('*')
@@ -45,6 +45,10 @@ export function usePurchaseOrders() {
       supabase
         .from('companies')
         .select('id, name'),
+      supabase
+        .from('po_attachments')
+        .select('*')
+        .order('created_at', { ascending: true }),
     ]);
 
     if (ordersResult.error) {
@@ -105,12 +109,29 @@ export function usePurchaseOrders() {
       });
     }
 
+    // Build PO -> attachments map
+    const attachmentsMap = new Map<string, PoAttachment[]>();
+    if (attachmentsResult.data) {
+      for (const a of attachmentsResult.data as any[]) {
+        const attachment: PoAttachment = {
+          id: a.id,
+          purchaseOrderId: a.purchase_order_id,
+          url: a.url,
+          fileType: a.file_type as 'image' | 'pdf',
+          fileName: a.file_name,
+          createdAt: new Date(a.created_at),
+        };
+        if (!attachmentsMap.has(a.purchase_order_id)) attachmentsMap.set(a.purchase_order_id, []);
+        attachmentsMap.get(a.purchase_order_id)!.push(attachment);
+      }
+    }
+
     setOrders(
       (ordersResult.data as DbPurchaseOrder[]).map((db) => {
         const jobIds = poJobMap.get(db.id) || [];
         const jobNumbers = jobIds.map(jid => jobMap.get(jid)).filter(Boolean) as string[];
         const companyId = (db as any).company_id;
-        return dbToPurchaseOrder(
+        const order = dbToPurchaseOrder(
           db, 
           db.vendor_id ? vendorMap.get(db.vendor_id) : null,
           db.request_id ? requestMap.get(db.request_id) : null,
@@ -118,6 +139,8 @@ export function usePurchaseOrders() {
           jobNumbers,
           companyId ? companyMap.get(companyId) : null,
         );
+        order.attachments = attachmentsMap.get(db.id) || [];
+        return order;
       })
     );
     setLoading(false);
@@ -753,6 +776,49 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const addAttachment = async (orderId: string, file: File): Promise<boolean> => {
+    if (!user) return false;
+    const isImage = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    if (!isImage && !isPdf) {
+      toast({ title: 'Unsupported file type', description: 'Please upload an image or PDF.', variant: 'destructive' });
+      return false;
+    }
+    const fileExt = file.name.split('.').pop();
+    const fileType = isImage ? 'image' : 'pdf';
+    const fileName = `${user.id}/${Date.now()}-${fileType}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage.from('purchase-orders').upload(fileName, file);
+    if (uploadError) {
+      toast({ title: 'Error uploading file', variant: 'destructive' });
+      return false;
+    }
+    const { data: signedData } = await supabase.storage.from('purchase-orders').createSignedUrl(fileName, 3600);
+    if (!signedData) return false;
+    const { error: insertError } = await supabase.from('po_attachments').insert({
+      purchase_order_id: orderId,
+      user_id: user.id,
+      url: signedData.signedUrl,
+      file_type: fileType,
+      file_name: file.name,
+    });
+    if (insertError) {
+      toast({ title: 'Error saving attachment', variant: 'destructive' });
+      return false;
+    }
+    await fetchOrders();
+    return true;
+  };
+
+  const deleteAttachment = async (attachmentId: string): Promise<boolean> => {
+    const { error } = await supabase.from('po_attachments').delete().eq('id', attachmentId);
+    if (error) {
+      toast({ title: 'Error removing attachment', variant: 'destructive' });
+      return false;
+    }
+    await fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
@@ -765,6 +831,8 @@ export function usePurchaseOrders() {
     uploadImageForOrder,
     deleteImageForOrder,
     deletePdfForOrder,
+    addAttachment,
+    deleteAttachment,
     refetch: fetchOrders,
   };
 }
