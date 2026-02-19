@@ -49,6 +49,7 @@ export function MultiImageUploader({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [isDroppingFiles, setIsDroppingFiles] = useState(false);
   const dragIdRef = useRef<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +77,35 @@ export function MultiImageUploader({
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setViewerOpen(true);
+  };
+
+  // --- File drop on upload zone ---
+  const handleZoneDragOver = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes('Files')) {
+      e.preventDefault();
+      setIsDroppingFiles(true);
+    }
+  };
+
+  const handleZoneDragLeave = () => setIsDroppingFiles(false);
+
+  const handleZoneDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDroppingFiles(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+    if (stagingMode && onStageFiles) {
+      onStageFiles(files);
+    } else {
+      setUploading(true);
+      try {
+        for (let i = 0; i < files.length; i++) {
+          await onUpload(files[i], images.length === 0 && i === 0);
+        }
+      } finally {
+        setUploading(false);
+      }
+    }
   };
 
   // --- Staged drag handlers ---
@@ -262,18 +292,24 @@ export function MultiImageUploader({
           </div>
         ))}
 
-        {/* Upload Button */}
+        {/* Upload / Drop Zone */}
         <div
           className={cn(
-            "w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors",
+            "w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors",
+            isDroppingFiles
+              ? "border-primary bg-primary/10 scale-105"
+              : "border-border hover:border-primary/50",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           onClick={() => !disabled && !uploading && fileInputRef.current?.click()}
+          onDragOver={!disabled ? handleZoneDragOver : undefined}
+          onDragLeave={!disabled ? handleZoneDragLeave : undefined}
+          onDrop={!disabled ? handleZoneDrop : undefined}
         >
           {uploading ? (
             <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
           ) : (
-            <Plus className="h-6 w-6 text-muted-foreground" />
+            <Plus className={cn("h-6 w-6 transition-colors", isDroppingFiles ? "text-primary" : "text-muted-foreground")} />
           )}
         </div>
       </div>
