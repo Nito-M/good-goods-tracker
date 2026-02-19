@@ -841,6 +841,44 @@ export type Database = {
         }
         Relationships: []
       }
+      po_attachments: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_type: string
+          id: string
+          purchase_order_id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_type?: string
+          id?: string
+          purchase_order_id: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_type?: string
+          id?: string
+          purchase_order_id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_attachments_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       po_item_allocations: {
         Row: {
           created_at: string

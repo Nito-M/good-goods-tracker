@@ -23,7 +23,7 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 export function PurchaseOrders() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder, uploadImageForOrder, deleteImageForOrder, deletePdfForOrder } =
+  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
     usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
@@ -241,7 +241,8 @@ export function PurchaseOrders() {
                     onEdit={handleEdit}
                     onDownload={handleDownload}
                     onPreview={handlePreview}
-                    onUploadImage={(file) => uploadImageForOrder(order.id, file)}
+                    onAddAttachment={(file) => addAttachment(order.id, file)}
+                    onDeleteAttachment={deleteAttachment}
                     onDeleteImage={() => deleteImageForOrder(order.id)}
                     onDeletePdf={() => deletePdfForOrder(order.id)}
                     loading={processingId === order.id}
@@ -266,7 +267,8 @@ export function PurchaseOrders() {
                     onEdit={handleEdit}
                     onDownload={handleDownload}
                     onPreview={handlePreview}
-                    onUploadImage={(file) => uploadImageForOrder(order.id, file)}
+                    onAddAttachment={(file) => addAttachment(order.id, file)}
+                    onDeleteAttachment={deleteAttachment}
                     onDeleteImage={() => deleteImageForOrder(order.id)}
                     onDeletePdf={() => deletePdfForOrder(order.id)}
                     loading={processingId === order.id}
@@ -291,7 +293,8 @@ export function PurchaseOrders() {
                     onEdit={handleEdit}
                     onDownload={handleDownload}
                     onPreview={handlePreview}
-                    onUploadImage={(file) => uploadImageForOrder(order.id, file)}
+                    onAddAttachment={(file) => addAttachment(order.id, file)}
+                    onDeleteAttachment={deleteAttachment}
                     onDeleteImage={() => deleteImageForOrder(order.id)}
                     onDeletePdf={() => deletePdfForOrder(order.id)}
                     loading={processingId === order.id}

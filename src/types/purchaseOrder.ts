@@ -6,6 +6,15 @@ export interface PurchaseOrderItem {
   notes?: string;
 }
 
+export interface PoAttachment {
+  id: string;
+  purchaseOrderId: string;
+  url: string;
+  fileType: 'image' | 'pdf';
+  fileName: string | null;
+  createdAt: Date;
+}
+
 export interface PurchaseOrder {
   id: string;
   userId: string;
@@ -18,6 +27,7 @@ export interface PurchaseOrder {
   jobNumbers?: string[];
   pdfUrl: string | null;
   imageUrl: string | null;
+  attachments?: PoAttachment[];
   items: PurchaseOrderItem[];
   status: 'draft' | 'ordered' | 'received';
   orderedAt: Date;
