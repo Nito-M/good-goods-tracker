@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PurchaseOrder } from '@/types/purchaseOrder';
-import { InvoiceSettings } from '@/types/sale';
 import {
   FileText,
   Check,
@@ -14,11 +13,11 @@ import {
   Pencil,
   Building2,
   Download,
-  DollarSign,
   Banknote,
   ClipboardList,
   Briefcase,
   Eye,
+  CreditCard,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -32,6 +31,7 @@ interface PurchaseOrderCardProps {
   onDownload: (order: PurchaseOrder) => void;
   onPreview?: (order: PurchaseOrder) => void;
   loading?: boolean;
+  bankCardName?: string | null;
 }
 
 export function PurchaseOrderCard({
@@ -44,6 +44,7 @@ export function PurchaseOrderCard({
   onDownload,
   onPreview,
   loading,
+  bankCardName,
 }: PurchaseOrderCardProps) {
   const TAX_RATE = 0.05;
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -222,6 +223,12 @@ export function PurchaseOrderCard({
                   <span>
                     Paid: {format(formatLocalDate(order.paidAt), 'MMM d, yyyy')}
                   </span>
+                </div>
+              )}
+              {bankCardName && (
+                <div className="flex items-center gap-2 col-span-2">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <span>Card: {bankCardName}</span>
                 </div>
               )}
             </div>

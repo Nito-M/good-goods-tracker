@@ -9,6 +9,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useJobs } from '@/hooks/useJobs';
 import { useBank } from '@/hooks/useBank';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useBankCards } from '@/hooks/useBankCards';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { PurchaseOrderPreviewDialog } from '@/components/PurchaseOrderPreviewDialog';
@@ -30,6 +31,7 @@ export function PurchaseOrders() {
   const { addWithdrawal } = useBank();
   const { jobs } = useJobs();
   const { companies } = useCompanies();
+  const { cards: bankCards } = useBankCards();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [previewOrder, setPreviewOrder] = useState<PurchaseOrder | null>(null);
@@ -242,6 +244,7 @@ export function PurchaseOrders() {
                     onDownload={handleDownload}
                     onPreview={handlePreview}
                     loading={processingId === order.id}
+                    bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />
                 ))
               )}
@@ -265,6 +268,7 @@ export function PurchaseOrders() {
                     onDownload={handleDownload}
                     onPreview={handlePreview}
                     loading={processingId === order.id}
+                    bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />
                 ))
               )}
@@ -288,6 +292,7 @@ export function PurchaseOrders() {
                     onDownload={handleDownload}
                     onPreview={handlePreview}
                     loading={processingId === order.id}
+                    bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />
                 ))
               )}
