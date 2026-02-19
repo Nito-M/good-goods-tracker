@@ -42,6 +42,8 @@ export function EditRequestDialog({
   const [quantityUnit, setQuantityUnit] = useState("pcs");
   const [price, setPrice] = useState(0);
   const [gstRate, setGstRate] = useState(0);
+  const [extraCost, setExtraCost] = useState(0);
+  const [extraCostLabel, setExtraCostLabel] = useState("Shipping");
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
@@ -55,7 +57,7 @@ export function EditRequestDialog({
 
   const subtotal = quantity * price;
   const gstAmount = subtotal * (gstRate / 100);
-  const totalPrice = subtotal + gstAmount;
+  const totalPrice = subtotal + gstAmount + extraCost;
 
   useEffect(() => {
     if (request) {
@@ -66,6 +68,8 @@ export function EditRequestDialog({
       setQuantityUnit(request.quantityUnit);
       setPrice(request.price || 0);
       setGstRate(request.gstRate || 0);
+      setExtraCost(request.extraCost || 0);
+      setExtraCostLabel(request.extraCostLabel || "Shipping");
       setLink(request.link || "");
       setNotes(request.notes || "");
       setNeedByDate(request.needByDate ? new Date(request.needByDate) : undefined);
@@ -149,6 +153,8 @@ export function EditRequestDialog({
         quantityUnit,
         price,
         gstRate,
+        extraCost,
+        extraCostLabel: extraCostLabel.trim() || "Shipping",
         link: link.trim() || null,
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
@@ -259,6 +265,18 @@ export function EditRequestDialog({
             </div>
           </div>
 
+          {/* Extra Cost (e.g. Shipping) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="editExtraCostLabel">Extra Cost Label <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+              <Input id="editExtraCostLabel" value={extraCostLabel} onChange={(e) => setExtraCostLabel(e.target.value)} placeholder="e.g. Shipping" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editExtraCost">Extra Cost ($) <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+              <Input id="editExtraCost" type="number" min={0} step={0.01} value={extraCost} onChange={(e) => setExtraCost(parseFloat(e.target.value) || 0)} placeholder="0.00" />
+            </div>
+          </div>
+
           {/* Price Breakdown */}
           {price > 0 && (
             <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
@@ -270,6 +288,12 @@ export function EditRequestDialog({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">GST ({gstRate}%)</span>
                   <span className="font-medium">{formatCurrency(gstAmount)}</span>
+                </div>
+              )}
+              {extraCost > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{extraCostLabel || "Extra Cost"}</span>
+                  <span className="font-medium">{formatCurrency(extraCost)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t pt-2">

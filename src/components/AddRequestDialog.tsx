@@ -32,6 +32,8 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
   const [quantityUnit, setQuantityUnit] = useState("pcs");
   const [price, setPrice] = useState<number | "">("");
   const [gstRate, setGstRate] = useState<number | "">(5);
+  const [extraCost, setExtraCost] = useState<number | "">(0);
+  const [extraCostLabel, setExtraCostLabel] = useState("Shipping");
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
@@ -47,6 +49,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
   const qty = typeof quantity === 'number' ? quantity : 0;
   const unitPrice = typeof price === 'number' ? price : 0;
   const gst = typeof gstRate === 'number' ? gstRate : 0;
+  const extra = typeof extraCost === 'number' ? extraCost : 0;
   const subtotal = qty * unitPrice;
   const gstAmount = subtotal * (gst / 100);
 
@@ -108,6 +111,8 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
     setQuantityUnit("pcs");
     setPrice("");
     setGstRate(5);
+    setExtraCost(0);
+    setExtraCostLabel("Shipping");
     setLink("");
     setNotes("");
     setNeedByDate(undefined);
@@ -138,6 +143,8 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
         quantityUnit,
         price: unitPrice,
         gstRate: gst,
+        extraCost: extra,
+        extraCostLabel: extraCostLabel.trim() || "Shipping",
         link: link.trim() || null,
         notes: notes.trim() || null,
         imageUrl: uploadedImageUrl,
@@ -286,6 +293,18 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
             </div>
           </div>
 
+          {/* Extra Cost (e.g. Shipping) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="extraCostLabel">Extra Cost Label <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+              <Input id="extraCostLabel" value={extraCostLabel} onChange={(e) => setExtraCostLabel(e.target.value)} placeholder="e.g. Shipping" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="extraCost">Extra Cost ($) <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+              <Input id="extraCost" type="number" min={0} step={0.01} value={extraCost} onChange={(e) => setExtraCost(e.target.value ? parseFloat(e.target.value) : 0)} placeholder="0.00" />
+            </div>
+          </div>
+
           {/* Price Breakdown */}
           {unitPrice > 0 && (
             <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
@@ -299,9 +318,15 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
                   <span className="font-medium">{formatCurrency(((qty || 1) * unitPrice) * (gst / 100))}</span>
                 </div>
               )}
+              {extra > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{extraCostLabel || "Extra Cost"}</span>
+                  <span className="font-medium">{formatCurrency(extra)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t pt-2">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-primary">{formatCurrency(((qty || 1) * unitPrice) * (1 + gst / 100))}</span>
+                <span className="font-bold text-primary">{formatCurrency(((qty || 1) * unitPrice) * (1 + gst / 100) + extra)}</span>
               </div>
             </div>
           )}

@@ -34,6 +34,8 @@ export function useRequests() {
         quantityUnit: r.quantity_unit,
         price: r.price || 0,
         gstRate: r.gst_rate || 0,
+        extraCost: (r as any).extra_cost ?? 0,
+        extraCostLabel: (r as any).extra_cost_label ?? 'Shipping',
         link: r.link,
         notes: r.notes,
         imageUrl: r.image_url,
@@ -80,6 +82,8 @@ export function useRequests() {
           quantity_unit: input.quantityUnit,
           price: input.price || 0,
           gst_rate: input.gstRate || 0,
+          extra_cost: input.extraCost || 0,
+          extra_cost_label: input.extraCostLabel || 'Shipping',
           link: input.link || null,
           notes: input.notes || null,
           image_url: input.imageUrl || null,
@@ -102,9 +106,11 @@ export function useRequests() {
         sku: data.sku,
         quantity: data.quantity,
         quantityUnit: data.quantity_unit,
-        price: data.price || 0,
-        gstRate: data.gst_rate || 0,
-        link: data.link,
+          price: data.price || 0,
+          gstRate: data.gst_rate || 0,
+          extraCost: (data as any).extra_cost ?? 0,
+          extraCostLabel: (data as any).extra_cost_label ?? 'Shipping',
+          link: data.link,
         notes: data.notes,
         imageUrl: data.image_url,
         pdfUrl: (data as any).pdf_url ?? null,
@@ -143,6 +149,8 @@ export function useRequests() {
       if (updates.quantityUnit !== undefined) dbUpdates.quantity_unit = updates.quantityUnit;
       if (updates.price !== undefined) dbUpdates.price = updates.price;
       if (updates.gstRate !== undefined) dbUpdates.gst_rate = updates.gstRate;
+      if (updates.extraCost !== undefined) dbUpdates.extra_cost = updates.extraCost;
+      if (updates.extraCostLabel !== undefined) dbUpdates.extra_cost_label = updates.extraCostLabel;
       if (updates.link !== undefined) dbUpdates.link = updates.link;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
