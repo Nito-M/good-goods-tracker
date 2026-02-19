@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBank, TransactionType } from '@/hooks/useBank';
-
 import { useBankCards } from '@/hooks/useBankCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Table,
   TableBody,
@@ -33,25 +43,61 @@ import {
   Trash2,
   Plus,
   Minus,
+  Pencil,
+  AlertTriangle,
 } from 'lucide-react';
-
 import { formatCurrency } from '@/lib/utils';
+
+const CARD_COLORS = [
+  { label: 'Blue', value: 'from-blue-600 to-blue-800' },
+  { label: 'Purple', value: 'from-purple-600 to-purple-800' },
+  { label: 'Green', value: 'from-emerald-600 to-emerald-800' },
+  { label: 'Red', value: 'from-red-600 to-red-800' },
+  { label: 'Orange', value: 'from-orange-500 to-orange-700' },
+  { label: 'Gray', value: 'from-gray-600 to-gray-800' },
+  { label: 'Teal', value: 'from-teal-500 to-teal-700' },
+  { label: 'Cyan', value: 'from-cyan-500 to-cyan-700' },
+  { label: 'Indigo', value: 'from-indigo-600 to-indigo-800' },
+  { label: 'Violet', value: 'from-violet-600 to-violet-800' },
+  { label: 'Fuchsia', value: 'from-fuchsia-600 to-fuchsia-800' },
+  { label: 'Pink', value: 'from-pink-500 to-pink-700' },
+  { label: 'Rose', value: 'from-rose-500 to-rose-700' },
+  { label: 'Amber', value: 'from-amber-500 to-amber-700' },
+  { label: 'Yellow', value: 'from-yellow-500 to-yellow-700' },
+  { label: 'Lime', value: 'from-lime-500 to-lime-700' },
+  { label: 'Sky', value: 'from-sky-500 to-sky-700' },
+  { label: 'Slate', value: 'from-slate-600 to-slate-800' },
+  { label: 'Zinc', value: 'from-zinc-600 to-zinc-800' },
+  { label: 'Stone', value: 'from-stone-600 to-stone-800' },
+  { label: 'Midnight', value: 'from-blue-900 to-indigo-950' },
+  { label: 'Forest', value: 'from-green-700 to-emerald-900' },
+  { label: 'Sunset', value: 'from-orange-500 to-pink-600' },
+  { label: 'Ocean', value: 'from-cyan-600 to-blue-800' },
+  { label: 'Lavender', value: 'from-purple-400 to-indigo-600' },
+  { label: 'Crimson', value: 'from-red-700 to-rose-900' },
+];
 
 export function BankCardDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { transactions, loading: txLoading, deleteTransaction, addCardDeposit, addWithdrawal } = useBank();
-  const { cards, loading: cardsLoading, refetch: refetchCards } = useBankCards();
+  const { cards, loading: cardsLoading, refetch: refetchCards, updateCard, deleteCard } = useBankCards();
 
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
   const [depositing, setDepositing] = useState(false);
+
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawDescription, setWithdrawDescription] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
 
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState('');
 
   const card = cards.find((c) => c.id === id);
   const cardTx = transactions.filter((t) => t.bankCardId === id);
@@ -85,8 +131,27 @@ export function BankCardDetail() {
     setWithdrawing(false);
   };
 
-  const getTypeIcon = (type: TransactionType) => {
+  const openEdit = () => {
+    if (!card) return;
+    setEditName(card.name);
+    setEditColor(card.color);
+    setEditOpen(true);
+  };
 
+  const handleEdit = async () => {
+    if (!id || !editName.trim()) return;
+    await updateCard(id, { name: editName.trim(), color: editColor });
+    await refetchCards();
+    setEditOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    await deleteCard(id);
+    navigate('/bank');
+  };
+
+  const getTypeIcon = (type: TransactionType) => {
     switch (type) {
       case 'deposit': return <ArrowUpCircle className="h-4 w-4 text-success" />;
       case 'withdrawal': return <ArrowDownCircle className="h-4 w-4 text-destructive" />;
@@ -141,23 +206,12 @@ export function BankCardDetail() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Amount</label>
-              <Input
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-              />
+              <Label>Amount</Label>
+              <Input type="number" min="0.01" step="0.01" placeholder="0.00" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Description (optional)</label>
-              <Input
-                placeholder="e.g. Monthly funding"
-                value={depositDescription}
-                onChange={(e) => setDepositDescription(e.target.value)}
-              />
+              <Label>Description (optional)</Label>
+              <Input placeholder="e.g. Monthly funding" value={depositDescription} onChange={(e) => setDepositDescription(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
@@ -177,23 +231,12 @@ export function BankCardDetail() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Amount</label>
-              <Input
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-              />
+              <Label>Amount</Label>
+              <Input type="number" min="0.01" step="0.01" placeholder="0.00" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Description (optional)</label>
-              <Input
-                placeholder="e.g. Business expense"
-                value={withdrawDescription}
-                onChange={(e) => setWithdrawDescription(e.target.value)}
-              />
+              <Label>Description (optional)</Label>
+              <Input placeholder="e.g. Business expense" value={withdrawDescription} onChange={(e) => setWithdrawDescription(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
@@ -205,6 +248,72 @@ export function BankCardDetail() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Card Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Card</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Card Name</Label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="e.g. Business Visa" />
+            </div>
+            <div className="space-y-2">
+              <Label>Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {CARD_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    onClick={() => setEditColor(c.value)}
+                    className={`w-8 h-8 rounded-full bg-gradient-to-br ${c.value} border-2 transition-all ${
+                      editColor === c.value ? 'border-foreground scale-110' : 'border-transparent'
+                    }`}
+                    title={c.label}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleEdit} disabled={!editName.trim()}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete "{card.name}"?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>Deleting this card will:</p>
+                <ul className="list-disc list-inside space-y-1 text-foreground/80">
+                  <li>Permanently remove the card and its settings</li>
+                  <li><strong>{cardTx.length} transaction{cardTx.length !== 1 ? 's' : ''}</strong> linked to this card will remain in the overall ledger but will no longer show a card association</li>
+                  <li>The card balance of <strong>{formatCurrency(card.balance)}</strong> will be lost from this card (overall bank transactions are unaffected)</li>
+                </ul>
+                <p className="text-destructive font-medium">This action cannot be undone.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center gap-4">
@@ -213,6 +322,12 @@ export function BankCardDetail() {
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">{card.name}</h1>
             <div className="ml-auto flex gap-2">
+              <Button variant="ghost" size="icon" onClick={openEdit} title="Edit card">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => setDeleteConfirmOpen(true)} title="Delete card" className="text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
               <Button variant="outline" onClick={() => setWithdrawOpen(true)}>
                 <Minus className="h-4 w-4 mr-2" /> Withdraw
               </Button>

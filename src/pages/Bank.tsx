@@ -34,7 +34,6 @@ import {
   DollarSign,
   Trash2,
   CreditCard,
-  Pencil,
   ExternalLink,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -69,11 +68,9 @@ const CARD_COLORS = [
 ];
 
 
-function BankCardVisual({ card, transactions, onEdit, onDelete }: { 
+function BankCardVisual({ card, transactions }: { 
   card: BankCard; 
   transactions: import('@/hooks/useBank').BankTransaction[];
-  onEdit: () => void; 
-  onDelete: () => void; 
 }) {
   const navigate = useNavigate();
 
@@ -85,14 +82,6 @@ function BankCardVisual({ card, transactions, onEdit, onDelete }: {
       >
         <div className="flex items-start justify-between mb-6">
           <CreditCard className="h-7 w-7 opacity-80" />
-          <div className="flex gap-1">
-            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1 rounded hover:bg-white/20 transition-colors">
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 rounded hover:bg-white/20 transition-colors">
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
         </div>
         <div className="text-2xl font-bold tracking-tight mb-1">
           {formatCurrency(card.balance)}
@@ -106,6 +95,7 @@ function BankCardVisual({ card, transactions, onEdit, onDelete }: {
     </div>
   );
 }
+
 
 interface CardFormProps {
   initial?: { name: string; balance: string; color: string };
@@ -167,13 +157,12 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
 export function Bank() {
   const navigate = useNavigate();
   const { transactions, balance, loading, addDeposit, addWithdrawal, deleteTransaction } = useBank();
-  const { cards, addCard, updateCard, deleteCard } = useBankCards();
+  const { cards, addCard } = useBankCards();
   const { orders } = usePurchaseOrders();
 
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [addCardOpen, setAddCardOpen] = useState(false);
-  const [editCard, setEditCard] = useState<BankCard | null>(null);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
 
@@ -322,30 +311,10 @@ export function Bank() {
                       key={card.id}
                       card={card}
                       transactions={transactions.filter(t => t.bankCardId === card.id)}
-                      onEdit={() => setEditCard(card)}
-                      onDelete={() => deleteCard(card.id)}
                     />
                   ))}
                 </div>
               </section>
-            )}
-
-            {/* Edit Card Dialog */}
-            {editCard && (
-              <Dialog open={!!editCard} onOpenChange={(o) => { if (!o) setEditCard(null); }}>
-                <DialogContent>
-                  <DialogHeader><DialogTitle>Edit Card</DialogTitle></DialogHeader>
-                  <CardForm
-                    initial={{ name: editCard.name, balance: String(editCard.balance), color: editCard.color }}
-                    saveLabel="Save Changes"
-                    onSave={async (name, bal, color) => {
-                      await updateCard(editCard.id, { name, balance: bal, color });
-                      setEditCard(null);
-                    }}
-                    onCancel={() => setEditCard(null)}
-                  />
-                </DialogContent>
-              </Dialog>
             )}
 
             {/* Main Bank Overview - Transaction History only */}
