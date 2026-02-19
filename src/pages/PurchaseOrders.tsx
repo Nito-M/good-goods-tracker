@@ -23,7 +23,7 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 export function PurchaseOrders() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder, uploadImageForOrder } =
+  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder, uploadImageForOrder, deleteImageForOrder, deletePdfForOrder } =
     usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
@@ -242,6 +242,8 @@ export function PurchaseOrders() {
                     onDownload={handleDownload}
                     onPreview={handlePreview}
                     onUploadImage={(file) => uploadImageForOrder(order.id, file)}
+                    onDeleteImage={() => deleteImageForOrder(order.id)}
+                    onDeletePdf={() => deletePdfForOrder(order.id)}
                     loading={processingId === order.id}
                     bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />
@@ -265,6 +267,8 @@ export function PurchaseOrders() {
                     onDownload={handleDownload}
                     onPreview={handlePreview}
                     onUploadImage={(file) => uploadImageForOrder(order.id, file)}
+                    onDeleteImage={() => deleteImageForOrder(order.id)}
+                    onDeletePdf={() => deletePdfForOrder(order.id)}
                     loading={processingId === order.id}
                     bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />
@@ -288,6 +292,8 @@ export function PurchaseOrders() {
                     onDownload={handleDownload}
                     onPreview={handlePreview}
                     onUploadImage={(file) => uploadImageForOrder(order.id, file)}
+                    onDeleteImage={() => deleteImageForOrder(order.id)}
+                    onDeletePdf={() => deletePdfForOrder(order.id)}
                     loading={processingId === order.id}
                     bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />

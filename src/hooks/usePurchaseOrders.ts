@@ -723,6 +723,36 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const deleteImageForOrder = async (orderId: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ image_url: null })
+      .eq('id', orderId);
+    if (error) {
+      console.error('Error removing image:', error);
+      toast({ title: 'Error removing image', variant: 'destructive' });
+      return false;
+    }
+    toast({ title: 'Image removed' });
+    await fetchOrders();
+    return true;
+  };
+
+  const deletePdfForOrder = async (orderId: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ pdf_url: null })
+      .eq('id', orderId);
+    if (error) {
+      console.error('Error removing PDF:', error);
+      toast({ title: 'Error removing PDF', variant: 'destructive' });
+      return false;
+    }
+    toast({ title: 'PDF removed' });
+    await fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
@@ -733,6 +763,8 @@ export function usePurchaseOrders() {
     markAsPaid,
     deleteOrder,
     uploadImageForOrder,
+    deleteImageForOrder,
+    deletePdfForOrder,
     refetch: fetchOrders,
   };
 }

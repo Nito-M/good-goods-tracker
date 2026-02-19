@@ -23,6 +23,7 @@ import {
   CreditCard,
   ChevronDown,
   ImageIcon,
+  X,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -36,6 +37,8 @@ interface PurchaseOrderCardProps {
   onDownload: (order: PurchaseOrder) => void;
   onPreview?: (order: PurchaseOrder) => void;
   onUploadImage?: (file: File) => Promise<boolean>;
+  onDeleteImage?: () => Promise<boolean>;
+  onDeletePdf?: () => Promise<boolean>;
   loading?: boolean;
   bankCardName?: string | null;
 }
@@ -50,6 +53,8 @@ export function PurchaseOrderCard({
   onDownload,
   onPreview,
   onUploadImage,
+  onDeleteImage,
+  onDeletePdf,
   loading,
   bankCardName,
 }: PurchaseOrderCardProps) {
@@ -280,15 +285,26 @@ export function PurchaseOrderCard({
 
               {/* PDF link */}
               {order.pdfUrl && (
-                <a
-                  href={order.pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                >
-                  <FileText className="h-4 w-4" />
-                  View PDF
-                </a>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={order.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                  >
+                    <FileText className="h-4 w-4" />
+                    View PDF
+                  </a>
+                  {onDeletePdf && (
+                    <button
+                      onClick={onDeletePdf}
+                      className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Remove PDF"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               )}
 
               {/* Image upload zone */}
@@ -301,19 +317,30 @@ export function PurchaseOrderCard({
                     className="hidden"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ''; }}
                   />
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-4 cursor-pointer transition-colors text-center
-                      ${isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/30 hover:border-primary/60 hover:bg-muted/40'}
-                      ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
-                  >
-                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {uploading ? 'Uploading…' : order.imageUrl ? 'Replace image' : 'Drop image or click to upload'}
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`flex-1 flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-4 cursor-pointer transition-colors text-center
+                        ${isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/30 hover:border-primary/60 hover:bg-muted/40'}
+                        ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                    >
+                      <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        {uploading ? 'Uploading…' : order.imageUrl ? 'Replace image' : 'Drop image or click to upload'}
+                      </span>
+                    </div>
+                    {order.imageUrl && onDeleteImage && (
+                      <button
+                        onClick={onDeleteImage}
+                        className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                        title="Remove image"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
