@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useBank, TransactionType } from '@/hooks/useBank';
+import { useBank, TransactionType, BankTransaction } from '@/hooks/useBank';
 import { useBankCards, BankCard } from '@/hooks/useBankCards';
+import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,7 @@ import {
   Trash2,
   CreditCard,
   Pencil,
+  ExternalLink,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -142,8 +144,10 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
 }
 
 export function Bank() {
+  const navigate = useNavigate();
   const { transactions, balance, loading, addDeposit, addWithdrawal, deleteTransaction } = useBank();
   const { cards, addCard, updateCard, deleteCard } = useBankCards();
+  const { orders } = usePurchaseOrders();
 
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -180,6 +184,16 @@ export function Bank() {
       case 'withdrawal': return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">Withdrawal</Badge>;
       case 'sale_profit': return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">Sale Profit</Badge>;
     }
+  };
+
+  // Find which PO a withdrawal transaction refers to (by matching description)
+  const findPoForTransaction = (t: BankTransaction) => {
+    if (t.type !== 'withdrawal') return null;
+    const desc = t.description || '';
+    const match = desc.match(/Payment for (PO-\d+)/);
+    if (!match) return null;
+    const poNumber = match[1];
+    return orders.find((o) => o.poNumber === poNumber) ?? null;
   };
 
   const totals = transactions.reduce(
@@ -380,12 +394,17 @@ export function Bank() {
                           <TableHead>Date</TableHead>
                           <TableHead>Type</TableHead>
                           <TableHead>Description</TableHead>
+                          <TableHead>Card</TableHead>
+                          <TableHead>Link</TableHead>
                           <TableHead className="text-right">Amount</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {transactions.map((t) => (
+                        {transactions.map((t) => {
+                          const linkedCard = t.bankCardId ? cards.find((c) => c.id === t.bankCardId) : null;
+                          const linkedPo = findPoForTransaction(t);
+                          return (
                           <TableRow key={t.id}>
                             <TableCell className="whitespace-nowrap">
                               {format(new Date(t.createdAt), 'MMM d, yyyy h:mm a')}
@@ -397,6 +416,33 @@ export function Bank() {
                               </div>
                             </TableCell>
                             <TableCell>{t.description || '-'}</TableCell>
+                            <TableCell>
+                              {linkedCard ? (
+                                <button
+                                  onClick={() => navigate(`/bank/card/${linkedCard.id}`)}
+                                  className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                                >
+                                  <CreditCard className="h-3.5 w-3.5" />
+                                  {linkedCard.name}
+                                </button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {linkedPo ? (
+                                <button
+                                  onClick={() => navigate(`/purchase-orders`)}
+                                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                                  title={`Go to ${linkedPo.poNumber}`}
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  {linkedPo.poNumber}
+                                </button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </TableCell>
                             <TableCell className={`text-right font-medium ${
                               t.type === 'withdrawal' ? 'text-destructive' : 'text-success'
                             }`}>
@@ -410,7 +456,8 @@ export function Bank() {
                               )}
                             </TableCell>
                           </TableRow>
-                        ))}
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   )}
