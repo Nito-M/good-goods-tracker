@@ -17,6 +17,7 @@ interface MultiImageUploaderProps {
   onUpload: (file: File, isPrimary?: boolean) => Promise<string | null>;
   onDelete: (imageId: string) => Promise<void>;
   onSetPrimary: (imageId: string) => Promise<void>;
+  onReorder?: (reorderedImages: ItemImage[]) => Promise<void>;
   disabled?: boolean;
   // Staging mode: used on create form — files are held locally, not uploaded immediately
   stagingMode?: boolean;
@@ -24,6 +25,7 @@ interface MultiImageUploaderProps {
   onStageFiles?: (files: File[]) => void;
   onRemoveStaged?: (id: string) => void;
   onSetStagedPrimary?: (id: string) => void;
+  onReorderStaged?: (reordered: StagedImage[]) => void;
 }
 
 export type { StagedImage };
@@ -33,17 +35,21 @@ export function MultiImageUploader({
   onUpload,
   onDelete,
   onSetPrimary,
+  onReorder,
   disabled = false,
   stagingMode = false,
   stagedImages = [],
   onStageFiles,
   onRemoveStaged,
   onSetStagedPrimary,
+  onReorderStaged,
 }: MultiImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragIdRef = useRef<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -72,6 +78,67 @@ export function MultiImageUploader({
     setViewerOpen(true);
   };
 
+  // --- Staged drag handlers ---
+  const handleStagedDragStart = (id: string) => {
+    dragIdRef.current = id;
+  };
+
+  const handleStagedDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    setDragOverId(id);
+  };
+
+  const handleStagedDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = dragIdRef.current;
+    if (!sourceId || sourceId === targetId || !onReorderStaged) {
+      setDragOverId(null);
+      return;
+    }
+    const fromIdx = stagedImages.findIndex(img => img.id === sourceId);
+    const toIdx = stagedImages.findIndex(img => img.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) { setDragOverId(null); return; }
+    const reordered = [...stagedImages];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    onReorderStaged(reordered);
+    dragIdRef.current = null;
+    setDragOverId(null);
+  };
+
+  // --- Existing images drag handlers ---
+  const handleExistingDragStart = (id: string) => {
+    dragIdRef.current = id;
+  };
+
+  const handleExistingDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    setDragOverId(id);
+  };
+
+  const handleExistingDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = dragIdRef.current;
+    if (!sourceId || sourceId === targetId || !onReorder) {
+      setDragOverId(null);
+      return;
+    }
+    const fromIdx = images.findIndex(img => img.id === sourceId);
+    const toIdx = images.findIndex(img => img.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) { setDragOverId(null); return; }
+    const reordered = [...images];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    onReorder(reordered);
+    dragIdRef.current = null;
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    dragIdRef.current = null;
+    setDragOverId(null);
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
@@ -79,16 +146,23 @@ export function MultiImageUploader({
         {stagingMode && stagedImages.map((image) => (
           <div
             key={image.id}
+            draggable
+            onDragStart={() => handleStagedDragStart(image.id)}
+            onDragOver={(e) => handleStagedDragOver(e, image.id)}
+            onDrop={(e) => handleStagedDrop(e, image.id)}
+            onDragEnd={handleDragEnd}
             className={cn(
-              "relative w-24 h-24 rounded-lg overflow-hidden border-2 group",
-              image.is_primary ? "border-primary ring-2 ring-primary/20" : "border-border"
+              "relative w-24 h-24 rounded-lg overflow-hidden border-2 group cursor-grab active:cursor-grabbing transition-all",
+              image.is_primary ? "border-primary ring-2 ring-primary/20" : "border-border",
+              dragOverId === image.id && dragIdRef.current !== image.id && "ring-2 ring-primary scale-105"
             )}
           >
             <img
               src={image.image_url}
               alt="Product"
-              className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+              className="w-full h-full object-cover hover:opacity-80 transition-opacity"
               onClick={() => handleImageClick(image.image_url)}
+              draggable={false}
             />
             {image.is_primary && (
               <div className="absolute top-1 left-1">
@@ -128,16 +202,23 @@ export function MultiImageUploader({
         {!stagingMode && images.map((image) => (
           <div
             key={image.id}
+            draggable
+            onDragStart={() => handleExistingDragStart(image.id)}
+            onDragOver={(e) => handleExistingDragOver(e, image.id)}
+            onDrop={(e) => handleExistingDrop(e, image.id)}
+            onDragEnd={handleDragEnd}
             className={cn(
-              "relative w-24 h-24 rounded-lg overflow-hidden border-2 group",
-              image.is_primary ? "border-primary ring-2 ring-primary/20" : "border-border"
+              "relative w-24 h-24 rounded-lg overflow-hidden border-2 group cursor-grab active:cursor-grabbing transition-all",
+              image.is_primary ? "border-primary ring-2 ring-primary/20" : "border-border",
+              dragOverId === image.id && dragIdRef.current !== image.id && "ring-2 ring-primary scale-105"
             )}
           >
             <img
               src={image.image_url}
               alt="Product"
-              className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+              className="w-full h-full object-cover hover:opacity-80 transition-opacity"
               onClick={() => handleImageClick(image.image_url)}
+              draggable={false}
             />
             
             {/* Primary Badge */}
@@ -224,7 +305,7 @@ export function MultiImageUploader({
           Add Images
         </Button>
         <p className="text-xs text-muted-foreground">
-          PNG, JPG up to 5MB. First image or starred becomes primary.
+          PNG, JPG up to 5MB. Drag to reorder. First image or starred becomes primary.
         </p>
       </div>
 
