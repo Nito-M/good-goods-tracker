@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import {
   FileText,
@@ -18,6 +20,7 @@ import {
   Briefcase,
   Eye,
   CreditCard,
+  ChevronDown,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -46,6 +49,8 @@ export function PurchaseOrderCard({
   loading,
   bankCardName,
 }: PurchaseOrderCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
   const TAX_RATE = 0.05;
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
@@ -54,279 +59,248 @@ export function PurchaseOrderCard({
   const taxAmount = afterDiscount * TAX_RATE;
   const totalCost = afterDiscount + taxAmount;
 
-  // Format date using local date components (avoids UTC timezone shift)
   const formatLocalDate = (dateValue: Date | string) => {
     const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
-    // Use local date methods to extract year/month/day in user's timezone
     const year = date.getFullYear();
-    const month = date.getMonth(); // 0-indexed
+    const month = date.getMonth();
     const day = date.getDate();
-    // Create a local date at noon to format
     return new Date(year, month, day, 12, 0, 0);
   };
 
-
   return (
     <Card className="overflow-hidden">
-      <CardContent className="p-4">
-        <div className="space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                  <Hash className="h-3 w-3" />
-                  <span className="font-medium">{order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`}</span>
+      <CardContent className="p-0">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          {/* Always-visible header */}
+          <CollapsibleTrigger asChild>
+            <button className="w-full text-left p-4 hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-0.5">
+                    <Hash className="h-3 w-3 shrink-0" />
+                    <span className="font-medium">{order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`}</span>
+                    {order.vendorName && (
+                      <span className="text-muted-foreground truncate">· {order.vendorName}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-base truncate">
+                      {order.items.length === 1
+                        ? order.items[0].itemName
+                        : `${order.items.length} Items`}
+                    </h3>
+                    {subtotal > 0 && (
+                      <span className="text-sm font-medium text-muted-foreground shrink-0">
+                        {formatCurrency(totalCost)}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <h3 className="font-semibold text-lg">
-                  {order.items.length === 1
-                    ? order.items[0].itemName
-                    : `${order.items.length} Items`}
-                </h3>
-                {order.items.length === 1 && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-col gap-1 items-end">
+                    <Badge
+                      variant={order.status === 'received' ? 'default' : order.status === 'draft' ? 'outline' : 'secondary'}
+                      className={
+                        order.status === 'received'
+                          ? 'bg-green-600 hover:bg-green-700 text-xs'
+                          : order.status === 'draft'
+                          ? 'border-yellow-500 text-yellow-600 text-xs'
+                          : 'text-xs'
+                      }
+                    >
+                      {order.status === 'received' ? 'Received' : order.status === 'draft' ? 'Draft' : 'Ordered'}
+                    </Badge>
+                    {order.paidAt ? (
+                      <Badge variant="outline" className="border-blue-500 text-blue-600 text-xs">Paid</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Unpaid</Badge>
+                    )}
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+            </button>
+          </CollapsibleTrigger>
+
+          {/* Collapsible details */}
+          <CollapsibleContent>
+            <div className="px-4 pb-4 space-y-3 border-t">
+              {/* Multiple items list */}
+              {order.items.length > 1 && (
+                <div className="pt-3 space-y-1.5">
+                  {[...order.items].sort((a, b) => a.itemName.localeCompare(b.itemName)).map((item, idx) => (
+                    <div key={idx} className="py-1 border-b border-dashed last:border-b-0">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Package className="h-3 w-3 shrink-0" />
+                        <span className="flex-1 truncate">{item.itemName}</span>
+                        <span className="text-foreground font-medium">x{item.quantity}</span>
+                        {item.unitCost !== undefined && (
+                          <span className="text-muted-foreground">@ {formatCurrency(item.unitCost)}</span>
+                        )}
+                        {item.unitCost !== undefined && (
+                          <span className="text-foreground font-medium min-w-[80px] text-right">
+                            {formatCurrency(item.unitCost * item.quantity)}
+                          </span>
+                        )}
+                      </div>
+                      {item.notes && (
+                        <p className="text-xs text-muted-foreground mt-0.5 ml-5 italic">{item.notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Single item details */}
+              {order.items.length === 1 && (
+                <div className="pt-3 space-y-1">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>SKU: {order.items[0].sku}</span>
                     <span>Qty: {order.items[0].quantity}</span>
                     {order.items[0].unitCost !== undefined && order.items[0].unitCost > 0 && (
-                      <span className="font-medium text-foreground">
-                        @ {formatCurrency(order.items[0].unitCost)} each
-                      </span>
+                      <span className="font-medium text-foreground">@ {formatCurrency(order.items[0].unitCost)} each</span>
                     )}
                   </div>
-                )}
-              </div>
-              <div className="flex flex-col gap-1 items-end">
-                <Badge
-                  variant={order.status === 'received' ? 'default' : order.status === 'draft' ? 'outline' : 'secondary'}
-                  className={
-                    order.status === 'received'
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : order.status === 'draft'
-                      ? 'border-yellow-500 text-yellow-600'
-                      : ''
-                  }
-                >
-                  {order.status === 'received' ? 'Received' : order.status === 'draft' ? 'Draft' : 'Ordered'}
-                </Badge>
-                {order.paidAt ? (
-                  <Badge variant="outline" className="border-blue-500 text-blue-600">
-                    Paid
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="border-amber-500 text-amber-600">
-                    Unpaid
-                  </Badge>
-                )}
-              </div>
-            </div>
+                  {order.items[0].notes && (
+                    <p className="text-sm text-muted-foreground italic">{order.items[0].notes}</p>
+                  )}
+                </div>
+              )}
 
-            {/* Multiple items list */}
-            {order.items.length > 1 && (
-              <div className="border-t pt-3 space-y-1.5">
-                {[...order.items].sort((a, b) => a.itemName.localeCompare(b.itemName)).map((item, idx) => (
-                  <div key={idx} className="py-1 border-b border-dashed last:border-b-0">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Package className="h-3 w-3 shrink-0" />
-                      <span className="flex-1 truncate">{item.itemName}</span>
-                      <span className="text-foreground font-medium">x{item.quantity}</span>
-                      {item.unitCost !== undefined && (
-                        <span className="text-muted-foreground">@ {formatCurrency(item.unitCost)}</span>
-                      )}
-                      {item.unitCost !== undefined && (
-                        <span className="text-foreground font-medium min-w-[80px] text-right">
-                          {formatCurrency(item.unitCost * item.quantity)}
-                        </span>
-                      )}
+              {/* Pricing section */}
+              {subtotal > 0 && (
+                <div className="border-t pt-3 space-y-1 text-sm">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                      <span>Discount{order.discountType === 'percentage' && order.discountValue > 0 ? ` (${order.discountValue}%)` : ''}</span>
+                      <span>-{formatCurrency(discountAmount)}</span>
                     </div>
-                    {item.notes && (
-                      <p className="text-xs text-muted-foreground mt-0.5 ml-5 italic">{item.notes}</p>
-                    )}
+                  )}
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Tax (5%)</span>
+                    <span>{formatCurrency(taxAmount)}</span>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Single item notes */}
-            {order.items.length === 1 && order.items[0].notes && (
-              <p className="text-sm text-muted-foreground italic">{order.items[0].notes}</p>
-            )}
-
-            {/* Pricing section */}
-            {subtotal > 0 && (
-              <div className="border-t pt-3 space-y-1 text-sm">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(subtotal)}</span>
+                  <div className="flex justify-between font-semibold text-base pt-1 border-t">
+                    <span>Total</span>
+                    <span>{formatCurrency(totalCost)}</span>
+                  </div>
                 </div>
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                    <span>Discount{order.discountType === 'percentage' && order.discountValue > 0 ? ` (${order.discountValue}%)` : ''}</span>
-                    <span>-{formatCurrency(discountAmount)}</span>
+              )}
+
+              {/* Details grid */}
+              <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
+                {order.companyName && (
+                  <div className="flex items-center gap-2 col-span-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <span>Company: {order.companyName}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Tax (5%)</span>
-                  <span>{formatCurrency(taxAmount)}</span>
-                </div>
-                <div className="flex justify-between font-semibold text-base pt-1 border-t">
-                  <span>Total</span>
-                  <span>{formatCurrency(totalCost)}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Details grid */}
-            <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
-              {order.companyName && (
-                <div className="flex items-center gap-2 col-span-2">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span>Company: {order.companyName}</span>
-                </div>
-              )}
-              {order.vendorName && (
-                <div className="flex items-center gap-2 col-span-2">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span>Vendor: {order.vendorName}</span>
-                </div>
-              )}
-              {order.requestNumber && (
-                <div className="flex items-center gap-2 col-span-2">
-                  <ClipboardList className="h-4 w-4 text-primary" />
-                  <span className="text-primary font-medium">Request: {order.requestNumber}</span>
-                </div>
-              )}
-              {order.jobNumbers && order.jobNumbers.length > 0 && (
-                <div className="flex items-center gap-2 col-span-2 flex-wrap">
-                  <Briefcase className="h-4 w-4 text-primary" />
-                  {order.jobNumbers.map((jn, idx) => (
-                    <span key={idx} className="text-primary font-medium">Job: {jn}</span>
-                  ))}
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-muted-foreground" />
-                <span>Total Qty: {totalQuantity}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>Ordered: {format(formatLocalDate(order.orderedAt), 'MMM d, yyyy')}</span>
-              </div>
-              {order.receivedAt && (
+                {order.requestNumber && (
+                  <div className="flex items-center gap-2 col-span-2">
+                    <ClipboardList className="h-4 w-4 text-primary" />
+                    <span className="text-primary font-medium">Request: {order.requestNumber}</span>
+                  </div>
+                )}
+                {order.jobNumbers && order.jobNumbers.length > 0 && (
+                  <div className="flex items-center gap-2 col-span-2 flex-wrap">
+                    <Briefcase className="h-4 w-4 text-primary" />
+                    {order.jobNumbers.map((jn, idx) => (
+                      <span key={idx} className="text-primary font-medium">Job: {jn}</span>
+                    ))}
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  <span>
-                    Received: {format(formatLocalDate(order.receivedAt), 'MMM d, yyyy')}
-                  </span>
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                  <span>Total Qty: {totalQuantity}</span>
                 </div>
-              )}
-              {order.paidAt && (
                 <div className="flex items-center gap-2">
-                  <Banknote className="h-4 w-4 text-blue-600" />
-                  <span>
-                    Paid: {format(formatLocalDate(order.paidAt), 'MMM d, yyyy')}
-                  </span>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>Ordered: {format(formatLocalDate(order.orderedAt), 'MMM d, yyyy')}</span>
                 </div>
+                {order.receivedAt && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <span>Received: {format(formatLocalDate(order.receivedAt), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
+                {order.paidAt && (
+                  <div className="flex items-center gap-2">
+                    <Banknote className="h-4 w-4 text-blue-600" />
+                    <span>Paid: {format(formatLocalDate(order.paidAt), 'MMM d, yyyy')}</span>
+                  </div>
+                )}
+                {bankCardName && (
+                  <div className="flex items-center gap-2 col-span-2">
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    <span>Card: {bankCardName}</span>
+                  </div>
+                )}
+              </div>
+
+              {order.notes && (
+                <p className="text-sm text-muted-foreground">{order.notes}</p>
               )}
-              {bankCardName && (
-                <div className="flex items-center gap-2 col-span-2">
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  <span>Card: {bankCardName}</span>
-                </div>
+
+              {/* PDF link */}
+              {order.pdfUrl && (
+                <a
+                  href={order.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <FileText className="h-4 w-4" />
+                  View PDF
+                </a>
               )}
+
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 pt-2">
+                {order.status === 'draft' && onMarkOrdered && (
+                  <Button size="sm" onClick={() => onMarkOrdered(order.id)} disabled={loading} className="gap-2">
+                    <Package className="h-4 w-4" />
+                    Place Order
+                  </Button>
+                )}
+                {order.status === 'ordered' && (
+                  <Button size="sm" onClick={() => onMarkReceived(order.id)} disabled={loading} className="gap-2">
+                    <Check className="h-4 w-4" />
+                    Mark Received
+                  </Button>
+                )}
+                {!order.paidAt && (
+                  <Button size="sm" variant="outline" onClick={() => onMarkPaid(order.id)} disabled={loading} className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50">
+                    <Banknote className="h-4 w-4" />
+                    Mark Paid
+                  </Button>
+                )}
+                {onPreview && (
+                  <Button size="sm" variant="outline" onClick={() => onPreview(order)} className="gap-2">
+                    <Eye className="h-4 w-4" />
+                    Preview
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => onDownload(order)} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Download
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => onEdit(order)} className="gap-2">
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => onDelete(order.id)} className="gap-2 text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
             </div>
-
-            {order.notes && (
-              <p className="text-sm text-muted-foreground">{order.notes}</p>
-            )}
-
-            {/* PDF link */}
-            {order.pdfUrl && (
-              <a
-                href={order.pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-              >
-                <FileText className="h-4 w-4" />
-                View PDF
-              </a>
-            )}
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              {order.status === 'draft' && onMarkOrdered && (
-                <Button
-                  size="sm"
-                  onClick={() => onMarkOrdered(order.id)}
-                  disabled={loading}
-                  className="gap-2"
-                >
-                  <Package className="h-4 w-4" />
-                  Place Order
-                </Button>
-              )}
-              {order.status === 'ordered' && (
-                <Button
-                  size="sm"
-                  onClick={() => onMarkReceived(order.id)}
-                  disabled={loading}
-                  className="gap-2"
-                >
-                  <Check className="h-4 w-4" />
-                  Mark Received
-                </Button>
-              )}
-              {!order.paidAt && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onMarkPaid(order.id)}
-                  disabled={loading}
-                  className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
-                >
-                  <Banknote className="h-4 w-4" />
-                  Mark Paid
-                </Button>
-              )}
-              {onPreview && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onPreview(order)}
-                  className="gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  Preview
-                </Button>
-              )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onDownload(order)}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onEdit(order)}
-                className="gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                Edit
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onDelete(order.id)}
-                className="gap-2 text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+          </CollapsibleContent>
+        </Collapsible>
+      </CardContent>
+    </Card>
+  );
+}
