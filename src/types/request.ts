@@ -11,6 +11,8 @@ export interface Request {
   quantityUnit: string;
   price: number;
   gstRate: number;
+  extraCost: number;
+  extraCostLabel: string;
   link: string | null;
   notes: string | null;
   imageUrl: string | null;
@@ -30,6 +32,8 @@ export interface CreateRequestInput {
   quantityUnit: string;
   price: number;
   gstRate: number;
+  extraCost: number;
+  extraCostLabel: string;
   link: string | null;
   notes: string | null;
   imageUrl: string | null;
