@@ -1,15 +1,10 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2 } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Vendor } from '@/hooks/useVendors';
@@ -42,7 +37,7 @@ export function ItemVendorPricing({
   isSaving,
 }: ItemVendorPricingProps) {
   const [selectedVendor, setSelectedVendor] = useState<string>('');
-
+  const [vendorOpen, setVendorOpen] = useState(false);
   // Track dirty state by comparing current entries against existing prices
   const hasUnsavedChanges = useMemo(() => {
     if (!isEditing) return false;
@@ -141,18 +136,49 @@ export function ItemVendorPricing({
         {/* Add vendor selector */}
         {availableVendors.length > 0 && (
           <div className="flex gap-2">
-            <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select a vendor to add..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableVendors.map((vendor) => (
-                  <SelectItem key={vendor.id} value={vendor.id}>
-                    {vendor.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={vendorOpen}
+                  className="flex-1 justify-between"
+                >
+                  {selectedVendor
+                    ? vendors.find((v) => v.id === selectedVendor)?.name
+                    : 'Search vendors...'}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search vendors..." />
+                  <CommandList>
+                    <CommandEmpty>No vendor found.</CommandEmpty>
+                    <CommandGroup>
+                      {availableVendors.map((vendor) => (
+                        <CommandItem
+                          key={vendor.id}
+                          value={vendor.name}
+                          onSelect={() => {
+                            setSelectedVendor(vendor.id);
+                            setVendorOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              'mr-2 h-4 w-4',
+                              selectedVendor === vendor.id ? 'opacity-100' : 'opacity-0'
+                            )}
+                          />
+                          {vendor.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <Button
               type="button"
               variant="secondary"
