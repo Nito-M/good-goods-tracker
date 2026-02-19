@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBank, TransactionType } from '@/hooks/useBank';
+
 import { useBankCards } from '@/hooks/useBankCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,19 +32,26 @@ import {
   CreditCard,
   Trash2,
   Plus,
+  Minus,
 } from 'lucide-react';
+
 import { formatCurrency } from '@/lib/utils';
 
 export function BankCardDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { transactions, loading: txLoading, deleteTransaction, addCardDeposit } = useBank();
+  const { transactions, loading: txLoading, deleteTransaction, addCardDeposit, addWithdrawal } = useBank();
   const { cards, loading: cardsLoading, refetch: refetchCards } = useBankCards();
 
   const [depositOpen, setDepositOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
   const [depositing, setDepositing] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawDescription, setWithdrawDescription] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
+
 
   const card = cards.find((c) => c.id === id);
   const cardTx = transactions.filter((t) => t.bankCardId === id);
@@ -63,7 +71,22 @@ export function BankCardDetail() {
     setDepositing(false);
   };
 
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (!id || isNaN(amount) || amount <= 0) return;
+    setWithdrawing(true);
+    const ok = await addWithdrawal(amount, withdrawDescription || undefined);
+    if (ok) {
+      await refetchCards();
+      setWithdrawOpen(false);
+      setWithdrawAmount('');
+      setWithdrawDescription('');
+    }
+    setWithdrawing(false);
+  };
+
   const getTypeIcon = (type: TransactionType) => {
+
     switch (type) {
       case 'deposit': return <ArrowUpCircle className="h-4 w-4 text-success" />;
       case 'withdrawal': return <ArrowDownCircle className="h-4 w-4 text-destructive" />;
@@ -146,6 +169,42 @@ export function BankCardDetail() {
         </DialogContent>
       </Dialog>
 
+      {/* Withdraw Dialog */}
+      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Withdraw from {card.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Amount</label>
+              <Input
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Description (optional)</label>
+              <Input
+                placeholder="e.g. Business expense"
+                value={withdrawDescription}
+                onChange={(e) => setWithdrawDescription(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWithdrawOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleWithdraw} disabled={withdrawing || !withdrawAmount}>
+              {withdrawing ? 'Processing...' : 'Withdraw'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center gap-4">
@@ -153,7 +212,10 @@ export function BankCardDetail() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">{card.name}</h1>
-            <div className="ml-auto">
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" onClick={() => setWithdrawOpen(true)}>
+                <Minus className="h-4 w-4 mr-2" /> Withdraw
+              </Button>
               <Button onClick={() => setDepositOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Add Deposit
               </Button>

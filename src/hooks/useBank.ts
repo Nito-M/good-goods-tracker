@@ -154,15 +154,6 @@ export function useBank() {
   const addWithdrawal = async (amount: number, description?: string) => {
     if (!user) return false;
 
-    if (amount > balance) {
-      toast({
-        title: 'Insufficient funds',
-        description: 'Withdrawal amount exceeds current balance.',
-        variant: 'destructive',
-      });
-      return false;
-    }
-
     try {
       const { error } = await supabase.from('bank_transactions').insert({
         user_id: user.id,
