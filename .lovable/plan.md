@@ -1,41 +1,56 @@
 
-## Filter Inventory Items to Vendor-Linked Items Only
+## Add Card Deposit on Bank Card Detail Page
 
-### Problem
-When a vendor is selected on the Create Purchase Order page, the item dropdown (`ItemSearchCombobox`) currently shows **all inventory items** (just sorted A-Z). The request is to only show items that have a vendor price entry linked to the selected vendor — plus always keeping the "Custom Item" option available.
+**Goal:** Add a "Deposit" button on the card detail page that allows users to add funds directly to a specific card. The deposit should:
+1. Increase the card's balance in `bank_cards`
+2. Record a tagged transaction in `bank_transactions` (with the `bank_card_id` set) so it appears in both the card's transaction list and the overall bank ledger
 
-### How it Works Today
-In `src/pages/AddPurchaseOrder.tsx`:
-- `vendorPrices` state is populated by fetching `item_vendor_prices` rows filtered by `vendor_id` — this gives back `{ itemId, price }` pairs.
-- `filteredInventoryItems` is computed as all items sorted A-Z when a vendor is selected.
-- The `vendorPrices` data is only used to auto-fill `unitCost` when an item is selected — it is **not** used to restrict the item list.
+---
 
-### The Fix
-The change is a single-line update to `filteredInventoryItems` in `src/pages/AddPurchaseOrder.tsx`:
+### What will be built
 
-**Current:**
-```ts
-const filteredInventoryItems = vendorId && vendorId !== 'none'
-  ? [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name))
-  : [];
-```
+A dialog/modal accessible from the `BankCardDetail` page with:
+- An amount input
+- An optional description input
+- A submit button that triggers the deposit logic
 
-**Updated:**
-```ts
-const filteredInventoryItems = vendorId && vendorId !== 'none'
-  ? [...inventoryItems]
-      .filter(item => vendorPrices.some(vp => vp.itemId === item.id))
-      .sort((a, b) => a.name.localeCompare(b.name))
-  : [];
-```
+---
 
-This filters the inventory list to only items that exist in `vendorPrices` (i.e., have a price entry for the selected vendor). The "Custom Item" option is always shown in the combobox regardless, so users can still enter custom items freely.
+### Files to change
 
-### Edge Case: No Vendor Items Configured
-If a vendor has no items assigned in the vendor pricing table, the inventory list will be empty and only "Custom Item" will appear. This is correct behavior — it tells the user no items have been set up for this vendor yet.
+**1. `src/hooks/useBank.ts`**
+- Add a new `addCardDeposit(cardId, amount, description?)` function that:
+  - Inserts a `deposit` transaction into `bank_transactions` with `bank_card_id` set to the given card
+  - Updates the card's balance in `bank_cards` (increments by amount)
+  - Refreshes transactions
+
+**2. `src/hooks/useBankCards.ts`**
+- The `updateCard` function already exists and can update balances, so we'll reuse it via the new hook function
+
+**3. `src/pages/BankCardDetail.tsx`**
+- Add a "Add Deposit" button in the header area next to the card visual
+- Add a simple inline dialog (using the existing `Dialog` component) with:
+  - Amount field (number input)
+  - Description field (optional text input)
+  - Submit button
+- Wire up to the new `addCardDeposit` function
+- Refresh card data and transactions after deposit
+
+---
 
 ### Technical Details
-- File to change: `src/pages/AddPurchaseOrder.tsx` — line 234-236
-- No database changes needed
-- No new dependencies required
-- The `vendorPrices` state is already correctly populated when the vendor changes, so the filter will be reactive and update automatically when a vendor is selected or changed
+
+**New `addCardDeposit` function logic:**
+```
+1. Fetch current card balance from bank_cards
+2. Insert bank_transaction with type='deposit', bank_card_id=cardId
+3. Update bank_cards.balance = current + amount
+4. Refresh both transactions and cards
+```
+
+This ensures the deposit shows up in:
+- The card's own transaction list (filtered by `bankCardId`)
+- The overall bank ledger (it's a standard bank_transaction record)
+- The card's displayed balance (updated in bank_cards)
+
+No database migrations needed — the `bank_card_id` column already exists on `bank_transactions` from the previous migration.
