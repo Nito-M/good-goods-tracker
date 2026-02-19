@@ -70,6 +70,56 @@ export function useBank() {
     fetchTransactions();
   }, [user]);
 
+  const addCardDeposit = async (cardId: string, amount: number, description?: string) => {
+    if (!user) return false;
+
+    try {
+      // Get current card balance
+      const { data: card, error: cardFetchError } = await supabase
+        .from('bank_cards')
+        .select('balance')
+        .eq('id', cardId)
+        .single();
+
+      if (cardFetchError) throw cardFetchError;
+
+      // Insert transaction tagged to this card
+      const { error: txError } = await supabase.from('bank_transactions').insert({
+        user_id: user.id,
+        amount,
+        type: 'deposit',
+        description: description || 'Card deposit',
+        bank_card_id: cardId,
+      });
+
+      if (txError) throw txError;
+
+      // Update card balance
+      const { error: balanceError } = await supabase
+        .from('bank_cards')
+        .update({ balance: Number(card.balance) + amount })
+        .eq('id', cardId);
+
+      if (balanceError) throw balanceError;
+
+      toast({
+        title: 'Deposit added',
+        description: `$${amount.toFixed(2)} deposited to card`,
+      });
+
+      await fetchTransactions();
+      return true;
+    } catch (error) {
+      console.error('Error adding card deposit:', error);
+      toast({
+        title: 'Error adding deposit',
+        description: 'Unable to add deposit. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   const addDeposit = async (amount: number, description?: string) => {
     if (!user) return false;
 
@@ -226,6 +276,7 @@ export function useBank() {
     balance,
     loading,
     addDeposit,
+    addCardDeposit,
     addWithdrawal,
     addSaleRevenue,
     removeSaleProfit,
