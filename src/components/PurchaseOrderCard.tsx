@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +35,7 @@ interface PurchaseOrderCardProps {
   onEdit: (order: PurchaseOrder) => void;
   onDownload: (order: PurchaseOrder) => void;
   onPreview?: (order: PurchaseOrder) => void;
+  onUploadImage?: (file: File) => Promise<boolean>;
   loading?: boolean;
   bankCardName?: string | null;
 }
@@ -48,11 +49,30 @@ export function PurchaseOrderCard({
   onEdit,
   onDownload,
   onPreview,
+  onUploadImage,
   loading,
   bankCardName,
 }: PurchaseOrderCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (file: File) => {
+    if (!onUploadImage) return;
+    if (!file.type.startsWith('image/')) return;
+    setUploading(true);
+    await onUploadImage(file);
+    setUploading(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageUpload(file);
+  };
 
   const TAX_RATE = 0.05;
   const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -269,6 +289,33 @@ export function PurchaseOrderCard({
                   <FileText className="h-4 w-4" />
                   View PDF
                 </a>
+              )}
+
+              {/* Image upload zone */}
+              {onUploadImage && (
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ''; }}
+                  />
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-4 cursor-pointer transition-colors text-center
+                      ${isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/30 hover:border-primary/60 hover:bg-muted/40'}
+                      ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      {uploading ? 'Uploading…' : order.imageUrl ? 'Replace image' : 'Drop image or click to upload'}
+                    </span>
+                  </div>
+                </div>
               )}
 
               {/* Actions */}
