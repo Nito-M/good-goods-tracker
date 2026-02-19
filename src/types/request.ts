@@ -19,6 +19,7 @@ export interface Request {
   pdfUrl: string | null;
   needByDate: string | null;
   requesterName: string | null;
+  bankCardId: string | null;
   status: RequestStatus;
   createdAt: string;
   updatedAt: string;

@@ -42,6 +42,7 @@ export function useRequests() {
         pdfUrl: (r as any).pdf_url ?? null,
         needByDate: r.need_by_date,
         requesterName: r.requester_name,
+        bankCardId: (r as any).bank_card_id ?? null,
         status: r.status as RequestStatus,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
@@ -106,16 +107,17 @@ export function useRequests() {
         sku: data.sku,
         quantity: data.quantity,
         quantityUnit: data.quantity_unit,
-          price: data.price || 0,
-          gstRate: data.gst_rate || 0,
-          extraCost: (data as any).extra_cost ?? 0,
-          extraCostLabel: (data as any).extra_cost_label ?? 'Shipping',
-          link: data.link,
+        price: data.price || 0,
+        gstRate: data.gst_rate || 0,
+        extraCost: (data as any).extra_cost ?? 0,
+        extraCostLabel: (data as any).extra_cost_label ?? 'Shipping',
+        link: data.link,
         notes: data.notes,
         imageUrl: data.image_url,
         pdfUrl: (data as any).pdf_url ?? null,
         needByDate: data.need_by_date,
         requesterName: data.requester_name,
+        bankCardId: (data as any).bank_card_id ?? null,
         status: data.status as RequestStatus,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
@@ -194,37 +196,52 @@ export function useRequests() {
     }
   };
 
-  const updateStatus = async (id: string, status: RequestStatus): Promise<boolean> => {
+  const updateStatus = async (id: string, status: RequestStatus, bankCardId?: string | null): Promise<boolean> => {
     try {
+      const updatePayload: Record<string, any> = { status };
+      if (bankCardId !== undefined) updatePayload.bank_card_id = bankCardId;
+
       const { error } = await supabase
         .from("requests")
-        .update({ status })
+        .update(updatePayload)
         .eq("id", id);
 
       if (error) throw error;
 
       setRequests((prev) =>
         prev.map((r) =>
-          r.id === id ? { ...r, status, updatedAt: new Date().toISOString() } : r
+          r.id === id
+            ? { ...r, status, ...(bankCardId !== undefined ? { bankCardId } : {}), updatedAt: new Date().toISOString() }
+            : r
         )
       );
 
-      toast({
-        title: "Success",
-        description: `Request marked as ${status}`,
-      });
-
+      toast({ title: "Success", description: `Request marked as ${status}` });
       return true;
     } catch (error: any) {
       console.error("Error updating request status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update request status",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to update request status", variant: "destructive" });
       return false;
     }
   };
+
+  const updateCardId = async (id: string, bankCardId: string | null): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from("requests")
+        .update({ bank_card_id: bankCardId } as any)
+        .eq("id", id);
+      if (error) throw error;
+      setRequests((prev) =>
+        prev.map((r) => r.id === id ? { ...r, bankCardId, updatedAt: new Date().toISOString() } : r)
+      );
+      return true;
+    } catch (error: any) {
+      console.error("Error updating card:", error);
+      return false;
+    }
+  };
+
 
   const deleteRequest = async (id: string): Promise<boolean> => {
     try {
@@ -323,6 +340,7 @@ export function useRequests() {
     addRequest,
     updateRequest,
     updateStatus,
+    updateCardId,
     deleteRequest,
     uploadImage,
     uploadPdf,
