@@ -70,6 +70,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const { 
     images: itemImages, 
     uploadImage: uploadItemImageToGallery, 
+    uploadImageForItem,
     deleteImage: deleteItemImage, 
     setPrimaryImage 
   } = useItemImages(editItem?.id);
@@ -244,10 +245,10 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       const newItemId = await onSave(itemData);
       
       if (newItemId) {
-        // Upload staged images
+        // Upload staged images using the new item's ID directly
         for (const staged of stagedImages) {
           if (staged.file) {
-            await uploadItemImageToGallery(staged.file, staged.is_primary);
+            await uploadImageForItem(newItemId, staged.file, staged.is_primary);
           }
         }
         // Save vendor prices for new item
@@ -260,7 +261,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
         if (pendingTagIds.length > 0) {
           await setTagsForItem(pendingTagIds);
         }
-        navigate(`/items/edit/${newItemId}`);
+        navigate('/items');
       }
     }
   };
