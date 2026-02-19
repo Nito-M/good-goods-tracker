@@ -1,106 +1,52 @@
 
-## Change: Each Sales Order Item Creates Its Own Job (Titled by Item Name)
+# Fix: Item Creation - Images Not Saving & Redirect to Edit Page
 
-### The Problem
+## Root Cause Analysis
 
-Currently, when you press "Create Job" on a single item in a Sales Order:
-1. A **shared job** is created titled with the SO number (e.g. `SO-001`)
-2. The item is then added as a **job_items row** inside that shared job
+Two distinct bugs were found in `src/pages/AddItem.tsx`:
 
-The user wants the opposite: pressing "Create Job" on an item should create a **new job titled with the item name** itself, with no items inserted into `job_items` at all. The item name becomes the job title, not a row inside the job.
+### Bug 1: Images Not Uploading on Create
 
-Similarly, "Create All Jobs" should create **one separate job per item**, each titled with that item's name.
+The `useItemImages` hook is called at component mount time with `useItemImages(editItem?.id)`. When creating a new item, `editItem` is `null`, so the hook receives `undefined` as the `itemId`. The `uploadImage` function inside the hook has an early guard: `if (!itemId || !user) return null;`. This means when the staged images are uploaded after the item is created (the new `newItemId` is returned), the hook's internal `itemId` is still `undefined` — it was captured at initialization and does not update.
 
-### What Changes
+**Fix**: Instead of relying on the `useItemImages` hook's `uploadImage` function (which is bound to an undefined `itemId`), the image upload for create mode needs to call the upload function with the correct new item ID. The solution is to create a direct upload helper that accepts an `itemId` parameter, or to call the upload directly using the Supabase client with the returned `newItemId`.
 
-Only **`src/pages/SalesOrderDetail.tsx`** needs to be modified. No database schema changes are required.
+The cleanest fix is to add an `uploadImageForItem` function to `useItemImages` that accepts an explicit `itemId` as a parameter alongside the file, bypassing the stale closure issue.
 
-#### Per-item "Create Job" (`handleCreateJobForItem`)
-- Currently: calls `getOrCreateOrderJob()` (creates/reuses one shared SO-level job), then calls `addItemToJob()` (inserts a `job_items` row).
-- After: creates a **new dedicated job** titled `item.itemName`, passing the item notes as the job description. Does **not** insert any `job_items` row. Records the link in `so_item_job_links` pointing to the new job.
+### Bug 2: Redirect Goes to Edit Page Instead of Items List
 
-#### "Create All Jobs" (`handleCreateAllJobs`)
-- Currently: creates one shared job for the whole SO, adds all items as rows.
-- After: iterates through each unlinked item and creates **one separate job per item**, each titled with the item name. Does not insert any `job_items` rows. Navigates to the Jobs list page after (since there's no single job to navigate to).
+In `handleSubmit` (line 263 of `AddItem.tsx`), after a new item is saved, the code navigates to `/items/edit/${newItemId}`. The user expects to be returned to the items list (`/items`) after creating an item.
 
-#### `getOrCreateOrderJob` / `addItemToJob`
-- These helpers become unnecessary and will be removed/replaced with the simpler per-item job creation logic.
+**Fix**: Change `navigate(`/items/edit/${newItemId}`)` to `navigate('/items')`.
 
-#### Button Label
-- Remove the conditional `'Add to Job'` vs `'Create Job'` text — it will always say `'Create Job'` since every press makes a new job.
+## Files to Change
 
-### Logic After the Change
+### `src/hooks/useItemImages.ts`
+- Add a new exported function `uploadImageForItem(itemId: string, file: File, isPrimary: boolean)` that accepts an explicit `itemId` so it can be called after the new item ID is known.
 
-```typescript
-const handleCreateJobForItem = async (item: ExpandedItem) => {
-  setCreatingJobFor(item.linkKey);
-  try {
-    // Each item gets its OWN job titled with the item name
-    const job = await createJob(
-      item.itemName,              // <-- Job title = item name
-      item.notes || undefined,    // <-- Job description = item notes
-      'open',
-      {
-        name: quote!.vendorName || undefined,
-        email: vendor?.contact_email || undefined,
-        phone: vendor?.contact_phone || undefined,
-        address: vendor?.address || undefined,
-      },
-      dueDate ? dueDate.toISOString() : undefined,
-      jobNumber || undefined
-    );
-    if (!job) return;
+### `src/pages/AddItem.tsx`
+- Import and use the new `uploadImageForItem` function (which accepts `itemId`) when uploading staged images after creation.
+- Change `navigate(`/items/edit/${newItemId}`)` to `navigate('/items')` so users return to the items list after creation.
 
-    // Record the link (no job_items row inserted)
-    await supabase.from('so_item_job_links').upsert({
-      quote_id: quote!.id,
-      quote_item_id: item.quoteItemId,
-      unit_index: item.unitIndex,
-      job_id: job.id,
-      status: 'open',
-    }, { onConflict: 'quote_item_id,unit_index' });
+## Technical Detail
 
-    toast({ title: 'Job created', description: item.itemName });
-    await fetchItemLinks();
-  } finally {
-    setCreatingJobFor(null);
-  }
-};
+```text
+Current flow (broken):
+  1. useItemImages(undefined) — itemId is undefined at mount
+  2. User stages images
+  3. onSave() returns newItemId
+  4. uploadItemImageToGallery(file, isPrimary) is called
+     → internally checks: if (!itemId || !user) return null  ← exits early!
+  5. Images are silently lost
+  6. navigate(`/items/edit/${newItemId}`) — goes to edit page
 
-const handleCreateAllJobs = async () => {
-  setCreating(true);
-  try {
-    for (const item of expandedItems) {
-      if (itemLinks[item.linkKey]?.jobId) continue; // skip already-linked
-
-      const job = await createJob(
-        item.itemName,
-        item.notes || undefined,
-        'open',
-        { name: quote!.vendorName || undefined, ... },
-        dueDate ? dueDate.toISOString() : undefined,
-        // no jobNumber here since each job is separate
-      );
-      if (!job) continue;
-
-      await supabase.from('so_item_job_links').upsert({
-        quote_id: quote!.id,
-        quote_item_id: item.quoteItemId,
-        unit_index: item.unitIndex,
-        job_id: job.id,
-        status: 'open',
-      }, { onConflict: 'quote_item_id,unit_index' });
-    }
-    await fetchItemLinks();
-    navigate('/jobs'); // go to jobs list since multiple jobs were created
-  } finally {
-    setCreating(false);
-  }
-};
+Fixed flow:
+  1. useItemImages(undefined) — still undefined at mount (fine)
+  2. User stages images  
+  3. onSave() returns newItemId
+  4. uploadImageForItem(newItemId, file, isPrimary) is called
+     → uses the fresh newItemId directly — uploads succeed
+  5. navigate('/items') — returns to items list
 ```
 
-### Also: Remove the `converted_to_job_id` link on the quote
-Since jobs are now per-item (not a single shared order-level job), the `convertedToJobId` field on the quote is no longer updated. The "Job Created" badge in the header will instead be driven by whether any `so_item_job_links` exist for this order.
-
-### Files to Modify
-- **`src/pages/SalesOrderDetail.tsx`** — Rewrite `handleCreateJobForItem` and `handleCreateAllJobs`, remove `getOrCreateOrderJob` and `addItemToJob` helpers, update button label and header badge logic.
+No database schema changes required. This is a purely frontend fix.
