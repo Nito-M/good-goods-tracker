@@ -23,7 +23,7 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 export function PurchaseOrders() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder } =
+  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder, uploadImageForOrder } =
     usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
@@ -228,9 +228,7 @@ export function PurchaseOrders() {
 
             <TabsContent value="draft" className="space-y-4">
               {draftOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No draft orders
-                </p>
+                <p className="text-muted-foreground text-center py-8">No draft orders</p>
               ) : (
                 draftOrders.map((order) => (
                   <PurchaseOrderCard
@@ -243,6 +241,7 @@ export function PurchaseOrders() {
                     onEdit={handleEdit}
                     onDownload={handleDownload}
                     onPreview={handlePreview}
+                    onUploadImage={(file) => uploadImageForOrder(order.id, file)}
                     loading={processingId === order.id}
                     bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />
@@ -252,9 +251,7 @@ export function PurchaseOrders() {
 
             <TabsContent value="ordered" className="space-y-4">
               {orderedOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No pending orders
-                </p>
+                <p className="text-muted-foreground text-center py-8">No pending orders</p>
               ) : (
                 orderedOrders.map((order) => (
                   <PurchaseOrderCard
@@ -267,6 +264,7 @@ export function PurchaseOrders() {
                     onEdit={handleEdit}
                     onDownload={handleDownload}
                     onPreview={handlePreview}
+                    onUploadImage={(file) => uploadImageForOrder(order.id, file)}
                     loading={processingId === order.id}
                     bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />
@@ -276,9 +274,7 @@ export function PurchaseOrders() {
 
             <TabsContent value="received" className="space-y-4">
               {receivedOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No received orders yet
-                </p>
+                <p className="text-muted-foreground text-center py-8">No received orders yet</p>
               ) : (
                 receivedOrders.map((order) => (
                   <PurchaseOrderCard
@@ -291,6 +287,7 @@ export function PurchaseOrders() {
                     onEdit={handleEdit}
                     onDownload={handleDownload}
                     onPreview={handlePreview}
+                    onUploadImage={(file) => uploadImageForOrder(order.id, file)}
                     loading={processingId === order.id}
                     bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
                   />

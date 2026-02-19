@@ -706,6 +706,23 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const uploadImageForOrder = async (orderId: string, file: File): Promise<boolean> => {
+    if (!user) return false;
+    const url = await uploadFile(file, 'image');
+    if (!url) return false;
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ image_url: url })
+      .eq('id', orderId);
+    if (error) {
+      console.error('Error saving image URL:', error);
+      toast({ title: 'Error saving image', variant: 'destructive' });
+      return false;
+    }
+    await fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
@@ -715,6 +732,7 @@ export function usePurchaseOrders() {
     markAsReceived,
     markAsPaid,
     deleteOrder,
+    uploadImageForOrder,
     refetch: fetchOrders,
   };
 }
