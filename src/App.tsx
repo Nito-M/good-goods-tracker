@@ -20,6 +20,7 @@ import { Calendar } from "./pages/Calendar";
 import { Notes } from "./pages/Notes";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
+import { BankCardDetail } from "./pages/BankCardDetail";
 import { Jobs } from "./pages/Jobs";
 import { CreateJob } from "./pages/CreateJob";
 import { EditJob } from "./pages/EditJob";
@@ -341,6 +342,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Bank />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bank/card/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <BankCardDetail />
               </AppLayout>
             </ProtectedRoute>
           }
