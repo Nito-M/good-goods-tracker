@@ -1,56 +1,53 @@
 
-## Add Card Deposit on Bank Card Detail Page
+## Fix: Tags Not Saving or Displaying on Inventory Page
 
-**Goal:** Add a "Deposit" button on the card detail page that allows users to add funds directly to a specific card. The deposit should:
-1. Increase the card's balance in `bank_cards`
-2. Record a tagged transaction in `bank_transactions` (with the `bank_card_id` set) so it appears in both the card's transaction list and the overall bank ledger
+### Root Cause Analysis
 
----
+There are two separate bugs:
 
-### What will be built
+**Bug 1 — Edit mode silently discards tag changes**
 
-A dialog/modal accessible from the `BankCardDetail` page with:
-- An amount input
-- An optional description input
-- A submit button that triggers the deposit logic
+In `src/pages/AddItem.tsx`, the `handleSubmit` function has two branches:
+- **New item** (line 249+): correctly calls `setTagsForItem(pendingTagIds)` after saving
+- **Edit item** (line 228): saves vendor prices but **never calls `setTagsForItem`** — tag changes are lost on every edit
 
----
+**Bug 2 — New item tag saving fails silently**
 
-### Files to change
-
-**1. `src/hooks/useBank.ts`**
-- Add a new `addCardDeposit(cardId, amount, description?)` function that:
-  - Inserts a `deposit` transaction into `bank_transactions` with `bank_card_id` set to the given card
-  - Updates the card's balance in `bank_cards` (increments by amount)
-  - Refreshes transactions
-
-**2. `src/hooks/useBankCards.ts`**
-- The `updateCard` function already exists and can update balances, so we'll reuse it via the new hook function
-
-**3. `src/pages/BankCardDetail.tsx`**
-- Add a "Add Deposit" button in the header area next to the card visual
-- Add a simple inline dialog (using the existing `Dialog` component) with:
-  - Amount field (number input)
-  - Description field (optional text input)
-  - Submit button
-- Wire up to the new `addCardDeposit` function
-- Refresh card data and transactions after deposit
+The `useItemTags` hook at the top of `AddItem.tsx` is initialized as `useItemTags(editItem?.id)`. For a new item, `editItem` is `null`, so `itemId` is `undefined`. When the new item is saved and `setTagsForItem(pendingTagIds)` is called, the hook's internal guard (`if (!user || !itemId) return`) immediately exits without saving anything — tags are silently dropped.
 
 ---
 
-### Technical Details
+### The Fix
 
-**New `addCardDeposit` function logic:**
+**File: `src/pages/AddItem.tsx`**
+
+**Fix 1 — Edit mode:** Add a call to `setTagsForItem(pendingTagIds)` inside the edit branch of `handleSubmit`, after the vendor price updates.
+
+**Fix 2 — New item mode:** The `setTagsForItem` function inside `useItemTags` uses the `itemId` from its hook closure. Since the hook is initialized before the new item's ID exists, we cannot use it for new items. Instead, we need to call `setTagsForItem` on a **separate hook instance** initialized with the new item's ID after save, OR directly use the Supabase client inline to insert tags for the new item ID after save.
+
+The cleanest fix is to insert tags inline for new items (using supabase directly in the submit handler with the returned `newItemId`), bypassing the hook's closure limitation. For edit mode, we can safely call the hook's `setTagsForItem` since `editItem?.id` is known upfront.
+
+---
+
+### Technical Changes
+
+**`src/pages/AddItem.tsx`**
+
+1. Import `supabase` and `useAuth` so we can insert tags directly for new items
+2. In the **edit branch** of `handleSubmit`: add `await setTagsForItem(pendingTagIds)` after vendor price updates
+3. In the **new item branch** of `handleSubmit`: replace the broken `setTagsForItem(pendingTagIds)` call (which uses `undefined` as itemId) with a direct supabase insert using `newItemId`
+
 ```
-1. Fetch current card balance from bank_cards
-2. Insert bank_transaction with type='deposit', bank_card_id=cardId
-3. Update bank_cards.balance = current + amount
-4. Refresh both transactions and cards
+// For new item — direct insert bypasses the undefined-itemId issue:
+if (pendingTagIds.length > 0) {
+  await supabase.from('item_tags').insert(
+    pendingTagIds.map((tagId) => ({
+      item_id: newItemId,
+      tag_id: tagId,
+      user_id: user.id,
+    }))
+  );
+}
 ```
 
-This ensures the deposit shows up in:
-- The card's own transaction list (filtered by `bankCardId`)
-- The overall bank ledger (it's a standard bank_transaction record)
-- The card's displayed balance (updated in bank_cards)
-
-No database migrations needed — the `bank_card_id` column already exists on `bank_transactions` from the previous migration.
+No database migrations needed — the `item_tags` table and all RLS policies already exist.
