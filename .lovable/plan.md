@@ -1,44 +1,60 @@
 
-# Fix: Square Feet Measurement Summary
+# Fix: Square Feet Quantity Model - Flip to Sheet-Count Input
 
-## Root Cause
+## The Real Problem
 
-There are two problems with the Measurement Summary:
+The core issue is a **model mismatch** between what the app does and what users expect:
 
-1. **Layout order bug** — The Measurement Summary card is rendered between the "Inventory & Pricing" card and the "Physical Properties" (dimensions) card. This means users see the summary before entering dimensions, and the card appears disconnected from the dimensions fields it depends on. React state is still correct, but the UX is broken — changes to dimensions are hard to correlate with the summary above.
+Current (broken UX):
+- User enters `quantity = 100` and expects that to mean "100 sheets"
+- App treats `quantity = 100` as "100 sq ft total"
+- With a 12 × 12 in sheet (1 sq ft/sheet), app shows "100 sheets" — which coincidentally appears correct for that specific case, but breaks for any other sheet size
 
-2. **Missing `ft` dimension unit** — The dimension unit selector only shows `in` and `cm`. There is no `ft` option in the dimensions, which means someone working in feet has no way to get correct sq ft calculations. The fallback `else sheetSqFt = l * w` exists in code but is unreachable.
+Real-world expectation:
+- User has 50 sheets of 4 ft × 8 ft plywood
+- User enters `quantity = 50` (sheets) and selects unit `Sq Ft`
+- App should show: "50 sheets × 32 sq ft/sheet = 1,600 sq ft total"
+
+Current behavior:
+- User enters `quantity = 50`, app treats it as 50 sq ft total → shows "1.56 sheets" (50 ÷ 32) — **wrong**
+
+Additionally, there is a secondary bug in `useInventory.ts` line 58 where `dimensions_unit` is cast to `'in' | 'cm'` (missing `'ft'`), which can silently break calculations when `ft` is saved to the database.
 
 ## What Will Be Fixed
 
-### 1. Move the Measurement Summary after Dimensions
-The summary card will be relocated to appear immediately **after the Physical Properties card** (which contains the dimensions inputs). This way:
-- Users see the summary update as they fill in dimensions
-- The visual connection between dimensions and sq ft summary is clear
+### 1. Flip the quantity model for `sqft` items
+- `quantity` = **number of sheets** (intuitive)
+- App calculates **total sq ft = quantity × sheet area** (derived, shown in summary)
+- This is what every user naturally expects
 
-### 2. Add `ft` as a dimension unit option
-Add feet (`ft`) as a selectable dimension unit in the Dimensions selector. This enables:
-- Entering sheet dimensions in feet (e.g. 4 ft × 8 ft)
-- Correct sq ft calculation: `4 × 8 = 32 sq ft/sheet`
+### 2. Fix the type cast bug in `useInventory.ts`
+- Line 58: change `as 'in' | 'cm'` to `as 'in' | 'cm' | 'ft'` so feet dimension unit is preserved correctly when fetched from the database
 
-The conversion logic already handles `ft` correctly (the `else` branch uses `l * w` directly, which is correct for feet → sq ft).
+### 3. Update labels and helper text
+- Quantity label hint changes from "Enter total sq ft in stock" to "Enter number of sheets in stock"
+- Measurement Summary shows: sheets → sq ft total
+- Item Details page shows: "X sheets" as stock, "Y sq ft total" as derived metric
 
-### 3. Clarify the `sqft` quantity model with a helper label
-Add a small helper text under the Quantity field when `sqft` is selected to make it clear:
-- *"Enter the total sq ft in stock (e.g. 2000 sq ft). Add sheet dimensions below to calculate number of sheets."*
+### 4. Update ItemDetails.tsx display
+- "Quantity in Stock" shows sheets (e.g., "50 Sq Ft" label should say "50 sheets")
+- Sheet calculation section shows total sq ft instead of deriving sheets from sq ft
 
 ## Technical Changes
 
+**File: `src/hooks/useInventory.ts`**
+- Line 58: Fix type cast from `as 'in' | 'cm'` to `as 'in' | 'cm' | 'ft'`
+
 **File: `src/pages/AddItem.tsx`**
-- Move the entire Measurement Summary IIFE block (lines 520–592) to be placed after the Physical Properties card (currently ends at line 673), so it renders after the dimensions inputs
-- In the Dimensions unit selector `SelectContent`, add `<SelectItem value="ft">ft</SelectItem>` between the `in` and `cm` options
-- Update the dimension unit type in `setDimensions` call to accept `'in' | 'cm' | 'ft'`
-- Add a conditional helper hint beneath the quantity input when `quantityUnit === 'sqft'`
+- Update helper text under quantity input when `sqft` is selected: "Enter the number of sheets in stock. Add sheet dimensions below to see total sq ft."
+- Update Measurement Summary IIFE:
+  - `sheetsInStock` → now just `qty` (quantity IS the sheet count)
+  - `totalSqFt` → now `qty * sheetSqFt` (calculated from sheet count × sheet area)
+  - Display: "X sheets in stock → Y sq ft total"
 
-**File: `src/types/inventory.ts`**
-- Update the `Dimensions` interface's `unit` field type from `'in' | 'cm'` to `'in' | 'cm' | 'ft'`
+**File: `src/pages/ItemDetails.tsx`**
+- Update the sqft section (lines 294–323):
+  - Show quantity as "X sheets" 
+  - Compute and display total sq ft = `quantity × sheetSqFt`
+  - Show "Total Sq Ft in Stock" as the derived value
 
-**File: `src/lib/validation.ts`**  
-- Update the Zod schema for `dimensions.unit` to include `'ft'` as a valid enum value
-
-No database changes are needed.
+No database schema changes needed — the `quantity` column already stores a number; we're only changing the interpretation and display logic.
