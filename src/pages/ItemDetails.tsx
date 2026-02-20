@@ -278,23 +278,19 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
               <Separator />
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {item.quantityUnit === 'sqft' ? 'Sheets in Stock' : 'Quantity in Stock'}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Quantity in Stock</p>
                   <p className="text-xl font-semibold text-card-foreground">
-                    {item.quantity} {item.quantityUnit === 'sqft' ? 'sheets' : (item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : '')}
+                    {item.quantity} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {item.quantityUnit === 'sqft' ? 'Min Sheets Level' : 'Minimum Stock Level'}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Minimum Stock Level</p>
                   <p className="text-xl font-semibold text-card-foreground">
-                    {item.minStock} {item.quantityUnit === 'sqft' ? 'sheets' : (item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : '')}
+                    {item.minStock} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </p>
                 </div>
               </div>
-              {/* Sheet count for sqft items — qty = sheets, total sq ft = qty × sheetArea */}
+              {/* Sheet count for sqft items — qty = total sq ft, sheets = qty / sheetSqFt */}
               {item.quantityUnit === 'sqft' && item.dimensions.length > 0 && item.dimensions.width > 0 && (() => {
                 const l = item.dimensions.length;
                 const w = item.dimensions.width;
@@ -303,7 +299,7 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                 if (dimUnit === 'in') sheetSqFt = (l * w) / 144;
                 else if (dimUnit === 'cm') sheetSqFt = (l * w) / 929.03;
                 else sheetSqFt = l * w; // ft → sq ft directly
-                const totalSqFt = item.quantity * sheetSqFt;
+                const sheets = sheetSqFt > 0 ? item.quantity / sheetSqFt : 0;
                 return (
                   <>
                     <Separator />
@@ -316,9 +312,9 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                         <p className="text-xs text-muted-foreground">({sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft/sheet)</p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Sq Ft in Stock</p>
+                        <p className="text-sm text-muted-foreground">Sheets in Stock</p>
                         <p className="text-xl font-semibold text-card-foreground">
-                          {totalSqFt.toLocaleString(undefined, { maximumFractionDigits: 2 })} sq ft
+                          {sheets.toLocaleString(undefined, { maximumFractionDigits: 2 })} sheets
                         </p>
                       </div>
                     </div>
