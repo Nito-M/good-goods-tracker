@@ -55,7 +55,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
       length: Number(db.dimensions_length),
       width: Number(db.dimensions_width),
       height: Number(db.dimensions_height),
-      unit: db.dimensions_unit as 'in' | 'cm',
+      unit: db.dimensions_unit as 'in' | 'cm' | 'ft',
     },
     colors: db.colors || [],
     description: db.description || '',

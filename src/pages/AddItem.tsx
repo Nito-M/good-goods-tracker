@@ -475,7 +475,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   </Select>
                 </div>
                 {quantityUnit === 'sqft' && (
-                  <p className="text-xs text-muted-foreground">Enter total sq ft in stock. Add sheet dimensions below to calculate sheets in stock.</p>
+                  <p className="text-xs text-muted-foreground">Enter the number of sheets in stock. Add sheet dimensions (L × W) below to see total sq ft.</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -623,9 +623,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             const isLinear = unit === 'ft' || unit === 'in' || unit === 'm' || unit === 'yd';
             const isSqft = unit === 'sqft';
 
-            // For sqft unit: qty = total sq ft; sheets = qty / sheetSqFt
-            // For pcs with dimensions: show total area
-            const sheetsInStock = isSqft && sheetSqFt > 0 ? qty / sheetSqFt : null;
+            // For sqft unit: qty = number of sheets; totalSqFt = qty × sheetSqFt
+            // For pcs/linear with dimensions: show total area
+            const totalSqFt = isSqft && sheetSqFt > 0 ? qty * sheetSqFt : null;
             const totalAreaSqFt = !isSqft && sheetSqFt > 0 ? sheetSqFt * qty : null;
 
             const hasContent = isLinear || isSqft || totalAreaSqFt !== null;
@@ -645,24 +645,24 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   )}
                   {isSqft && (
                     <div>
-                      <span className="text-muted-foreground">Total sq ft in stock: </span>
-                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft</span>
+                      <span className="text-muted-foreground">Sheets in stock: </span>
+                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 2 })} sheets</span>
                     </div>
                   )}
-                  {isSqft && sheetSqFt > 0 && sheetsInStock !== null && (
+                  {isSqft && sheetSqFt > 0 && totalSqFt !== null && (
                     <div>
-                      <span className="text-muted-foreground">Sheets in stock: </span>
-                      <span className="font-semibold">{sheetsInStock.toLocaleString(undefined, { maximumFractionDigits: 2 })} sheets</span>
+                      <span className="text-muted-foreground">Total sq ft: </span>
+                      <span className="font-semibold">{totalSqFt.toLocaleString(undefined, { maximumFractionDigits: 2 })} sq ft</span>
                       <span className="text-muted-foreground text-xs ml-1">
                         ({l} × {w} {dimUnit} = {sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft/sheet)
                       </span>
                     </div>
                   )}
                   {isSqft && l > 0 && w === 0 && (
-                    <p className="text-muted-foreground text-xs">Enter sheet width in Dimensions to calculate sheets in stock.</p>
+                    <p className="text-muted-foreground text-xs">Enter sheet width in Dimensions to calculate total sq ft.</p>
                   )}
                   {isSqft && l === 0 && (
-                    <p className="text-muted-foreground text-xs">Enter sheet size in Dimensions (L × W) to calculate sheets in stock.</p>
+                    <p className="text-muted-foreground text-xs">Enter sheet size in Dimensions (L × W) to calculate total sq ft.</p>
                   )}
                   {totalAreaSqFt !== null && (
                     <div>
