@@ -90,6 +90,10 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<'lb' | 'kg'>('lb');
   const [dimensions, setDimensions] = useState<Dimensions>(DEFAULT_DIMENSIONS);
+  // Dedicated sheet size state for sqft items
+  const [sheetLength, setSheetLength] = useState('');
+  const [sheetWidth, setSheetWidth] = useState('');
+  const [sheetUnit, setSheetUnit] = useState<'ft' | 'in'>('ft');
   const [colors, setColors] = useState('');
   const [description, setDescription] = useState('');
   const [vendorPrices, setVendorPrices] = useState<VendorPriceEntry[]>([]);
@@ -115,6 +119,13 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setWeight(String(editItem.weight));
       setWeightUnit(editItem.weightUnit);
       setDimensions(editItem.dimensions);
+      // Populate sheet size state for sqft items
+      if (editItem.quantityUnit === 'sqft') {
+        const dimUnit = editItem.dimensions.unit as 'ft' | 'in';
+        setSheetUnit(dimUnit === 'ft' || dimUnit === 'in' ? dimUnit : 'ft');
+        setSheetLength(String(editItem.dimensions.length || ''));
+        setSheetWidth(String(editItem.dimensions.width || ''));
+      }
       setColors(editItem.colors.join(', '));
       setDescription(editItem.description);
       if (editItem.imageUrl) {
@@ -211,6 +222,16 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       }
     }
     
+    // For sqft items, merge sheet dimensions into the dimensions object
+    const finalDimensions: Dimensions = quantityUnit === 'sqft'
+      ? {
+          length: parseFloat(sheetLength) || 0,
+          width: parseFloat(sheetWidth) || 0,
+          height: dimensions.height,
+          unit: sheetUnit,
+        }
+      : dimensions;
+
     const itemData = {
       name,
       sku,
@@ -222,7 +243,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       minStock: parseFloat(minStock) || 0,
       weight: parseFloat(weight) || 0,
       weightUnit,
-      dimensions,
+      dimensions: finalDimensions,
       colors: colors.split(',').map((c) => c.trim()).filter(Boolean),
       description,
       imageUrl: finalImageUrl,
@@ -448,7 +469,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
+                <Label htmlFor="quantity">
+                  {quantityUnit === 'sqft' ? 'Number of Sheets' : 'Quantity'}
+                </Label>
                 <div className="flex gap-2">
                    <Input
                     id="quantity"
@@ -475,7 +498,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   </Select>
                 </div>
                 {quantityUnit === 'sqft' && (
-                  <p className="text-xs text-muted-foreground">Enter the number of sheets in stock. Add sheet dimensions (L × W) below to see total sq ft.</p>
+                  <p className="text-xs text-muted-foreground">Enter how many sheets you have in stock.</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -505,7 +528,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minStock">Min Stock Level</Label>
+                <Label htmlFor="minStock">
+                  {quantityUnit === 'sqft' ? 'Min Sheets Level' : 'Min Stock Level'}
+                </Label>
                 <Input
                   id="minStock"
                   type="number"
@@ -519,6 +544,116 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
               </div>
             </CardContent>
           </Card>
+
+          {/* Sheet Size Configuration — only shown when Sq Ft is selected */}
+          {quantityUnit === 'sqft' && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-primary">Sheet Size</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Define the size of each individual sheet. This is used to calculate your total square footage.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Unit toggle */}
+                <div className="space-y-2">
+                  <Label>Sheet Size Unit</Label>
+                  <div className="flex rounded-lg border border-border overflow-hidden w-fit">
+                    <button
+                      type="button"
+                      onClick={() => setSheetUnit('ft')}
+                      className={`px-5 py-2 text-sm font-medium transition-colors ${
+                        sheetUnit === 'ft'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-card text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      Feet (ft)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSheetUnit('in')}
+                      className={`px-5 py-2 text-sm font-medium transition-colors ${
+                        sheetUnit === 'in'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-card text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      Inches (in)
+                    </button>
+                  </div>
+                </div>
+
+                {/* L × W inputs */}
+                <div className="space-y-2">
+                  <Label>Sheet Dimensions (Length × Width)</Label>
+                  <div className="flex items-center gap-3">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Length</p>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0"
+                          value={sheetLength}
+                          onChange={(e) => setSheetLength(e.target.value)}
+                          className="w-28"
+                        />
+                        <span className="text-sm text-muted-foreground">{sheetUnit}</span>
+                      </div>
+                    </div>
+                    <span className="text-xl text-muted-foreground mt-4">×</span>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Width</p>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0"
+                          value={sheetWidth}
+                          onChange={(e) => setSheetWidth(e.target.value)}
+                          className="w-28"
+                        />
+                        <span className="text-sm text-muted-foreground">{sheetUnit}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live calculation preview */}
+                {(() => {
+                  const l = parseFloat(sheetLength) || 0;
+                  const w = parseFloat(sheetWidth) || 0;
+                  const qty = parseFloat(quantity) || 0;
+                  if (l <= 0 || w <= 0) return (
+                    <p className="text-xs text-muted-foreground">Enter length and width above to see the sq ft calculation.</p>
+                  );
+                  const sheetSqFt = sheetUnit === 'in' ? (l * w) / 144 : l * w;
+                  const totalSqFt = sheetSqFt * qty;
+                  return (
+                    <div className="rounded-lg bg-background border border-border p-4 space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Sheet area</span>
+                        <span className="font-semibold">
+                          {l} × {w} {sheetUnit} = <span className="text-primary">{sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft/sheet</span>
+                        </span>
+                      </div>
+                      {qty > 0 && (
+                        <div className="flex items-center justify-between border-t border-border pt-2">
+                          <span className="text-muted-foreground">Total in stock</span>
+                          <span className="font-bold text-base">
+                            {qty} sheets × {sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} = <span className="text-primary">{totalSqFt.toLocaleString(undefined, { maximumFractionDigits: 2 })} sq ft</span>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Physical Properties */}
           <Card>
@@ -552,128 +687,79 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
               </div>
               <div className="space-y-2">
                 <Label>
-                  Dimensions
-                  {quantityUnit === 'sqft' && (
-                    <span className="ml-2 text-xs font-normal text-primary">(L × W = sheet size for sq ft calculation)</span>
-                  )}
+                  {quantityUnit === 'sqft' ? 'Height' : 'Dimensions (L × W × H)'}
                 </Label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="L"
-                    value={dimensions.length || ''}
-                    onChange={(e) => setDimensions({ ...dimensions, length: parseFloat(e.target.value) || 0 })}
-                    className="w-20"
-                  />
-                  <span className="text-muted-foreground">×</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="W"
-                    value={dimensions.width || ''}
-                    onChange={(e) => setDimensions({ ...dimensions, width: parseFloat(e.target.value) || 0 })}
-                    className="w-20"
-                  />
-                  <span className="text-muted-foreground">×</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="H"
-                    value={dimensions.height || ''}
-                    onChange={(e) => setDimensions({ ...dimensions, height: parseFloat(e.target.value) || 0 })}
-                    className="w-20"
-                  />
-                  <Select value={dimensions.unit} onValueChange={(v) => setDimensions({ ...dimensions, unit: v as 'in' | 'cm' | 'ft' })}>
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="in">in</SelectItem>
-                      <SelectItem value="ft">ft</SelectItem>
-                      <SelectItem value="cm">cm</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {quantityUnit === 'sqft' ? (
+                  // For sqft items, only show height (L×W is handled in Sheet Size card)
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="H"
+                      value={dimensions.height || ''}
+                      onChange={(e) => setDimensions({ ...dimensions, height: parseFloat(e.target.value) || 0 })}
+                      className="w-24"
+                    />
+                    <Select value={dimensions.unit} onValueChange={(v) => setDimensions({ ...dimensions, unit: v as 'in' | 'cm' | 'ft' })}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="in">in</SelectItem>
+                        <SelectItem value="ft">ft</SelectItem>
+                        <SelectItem value="cm">cm</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="text-xs text-muted-foreground">(optional)</span>
+                  </div>
+                ) : (
+                  // For non-sqft items, show full L × W × H
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="L"
+                      value={dimensions.length || ''}
+                      onChange={(e) => setDimensions({ ...dimensions, length: parseFloat(e.target.value) || 0 })}
+                      className="w-20"
+                    />
+                    <span className="text-muted-foreground">×</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="W"
+                      value={dimensions.width || ''}
+                      onChange={(e) => setDimensions({ ...dimensions, width: parseFloat(e.target.value) || 0 })}
+                      className="w-20"
+                    />
+                    <span className="text-muted-foreground">×</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="H"
+                      value={dimensions.height || ''}
+                      onChange={(e) => setDimensions({ ...dimensions, height: parseFloat(e.target.value) || 0 })}
+                      className="w-20"
+                    />
+                    <Select value={dimensions.unit} onValueChange={(v) => setDimensions({ ...dimensions, unit: v as 'in' | 'cm' | 'ft' })}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="in">in</SelectItem>
+                        <SelectItem value="ft">ft</SelectItem>
+                        <SelectItem value="cm">cm</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
-
-          {/* Total Measurement Summary — shown after dimensions so changes are visible immediately */}
-          {(() => {
-            const qty = parseFloat(quantity) || 0;
-            const unit = quantityUnit;
-            const l = dimensions.length || 0;
-            const w = dimensions.width || 0;
-            const dimUnit = dimensions.unit;
-
-            if (qty <= 0) return null;
-
-            // Convert sheet L×W to sq ft
-            let sheetSqFt = 0;
-            if (l > 0 && w > 0) {
-              if (dimUnit === 'in') sheetSqFt = (l * w) / 144;
-              else if (dimUnit === 'cm') sheetSqFt = (l * w) / 929.03;
-              else sheetSqFt = l * w; // ft → sq ft directly
-            }
-
-            const isLinear = unit === 'ft' || unit === 'in' || unit === 'm' || unit === 'yd';
-            const isSqft = unit === 'sqft';
-
-            // For sqft unit: qty = number of sheets; totalSqFt = qty × sheetSqFt
-            // For pcs/linear with dimensions: show total area
-            const totalSqFt = isSqft && sheetSqFt > 0 ? qty * sheetSqFt : null;
-            const totalAreaSqFt = !isSqft && sheetSqFt > 0 ? sheetSqFt * qty : null;
-
-            const hasContent = isLinear || isSqft || totalAreaSqFt !== null;
-            if (!hasContent) return null;
-
-            return (
-              <Card className="border-primary/20 bg-primary/5">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-primary">Measurement Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-6 text-sm">
-                  {isLinear && (
-                    <div>
-                      <span className="text-muted-foreground">Total length: </span>
-                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} {QUANTITY_UNIT_LABELS[unit]?.toLowerCase()}</span>
-                    </div>
-                  )}
-                  {isSqft && (
-                    <div>
-                      <span className="text-muted-foreground">Sheets in stock: </span>
-                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 2 })} sheets</span>
-                    </div>
-                  )}
-                  {isSqft && sheetSqFt > 0 && totalSqFt !== null && (
-                    <div>
-                      <span className="text-muted-foreground">Total sq ft: </span>
-                      <span className="font-semibold">{totalSqFt.toLocaleString(undefined, { maximumFractionDigits: 2 })} sq ft</span>
-                      <span className="text-muted-foreground text-xs ml-1">
-                        ({l} × {w} {dimUnit} = {sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft/sheet)
-                      </span>
-                    </div>
-                  )}
-                  {isSqft && l > 0 && w === 0 && (
-                    <p className="text-muted-foreground text-xs">Enter sheet width in Dimensions to calculate total sq ft.</p>
-                  )}
-                  {isSqft && l === 0 && (
-                    <p className="text-muted-foreground text-xs">Enter sheet size in Dimensions (L × W) to calculate total sq ft.</p>
-                  )}
-                  {totalAreaSqFt !== null && (
-                    <div>
-                      <span className="text-muted-foreground">Total area (L×W×qty): </span>
-                      <span className="font-semibold">{totalAreaSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })()}
 
           {/* Additional Details */}
           <Card>
