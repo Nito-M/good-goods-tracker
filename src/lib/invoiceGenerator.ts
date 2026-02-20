@@ -155,21 +155,25 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
 
     // Items
     doc.setFont('helvetica', 'normal');
+    const nameColWidth = 55;
+    const skuColWidth = 32;
     sale.items.forEach((item) => {
-      if (y > 260) {
+      const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
+      const skuLines = doc.splitTextToSize(item.sku, skuColWidth);
+      const rowLineCount = Math.max(nameLines.length, skuLines.length);
+      const rowHeight = rowLineCount * 5;
+
+      if (y + rowHeight > 260) {
         doc.addPage();
         y = 20;
       }
       
-      const itemName = item.itemName.length > 25
-        ? item.itemName.substring(0, 25) + '...'
-        : item.itemName;
-      doc.text(itemName, layout.itemsTable.x + 2, y);
-      doc.text(item.sku, layout.itemsTable.x + 60, y);
+      doc.text(nameLines, layout.itemsTable.x + 2, y);
+      doc.text(skuLines, layout.itemsTable.x + 60, y);
       doc.text(item.quantity.toString(), layout.itemsTable.x + 95, y);
       doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 115, y);
       doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
-      y += 7;
+      y += rowHeight + 2;
     });
 
     // Line
