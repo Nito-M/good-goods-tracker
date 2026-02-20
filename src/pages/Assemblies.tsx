@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft } from 'lucide-react';
+import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
@@ -45,8 +46,8 @@ function ItemSearchCombobox({
   inventoryItems,
   onSelect,
 }: {
-  inventoryItems: { id: string; name: string; sku: string }[];
-  onSelect: (item: { id: string | null; name: string; sku: string }) => void;
+  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
+  onSelect: (item: { id: string | null; name: string; sku: string; quantityUnit?: string }) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -63,11 +64,11 @@ function ItemSearchCombobox({
           <CommandList>
             <CommandEmpty>No items found.</CommandEmpty>
             <CommandGroup>
-              <CommandItem value="__custom__" onSelect={() => { onSelect({ id: null, name: '', sku: '' }); setOpen(false); }}>
+              <CommandItem value="__custom__" onSelect={() => { onSelect({ id: null, name: '', sku: '', quantityUnit: 'pcs' }); setOpen(false); }}>
                 <Plus className="mr-2 h-4 w-4" /> Add custom item...
               </CommandItem>
               {inventoryItems.map((item) => (
-                <CommandItem key={item.id} value={`${item.name} ${item.sku}`} onSelect={() => { onSelect({ id: item.id, name: item.name, sku: item.sku }); setOpen(false); }}>
+                <CommandItem key={item.id} value={`${item.name} ${item.sku}`} onSelect={() => { onSelect({ id: item.id, name: item.name, sku: item.sku, quantityUnit: item.quantityUnit }); setOpen(false); }}>
                   <div className="flex flex-col">
                     <span>{item.name}</span>
                     <span className="text-xs text-muted-foreground">{item.sku}</span>
@@ -85,7 +86,7 @@ function ItemSearchCombobox({
 function AddItemForm({
   inventoryItems, onAdd, onCancel,
 }: {
-  inventoryItems: { id: string; name: string; sku: string }[];
+  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
   onAdd: (item: { inventory_item_id?: string | null; item_name: string; sku: string; quantity: number; notes?: string }) => Promise<boolean>;
   onCancel: () => void;
 }) {
@@ -148,7 +149,7 @@ function AssemblyDetail({
   assembly, inventoryItems, summary, onDelete, onUpdate, onItemsChanged,
 }: {
   assembly: Assembly;
-  inventoryItems: { id: string; name: string; sku: string }[];
+  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => Promise<void>;
@@ -337,7 +338,14 @@ function AssemblyDetail({
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleSaveQty(item.id)}><Check className="h-3 w-3" /></Button>
                   </div>
                 ) : (
-                  <button className="w-16 text-center text-sm font-medium hover:underline cursor-pointer" onClick={() => startEditQty(item)}>{item.quantity}</button>
+                  <button className="w-16 text-center text-sm font-medium hover:underline cursor-pointer" onClick={() => startEditQty(item)}>
+                    {item.quantity}
+                    {(() => {
+                      const linked = inventoryItems.find(inv => inv.id === item.inventory_item_id);
+                      const unit = linked?.quantityUnit as QuantityUnit | undefined;
+                      return unit && unit !== 'pcs' ? <span className="text-xs text-muted-foreground ml-1">{QUANTITY_UNIT_LABELS[unit]}</span> : null;
+                    })()}
+                  </button>
                 )}
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteItemId(item.id)}>
                   <Trash2 className="h-3 w-3" />
@@ -383,7 +391,7 @@ export function Assemblies() {
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
   const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
   const filtered = typeAssemblies.filter((a) => a.name.toLowerCase().includes(search.toLowerCase()));
-  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku }));
+  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit }));
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
