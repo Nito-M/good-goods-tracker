@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
-import { PdfViewerDialog } from '@/components/PdfViewerDialog';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import {
   FileText,
@@ -66,9 +65,6 @@ export function PurchaseOrderCard({
   const [isOpen, setIsOpen] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
-  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
-  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null);
-  const [pdfViewerTitle, setPdfViewerTitle] = useState<string>('PDF Preview');
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -312,12 +308,11 @@ export function PurchaseOrderCard({
                   {/* Legacy PDF */}
                   {order.pdfUrl && (
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => { setPdfViewerUrl(order.pdfUrl); setPdfViewerTitle('PDF (original)'); setPdfViewerOpen(true); }}
+                      <a href={order.pdfUrl} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
                         <FileText className="h-4 w-4" />
                         View PDF (original)
-                      </button>
+                      </a>
                       {onDeletePdf && (
                         <button onClick={onDeletePdf}
                           className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
@@ -349,12 +344,11 @@ export function PurchaseOrderCard({
                   {/* New PDF attachments */}
                   {pdfAttachments.map(a => (
                     <div key={a.id} className="flex items-center gap-2">
-                      <button
-                        onClick={() => { setPdfViewerUrl(a.url); setPdfViewerTitle(a.fileName || 'PDF'); setPdfViewerOpen(true); }}
+                      <a href={a.url} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-sm text-primary hover:underline truncate max-w-[200px]">
                         <FileText className="h-4 w-4 shrink-0" />
                         {a.fileName || 'PDF'}
-                      </button>
+                      </a>
                       {onDeleteAttachment && (
                         <button onClick={() => onDeleteAttachment(a.id)}
                           className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors shrink-0"
@@ -468,13 +462,6 @@ export function PurchaseOrderCard({
         alt={order.poNumber || 'Purchase Order'}
         open={imageViewerOpen}
         onOpenChange={setImageViewerOpen}
-      />
-
-      <PdfViewerDialog
-        pdfUrl={pdfViewerUrl}
-        title={pdfViewerTitle}
-        open={pdfViewerOpen}
-        onOpenChange={setPdfViewerOpen}
       />
     </>
   );
