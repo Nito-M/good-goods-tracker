@@ -5,7 +5,7 @@ export interface Dimensions {
   unit: 'in' | 'cm';
 }
 
-export type QuantityUnit = 'pcs' | 'ft' | 'm' | 'yd' | 'in';
+export type QuantityUnit = 'pcs' | 'ft' | 'm' | 'yd' | 'in' | 'sqft';
 
 export const QUANTITY_UNIT_LABELS: Record<QuantityUnit, string> = {
   pcs: 'Pieces',
@@ -13,6 +13,7 @@ export const QUANTITY_UNIT_LABELS: Record<QuantityUnit, string> = {
   m: 'Meters',
   yd: 'Yards',
   in: 'Inches',
+  sqft: 'Sq Ft',
 };
 
 export interface InventoryItem {

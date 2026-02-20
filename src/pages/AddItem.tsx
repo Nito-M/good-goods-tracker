@@ -517,6 +517,72 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             </CardContent>
           </Card>
 
+          {/* Total Measurement Summary */}
+          {(() => {
+            const qty = parseFloat(quantity) || 0;
+            const unit = quantityUnit;
+            const l = dimensions.length || 0;
+            const w = dimensions.width || 0;
+            const dimUnit = dimensions.unit;
+
+            // Compute total linear measurement
+            const showLinear = (unit === 'ft' || unit === 'in' || unit === 'm' || unit === 'yd') && qty > 0;
+            // Compute area from dimensions (L × W) × qty
+            const area = l * w * qty;
+            const showArea = (unit === 'sqft' || (unit === 'pcs' && l > 0 && w > 0)) && qty > 0;
+
+            // Convert dimension area to sq ft if needed
+            let areaLabel = '';
+            let areaValue = 0;
+            if (showArea || (l > 0 && w > 0 && qty > 0)) {
+              if (dimUnit === 'in') {
+                areaValue = (l * w / 144) * qty;
+                areaLabel = `sq ft`;
+              } else if (dimUnit === 'cm') {
+                areaValue = (l * w / 929.03) * qty;
+                areaLabel = `sq ft`;
+              } else {
+                areaValue = l * w * qty;
+                areaLabel = `sq ${dimUnit}`;
+              }
+            }
+
+            const hasContent =
+              (showLinear && qty > 0) ||
+              (areaValue > 0) ||
+              (unit === 'sqft' && qty > 0);
+
+            if (!hasContent) return null;
+
+            return (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-primary">Measurement Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-6 text-sm">
+                  {unit === 'sqft' && qty > 0 && (
+                    <div>
+                      <span className="text-muted-foreground">Total area: </span>
+                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft</span>
+                    </div>
+                  )}
+                  {showLinear && (
+                    <div>
+                      <span className="text-muted-foreground">Total length: </span>
+                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} {QUANTITY_UNIT_LABELS[unit]?.toLowerCase()}</span>
+                    </div>
+                  )}
+                  {areaValue > 0 && (
+                    <div>
+                      <span className="text-muted-foreground">Total area (L×W×qty): </span>
+                      <span className="font-semibold">{areaValue.toLocaleString(undefined, { maximumFractionDigits: 4 })} {areaLabel}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
           {/* Physical Properties */}
           <Card>
             <CardHeader>
