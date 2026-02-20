@@ -469,9 +469,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="quantity">
-                  {quantityUnit === 'sqft' ? 'Number of Sheets' : 'Quantity'}
-                </Label>
+                <Label htmlFor="quantity">Quantity</Label>
                 <div className="flex gap-2">
                    <Input
                     id="quantity"
@@ -498,7 +496,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   </Select>
                 </div>
                 {quantityUnit === 'sqft' && (
-                  <p className="text-xs text-muted-foreground">Enter how many sheets you have in stock.</p>
+                  <p className="text-xs text-muted-foreground">Total sq ft in stock. Optionally define sheet size below to calculate sheets.</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -528,9 +526,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="minStock">
-                  {quantityUnit === 'sqft' ? 'Min Sheets Level' : 'Min Stock Level'}
-                </Label>
+                <Label htmlFor="minStock">Min Stock Level</Label>
                 <Input
                   id="minStock"
                   type="number"
@@ -545,13 +541,13 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             </CardContent>
           </Card>
 
-          {/* Sheet Size Configuration — only shown when Sq Ft is selected */}
+          {/* Sheet Size Configuration — optional, only shown when Sq Ft is selected */}
           {quantityUnit === 'sqft' && (
             <Card className="border-primary/30 bg-primary/5">
               <CardHeader>
-                <CardTitle className="text-primary">Sheet Size</CardTitle>
+                <CardTitle className="text-primary">Sheet Size <span className="text-sm font-normal text-muted-foreground">(optional)</span></CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Define the size of each individual sheet. This is used to calculate your total square footage.
+                  If your stock comes in standard sheets, enter the sheet dimensions to calculate how many sheets you have.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -622,16 +618,16 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   </div>
                 </div>
 
-                {/* Live calculation preview */}
+                {/* Live calculation preview — qty is total sq ft, sheets = qty / sheetSqFt */}
                 {(() => {
                   const l = parseFloat(sheetLength) || 0;
                   const w = parseFloat(sheetWidth) || 0;
-                  const qty = parseFloat(quantity) || 0;
+                  const totalSqFt = parseFloat(quantity) || 0;
                   if (l <= 0 || w <= 0) return (
-                    <p className="text-xs text-muted-foreground">Enter length and width above to see the sq ft calculation.</p>
+                    <p className="text-xs text-muted-foreground">Enter length and width above to see the sheet count.</p>
                   );
                   const sheetSqFt = sheetUnit === 'in' ? (l * w) / 144 : l * w;
-                  const totalSqFt = sheetSqFt * qty;
+                  const sheets = sheetSqFt > 0 ? totalSqFt / sheetSqFt : 0;
                   return (
                     <div className="rounded-lg bg-background border border-border p-4 space-y-2 text-sm">
                       <div className="flex items-center justify-between">
@@ -640,11 +636,11 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                           {l} × {w} {sheetUnit} = <span className="text-primary">{sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft/sheet</span>
                         </span>
                       </div>
-                      {qty > 0 && (
+                      {totalSqFt > 0 && (
                         <div className="flex items-center justify-between border-t border-border pt-2">
-                          <span className="text-muted-foreground">Total in stock</span>
+                          <span className="text-muted-foreground">Sheets in stock</span>
                           <span className="font-bold text-base">
-                            {qty} sheets × {sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} = <span className="text-primary">{totalSqFt.toLocaleString(undefined, { maximumFractionDigits: 2 })} sq ft</span>
+                            {totalSqFt} sq ft ÷ {sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} = <span className="text-primary">{sheets.toLocaleString(undefined, { maximumFractionDigits: 2 })} sheets</span>
                           </span>
                         </div>
                       )}
