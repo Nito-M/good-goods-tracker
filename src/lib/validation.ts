@@ -75,7 +75,7 @@ export const inventoryItemSchema = z.object({
     length: z.number().min(0, 'Length cannot be negative'),
     width: z.number().min(0, 'Width cannot be negative'),
     height: z.number().min(0, 'Height cannot be negative'),
-    unit: z.enum(['in', 'cm'], { errorMap: () => ({ message: 'Invalid dimension unit' }) }),
+    unit: z.enum(['in', 'cm', 'ft'], { errorMap: () => ({ message: 'Invalid dimension unit' }) }),
   }),
   colors: z.array(z.string().max(50)).max(20, 'Maximum 20 colors allowed').optional(),
   description: z.string().max(2000, 'Description must be less than 2000 characters').optional(),
