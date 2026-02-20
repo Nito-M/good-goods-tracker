@@ -474,6 +474,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                     </SelectContent>
                   </Select>
                 </div>
+                {quantityUnit === 'sqft' && (
+                  <p className="text-xs text-muted-foreground">Enter total sq ft in stock. Add sheet dimensions below to calculate sheets in stock.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">Price ($)</Label>
@@ -516,80 +519,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
               </div>
             </CardContent>
           </Card>
-
-          {/* Total Measurement Summary */}
-          {(() => {
-            const qty = parseFloat(quantity) || 0;
-            const unit = quantityUnit;
-            const l = dimensions.length || 0;
-            const w = dimensions.width || 0;
-            const dimUnit = dimensions.unit;
-
-            if (qty <= 0) return null;
-
-            // Convert sheet L×W to sq ft
-            let sheetSqFt = 0;
-            if (l > 0 && w > 0) {
-              if (dimUnit === 'in') sheetSqFt = (l * w) / 144;
-              else if (dimUnit === 'cm') sheetSqFt = (l * w) / 929.03;
-              else sheetSqFt = l * w; // already ft or similar
-            }
-
-            const isLinear = unit === 'ft' || unit === 'in' || unit === 'm' || unit === 'yd';
-            const isSqft = unit === 'sqft';
-
-            // For sqft unit: qty = total sq ft; sheets = qty / sheetSqFt
-            // For pcs with dimensions: show area per unit & total area
-            const sheetsInStock = isSqft && sheetSqFt > 0 ? qty / sheetSqFt : null;
-            // Area for non-sqft units
-            const totalAreaSqFt = !isSqft && sheetSqFt > 0 ? sheetSqFt * qty : null;
-
-            const hasContent = isLinear || isSqft || totalAreaSqFt !== null;
-            if (!hasContent) return null;
-
-            return (
-              <Card className="border-primary/20 bg-primary/5">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-primary">Measurement Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-6 text-sm">
-                  {isLinear && (
-                    <div>
-                      <span className="text-muted-foreground">Total length: </span>
-                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} {QUANTITY_UNIT_LABELS[unit]?.toLowerCase()}</span>
-                    </div>
-                  )}
-                  {isSqft && (
-                    <div>
-                      <span className="text-muted-foreground">Total sq ft in stock: </span>
-                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft</span>
-                    </div>
-                  )}
-                  {isSqft && sheetSqFt > 0 && sheetsInStock !== null && (
-                    <div>
-                      <span className="text-muted-foreground">Sheets in stock: </span>
-                      <span className="font-semibold">{sheetsInStock.toLocaleString(undefined, { maximumFractionDigits: 2 })} sheets</span>
-                      <span className="text-muted-foreground text-xs ml-1">
-                        ({l} × {w} {dimUnit} = {sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft/sheet)
-                      </span>
-                    </div>
-                  )}
-                  {isSqft && l > 0 && w === 0 && (
-                    <p className="text-muted-foreground text-xs">Enter sheet width in Dimensions to calculate sheets in stock.</p>
-                  )}
-                  {isSqft && l === 0 && (
-                    <p className="text-muted-foreground text-xs">Enter sheet size in Dimensions (L × W) to calculate sheets in stock.</p>
-                  )}
-                  {totalAreaSqFt !== null && (
-                    <div>
-                      <span className="text-muted-foreground">Total area (L×W×qty): </span>
-                      <span className="font-semibold">{totalAreaSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })()}
 
           {/* Physical Properties */}
           <Card>
@@ -658,12 +587,13 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                     onChange={(e) => setDimensions({ ...dimensions, height: parseFloat(e.target.value) || 0 })}
                     className="w-20"
                   />
-                  <Select value={dimensions.unit} onValueChange={(v) => setDimensions({ ...dimensions, unit: v as 'in' | 'cm' })}>
+                  <Select value={dimensions.unit} onValueChange={(v) => setDimensions({ ...dimensions, unit: v as 'in' | 'cm' | 'ft' })}>
                     <SelectTrigger className="w-20">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="in">in</SelectItem>
+                      <SelectItem value="ft">ft</SelectItem>
                       <SelectItem value="cm">cm</SelectItem>
                     </SelectContent>
                   </Select>
@@ -671,6 +601,79 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
               </div>
             </CardContent>
           </Card>
+
+          {/* Total Measurement Summary — shown after dimensions so changes are visible immediately */}
+          {(() => {
+            const qty = parseFloat(quantity) || 0;
+            const unit = quantityUnit;
+            const l = dimensions.length || 0;
+            const w = dimensions.width || 0;
+            const dimUnit = dimensions.unit;
+
+            if (qty <= 0) return null;
+
+            // Convert sheet L×W to sq ft
+            let sheetSqFt = 0;
+            if (l > 0 && w > 0) {
+              if (dimUnit === 'in') sheetSqFt = (l * w) / 144;
+              else if (dimUnit === 'cm') sheetSqFt = (l * w) / 929.03;
+              else sheetSqFt = l * w; // ft → sq ft directly
+            }
+
+            const isLinear = unit === 'ft' || unit === 'in' || unit === 'm' || unit === 'yd';
+            const isSqft = unit === 'sqft';
+
+            // For sqft unit: qty = total sq ft; sheets = qty / sheetSqFt
+            // For pcs with dimensions: show total area
+            const sheetsInStock = isSqft && sheetSqFt > 0 ? qty / sheetSqFt : null;
+            const totalAreaSqFt = !isSqft && sheetSqFt > 0 ? sheetSqFt * qty : null;
+
+            const hasContent = isLinear || isSqft || totalAreaSqFt !== null;
+            if (!hasContent) return null;
+
+            return (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-primary">Measurement Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-6 text-sm">
+                  {isLinear && (
+                    <div>
+                      <span className="text-muted-foreground">Total length: </span>
+                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} {QUANTITY_UNIT_LABELS[unit]?.toLowerCase()}</span>
+                    </div>
+                  )}
+                  {isSqft && (
+                    <div>
+                      <span className="text-muted-foreground">Total sq ft in stock: </span>
+                      <span className="font-semibold">{qty.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft</span>
+                    </div>
+                  )}
+                  {isSqft && sheetSqFt > 0 && sheetsInStock !== null && (
+                    <div>
+                      <span className="text-muted-foreground">Sheets in stock: </span>
+                      <span className="font-semibold">{sheetsInStock.toLocaleString(undefined, { maximumFractionDigits: 2 })} sheets</span>
+                      <span className="text-muted-foreground text-xs ml-1">
+                        ({l} × {w} {dimUnit} = {sheetSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft/sheet)
+                      </span>
+                    </div>
+                  )}
+                  {isSqft && l > 0 && w === 0 && (
+                    <p className="text-muted-foreground text-xs">Enter sheet width in Dimensions to calculate sheets in stock.</p>
+                  )}
+                  {isSqft && l === 0 && (
+                    <p className="text-muted-foreground text-xs">Enter sheet size in Dimensions (L × W) to calculate sheets in stock.</p>
+                  )}
+                  {totalAreaSqFt !== null && (
+                    <div>
+                      <span className="text-muted-foreground">Total area (L×W×qty): </span>
+                      <span className="font-semibold">{totalAreaSqFt.toLocaleString(undefined, { maximumFractionDigits: 4 })} sq ft</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Additional Details */}
           <Card>

@@ -2,7 +2,7 @@ export interface Dimensions {
   length: number;
   width: number;
   height: number;
-  unit: 'in' | 'cm';
+  unit: 'in' | 'cm' | 'ft';
 }
 
 export type QuantityUnit = 'pcs' | 'ft' | 'm' | 'yd' | 'in' | 'sqft';
