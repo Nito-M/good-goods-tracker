@@ -187,9 +187,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     let isFirstItem = true;
     quote.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, 55);
-      const rowHeight = Math.max(nameLines.length, 1) * LINE_HEIGHT;
+      const skuLines = doc.splitTextToSize(item.sku, 32);
+      const rowHeight = Math.max(nameLines.length, skuLines.length, 1) * LINE_HEIGHT;
 
-      // Calculate total height this item needs (name rows + optional note rows)
+      // Calculate total height this item needs (name/sku rows + optional note rows)
       let itemTotalHeight = rowHeight;
       let noteLines: string[] = [];
       if (item.notes) {
@@ -207,7 +208,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       isFirstItem = false;
 
       doc.text(nameLines, tableX + 2, y);
-      doc.text(item.sku, tableX + 60, y);
+      doc.text(skuLines, tableX + 60, y);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
       doc.text(qtyDisplay, tableX + 95, y);
       doc.text(formatCurrency(item.unitPrice), tableX + 115, y);
