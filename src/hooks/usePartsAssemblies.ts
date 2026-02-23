@@ -120,6 +120,24 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
     notes?: string;
   }): Promise<boolean> => {
     if (!assemblyId) return false;
+
+    // Check if this part already exists in the assembly
+    const existing = items.find(i => i.part_id && item.part_id && i.part_id === item.part_id);
+    if (existing) {
+      // Increment quantity instead of adding a duplicate
+      const { error } = await (supabase as any)
+        .from('parts_assembly_items')
+        .update({ quantity: existing.quantity + item.quantity })
+        .eq('id', existing.id);
+      if (error) {
+        toast({ title: 'Error', description: 'Failed to update part quantity.', variant: 'destructive' });
+        return false;
+      }
+      await fetchItems();
+      toast({ title: 'Part already exists', description: `Quantity increased by ${item.quantity}.` });
+      return true;
+    }
+
     const { error } = await (supabase as any).from('parts_assembly_items').insert({
       assembly_id: assemblyId,
       part_id: item.part_id || null,
