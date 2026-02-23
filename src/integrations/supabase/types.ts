@@ -369,6 +369,7 @@ export type Database = {
           sku: string
           updated_at: string
           user_id: string | null
+          warehouse_id: string | null
           weight: number
           weight_unit: string
         }
@@ -393,6 +394,7 @@ export type Database = {
           sku: string
           updated_at?: string
           user_id?: string | null
+          warehouse_id?: string | null
           weight?: number
           weight_unit?: string
         }
@@ -417,10 +419,19 @@ export type Database = {
           sku?: string
           updated_at?: string
           user_id?: string | null
+          warehouse_id?: string | null
           weight?: number
           weight_unit?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       item_images: {
         Row: {
@@ -1731,6 +1742,33 @@ export type Database = {
           link?: string | null
           name?: string
           notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      warehouses: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
           updated_at?: string
           user_id?: string
         }

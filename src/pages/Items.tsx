@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
@@ -8,6 +8,7 @@ import { InventoryItem } from '@/types/inventory';
 import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
 import { useBulkItemTags } from '@/hooks/useItemTags';
+import { useWarehouses } from '@/hooks/useWarehouses';
 
 interface ItemsProps {
   items: InventoryItem[];
@@ -31,12 +32,24 @@ export const Items = ({
   onDelete,
 }: ItemsProps) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tagFilter, setTagFilter] = useState('all');
+  const warehouseFilter = searchParams.get('warehouse') || 'all';
   
   const { tagCategories } = useTagCategories();
   const { tags } = useTags();
+  const { warehouses } = useWarehouses();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const { getTagsForItem, itemTagsMap } = useBulkItemTags(itemIds);
+
+  const setWarehouseFilter = (value: string) => {
+    if (value === 'all') {
+      searchParams.delete('warehouse');
+    } else {
+      searchParams.set('warehouse', value);
+    }
+    setSearchParams(searchParams);
+  };
 
   // Build tag options for filter dropdown
   const tagOptions = useMemo(() => {
@@ -50,14 +63,25 @@ export const Items = ({
     });
   }, [tags, tagCategories]);
 
-  // Filter items by tag
+  // Filter items by tag and warehouse
   const filteredItems = useMemo(() => {
-    if (tagFilter === 'all') return items;
-    return items.filter((item) => {
-      const tagIds = itemTagsMap.get(item.id) || [];
-      return tagIds.includes(tagFilter);
-    });
-  }, [items, tagFilter, itemTagsMap]);
+    let result = items;
+    if (tagFilter !== 'all') {
+      result = result.filter((item) => {
+        const tagIds = itemTagsMap.get(item.id) || [];
+        return tagIds.includes(tagFilter);
+      });
+    }
+    if (warehouseFilter !== 'all') {
+      result = result.filter((item) => item.warehouseId === warehouseFilter);
+    }
+    return result;
+  }, [items, tagFilter, itemTagsMap, warehouseFilter]);
+
+  const warehouseOptions = useMemo(() =>
+    warehouses.map((w) => ({ id: w.id, name: w.name })),
+    [warehouses]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,6 +113,9 @@ export const Items = ({
             tagFilter={tagFilter}
             onTagChange={setTagFilter}
             tagOptions={tagOptions}
+            warehouseFilter={warehouseFilter}
+            onWarehouseChange={setWarehouseFilter}
+            warehouseOptions={warehouseOptions}
           />
         </div>
 

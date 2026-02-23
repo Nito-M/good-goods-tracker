@@ -23,6 +23,11 @@ interface TagOption {
   categoryName: string;
 }
 
+interface WarehouseOption {
+  id: string;
+  name: string;
+}
+
 interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -32,6 +37,9 @@ interface SearchFilterProps {
   tagFilter?: string;
   onTagChange?: (value: string) => void;
   tagOptions?: TagOption[];
+  warehouseFilter?: string;
+  onWarehouseChange?: (value: string) => void;
+  warehouseOptions?: WarehouseOption[];
 }
 
 export function SearchFilter({
@@ -43,9 +51,13 @@ export function SearchFilter({
   tagFilter,
   onTagChange,
   tagOptions,
+  warehouseFilter,
+  onWarehouseChange,
+  warehouseOptions,
 }: SearchFilterProps) {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
+  const [warehouseOpen, setWarehouseOpen] = useState(false);
 
   const selectedCategoryLabel =
     categoryFilter === 'all' || !categoryFilter ? 'All Categories' : categoryFilter;
@@ -178,6 +190,70 @@ export function SearchFilter({
                       />
                       <span className="text-muted-foreground text-xs mr-1">{tag.categoryName}:</span>
                       {tag.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {/* Warehouse/Location combobox */}
+      {warehouseOptions && warehouseOptions.length > 0 && onWarehouseChange && (
+        <Popover open={warehouseOpen} onOpenChange={setWarehouseOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={warehouseOpen}
+              className="w-full sm:w-48 justify-between font-normal"
+            >
+              <span className="truncate">
+                {!warehouseFilter || warehouseFilter === 'all'
+                  ? 'All Locations'
+                  : warehouseOptions.find((w) => w.id === warehouseFilter)?.name || 'All Locations'}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search locations..." />
+              <CommandList>
+                <CommandEmpty>No location found.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="all"
+                    onSelect={() => {
+                      onWarehouseChange('all');
+                      setWarehouseOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        !warehouseFilter || warehouseFilter === 'all' ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    All Locations
+                  </CommandItem>
+                  {warehouseOptions.map((w) => (
+                    <CommandItem
+                      key={w.id}
+                      value={w.name}
+                      onSelect={() => {
+                        onWarehouseChange(w.id);
+                        setWarehouseOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          warehouseFilter === w.id ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      {w.name}
                     </CommandItem>
                   ))}
                 </CommandGroup>
