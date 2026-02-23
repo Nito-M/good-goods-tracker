@@ -178,15 +178,13 @@ export function Requests() {
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RequestStatus)} className="w-full">
         <TabsList className="grid w-full grid-cols-5 mb-6">
           {(Object.keys(STATUS_CONFIG) as RequestStatus[]).map((status) => (
-            <TabsTrigger key={status} value={status} className="flex flex-col items-center gap-0.5 py-2">
-              <div className="flex items-center gap-1.5">
-                {STATUS_CONFIG[status].icon}
-                <span className="hidden sm:inline">{STATUS_CONFIG[status].label}</span>
-                <Badge variant="secondary" className="h-5 min-w-5 px-1.5">
-                  {getStatusCount(status)}
-                </Badge>
-              </div>
-              <span className="text-[10px] text-muted-foreground font-medium">
+            <TabsTrigger key={status} value={status} className="flex items-center gap-1.5 py-1.5 px-2">
+              {STATUS_CONFIG[status].icon}
+              <span className="hidden sm:inline">{STATUS_CONFIG[status].label}</span>
+              <Badge variant="secondary" className="h-5 min-w-5 px-1.5">
+                {getStatusCount(status)}
+              </Badge>
+              <span className="hidden sm:inline text-[11px] text-muted-foreground font-medium opacity-75">
                 {formatCurrency(getStatusTotal(status))}
               </span>
             </TabsTrigger>
