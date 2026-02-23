@@ -136,6 +136,7 @@ function AssemblyDetail({
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
 }) {
+  const navigate = useNavigate();
   const { items, loading, addItem, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -310,7 +311,13 @@ function AssemblyDetail({
             {items.map((item) => (
               <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
-                  <p className="font-medium text-sm">{item.part_name}</p>
+                  {item.part_id ? (
+                    <button className="font-medium text-sm text-primary hover:underline cursor-pointer text-left" onClick={() => navigate(`/parts/library/${item.part_id}`)}>
+                      {item.part_name}
+                    </button>
+                  ) : (
+                    <p className="font-medium text-sm">{item.part_name}</p>
+                  )}
                   {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
                 </div>
                 <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.part_sku || '—'}</span>
