@@ -1,0 +1,214 @@
+import { useMemo, useEffect, useRef } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { MapControls } from '@react-three/drei';
+import * as THREE from 'three';
+import DxfParser from 'dxf-parser';
+
+interface DxfThreeViewerProps {
+  dxfText: string;
+}
+
+interface ParsedGeometry {
+  positions: Float32Array;
+  boundingBox: THREE.Box3;
+}
+
+function parseDxfToGeometry(dxfText: string): ParsedGeometry {
+  const parser = new DxfParser();
+  const dxf = parser.parseSync(dxfText);
+
+  const allPoints: number[] = [];
+
+  const addLine = (x1: number, y1: number, x2: number, y2: number) => {
+    allPoints.push(x1, y1, 0, x2, y2, 0);
+  };
+
+  const addCirclePoints = (cx: number, cy: number, r: number, startAngle = 0, endAngle = Math.PI * 2, segments = 64) => {
+    let angle = endAngle - startAngle;
+    if (angle < 0) angle += Math.PI * 2;
+    const step = angle / segments;
+    for (let i = 0; i < segments; i++) {
+      const a1 = startAngle + step * i;
+      const a2 = startAngle + step * (i + 1);
+      addLine(
+        cx + r * Math.cos(a1), cy + r * Math.sin(a1),
+        cx + r * Math.cos(a2), cy + r * Math.sin(a2)
+      );
+    }
+  };
+
+  if (dxf?.entities) {
+    for (const entity of dxf.entities) {
+      try {
+        switch (entity.type) {
+          case 'LINE': {
+            const e = entity as any;
+            if (e.vertices && e.vertices.length >= 2) {
+              addLine(e.vertices[0].x, e.vertices[0].y, e.vertices[1].x, e.vertices[1].y);
+            }
+          } break;
+
+          case 'CIRCLE': {
+            const e = entity as any;
+            addCirclePoints(e.center?.x || 0, e.center?.y || 0, e.radius || 1);
+          } break;
+
+          case 'ARC': {
+            const e = entity as any;
+            const startAngle = (e.startAngle || 0) * Math.PI / 180;
+            const endAngle = (e.endAngle || 360) * Math.PI / 180;
+            addCirclePoints(e.center?.x || 0, e.center?.y || 0, e.radius || 1, startAngle, endAngle, 64);
+          } break;
+
+          case 'LWPOLYLINE':
+          case 'POLYLINE': {
+            const e = entity as any;
+            const verts = e.vertices;
+            if (verts && verts.length >= 2) {
+              for (let i = 0; i < verts.length - 1; i++) {
+                const v1 = verts[i];
+                const v2 = verts[i + 1];
+                if (v1.bulge && v1.bulge !== 0) {
+                  // Handle bulge (arc between vertices)
+                  const bulge = v1.bulge;
+                  const dx = v2.x - v1.x;
+                  const dy = v2.y - v1.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  const sagitta = Math.abs(bulge) * dist / 2;
+                  const radius = (dist / 2) / Math.sin(2 * Math.atan(Math.abs(bulge)));
+                  const midX = (v1.x + v2.x) / 2;
+                  const midY = (v1.y + v2.y) / 2;
+                  const perpX = -dy / dist;
+                  const perpY = dx / dist;
+                  const sign = bulge > 0 ? 1 : -1;
+                  const offset = radius - sagitta;
+                  const cx = midX + sign * perpX * offset;
+                  const cy = midY + sign * perpY * offset;
+                  const startAngle = Math.atan2(v1.y - cy, v1.x - cx);
+                  const endAngle = Math.atan2(v2.y - cy, v2.x - cx);
+                  addCirclePoints(cx, cy, Math.abs(radius), startAngle, endAngle, 32);
+                } else {
+                  addLine(v1.x, v1.y, v2.x, v2.y);
+                }
+              }
+              // Close if shape is closed
+              if (e.shape) {
+                const last = verts[verts.length - 1];
+                const first = verts[0];
+                addLine(last.x, last.y, first.x, first.y);
+              }
+            }
+          } break;
+
+          case 'ELLIPSE': {
+            const e = entity as any;
+            const cx = e.center?.x || 0;
+            const cy = e.center?.y || 0;
+            const mx = e.majorAxisEndPoint?.x || 1;
+            const my = e.majorAxisEndPoint?.y || 0;
+            const ratio = e.axisRatio || 1;
+            const a = Math.sqrt(mx * mx + my * my);
+            const b = a * ratio;
+            const rotation = Math.atan2(my, mx);
+            const startAngle = e.startAngle || 0;
+            const endAngle = e.endAngle || Math.PI * 2;
+            const segments = 64;
+            let angle = endAngle - startAngle;
+            if (angle < 0) angle += Math.PI * 2;
+            const step = angle / segments;
+            for (let i = 0; i < segments; i++) {
+              const t1 = startAngle + step * i;
+              const t2 = startAngle + step * (i + 1);
+              const x1 = cx + a * Math.cos(t1) * Math.cos(rotation) - b * Math.sin(t1) * Math.sin(rotation);
+              const y1 = cy + a * Math.cos(t1) * Math.sin(rotation) + b * Math.sin(t1) * Math.cos(rotation);
+              const x2 = cx + a * Math.cos(t2) * Math.cos(rotation) - b * Math.sin(t2) * Math.sin(rotation);
+              const y2 = cy + a * Math.cos(t2) * Math.sin(rotation) + b * Math.sin(t2) * Math.cos(rotation);
+              addLine(x1, y1, x2, y2);
+            }
+          } break;
+
+          case 'SPLINE': {
+            const e = entity as any;
+            const pts = e.controlPoints || e.fitPoints;
+            if (pts && pts.length >= 2) {
+              for (let i = 0; i < pts.length - 1; i++) {
+                addLine(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y);
+              }
+            }
+          } break;
+
+          default:
+            break;
+        }
+      } catch {
+        // Skip malformed entities
+      }
+    }
+  }
+
+  const positions = new Float32Array(allPoints);
+  const boundingBox = new THREE.Box3();
+  for (let i = 0; i < positions.length; i += 3) {
+    boundingBox.expandByPoint(new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]));
+  }
+
+  return { positions, boundingBox };
+}
+
+function DxfScene({ geometry }: { geometry: ParsedGeometry }) {
+  const { camera } = useThree();
+  const linesRef = useRef<THREE.LineSegments>(null);
+
+  useEffect(() => {
+    if (geometry.positions.length === 0) return;
+
+    const box = geometry.boundingBox;
+    const center = new THREE.Vector3();
+    const size = new THREE.Vector3();
+    box.getCenter(center);
+    box.getSize(size);
+
+    const maxDim = Math.max(size.x, size.y) || 1;
+    const cam = camera as THREE.OrthographicCamera;
+    const padding = 1.1;
+    cam.left = -maxDim * padding / 2;
+    cam.right = maxDim * padding / 2;
+    cam.top = maxDim * padding / 2;
+    cam.bottom = -maxDim * padding / 2;
+    cam.position.set(center.x, center.y, 100);
+    cam.lookAt(center.x, center.y, 0);
+    cam.updateProjectionMatrix();
+  }, [geometry, camera]);
+
+  const bufferGeometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(geometry.positions, 3));
+    return geo;
+  }, [geometry]);
+
+  if (geometry.positions.length === 0) return null;
+
+  return (
+    <lineSegments ref={linesRef} geometry={bufferGeometry}>
+      <lineBasicMaterial color="#ffffff" linewidth={1} />
+    </lineSegments>
+  );
+}
+
+export function DxfThreeViewer({ dxfText }: DxfThreeViewerProps) {
+  const geometry = useMemo(() => parseDxfToGeometry(dxfText), [dxfText]);
+
+  return (
+    <div className="w-full h-full" style={{ minHeight: 400 }}>
+      <Canvas
+        orthographic
+        camera={{ position: [0, 0, 100], zoom: 1, near: 0.1, far: 1000 }}
+        style={{ width: '100%', height: '100%', background: '#1a1a2e' }}
+        gl={{ antialias: true }}
+      >
+        <DxfScene geometry={geometry} />
+        <MapControls enableRotate={false} />
+      </Canvas>
+    </div>
+  );
+}
