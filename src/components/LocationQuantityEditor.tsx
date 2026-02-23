@@ -38,12 +38,12 @@ export function LocationQuantityEditor({
   const assignedQty = entries.reduce((sum, e) => sum + (parseFloat(e.quantity) || 0), 0);
   const unassignedQty = totalQuantity - assignedQty;
 
-  const usedWarehouseIds = entries.map(e => e.warehouseId);
+  const usedWarehouseIds = entries.filter(e => e.warehouseId).map(e => e.warehouseId);
   const availableWarehouses = warehouses.filter(w => !usedWarehouseIds.includes(w.id));
 
   const addEntry = () => {
     if (availableWarehouses.length === 0) return;
-    onChange([...entries, { warehouseId: availableWarehouses[0].id, quantity: '' }]);
+    onChange([...entries, { warehouseId: '', quantity: '' }]);
   };
 
   const removeEntry = (index: number) => {
@@ -91,13 +91,14 @@ export function LocationQuantityEditor({
           const rowAvailable = warehouses.filter(
             w => w.id === entry.warehouseId || !usedWarehouseIds.includes(w.id)
           );
+          const hasSelectedWarehouse = !!entry.warehouseId;
 
           return (
             <div key={index} className="flex items-end gap-2">
               <div className="flex-1 space-y-1">
                 {index === 0 && <Label className="text-xs text-muted-foreground">Location</Label>}
                 <Select
-                  value={entry.warehouseId}
+                  value={entry.warehouseId || undefined}
                   onValueChange={(v) => updateEntry(index, 'warehouseId', v)}
                 >
                   <SelectTrigger>
