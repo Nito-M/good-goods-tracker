@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
 import { OrganizationsSettings } from '@/components/OrganizationsSettings';
@@ -56,7 +56,7 @@ export function Settings() {
   const { isOrgAdmin } = useIsOrgAdmin();
   const showUsersTab = isAdmin || isOrgAdmin;
   const { theme, setTheme } = useTheme();
-  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme } = useColorTheme();
+  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
@@ -129,7 +129,9 @@ export function Settings() {
   const [logoUrl, setLogoUrl] = useState('');
   const [invoiceLayout, setInvoiceLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBackground, setUploadingBackground] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
 
   // Quote settings state
   const [quoteThankYouNote, setQuoteThankYouNote] = useState('');
@@ -501,9 +503,9 @@ export function Settings() {
 
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div className="space-y-0.5">
-                    <Label>Background Color</Label>
+                    <Label>Background</Label>
                     <p className="text-sm text-muted-foreground">
-                      Choose your preferred background color
+                      Choose your preferred background
                     </p>
                   </div>
                   <div className="flex gap-2 flex-wrap justify-end">
@@ -520,6 +522,58 @@ export function Settings() {
                         title={option.label}
                       />
                     ))}
+                    {/* Custom image upload button */}
+                    <input
+                      ref={backgroundInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !user) return;
+                        setUploadingBackground(true);
+                        try {
+                          const fileExt = file.name.split('.').pop();
+                          const filePath = `${user.id}/background.${fileExt}`;
+                          const { error: uploadError } = await supabase.storage
+                            .from('backgrounds')
+                            .upload(filePath, file, { upsert: true });
+                          if (uploadError) throw uploadError;
+                          // Create a signed URL (1 year)
+                          const { data: signedData } = await supabase.storage
+                            .from('backgrounds')
+                            .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+                          if (signedData?.signedUrl) {
+                            await setCustomBackgroundImage(signedData.signedUrl);
+                            setBackgroundTheme('custom');
+                          }
+                        } catch (error) {
+                          console.error('Error uploading background:', error);
+                        } finally {
+                          setUploadingBackground(false);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => backgroundInputRef.current?.click()}
+                      disabled={uploadingBackground}
+                      className={`w-8 h-8 rounded-full border border-border transition-all flex items-center justify-center bg-muted ${
+                        backgroundTheme === 'custom'
+                          ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
+                          : 'hover:scale-105'
+                      }`}
+                      style={
+                        backgroundTheme === 'custom' && backgroundImageUrl
+                          ? { backgroundImage: `url(${backgroundImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                          : undefined
+                      }
+                      title="Custom Image"
+                    >
+                      {!(backgroundTheme === 'custom' && backgroundImageUrl) && (
+                        <ImagePlus className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </CardContent>

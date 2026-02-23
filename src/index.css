@@ -450,6 +450,31 @@ All colors MUST be HSL.
     --sidebar-ring: 340 65% 60%;
     --sidebar: 0 0% 12%;
   }
+
+  /* Custom Background Image */
+  .bg-custom:root, :root.bg-custom,
+  .dark.bg-custom, .bg-custom.dark {
+    --background: 0 0% 0% / 0;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 8% / 0.85;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 10% / 0.9;
+    --popover-foreground: 0 0% 95%;
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 80%;
+    --accent: 0 0% 12% / 0.8;
+    --accent-foreground: 0 0% 85%;
+    --border: 0 0% 30% / 0.5;
+    --input: 0 0% 25% / 0.6;
+    --secondary: 0 0% 15% / 0.8;
+    --secondary-foreground: 0 0% 90%;
+    --sidebar-background: 0 0% 5% / 0.85;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-accent: 0 0% 15% / 0.7;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 0 0% 30% / 0.4;
+    --sidebar: 0 0% 8% / 0.85;
+  }
 }
 
 @layer base {
