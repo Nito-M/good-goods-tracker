@@ -60,7 +60,7 @@ export function useItemLocationQuantities(itemId?: string) {
 
     // Insert non-zero entries
     const toInsert = entries
-      .filter(e => e.quantity > 0)
+      .filter(e => e.quantity > 0 && e.warehouseId)
       .map(e => ({
         item_id: targetItemId,
         warehouse_id: e.warehouseId,
