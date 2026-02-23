@@ -173,7 +173,7 @@ function parseDxfToGeometry(dxfText: string): ParsedGeometry {
 }
 
 function DxfScene({ geometry, controlsRef }: { geometry: ParsedGeometry; controlsRef: React.MutableRefObject<any> }) {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const linesRef = useRef<THREE.LineSegments>(null);
 
   useEffect(() => {
@@ -185,13 +185,26 @@ function DxfScene({ geometry, controlsRef }: { geometry: ParsedGeometry; control
     box.getCenter(center);
     box.getSize(size);
 
-    const maxDim = Math.max(size.x, size.y) || 1;
-    const cam = camera as THREE.OrthographicCamera;
+    const canvas = gl.domElement;
+    const aspect = canvas.clientWidth / canvas.clientHeight || 1;
     const padding = 1.1;
-    cam.left = -maxDim * padding / 2;
-    cam.right = maxDim * padding / 2;
-    cam.top = maxDim * padding / 2;
-    cam.bottom = -maxDim * padding / 2;
+    const drawingW = (size.x || 1) * padding;
+    const drawingH = (size.y || 1) * padding;
+
+    let halfW: number, halfH: number;
+    if (drawingW / drawingH > aspect) {
+      halfW = drawingW / 2;
+      halfH = halfW / aspect;
+    } else {
+      halfH = drawingH / 2;
+      halfW = halfH * aspect;
+    }
+
+    const cam = camera as THREE.OrthographicCamera;
+    cam.left = -halfW;
+    cam.right = halfW;
+    cam.top = halfH;
+    cam.bottom = -halfH;
     cam.position.set(center.x, center.y, 100);
     cam.lookAt(center.x, center.y, 0);
     cam.updateProjectionMatrix();
