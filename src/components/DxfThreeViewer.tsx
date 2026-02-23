@@ -155,7 +155,7 @@ function parseDxfToGeometry(dxfText: string): ParsedGeometry {
   return { positions, boundingBox };
 }
 
-function DxfScene({ geometry }: { geometry: ParsedGeometry }) {
+function DxfScene({ geometry, controlsRef }: { geometry: ParsedGeometry; controlsRef: React.MutableRefObject<any> }) {
   const { camera } = useThree();
   const linesRef = useRef<THREE.LineSegments>(null);
 
@@ -178,7 +178,12 @@ function DxfScene({ geometry }: { geometry: ParsedGeometry }) {
     cam.position.set(center.x, center.y, 100);
     cam.lookAt(center.x, center.y, 0);
     cam.updateProjectionMatrix();
-  }, [geometry, camera]);
+
+    if (controlsRef.current) {
+      controlsRef.current.target.set(center.x, center.y, 0);
+      controlsRef.current.update();
+    }
+  }, [geometry, camera, controlsRef]);
 
   const bufferGeometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -195,20 +200,71 @@ function DxfScene({ geometry }: { geometry: ParsedGeometry }) {
   );
 }
 
+function ZoomControls({ controlsRef }: { controlsRef: React.MutableRefObject<any> }) {
+  const { camera } = useThree();
+
+  const handleZoom = (factor: number) => {
+    const cam = camera as THREE.OrthographicCamera;
+    const scale = factor;
+    cam.left *= scale;
+    cam.right *= scale;
+    cam.top *= scale;
+    cam.bottom *= scale;
+    cam.updateProjectionMatrix();
+    if (controlsRef.current) controlsRef.current.update();
+  };
+
+  return null; // Controls are rendered outside Canvas
+}
+
 export function DxfThreeViewer({ dxfText }: DxfThreeViewerProps) {
   const geometry = useMemo(() => parseDxfToGeometry(dxfText), [dxfText]);
+  const controlsRef = useRef<any>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const handleZoom = (factor: number) => {
+    // Access the Three.js state through the canvas
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const state = (canvas as any).__r3f;
+    if (!state) return;
+    const cam = state.camera as THREE.OrthographicCamera;
+    cam.left *= factor;
+    cam.right *= factor;
+    cam.top *= factor;
+    cam.bottom *= factor;
+    cam.updateProjectionMatrix();
+    if (controlsRef.current) controlsRef.current.update();
+  };
 
   return (
-    <div className="w-full h-full" style={{ minHeight: 400 }}>
+    <div className="w-full h-full relative" style={{ minHeight: 400 }}>
       <Canvas
+        ref={canvasRef}
         orthographic
         camera={{ position: [0, 0, 100], zoom: 1, near: 0.1, far: 1000 }}
         style={{ width: '100%', height: '100%', background: '#1a1a2e' }}
         gl={{ antialias: true }}
       >
-        <DxfScene geometry={geometry} />
-        <MapControls enableRotate={false} />
+        <DxfScene geometry={geometry} controlsRef={controlsRef} />
+        <MapControls ref={controlsRef} enableRotate={false} mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }} />
       </Canvas>
+      <div className="absolute bottom-4 right-4 flex flex-col gap-1">
+        <button
+          onClick={() => handleZoom(0.8)}
+          className="w-9 h-9 rounded-md bg-background/80 backdrop-blur border border-border text-foreground flex items-center justify-center hover:bg-accent transition-colors text-lg font-bold"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <button
+          onClick={() => handleZoom(1.25)}
+          className="w-9 h-9 rounded-md bg-background/80 backdrop-blur border border-border text-foreground flex items-center justify-center hover:bg-accent transition-colors text-lg font-bold"
+          title="Zoom Out"
+        >
+          −
+        </button>
+      </div>
     </div>
   );
 }
