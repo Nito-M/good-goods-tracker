@@ -118,7 +118,7 @@ export function useInventory() {
       return;
     }
 
-    // First, load from IndexedDB for instant display (filter out deleted items)
+    // Load from IndexedDB for instant display
     try {
       const localItems = await getAll('inventory_items', user.id);
       if (localItems.length > 0) {
@@ -126,13 +126,16 @@ export function useInventory() {
           (item) => !item.deleted_at
         );
         setItems(activeItems.map(dbToInventoryItem));
-        setLoading(false);
+        // Don't set loading false yet if online -- wait for server
+        if (!isOnline) {
+          setLoading(false);
+        }
       }
     } catch (error) {
       console.error('Error loading from IndexedDB:', error);
     }
 
-    // If online, fetch from server and update local (only active items)
+    // If online, always fetch from server
     if (isOnline) {
       const { data, error } = await supabase
         .from('inventory_items')
@@ -141,19 +144,16 @@ export function useInventory() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        if (items.length === 0) {
-          console.error('Error loading inventory:', error);
-          toast({
-            title: 'Error loading inventory',
-            description: 'Unable to load inventory. Please try again.',
-            variant: 'destructive',
-          });
-        }
+        console.error('Error loading inventory:', error);
+        toast({
+          title: 'Error loading inventory',
+          description: 'Unable to load inventory. Please try again.',
+          variant: 'destructive',
+        });
         setLoading(false);
         return;
       }
 
-      // Update local DB with server data
       if (data) {
         await putMany('inventory_items', data as unknown as Record<string, unknown>[]);
         setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
