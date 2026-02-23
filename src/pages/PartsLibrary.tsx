@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useParts } from '@/hooks/useParts';
+import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -91,7 +92,10 @@ export function PartsLibrary() {
                     )}
                   </div>
                   <h3 className="font-semibold text-foreground truncate">{part.name}</h3>
-                  <p className="text-sm text-muted-foreground truncate">SKU: {part.sku || '—'}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground truncate">SKU: {part.sku || '—'}</p>
+                    {part.price > 0 && <span className="text-sm font-semibold text-primary">{formatCurrency(part.price)}</span>}
+                  </div>
                   <div className="flex gap-1 mt-1">
                     {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
                     {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
