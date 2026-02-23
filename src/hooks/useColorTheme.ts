@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red';
-export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black' | 'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose';
+export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black' | 'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose' | 'custom';
 
 const COLOR_THEME_KEY = 'color-theme';
 const BACKGROUND_THEME_KEY = 'background-theme';
@@ -27,6 +27,8 @@ export function useColorTheme() {
 
   const [loaded, setLoaded] = useState(false);
 
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+
   // Load theme from database on mount
   useEffect(() => {
     const loadFromDatabase = async () => {
@@ -38,7 +40,7 @@ export function useColorTheme() {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('color_theme, background_theme')
+          .select('color_theme, background_theme, background_image_url')
           .eq('user_id', user.id)
           .single();
 
@@ -50,6 +52,9 @@ export function useColorTheme() {
           if (data.background_theme) {
             setBackgroundThemeState(data.background_theme as BackgroundTheme);
             localStorage.setItem(BACKGROUND_THEME_KEY, data.background_theme);
+          }
+          if (data.background_image_url) {
+            setBackgroundImageUrl(data.background_image_url);
           }
         }
       } catch (error) {
@@ -96,14 +101,29 @@ export function useColorTheme() {
     const root = document.documentElement;
     
     // Remove all background theme classes
-    root.classList.remove('bg-normal', 'bg-green', 'bg-blue', 'bg-grey', 'bg-red', 'bg-black', 'bg-black-gold', 'bg-midnight-silver', 'bg-dark-emerald', 'bg-charcoal-rose');
+    root.classList.remove('bg-normal', 'bg-green', 'bg-blue', 'bg-grey', 'bg-red', 'bg-black', 'bg-black-gold', 'bg-midnight-silver', 'bg-dark-emerald', 'bg-charcoal-rose', 'bg-custom');
     
     // Add the current background theme class
     root.classList.add(`bg-${backgroundTheme}`);
     
+    // Apply or remove background image
+    if (backgroundTheme === 'custom' && backgroundImageUrl) {
+      root.style.backgroundImage = `url(${backgroundImageUrl})`;
+      root.style.backgroundSize = 'cover';
+      root.style.backgroundPosition = 'center';
+      root.style.backgroundAttachment = 'fixed';
+      root.style.backgroundRepeat = 'no-repeat';
+    } else {
+      root.style.backgroundImage = '';
+      root.style.backgroundSize = '';
+      root.style.backgroundPosition = '';
+      root.style.backgroundAttachment = '';
+      root.style.backgroundRepeat = '';
+    }
+    
     // Save to localStorage
     localStorage.setItem(BACKGROUND_THEME_KEY, backgroundTheme);
-  }, [backgroundTheme]);
+  }, [backgroundTheme, backgroundImageUrl]);
 
   const setColorTheme = (theme: ColorTheme) => {
     setColorThemeState(theme);
@@ -115,5 +135,18 @@ export function useColorTheme() {
     saveToDatabase(colorTheme, theme);
   };
 
-  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, loaded };
+  const setCustomBackgroundImage = async (url: string | null) => {
+    setBackgroundImageUrl(url);
+    if (!user) return;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ background_image_url: url })
+        .eq('user_id', user.id);
+    } catch (error) {
+      console.error('Error saving background image:', error);
+    }
+  };
+
+  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, loaded };
 }

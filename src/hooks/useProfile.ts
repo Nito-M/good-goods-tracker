@@ -28,6 +28,7 @@ export interface Profile {
   quoteLayout: InvoiceLayout;
   requesterName: string | null;
   requesterNames: string[];
+  backgroundImageUrl: string | null;
 }
 
 export interface UpdateProfileInput {
@@ -51,6 +52,7 @@ export interface UpdateProfileInput {
   quoteLayout?: InvoiceLayout | null;
   requesterName?: string | null;
   requesterNames?: string[];
+  backgroundImageUrl?: string | null;
 }
 
 export function useProfile() {
@@ -94,6 +96,7 @@ export function useProfile() {
         quoteLayout: (data.quote_layout as unknown as InvoiceLayout) || defaultInvoiceLayout,
         requesterName: data.requester_name,
         requesterNames: data.requester_names || [],
+        backgroundImageUrl: data.background_image_url,
       });
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
@@ -143,6 +146,7 @@ export function useProfile() {
       if (input.quoteLayout !== undefined) updateData.quote_layout = input.quoteLayout;
       if (input.requesterName !== undefined) updateData.requester_name = input.requesterName;
       if (input.requesterNames !== undefined) updateData.requester_names = input.requesterNames;
+      if (input.backgroundImageUrl !== undefined) updateData.background_image_url = input.backgroundImageUrl;
 
       const { error } = await supabase
         .from('profiles')

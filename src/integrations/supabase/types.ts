@@ -963,6 +963,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          background_image_url: string | null
           background_theme: string | null
           birth_year: number | null
           business_address: string | null
@@ -991,6 +992,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          background_image_url?: string | null
           background_theme?: string | null
           birth_year?: number | null
           business_address?: string | null
@@ -1019,6 +1021,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          background_image_url?: string | null
           background_theme?: string | null
           birth_year?: number | null
           business_address?: string | null
