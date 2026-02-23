@@ -1,31 +1,31 @@
 
 
-# Fix: "Sq Ft" Quantity Unit Rejected by Database
+# Add Total Amount Per Status Tab on Requests Page
 
-## The Problem
+## What Changes
 
-The database has a check constraint called `valid_quantity_unit` that only allows these values:
-`pcs`, `ft`, `m`, `yd`, `in`
+Add a dollar total next to each status tab badge showing the sum of all request totals in that status. This gives a quick financial overview of how much money is in each pipeline stage.
 
-**`sqft` is missing from this list.** Every time you save an item with "Sq Ft" selected, the database rejects it with an error, so the item keeps its old value ("Pieces").
+## How It Works
 
-## The Fix
+The total for each request is calculated as:
+`(quantity x price) + GST + extra cost`
 
-One single database migration to add `sqft` to the allowed values:
-
-- **Drop** the old `valid_quantity_unit` constraint
-- **Re-create** it with `sqft` included: `pcs, ft, m, yd, in, sqft`
-
-That's it. No code changes needed -- the app already sends `sqft` correctly, the database just wasn't accepting it.
+This same formula already exists in `RequestCard.tsx`. We'll replicate it in the Requests page to compute a sum per status.
 
 ## Technical Detail
 
-```text
-SQL Migration:
-  ALTER TABLE inventory_items DROP CONSTRAINT valid_quantity_unit;
-  ALTER TABLE inventory_items ADD CONSTRAINT valid_quantity_unit
-    CHECK (quantity_unit IN ('pcs','ft','m','yd','in','sqft'));
-```
+**File: `src/pages/Requests.tsx`**
 
-Also need to update the `dimensions_unit` constraint (if one exists) to allow `ft` for the sheet size feature.
+1. Import `formatCurrency` from `@/lib/utils`
+2. Add a helper function to calculate a single request's total:
+   ```text
+   subtotal = quantity * price
+   gst = subtotal * (gstRate / 100)
+   total = subtotal + gst + extraCost
+   ```
+3. Add a `getStatusTotal(status)` function that sums all visible requests matching that status
+4. Display the formatted total below or next to the count badge in each tab trigger, e.g. showing "$1,234.56" as smaller text beneath the status label
+
+The total will appear as a subtle secondary line in each tab, so users can see at a glance how much money each status represents.
 
