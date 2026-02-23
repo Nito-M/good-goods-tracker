@@ -121,7 +121,7 @@ export function AddPart() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>DXF File 1</Label>
+                <Label>Plasma DXF</Label>
                 <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors text-sm w-full justify-center">
                   <Upload className="h-4 w-4" />
                   {dxfFile1 ? dxfFile1.name : 'Upload DXF'}
@@ -129,7 +129,7 @@ export function AddPart() {
                 </label>
               </div>
               <div className="space-y-2">
-                <Label>DXF File 2</Label>
+                <Label>Laser DXF</Label>
                 <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors text-sm w-full justify-center">
                   <Upload className="h-4 w-4" />
                   {dxfFile2 ? dxfFile2.name : 'Upload DXF'}

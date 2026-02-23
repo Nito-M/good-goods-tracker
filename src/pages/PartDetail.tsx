@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +33,8 @@ export function PartDetail() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [dxfText1, setDxfText1] = useState<string | null>(null);
   const [dxfText2, setDxfText2] = useState<string | null>(null);
-
+  const [dxfSignedUrl1, setDxfSignedUrl1] = useState<string | null>(null);
+  const [dxfSignedUrl2, setDxfSignedUrl2] = useState<string | null>(null);
   // Edit state
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -58,22 +59,26 @@ export function PartDetail() {
     if (part.dxfUrl1) {
       getSignedUrl('dxf-files', part.dxfUrl1).then(async url => {
         if (url) {
+          setDxfSignedUrl1(url);
           const res = await fetch(url);
           setDxfText1(await res.text());
         }
       });
     } else {
       setDxfText1(null);
+      setDxfSignedUrl1(null);
     }
     if (part.dxfUrl2) {
       getSignedUrl('dxf-files', part.dxfUrl2).then(async url => {
         if (url) {
+          setDxfSignedUrl2(url);
           const res = await fetch(url);
           setDxfText2(await res.text());
         }
       });
     } else {
       setDxfText2(null);
+      setDxfSignedUrl2(null);
     }
   }, [part]);
 
@@ -120,8 +125,8 @@ export function PartDetail() {
       sku: editSku.trim(),
       price: parseFloat(editPrice) || 0,
       description: editDescription.trim(),
-      dxfLabel1: editDxfLabel1.trim() || 'DXF Drawing 1',
-      dxfLabel2: editDxfLabel2.trim() || 'DXF Drawing 2',
+      dxfLabel1: editDxfLabel1.trim() || 'Plasma DXF',
+      dxfLabel2: editDxfLabel2.trim() || 'Laser DXF',
     };
 
     if (newImageFile) {
@@ -305,14 +310,21 @@ export function PartDetail() {
         {/* DXF Previews - Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>
                 {editing ? (
-                  <Input value={editDxfLabel1} onChange={e => setEditDxfLabel1(e.target.value)} placeholder="DXF Drawing 1" className="text-base font-semibold" />
+                  <Input value={editDxfLabel1} onChange={e => setEditDxfLabel1(e.target.value)} placeholder="Plasma DXF" className="text-base font-semibold" />
                 ) : (
                   part.dxfLabel1
                 )}
               </CardTitle>
+              {!editing && dxfSignedUrl1 && (
+                <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                  <a href={dxfSignedUrl1} download={`${part.name} - ${part.dxfLabel1}.dxf`}>
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </a>
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div className="aspect-square bg-muted rounded-md overflow-hidden">
@@ -337,14 +349,21 @@ export function PartDetail() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>
                 {editing ? (
-                  <Input value={editDxfLabel2} onChange={e => setEditDxfLabel2(e.target.value)} placeholder="DXF Drawing 2" className="text-base font-semibold" />
+                  <Input value={editDxfLabel2} onChange={e => setEditDxfLabel2(e.target.value)} placeholder="Laser DXF" className="text-base font-semibold" />
                 ) : (
                   part.dxfLabel2
                 )}
               </CardTitle>
+              {!editing && dxfSignedUrl2 && (
+                <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                  <a href={dxfSignedUrl2} download={`${part.name} - ${part.dxfLabel2}.dxf`}>
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </a>
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div className="aspect-square bg-muted rounded-md overflow-hidden">
