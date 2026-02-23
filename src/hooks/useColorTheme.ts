@@ -10,6 +10,7 @@ const COLOR_THEME_KEY = 'color-theme';
 const BACKGROUND_THEME_KEY = 'background-theme';
 const CUSTOM_BG_LIGHT_KEY = 'custom-bg-light';
 const CUSTOM_TEXT_COLOR_KEY = 'custom-text-color';
+const BACKGROUND_IMAGE_URL_KEY = 'background-image-url';
 
 export function useColorTheme() {
   const { user } = useAuth();
@@ -44,7 +45,12 @@ export function useColorTheme() {
 
   const [loaded, setLoaded] = useState(false);
 
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(BACKGROUND_IMAGE_URL_KEY);
+    }
+    return null;
+  });
 
   // Load theme from database on mount
   useEffect(() => {
@@ -72,6 +78,10 @@ export function useColorTheme() {
           }
           if (data.background_image_url) {
             setBackgroundImageUrl(data.background_image_url);
+            localStorage.setItem(BACKGROUND_IMAGE_URL_KEY, data.background_image_url);
+          } else {
+            setBackgroundImageUrl(null);
+            localStorage.removeItem(BACKGROUND_IMAGE_URL_KEY);
           }
           const bgLight = data.custom_bg_light === true;
           setCustomBgLightState(bgLight);
@@ -205,6 +215,11 @@ export function useColorTheme() {
 
   const setCustomBackgroundImage = async (url: string | null) => {
     setBackgroundImageUrl(url);
+    if (url) {
+      localStorage.setItem(BACKGROUND_IMAGE_URL_KEY, url);
+    } else {
+      localStorage.removeItem(BACKGROUND_IMAGE_URL_KEY);
+    }
     if (!user) return;
     try {
       await supabase
