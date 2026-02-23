@@ -98,7 +98,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [sheetUnit, setSheetUnit] = useState<'ft' | 'in'>('ft');
   const [colors, setColors] = useState('');
   const [description, setDescription] = useState('');
-  const [warehouseId, setWarehouseId] = useState<string>('');
+  const [warehouseId, setWarehouseId] = useState<string>('none');
   const [vendorPrices, setVendorPrices] = useState<VendorPriceEntry[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -131,7 +131,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       }
       setColors(editItem.colors.join(', '));
       setDescription(editItem.description);
-      setWarehouseId(editItem.warehouseId || '');
+      setWarehouseId(editItem.warehouseId || 'none');
       if (editItem.imageUrl) {
         setImageUrl(editItem.imageUrl);
         setImagePreview(editItem.imageUrl);
@@ -251,7 +251,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       colors: colors.split(',').map((c) => c.trim()).filter(Boolean),
       description,
       imageUrl: finalImageUrl,
-      warehouseId: warehouseId || null,
+      warehouseId: warehouseId === 'none' ? null : warehouseId,
     };
 
     if (editItem && onUpdate) {
@@ -441,7 +441,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                       <SelectValue placeholder="No location" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No location</SelectItem>
+                      <SelectItem value="none">No location</SelectItem>
                       {warehouses.map((w) => (
                         <SelectItem key={w.id} value={w.id}>
                           {w.name}
