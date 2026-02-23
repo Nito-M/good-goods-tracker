@@ -29,6 +29,7 @@ import { JobDescription } from "./pages/JobDescription";
 import { JobAddItems } from "./pages/JobAddItems";
 import { Assemblies } from "./pages/Assemblies";
 import { AssemblyTypes } from "./pages/AssemblyTypes";
+import { Warehouses } from "./pages/Warehouses";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { CompanyDetail } from "./pages/CompanyDetail";
@@ -372,6 +373,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Assemblies />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/warehouses"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Warehouses />
               </AppLayout>
             </ProtectedRoute>
           }

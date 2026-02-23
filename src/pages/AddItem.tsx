@@ -29,6 +29,7 @@ import { ItemVendorPricing } from '@/components/ItemVendorPricing';
 import { ItemTagSelector } from '@/components/ItemTagSelector';
 import { MultiImageUploader, StagedImage } from '@/components/MultiImageUploader';
 import { useVendors, Vendor } from '@/hooks/useVendors';
+import { useWarehouses } from '@/hooks/useWarehouses';
 import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrices';
 import { useItemImages } from '@/hooks/useItemImages';
 import { useItemTags } from '@/hooks/useItemTags';
@@ -67,6 +68,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
 
   // Vendor and pricing hooks
   const { vendors } = useVendors();
+  const { warehouses } = useWarehouses();
   const { prices: existingPrices, upsertPrice, deletePrice } = useItemVendorPrices(editItem?.id);
   const { selectedTagIds, setTagsForItem } = useItemTags(editItem?.id);
   // Multi-image support for editing mode
@@ -96,6 +98,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [sheetUnit, setSheetUnit] = useState<'ft' | 'in'>('ft');
   const [colors, setColors] = useState('');
   const [description, setDescription] = useState('');
+  const [warehouseId, setWarehouseId] = useState<string>('');
   const [vendorPrices, setVendorPrices] = useState<VendorPriceEntry[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -128,6 +131,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       }
       setColors(editItem.colors.join(', '));
       setDescription(editItem.description);
+      setWarehouseId(editItem.warehouseId || '');
       if (editItem.imageUrl) {
         setImageUrl(editItem.imageUrl);
         setImagePreview(editItem.imageUrl);
@@ -247,6 +251,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       colors: colors.split(',').map((c) => c.trim()).filter(Boolean),
       description,
       imageUrl: finalImageUrl,
+      warehouseId: warehouseId || null,
     };
 
     if (editItem && onUpdate) {
@@ -424,6 +429,22 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                       {categories.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="warehouse">Location</Label>
+                  <Select value={warehouseId} onValueChange={setWarehouseId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="No location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No location</SelectItem>
+                      {warehouses.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

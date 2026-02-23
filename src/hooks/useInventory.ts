@@ -36,6 +36,7 @@ interface DbInventoryItem {
   updated_at: string;
   user_id: string;
   deleted_at: string | null;
+  warehouse_id: string | null;
 }
 
 function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
@@ -60,6 +61,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     colors: db.colors || [],
     description: db.description || '',
     imageUrl: db.image_url,
+    warehouseId: db.warehouse_id,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
   };
@@ -94,6 +96,7 @@ function inventoryItemToDb(
     updated_at: now,
     user_id: userId,
     deleted_at: null,
+    warehouse_id: item.warehouseId || null,
   };
 }
 
@@ -235,6 +238,7 @@ export function useInventory() {
         description: item.description,
         image_url: item.imageUrl || null,
         user_id: user.id,
+        warehouse_id: item.warehouseId || null,
       });
 
       if (error) {
@@ -288,6 +292,7 @@ export function useInventory() {
     if (updates.colors !== undefined) dbUpdates.colors = updates.colors;
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
+    if (updates.warehouseId !== undefined) dbUpdates.warehouse_id = updates.warehouseId;
     dbUpdates.updated_at = new Date().toISOString();
 
     // Get current item from local DB and merge updates
