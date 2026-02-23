@@ -147,7 +147,7 @@ export function PartDetail() {
     const ok = await deletePart(id);
     if (ok) {
       toast({ title: 'Part deleted' });
-      navigate('/parts');
+      navigate('/parts/library');
     }
   };
 
@@ -163,7 +163,7 @@ export function PartDetail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-muted-foreground">Part not found</p>
-        <Button onClick={() => navigate('/parts')}>Back to Parts</Button>
+        <Button onClick={() => navigate('/parts/library')}>Back to Parts</Button>
       </div>
     );
   }
@@ -174,7 +174,7 @@ export function PartDetail() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/parts')}>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/parts/library')}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>

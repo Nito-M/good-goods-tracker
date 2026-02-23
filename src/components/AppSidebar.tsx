@@ -55,6 +55,9 @@ export function AppSidebar() {
     if (path === "/items") {
       return location.pathname === "/items" || location.pathname.startsWith("/item/");
     }
+    if (path === "/parts") {
+      return location.pathname.startsWith("/parts");
+    }
     if (path === "/sales") {
       return location.pathname === "/sales";
     }
