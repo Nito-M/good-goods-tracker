@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin } from 'lucide-react';
+import { DxfFileCard } from '@/components/DxfFileCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +38,7 @@ interface ItemDetailsProps {
 }
 
 export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
+  const [dxfUrl, setDxfUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -44,6 +46,13 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   const [deleteError, setDeleteError] = useState<{ message: string; poNumbers?: string[] } | null>(null);
   
   const item = items.find((i) => i.id === id);
+
+  // Initialize DXF URL from item
+  useEffect(() => {
+    if (item?.dxfUrl !== undefined) {
+      setDxfUrl(item.dxfUrl ?? null);
+    }
+  }, [item?.dxfUrl]);
   
   // Fetch vendor prices, vendors, images, and last purchase for this item
   const { prices: vendorPrices } = useItemVendorPrices(item?.id);
@@ -248,6 +257,11 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
             />
           </CardContent>
         </Card>
+
+        {/* DXF Drawing */}
+        <div className="mb-6">
+          <DxfFileCard itemId={item.id} dxfUrl={dxfUrl} onDxfUrlChange={setDxfUrl} />
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Pricing & Stock Card */}

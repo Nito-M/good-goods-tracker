@@ -32,6 +32,7 @@ interface DbInventoryItem {
   colors: string[];
   description: string | null;
   image_url: string | null;
+  dxf_url: string | null;
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -61,6 +62,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     colors: db.colors || [],
     description: db.description || '',
     imageUrl: db.image_url,
+    dxfUrl: db.dxf_url,
     warehouseId: db.warehouse_id,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
@@ -92,6 +94,7 @@ function inventoryItemToDb(
     colors: item.colors,
     description: item.description || null,
     image_url: item.imageUrl || null,
+    dxf_url: item.dxfUrl || null,
     created_at: now,
     updated_at: now,
     user_id: userId,
