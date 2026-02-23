@@ -1,92 +1,54 @@
 
 
-# Fix: Items Not Showing for jkmartens47
+# DXF Three.js Viewer with Pan/Zoom
 
-## Root Cause
-The `useInventory` hook loads items from IndexedDB first, then fetches from the server. If the IndexedDB cache is stale or empty (likely after the warehouses feature changed the DB version), and the server fetch encounters a silent error, items remain empty showing "No items found."
-
-The current error handling also has a stale closure issue -- `items.length` inside the error handler captures the state value at callback creation time, not the current value.
-
-## Solution
-Make the inventory loading more resilient:
-
-1. **Always show server data when available** -- even if IndexedDB load fails
-2. **Clear stale IndexedDB data on user change** -- prevent one user's cache from interfering with another
-3. **Improve error handling** -- remove stale closure reference and always log errors
+## Overview
+Replace the current SVG-based DXF renderer with a Three.js canvas viewer using `dxf-parser` for parsing and `@react-three/fiber` + `@react-three/drei` for rendering with pan and zoom controls.
 
 ## Changes
 
-### 1. `src/hooks/useInventory.ts` -- Fix `fetchItems` function
+### 1. Install dependencies
+- `three` (>=0.133)
+- `@react-three/fiber@^8.18` (React 18 compatible)
+- `@react-three/drei@^9.122.0` (React 18 compatible)
+- `dxf-parser` (parses DXF text into structured entity data)
 
-**Current issues:**
-- Uses `items.length` (stale closure) inside the error callback
-- If IndexedDB has stale data with `deleted_at` set, `activeItems` is empty but `localItems.length > 0` is true, causing `setLoading(false)` before server response
-- Errors in the server fetch are conditionally logged
+### 2. Create `src/components/DxfThreeViewer.tsx`
+A new component that:
+- Accepts DXF text content as a prop
+- Uses `dxf-parser` to parse into structured entities (lines, circles, arcs, polylines, lwpolylines, splines, ellipses)
+- Renders each entity type as Three.js geometry (LineSegments, BufferGeometry, etc.)
+- Uses an OrthographicCamera that auto-fits to the drawing bounds
+- Uses `MapControls` from drei for 2D pan and zoom (mouse wheel zoom, click-drag pan)
+- Responsive: fills container width, maintains a fixed aspect ratio height
 
-**Fix:**
-- Always log server fetch errors (remove the `items.length === 0` conditional)
-- Remove stale closure reference to `items`
-- Ensure `setLoading(false)` only happens after the server fetch completes (when online)
-- Clear the IndexedDB inventory store before writing fresh server data to avoid accumulating stale records from other users or sessions
+### 3. Update `src/components/DxfFileCard.tsx`
+- Replace the SVG `dangerouslySetInnerHTML` rendering with the new `DxfThreeViewer` component
+- Keep the existing upload, delete, and signed URL fetching logic unchanged
+- When no DXF is attached, show "No DXF available." text
+- Pass the fetched DXF text to the Three.js viewer inside the dialog
 
-```typescript
-const fetchItems = useCallback(async () => {
-  if (!user) {
-    setItems([]);
-    setLoading(false);
-    return;
-  }
+### Entity rendering approach
+Each DXF entity type will be converted to Three.js line geometry:
+- **LINE**: Simple line between two points
+- **CIRCLE**: Circle geometry using `BufferGeometry` with computed points
+- **ARC**: Partial circle arc
+- **POLYLINE / LWPOLYLINE**: Connected line segments (with optional bulge handling)
+- **ELLIPSE**: Ellipse arc geometry
+- All rendered as `Line2` or `LineSegments` with white/light color for contrast on dark background
 
-  // Load from IndexedDB for instant display
-  try {
-    const localItems = await getAll('inventory_items', user.id);
-    if (localItems.length > 0) {
-      const activeItems = (localItems as unknown as DbInventoryItem[]).filter(
-        (item) => !item.deleted_at
-      );
-      setItems(activeItems.map(dbToInventoryItem));
-      // Don't set loading false yet if online -- wait for server
-      if (!isOnline) {
-        setLoading(false);
-      }
-    }
-  } catch (error) {
-    console.error('Error loading from IndexedDB:', error);
-  }
+### Controls
+- `MapControls` from drei enables 2D pan (right-click or left-click drag) and scroll-to-zoom
+- Camera auto-centers on the bounding box of all entities on load
 
-  // If online, always fetch from server
-  if (isOnline) {
-    const { data, error } = await supabase
-      .from('inventory_items')
-      .select('*')
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
+## Technical Details
 
-    if (error) {
-      console.error('Error loading inventory:', error);
-      toast({
-        title: 'Error loading inventory',
-        description: 'Unable to load inventory. Please try again.',
-        variant: 'destructive',
-      });
-      setLoading(false);
-      return;
-    }
+### Files modified
+- `src/components/DxfFileCard.tsx` -- swap SVG viewer for Three.js viewer, add "No DXF available" state
+- `src/components/DxfThreeViewer.tsx` -- new file with Three.js canvas and DXF entity rendering
 
-    if (data) {
-      await putMany('inventory_items', data as unknown as Record<string, unknown>[]);
-      setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
-    }
-  }
-
-  setLoading(false);
-}, [toast, user, isOnline]);
-```
-
-Key changes:
-- **Don't set `loading = false` early when online** -- wait for the server response so the user sees a loading spinner instead of "No items found" briefly
-- **Always log errors** -- removes the conditional `if (items.length === 0)` check that used a stale closure
-- **Remove stale `items` reference** from the dependency-free error handler
-
-This ensures jkmartens47 (or any user) always gets fresh server data when online, and the "No items found" message only appears after the server confirms there are truly no items.
+### Files unchanged
+- `src/hooks/useInventory.ts`
+- `src/pages/ItemDetails.tsx`
+- `src/types/inventory.ts`
 
