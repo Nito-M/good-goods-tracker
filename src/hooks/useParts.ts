@@ -10,6 +10,8 @@ export interface Part {
   imageUrl: string | null;
   dxfUrl1: string | null;
   dxfUrl2: string | null;
+  dxfLabel1: string;
+  dxfLabel2: string;
   description: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -39,6 +41,8 @@ export function useParts() {
         imageUrl: d.image_url,
         dxfUrl1: d.dxf_url_1,
         dxfUrl2: d.dxf_url_2,
+        dxfLabel1: d.dxf_label_1 || 'DXF Drawing 1',
+        dxfLabel2: d.dxf_label_2 || 'DXF Drawing 2',
         description: d.description,
         createdAt: new Date(d.created_at),
         updatedAt: new Date(d.updated_at),
@@ -69,7 +73,7 @@ export function useParts() {
     return data?.id || null;
   };
 
-  const updatePart = async (id: string, updates: Partial<{ name: string; sku: string; description: string; imageUrl: string; dxfUrl1: string; dxfUrl2: string }>) => {
+  const updatePart = async (id: string, updates: Partial<{ name: string; sku: string; description: string; imageUrl: string; dxfUrl1: string; dxfUrl2: string; dxfLabel1: string; dxfLabel2: string }>) => {
     const dbUpdates: Record<string, unknown> = {};
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
@@ -77,6 +81,8 @@ export function useParts() {
     if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
     if (updates.dxfUrl1 !== undefined) dbUpdates.dxf_url_1 = updates.dxfUrl1;
     if (updates.dxfUrl2 !== undefined) dbUpdates.dxf_url_2 = updates.dxfUrl2;
+    if (updates.dxfLabel1 !== undefined) dbUpdates.dxf_label_1 = updates.dxfLabel1;
+    if (updates.dxfLabel2 !== undefined) dbUpdates.dxf_label_2 = updates.dxfLabel2;
 
     const { error } = await supabase.from('parts').update(dbUpdates).eq('id', id);
     if (error) {

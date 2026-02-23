@@ -874,6 +874,8 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          dxf_label_1: string
+          dxf_label_2: string
           dxf_url_1: string | null
           dxf_url_2: string | null
           id: string
@@ -886,6 +888,8 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          dxf_label_1?: string
+          dxf_label_2?: string
           dxf_url_1?: string | null
           dxf_url_2?: string | null
           id?: string
@@ -898,6 +902,8 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          dxf_label_1?: string
+          dxf_label_2?: string
           dxf_url_1?: string | null
           dxf_url_2?: string | null
           id?: string

@@ -42,6 +42,8 @@ export function PartDetail() {
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
   const [newDxfFile1, setNewDxfFile1] = useState<File | null>(null);
   const [newDxfFile2, setNewDxfFile2] = useState<File | null>(null);
+  const [editDxfLabel1, setEditDxfLabel1] = useState('');
+  const [editDxfLabel2, setEditDxfLabel2] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -78,6 +80,8 @@ export function PartDetail() {
     setEditName(part.name);
     setEditSku(part.sku);
     setEditDescription(part.description || '');
+    setEditDxfLabel1(part.dxfLabel1);
+    setEditDxfLabel2(part.dxfLabel2);
     setNewImageFile(null);
     setNewImagePreview(null);
     setNewDxfFile1(null);
@@ -112,6 +116,8 @@ export function PartDetail() {
       name: editName.trim(),
       sku: editSku.trim(),
       description: editDescription.trim(),
+      dxfLabel1: editDxfLabel1.trim() || 'DXF Drawing 1',
+      dxfLabel2: editDxfLabel2.trim() || 'DXF Drawing 2',
     };
 
     if (newImageFile) {
@@ -287,7 +293,15 @@ export function PartDetail() {
         {/* DXF Previews - Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader><CardTitle>DXF Drawing 1</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>
+                {editing ? (
+                  <Input value={editDxfLabel1} onChange={e => setEditDxfLabel1(e.target.value)} placeholder="DXF Drawing 1" className="text-base font-semibold" />
+                ) : (
+                  part.dxfLabel1
+                )}
+              </CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="aspect-square bg-muted rounded-md overflow-hidden">
                 {dxfText1 ? (
@@ -311,7 +325,15 @@ export function PartDetail() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>DXF Drawing 2</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>
+                {editing ? (
+                  <Input value={editDxfLabel2} onChange={e => setEditDxfLabel2(e.target.value)} placeholder="DXF Drawing 2" className="text-base font-semibold" />
+                ) : (
+                  part.dxfLabel2
+                )}
+              </CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="aspect-square bg-muted rounded-md overflow-hidden">
                 {dxfText2 ? (
