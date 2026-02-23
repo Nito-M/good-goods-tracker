@@ -1,35 +1,21 @@
 
-# Add "Light Text Mode" Toggle for Custom Background
 
-## Overview
-When you have a custom background image, the app currently uses light/white text on a dark overlay. This plan adds a toggle in Settings (under the background theme section) that switches to **black text on white/light semi-transparent cards** -- making it easier to read over bright background photos.
+# Fix Background Image Not Persisting on Reload
 
-## What Changes
+## Problem
+When the page reloads, the background image briefly disappears (or changes) because `backgroundImageUrl` is initialized as `null` and only gets set after an async database fetch. All other appearance settings (color theme, background theme, light mode, text color) are cached in `localStorage` for instant restore -- but the background image URL is not.
 
-### 1. New CSS class for light custom background mode
-In `src/index.css`, add a new variant `.bg-custom-light` that uses:
-- Dark/black text (`--foreground: 0 0% 10%`)
-- White semi-transparent cards and sidebar
-- Dark borders and input styling
-- Essentially the inverse of the current `.bg-custom` dark overlay
+## Solution
+Cache the `backgroundImageUrl` in `localStorage` just like the other theme settings. This way, on page load the image URL is available immediately from localStorage, and the background stays consistent while the database fetch confirms/updates the value.
 
-### 2. New setting in the color theme hook (`src/hooks/useColorTheme.ts`)
-- Add a `customBgLight` boolean state (persisted to localStorage + database)
-- When `backgroundTheme === 'custom'` and `customBgLight` is true, apply `bg-custom-light` class to the root instead of `bg-custom`
-- Expose `customBgLight` and `setCustomBgLight` from the hook
+## Changes
 
-### 3. Database column for persistence
-- Add `custom_bg_light boolean DEFAULT false` to the `profiles` table via migration
+### File: `src/hooks/useColorTheme.ts`
 
-### 4. Settings UI update (`src/pages/Settings.tsx`)
-- When the custom background is active, show a toggle/switch labeled **"Light mode (white background, black text)"** below the background theme selector
-- Toggling it switches between the dark overlay and light overlay styles
+1. Add a new localStorage key constant: `BACKGROUND_IMAGE_URL_KEY`
+2. Initialize `backgroundImageUrl` state from localStorage instead of `null`
+3. Save to localStorage whenever the background image URL changes (in the database load, in `setCustomBackgroundImage`, and in the background effect)
+4. Clear it from localStorage when set to `null`
 
-## Technical Details
+This is a single-file change with no database or CSS modifications needed.
 
-### Files to create/modify
-- **Migration**: Add `custom_bg_light` column to `profiles`
-- **`src/index.css`**: Add `.bg-custom-light` CSS variables (white/light card backgrounds, dark text)
-- **`src/hooks/useColorTheme.ts`**: Add `customBgLight` state, load/save to DB, toggle CSS class
-- **`src/pages/Settings.tsx`**: Add Switch component when custom background is selected
-- **`src/hooks/useProfile.ts`**: Add `customBgLight` to Profile interface (for consistency)
