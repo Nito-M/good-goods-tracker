@@ -915,6 +915,93 @@ export type Database = {
         }
         Relationships: []
       }
+      parts_assemblies: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          selling_price: number
+          status: string
+          status_notes: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          selling_price?: number
+          status?: string
+          status_notes?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          selling_price?: number
+          status?: string
+          status_notes?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      parts_assembly_items: {
+        Row: {
+          assembly_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          part_id: string | null
+          part_name: string
+          part_sku: string
+          quantity: number
+        }
+        Insert: {
+          assembly_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          part_id?: string | null
+          part_name: string
+          part_sku?: string
+          quantity?: number
+        }
+        Update: {
+          assembly_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          part_id?: string | null
+          part_name?: string
+          part_sku?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parts_assembly_items_assembly_id_fkey"
+            columns: ["assembly_id"]
+            isOneToOne: false
+            referencedRelation: "parts_assemblies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parts_assembly_items_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       password_reset_tokens: {
         Row: {
           created_at: string

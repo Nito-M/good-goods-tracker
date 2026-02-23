@@ -33,6 +33,7 @@ import { Warehouses } from "./pages/Warehouses";
 import { PartsLibrary } from "./pages/PartsLibrary";
 import { PartsLanding } from "./pages/PartsLanding";
 import { PartsAssemblies } from "./pages/PartsAssemblies";
+import { PartsAssembliesDetail } from "./pages/PartsAssembliesDetail";
 import { AddPart } from "./pages/AddPart";
 import { PartDetail } from "./pages/PartDetail";
 import NotFound from "./pages/NotFound";
@@ -449,7 +450,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <Assemblies />
+                <PartsAssembliesDetail />
               </AppLayout>
             </ProtectedRoute>
           }
