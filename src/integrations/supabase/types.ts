@@ -359,6 +359,7 @@ export type Database = {
           dimensions_length: number
           dimensions_unit: string
           dimensions_width: number
+          dxf_url: string | null
           id: string
           image_url: string | null
           min_stock: number
@@ -384,6 +385,7 @@ export type Database = {
           dimensions_length?: number
           dimensions_unit?: string
           dimensions_width?: number
+          dxf_url?: string | null
           id?: string
           image_url?: string | null
           min_stock?: number
@@ -409,6 +411,7 @@ export type Database = {
           dimensions_length?: number
           dimensions_unit?: string
           dimensions_width?: number
+          dxf_url?: string | null
           id?: string
           image_url?: string | null
           min_stock?: number

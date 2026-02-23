@@ -32,6 +32,7 @@ export interface InventoryItem {
   colors: string[];
   description: string;
   imageUrl?: string | null;
+  dxfUrl?: string | null;
   warehouseId?: string | null;
   createdAt: Date;
   updatedAt: Date;
