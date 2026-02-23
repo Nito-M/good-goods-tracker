@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Pencil, Upload, X, Check } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/utils';
 import { useParts } from '@/hooks/useParts';
 import { DxfThreeViewer } from '@/components/DxfThreeViewer';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +38,7 @@ export function PartDetail() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editSku, setEditSku] = useState('');
+  const [editPrice, setEditPrice] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
@@ -79,6 +81,7 @@ export function PartDetail() {
     if (!part) return;
     setEditName(part.name);
     setEditSku(part.sku);
+    setEditPrice(String(part.price ?? 0));
     setEditDescription(part.description || '');
     setEditDxfLabel1(part.dxfLabel1);
     setEditDxfLabel2(part.dxfLabel2);
@@ -112,9 +115,10 @@ export function PartDetail() {
     }
     setSaving(true);
 
-    const updates: Record<string, string> = {
+    const updates: Record<string, any> = {
       name: editName.trim(),
       sku: editSku.trim(),
+      price: parseFloat(editPrice) || 0,
       description: editDescription.trim(),
       dxfLabel1: editDxfLabel1.trim() || 'DXF Drawing 1',
       dxfLabel2: editDxfLabel2.trim() || 'DXF Drawing 2',
@@ -260,6 +264,10 @@ export function PartDetail() {
                     <Input id="edit-sku" value={editSku} onChange={e => setEditSku(e.target.value)} />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="edit-price">Price ($)</Label>
+                    <Input id="edit-price" type="number" min={0} step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="edit-desc">Description</Label>
                     <Textarea id="edit-desc" value={editDescription} onChange={e => setEditDescription(e.target.value)} rows={3} />
                   </div>
@@ -273,6 +281,10 @@ export function PartDetail() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">SKU</p>
                     <p className="text-foreground">{part.sku || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Price</p>
+                    <p className="text-foreground font-semibold">{part.price > 0 ? formatCurrency(part.price) : '—'}</p>
                   </div>
                   {part.description && (
                     <div>

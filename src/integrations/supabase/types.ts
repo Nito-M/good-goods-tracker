@@ -881,6 +881,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          price: number
           sku: string
           updated_at: string
           user_id: string
@@ -895,6 +896,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          price?: number
           sku?: string
           updated_at?: string
           user_id: string
@@ -909,6 +911,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          price?: number
           sku?: string
           updated_at?: string
           user_id?: string
