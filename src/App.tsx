@@ -38,10 +38,12 @@ import { useCategories } from "@/hooks/useCategories";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
+import { useColorTheme } from "@/hooks/useColorTheme";
 
 const queryClient = new QueryClient();
 
 function AppContent() {
+  useColorTheme();
   const {
     items,
     allItems,
