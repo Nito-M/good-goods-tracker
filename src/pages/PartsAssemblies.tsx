@@ -26,13 +26,13 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAssemblies } from '@/hooks/useAssemblies';
+import { usePartsAssemblies } from '@/hooks/usePartsAssemblies';
 
 export function PartsAssemblies() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { assemblies, loading, refetch } = useAssemblies();
+  const { assemblies, loading, refetch } = usePartsAssemblies();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
@@ -75,8 +75,8 @@ export function PartsAssemblies() {
     const newName = editTypeName.trim();
     if (!newName || newName === oldType) { setEditingType(null); return; }
     setSavingEdit(true);
-    const { error } = await supabase
-      .from('assemblies')
+    const { error } = await (supabase as any)
+      .from('parts_assemblies')
       .update({ type: newName })
       .eq('type', oldType);
     if (error) {
@@ -91,8 +91,8 @@ export function PartsAssemblies() {
 
   const handleDeleteType = async (type: string) => {
     setDeletingType(true);
-    const { error } = await supabase
-      .from('assemblies')
+    const { error } = await (supabase as any)
+      .from('parts_assemblies')
       .update({ type: 'General' })
       .eq('type', type);
     if (error) {
