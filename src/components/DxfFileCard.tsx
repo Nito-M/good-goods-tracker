@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUp, Eye, Trash2, Loader2, FileCode2 } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -98,9 +99,10 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
       const dxfText = await response.text();
 
       // Dynamically import dxf library
-      const dxf = await import('dxf');
-      const parsed = dxf.parseString(dxfText);
-      const svg = dxf.toSVG(parsed);
+      const dxfModule = await import('dxf');
+      const Helper = dxfModule.Helper || dxfModule.default?.Helper;
+      const helper = new Helper(dxfText);
+      const svg = helper.toSVG();
       setSvgContent(svg);
     } catch (err) {
       console.error('DXF render error:', err);
@@ -152,7 +154,8 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
       </Card>
 
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden" aria-describedby={undefined}>
+          <VisuallyHidden><DialogTitle>DXF Drawing Preview</DialogTitle></VisuallyHidden>
           {loadingSvg ? (
             <div className="flex items-center justify-center h-[60vh]">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
