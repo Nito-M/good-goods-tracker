@@ -98,10 +98,16 @@ export function Settings() {
 
   const colorThemeOptions: { value: ColorTheme; label: string; color: string }[] = [
     { value: 'normal', label: 'Normal (Teal)', color: 'bg-[hsl(200,98%,39%)]' },
-    { value: 'green', label: 'Light Green', color: 'bg-[hsl(142,76%,36%)]' },
-    { value: 'blue', label: 'Light Blue', color: 'bg-[hsl(217,91%,60%)]' },
-    { value: 'grey', label: 'Light Grey', color: 'bg-[hsl(215,16%,47%)]' },
-    { value: 'red', label: 'Light Red', color: 'bg-[hsl(0,72%,50%)]' },
+    { value: 'green', label: 'Green', color: 'bg-[hsl(142,76%,36%)]' },
+    { value: 'blue', label: 'Blue', color: 'bg-[hsl(217,91%,60%)]' },
+    { value: 'grey', label: 'Grey', color: 'bg-[hsl(215,16%,47%)]' },
+    { value: 'red', label: 'Red', color: 'bg-[hsl(0,72%,50%)]' },
+    { value: 'yellow', label: 'Yellow', color: 'bg-[hsl(48,96%,53%)]' },
+    { value: 'white', label: 'White', color: 'bg-[hsl(0,0%,95%)] border border-border' },
+    { value: 'purple', label: 'Purple', color: 'bg-[hsl(271,76%,53%)]' },
+    { value: 'pink', label: 'Pink', color: 'bg-[hsl(330,81%,60%)]' },
+    { value: 'orange', label: 'Orange', color: 'bg-[hsl(24,95%,53%)]' },
+    { value: 'gold', label: 'Gold', color: 'bg-[hsl(43,90%,55%)]' },
   ];
 
   const backgroundThemeOptions: { value: BackgroundTheme; label: string; color: string; gradient?: string }[] = [

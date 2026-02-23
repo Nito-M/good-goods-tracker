@@ -173,6 +173,60 @@ All colors MUST be HSL.
     --sidebar-ring: 0 72% 50%;
   }
 
+  .theme-yellow:root, :root.theme-yellow {
+    --primary: 48 96% 53%;
+    --primary-foreground: 0 0% 10%;
+    --ring: 48 96% 53%;
+    --sidebar-primary: 48 96% 53%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 48 96% 53%;
+  }
+
+  .theme-white:root, :root.theme-white {
+    --primary: 0 0% 95%;
+    --primary-foreground: 0 0% 10%;
+    --ring: 0 0% 75%;
+    --sidebar-primary: 0 0% 90%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 0 0% 75%;
+  }
+
+  .theme-purple:root, :root.theme-purple {
+    --primary: 271 76% 53%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 271 76% 53%;
+    --sidebar-primary: 271 76% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 271 76% 53%;
+  }
+
+  .theme-pink:root, :root.theme-pink {
+    --primary: 330 81% 60%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 330 81% 60%;
+    --sidebar-primary: 330 81% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 330 81% 60%;
+  }
+
+  .theme-orange:root, :root.theme-orange {
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 24 95% 53%;
+    --sidebar-primary: 24 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 24 95% 53%;
+  }
+
+  .theme-gold:root, :root.theme-gold {
+    --primary: 43 90% 55%;
+    --primary-foreground: 0 0% 10%;
+    --ring: 43 90% 55%;
+    --sidebar-primary: 43 90% 55%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 43 90% 55%;
+  }
+
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
@@ -267,6 +321,60 @@ All colors MUST be HSL.
     --sidebar-primary: 0 84% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-ring: 0 84% 60%;
+  }
+
+  .dark.theme-yellow, .theme-yellow.dark {
+    --primary: 48 96% 58%;
+    --primary-foreground: 0 0% 10%;
+    --ring: 48 96% 58%;
+    --sidebar-primary: 48 96% 58%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 48 96% 58%;
+  }
+
+  .dark.theme-white, .theme-white.dark {
+    --primary: 0 0% 90%;
+    --primary-foreground: 0 0% 10%;
+    --ring: 0 0% 70%;
+    --sidebar-primary: 0 0% 85%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 0 0% 70%;
+  }
+
+  .dark.theme-purple, .theme-purple.dark {
+    --primary: 271 76% 65%;
+    --primary-foreground: 271 76% 10%;
+    --ring: 271 76% 65%;
+    --sidebar-primary: 271 76% 65%;
+    --sidebar-primary-foreground: 271 76% 10%;
+    --sidebar-ring: 271 76% 65%;
+  }
+
+  .dark.theme-pink, .theme-pink.dark {
+    --primary: 330 81% 65%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 330 81% 65%;
+    --sidebar-primary: 330 81% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 330 81% 65%;
+  }
+
+  .dark.theme-orange, .theme-orange.dark {
+    --primary: 24 95% 58%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 24 95% 58%;
+    --sidebar-primary: 24 95% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-ring: 24 95% 58%;
+  }
+
+  .dark.theme-gold, .theme-gold.dark {
+    --primary: 43 90% 60%;
+    --primary-foreground: 0 0% 10%;
+    --ring: 43 90% 60%;
+    --sidebar-primary: 43 90% 60%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 43 90% 60%;
   }
 
   /* Background Theme Variants - Dark Mode */

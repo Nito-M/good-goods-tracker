@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red';
+export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'yellow' | 'white' | 'purple' | 'pink' | 'orange' | 'gold';
 export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black' | 'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose' | 'custom';
 
 const COLOR_THEME_KEY = 'color-theme';
@@ -88,7 +88,7 @@ export function useColorTheme() {
     const root = document.documentElement;
     
     // Remove all color theme classes
-    root.classList.remove('theme-normal', 'theme-green', 'theme-blue', 'theme-grey', 'theme-red');
+    root.classList.remove('theme-normal', 'theme-green', 'theme-blue', 'theme-grey', 'theme-red', 'theme-yellow', 'theme-white', 'theme-purple', 'theme-pink', 'theme-orange', 'theme-gold');
     
     // Add the current color theme class
     root.classList.add(`theme-${colorTheme}`);
