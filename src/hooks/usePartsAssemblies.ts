@@ -105,7 +105,40 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
     if (error) {
       console.error('Error fetching parts assembly items:', error);
     } else {
-      setItems((data as PartsAssemblyItem[]) || []);
+      const fetched = (data as PartsAssemblyItem[]) || [];
+
+      // Auto-merge duplicates (same part_id)
+      const partIdMap = new Map<string, PartsAssemblyItem[]>();
+      for (const item of fetched) {
+        if (item.part_id) {
+          const existing = partIdMap.get(item.part_id) || [];
+          existing.push(item);
+          partIdMap.set(item.part_id, existing);
+        }
+      }
+      for (const [, dupes] of partIdMap) {
+        if (dupes.length > 1) {
+          // Keep the first, merge quantity from the rest, delete the rest
+          const keep = dupes[0];
+          const totalQty = dupes.reduce((sum, d) => sum + d.quantity, 0);
+          const deleteIds = dupes.slice(1).map(d => d.id);
+          await (supabase as any).from('parts_assembly_items').update({ quantity: totalQty }).eq('id', keep.id);
+          await (supabase as any).from('parts_assembly_items').delete().in('id', deleteIds);
+        }
+      }
+
+      // If we merged anything, re-fetch clean data
+      const hadDupes = Array.from(partIdMap.values()).some(d => d.length > 1);
+      if (hadDupes) {
+        const { data: cleanData } = await (supabase as any)
+          .from('parts_assembly_items')
+          .select('*')
+          .eq('assembly_id', assemblyId)
+          .order('created_at');
+        setItems((cleanData as PartsAssemblyItem[]) || []);
+      } else {
+        setItems(fetched);
+      }
     }
     setLoading(false);
   };
