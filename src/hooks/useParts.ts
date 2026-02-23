@@ -14,6 +14,7 @@ export interface Part {
   dxfLabel1: string;
   dxfLabel2: string;
   description: string | null;
+  folderId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +47,7 @@ export function useParts() {
         dxfLabel1: d.dxf_label_1 || 'Plasma DXF',
         dxfLabel2: d.dxf_label_2 || 'Laser DXF',
         description: d.description,
+        folderId: d.folder_id ?? null,
         createdAt: new Date(d.created_at),
         updatedAt: new Date(d.updated_at),
       })));
@@ -55,7 +57,7 @@ export function useParts() {
 
   useEffect(() => { fetchParts(); }, [fetchParts]);
 
-  const addPart = async (part: { name: string; sku: string; description?: string; imageUrl?: string; dxfUrl1?: string; dxfUrl2?: string }) => {
+  const addPart = async (part: { name: string; sku: string; description?: string; imageUrl?: string; dxfUrl1?: string; dxfUrl2?: string; folderId?: string | null }) => {
     if (!user) return null;
     const { data, error } = await supabase.from('parts').insert({
       user_id: user.id,
@@ -65,6 +67,7 @@ export function useParts() {
       image_url: part.imageUrl || null,
       dxf_url_1: part.dxfUrl1 || null,
       dxf_url_2: part.dxfUrl2 || null,
+      folder_id: part.folderId || null,
     }).select().single();
 
     if (error) {
@@ -75,7 +78,7 @@ export function useParts() {
     return data?.id || null;
   };
 
-  const updatePart = async (id: string, updates: Partial<{ name: string; sku: string; description: string; price: number; imageUrl: string; dxfUrl1: string; dxfUrl2: string; dxfLabel1: string; dxfLabel2: string }>) => {
+  const updatePart = async (id: string, updates: Partial<{ name: string; sku: string; description: string; price: number; imageUrl: string; dxfUrl1: string; dxfUrl2: string; dxfLabel1: string; dxfLabel2: string; folderId: string | null }>) => {
     const dbUpdates: Record<string, unknown> = {};
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
@@ -86,6 +89,7 @@ export function useParts() {
     if (updates.dxfUrl2 !== undefined) dbUpdates.dxf_url_2 = updates.dxfUrl2;
     if (updates.dxfLabel1 !== undefined) dbUpdates.dxf_label_1 = updates.dxfLabel1;
     if (updates.dxfLabel2 !== undefined) dbUpdates.dxf_label_2 = updates.dxfLabel2;
+    if (updates.folderId !== undefined) dbUpdates.folder_id = updates.folderId;
 
     const { error } = await supabase.from('parts').update(dbUpdates).eq('id', id);
     if (error) {
