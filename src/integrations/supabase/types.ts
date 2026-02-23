@@ -870,6 +870,45 @@ export type Database = {
         }
         Relationships: []
       }
+      parts: {
+        Row: {
+          created_at: string
+          description: string | null
+          dxf_url_1: string | null
+          dxf_url_2: string | null
+          id: string
+          image_url: string | null
+          name: string
+          sku: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dxf_url_1?: string | null
+          dxf_url_2?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          sku?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dxf_url_1?: string | null
+          dxf_url_2?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          sku?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       password_reset_tokens: {
         Row: {
           created_at: string

@@ -1,0 +1,128 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+
+export interface Part {
+  id: string;
+  name: string;
+  sku: string;
+  imageUrl: string | null;
+  dxfUrl1: string | null;
+  dxfUrl2: string | null;
+  description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export function useParts() {
+  const [parts, setParts] = useState<Part[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const fetchParts = useCallback(async () => {
+    if (!user) { setParts([]); setLoading(false); return; }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({ title: 'Error loading parts', description: error.message, variant: 'destructive' });
+    } else {
+      setParts((data || []).map(d => ({
+        id: d.id,
+        name: d.name,
+        sku: d.sku,
+        imageUrl: d.image_url,
+        dxfUrl1: d.dxf_url_1,
+        dxfUrl2: d.dxf_url_2,
+        description: d.description,
+        createdAt: new Date(d.created_at),
+        updatedAt: new Date(d.updated_at),
+      })));
+    }
+    setLoading(false);
+  }, [user, toast]);
+
+  useEffect(() => { fetchParts(); }, [fetchParts]);
+
+  const addPart = async (part: { name: string; sku: string; description?: string; imageUrl?: string; dxfUrl1?: string; dxfUrl2?: string }) => {
+    if (!user) return null;
+    const { data, error } = await supabase.from('parts').insert({
+      user_id: user.id,
+      name: part.name,
+      sku: part.sku,
+      description: part.description || null,
+      image_url: part.imageUrl || null,
+      dxf_url_1: part.dxfUrl1 || null,
+      dxf_url_2: part.dxfUrl2 || null,
+    }).select().single();
+
+    if (error) {
+      toast({ title: 'Error adding part', description: error.message, variant: 'destructive' });
+      return null;
+    }
+    await fetchParts();
+    return data?.id || null;
+  };
+
+  const updatePart = async (id: string, updates: Partial<{ name: string; sku: string; description: string; imageUrl: string; dxfUrl1: string; dxfUrl2: string }>) => {
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
+    if (updates.dxfUrl1 !== undefined) dbUpdates.dxf_url_1 = updates.dxfUrl1;
+    if (updates.dxfUrl2 !== undefined) dbUpdates.dxf_url_2 = updates.dxfUrl2;
+
+    const { error } = await supabase.from('parts').update(dbUpdates).eq('id', id);
+    if (error) {
+      toast({ title: 'Error updating part', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    await fetchParts();
+    return true;
+  };
+
+  const deletePart = async (id: string) => {
+    const { error } = await supabase.from('parts').delete().eq('id', id);
+    if (error) {
+      toast({ title: 'Error deleting part', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    await fetchParts();
+    return true;
+  };
+
+  const uploadPartImage = async (file: File) => {
+    if (!user) return null;
+    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('part-images').upload(path, file);
+    if (error) {
+      toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+      return null;
+    }
+    return path;
+  };
+
+  const uploadPartDxf = async (file: File) => {
+    if (!user) return null;
+    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('dxf-files').upload(path, file);
+    if (error) {
+      toast({ title: 'DXF upload failed', description: error.message, variant: 'destructive' });
+      return null;
+    }
+    return path;
+  };
+
+  const getSignedUrl = async (bucket: string, path: string) => {
+    const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+  };
+
+  return { parts, loading, addPart, updatePart, deletePart, uploadPartImage, uploadPartDxf, getSignedUrl, refetch: fetchParts };
+}

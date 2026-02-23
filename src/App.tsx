@@ -30,6 +30,9 @@ import { JobAddItems } from "./pages/JobAddItems";
 import { Assemblies } from "./pages/Assemblies";
 import { AssemblyTypes } from "./pages/AssemblyTypes";
 import { Warehouses } from "./pages/Warehouses";
+import { PartsLibrary } from "./pages/PartsLibrary";
+import { AddPart } from "./pages/AddPart";
+import { PartDetail } from "./pages/PartDetail";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { CompanyDetail } from "./pages/CompanyDetail";
@@ -385,6 +388,36 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Warehouses />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PartsLibrary />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/new"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddPart />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PartDetail />
               </AppLayout>
             </ProtectedRoute>
           }
