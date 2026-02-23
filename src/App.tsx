@@ -31,6 +31,8 @@ import { Assemblies } from "./pages/Assemblies";
 import { AssemblyTypes } from "./pages/AssemblyTypes";
 import { Warehouses } from "./pages/Warehouses";
 import { PartsLibrary } from "./pages/PartsLibrary";
+import { PartsLanding } from "./pages/PartsLanding";
+import { PartsAssemblies } from "./pages/PartsAssemblies";
 import { AddPart } from "./pages/AddPart";
 import { PartDetail } from "./pages/PartDetail";
 import NotFound from "./pages/NotFound";
@@ -397,13 +399,23 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AppLayout>
+                <PartsLanding />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/library"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
                 <PartsLibrary />
               </AppLayout>
             </ProtectedRoute>
           }
         />
         <Route
-          path="/parts/new"
+          path="/parts/library/new"
           element={
             <ProtectedRoute>
               <AppLayout>
@@ -413,11 +425,31 @@ function AppContent() {
           }
         />
         <Route
-          path="/parts/:id"
+          path="/parts/library/:id"
           element={
             <ProtectedRoute>
               <AppLayout>
                 <PartDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/assemblies"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PartsAssemblies />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/assemblies/:type"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Assemblies />
               </AppLayout>
             </ProtectedRoute>
           }

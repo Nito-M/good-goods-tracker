@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,8 +40,13 @@ export function PartsLibrary() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Parts Library</h1>
-            <Button onClick={() => navigate('/parts/new')} className="gap-2">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/parts')}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Parts Library</h1>
+            </div>
+            <Button onClick={() => navigate('/parts/library/new')} className="gap-2">
               <Plus className="h-4 w-4" />
               Add Part
             </Button>
@@ -67,7 +72,7 @@ export function PartsLibrary() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-muted-foreground mb-4">No parts found</p>
-            <Button onClick={() => navigate('/parts/new')}>Add your first part</Button>
+            <Button onClick={() => navigate('/parts/library/new')}>Add your first part</Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -75,7 +80,7 @@ export function PartsLibrary() {
               <Card
                 key={part.id}
                 className="cursor-pointer hover:shadow-md transition-shadow group relative"
-                onClick={() => navigate(`/parts/${part.id}`)}
+                onClick={() => navigate(`/parts/library/${part.id}`)}
               >
                 <CardContent className="p-4">
                   <div className="aspect-square bg-muted rounded-md mb-3 overflow-hidden flex items-center justify-center">
