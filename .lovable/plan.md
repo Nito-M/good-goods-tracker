@@ -1,72 +1,35 @@
 
-
-# Inventory Warehouses / Locations
+# Add "Light Text Mode" Toggle for Custom Background
 
 ## Overview
-Add a warehouse/location system so you can organize inventory across multiple physical locations. There will be an "All Inventory" default view (showing everything), plus the ability to create custom-named locations (e.g. "Main Warehouse", "Garage", "Shop Floor") and assign items to them.
+When you have a custom background image, the app currently uses light/white text on a dark overlay. This plan adds a toggle in Settings (under the background theme section) that switches to **black text on white/light semi-transparent cards** -- making it easier to read over bright background photos.
 
-## How It Works
+## What Changes
 
-1. A new "Warehouses" table stores user-defined locations with custom names
-2. Each inventory item gets an optional `warehouse_id` linking it to a location
-3. The Items page gets a warehouse filter dropdown -- "All Locations" shows everything, or pick a specific warehouse
-4. A new Warehouses management page lets you create, rename, and delete locations
-5. When adding/editing items, you can assign them to a warehouse
+### 1. New CSS class for light custom background mode
+In `src/index.css`, add a new variant `.bg-custom-light` that uses:
+- Dark/black text (`--foreground: 0 0% 10%`)
+- White semi-transparent cards and sidebar
+- Dark borders and input styling
+- Essentially the inverse of the current `.bg-custom` dark overlay
 
-## Database Changes
+### 2. New setting in the color theme hook (`src/hooks/useColorTheme.ts`)
+- Add a `customBgLight` boolean state (persisted to localStorage + database)
+- When `backgroundTheme === 'custom'` and `customBgLight` is true, apply `bg-custom-light` class to the root instead of `bg-custom`
+- Expose `customBgLight` and `setCustomBgLight` from the hook
 
-### New `warehouses` table
-- `id` (uuid, primary key)
-- `user_id` (uuid, not null)
-- `name` (text, not null) -- custom name like "Main Warehouse"
-- `description` (text, nullable)
-- `created_at` (timestamptz)
-- `updated_at` (timestamptz)
-- RLS policies: users can CRUD their own; org members can view
+### 3. Database column for persistence
+- Add `custom_bg_light boolean DEFAULT false` to the `profiles` table via migration
 
-### Update `inventory_items` table
-- Add `warehouse_id` (uuid, nullable, references warehouses) -- null means unassigned
-
-## UI Changes
-
-### 1. Warehouses management page (`src/pages/Warehouses.tsx`)
-- List all warehouses with item count for each
-- Add/rename/delete warehouses via dialogs
-- Click a warehouse to filter the Items page to that location
-
-### 2. Items page updates (`src/pages/Items.tsx`)
-- Add a warehouse filter dropdown alongside existing category and tag filters
-- "All Locations" option shows everything (default)
-- Each specific warehouse filters to only items in that location
-
-### 3. Add/Edit Item form updates (`src/pages/AddItem.tsx`)
-- Add a "Location" dropdown to assign the item to a warehouse
-- Optional -- leaving it blank means the item has no assigned location
-
-### 4. Sidebar updates (`src/components/AppSidebar.tsx`)
-- Add "Warehouses" nav item (with a Warehouse icon) in the navigation menu
-
-### 5. New hook (`src/hooks/useWarehouses.ts`)
-- CRUD operations for warehouses
-- Fetch warehouse list for the current user
-
-### 6. Inventory hook updates (`src/hooks/useInventory.ts`)
-- Add `warehouseFilter` state
-- Include `warehouse_id` in item fetch/create/update logic
+### 4. Settings UI update (`src/pages/Settings.tsx`)
+- When the custom background is active, show a toggle/switch labeled **"Light mode (white background, black text)"** below the background theme selector
+- Toggling it switches between the dark overlay and light overlay styles
 
 ## Technical Details
 
-### New files
-- `src/pages/Warehouses.tsx` -- warehouse management page
-- `src/hooks/useWarehouses.ts` -- warehouse CRUD hook
-- Database migration for `warehouses` table and `inventory_items.warehouse_id` column
-
-### Modified files
-- `src/pages/Items.tsx` -- add warehouse filter dropdown
-- `src/pages/AddItem.tsx` -- add warehouse selector to form
-- `src/hooks/useInventory.ts` -- handle warehouse_id in DB operations
-- `src/types/inventory.ts` -- add warehouseId to InventoryItem interface
-- `src/components/AppSidebar.tsx` -- add Warehouses nav link
-- `src/App.tsx` -- add /warehouses route
-- `src/components/SearchFilter.tsx` -- add warehouse filter option
-
+### Files to create/modify
+- **Migration**: Add `custom_bg_light` column to `profiles`
+- **`src/index.css`**: Add `.bg-custom-light` CSS variables (white/light card backgrounds, dark text)
+- **`src/hooks/useColorTheme.ts`**: Add `customBgLight` state, load/save to DB, toggle CSS class
+- **`src/pages/Settings.tsx`**: Add Switch component when custom background is selected
+- **`src/hooks/useProfile.ts`**: Add `customBgLight` to Profile interface (for consistency)
