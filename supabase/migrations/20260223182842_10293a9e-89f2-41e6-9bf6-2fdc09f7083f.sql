@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN custom_bg_light boolean NOT NULL DEFAULT false;

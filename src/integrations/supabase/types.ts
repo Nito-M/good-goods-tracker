@@ -984,6 +984,7 @@ export type Database = {
           business_phone: string | null
           color_theme: string | null
           created_at: string
+          custom_bg_light: boolean
           display_name: string | null
           id: string
           invoice_layout: Json | null
@@ -1013,6 +1014,7 @@ export type Database = {
           business_phone?: string | null
           color_theme?: string | null
           created_at?: string
+          custom_bg_light?: boolean
           display_name?: string | null
           id?: string
           invoice_layout?: Json | null
@@ -1042,6 +1044,7 @@ export type Database = {
           business_phone?: string | null
           color_theme?: string | null
           created_at?: string
+          custom_bg_light?: boolean
           display_name?: string | null
           id?: string
           invoice_layout?: Json | null
