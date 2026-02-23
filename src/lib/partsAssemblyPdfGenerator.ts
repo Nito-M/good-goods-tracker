@@ -69,27 +69,44 @@ export function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
   doc.text(`Parts List (${assembly.items.length})`, margin, y);
   y += 8;
 
-  // Table header
-  const colX = {
-    name: margin + 2,
-    sku: margin + 85,
-    qty: margin + 130,
-    notes: margin + 148,
-  };
-  const nameColW = 80;
-  const skuColW = 42;
-  const notesColW = contentWidth - 148;
+  // Table columns - define edges for vertical lines
+  const col1X = margin;           // Name start
+  const col2X = margin + 85;      // SKU start
+  const col3X = margin + 130;     // Qty start
+  const col4X = margin + 148;     // Notes start
+  const tableRight = pageWidth - margin;
+
+  const nameColW = col2X - col1X - 4;
+  const skuColW = col3X - col2X - 4;
+  const notesColW = tableRight - col4X - 2;
+
+  const headerH = 8;
+  const rowPadding = 3;
 
   const drawTableHeader = (yPos: number) => {
     doc.setFillColor(240, 240, 240);
-    doc.rect(margin, yPos - 4, contentWidth, 8, 'F');
+    doc.rect(col1X, yPos, tableRight - col1X, headerH, 'F');
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text('Part Name', colX.name, yPos);
-    doc.text('SKU', colX.sku, yPos);
-    doc.text('Qty', colX.qty, yPos);
-    doc.text('Notes', colX.notes, yPos);
-    return yPos + 10;
+    doc.setTextColor(0, 0, 0);
+    const textY = yPos + 5.5;
+    doc.text('Part Name', col1X + 2, textY);
+    doc.text('SKU', col2X + 2, textY);
+    doc.text('Qty', col3X + 2, textY);
+    doc.text('Notes', col4X + 2, textY);
+
+    // Header border lines
+    doc.setDrawColor(180, 180, 180);
+    doc.line(col1X, yPos, tableRight, yPos); // top
+    doc.line(col1X, yPos + headerH, tableRight, yPos + headerH); // bottom
+    // Vertical lines
+    doc.line(col1X, yPos, col1X, yPos + headerH);
+    doc.line(col2X, yPos, col2X, yPos + headerH);
+    doc.line(col3X, yPos, col3X, yPos + headerH);
+    doc.line(col4X, yPos, col4X, yPos + headerH);
+    doc.line(tableRight, yPos, tableRight, yPos + headerH);
+
+    return yPos + headerH;
   };
 
   y = drawTableHeader(y);
@@ -102,8 +119,8 @@ export function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
     const nameLines = doc.splitTextToSize(item.partName, nameColW);
     const skuLines = doc.splitTextToSize(item.partSku || '—', skuColW);
     const notesLines = item.notes ? doc.splitTextToSize(item.notes, notesColW) : [];
-    const rowLines = Math.max(nameLines.length, skuLines.length, notesLines.length || 1);
-    const rowHeight = rowLines * 5 + 2;
+    const rowLines = Math.max(nameLines.length, skuLines.length, notesLines.length, 1);
+    const rowHeight = rowLines * 5 + rowPadding * 2;
 
     // Page break check
     if (y + rowHeight > pageHeight - 25) {
@@ -114,20 +131,28 @@ export function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
       doc.setFontSize(9);
     }
 
-    doc.text(nameLines, colX.name, y);
-    doc.text(skuLines, colX.sku, y);
-    doc.text(String(item.quantity), colX.qty, y);
+    const textY = y + rowPadding + 4;
+
+    doc.setTextColor(0, 0, 0);
+    doc.text(nameLines, col1X + 2, textY);
+    doc.text(skuLines, col2X + 2, textY);
+    doc.text(String(item.quantity), col3X + 2, textY);
     if (notesLines.length > 0) {
       doc.setTextColor(100, 100, 100);
-      doc.text(notesLines, colX.notes, y);
+      doc.text(notesLines, col4X + 2, textY);
       doc.setTextColor(0, 0, 0);
     }
 
-    y += rowHeight;
+    // Row border: bottom line and vertical lines
+    doc.setDrawColor(200, 200, 200);
+    doc.line(col1X, y + rowHeight, tableRight, y + rowHeight); // bottom
+    doc.line(col1X, y, col1X, y + rowHeight);       // left
+    doc.line(col2X, y, col2X, y + rowHeight);       // col separator
+    doc.line(col3X, y, col3X, y + rowHeight);       // col separator
+    doc.line(col4X, y, col4X, y + rowHeight);       // col separator
+    doc.line(tableRight, y, tableRight, y + rowHeight); // right
 
-    // Light row separator
-    doc.setDrawColor(230, 230, 230);
-    doc.line(margin, y - 1, pageWidth - margin, y - 1);
+    y += rowHeight;
   }
 
   // Footer
