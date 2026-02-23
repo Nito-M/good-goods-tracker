@@ -31,6 +31,8 @@ import { MultiImageUploader, StagedImage } from '@/components/MultiImageUploader
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useWarehouses } from '@/hooks/useWarehouses';
 import { useItemVendorPrices, ItemVendorPrice } from '@/hooks/useItemVendorPrices';
+import { useItemLocationQuantities } from '@/hooks/useItemLocationQuantities';
+import { LocationQuantityEditor, LocationEntry } from '@/components/LocationQuantityEditor';
 import { useItemImages } from '@/hooks/useItemImages';
 import { useItemTags } from '@/hooks/useItemTags';
 import { useToast } from '@/hooks/use-toast';
@@ -70,6 +72,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const { vendors } = useVendors();
   const { warehouses } = useWarehouses();
   const { prices: existingPrices, upsertPrice, deletePrice } = useItemVendorPrices(editItem?.id);
+  const { locations: existingLocations, saveLocations } = useItemLocationQuantities(editItem?.id);
   const { selectedTagIds, setTagsForItem } = useItemTags(editItem?.id);
   // Multi-image support for editing mode
   const { 
@@ -98,7 +101,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [sheetUnit, setSheetUnit] = useState<'ft' | 'in'>('ft');
   const [colors, setColors] = useState('');
   const [description, setDescription] = useState('');
-  const [warehouseId, setWarehouseId] = useState<string>('none');
+  const [locationEntries, setLocationEntries] = useState<LocationEntry[]>([]);
   const [vendorPrices, setVendorPrices] = useState<VendorPriceEntry[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -131,13 +134,27 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       }
       setColors(editItem.colors.join(', '));
       setDescription(editItem.description);
-      setWarehouseId(editItem.warehouseId || 'none');
+      // Location entries will be populated from existingLocations effect below
+      // Keep backward compat: if item has warehouseId but no location entries, seed one
+      if (editItem.warehouseId) {
+        setLocationEntries([{ warehouseId: editItem.warehouseId, quantity: String(editItem.quantity) }]);
+      }
       if (editItem.imageUrl) {
         setImageUrl(editItem.imageUrl);
         setImagePreview(editItem.imageUrl);
       }
     }
   }, [editItem]);
+
+  // Sync location entries from existing data
+  useEffect(() => {
+    if (isEditing && existingLocations.length > 0) {
+      setLocationEntries(existingLocations.map(loc => ({
+        warehouseId: loc.warehouse_id,
+        quantity: String(loc.quantity),
+      })));
+    }
+  }, [isEditing, existingLocations]);
 
   // Sync pending tags from loaded item tags
   useEffect(() => {
@@ -251,8 +268,12 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       colors: colors.split(',').map((c) => c.trim()).filter(Boolean),
       description,
       imageUrl: finalImageUrl,
-      warehouseId: warehouseId === 'none' ? null : warehouseId,
+      warehouseId: null,
     };
+
+    const locationData = locationEntries
+      .filter(e => parseFloat(e.quantity) > 0)
+      .map(e => ({ warehouseId: e.warehouseId, quantity: parseFloat(e.quantity) || 0 }));
 
     if (editItem && onUpdate) {
       onUpdate(editItem.id, itemData);
@@ -278,6 +299,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
 
       // Fix 1: Save tag changes in edit mode
       await setTagsForItem(pendingTagIds);
+      // Save location quantities
+      await saveLocations(editItem.id, locationData);
     } else {
       // Creating a new item
       const newItemId = await onSave(itemData);
@@ -308,6 +331,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             console.error('Error saving tags for new item:', error);
           }
         }
+        // Save location quantities for new item
+        await saveLocations(newItemId, locationData);
         navigate('/items');
       }
     }
@@ -429,22 +454,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                       {categories.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="warehouse">Location</Label>
-                  <Select value={warehouseId} onValueChange={setWarehouseId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="No location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No location</SelectItem>
-                      {warehouses.map((w) => (
-                        <SelectItem key={w.id} value={w.id}>
-                          {w.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -805,6 +814,14 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
               </div>
             </CardContent>
           </Card>
+
+          {/* Location Quantities */}
+          <LocationQuantityEditor
+            warehouses={warehouses}
+            entries={locationEntries}
+            onChange={setLocationEntries}
+            totalQuantity={parseFloat(quantity) || 0}
+          />
 
           {/* Tags */}
           <ItemTagSelector
