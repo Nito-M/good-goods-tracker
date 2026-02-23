@@ -1,48 +1,72 @@
 
 
-# Custom Background Image
+# Inventory Warehouses / Locations
 
 ## Overview
-Allow users to upload a custom photo/image and use it as their app background, in addition to the existing solid-color and designer theme options.
+Add a warehouse/location system so you can organize inventory across multiple physical locations. There will be an "All Inventory" default view (showing everything), plus the ability to create custom-named locations (e.g. "Main Warehouse", "Garage", "Shop Floor") and assign items to them.
 
 ## How It Works
 
-1. A new "Custom Image" option appears at the end of the background theme picker in Settings
-2. Clicking it opens a file upload dialog where the user selects an image
-3. The image is uploaded to cloud storage and stored in the user's profile
-4. The image is applied as a full-screen background using CSS `background-image` on the root element
-5. A subtle dark overlay ensures text remains readable on top of the image
+1. A new "Warehouses" table stores user-defined locations with custom names
+2. Each inventory item gets an optional `warehouse_id` linking it to a location
+3. The Items page gets a warehouse filter dropdown -- "All Locations" shows everything, or pick a specific warehouse
+4. A new Warehouses management page lets you create, rename, and delete locations
+5. When adding/editing items, you can assign them to a warehouse
 
-## Changes Required
+## Database Changes
 
-### 1. Storage bucket
-- Create a new `backgrounds` storage bucket (private) with RLS policies so users can upload/view/delete their own background images
+### New `warehouses` table
+- `id` (uuid, primary key)
+- `user_id` (uuid, not null)
+- `name` (text, not null) -- custom name like "Main Warehouse"
+- `description` (text, nullable)
+- `created_at` (timestamptz)
+- `updated_at` (timestamptz)
+- RLS policies: users can CRUD their own; org members can view
 
-### 2. Database
-- Add a `background_image_url` column to the `profiles` table to store the user's custom background image path
+### Update `inventory_items` table
+- Add `warehouse_id` (uuid, nullable, references warehouses) -- null means unassigned
 
-### 3. Update the color theme hook (`src/hooks/useColorTheme.ts`)
-- Add `'custom'` to the `BackgroundTheme` type
-- Load the `background_image_url` from the profile
-- When `backgroundTheme === 'custom'`, apply the image as a CSS background on `document.documentElement` using inline styles
-- When switching away from custom, remove the background image style
+## UI Changes
 
-### 4. Update Settings page (`src/pages/Settings.tsx`)
-- Add a "Custom Image" button at the end of the background options (with an upload icon instead of a color swatch)
-- When clicked, open a file input to select an image
-- Upload the image to the `backgrounds` bucket
-- Save the signed URL to the profile and set the background theme to `'custom'`
-- Show a small preview thumbnail when a custom background is active
+### 1. Warehouses management page (`src/pages/Warehouses.tsx`)
+- List all warehouses with item count for each
+- Add/rename/delete warehouses via dialogs
+- Click a warehouse to filter the Items page to that location
 
-### 5. CSS updates (`src/index.css`)
-- Add a `.bg-custom` class that applies a dark-themed color scheme (similar to `bg-black`) so text is readable over any background image
-- The actual image is applied via inline styles from JS
+### 2. Items page updates (`src/pages/Items.tsx`)
+- Add a warehouse filter dropdown alongside existing category and tag filters
+- "All Locations" option shows everything (default)
+- Each specific warehouse filters to only items in that location
 
-### 6. Update profile hook (`src/hooks/useProfile.ts`)
-- Add `backgroundImageUrl` to the Profile interface and the fetch/update logic
+### 3. Add/Edit Item form updates (`src/pages/AddItem.tsx`)
+- Add a "Location" dropdown to assign the item to a warehouse
+- Optional -- leaving it blank means the item has no assigned location
 
-## User Experience
-- The custom image covers the full viewport, stays fixed while scrolling, and has a semi-transparent dark overlay for readability
-- Cards and sidebars use their normal semi-transparent backgrounds on top
-- Users can switch back to any preset theme at any time, which removes the custom image
+### 4. Sidebar updates (`src/components/AppSidebar.tsx`)
+- Add "Warehouses" nav item (with a Warehouse icon) in the navigation menu
+
+### 5. New hook (`src/hooks/useWarehouses.ts`)
+- CRUD operations for warehouses
+- Fetch warehouse list for the current user
+
+### 6. Inventory hook updates (`src/hooks/useInventory.ts`)
+- Add `warehouseFilter` state
+- Include `warehouse_id` in item fetch/create/update logic
+
+## Technical Details
+
+### New files
+- `src/pages/Warehouses.tsx` -- warehouse management page
+- `src/hooks/useWarehouses.ts` -- warehouse CRUD hook
+- Database migration for `warehouses` table and `inventory_items.warehouse_id` column
+
+### Modified files
+- `src/pages/Items.tsx` -- add warehouse filter dropdown
+- `src/pages/AddItem.tsx` -- add warehouse selector to form
+- `src/hooks/useInventory.ts` -- handle warehouse_id in DB operations
+- `src/types/inventory.ts` -- add warehouseId to InventoryItem interface
+- `src/components/AppSidebar.tsx` -- add Warehouses nav link
+- `src/App.tsx` -- add /warehouses route
+- `src/components/SearchFilter.tsx` -- add warehouse filter option
 
