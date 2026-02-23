@@ -3,6 +3,8 @@ import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, Me
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssemblyItem } from '@/hooks/usePartsAssemblies';
 import { useParts } from '@/hooks/useParts';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { generatePartsAssemblyPDF } from '@/lib/partsAssemblyPdfGenerator';
 import { Button } from '@/components/ui/button';
@@ -352,8 +354,9 @@ function AssemblyDetail({
 export function PartsAssembliesDetail() {
   const { type } = useParams<{ type: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const decodedType = decodeURIComponent(type || 'General');
-  const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly } = usePartsAssemblies();
+  const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, refetch } = usePartsAssemblies();
   const { parts } = useParts();
 
   const filtered = assemblies.filter(a => (a.type || 'General') === decodedType);
@@ -364,6 +367,13 @@ export function PartsAssembliesDetail() {
   const [creating, setCreating] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Type rename/delete state
+  const [editingType, setEditingType] = useState(false);
+  const [editTypeName, setEditTypeName] = useState(decodedType);
+  const [savingType, setSavingType] = useState(false);
+  const [deleteTypeOpen, setDeleteTypeOpen] = useState(false);
+  const [deletingType, setDeletingType] = useState(false);
 
   const selected = filtered.find(a => a.id === selectedId) || null;
 
@@ -391,6 +401,42 @@ export function PartsAssembliesDetail() {
     setDeleteId(null);
   };
 
+  const handleRenameType = async () => {
+    const newName2 = editTypeName.trim();
+    if (!newName2 || newName2 === decodedType) { setEditingType(false); return; }
+    setSavingType(true);
+    const { error } = await (supabase as any)
+      .from('parts_assemblies')
+      .update({ type: newName2 })
+      .eq('type', decodedType);
+    if (error) {
+      toast({ title: 'Error renaming type', variant: 'destructive' });
+    } else {
+      await refetch();
+      toast({ title: 'Type renamed' });
+      navigate(`/parts/assemblies/${encodeURIComponent(newName2)}`, { replace: true });
+    }
+    setSavingType(false);
+    setEditingType(false);
+  };
+
+  const handleDeleteType = async () => {
+    setDeletingType(true);
+    const { error } = await (supabase as any)
+      .from('parts_assemblies')
+      .update({ type: 'General' })
+      .eq('type', decodedType);
+    if (error) {
+      toast({ title: 'Error deleting type', variant: 'destructive' });
+    } else {
+      await refetch();
+      toast({ title: 'Type deleted', description: 'Assemblies moved to General' });
+      navigate('/parts/assemblies', { replace: true });
+    }
+    setDeletingType(false);
+    setDeleteTypeOpen(false);
+  };
+
   const partsList = parts.map(p => ({ id: p.id, name: p.name, sku: p.sku }));
 
   return (
@@ -402,14 +448,46 @@ export function PartsAssembliesDetail() {
               <Button variant="ghost" size="icon" onClick={() => navigate('/parts/assemblies')}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
-                <h1 className="text-lg font-bold tracking-tight text-card-foreground">{decodedType}</h1>
-                <p className="text-xs text-muted-foreground">{filtered.length} assembly{filtered.length !== 1 ? 's' : ''}</p>
-              </div>
+              {editingType ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={editTypeName}
+                    onChange={e => setEditTypeName(e.target.value)}
+                    className="h-8 w-48 text-sm"
+                    autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') handleRenameType(); if (e.key === 'Escape') { setEditingType(false); setEditTypeName(decodedType); } }}
+                  />
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleRenameType} disabled={savingType}>
+                    <Check className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingType(false); setEditTypeName(decodedType); }}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <h1 className="text-lg font-bold tracking-tight text-card-foreground">{decodedType}</h1>
+                  <p className="text-xs text-muted-foreground">{filtered.length} assembly{filtered.length !== 1 ? 's' : ''}</p>
+                </div>
+              )}
             </div>
-            <Button onClick={() => setCreateOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" /> New Assembly
-            </Button>
+            <div className="flex items-center gap-2">
+              {!editingType && (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => { setEditingType(true); setEditTypeName(decodedType); }}>
+                    <Pencil className="h-3 w-3 mr-1" /> Rename
+                  </Button>
+                  {decodedType !== 'General' && (
+                    <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => setDeleteTypeOpen(true)}>
+                      <Trash2 className="h-3 w-3 mr-1" /> Delete Type
+                    </Button>
+                  )}
+                </>
+              )}
+              <Button onClick={() => setCreateOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" /> New Assembly
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -482,6 +560,21 @@ export function PartsAssembliesDetail() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteTypeOpen} onOpenChange={setDeleteTypeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete type "{decodedType}"?</AlertDialogTitle>
+            <AlertDialogDescription>All assemblies in this type will be moved to "General".</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteType} disabled={deletingType} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deletingType ? 'Deleting...' : 'Delete Type'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
