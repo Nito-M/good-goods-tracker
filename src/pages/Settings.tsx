@@ -104,13 +104,17 @@ export function Settings() {
     { value: 'red', label: 'Light Red', color: 'bg-[hsl(0,72%,50%)]' },
   ];
 
-  const backgroundThemeOptions: { value: BackgroundTheme; label: string; color: string }[] = [
+  const backgroundThemeOptions: { value: BackgroundTheme; label: string; color: string; gradient?: string }[] = [
     { value: 'normal', label: 'Normal', color: 'bg-[hsl(209,40%,96%)]' },
     { value: 'green', label: 'Light Green', color: 'bg-[hsl(142,40%,96%)]' },
     { value: 'blue', label: 'Light Blue', color: 'bg-[hsl(217,40%,96%)]' },
     { value: 'grey', label: 'Light Grey', color: 'bg-[hsl(0,0%,96%)]' },
     { value: 'red', label: 'Light Red', color: 'bg-[hsl(0,40%,96%)]' },
     { value: 'black', label: 'Black', color: 'bg-[hsl(0,0%,8%)]' },
+    { value: 'black-gold', label: 'Black & Gold', color: '', gradient: 'linear-gradient(135deg, hsl(0,0%,4%) 50%, hsl(43,90%,55%) 50%)' },
+    { value: 'midnight-silver', label: 'Midnight Silver', color: '', gradient: 'linear-gradient(135deg, hsl(220,30%,6%) 50%, hsl(210,20%,70%) 50%)' },
+    { value: 'dark-emerald', label: 'Emerald & Copper', color: '', gradient: 'linear-gradient(135deg, hsl(160,30%,6%) 50%, hsl(25,70%,55%) 50%)' },
+    { value: 'charcoal-rose', label: 'Charcoal & Rose', color: '', gradient: 'linear-gradient(135deg, hsl(0,0%,10%) 50%, hsl(340,65%,60%) 50%)' },
   ];
 
   // Invoice settings state
@@ -502,7 +506,7 @@ export function Settings() {
                       Choose your preferred background color
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap justify-end">
                     {backgroundThemeOptions.map((option) => (
                       <button
                         key={option.value}
@@ -512,6 +516,7 @@ export function Settings() {
                             ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
                             : 'hover:scale-105'
                         }`}
+                        style={option.gradient ? { background: option.gradient } : undefined}
                         title={option.label}
                       />
                     ))}

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red';
-export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black';
+export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black' | 'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose';
 
 const COLOR_THEME_KEY = 'color-theme';
 const BACKGROUND_THEME_KEY = 'background-theme';
@@ -96,7 +96,7 @@ export function useColorTheme() {
     const root = document.documentElement;
     
     // Remove all background theme classes
-    root.classList.remove('bg-normal', 'bg-green', 'bg-blue', 'bg-grey', 'bg-red', 'bg-black');
+    root.classList.remove('bg-normal', 'bg-green', 'bg-blue', 'bg-grey', 'bg-red', 'bg-black', 'bg-black-gold', 'bg-midnight-silver', 'bg-dark-emerald', 'bg-charcoal-rose');
     
     // Add the current background theme class
     root.classList.add(`bg-${backgroundTheme}`);
