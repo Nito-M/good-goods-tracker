@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<RequestStatus, { label: string; icon: React.ReactNode }> = {
   pending: { label: "Pending", icon: <Clock className="h-4 w-4" /> },
@@ -56,6 +57,18 @@ export function Requests() {
 
   const getStatusCount = (status: RequestStatus) => {
     return visibleRequests.filter((r) => r.status === status).length;
+  };
+
+  const getRequestTotal = (r: Request) => {
+    const subtotal = r.quantity * r.price;
+    const gst = subtotal * (r.gstRate / 100);
+    return subtotal + gst + (r.extraCost || 0);
+  };
+
+  const getStatusTotal = (status: RequestStatus) => {
+    return visibleRequests
+      .filter((r) => r.status === status)
+      .reduce((sum, r) => sum + getRequestTotal(r), 0);
   };
 
   const handleStatusChange = async (id: string, status: RequestStatus) => {
@@ -165,12 +178,17 @@ export function Requests() {
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RequestStatus)} className="w-full">
         <TabsList className="grid w-full grid-cols-5 mb-6">
           {(Object.keys(STATUS_CONFIG) as RequestStatus[]).map((status) => (
-            <TabsTrigger key={status} value={status} className="flex items-center gap-2">
-              {STATUS_CONFIG[status].icon}
-              <span className="hidden sm:inline">{STATUS_CONFIG[status].label}</span>
-              <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5">
-                {getStatusCount(status)}
-              </Badge>
+            <TabsTrigger key={status} value={status} className="flex flex-col items-center gap-0.5 py-2">
+              <div className="flex items-center gap-1.5">
+                {STATUS_CONFIG[status].icon}
+                <span className="hidden sm:inline">{STATUS_CONFIG[status].label}</span>
+                <Badge variant="secondary" className="h-5 min-w-5 px-1.5">
+                  {getStatusCount(status)}
+                </Badge>
+              </div>
+              <span className="text-[10px] text-muted-foreground font-medium">
+                {formatCurrency(getStatusTotal(status))}
+              </span>
             </TabsTrigger>
           ))}
         </TabsList>
