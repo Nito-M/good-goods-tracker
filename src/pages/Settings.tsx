@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
 import { OrganizationsSettings } from '@/components/OrganizationsSettings';
@@ -56,7 +57,7 @@ export function Settings() {
   const { isOrgAdmin } = useIsOrgAdmin();
   const showUsersTab = isAdmin || isOrgAdmin;
   const { theme, setTheme } = useTheme();
-  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage } = useColorTheme();
+  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
@@ -582,6 +583,22 @@ export function Settings() {
                     </button>
                   </div>
                 </div>
+
+                {backgroundTheme === 'custom' && (
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="custom-bg-light">Light mode</Label>
+                      <p className="text-sm text-muted-foreground">
+                        White background, black text (for bright images)
+                      </p>
+                    </div>
+                    <Switch
+                      id="custom-bg-light"
+                      checked={customBgLight}
+                      onCheckedChange={setCustomBgLight}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 

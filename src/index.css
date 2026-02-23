@@ -583,6 +583,31 @@ All colors MUST be HSL.
     --sidebar-border: 0 0% 30% / 0.4;
     --sidebar: 0 0% 8% / 0.85;
   }
+
+  /* Custom Background Image — Light Mode (white cards, black text) */
+  .bg-custom-light:root, :root.bg-custom-light,
+  .dark.bg-custom-light, .bg-custom-light.dark {
+    --background: 0 0% 100% / 0;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100% / 0.85;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100% / 0.92;
+    --popover-foreground: 222 47% 11%;
+    --muted: 215 20% 65%;
+    --muted-foreground: 222 47% 11%;
+    --accent: 0 0% 96% / 0.8;
+    --accent-foreground: 215 19% 34%;
+    --border: 212 26% 83% / 0.6;
+    --input: 212 26% 83% / 0.7;
+    --secondary: 0 0% 96% / 0.8;
+    --secondary-foreground: 222 47% 11%;
+    --sidebar-background: 0 0% 100% / 0.88;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-accent: 0 0% 96% / 0.7;
+    --sidebar-accent-foreground: 215 19% 34%;
+    --sidebar-border: 212 26% 83% / 0.5;
+    --sidebar: 0 0% 100% / 0.85;
+  }
 }
 
 @layer base {
