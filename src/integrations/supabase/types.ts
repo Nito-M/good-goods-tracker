@@ -870,6 +870,41 @@ export type Database = {
         }
         Relationships: []
       }
+      part_folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "part_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parts: {
         Row: {
           created_at: string
@@ -878,6 +913,7 @@ export type Database = {
           dxf_label_2: string
           dxf_url_1: string | null
           dxf_url_2: string | null
+          folder_id: string | null
           id: string
           image_url: string | null
           name: string
@@ -893,6 +929,7 @@ export type Database = {
           dxf_label_2?: string
           dxf_url_1?: string | null
           dxf_url_2?: string | null
+          folder_id?: string | null
           id?: string
           image_url?: string | null
           name: string
@@ -908,6 +945,7 @@ export type Database = {
           dxf_label_2?: string
           dxf_url_1?: string | null
           dxf_url_2?: string | null
+          folder_id?: string | null
           id?: string
           image_url?: string | null
           name?: string
@@ -916,7 +954,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "parts_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "part_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parts_assemblies: {
         Row: {
