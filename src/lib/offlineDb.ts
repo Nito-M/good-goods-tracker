@@ -39,6 +39,126 @@ interface OfflineDbSchema extends DBSchema {
     value: Record<string, unknown>;
     indexes: { 'by-user': string };
   };
+  warehouses: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  quotes: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  quote_items: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-quote': string };
+  };
+  jobs: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  job_items: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-job': string };
+  };
+  requests: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  customers: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  notes: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  calendar_events: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  assemblies: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  assembly_items: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-assembly': string };
+  };
+  bank_cards: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  bank_transactions: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  tags: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  tag_categories: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  item_tags: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-item': string };
+  };
+  item_images: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-item': string };
+  };
+  item_vendor_prices: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-item': string };
+  };
+  companies: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  po_attachments: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-po': string };
+  };
+  po_job_links: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-po': string };
+  };
+  po_item_allocations: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-po': string };
+  };
+  profiles: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-user': string };
+  };
+  so_item_job_links: {
+    key: string;
+    value: Record<string, unknown>;
+    indexes: { 'by-quote': string };
+  };
   sync_queue: {
     key: string;
     value: SyncQueueItem;
@@ -50,10 +170,29 @@ interface OfflineDbSchema extends DBSchema {
   };
 }
 
-type DataTableName = 'inventory_items' | 'purchase_orders' | 'sales' | 'sale_items' | 'vendors' | 'categories';
+type DataTableName =
+  | 'inventory_items' | 'purchase_orders' | 'sales' | 'sale_items' | 'vendors' | 'categories'
+  | 'warehouses' | 'quotes' | 'quote_items' | 'jobs' | 'job_items' | 'requests'
+  | 'customers' | 'notes' | 'calendar_events' | 'assemblies' | 'assembly_items'
+  | 'bank_cards' | 'bank_transactions' | 'tags' | 'tag_categories'
+  | 'item_tags' | 'item_images' | 'item_vendor_prices' | 'companies'
+  | 'po_attachments' | 'po_job_links' | 'po_item_allocations' | 'profiles' | 'so_item_job_links';
 
 const DB_NAME = 'zumy-offline-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+
+// Helper to create a store with an index if it doesn't exist
+function ensureStore(
+  db: IDBPDatabase<OfflineDbSchema>,
+  name: string,
+  indexName: string,
+  indexKey: string
+) {
+  if (!db.objectStoreNames.contains(name as never)) {
+    const store = db.createObjectStore(name as never, { keyPath: 'id' });
+    (store as unknown as { createIndex: (n: string, k: string) => void }).createIndex(indexName, indexKey);
+  }
+}
 
 let dbInstance: IDBPDatabase<OfflineDbSchema> | null = null;
 
@@ -62,40 +201,33 @@ export async function getOfflineDb(): Promise<IDBPDatabase<OfflineDbSchema>> {
 
   dbInstance = await openDB<OfflineDbSchema>(DB_NAME, DB_VERSION, {
     upgrade(db) {
-      // Inventory items store
-      if (!db.objectStoreNames.contains('inventory_items')) {
-        const store = db.createObjectStore('inventory_items', { keyPath: 'id' });
-        store.createIndex('by-user', 'user_id');
+      // User-scoped stores
+      const userStores = [
+        'inventory_items', 'purchase_orders', 'sales', 'vendors', 'categories',
+        'warehouses', 'quotes', 'jobs', 'requests', 'customers', 'notes',
+        'calendar_events', 'assemblies', 'bank_cards', 'bank_transactions',
+        'tags', 'tag_categories', 'companies', 'profiles',
+      ];
+      for (const name of userStores) {
+        ensureStore(db, name, 'by-user', 'user_id');
       }
 
-      // Purchase orders store
-      if (!db.objectStoreNames.contains('purchase_orders')) {
-        const store = db.createObjectStore('purchase_orders', { keyPath: 'id' });
-        store.createIndex('by-user', 'user_id');
-      }
-
-      // Sales store
-      if (!db.objectStoreNames.contains('sales')) {
-        const store = db.createObjectStore('sales', { keyPath: 'id' });
-        store.createIndex('by-user', 'user_id');
-      }
-
-      // Sale items store
-      if (!db.objectStoreNames.contains('sale_items')) {
-        const store = db.createObjectStore('sale_items', { keyPath: 'id' });
-        store.createIndex('by-sale', 'sale_id');
-      }
-
-      // Vendors store
-      if (!db.objectStoreNames.contains('vendors')) {
-        const store = db.createObjectStore('vendors', { keyPath: 'id' });
-        store.createIndex('by-user', 'user_id');
-      }
-
-      // Categories store
-      if (!db.objectStoreNames.contains('categories')) {
-        const store = db.createObjectStore('categories', { keyPath: 'id' });
-        store.createIndex('by-user', 'user_id');
+      // Child/relation stores with specific indexes
+      const childStores: [string, string, string][] = [
+        ['sale_items', 'by-sale', 'sale_id'],
+        ['quote_items', 'by-quote', 'quote_id'],
+        ['job_items', 'by-job', 'job_id'],
+        ['assembly_items', 'by-assembly', 'assembly_id'],
+        ['item_tags', 'by-item', 'item_id'],
+        ['item_images', 'by-item', 'item_id'],
+        ['item_vendor_prices', 'by-item', 'item_id'],
+        ['po_attachments', 'by-po', 'purchase_order_id'],
+        ['po_job_links', 'by-po', 'purchase_order_id'],
+        ['po_item_allocations', 'by-po', 'purchase_order_id'],
+        ['so_item_job_links', 'by-quote', 'quote_id'],
+      ];
+      for (const [name, idx, key] of childStores) {
+        ensureStore(db, name, idx, key);
       }
 
       // Sync queue store
@@ -114,14 +246,23 @@ export async function getOfflineDb(): Promise<IDBPDatabase<OfflineDbSchema>> {
   return dbInstance;
 }
 
+// Tables that have a 'by-user' index
+const USER_INDEXED_TABLES = new Set<DataTableName>([
+  'inventory_items', 'purchase_orders', 'sales', 'vendors', 'categories',
+  'warehouses', 'quotes', 'jobs', 'requests', 'customers', 'notes',
+  'calendar_events', 'assemblies', 'bank_cards', 'bank_transactions',
+  'tags', 'tag_categories', 'companies', 'profiles',
+]);
+
 // Generic CRUD operations for offline storage
 export async function getAll(
   table: DataTableName,
   userId?: string
 ): Promise<Record<string, unknown>[]> {
   const db = await getOfflineDb();
-  if (userId && table !== 'sale_items') {
-    return db.getAllFromIndex(table, 'by-user', userId);
+  if (userId && USER_INDEXED_TABLES.has(table)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return db.getAllFromIndex(table as any, 'by-user', userId);
   }
   return db.getAll(table);
 }
