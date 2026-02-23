@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssemblyItem } from '@/hooks/usePartsAssemblies';
 import { useParts } from '@/hooks/useParts';
 import { formatCurrency } from '@/lib/utils';
+import { generatePartsAssemblyPDF } from '@/lib/partsAssemblyPdfGenerator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -225,6 +226,18 @@ function AssemblyDetail({
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => {
+                generatePartsAssemblyPDF({
+                  name: assembly.name,
+                  description: assembly.description,
+                  sellingPrice: assembly.selling_price,
+                  status: assembly.status,
+                  statusNotes: assembly.status_notes,
+                  items: items.map(i => ({ partName: i.part_name, partSku: i.part_sku, quantity: i.quantity, notes: i.notes })),
+                });
+              }}>
+                <Download className="h-3 w-3 mr-1" /> PDF
+              </Button>
               <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                 <Pencil className="h-3 w-3 mr-1" /> Edit
               </Button>
