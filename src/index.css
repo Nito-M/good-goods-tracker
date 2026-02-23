@@ -610,6 +610,78 @@ All colors MUST be HSL.
   }
 }
 
+/* Custom Text Color Overrides (for custom backgrounds) */
+.text-color-black:root, :root.text-color-black {
+  --foreground: 0 0% 5%;
+  --card-foreground: 0 0% 5%;
+  --popover-foreground: 0 0% 5%;
+  --muted-foreground: 0 0% 25%;
+  --sidebar-foreground: 0 0% 5%;
+}
+.text-color-white:root, :root.text-color-white {
+  --foreground: 0 0% 95%;
+  --card-foreground: 0 0% 95%;
+  --popover-foreground: 0 0% 95%;
+  --muted-foreground: 0 0% 80%;
+  --sidebar-foreground: 0 0% 95%;
+}
+.text-color-gold:root, :root.text-color-gold {
+  --foreground: 43 90% 55%;
+  --card-foreground: 43 90% 55%;
+  --popover-foreground: 43 90% 55%;
+  --muted-foreground: 43 60% 45%;
+  --sidebar-foreground: 43 90% 55%;
+}
+.text-color-red:root, :root.text-color-red {
+  --foreground: 0 72% 50%;
+  --card-foreground: 0 72% 50%;
+  --popover-foreground: 0 72% 50%;
+  --muted-foreground: 0 50% 40%;
+  --sidebar-foreground: 0 72% 50%;
+}
+.text-color-blue:root, :root.text-color-blue {
+  --foreground: 217 91% 60%;
+  --card-foreground: 217 91% 60%;
+  --popover-foreground: 217 91% 60%;
+  --muted-foreground: 217 60% 45%;
+  --sidebar-foreground: 217 91% 60%;
+}
+.text-color-grey:root, :root.text-color-grey {
+  --foreground: 215 16% 55%;
+  --card-foreground: 215 16% 55%;
+  --popover-foreground: 215 16% 55%;
+  --muted-foreground: 215 12% 45%;
+  --sidebar-foreground: 215 16% 55%;
+}
+.text-color-green:root, :root.text-color-green {
+  --foreground: 142 76% 36%;
+  --card-foreground: 142 76% 36%;
+  --popover-foreground: 142 76% 36%;
+  --muted-foreground: 142 50% 30%;
+  --sidebar-foreground: 142 76% 36%;
+}
+.text-color-orange:root, :root.text-color-orange {
+  --foreground: 24 95% 53%;
+  --card-foreground: 24 95% 53%;
+  --popover-foreground: 24 95% 53%;
+  --muted-foreground: 24 70% 42%;
+  --sidebar-foreground: 24 95% 53%;
+}
+.text-color-purple:root, :root.text-color-purple {
+  --foreground: 271 76% 53%;
+  --card-foreground: 271 76% 53%;
+  --popover-foreground: 271 76% 53%;
+  --muted-foreground: 271 50% 42%;
+  --sidebar-foreground: 271 76% 53%;
+}
+.text-color-pink:root, :root.text-color-pink {
+  --foreground: 330 81% 60%;
+  --card-foreground: 330 81% 60%;
+  --popover-foreground: 330 81% 60%;
+  --muted-foreground: 330 55% 48%;
+  --sidebar-foreground: 330 81% 60%;
+}
+
 @layer base {
   * {
     @apply border-border;
