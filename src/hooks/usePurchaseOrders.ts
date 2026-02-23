@@ -297,7 +297,7 @@ export function usePurchaseOrders() {
     fetchOrders();
   };
 
-  const markAsReceived = async (orderId: string) => {
+  const markAsReceived = async (orderId: string, warehouseId?: string | null) => {
     // Get the order to access its items and costs
     const order = orders.find((o) => o.id === orderId);
     if (!order) {
@@ -348,10 +348,15 @@ export function usePurchaseOrders() {
         .single();
 
       if (inventoryItem) {
-        // Existing item - update quantity and cost
+        // Existing item - update quantity and cost (and optionally location)
         const updates: Record<string, unknown> = {
           quantity: inventoryItem.quantity + item.quantity,
         };
+
+        // Update warehouse if provided
+        if (warehouseId !== undefined) {
+          updates.warehouse_id = warehouseId || null;
+        }
 
         // Update cost if provided in the PO
         if (item.unitCost !== undefined && item.unitCost > 0) {
@@ -387,6 +392,7 @@ export function usePurchaseOrders() {
             dimensions_width: 0,
             dimensions_height: 0,
             dimensions_unit: 'in',
+            warehouse_id: warehouseId || null,
           })
           .select('id')
           .single();

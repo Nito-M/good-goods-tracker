@@ -10,9 +10,11 @@ import { useJobs } from '@/hooks/useJobs';
 import { useBank } from '@/hooks/useBank';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useBankCards } from '@/hooks/useBankCards';
+import { useWarehouses } from '@/hooks/useWarehouses';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { PurchaseOrderPreviewDialog } from '@/components/PurchaseOrderPreviewDialog';
+import { ReceiveLocationDialog } from '@/components/ReceiveLocationDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
@@ -32,11 +34,14 @@ export function PurchaseOrders() {
   const { jobs } = useJobs();
   const { companies } = useCompanies();
   const { cards: bankCards } = useBankCards();
+  const { warehouses } = useWarehouses();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [previewOrder, setPreviewOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
+  const [receivingOrderId, setReceivingOrderId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleMarkOrdered = async (orderId: string) => {
@@ -45,10 +50,18 @@ export function PurchaseOrders() {
     setProcessingId(null);
   };
 
-  const handleMarkReceived = async (orderId: string) => {
-    setProcessingId(orderId);
-    await markAsReceived(orderId);
+  const handleMarkReceived = (orderId: string) => {
+    setReceivingOrderId(orderId);
+    setReceiveDialogOpen(true);
+  };
+
+  const handleConfirmReceive = async (warehouseId: string | null) => {
+    if (!receivingOrderId) return;
+    setProcessingId(receivingOrderId);
+    await markAsReceived(receivingOrderId, warehouseId);
     setProcessingId(null);
+    setReceiveDialogOpen(false);
+    setReceivingOrderId(null);
   };
 
   const handleMarkPaid = async (orderId: string) => {
@@ -328,6 +341,14 @@ export function PurchaseOrders() {
           onDownload={() => handleDownload(previewOrder)}
         />
       )}
+
+      <ReceiveLocationDialog
+        open={receiveDialogOpen}
+        onOpenChange={setReceiveDialogOpen}
+        onConfirm={handleConfirmReceive}
+        warehouses={warehouses}
+        loading={!!processingId}
+      />
     </div>
   );
 }
