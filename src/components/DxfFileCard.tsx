@@ -7,6 +7,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { DxfThreeViewer } from './DxfThreeViewer';
 
 interface DxfFileCardProps {
   itemId: string;
@@ -20,8 +21,8 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
-  const [svgContent, setSvgContent] = useState<string | null>(null);
-  const [loadingSvg, setLoadingSvg] = useState(false);
+  const [dxfText, setDxfText] = useState<string | null>(null);
+  const [loadingDxf, setLoadingDxf] = useState(false);
 
   const storagePath = dxfUrl && !dxfUrl.startsWith('http')
     ? dxfUrl
@@ -75,7 +76,7 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
       await supabase.storage.from('dxf-files').remove([storagePath]);
       await supabase.from('inventory_items').update({ dxf_url: null }).eq('id', itemId);
       onDxfUrlChange(null);
-      setSvgContent(null);
+      setDxfText(null);
       toast({ title: 'DXF file removed' });
     } catch (err) {
       console.error('DXF delete error:', err);
@@ -85,7 +86,7 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
 
   const handleView = async () => {
     if (!storagePath) return;
-    setLoadingSvg(true);
+    setLoadingDxf(true);
     setViewerOpen(true);
 
     try {
@@ -96,20 +97,14 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
       if (signError || !signedData) throw signError;
 
       const response = await fetch(signedData.signedUrl);
-      const dxfText = await response.text();
-
-      // Dynamically import dxf library
-      const dxfModule = await import('dxf');
-      const Helper = dxfModule.Helper || dxfModule.default?.Helper;
-      const helper = new Helper(dxfText);
-      const svg = helper.toSVG();
-      setSvgContent(svg);
+      const text = await response.text();
+      setDxfText(text);
     } catch (err) {
-      console.error('DXF render error:', err);
-      toast({ title: 'Could not render DXF', description: 'The file may be corrupted or unsupported.', variant: 'destructive' });
+      console.error('DXF load error:', err);
+      toast({ title: 'Could not load DXF', description: 'The file may be corrupted or inaccessible.', variant: 'destructive' });
       setViewerOpen(false);
     } finally {
-      setLoadingSvg(false);
+      setLoadingDxf(false);
     }
   };
 
@@ -138,10 +133,7 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
               </Button>
             </div>
           ) : (
-            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2">
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
-              Upload DXF File
-            </Button>
+            <div className="text-sm text-muted-foreground py-2">No DXF available.</div>
           )}
           <input
             ref={fileInputRef}
@@ -156,16 +148,14 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
         <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden" aria-describedby={undefined}>
           <VisuallyHidden><DialogTitle>DXF Drawing Preview</DialogTitle></VisuallyHidden>
-          {loadingSvg ? (
+          {loadingDxf ? (
             <div className="flex items-center justify-center h-[60vh]">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : svgContent ? (
-            <div
-              className="w-full h-[85vh] overflow-auto p-4 bg-background flex items-center justify-center"
-              dangerouslySetInnerHTML={{ __html: svgContent }}
-              style={{ minHeight: 400 }}
-            />
+          ) : dxfText ? (
+            <div className="w-full h-[85vh]">
+              <DxfThreeViewer dxfText={dxfText} />
+            </div>
           ) : null}
         </DialogContent>
       </Dialog>
