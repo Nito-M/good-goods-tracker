@@ -1747,6 +1747,27 @@ export type Database = {
           },
         ]
       }
+      signup_requests_log: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          ip_address: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          ip_address: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          ip_address?: string
+        }
+        Relationships: []
+      }
       so_item_job_links: {
         Row: {
           created_at: string
