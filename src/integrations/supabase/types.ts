@@ -985,6 +985,7 @@ export type Database = {
           color_theme: string | null
           created_at: string
           custom_bg_light: boolean
+          custom_text_color: string | null
           display_name: string | null
           id: string
           invoice_layout: Json | null
@@ -1015,6 +1016,7 @@ export type Database = {
           color_theme?: string | null
           created_at?: string
           custom_bg_light?: boolean
+          custom_text_color?: string | null
           display_name?: string | null
           id?: string
           invoice_layout?: Json | null
@@ -1045,6 +1047,7 @@ export type Database = {
           color_theme?: string | null
           created_at?: string
           custom_bg_light?: boolean
+          custom_text_color?: string | null
           display_name?: string | null
           id?: string
           invoice_layout?: Json | null

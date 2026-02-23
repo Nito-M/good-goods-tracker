@@ -4,10 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'yellow' | 'white' | 'purple' | 'pink' | 'orange' | 'gold';
 export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black' | 'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose' | 'custom';
+export type CustomTextColor = 'default' | 'black' | 'white' | 'gold' | 'red' | 'blue' | 'grey' | 'green' | 'orange' | 'purple' | 'pink';
 
 const COLOR_THEME_KEY = 'color-theme';
 const BACKGROUND_THEME_KEY = 'background-theme';
 const CUSTOM_BG_LIGHT_KEY = 'custom-bg-light';
+const CUSTOM_TEXT_COLOR_KEY = 'custom-text-color';
 
 export function useColorTheme() {
   const { user } = useAuth();
@@ -33,6 +35,13 @@ export function useColorTheme() {
     return false;
   });
 
+  const [customTextColor, setCustomTextColorState] = useState<CustomTextColor>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem(CUSTOM_TEXT_COLOR_KEY) as CustomTextColor) || 'default';
+    }
+    return 'default';
+  });
+
   const [loaded, setLoaded] = useState(false);
 
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
@@ -48,7 +57,7 @@ export function useColorTheme() {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('color_theme, background_theme, background_image_url, custom_bg_light')
+          .select('color_theme, background_theme, background_image_url, custom_bg_light, custom_text_color')
           .eq('user_id', user.id)
           .single();
 
@@ -67,6 +76,10 @@ export function useColorTheme() {
           const bgLight = data.custom_bg_light === true;
           setCustomBgLightState(bgLight);
           localStorage.setItem(CUSTOM_BG_LIGHT_KEY, String(bgLight));
+          if (data.custom_text_color) {
+            setCustomTextColorState(data.custom_text_color as CustomTextColor);
+            localStorage.setItem(CUSTOM_TEXT_COLOR_KEY, data.custom_text_color);
+          }
         }
       } catch (error) {
         console.error('Error loading theme from database:', error);
@@ -140,6 +153,18 @@ export function useColorTheme() {
     localStorage.setItem(BACKGROUND_THEME_KEY, backgroundTheme);
   }, [backgroundTheme, backgroundImageUrl, customBgLight]);
 
+  // Apply custom text color
+  useEffect(() => {
+    const root = document.documentElement;
+    const textColorClasses = ['text-color-black', 'text-color-white', 'text-color-gold', 'text-color-red', 'text-color-blue', 'text-color-grey', 'text-color-green', 'text-color-orange', 'text-color-purple', 'text-color-pink'];
+    root.classList.remove(...textColorClasses);
+    
+    if (backgroundTheme === 'custom' && customTextColor && customTextColor !== 'default') {
+      root.classList.add(`text-color-${customTextColor}`);
+    }
+    localStorage.setItem(CUSTOM_TEXT_COLOR_KEY, customTextColor);
+  }, [customTextColor, backgroundTheme]);
+
   const setColorTheme = (theme: ColorTheme) => {
     setColorThemeState(theme);
     saveToDatabase(theme, backgroundTheme);
@@ -164,6 +189,20 @@ export function useColorTheme() {
     }
   };
 
+  const setCustomTextColor = async (color: CustomTextColor) => {
+    setCustomTextColorState(color);
+    localStorage.setItem(CUSTOM_TEXT_COLOR_KEY, color);
+    if (!user) return;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ custom_text_color: color === 'default' ? null : color })
+        .eq('user_id', user.id);
+    } catch (error) {
+      console.error('Error saving custom text color:', error);
+    }
+  };
+
   const setCustomBackgroundImage = async (url: string | null) => {
     setBackgroundImageUrl(url);
     if (!user) return;
@@ -177,5 +216,5 @@ export function useColorTheme() {
     }
   };
 
-  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, loaded };
+  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, loaded };
 }

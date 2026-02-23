@@ -24,7 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { InvoiceLayoutEditor } from '@/components/InvoiceLayoutEditor';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
-import { useColorTheme, ColorTheme, BackgroundTheme } from '@/hooks/useColorTheme';
+import { useColorTheme, ColorTheme, BackgroundTheme, CustomTextColor } from '@/hooks/useColorTheme';
 import {
   Dialog,
   DialogContent,
@@ -57,7 +57,7 @@ export function Settings() {
   const { isOrgAdmin } = useIsOrgAdmin();
   const showUsersTab = isAdmin || isOrgAdmin;
   const { theme, setTheme } = useTheme();
-  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight } = useColorTheme();
+  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
@@ -597,6 +597,43 @@ export function Settings() {
                       checked={customBgLight}
                       onCheckedChange={setCustomBgLight}
                     />
+                  </div>
+                )}
+
+                {backgroundTheme === 'custom' && (
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="space-y-0.5">
+                      <Label>Text Color</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Override the text color on custom backgrounds
+                      </p>
+                    </div>
+                    <div className="flex gap-2 flex-wrap justify-end">
+                      {([
+                        { value: 'default' as CustomTextColor, label: 'Default', color: 'bg-foreground', border: true },
+                        { value: 'black' as CustomTextColor, label: 'Black', color: 'bg-[hsl(0,0%,5%)]' },
+                        { value: 'white' as CustomTextColor, label: 'White', color: 'bg-[hsl(0,0%,95%)]' },
+                        { value: 'gold' as CustomTextColor, label: 'Gold', color: 'bg-[hsl(43,90%,55%)]' },
+                        { value: 'red' as CustomTextColor, label: 'Red', color: 'bg-[hsl(0,72%,50%)]' },
+                        { value: 'blue' as CustomTextColor, label: 'Blue', color: 'bg-[hsl(217,91%,60%)]' },
+                        { value: 'grey' as CustomTextColor, label: 'Grey', color: 'bg-[hsl(215,16%,55%)]' },
+                        { value: 'green' as CustomTextColor, label: 'Green', color: 'bg-[hsl(142,76%,36%)]' },
+                        { value: 'orange' as CustomTextColor, label: 'Orange', color: 'bg-[hsl(24,95%,53%)]' },
+                        { value: 'purple' as CustomTextColor, label: 'Purple', color: 'bg-[hsl(271,76%,53%)]' },
+                        { value: 'pink' as CustomTextColor, label: 'Pink', color: 'bg-[hsl(330,81%,60%)]' },
+                      ]).map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setCustomTextColor(option.value)}
+                          className={`w-7 h-7 rounded-full ${option.color} ${option.border ? 'border border-border' : ''} transition-all ${
+                            customTextColor === option.value
+                              ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
+                              : 'hover:scale-105'
+                          }`}
+                          title={option.label}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
