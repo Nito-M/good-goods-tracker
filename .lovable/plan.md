@@ -1,36 +1,48 @@
 
-# Add Designer Background Themes
+
+# Custom Background Image
 
 ## Overview
-Add new visually striking background theme options beyond the current solid-color choices. These will be full theme presets that combine a background color with matching accent/button colors for a cohesive look.
+Allow users to upload a custom photo/image and use it as their app background, in addition to the existing solid-color and designer theme options.
 
-## New Theme Options
+## How It Works
 
-1. **Black & Gold** -- Deep black background with warm gold primary buttons and accents
-2. **Midnight Blue & Silver** -- Very dark navy background with cool silver/steel blue buttons
-3. **Dark Emerald & Copper** -- Deep forest green background with warm copper/bronze accents
-4. **Charcoal & Rose** -- Dark charcoal grey with soft rose/pink accent buttons
+1. A new "Custom Image" option appears at the end of the background theme picker in Settings
+2. Clicking it opens a file upload dialog where the user selects an image
+3. The image is uploaded to cloud storage and stored in the user's profile
+4. The image is applied as a full-screen background using CSS `background-image` on the root element
+5. A subtle dark overlay ensures text remains readable on top of the image
 
 ## Changes Required
 
-### 1. Update the BackgroundTheme type (`src/hooks/useColorTheme.ts`)
-- Extend the `BackgroundTheme` type to include new values: `'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose'`
-- Add the new class names to the remove list in the useEffect that manages background classes
+### 1. Storage bucket
+- Create a new `backgrounds` storage bucket (private) with RLS policies so users can upload/view/delete their own background images
 
-### 2. Add CSS theme definitions (`src/index.css`)
-- Add light-mode versions for each new theme (these are inherently dark, so light and dark will be similar)
-- Add dark-mode versions for each
-- Each theme sets `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--popover-foreground`, `--muted`, `--muted-foreground`, `--accent`, `--accent-foreground`, `--border`, `--input`, plus overrides for `--primary`, `--primary-foreground`, `--ring`, and sidebar variables to match the accent color
+### 2. Database
+- Add a `background_image_url` column to the `profiles` table to store the user's custom background image path
 
-Example color palettes:
-- **Black & Gold**: Background #0a0a0a, cards #141414, primary gold at HSL(43, 90%, 55%), borders dark grey
-- **Midnight Silver**: Background HSL(220, 30%, 6%), primary steel HSL(210, 20%, 70%)
-- **Dark Emerald & Copper**: Background HSL(160, 30%, 6%), primary copper HSL(25, 70%, 55%)
-- **Charcoal & Rose**: Background HSL(0, 0%, 10%), primary rose HSL(340, 65%, 60%)
+### 3. Update the color theme hook (`src/hooks/useColorTheme.ts`)
+- Add `'custom'` to the `BackgroundTheme` type
+- Load the `background_image_url` from the profile
+- When `backgroundTheme === 'custom'`, apply the image as a CSS background on `document.documentElement` using inline styles
+- When switching away from custom, remove the background image style
 
-### 3. Update Settings page (`src/pages/Settings.tsx`)
-- Add the 4 new options to `backgroundThemeOptions` array with descriptive labels and representative swatch colors
-- The swatches will show a split-color circle or a gradient-like visual to hint at the dual-tone nature
+### 4. Update Settings page (`src/pages/Settings.tsx`)
+- Add a "Custom Image" button at the end of the background options (with an upload icon instead of a color swatch)
+- When clicked, open a file input to select an image
+- Upload the image to the `backgrounds` bucket
+- Save the signed URL to the profile and set the background theme to `'custom'`
+- Show a small preview thumbnail when a custom background is active
 
-### 4. Update database column (if needed)
-- The `background_theme` column likely stores a text value -- the new string values will work without schema changes as long as it's a text/varchar column
+### 5. CSS updates (`src/index.css`)
+- Add a `.bg-custom` class that applies a dark-themed color scheme (similar to `bg-black`) so text is readable over any background image
+- The actual image is applied via inline styles from JS
+
+### 6. Update profile hook (`src/hooks/useProfile.ts`)
+- Add `backgroundImageUrl` to the Profile interface and the fetch/update logic
+
+## User Experience
+- The custom image covers the full viewport, stays fixed while scrolling, and has a semi-transparent dark overlay for readability
+- Cards and sidebars use their normal semi-transparent backgrounds on top
+- Users can switch back to any preset theme at any time, which removes the custom image
+
