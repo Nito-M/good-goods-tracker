@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,8 @@ import { useItemImages } from '@/hooks/useItemImages';
 import { useItemTags } from '@/hooks/useItemTags';
 import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
+import { useItemLocationQuantities } from '@/hooks/useItemLocationQuantities';
+import { useWarehouses } from '@/hooks/useWarehouses';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 
@@ -51,6 +53,8 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
   const { selectedTagIds } = useItemTags(item?.id);
   const { tagCategories } = useTagCategories();
   const { tags, getTagsByCategory } = useTags();
+  const { locations: itemLocations } = useItemLocationQuantities(item?.id);
+  const { warehouses } = useWarehouses();
 
   const getVendorName = (vendorId: string) => {
     return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
@@ -338,7 +342,49 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
             </CardContent>
           </Card>
 
-          {/* Physical Details Card */}
+          {/* Stock by Location */}
+          {itemLocations.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Stock by Location
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {itemLocations.map((loc) => {
+                  const warehouse = warehouses.find(w => w.id === loc.warehouse_id);
+                  return (
+                    <div key={loc.id} className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-card-foreground">
+                        {warehouse?.name || 'Unknown Location'}
+                      </span>
+                      <Badge variant="secondary">
+                        {loc.quantity} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                      </Badge>
+                    </div>
+                  );
+                })}
+                {(() => {
+                  const assignedTotal = itemLocations.reduce((sum, loc) => sum + loc.quantity, 0);
+                  const unassigned = item.quantity - assignedTotal;
+                  if (unassigned > 0) {
+                    return (
+                      <div className="flex items-center justify-between text-muted-foreground">
+                        <span className="text-sm">Unassigned</span>
+                        <Badge variant="outline">
+                          {unassigned} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                        </Badge>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </CardContent>
+            </Card>
+          )}
+
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Physical Details</CardTitle>
