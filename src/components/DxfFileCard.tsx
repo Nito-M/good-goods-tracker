@@ -133,7 +133,13 @@ export function DxfFileCard({ itemId, dxfUrl, onDxfUrlChange }: DxfFileCardProps
               </Button>
             </div>
           ) : (
-            <div className="text-sm text-muted-foreground py-2">No DXF available.</div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">No DXF available.</span>
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+                Upload DXF File
+              </Button>
+            </div>
           )}
           <input
             ref={fileInputRef}
