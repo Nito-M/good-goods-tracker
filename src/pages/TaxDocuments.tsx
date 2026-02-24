@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
-import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2 } from "lucide-react";
+import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,12 @@ interface TaxDocument {
   storagePath?: string;
   fileName?: string;
   saleId?: string;
+  // Extracted fields
+  extractedVendor?: string | null;
+  extractedDate?: string | null;
+  extractedTotal?: number | null;
+  extractedGst?: number | null;
+  extractionStatus?: string | null;
 }
 
 export function TaxDocuments() {
@@ -39,6 +45,7 @@ export function TaxDocuments() {
   const [uploading, setUploading] = useState(false);
   const [isDroppingFiles, setIsDroppingFiles] = useState(false);
   const [loadingUploads, setLoadingUploads] = useState(true);
+  const [extractingIds, setExtractingIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loading = poLoading || salesLoading;
@@ -56,7 +63,6 @@ export function TaxDocuments() {
     if (error) {
       console.error("Error fetching tax docs:", error);
     } else if (data) {
-      // Generate signed URLs for each document
       const docs: TaxDocument[] = [];
       for (const row of data) {
         const { data: signedData } = await supabase.storage
@@ -72,6 +78,11 @@ export function TaxDocuments() {
           url: signedData?.signedUrl || "",
           fileName: row.file_name || undefined,
           storagePath: row.file_url,
+          extractedVendor: (row as any).extracted_vendor,
+          extractedDate: (row as any).extracted_date,
+          extractedTotal: (row as any).extracted_total,
+          extractedGst: (row as any).extracted_gst,
+          extractionStatus: (row as any).extraction_status,
         });
       }
       setUploadedDocs(docs);
@@ -83,6 +94,47 @@ export function TaxDocuments() {
   useState(() => {
     fetchUploadedDocs();
   });
+
+  // Extract document data using AI
+  const extractDocument = async (docId: string) => {
+    setExtractingIds(prev => new Set(prev).add(docId));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Please sign in", variant: "destructive" });
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-tax-document`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ documentId: docId }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "Extraction failed" }));
+        toast({ title: "Extraction failed", description: err.error, variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Data extracted successfully" });
+      await fetchUploadedDocs();
+    } catch (e) {
+      toast({ title: "Extraction error", variant: "destructive" });
+    } finally {
+      setExtractingIds(prev => {
+        const next = new Set(prev);
+        next.delete(docId);
+        return next;
+      });
+    }
+  };
 
   // Upload files
   const uploadFiles = async (files: File[]) => {
@@ -303,7 +355,14 @@ export function TaxDocuments() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredUploads.map(doc => (
-                  <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} onDelete={handleDeleteUploaded} />
+                  <DocumentCard
+                    key={doc.id}
+                    doc={doc}
+                    onOpen={handleOpenFile}
+                    onDelete={handleDeleteUploaded}
+                    onExtract={extractDocument}
+                    isExtracting={extractingIds.has(doc.id)}
+                  />
                 ))}
               </div>
             )}
@@ -353,11 +412,15 @@ function DocumentCard({
   doc,
   onOpen,
   onDelete,
+  onExtract,
+  isExtracting,
   isInvoice,
 }: {
   doc: TaxDocument;
   onOpen: (doc: TaxDocument) => void;
   onDelete?: (doc: TaxDocument) => void;
+  onExtract?: (docId: string) => void;
+  isExtracting?: boolean;
   isInvoice?: boolean;
 }) {
   const isPdf = doc.fileType === "pdf";
@@ -370,6 +433,9 @@ function DocumentCard({
     : doc.type === "uploaded"
     ? (isPdf ? "PDF" : "Image")
     : "Invoice";
+
+  const hasExtractedData = doc.extractionStatus === "done" && (doc.extractedVendor || doc.extractedTotal != null);
+  const canExtract = doc.type === "uploaded" && doc.extractionStatus !== "extracting" && !isExtracting;
 
   return (
     <Card
@@ -386,8 +452,10 @@ function DocumentCard({
             )}
             <div className="min-w-0">
               <p className="font-medium text-sm truncate">{doc.refNumber}</p>
-              {doc.vendorName && (
-                <p className="text-xs text-muted-foreground truncate">{doc.vendorName}</p>
+              {(doc.extractedVendor || doc.vendorName) && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {doc.extractedVendor || doc.vendorName}
+                </p>
               )}
             </div>
           </div>
@@ -406,11 +474,60 @@ function DocumentCard({
           </div>
         </div>
 
+        {/* Extracted data display */}
+        {hasExtractedData && (
+          <div className="space-y-1 rounded-md bg-muted/50 p-2">
+            {doc.extractedDate && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Date</span>
+                <span className="font-medium">{format(new Date(doc.extractedDate), "MMM d, yyyy")}</span>
+              </div>
+            )}
+            {doc.extractedVendor && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Vendor</span>
+                <span className="font-medium truncate max-w-[140px]">{doc.extractedVendor}</span>
+              </div>
+            )}
+            {doc.extractedTotal != null && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-medium">${Number(doc.extractedTotal).toFixed(2)}</span>
+              </div>
+            )}
+            {doc.extractedGst != null && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">GST</span>
+                <span className="font-medium">${Number(doc.extractedGst).toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{format(doc.date, "MMM d, yyyy")}</span>
-          {doc.fileName && (
-            <span className="truncate max-w-[120px]">{doc.fileName}</span>
-          )}
+          <div className="flex items-center gap-1">
+            {canExtract && onExtract && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs gap-1"
+                onClick={(e) => { e.stopPropagation(); onExtract(doc.id); }}
+              >
+                <Sparkles className="h-3 w-3" />
+                Extract
+              </Button>
+            )}
+            {isExtracting && (
+              <span className="flex items-center gap-1 text-xs text-primary">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Extracting...
+              </span>
+            )}
+            {doc.extractionStatus === "failed" && (
+              <Badge variant="destructive" className="text-[10px] h-5">Failed</Badge>
+            )}
+          </div>
         </div>
 
         {isInvoice && (
