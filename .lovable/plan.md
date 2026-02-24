@@ -1,37 +1,44 @@
 
 
-# Add Requester Management to the Requests Page (Admin-Only)
+# Merge Locations into Items Page
 
-## Overview
-Add a collapsible "Manage Requesters" section at the top of the Requests page that only admins can see. This will allow admins to add, delete, and link requester names to users -- all without leaving the Requests page.
+## What Changes
 
-## What You'll See
-- Admins will see a "Manage Requesters" button/section at the top of the Requests page
-- Clicking it expands a panel showing all requester names for the organization
-- Admins can add new requester names, delete existing ones, and link/unlink them to users
-- Regular (non-admin) users will not see this section at all
+The separate **Locations** (`/warehouses`) page will be removed. Instead, when you navigate to **Items**, you'll first see a row of location buttons (including "All") at the top. Selecting a location filters the items shown below. You can also manage locations (add/edit/delete) right from the Items page.
+
+## How It Will Work
+
+1. At the top of the Items page, below the header, a horizontal row of clickable location chips/buttons appears:
+   - **All** (selected by default) -- shows every item
+   - One button per location (e.g. "Main Warehouse", "Shop Floor")
+   - A **+ Add Location** button at the end (with edit/delete options on each location)
+
+2. Clicking a location filters items to only those assigned to that location (using the existing `warehouse` URL parameter)
+
+3. The existing warehouse filter dropdown in `SearchFilter` will be removed since location selection is now the primary UI
+
+4. The `/warehouses` route and sidebar link will be removed
+
+---
 
 ## Technical Details
 
-### 1. Create a new `RequestersManager` component (`src/components/RequestersManager.tsx`)
-- A collapsible card/section using the existing Collapsible UI component
-- Displays a list of all `org_requesters` for the user's organization(s)
-- Each requester row shows the name and linked user (if any)
-- "Add Requester" button opens a small inline form or dialog to insert a new name into `org_requesters`
-- Delete button removes a requester from `org_requesters`
-- A dropdown to link/unlink a requester to an org member (using the same logic as `UsersSettings.tsx` `handleLinkRequester`)
+### 1. Update `Items` page (`src/pages/Items.tsx`)
+- Import `useWarehouses` hook
+- Add a location selector bar above the search/filter area with "All" + each warehouse as a button
+- Include inline add/edit/delete location functionality (reuse the dialog pattern from the current `Warehouses.tsx`)
+- Remove the `warehouseFilter` / `warehouseOptions` props from `SearchFilter` since location is selected above
+- Filter items by `warehouseId` matching the selected location (or show all)
 
-### 2. Create a `useOrgRequesters` hook (`src/hooks/useOrgRequesters.ts`)
-- Fetches all `org_requesters` for the user's organization(s)
-- Provides `addRequester(name)`, `deleteRequester(id)`, `linkRequester(id, userId)`, `unlinkRequester(id)` functions
-- Fetches org members (with display names) for the linking dropdown
-- Reuses the existing `organization_members` and `org_requesters` tables (no database changes needed)
+### 2. Remove `Warehouses` page
+- Delete `src/pages/Warehouses.tsx` (or leave unused)
+- Remove the `/warehouses` route from `src/App.tsx`
+- Remove the "Locations" sidebar entry from `src/components/AppSidebar.tsx`
 
-### 3. Update the Requests page (`src/pages/Requests.tsx`)
-- Import and render `RequestersManager` above the search bar
-- Only show it when `isAdminUser` is true (from `useLinkedRequester`)
-- Pass the `allOrgRequesterNames` refresh callback so adding/removing requesters updates the requester name dropdowns in the Add/Edit Request dialogs
+### 3. Update `SearchFilter` component (`src/components/SearchFilter.tsx`)
+- Remove the warehouse filter dropdown props (they become optional/removed) since location is handled at a higher level in the Items page
 
 ### 4. No database changes needed
-- The `org_requesters` table already exists with the correct schema (`id`, `name`, `organization_id`, `linked_user_id`)
-- Existing RLS policies on `org_requesters` already allow org members to read and org admins to manage
+- The `warehouses` table and `item_location_quantities` table remain unchanged
+- Filtering uses the existing `warehouseId` field on inventory items
+
