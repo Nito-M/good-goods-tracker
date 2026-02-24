@@ -1,14 +1,40 @@
 import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { InventoryTable } from '@/components/InventoryTable';
 import { SearchFilter } from '@/components/SearchFilter';
 import { InventoryItem } from '@/types/inventory';
 import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
 import { useBulkItemTags } from '@/hooks/useItemTags';
-import { useWarehouses } from '@/hooks/useWarehouses';
+import { useWarehouses, Warehouse } from '@/hooks/useWarehouses';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ItemsProps {
   items: InventoryItem[];
@@ -35,12 +61,19 @@ export const Items = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const [tagFilter, setTagFilter] = useState('all');
   const warehouseFilter = searchParams.get('warehouse') || 'all';
-  
+
   const { tagCategories } = useTagCategories();
   const { tags } = useTags();
-  const { warehouses } = useWarehouses();
+  const { warehouses, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
-  const { getTagsForItem, itemTagsMap } = useBulkItemTags(itemIds);
+  const { itemTagsMap } = useBulkItemTags(itemIds);
+
+  // Location management state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [locName, setLocName] = useState('');
+  const [locDesc, setLocDesc] = useState('');
 
   const setWarehouseFilter = (value: string) => {
     if (value === 'all') {
@@ -49,6 +82,41 @@ export const Items = ({
       searchParams.set('warehouse', value);
     }
     setSearchParams(searchParams);
+  };
+
+  const openAddLocation = () => {
+    setEditingWarehouse(null);
+    setLocName('');
+    setLocDesc('');
+    setDialogOpen(true);
+  };
+
+  const openEditLocation = (w: Warehouse) => {
+    setEditingWarehouse(w);
+    setLocName(w.name);
+    setLocDesc(w.description || '');
+    setDialogOpen(true);
+  };
+
+  const handleSaveLocation = async () => {
+    if (!locName.trim()) return;
+    if (editingWarehouse) {
+      await updateWarehouse(editingWarehouse.id, locName.trim(), locDesc.trim());
+    } else {
+      await addWarehouse(locName.trim(), locDesc.trim());
+    }
+    setDialogOpen(false);
+  };
+
+  const handleDeleteLocation = async () => {
+    if (deleteId) {
+      // If we're viewing the deleted location, reset to all
+      if (warehouseFilter === deleteId) {
+        setWarehouseFilter('all');
+      }
+      await deleteWarehouse(deleteId);
+      setDeleteId(null);
+    }
   };
 
   // Build tag options for filter dropdown
@@ -78,11 +146,6 @@ export const Items = ({
     return result;
   }, [items, tagFilter, itemTagsMap, warehouseFilter]);
 
-  const warehouseOptions = useMemo(() =>
-    warehouses.map((w) => ({ id: w.id, name: w.name })),
-    [warehouses]
-  );
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -102,6 +165,58 @@ export const Items = ({
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Location selector bar */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <Button
+            variant={warehouseFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setWarehouseFilter('all')}
+          >
+            All
+          </Button>
+          {warehouses.map((w) => (
+            <DropdownMenu key={w.id}>
+              <div className="flex items-center">
+                <Button
+                  variant={warehouseFilter === w.id ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setWarehouseFilter(w.id)}
+                  className="rounded-r-none"
+                >
+                  {w.name}
+                </Button>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant={warehouseFilter === w.id ? 'default' : 'outline'}
+                    size="sm"
+                    className="rounded-l-none border-l-0 px-1.5"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </div>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => openEditLocation(w)}>
+                  <Pencil className="h-3.5 w-3.5 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteId(w.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ))}
+          <Button variant="outline" size="sm" onClick={openAddLocation} className="gap-1">
+            <Plus className="h-3.5 w-3.5" />
+            Add Location
+          </Button>
+        </div>
+
         {/* Search and Filter */}
         <div className="mb-6">
           <SearchFilter
@@ -113,9 +228,6 @@ export const Items = ({
             tagFilter={tagFilter}
             onTagChange={setTagFilter}
             tagOptions={tagOptions}
-            warehouseFilter={warehouseFilter}
-            onWarehouseChange={setWarehouseFilter}
-            warehouseOptions={warehouseOptions}
           />
         </div>
 
@@ -131,6 +243,59 @@ export const Items = ({
           />
         )}
       </main>
+
+      {/* Add/Edit Location Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingWarehouse ? 'Edit Location' : 'Add Location'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="loc-name">Name</Label>
+              <Input
+                id="loc-name"
+                value={locName}
+                onChange={(e) => setLocName(e.target.value)}
+                placeholder="e.g. Main Warehouse"
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="loc-desc">Description (optional)</Label>
+              <Textarea
+                id="loc-desc"
+                value={locDesc}
+                onChange={(e) => setLocDesc(e.target.value)}
+                placeholder="Notes about this location..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveLocation} disabled={!locName.trim()}>
+              {editingWarehouse ? 'Save' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Location</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the location. Items assigned to it will become unassigned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteLocation}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
