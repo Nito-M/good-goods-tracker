@@ -46,6 +46,7 @@ export function TaxDocuments() {
   const [isDroppingFiles, setIsDroppingFiles] = useState(false);
   const [loadingUploads, setLoadingUploads] = useState(true);
   const [extractingIds, setExtractingIds] = useState<Set<string>>(new Set());
+  const [poExtractedData, setPoExtractedData] = useState<Record<string, { vendor?: string | null; date?: string | null; total?: number | null; gst?: number | null }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loading = poLoading || salesLoading;
@@ -96,7 +97,7 @@ export function TaxDocuments() {
   });
 
   // Extract document data using AI
-  const extractDocument = async (docId: string) => {
+  const extractDocument = async (docId: string, signedUrl?: string, fileName?: string) => {
     setExtractingIds(prev => new Set(prev).add(docId));
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -104,6 +105,10 @@ export function TaxDocuments() {
         toast({ title: "Please sign in", variant: "destructive" });
         return;
       }
+
+      const bodyPayload: any = signedUrl
+        ? { signedUrl, fileName }
+        : { documentId: docId };
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-tax-document`,
@@ -113,7 +118,7 @@ export function TaxDocuments() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ documentId: docId }),
+          body: JSON.stringify(bodyPayload),
         }
       );
 
@@ -123,8 +128,23 @@ export function TaxDocuments() {
         return;
       }
 
+      const result = await response.json();
       toast({ title: "Data extracted successfully" });
-      await fetchUploadedDocs();
+
+      if (signedUrl && result.extracted) {
+        // PO doc - store results in local state
+        setPoExtractedData(prev => ({
+          ...prev,
+          [docId]: {
+            vendor: result.extracted.extracted_vendor,
+            date: result.extracted.extracted_date,
+            total: result.extracted.extracted_total,
+            gst: result.extracted.extracted_gst,
+          },
+        }));
+      } else {
+        await fetchUploadedDocs();
+      }
     } catch (e) {
       toast({ title: "Extraction error", variant: "destructive" });
     } finally {
@@ -376,7 +396,16 @@ export function TaxDocuments() {
                   />
                 ))}
                 {poDocuments.map(doc => (
-                  <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} />
+                  <DocumentCard key={doc.id} doc={{
+                    ...doc,
+                    ...(poExtractedData[doc.id] ? {
+                      extractedVendor: poExtractedData[doc.id].vendor,
+                      extractedDate: poExtractedData[doc.id].date,
+                      extractedTotal: poExtractedData[doc.id].total,
+                      extractedGst: poExtractedData[doc.id].gst,
+                      extractionStatus: "done",
+                    } : {}),
+                  }} onOpen={handleOpenFile} onExtract={(id) => extractDocument(id, doc.url, doc.fileName)} isExtracting={extractingIds.has(doc.id)} />
                 ))}
               </div>
             )}
@@ -411,7 +440,16 @@ export function TaxDocuments() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {poDocuments.map(doc => (
-                  <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} />
+                  <DocumentCard key={doc.id} doc={{
+                    ...doc,
+                    ...(poExtractedData[doc.id] ? {
+                      extractedVendor: poExtractedData[doc.id].vendor,
+                      extractedDate: poExtractedData[doc.id].date,
+                      extractedTotal: poExtractedData[doc.id].total,
+                      extractedGst: poExtractedData[doc.id].gst,
+                      extractionStatus: "done",
+                    } : {}),
+                  }} onOpen={handleOpenFile} onExtract={(id) => extractDocument(id, doc.url, doc.fileName)} isExtracting={extractingIds.has(doc.id)} />
                 ))}
               </div>
             )}
@@ -470,7 +508,7 @@ function DocumentCard({
     : "Invoice";
 
   const hasExtractedData = doc.extractionStatus === "done" && (doc.extractedVendor || doc.extractedTotal != null);
-  const canExtract = doc.type === "uploaded" && doc.extractionStatus !== "extracting" && !isExtracting;
+  const canExtract = (doc.type === "uploaded" || doc.type === "po-pdf" || doc.type === "po-image" || doc.type === "po-attachment") && doc.extractionStatus !== "extracting" && !isExtracting;
 
   return (
     <Card
