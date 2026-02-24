@@ -1925,6 +1925,39 @@ export type Database = {
           },
         ]
       }
+      tax_documents: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_type: string
+          file_url: string
+          id: string
+          notes: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_type?: string
+          file_url: string
+          id?: string
+          notes?: string | null
+          user_id: string
+          year?: number
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       user_page_permissions: {
         Row: {
           created_at: string
