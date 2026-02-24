@@ -34,7 +34,6 @@ const menuItems = [
   { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
   { title: "Parts Library", url: "/parts", icon: Puzzle, pageKey: "parts" },
   { title: "Tax Documents", url: "/tax-documents", icon: FileText, pageKey: "tax-documents" },
-  { title: "Settings", url: "/settings", icon: Settings, pageKey: "settings" },
 ];
 
 export function AppSidebar() {
@@ -246,6 +245,22 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
+        {isPageAllowed('settings') && (
+          <SidebarMenuButton
+            asChild
+            isActive={isActive("/settings")}
+            tooltip="Settings"
+          >
+            <NavLink
+              to="/settings"
+              className="flex items-center gap-3"
+              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
+            >
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </NavLink>
+          </SidebarMenuButton>
+        )}
         <Button
           variant="ghost"
           size="sm"
