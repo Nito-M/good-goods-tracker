@@ -357,7 +357,7 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
           </Card>
 
           {/* Stock by Location */}
-          {itemLocations.length > 0 && (
+          {warehouses.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -366,15 +366,16 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {itemLocations.map((loc) => {
-                  const warehouse = warehouses.find(w => w.id === loc.warehouse_id);
+                {warehouses.map((warehouse) => {
+                  const loc = itemLocations.find(l => l.warehouse_id === warehouse.id);
+                  const qty = loc ? loc.quantity : 0;
                   return (
-                    <div key={loc.id} className="flex items-center justify-between">
+                    <div key={warehouse.id} className="flex items-center justify-between">
                       <span className="text-sm font-medium text-card-foreground">
-                        {warehouse?.name || 'Unknown Location'}
+                        {warehouse.name}
                       </span>
-                      <Badge variant="secondary">
-                        {loc.quantity} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                      <Badge variant={qty > 0 ? 'secondary' : 'outline'}>
+                        {qty} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                       </Badge>
                     </div>
                   );
