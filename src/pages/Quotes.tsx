@@ -152,7 +152,7 @@ export function Quotes() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
-  const [taxRate, setTaxRate] = useState<number | null>(null);
+  const [taxRate, setTaxRate] = useState<number | null>(5);
   const [discountRate, setDiscountRate] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
