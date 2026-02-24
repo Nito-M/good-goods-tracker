@@ -1,30 +1,21 @@
 
 
-## Add CSV Import Button to Items & Inventory Page
+## Make Assembly Sidebar List Scroll Independently
 
-Add an "Import CSV" button to the Items page header (next to "Add Item"), reusing the same pattern as the Assembly CSV import but adapted for inventory items.
+The assembly list (left panel) currently scrolls with the entire page. The fix ensures only the list of assemblies scrolls, keeping the header/breadcrumb and search bar fixed in place.
 
-### What Changes
+### Root Cause
 
-**1. New Component: `src/components/ItemCsvImport.tsx`**
-- Clone the pattern from `AssemblyCsvImport.tsx` (file input, preview dialog, confirm flow)
-- CSV format: two columns -- **Name** (col 1) and **Description** (col 2), same as the assembly CSV
-- Uses the same robust `parseCSVRows` parser that handles multi-line quoted fields
-- On confirm, calls `addItem` for each row with sensible defaults for required fields (quantity: 0, price: 0, cost: 0, category: "Other", sku: "", etc.)
-- Shows preview dialog with parsed name/description before importing
-- Props: `onComplete` callback (to refresh item list) and `addItem` function
+The `<main>` element in `AppLayout.tsx` has `overflow-auto`, which creates a page-level scrollbar. The Assemblies page sets `h-full` on its container, but the main's own scrolling prevents the inner flex layout from properly constraining the sidebar height.
 
-**2. Update `src/pages/Items.tsx`**
-- Add `addItem` to the `ItemsProps` interface
-- Import and render `ItemCsvImport` in the header, to the left of the "Add Item" button
-- Pass `addItem` and a no-op `onComplete` (items auto-update via state)
+### Changes
 
-**3. Update `src/App.tsx`**
-- Pass `addItem` as a prop to the `<Items>` component (line ~102)
+**`src/components/AppLayout.tsx`** (line 97)
+- Change main from `overflow-auto` to `overflow-hidden` so child pages fully control their own scrolling. This forces each page to manage its own scroll areas rather than relying on page-level scroll.
 
-### Technical Details
+This single change lets the existing flex layout in `Assemblies.tsx` work as intended -- the sidebar's list area (`flex-1 overflow-auto` on line 442) will scroll independently while the breadcrumb, search bar, and right panel remain fixed.
 
-- Each imported item will be created with default values for all required fields (0 quantity, 0 price, empty dimensions, etc.) since the CSV only provides name and description
-- The same character-by-character CSV parser handles multi-line quoted descriptions correctly
-- Items will sync offline just like manually added items since they use the existing `addItem` function
+### Impact on Other Pages
+
+Pages that rely on page-level scrolling will need their own scroll wrapper. Most pages already have their own `overflow-auto` containers, but if any page breaks, it can be fixed by adding `overflow-auto` to that page's root element.
 
