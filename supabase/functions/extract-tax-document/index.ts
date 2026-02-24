@@ -90,34 +90,30 @@ serve(async (req) => {
 
 Return ONLY a JSON object with these 4 fields. Use null for any field you cannot determine.`;
 
-    let messages: any[];
-
-    if (isImage) {
-      // For images, use vision capability
-      messages = [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Extract data from this receipt/invoice image." },
-            { type: "image_url", image_url: { url: fileUrl } },
-          ],
-        },
-      ];
-    } else {
-      // For PDFs, download and send as text description
-      // Since we can't directly send PDFs to vision, we'll try with the URL
-      messages = [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Extract data from this receipt/invoice document." },
-            { type: "image_url", image_url: { url: fileUrl } },
-          ],
-        },
-      ];
+    // Download the file and convert to base64 data URL
+    const fileResponse = await fetch(fileUrl);
+    if (!fileResponse.ok) {
+      await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
+      return new Response(JSON.stringify({ error: "Could not download file" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
+    const fileBytes = new Uint8Array(await fileResponse.arrayBuffer());
+    const base64 = btoa(String.fromCharCode(...fileBytes));
+    const mimeType = isImage ? (doc.file_name?.endsWith(".png") ? "image/png" : "image/jpeg") : "application/pdf";
+    const dataUrl = `data:${mimeType};base64,${base64}`;
+
+    const messages: any[] = [
+      { role: "system", content: systemPrompt },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Extract data from this receipt/invoice." },
+          { type: "image_url", image_url: { url: dataUrl } },
+        ],
+      },
+    ];
 
     // Call Lovable AI with tool calling for structured output
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
