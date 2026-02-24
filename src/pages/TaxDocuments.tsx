@@ -27,6 +27,7 @@ interface TaxDocument {
   fileName?: string;
   saleId?: string;
   bankCardId?: string | null;
+  purchaseOrderId?: string;
   // Extracted fields
   extractedVendor?: string | null;
   extractedDate?: string | null;
@@ -50,6 +51,7 @@ export function TaxDocuments() {
   const [loadingUploads, setLoadingUploads] = useState(true);
   const [extractingIds, setExtractingIds] = useState<Set<string>>(new Set());
   const [poExtractedData, setPoExtractedData] = useState<Record<string, { vendor?: string | null; date?: string | null; total?: number | null; gst?: number | null }>>({});
+  const [poCardOverrides, setPoCardOverrides] = useState<Record<string, string | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loading = poLoading || salesLoading;
@@ -234,18 +236,33 @@ export function TaxDocuments() {
     toast({ title: "Document deleted" });
   };
 
-  const handleAssignBankCard = async (docId: string, bankCardId: string | null) => {
-    const { error } = await supabase
-      .from("tax_documents")
-      .update({ bank_card_id: bankCardId } as any)
-      .eq("id", docId);
-    if (error) {
-      toast({ title: "Failed to update", description: error.message, variant: "destructive" });
-      return;
+  const handleAssignBankCard = async (docId: string, bankCardId: string | null, purchaseOrderId?: string) => {
+    if (purchaseOrderId) {
+      // PO doc — update purchase_orders table
+      const { error } = await supabase
+        .from("purchase_orders")
+        .update({ bank_card_id: bankCardId })
+        .eq("id", purchaseOrderId);
+      if (error) {
+        toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+        return;
+      }
+      // Force re-render by updating local PO card state
+      setPoCardOverrides(prev => ({ ...prev, [purchaseOrderId]: bankCardId }));
+    } else {
+      // Uploaded doc — update tax_documents table
+      const { error } = await supabase
+        .from("tax_documents")
+        .update({ bank_card_id: bankCardId } as any)
+        .eq("id", docId);
+      if (error) {
+        toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+        return;
+      }
+      setUploadedDocs(prev =>
+        prev.map(d => d.id === docId ? { ...d, bankCardId } : d)
+      );
     }
-    setUploadedDocs(prev =>
-      prev.map(d => d.id === docId ? { ...d, bankCardId } : d)
-    );
   };
 
   // Build year options from data
@@ -270,14 +287,14 @@ export function TaxDocuments() {
       const ref = po.poNumber || "PO-????";
 
       if (po.pdfUrl) {
-        poDocs.push({ id: `${po.id}-pdf`, type: "po-pdf", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "pdf", url: po.pdfUrl, fileName: `${ref}.pdf` });
+        poDocs.push({ id: `${po.id}-pdf`, type: "po-pdf", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "pdf", url: po.pdfUrl, fileName: `${ref}.pdf`, bankCardId: po.bankCardId, purchaseOrderId: po.id });
       }
       if (po.imageUrl) {
-        poDocs.push({ id: `${po.id}-img`, type: "po-image", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "image", url: po.imageUrl, fileName: `${ref}-receipt` });
+        poDocs.push({ id: `${po.id}-img`, type: "po-image", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "image", url: po.imageUrl, fileName: `${ref}-receipt`, bankCardId: po.bankCardId, purchaseOrderId: po.id });
       }
       if (po.attachments) {
         for (const att of po.attachments) {
-          poDocs.push({ id: att.id, type: "po-attachment", refNumber: ref, vendorName: po.vendorName || null, date: new Date(att.createdAt), fileType: att.fileType, url: att.url, fileName: att.fileName || `${ref}-attachment` });
+          poDocs.push({ id: att.id, type: "po-attachment", refNumber: ref, vendorName: po.vendorName || null, date: new Date(att.createdAt), fileType: att.fileType, url: att.url, fileName: att.fileName || `${ref}-attachment`, bankCardId: po.bankCardId, purchaseOrderId: po.id });
         }
       }
     }
@@ -415,9 +432,12 @@ export function TaxDocuments() {
                     onAssignCard={handleAssignBankCard}
                   />
                 ))}
-                {poDocuments.map(doc => (
+                {poDocuments.map(doc => {
+                  const cardId = doc.purchaseOrderId && poCardOverrides[doc.purchaseOrderId] !== undefined ? poCardOverrides[doc.purchaseOrderId] : doc.bankCardId;
+                  return (
                   <DocumentCard key={doc.id} doc={{
                     ...doc,
+                    bankCardId: cardId,
                     ...(poExtractedData[doc.id] ? {
                       extractedVendor: poExtractedData[doc.id].vendor,
                       extractedDate: poExtractedData[doc.id].date,
@@ -425,8 +445,9 @@ export function TaxDocuments() {
                       extractedGst: poExtractedData[doc.id].gst,
                       extractionStatus: "done",
                     } : {}),
-                  }} onOpen={handleOpenFile} onExtract={(id) => extractDocument(id, doc.url, doc.fileName)} isExtracting={extractingIds.has(doc.id)} />
-                ))}
+                  }} onOpen={handleOpenFile} onExtract={(id) => extractDocument(id, doc.url, doc.fileName)} isExtracting={extractingIds.has(doc.id)} bankCards={bankCards} onAssignCard={handleAssignBankCard} />
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -461,9 +482,12 @@ export function TaxDocuments() {
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {poDocuments.map(doc => (
+                {poDocuments.map(doc => {
+                  const cardId = doc.purchaseOrderId && poCardOverrides[doc.purchaseOrderId] !== undefined ? poCardOverrides[doc.purchaseOrderId] : doc.bankCardId;
+                  return (
                   <DocumentCard key={doc.id} doc={{
                     ...doc,
+                    bankCardId: cardId,
                     ...(poExtractedData[doc.id] ? {
                       extractedVendor: poExtractedData[doc.id].vendor,
                       extractedDate: poExtractedData[doc.id].date,
@@ -471,8 +495,9 @@ export function TaxDocuments() {
                       extractedGst: poExtractedData[doc.id].gst,
                       extractionStatus: "done",
                     } : {}),
-                  }} onOpen={handleOpenFile} onExtract={(id) => extractDocument(id, doc.url, doc.fileName)} isExtracting={extractingIds.has(doc.id)} />
-                ))}
+                  }} onOpen={handleOpenFile} onExtract={(id) => extractDocument(id, doc.url, doc.fileName)} isExtracting={extractingIds.has(doc.id)} bankCards={bankCards} onAssignCard={handleAssignBankCard} />
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -520,7 +545,7 @@ function DocumentCard({
   isExtracting?: boolean;
   isInvoice?: boolean;
   bankCards?: { id: string; name: string; color: string }[];
-  onAssignCard?: (docId: string, bankCardId: string | null) => void;
+  onAssignCard?: (docId: string, bankCardId: string | null, purchaseOrderId?: string) => void;
 }) {
   const isPdf = doc.fileType === "pdf";
   const typeLabel = doc.type === "po-pdf"
@@ -604,13 +629,13 @@ function DocumentCard({
           </div>
         )}
 
-        {/* Bank card selector for uploaded docs */}
-        {doc.type === "uploaded" && bankCards && onAssignCard && (
+        {/* Bank card selector */}
+        {(doc.type === "uploaded" || doc.type === "po-pdf" || doc.type === "po-image" || doc.type === "po-attachment") && bankCards && onAssignCard && (
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <CreditCard className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <Select
               value={doc.bankCardId || "none"}
-              onValueChange={(val) => onAssignCard(doc.id, val === "none" ? null : val)}
+              onValueChange={(val) => onAssignCard(doc.id, val === "none" ? null : val, doc.purchaseOrderId)}
             >
               <SelectTrigger className="h-7 text-xs flex-1">
                 <SelectValue placeholder="Assign card..." />
@@ -630,13 +655,6 @@ function DocumentCard({
           </div>
         )}
 
-        {/* Assigned card badge for display */}
-        {assignedCard && doc.type !== "uploaded" && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <CreditCard className="h-3 w-3" />
-            <span>{assignedCard.name}</span>
-          </div>
-        )}
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{format(doc.date, "MMM d, yyyy")}</span>
