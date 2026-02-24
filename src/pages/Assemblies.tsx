@@ -410,7 +410,7 @@ export function Assemblies() {
   };
 
   return (
-    <div className="flex h-full overflow-hidden flex-col">
+    <div className="flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3rem)] overflow-hidden flex-col">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 px-4 py-2 border-b bg-card shrink-0">
         <button onClick={() => navigate('/assemblies')} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm">
