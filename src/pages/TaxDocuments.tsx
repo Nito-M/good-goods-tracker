@@ -337,7 +337,7 @@ export function TaxDocuments() {
         <Tabs defaultValue="all">
           <TabsList>
             <TabsTrigger value="all">
-              All ({filteredUploads.length + poDocuments.length})
+              All Costs ({filteredUploads.length + poDocuments.length})
             </TabsTrigger>
             <TabsTrigger value="uploads">
               Uploads ({filteredUploads.length})
