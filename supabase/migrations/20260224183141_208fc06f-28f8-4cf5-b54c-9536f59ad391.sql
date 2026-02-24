@@ -1,0 +1,1 @@
+ALTER TABLE public.tax_documents ADD COLUMN bank_card_id uuid REFERENCES public.bank_cards(id) ON DELETE SET NULL;

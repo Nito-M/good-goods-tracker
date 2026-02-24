@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
 import { useSales } from "@/hooks/useSales";
+import { useBankCards } from "@/hooks/useBankCards";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
-import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2, Sparkles } from "lucide-react";
+import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2, Sparkles, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ interface TaxDocument {
   storagePath?: string;
   fileName?: string;
   saleId?: string;
+  bankCardId?: string | null;
   // Extracted fields
   extractedVendor?: string | null;
   extractedDate?: string | null;
@@ -36,6 +38,7 @@ interface TaxDocument {
 export function TaxDocuments() {
   const { orders, loading: poLoading } = usePurchaseOrders();
   const { sales, loading: salesLoading } = useSales();
+  const { cards: bankCards } = useBankCards();
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
@@ -79,6 +82,7 @@ export function TaxDocuments() {
           url: signedData?.signedUrl || "",
           fileName: row.file_name || undefined,
           storagePath: row.file_url,
+          bankCardId: (row as any).bank_card_id || null,
           extractedVendor: (row as any).extracted_vendor,
           extractedDate: (row as any).extracted_date,
           extractedTotal: (row as any).extracted_total,
@@ -228,6 +232,20 @@ export function TaxDocuments() {
     await supabase.from("tax_documents").delete().eq("id", doc.id);
     setUploadedDocs(prev => prev.filter(d => d.id !== doc.id));
     toast({ title: "Document deleted" });
+  };
+
+  const handleAssignBankCard = async (docId: string, bankCardId: string | null) => {
+    const { error } = await supabase
+      .from("tax_documents")
+      .update({ bank_card_id: bankCardId } as any)
+      .eq("id", docId);
+    if (error) {
+      toast({ title: "Failed to update", description: error.message, variant: "destructive" });
+      return;
+    }
+    setUploadedDocs(prev =>
+      prev.map(d => d.id === docId ? { ...d, bankCardId } : d)
+    );
   };
 
   // Build year options from data
@@ -393,6 +411,8 @@ export function TaxDocuments() {
                     onDelete={handleDeleteUploaded}
                     onExtract={extractDocument}
                     isExtracting={extractingIds.has(doc.id)}
+                    bankCards={bankCards}
+                    onAssignCard={handleAssignBankCard}
                   />
                 ))}
                 {poDocuments.map(doc => (
@@ -426,6 +446,8 @@ export function TaxDocuments() {
                     onDelete={handleDeleteUploaded}
                     onExtract={extractDocument}
                     isExtracting={extractingIds.has(doc.id)}
+                    bankCards={bankCards}
+                    onAssignCard={handleAssignBankCard}
                   />
                 ))}
               </div>
@@ -488,6 +510,8 @@ function DocumentCard({
   onExtract,
   isExtracting,
   isInvoice,
+  bankCards,
+  onAssignCard,
 }: {
   doc: TaxDocument;
   onOpen: (doc: TaxDocument) => void;
@@ -495,6 +519,8 @@ function DocumentCard({
   onExtract?: (docId: string) => void;
   isExtracting?: boolean;
   isInvoice?: boolean;
+  bankCards?: { id: string; name: string; color: string }[];
+  onAssignCard?: (docId: string, bankCardId: string | null) => void;
 }) {
   const isPdf = doc.fileType === "pdf";
   const typeLabel = doc.type === "po-pdf"
@@ -509,6 +535,7 @@ function DocumentCard({
 
   const hasExtractedData = doc.extractionStatus === "done" && (doc.extractedVendor || doc.extractedTotal != null);
   const canExtract = (doc.type === "uploaded" || doc.type === "po-pdf" || doc.type === "po-image" || doc.type === "po-attachment") && doc.extractionStatus !== "extracting" && !isExtracting;
+  const assignedCard = bankCards?.find(c => c.id === doc.bankCardId);
 
   return (
     <Card
@@ -574,6 +601,40 @@ function DocumentCard({
                 <span className="font-medium">${Number(doc.extractedGst).toFixed(2)}</span>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Bank card selector for uploaded docs */}
+        {doc.type === "uploaded" && bankCards && onAssignCard && (
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <CreditCard className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <Select
+              value={doc.bankCardId || "none"}
+              onValueChange={(val) => onAssignCard(doc.id, val === "none" ? null : val)}
+            >
+              <SelectTrigger className="h-7 text-xs flex-1">
+                <SelectValue placeholder="Assign card..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No card</SelectItem>
+                {bankCards.map(card => (
+                  <SelectItem key={card.id} value={card.id}>
+                    <span className="flex items-center gap-2">
+                      <span className={cn("h-2 w-2 rounded-full shrink-0", card.color)} />
+                      {card.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Assigned card badge for display */}
+        {assignedCard && doc.type !== "uploaded" && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CreditCard className="h-3 w-3" />
+            <span>{assignedCard.name}</span>
           </div>
         )}
 
