@@ -312,10 +312,22 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             await uploadImageForItem(newItemId, staged.file, staged.is_primary);
           }
         }
-        // Save vendor prices for new item
-        for (const vp of vendorPrices) {
-          if (vp.price) {
-            await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
+        // Save vendor prices for new item (insert directly since hook has no itemId yet)
+        if (vendorPrices.length > 0 && user) {
+          for (const vp of vendorPrices) {
+            if (vp.price) {
+              const { error } = await supabase.from('item_vendor_prices').insert({
+                item_id: newItemId,
+                vendor_id: vp.vendorId,
+                price: parseFloat(vp.price),
+                link: vp.link || null,
+                vendor_sku: vp.vendorSku || null,
+                user_id: user.id,
+              });
+              if (error) {
+                console.error('Error saving vendor price for new item:', error);
+              }
+            }
           }
         }
         // Fix 2: Insert tags directly with newItemId (hook closure has undefined itemId for new items)
