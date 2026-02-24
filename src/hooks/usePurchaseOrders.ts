@@ -372,6 +372,32 @@ export function usePurchaseOrders() {
           .from('inventory_items')
           .update(updates)
           .eq('id', inventoryItem.id);
+
+        // Update item_location_quantities if a warehouse was selected
+        if (warehouseId) {
+          const { data: existingLocQty } = await supabase
+            .from('item_location_quantities')
+            .select('id, quantity')
+            .eq('item_id', inventoryItem.id)
+            .eq('warehouse_id', warehouseId)
+            .single();
+
+          if (existingLocQty) {
+            await supabase
+              .from('item_location_quantities')
+              .update({ quantity: existingLocQty.quantity + item.quantity })
+              .eq('id', existingLocQty.id);
+          } else {
+            await supabase
+              .from('item_location_quantities')
+              .insert({
+                item_id: inventoryItem.id,
+                warehouse_id: warehouseId,
+                quantity: item.quantity,
+                user_id: user!.id,
+              });
+          }
+        }
       } else {
         // Custom item - create new inventory item
         const { data: newItem, error: createError } = await supabase
@@ -399,9 +425,22 @@ export function usePurchaseOrders() {
 
         if (createError) {
           console.error('Error creating inventory item from PO:', createError);
-        } else if (newItem && order.vendorId && item.unitCost && item.unitCost > 0) {
+        } else if (newItem) {
           // Save vendor price for the newly created item
-          await updateVendorPriceFromPO(user!.id, newItem.id, order.vendorId, item.unitCost);
+          if (order.vendorId && item.unitCost && item.unitCost > 0) {
+            await updateVendorPriceFromPO(user!.id, newItem.id, order.vendorId, item.unitCost);
+          }
+          // Save location quantity for the newly created item
+          if (warehouseId) {
+            await supabase
+              .from('item_location_quantities')
+              .insert({
+                item_id: newItem.id,
+                warehouse_id: warehouseId,
+                quantity: item.quantity,
+                user_id: user!.id,
+              });
+          }
         }
       }
     }
