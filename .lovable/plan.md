@@ -1,28 +1,30 @@
 
 
-## Fix CSV Parser for Multi-Line Descriptions
+## Add CSV Import Button to Items & Inventory Page
 
-The current CSV parser splits the file by newlines first, which breaks when a description cell contains multiple lines (as shown in your spreadsheet). The fix updates the parser to properly handle multi-line quoted fields.
+Add an "Import CSV" button to the Items page header (next to "Add Item"), reusing the same pattern as the Assembly CSV import but adapted for inventory items.
 
 ### What Changes
 
-**File: `src/components/AssemblyCsvImport.tsx`**
+**1. New Component: `src/components/ItemCsvImport.tsx`**
+- Clone the pattern from `AssemblyCsvImport.tsx` (file input, preview dialog, confirm flow)
+- CSV format: two columns -- **Name** (col 1) and **Description** (col 2), same as the assembly CSV
+- Uses the same robust `parseCSVRows` parser that handles multi-line quoted fields
+- On confirm, calls `addItem` for each row with sensible defaults for required fields (quantity: 0, price: 0, cost: 0, category: "Other", sku: "", etc.)
+- Shows preview dialog with parsed name/description before importing
+- Props: `onComplete` callback (to refresh item list) and `addItem` function
 
-- Replace the `parseCSV` function with a version that processes characters one at a time across the entire file, instead of splitting by newlines first.
-- This allows quoted fields (like long descriptions with line breaks) to be read correctly as a single cell value.
-- The two-column format stays the same: column 1 = **Name**, column 2 = **Description**.
+**2. Update `src/pages/Items.tsx`**
+- Add `addItem` to the `ItemsProps` interface
+- Import and render `ItemCsvImport` in the header, to the left of the "Add Item" button
+- Pass `addItem` and a no-op `onComplete` (items auto-update via state)
 
-### Technical Detail
+**3. Update `src/App.tsx`**
+- Pass `addItem` as a prop to the `<Items>` component (line ~102)
 
-The current parser does `text.split(/\r?\n/)` which splits multi-line quoted descriptions into separate rows. The new parser will iterate character-by-character, tracking whether we're inside quotes, and only treating a newline as a row boundary when we're outside of quotes. This correctly handles CSV like:
+### Technical Details
 
-```csv
-Name,Description
-"35' Gooseneck","Year: 2026
-Model: GNRS-310EN1
-Length & Width: 35' x 102""
-GVWR up to: 34,500 lbs"
-```
-
-No other files or database changes needed.
+- Each imported item will be created with default values for all required fields (0 quantity, 0 price, empty dimensions, etc.) since the CSV only provides name and description
+- The same character-by-character CSV parser handles multi-line quoted descriptions correctly
+- Items will sync offline just like manually added items since they use the existing `addItem` function
 
