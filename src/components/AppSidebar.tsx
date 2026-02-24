@@ -33,6 +33,7 @@ const menuItems = [
   { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
   { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
   { title: "Parts Library", url: "/parts", icon: Puzzle, pageKey: "parts" },
+  { title: "Tax Documents", url: "/tax-documents", icon: FileText, pageKey: "tax-documents" },
   { title: "Settings", url: "/settings", icon: Settings, pageKey: "settings" },
 ];
 

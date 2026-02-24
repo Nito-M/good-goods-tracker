@@ -36,6 +36,7 @@ import { PartsAssemblies } from "./pages/PartsAssemblies";
 import { PartsAssembliesDetail } from "./pages/PartsAssembliesDetail";
 import { AddPart } from "./pages/AddPart";
 import { PartDetail } from "./pages/PartDetail";
+import { TaxDocuments } from "./pages/TaxDocuments";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { CompanyDetail } from "./pages/CompanyDetail";
@@ -441,6 +442,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <PartsAssembliesDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tax-documents"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <TaxDocuments />
               </AppLayout>
             </ProtectedRoute>
           }
