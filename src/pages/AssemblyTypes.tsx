@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layers, Plus, ChevronRight, CheckCircle2, Clock, Pencil, Check, X, Trash2 } from 'lucide-react';
+import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,9 +126,12 @@ export function AssemblyTypes() {
                 <p className="text-xs text-muted-foreground">Choose a type to view its assemblies</p>
               </div>
             </div>
-            <Button onClick={() => setCreateOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" /> New Type
-            </Button>
+            <div className="flex items-center gap-2">
+              <AssemblyCsvImport onComplete={refetch} />
+              <Button onClick={() => setCreateOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" /> New Type
+              </Button>
+            </div>
           </div>
         </div>
       </header>
