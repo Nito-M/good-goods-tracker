@@ -562,25 +562,45 @@ export function Settings() {
                         }
                       }}
                     />
-                    <button
-                      onClick={() => backgroundInputRef.current?.click()}
-                      disabled={uploadingBackground}
-                      className={`w-8 h-8 rounded-full border border-border transition-all flex items-center justify-center bg-muted ${
-                        backgroundTheme === 'custom'
-                          ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
-                          : 'hover:scale-105'
-                      }`}
-                      style={
-                        backgroundTheme === 'custom' && backgroundImageUrl
-                          ? { backgroundImage: `url(${backgroundImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                          : undefined
-                      }
-                      title="Custom Image"
-                    >
-                      {!(backgroundTheme === 'custom' && backgroundImageUrl) && (
-                        <ImagePlus className="h-4 w-4 text-muted-foreground" />
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          if (backgroundImageUrl) {
+                            setBackgroundTheme('custom');
+                          } else {
+                            backgroundInputRef.current?.click();
+                          }
+                        }}
+                        disabled={uploadingBackground}
+                        className={`w-8 h-8 rounded-full border border-border transition-all flex items-center justify-center bg-muted ${
+                          backgroundTheme === 'custom'
+                            ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
+                            : 'hover:scale-105'
+                        }`}
+                        style={
+                          backgroundImageUrl
+                            ? { backgroundImage: `url(${backgroundImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                            : undefined
+                        }
+                        title={backgroundImageUrl ? 'Use saved image' : 'Upload custom image'}
+                      >
+                        {!backgroundImageUrl && (
+                          <ImagePlus className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
+                      {backgroundImageUrl && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            backgroundInputRef.current?.click();
+                          }}
+                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 transition-all"
+                          title="Change image"
+                        >
+                          <Upload className="h-2.5 w-2.5" />
+                        </button>
                       )}
-                    </button>
+                    </div>
                   </div>
                 </div>
 
