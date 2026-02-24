@@ -39,61 +39,67 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const { documentId } = await req.json();
-    if (!documentId) {
-      return new Response(JSON.stringify({ error: "documentId required" }), {
+    const body = await req.json();
+    const { documentId, signedUrl, fileName } = body;
+
+    // Two modes: documentId (tax_documents row) or signedUrl (direct extraction, e.g. PO files)
+    const isDirectMode = !!signedUrl;
+
+    if (!documentId && !signedUrl) {
+      return new Response(JSON.stringify({ error: "documentId or signedUrl required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Use service role to read & update
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get document
-    const { data: doc, error: docError } = await supabase
-      .from("tax_documents")
-      .select("*")
-      .eq("id", documentId)
-      .eq("user_id", userId)
-      .single();
+    let fileUrl: string;
+    let isImage: boolean;
+    let docFileName: string | null = fileName || null;
 
-    if (docError || !doc) {
-      return new Response(JSON.stringify({ error: "Document not found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (isDirectMode) {
+      // Direct mode: use the provided signed URL
+      fileUrl = signedUrl;
+      isImage = !fileName?.toLowerCase().endsWith(".pdf");
+    } else {
+      // DB mode: look up tax_documents row
+      const { data: doc, error: docError } = await supabase
+        .from("tax_documents")
+        .select("*")
+        .eq("id", documentId)
+        .eq("user_id", userId)
+        .single();
+
+      if (docError || !doc) {
+        return new Response(JSON.stringify({ error: "Document not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      await supabase.from("tax_documents").update({ extraction_status: "extracting" }).eq("id", documentId);
+
+      const { data: signedData } = await supabase.storage
+        .from("tax-documents")
+        .createSignedUrl(doc.file_url, 600);
+
+      if (!signedData?.signedUrl) {
+        await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
+        return new Response(JSON.stringify({ error: "Could not get file URL" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      fileUrl = signedData.signedUrl;
+      isImage = doc.file_type !== "pdf";
+      docFileName = doc.file_name;
     }
 
-    // Mark as extracting
-    await supabase.from("tax_documents").update({ extraction_status: "extracting" }).eq("id", documentId);
-
-    // Get signed URL for the file
-    const { data: signedData } = await supabase.storage
-      .from("tax-documents")
-      .createSignedUrl(doc.file_url, 600);
-
-    if (!signedData?.signedUrl) {
-      await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
-      return new Response(JSON.stringify({ error: "Could not get file URL" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const fileUrl = signedData.signedUrl;
-    const isImage = doc.file_type !== "pdf";
-
-    // Build messages for AI
-    const systemPrompt = `You are a document data extractor. Extract the following from the receipt/invoice/document:
-- vendor_name: The supplier or vendor name
-- document_date: The date on the document (YYYY-MM-DD format)
-- total_cost: The total amount/cost (number only, no currency symbols)
-- gst_cost: The GST/tax amount if shown (number only, no currency symbols, null if not found)
-
-Return ONLY a JSON object with these 4 fields. Use null for any field you cannot determine.`;
-
-    // Download the file and convert to base64 data URL
+    // Download file and convert to base64
     const fileResponse = await fetch(fileUrl);
     if (!fileResponse.ok) {
-      await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
+      if (!isDirectMode) {
+        await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
+      }
       return new Response(JSON.stringify({ error: "Could not download file" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -101,8 +107,16 @@ Return ONLY a JSON object with these 4 fields. Use null for any field you cannot
 
     const fileBytes = new Uint8Array(await fileResponse.arrayBuffer());
     const base64 = btoa(String.fromCharCode(...fileBytes));
-    const mimeType = isImage ? (doc.file_name?.endsWith(".png") ? "image/png" : "image/jpeg") : "application/pdf";
+    const mimeType = isImage ? (docFileName?.endsWith(".png") ? "image/png" : "image/jpeg") : "application/pdf";
     const dataUrl = `data:${mimeType};base64,${base64}`;
+
+    const systemPrompt = `You are a document data extractor. Extract the following from the receipt/invoice/document:
+- vendor_name: The supplier or vendor name
+- document_date: The date on the document (YYYY-MM-DD format)
+- total_cost: The total amount/cost (number only, no currency symbols)
+- gst_cost: The GST/tax amount if shown (number only, no currency symbols, null if not found)
+
+Return ONLY a JSON object with these 4 fields. Use null for any field you cannot determine.`;
 
     const messages: any[] = [
       { role: "system", content: systemPrompt },
@@ -115,7 +129,6 @@ Return ONLY a JSON object with these 4 fields. Use null for any field you cannot
       },
     ];
 
-    // Call Lovable AI with tool calling for structured output
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -153,20 +166,21 @@ Return ONLY a JSON object with these 4 fields. Use null for any field you cannot
       const errText = await aiResponse.text();
       console.error("AI error:", aiResponse.status, errText);
 
-      if (aiResponse.status === 429) {
+      if (!isDirectMode) {
         await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
+      }
+
+      if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited, try again later" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResponse.status === 402) {
-        await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
         return new Response(JSON.stringify({ error: "AI credits required" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      await supabase.from("tax_documents").update({ extraction_status: "failed" }).eq("id", documentId);
       return new Response(JSON.stringify({ error: "AI extraction failed" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -175,7 +189,6 @@ Return ONLY a JSON object with these 4 fields. Use null for any field you cannot
     const aiData = await aiResponse.json();
     let extracted: any = {};
 
-    // Try tool call response first
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       try {
@@ -184,7 +197,6 @@ Return ONLY a JSON object with these 4 fields. Use null for any field you cannot
         console.error("Failed to parse tool call args");
       }
     } else {
-      // Fallback: parse from content
       const content = aiData.choices?.[0]?.message?.content || "";
       try {
         const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -194,21 +206,22 @@ Return ONLY a JSON object with these 4 fields. Use null for any field you cannot
       }
     }
 
-    // Update database
-    const updateData: any = {
-      extraction_status: "done",
+    const result = {
       extracted_vendor: extracted.vendor_name || null,
       extracted_total: extracted.total_cost ?? null,
       extracted_gst: extracted.gst_cost ?? null,
+      extracted_date: extracted.document_date || null,
     };
 
-    if (extracted.document_date) {
-      updateData.extracted_date = extracted.document_date;
+    // In DB mode, persist to tax_documents
+    if (!isDirectMode) {
+      await supabase.from("tax_documents").update({
+        extraction_status: "done",
+        ...result,
+      }).eq("id", documentId);
     }
 
-    await supabase.from("tax_documents").update(updateData).eq("id", documentId);
-
-    return new Response(JSON.stringify({ success: true, extracted: updateData }), {
+    return new Response(JSON.stringify({ success: true, extracted: result }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
