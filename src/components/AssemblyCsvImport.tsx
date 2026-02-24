@@ -42,32 +42,65 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
+function parseCSVRows(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          cell += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cell += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(cell.trim());
+        cell = '';
+      } else if (ch === '\r') {
+        // skip
+      } else if (ch === '\n') {
+        row.push(cell.trim());
+        cell = '';
+        if (row.some(c => c !== '')) rows.push(row);
+        row = [];
+      } else {
+        cell += ch;
+      }
+    }
+  }
+  // last row
+  row.push(cell.trim());
+  if (row.some(c => c !== '')) rows.push(row);
+
+  return rows;
+}
+
 function parseCSV(text: string): { rows: ParsedAssembly[]; warnings: string[] } {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return { rows: [], warnings: ['CSV must have a header row and at least one data row.'] };
+  const allRows = parseCSVRows(text);
+  if (allRows.length < 2) return { rows: [], warnings: ['CSV must have a header row and at least one data row.'] };
 
-  const header = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/\s+/g, '_'));
-  const nameIdx = header.indexOf('name');
-  const descIdx = header.indexOf('description');
-
+  // Skip header row, use positional: col 0 = name, col 1 = description
   const warnings: string[] = [];
-  if (nameIdx === -1) warnings.push('Missing required column: name');
-  if (warnings.length > 0) return { rows: [], warnings };
-
   const rows: ParsedAssembly[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    const name = cols[nameIdx]?.trim();
-
+  for (let i = 1; i < allRows.length; i++) {
+    const cols = allRows[i];
+    const name = cols[0] || '';
     if (!name) {
       warnings.push(`Row ${i + 1}: missing name, skipped.`);
       continue;
     }
-
-    rows.push({
-      name,
-      description: descIdx >= 0 ? (cols[descIdx]?.trim() || '') : '',
-    });
+    rows.push({ name, description: cols[1] || '' });
   }
 
   return { rows, warnings };
