@@ -118,18 +118,51 @@ export function usePurchaseOrders() {
       }
     }
 
+    // Convert stored values to storage paths so legacy signed/public URLs get refreshed too
+    const extractPurchaseOrderPath = (value: string | null | undefined): string | null => {
+      if (!value) return null;
+
+      // New format: raw storage path already stored in DB
+      if (!value.startsWith('http')) return value;
+
+      // Legacy format: full signed/public URL stored in DB
+      try {
+        const parsed = new URL(value);
+        const signedPrefix = '/storage/v1/object/sign/purchase-orders/';
+        const publicPrefix = '/storage/v1/object/public/purchase-orders/';
+
+        if (parsed.pathname.startsWith(signedPrefix)) {
+          return decodeURIComponent(parsed.pathname.slice(signedPrefix.length));
+        }
+
+        if (parsed.pathname.startsWith(publicPrefix)) {
+          return decodeURIComponent(parsed.pathname.slice(publicPrefix.length));
+        }
+
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
     // Collect all storage paths that need signing (legacy fields + attachment urls)
-    const pathsToSign: string[] = [];
+    const pathSet = new Set<string>();
     const dbRows = ordersResult.data as DbPurchaseOrder[];
 
     for (const db of dbRows) {
-      if (db.image_url && !db.image_url.startsWith('http')) pathsToSign.push(db.image_url);
-      if (db.pdf_url && !db.pdf_url.startsWith('http')) pathsToSign.push(db.pdf_url);
+      const imagePath = extractPurchaseOrderPath(db.image_url);
+      const pdfPath = extractPurchaseOrderPath(db.pdf_url);
+      if (imagePath) pathSet.add(imagePath);
+      if (pdfPath) pathSet.add(pdfPath);
+
       const atts = rawAttachmentsMap.get(db.id) || [];
       for (const a of atts) {
-        if (a.url && !a.url.startsWith('http')) pathsToSign.push(a.url);
+        const attachmentPath = extractPurchaseOrderPath(a.url);
+        if (attachmentPath) pathSet.add(attachmentPath);
       }
     }
+
+    const pathsToSign = Array.from(pathSet);
 
     // Batch-sign all paths
     const signedUrlMap = new Map<string, string>();
@@ -148,8 +181,16 @@ export function usePurchaseOrders() {
 
     const resolveUrl = (url: string | null | undefined): string | null => {
       if (!url) return null;
-      if (url.startsWith('http')) return url; // already a full URL (legacy)
-      return signedUrlMap.get(url) || null;
+
+      const storagePath = extractPurchaseOrderPath(url);
+      if (storagePath) {
+        return signedUrlMap.get(storagePath) || null;
+      }
+
+      // Keep true external URLs working
+      if (url.startsWith('http')) return url;
+
+      return null;
     };
 
     setOrders(
