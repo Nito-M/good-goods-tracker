@@ -1927,6 +1927,7 @@ export type Database = {
       }
       tax_documents: {
         Row: {
+          bank_card_id: string | null
           created_at: string
           extracted_date: string | null
           extracted_gst: number | null
@@ -1942,6 +1943,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          bank_card_id?: string | null
           created_at?: string
           extracted_date?: string | null
           extracted_gst?: number | null
@@ -1957,6 +1959,7 @@ export type Database = {
           year?: number
         }
         Update: {
+          bank_card_id?: string | null
           created_at?: string
           extracted_date?: string | null
           extracted_gst?: number | null
@@ -1971,7 +1974,15 @@ export type Database = {
           user_id?: string
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tax_documents_bank_card_id_fkey"
+            columns: ["bank_card_id"]
+            isOneToOne: false
+            referencedRelation: "bank_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_page_permissions: {
         Row: {
