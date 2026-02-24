@@ -106,7 +106,14 @@ serve(async (req) => {
     }
 
     const fileBytes = new Uint8Array(await fileResponse.arrayBuffer());
-    const base64 = btoa(String.fromCharCode(...fileBytes));
+    // Convert to base64 in chunks to avoid stack overflow
+    let binaryStr = "";
+    const chunkSize = 8192;
+    for (let i = 0; i < fileBytes.length; i += chunkSize) {
+      const chunk = fileBytes.subarray(i, i + chunkSize);
+      binaryStr += String.fromCharCode(...chunk);
+    }
+    const base64 = btoa(binaryStr);
     const mimeType = isImage ? (docFileName?.endsWith(".png") ? "image/png" : "image/jpeg") : "application/pdf";
     const dataUrl = `data:${mimeType};base64,${base64}`;
 
