@@ -11,6 +11,7 @@ import { InventoryItem } from '@/types/inventory';
 import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
 import { useBulkItemTags } from '@/hooks/useItemTags';
+import { useBulkItemLocationQuantities } from '@/hooks/useBulkItemLocationQuantities';
 import { useWarehouses, Warehouse } from '@/hooks/useWarehouses';
 import {
   Dialog,
@@ -67,6 +68,7 @@ export const Items = ({
   const { warehouses, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const { itemTagsMap } = useBulkItemTags(itemIds);
+  const { warehouseItemMap } = useBulkItemLocationQuantities(itemIds);
 
   // Location management state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -141,7 +143,10 @@ export const Items = ({
       });
     }
     if (warehouseFilter !== 'all') {
-      result = result.filter((item) => item.warehouseId === warehouseFilter);
+      const itemsInWarehouse = warehouseItemMap.get(warehouseFilter);
+      result = result.filter((item) =>
+        itemsInWarehouse?.has(item.id) || item.warehouseId === warehouseFilter
+      );
     }
     return result;
   }, [items, tagFilter, itemTagsMap, warehouseFilter]);
