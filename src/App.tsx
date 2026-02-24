@@ -108,6 +108,7 @@ function AppContent() {
                   setCategoryFilter={setCategoryFilter}
                   categories={allCategories}
                   onDelete={deleteItem}
+                  addItem={addItem}
                 />
               </AppLayout>
             </ProtectedRoute>
