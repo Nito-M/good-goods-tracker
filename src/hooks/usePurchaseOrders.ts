@@ -109,25 +109,51 @@ export function usePurchaseOrders() {
       });
     }
 
-    // Build PO -> attachments map
-    const attachmentsMap = new Map<string, PoAttachment[]>();
+    // Build PO -> attachments map (raw, URLs will be signed below)
+    const rawAttachmentsMap = new Map<string, any[]>();
     if (attachmentsResult.data) {
       for (const a of attachmentsResult.data as any[]) {
-        const attachment: PoAttachment = {
-          id: a.id,
-          purchaseOrderId: a.purchase_order_id,
-          url: a.url,
-          fileType: a.file_type as 'image' | 'pdf',
-          fileName: a.file_name,
-          createdAt: new Date(a.created_at),
-        };
-        if (!attachmentsMap.has(a.purchase_order_id)) attachmentsMap.set(a.purchase_order_id, []);
-        attachmentsMap.get(a.purchase_order_id)!.push(attachment);
+        if (!rawAttachmentsMap.has(a.purchase_order_id)) rawAttachmentsMap.set(a.purchase_order_id, []);
+        rawAttachmentsMap.get(a.purchase_order_id)!.push(a);
       }
     }
 
+    // Collect all storage paths that need signing (legacy fields + attachment urls)
+    const pathsToSign: string[] = [];
+    const dbRows = ordersResult.data as DbPurchaseOrder[];
+
+    for (const db of dbRows) {
+      if (db.image_url && !db.image_url.startsWith('http')) pathsToSign.push(db.image_url);
+      if (db.pdf_url && !db.pdf_url.startsWith('http')) pathsToSign.push(db.pdf_url);
+      const atts = rawAttachmentsMap.get(db.id) || [];
+      for (const a of atts) {
+        if (a.url && !a.url.startsWith('http')) pathsToSign.push(a.url);
+      }
+    }
+
+    // Batch-sign all paths
+    const signedUrlMap = new Map<string, string>();
+    if (pathsToSign.length > 0) {
+      const { data: signedData } = await supabase.storage
+        .from('purchase-orders')
+        .createSignedUrls(pathsToSign, 3600);
+      if (signedData) {
+        for (const item of signedData) {
+          if (item.signedUrl && item.path) {
+            signedUrlMap.set(item.path, item.signedUrl);
+          }
+        }
+      }
+    }
+
+    const resolveUrl = (url: string | null | undefined): string | null => {
+      if (!url) return null;
+      if (url.startsWith('http')) return url; // already a full URL (legacy)
+      return signedUrlMap.get(url) || null;
+    };
+
     setOrders(
-      (ordersResult.data as DbPurchaseOrder[]).map((db) => {
+      dbRows.map((db) => {
         const jobIds = poJobMap.get(db.id) || [];
         const jobNumbers = jobIds.map(jid => jobMap.get(jid)).filter(Boolean) as string[];
         const companyId = (db as any).company_id;
@@ -139,7 +165,20 @@ export function usePurchaseOrders() {
           jobNumbers,
           companyId ? companyMap.get(companyId) : null,
         );
-        order.attachments = attachmentsMap.get(db.id) || [];
+        // Resolve signed URLs for legacy fields
+        order.imageUrl = resolveUrl(db.image_url) || order.imageUrl;
+        order.pdfUrl = resolveUrl(db.pdf_url) || order.pdfUrl;
+
+        // Resolve signed URLs for attachments
+        const rawAtts = rawAttachmentsMap.get(db.id) || [];
+        order.attachments = rawAtts.map(a => ({
+          id: a.id,
+          purchaseOrderId: a.purchase_order_id,
+          url: resolveUrl(a.url) || a.url,
+          fileType: a.file_type as 'image' | 'pdf',
+          fileName: a.file_name,
+          createdAt: new Date(a.created_at),
+        }));
         return order;
       })
     );
@@ -170,16 +209,8 @@ export function usePurchaseOrders() {
       return null;
     }
 
-    const { data, error: signedUrlError } = await supabase.storage
-      .from('purchase-orders')
-      .createSignedUrl(fileName, 3600); // 1 hour expiry
-
-    if (signedUrlError || !data) {
-      console.error('Error creating signed URL:', signedUrlError);
-      return null;
-    }
-
-    return data.signedUrl;
+    // Return the storage path, not a signed URL
+    return fileName;
   };
 
   const createOrder = async (
@@ -837,12 +868,11 @@ export function usePurchaseOrders() {
       toast({ title: 'Error uploading file', variant: 'destructive' });
       return false;
     }
-    const { data: signedData } = await supabase.storage.from('purchase-orders').createSignedUrl(fileName, 3600);
-    if (!signedData) return false;
+    // Store the storage path, not a signed URL
     const { error: insertError } = await supabase.from('po_attachments').insert({
       purchase_order_id: orderId,
       user_id: user.id,
-      url: signedData.signedUrl,
+      url: fileName,
       file_type: fileType,
       file_name: file.name,
     });
