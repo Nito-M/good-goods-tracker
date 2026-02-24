@@ -319,6 +319,7 @@ export function useQuotes() {
       notes: string | null;
       paymentTerms: string;
       validUntil: string | null;
+      companyId?: string | null;
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -349,6 +350,7 @@ export function useQuotes() {
           notes: input.notes,
           payment_terms: input.paymentTerms,
           valid_until: input.validUntil,
+          company_id: input.companyId || null,
         })
         .eq('id', quoteId);
 
