@@ -57,7 +57,7 @@ export function Settings() {
   const { isOrgAdmin } = useIsOrgAdmin();
   const showUsersTab = isAdmin || isOrgAdmin;
   const { theme, setTheme } = useTheme();
-  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor } = useColorTheme();
+  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
@@ -597,6 +597,32 @@ export function Settings() {
                       checked={customBgLight}
                       onCheckedChange={setCustomBgLight}
                     />
+                  </div>
+                )}
+
+                {backgroundTheme === 'custom' && (
+                  <div className="pt-4 border-t space-y-3">
+                    <div className="space-y-0.5">
+                      <Label>Card Transparency</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Control how see-through cards and panels are
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {([0, 25, 50, 75, 100] as const).map((value) => (
+                        <button
+                          key={value}
+                          onClick={() => setCardOpacity(value)}
+                          className={`flex-1 py-2 px-3 rounded-md border text-sm font-medium transition-all ${
+                            cardOpacity === value
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-card hover:bg-accent border-border'
+                          }`}
+                        >
+                          {value}%
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 

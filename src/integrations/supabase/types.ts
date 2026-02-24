@@ -1211,6 +1211,7 @@ export type Database = {
           business_name: string | null
           business_number: string | null
           business_phone: string | null
+          card_opacity: number
           color_theme: string | null
           created_at: string
           custom_bg_light: boolean
@@ -1242,6 +1243,7 @@ export type Database = {
           business_name?: string | null
           business_number?: string | null
           business_phone?: string | null
+          card_opacity?: number
           color_theme?: string | null
           created_at?: string
           custom_bg_light?: boolean
@@ -1273,6 +1275,7 @@ export type Database = {
           business_name?: string | null
           business_number?: string | null
           business_phone?: string | null
+          card_opacity?: number
           color_theme?: string | null
           created_at?: string
           custom_bg_light?: boolean
