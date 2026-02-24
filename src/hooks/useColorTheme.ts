@@ -6,11 +6,14 @@ export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'yellow'
 export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black' | 'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose' | 'custom';
 export type CustomTextColor = 'default' | 'black' | 'white' | 'gold' | 'red' | 'blue' | 'grey' | 'green' | 'orange' | 'purple' | 'pink';
 
+export type CardOpacity = 0 | 25 | 50 | 75 | 100;
+
 const COLOR_THEME_KEY = 'color-theme';
 const BACKGROUND_THEME_KEY = 'background-theme';
 const CUSTOM_BG_LIGHT_KEY = 'custom-bg-light';
 const CUSTOM_TEXT_COLOR_KEY = 'custom-text-color';
 const BACKGROUND_IMAGE_URL_KEY = 'background-image-url';
+const CARD_OPACITY_KEY = 'card-opacity';
 
 export function useColorTheme() {
   const { user } = useAuth();
@@ -43,6 +46,14 @@ export function useColorTheme() {
     return 'default';
   });
 
+  const [cardOpacity, setCardOpacityState] = useState<CardOpacity>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(CARD_OPACITY_KEY);
+      return stored !== null ? (Number(stored) as CardOpacity) : 100;
+    }
+    return 100;
+  });
+
   const [loaded, setLoaded] = useState(false);
 
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(() => {
@@ -63,7 +74,7 @@ export function useColorTheme() {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('color_theme, background_theme, background_image_url, custom_bg_light, custom_text_color')
+          .select('color_theme, background_theme, background_image_url, custom_bg_light, custom_text_color, card_opacity')
           .eq('user_id', user.id)
           .single();
 
@@ -90,6 +101,9 @@ export function useColorTheme() {
             setCustomTextColorState(data.custom_text_color as CustomTextColor);
             localStorage.setItem(CUSTOM_TEXT_COLOR_KEY, data.custom_text_color);
           }
+          const opacity = (data.card_opacity ?? 100) as CardOpacity;
+          setCardOpacityState(opacity);
+          localStorage.setItem(CARD_OPACITY_KEY, String(opacity));
         }
       } catch (error) {
         console.error('Error loading theme from database:', error);
@@ -175,6 +189,16 @@ export function useColorTheme() {
     localStorage.setItem(CUSTOM_TEXT_COLOR_KEY, customTextColor);
   }, [customTextColor, backgroundTheme]);
 
+  // Apply card opacity
+  useEffect(() => {
+    const root = document.documentElement;
+    if (backgroundTheme === 'custom') {
+      root.style.setProperty('--card-opacity', String(cardOpacity / 100));
+    } else {
+      root.style.removeProperty('--card-opacity');
+    }
+  }, [cardOpacity, backgroundTheme]);
+
   const setColorTheme = (theme: ColorTheme) => {
     setColorThemeState(theme);
     saveToDatabase(theme, backgroundTheme);
@@ -231,5 +255,19 @@ export function useColorTheme() {
     }
   };
 
-  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, loaded };
+  const setCardOpacity = async (value: CardOpacity) => {
+    setCardOpacityState(value);
+    localStorage.setItem(CARD_OPACITY_KEY, String(value));
+    if (!user) return;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ card_opacity: value })
+        .eq('user_id', user.id);
+    } catch (error) {
+      console.error('Error saving card opacity:', error);
+    }
+  };
+
+  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, loaded };
 }

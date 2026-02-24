@@ -158,7 +158,7 @@ export function Jobs() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6 bg-card rounded-b-lg">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search jobs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
@@ -223,7 +223,7 @@ export function Jobs() {
               ))}
             </div>
           ) : (
-            <div className="rounded-md border bg-card">
+            <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -431,7 +431,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-card rounded-b-lg">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
           {/* Job Items */}
           <div>
