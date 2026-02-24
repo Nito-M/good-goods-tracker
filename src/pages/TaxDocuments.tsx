@@ -337,7 +337,7 @@ export function TaxDocuments() {
         <Tabs defaultValue="all">
           <TabsList>
             <TabsTrigger value="all">
-              All ({filteredUploads.length + poDocuments.length + invoiceDocuments.length})
+              All ({filteredUploads.length + poDocuments.length})
             </TabsTrigger>
             <TabsTrigger value="uploads">
               Uploads ({filteredUploads.length})
@@ -351,7 +351,7 @@ export function TaxDocuments() {
           </TabsList>
 
           <TabsContent value="all" className="mt-4">
-            {filteredUploads.length + poDocuments.length + invoiceDocuments.length === 0 ? (
+            {filteredUploads.length + poDocuments.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">
                 No documents for {selectedYear}
               </p>
@@ -369,9 +369,6 @@ export function TaxDocuments() {
                 ))}
                 {poDocuments.map(doc => (
                   <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} />
-                ))}
-                {invoiceDocuments.map(doc => (
-                  <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} isInvoice />
                 ))}
               </div>
             )}
