@@ -421,10 +421,10 @@ export function Assemblies() {
         <span className="text-xs text-muted-foreground">({typeAssemblies.length})</span>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Left panel */}
         {sidebarOpen ? (
-        <div className="w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden transition-all">
+        <div className="w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden transition-all min-h-0">
           <div className="p-4 border-b space-y-3">
             <div className="flex items-center justify-between">
               <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
