@@ -7,6 +7,7 @@ import { useBankCards } from "@/hooks/useBankCards";
 import { AddRequestDialog } from "@/components/AddRequestDialog";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { RequestCard } from "@/components/RequestCard";
+import { RequestersManager } from "@/components/RequestersManager";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,7 +29,7 @@ export function Requests() {
   const { requests, loading, addRequest, updateRequest, updateStatus, updateCardId, deleteRequest, uploadImage, uploadPdf } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
-  const { linkedName, allOrgRequesterNames, isAdminUser } = useLinkedRequester();
+  const { linkedName, allOrgRequesterNames, isAdminUser, refetch: refetchRequesters } = useLinkedRequester();
   const { cards } = useBankCards();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,6 +147,11 @@ export function Requests() {
 
   return (
     <div className="space-y-6">
+      {/* Admin: Manage Requesters */}
+      {isAdminUser && (
+        <RequestersManager onRequestersChanged={refetchRequesters} />
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
