@@ -45,7 +45,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Mobile header with menu trigger */}
           <header className="md:hidden flex items-center justify-between h-14 border-b border-border px-4 bg-background sticky top-0 z-40">
             <div className="flex items-center">
@@ -94,7 +94,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <OfflineIndicator />
             </div>
           </header>
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 min-h-0 overflow-auto">
             {children}
           </main>
         </div>
