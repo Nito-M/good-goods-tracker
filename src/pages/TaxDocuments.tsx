@@ -140,6 +140,7 @@ export function TaxDocuments() {
   const uploadFiles = async (files: File[]) => {
     if (!user || files.length === 0) return;
     setUploading(true);
+    const newDocIds: string[] = [];
     try {
       for (const file of files) {
         const isImage = file.type.startsWith("image/");
@@ -159,20 +160,27 @@ export function TaxDocuments() {
           continue;
         }
 
-        const { error: dbError } = await supabase.from("tax_documents").insert({
+        const { data: insertData, error: dbError } = await supabase.from("tax_documents").insert({
           user_id: user.id,
           file_url: path,
           file_name: file.name,
           file_type: isPdf ? "pdf" : "image",
           year: parseInt(selectedYear),
-        });
+        }).select("id").single();
 
         if (dbError) {
           toast({ title: "Save failed", description: dbError.message, variant: "destructive" });
+        } else if (insertData) {
+          newDocIds.push(insertData.id);
         }
       }
       toast({ title: "Upload complete" });
       await fetchUploadedDocs();
+
+      // Auto-extract all newly uploaded docs
+      for (const docId of newDocIds) {
+        extractDocument(docId);
+      }
     } finally {
       setUploading(false);
     }
