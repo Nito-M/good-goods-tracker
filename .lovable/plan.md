@@ -1,20 +1,37 @@
 
 
-# Persist Background Image When Switching Themes
+# Tax Documents Page
 
-## Problem
-Currently, when you switch from a custom background image to a color theme, the custom image button loses its preview thumbnail and clicking it triggers a new upload. The image is actually still saved, but there's no way to switch back to it without re-uploading.
+A new page that aggregates all uploaded PDFs and images across Purchase Orders and Invoices (Sales) into one centralized view for tax purposes.
 
-## Solution
-Make the custom image button always show the saved image thumbnail -- even when a different background theme is active. Clicking it will restore the custom background using the already-saved image (no re-upload needed). A separate small button will allow uploading a new image.
+## What You'll Get
 
-## Changes
+- A new "Tax Documents" page accessible from the sidebar
+- All PO attachments (images and PDFs), PO receipt images, and PO PDF files shown in one place
+- All Invoice/Sale records listed with the ability to download their generated PDF
+- Filterable by year to easily find documents for a specific tax period
+- Each document shows its reference number (PO-XXXX or INV-XXXX), vendor name, date, and a thumbnail/icon
 
-### Settings Page (`src/pages/Settings.tsx`)
-- **Always show the custom image thumbnail** on the custom button if a `backgroundImageUrl` exists, regardless of which theme is active
-- **Clicking the custom button** when an image already exists will switch to `custom` theme using the saved image (no upload dialog)
-- **Add a small "change image" icon** (or long-press / secondary action) to allow uploading a replacement image
-- The upload-only behavior remains if no image has been saved yet
+## Data Sources
 
-### No database or hook changes needed
-The `backgroundImageUrl` is already preserved in the database and localStorage when switching themes. The image file remains in storage. This is purely a UI fix.
+The page will pull from:
+1. **Purchase Orders** -- `pdf_url`, `image_url` fields, plus all records from the `po_attachments` table (multi-file attachments)
+2. **Sales (Invoices)** -- Each sale record (invoices are generated on-the-fly as PDFs, so the page will list them with a "Download PDF" action using the existing invoice generator)
+
+## Technical Details
+
+### New Files
+1. **`src/pages/TaxDocuments.tsx`** -- Main page component
+   - Fetches all purchase orders (reuses `usePurchaseOrders`) and sales (reuses `useSales`)
+   - Displays a grid of document cards grouped by type (POs / Invoices)
+   - Year filter dropdown (defaults to current year)
+   - Each card shows: document type icon, reference number, vendor, date, amount, and a clickable thumbnail or download link
+   - Clicking an image opens the existing `ImageViewerDialog`
+   - Clicking a PDF opens it in a new tab (signed URL)
+
+### Modified Files
+2. **`src/components/AppSidebar.tsx`** -- Add "Tax Documents" menu item with a `FileText` icon
+3. **`src/App.tsx`** -- Add route `/tax-documents` pointing to the new page
+
+### No database changes needed
+All data already exists in the current tables.
