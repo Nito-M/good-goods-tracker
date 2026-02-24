@@ -1,24 +1,23 @@
 
 
-## Fix: Make Only the Assembly List Scroll (Not the Header)
+## Fix: Independent Scrolling for Assembly List
 
 ### Problem
-On the Assemblies page (`/assemblies/Trailers`), the entire content area scrolls together -- including the header (type name, Import CSV, + New buttons, search bar). Only the assembly cards list should scroll while the header stays pinned at the top.
+The previous fix (adding `min-h-0`) didn't resolve the scrolling issue. The assembly list on the left (red circled area) still scrolls together with everything else. The root cause is that `h-full` on the page wrapper doesn't properly resolve height constraints through the flexbox chain, so the content grows unbounded instead of being contained.
 
-### Root Cause
-The outer container and sidebar structure should constrain height properly, but the combination of `h-full` with the AppLayout's `overflow-hidden` main area may not resolve correctly on all viewports. The fix is to ensure the sidebar's inner list is the only scrollable region.
+### Solution
+Replace the relative `h-full` on the outer page wrapper with an absolute viewport height calculation that accounts for the AppLayout header bars (56px on mobile, 48px on desktop). This guarantees the page container has a fixed height, making the flex children properly constrain and enabling `overflow-auto` on just the assembly list.
 
 ### Changes
 
 **`src/pages/Assemblies.tsx`**
 
-1. On the outer wrapper (line 413), change from `h-full` to `h-[calc(100vh-theme(spacing.14))] md:h-[calc(100vh-theme(spacing.12))]` to give it an explicit calculated height accounting for the AppLayout headers (mobile: 56px / desktop: 48px). Alternatively, a simpler approach: ensure the flex column layout uses proper constraints.
+1. **Line 413** - Change the outer wrapper class from `h-full` to explicit viewport-based heights:
+   - From: `"flex h-full overflow-hidden flex-col"`
+   - To: `"flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3rem)] overflow-hidden flex-col"`
+   - 3.5rem = 56px (mobile header), 3rem = 48px (desktop header)
 
-2. Actually the simplest fix: the outer `div` at line 413 already has `flex h-full overflow-hidden flex-col` and the sidebar at line 427 has `flex flex-col overflow-hidden`. The list at line 442 has `flex-1 overflow-auto`. This chain should work -- but `h-full` may not resolve if the parent doesn't have explicit height. The fix is to add `min-h-0` to the flex-1 inner container (line 424) so the flex child can shrink below its content size, enabling overflow to kick in.
+This single change ensures the entire page is height-constrained to the viewport minus the AppLayout header. The existing `min-h-0` and `flex-1 overflow-auto` on the list (line 442) will then work correctly, making only the assembly cards scroll while the sidebar header (type name, buttons, search) and the right detail panel remain fixed.
 
-**Specific edits:**
-- Line 424: Add `min-h-0` to the inner flex container: `"flex flex-1 overflow-hidden min-h-0"`
-- Line 427: Ensure sidebar div has `min-h-0`: `"w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden min-h-0"`
-
-This ensures the flex children properly shrink, allowing `overflow-auto` on the list (line 442) to activate and scroll independently while the header with buttons stays fixed.
-
+### Why the previous fix didn't work
+`h-full` resolves to 100% of the parent's height. In a flexbox layout where the parent's height is computed by `flex-1` rather than set explicitly, percentage-based heights can fail to resolve in some browsers. Using viewport units (`100vh - header`) bypasses this entirely.
