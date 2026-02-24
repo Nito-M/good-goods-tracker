@@ -334,8 +334,11 @@ export function TaxDocuments() {
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading documents...</div>
       ) : (
-        <Tabs defaultValue="uploads">
+        <Tabs defaultValue="all">
           <TabsList>
+            <TabsTrigger value="all">
+              All ({filteredUploads.length + poDocuments.length + invoiceDocuments.length})
+            </TabsTrigger>
             <TabsTrigger value="uploads">
               Uploads ({filteredUploads.length})
             </TabsTrigger>
@@ -346,6 +349,33 @@ export function TaxDocuments() {
               Invoices ({invoiceDocuments.length})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="all" className="mt-4">
+            {filteredUploads.length + poDocuments.length + invoiceDocuments.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No documents for {selectedYear}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredUploads.map(doc => (
+                  <DocumentCard
+                    key={doc.id}
+                    doc={doc}
+                    onOpen={handleOpenFile}
+                    onDelete={handleDeleteUploaded}
+                    onExtract={extractDocument}
+                    isExtracting={extractingIds.has(doc.id)}
+                  />
+                ))}
+                {poDocuments.map(doc => (
+                  <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} />
+                ))}
+                {invoiceDocuments.map(doc => (
+                  <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} isInvoice />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="uploads" className="mt-4">
             {filteredUploads.length === 0 ? (
