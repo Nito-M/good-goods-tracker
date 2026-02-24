@@ -18,6 +18,8 @@ const PAGE_KEY_TO_ROUTES: Record<string, string[]> = {
   settings: ['/settings'],
   jobs: ['/jobs'],
   assemblies: ['/assemblies'],
+  parts: ['/parts'],
+  'tax-documents': ['/tax-documents'],
 };
 
 export function usePagePermissions() {

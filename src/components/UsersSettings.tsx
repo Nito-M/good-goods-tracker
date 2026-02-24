@@ -34,6 +34,7 @@ const PAGE_KEYS = [
   { key: 'items', label: 'Items' },
   { key: 'sales', label: 'Sales' },
   { key: 'quotes', label: 'Quotes' },
+  { key: 'sales-orders', label: 'Sales Orders' },
   { key: 'purchase-orders', label: 'Purchase Orders' },
   { key: 'requests', label: 'Requests' },
   { key: 'calendar', label: 'Calendar' },
@@ -41,6 +42,8 @@ const PAGE_KEYS = [
   { key: 'bank', label: 'Bank' },
   { key: 'jobs', label: 'Jobs' },
   { key: 'assemblies', label: 'Assemblies' },
+  { key: 'parts', label: 'Parts Library' },
+  { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'settings', label: 'Settings' },
 ];
 
