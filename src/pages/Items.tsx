@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import { ItemCsvImport } from '@/components/ItemCsvImport';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,7 @@ interface ItemsProps {
   setCategoryFilter: (category: string) => void;
   categories: string[];
   onDelete: (id: string) => void;
+  addItem: (item: Omit<import('@/types/inventory').InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
 }
 
 export const Items = ({
@@ -57,6 +59,7 @@ export const Items = ({
   setCategoryFilter,
   categories,
   onDelete,
+  addItem,
 }: ItemsProps) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -160,10 +163,13 @@ export const Items = ({
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
               Items & Inventory
             </h1>
-            <Button onClick={() => navigate('/items/new')} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Item
-            </Button>
+            <div className="flex items-center gap-2">
+              <ItemCsvImport addItem={addItem} />
+              <Button onClick={() => navigate('/items/new')} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
           </div>
         </div>
       </header>
