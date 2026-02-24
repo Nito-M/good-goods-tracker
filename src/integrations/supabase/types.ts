@@ -1928,6 +1928,11 @@ export type Database = {
       tax_documents: {
         Row: {
           created_at: string
+          extracted_date: string | null
+          extracted_gst: number | null
+          extracted_total: number | null
+          extracted_vendor: string | null
+          extraction_status: string | null
           file_name: string | null
           file_type: string
           file_url: string
@@ -1938,6 +1943,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          extracted_date?: string | null
+          extracted_gst?: number | null
+          extracted_total?: number | null
+          extracted_vendor?: string | null
+          extraction_status?: string | null
           file_name?: string | null
           file_type?: string
           file_url: string
@@ -1948,6 +1958,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          extracted_date?: string | null
+          extracted_gst?: number | null
+          extracted_total?: number | null
+          extracted_vendor?: string | null
+          extraction_status?: string | null
           file_name?: string | null
           file_type?: string
           file_url?: string
