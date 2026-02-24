@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical } from 'lucide-react';
+import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,13 +21,14 @@ import {
 
 export function PartsLibrary() {
   const navigate = useNavigate();
-  const { parts, loading: partsLoading, deletePart } = useParts();
+  const { parts, loading: partsLoading, deletePart, updatePart } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   const [search, setSearch] = useState('');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [renamingFolder, setRenamingFolder] = useState<{ id: string; name: string } | null>(null);
+  const [movingPartId, setMovingPartId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loading = partsLoading || foldersLoading;
@@ -74,6 +75,15 @@ export function PartsLibrary() {
   const handleDeleteFolder = async (id: string) => {
     const ok = await deleteFolder(id);
     if (ok) toast({ title: 'Folder deleted' });
+  };
+
+  const handleMovePart = async (targetFolderId: string | null) => {
+    if (!movingPartId) return;
+    const ok = await updatePart(movingPartId, { folderId: targetFolderId });
+    if (ok) {
+      toast({ title: 'Part moved' });
+      setMovingPartId(null);
+    }
   };
 
   return (
@@ -221,27 +231,39 @@ export function PartsLibrary() {
                         {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
                         {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
                       </div>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost" size="icon"
                             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
                             onClick={e => e.stopPropagation()}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent onClick={e => e.stopPropagation()}>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete part?</AlertDialogTitle>
-                            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={(e) => handleDelete(part.id, e)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent onClick={e => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={() => setMovingPartId(part.id)}>
+                            <FolderInput className="h-4 w-4 mr-2" /> Move to folder
+                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-destructive" onSelect={e => e.preventDefault()}>
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent onClick={e => e.stopPropagation()}>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete part?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={(e) => handleDelete(part.id, e)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </CardContent>
                   </Card>
                 ))}
@@ -289,6 +311,37 @@ export function PartsLibrary() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenamingFolder(null)}>Cancel</Button>
             <Button onClick={handleRenameFolder} disabled={!renamingFolder?.name.trim()}>Rename</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Move Part to Folder Dialog */}
+      <Dialog open={!!movingPartId} onOpenChange={open => !open && setMovingPartId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move to folder</DialogTitle>
+            <DialogDescription>Select a destination folder for this part.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            <button
+              onClick={() => handleMovePart(null)}
+              className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+            >
+              <Folder className="h-4 w-4 text-muted-foreground" />
+              Root (no folder)
+            </button>
+            {folders.map(folder => (
+              <button
+                key={folder.id}
+                onClick={() => handleMovePart(folder.id)}
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+              >
+                <Folder className="h-4 w-4 text-primary" />
+                {getBreadcrumb(folder.id).map(f => f.name).join(' / ')}
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMovingPartId(null)}>Cancel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
