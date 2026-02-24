@@ -272,7 +272,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     };
 
     const locationData = locationEntries
-      .filter(e => parseFloat(e.quantity) > 0)
+      .filter(e => e.warehouseId)
       .map(e => ({ warehouseId: e.warehouseId, quantity: parseFloat(e.quantity) || 0 }));
 
     if (editItem && onUpdate) {
