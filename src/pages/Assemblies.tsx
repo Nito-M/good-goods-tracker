@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft } from 'lucide-react';
+import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
@@ -425,7 +426,10 @@ export function Assemblies() {
           <div className="p-4 border-b space-y-3">
             <div className="flex items-center justify-between">
               <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
-              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
+              <div className="flex items-center gap-1">
+                <AssemblyCsvImport onComplete={refetchSummaries} />
+                <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
+              </div>
             </div>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
