@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -388,6 +388,7 @@ export function Assemblies() {
   const [newDesc, setNewDesc] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
   const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
@@ -422,13 +423,15 @@ export function Assemblies() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel */}
-        <div className="w-72 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden">
+        {sidebarOpen ? (
+        <div className="w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden transition-all">
           <div className="p-4 border-b space-y-3">
             <div className="flex items-center justify-between">
               <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
               <div className="flex items-center gap-1">
                 <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
                 <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(false)}><PanelLeftClose className="h-4 w-4" /></Button>
               </div>
             </div>
             <div className="relative">
@@ -467,6 +470,11 @@ export function Assemblies() {
             )}
           </div>
         </div>
+        ) : (
+          <div className="shrink-0 border-r bg-sidebar flex items-start p-2">
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(true)}><PanelLeftOpen className="h-4 w-4" /></Button>
+          </div>
+        )}
 
         {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
