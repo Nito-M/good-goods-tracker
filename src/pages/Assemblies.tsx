@@ -427,7 +427,7 @@ export function Assemblies() {
             <div className="flex items-center justify-between">
               <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
               <div className="flex items-center gap-1">
-                <AssemblyCsvImport onComplete={refetchSummaries} />
+                <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
                 <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
               </div>
             </div>
