@@ -564,7 +564,7 @@ All colors MUST be HSL.
   .dark.bg-custom, .bg-custom.dark {
     --background: 0 0% 0% / 0;
     --foreground: 0 0% 95%;
-    --card: 0 0% 8% / 0.85;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 10% / 0.9;
     --popover-foreground: 0 0% 95%;
@@ -589,7 +589,7 @@ All colors MUST be HSL.
   .dark.bg-custom-light, .bg-custom-light.dark {
     --background: 0 0% 100% / 0;
     --foreground: 222 47% 11%;
-    --card: 0 0% 100% / 0.85;
+    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100% / 0.92;
     --popover-foreground: 222 47% 11%;
