@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -12,6 +12,7 @@ interface LinkedRequesterInfo {
   /** Whether the current user is an admin (org admin or super admin) */
   isAdminUser: boolean;
   loading: boolean;
+  refetch: () => Promise<void>;
 }
 
 export function useLinkedRequester(): LinkedRequesterInfo {
@@ -22,53 +23,51 @@ export function useLinkedRequester(): LinkedRequesterInfo {
   const [allOrgRequesterNames, setAllOrgRequesterNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetch = async () => {
-      if (!user) {
+  const fetchData = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data: memberships } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id);
+
+      const userOrgIds = memberships?.map(m => m.organization_id) || [];
+
+      if (userOrgIds.length === 0) {
         setLoading(false);
         return;
       }
 
-      try {
-        // Get org IDs the user belongs to
-        const { data: memberships } = await supabase
-          .from('organization_members')
-          .select('organization_id')
-          .eq('user_id', user.id);
+      const { data: requesters } = await supabase
+        .from('org_requesters')
+        .select('name, linked_user_id, organization_id')
+        .in('organization_id', userOrgIds);
 
-        const userOrgIds = memberships?.map(m => m.organization_id) || [];
+      const names = requesters?.map(r => r.name) || [];
+      setAllOrgRequesterNames(names);
 
-        if (userOrgIds.length === 0) {
-          setLoading(false);
-          return;
-        }
-
-        // Get all org requesters for those orgs
-        const { data: requesters } = await supabase
-          .from('org_requesters')
-          .select('name, linked_user_id, organization_id')
-          .in('organization_id', userOrgIds);
-
-        const names = requesters?.map(r => r.name) || [];
-        setAllOrgRequesterNames(names);
-
-        // Find the one linked to this user
-        const linked = requesters?.find(r => r.linked_user_id === user.id);
-        setLinkedName(linked?.name || null);
-      } catch (error) {
-        console.error('Error fetching linked requester:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetch();
+      const linked = requesters?.find(r => r.linked_user_id === user.id);
+      setLinkedName(linked?.name || null);
+    } catch (error) {
+      console.error('Error fetching linked requester:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return {
     linkedName,
     allOrgRequesterNames,
     isAdminUser: isAdmin || isOrgAdmin,
     loading,
+    refetch: fetchData,
   };
 }
