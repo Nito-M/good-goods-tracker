@@ -23,7 +23,7 @@ export function useItemLocationQuantities(itemId?: string) {
     }
 
     const { data, error } = await supabase
-      .from('item_location_quantities' as any)
+      .from('item_location_quantities')
       .select('*')
       .eq('item_id', itemId)
       .order('created_at');
@@ -54,7 +54,7 @@ export function useItemLocationQuantities(itemId?: string) {
 
     // Delete all existing entries for this item
     await supabase
-      .from('item_location_quantities' as any)
+      .from('item_location_quantities')
       .delete()
       .eq('item_id', targetItemId);
 
@@ -70,7 +70,7 @@ export function useItemLocationQuantities(itemId?: string) {
 
     if (toInsert.length > 0) {
       const { error } = await supabase
-        .from('item_location_quantities' as any)
+        .from('item_location_quantities')
         .insert(toInsert);
 
       if (error) {
