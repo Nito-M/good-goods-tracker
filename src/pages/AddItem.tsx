@@ -276,8 +276,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       .map(e => ({ warehouseId: e.warehouseId, quantity: parseFloat(e.quantity) || 0 }));
 
     if (editItem && onUpdate) {
-      onUpdate(editItem.id, itemData);
-      navigate(`/item/${editItem.id}`);
+      await onUpdate(editItem.id, itemData);
       
       // Handle vendor price updates
       const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
@@ -301,6 +300,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       await setTagsForItem(pendingTagIds);
       // Save location quantities
       await saveLocations(editItem.id, locationData);
+      
+      navigate(`/item/${editItem.id}`);
     } else {
       // Creating a new item
       const newItemId = await onSave(itemData);
