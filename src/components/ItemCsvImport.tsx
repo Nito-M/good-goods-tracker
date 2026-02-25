@@ -186,7 +186,7 @@ export function ItemCsvImport({ addItem }: Props) {
       const id = await addItem({
         name: row.name,
         description: row.description,
-        sku: '',
+        sku: row.name.substring(0, 100),
         category: 'Other',
         quantity: 0,
         quantityUnit: row.quantityUnit,
