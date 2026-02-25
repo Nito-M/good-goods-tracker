@@ -1,24 +1,25 @@
 
 
-## Solid Backgrounds for All Tables
+## Solid Table Backgrounds on Picture Backgrounds
 
 ### Problem
-Tables across the app use semi-transparent backgrounds (e.g., `bg-muted/50`, `hover:bg-muted/50`) which can look washed out or inconsistent, especially on different background layers.
+When using a custom picture background with reduced card opacity, tables become see-through because their container (`bg-card`) respects `--card-opacity` but the `--muted` color used for table headers and hover states does not. This creates an inconsistent, hard-to-read appearance.
 
 ### Solution
-Update the base table UI component and the InventoryTable to use solid background colors. This ensures every table in the app gets solid backgrounds automatically.
+Update the `--muted` CSS variable in both custom background theme variants (dark and light) to include `var(--card-opacity, 1)`, matching how `--card`, `--accent`, `--secondary`, and other surface colors already work.
 
 ### Changes
 
-**1. `src/components/ui/table.tsx`** (base component - affects all tables)
-- `TableRow`: Change `hover:bg-muted/50` to `hover:bg-muted`
-- `TableFooter`: Change `bg-muted/50` to `bg-muted`
+**File: `src/index.css`**
 
-**2. `src/components/InventoryTable.tsx`**
-- Header `TableRow`: Change `bg-muted/50 hover:bg-muted/50` to `bg-muted hover:bg-muted`
+1. In `.bg-custom` (dark custom background, line 571):
+   - Change `--muted: 0 0% 25%;` to `--muted: 0 0% 25% / var(--card-opacity, 1);`
 
-These two file changes will give every table across the app (Inventory, Sales Orders, Jobs, Purchase History, Bank Card Details, Job Items, Sales, etc.) solid header/hover/footer backgrounds since they all use the shared `Table` component.
+2. In `.bg-custom-light` (light custom background, line 596):
+   - Change `--muted: 215 20% 65%;` to `--muted: 215 20% 65% / var(--card-opacity, 1);`
+
+This ensures that when card opacity is set to 100% (the default), tables look completely solid. When opacity is reduced, table backgrounds will match the rest of the UI's transparency level consistently.
 
 ### Files to modify
-- `src/components/ui/table.tsx`
-- `src/components/InventoryTable.tsx`
+- `src/index.css` (2 lines)
+
