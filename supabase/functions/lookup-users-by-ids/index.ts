@@ -14,34 +14,43 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const authHeader = req.headers.get("Authorization")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authHeader = req.headers.get("Authorization");
 
-    // Verify the caller
-    const supabaseClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // Verify caller using getClaims
+    const supabaseClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const callerUserId = claimsData.claims.sub;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     // Check if super admin OR org admin
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", callerUserId)
       .eq("role", "admin")
       .maybeSingle();
 
     const { data: orgAdminData } = await adminClient
       .from("organization_members")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", callerUserId)
       .in("role", ["owner", "admin"])
       .limit(1);
 
@@ -64,7 +73,6 @@ serve(async (req) => {
     // Cap at 100 to prevent abuse
     const ids = user_ids.slice(0, 100);
 
-    // Look up users by IDs using admin client
     const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({
       perPage: 1000,
     });
@@ -81,6 +89,7 @@ serve(async (req) => {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error("Error in lookup-users-by-ids:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
