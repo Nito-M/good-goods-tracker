@@ -369,7 +369,7 @@ export function usePurchaseOrders() {
     fetchOrders();
   };
 
-  const markAsReceived = async (orderId: string, warehouseId?: string | null) => {
+  const markAsReceived = async (orderId: string, locationEntries?: { warehouseId: string; quantity: number }[]) => {
     // Get the order to access its items and costs
     const order = orders.find((o) => o.id === orderId);
     if (!order) {
@@ -408,10 +408,10 @@ export function usePurchaseOrders() {
       return false;
     }
 
+    const validEntries = locationEntries?.filter(e => e.warehouseId && e.quantity > 0) || [];
+
     // Update inventory items with new costs and quantities, and save vendor prices
-    // For custom items that don't exist, create them as new inventory items
     for (const item of order.items) {
-      // Find matching inventory item by SKU
       const { data: inventoryItem } = await supabase
         .from('inventory_items')
         .select('id, quantity, cost')
@@ -420,21 +420,15 @@ export function usePurchaseOrders() {
         .single();
 
       if (inventoryItem) {
-        // Existing item - update quantity and cost (and optionally location)
+        // Existing item - update quantity and cost
         const updates: Record<string, unknown> = {
           quantity: inventoryItem.quantity + item.quantity,
         };
-
-        // Update warehouse if provided
-        if (warehouseId !== undefined) {
-          updates.warehouse_id = warehouseId || null;
-        }
 
         // Update cost if provided in the PO
         if (item.unitCost !== undefined && item.unitCost > 0) {
           updates.cost = item.unitCost;
           
-          // Also update the vendor price for this item if a vendor is assigned
           if (order.vendorId) {
             await updateVendorPriceFromPO(user!.id, inventoryItem.id, order.vendorId, item.unitCost);
           }
@@ -445,27 +439,27 @@ export function usePurchaseOrders() {
           .update(updates)
           .eq('id', inventoryItem.id);
 
-        // Update item_location_quantities if a warehouse was selected
-        if (warehouseId) {
+        // Update item_location_quantities for each location entry
+        for (const entry of validEntries) {
           const { data: existingLocQty } = await supabase
             .from('item_location_quantities')
             .select('id, quantity')
             .eq('item_id', inventoryItem.id)
-            .eq('warehouse_id', warehouseId)
+            .eq('warehouse_id', entry.warehouseId)
             .single();
 
           if (existingLocQty) {
             await supabase
               .from('item_location_quantities')
-              .update({ quantity: existingLocQty.quantity + item.quantity })
+              .update({ quantity: existingLocQty.quantity + entry.quantity })
               .eq('id', existingLocQty.id);
           } else {
             await supabase
               .from('item_location_quantities')
               .insert({
                 item_id: inventoryItem.id,
-                warehouse_id: warehouseId,
-                quantity: item.quantity,
+                warehouse_id: entry.warehouseId,
+                quantity: entry.quantity,
                 user_id: user!.id,
               });
           }
@@ -490,7 +484,7 @@ export function usePurchaseOrders() {
             dimensions_width: 0,
             dimensions_height: 0,
             dimensions_unit: 'in',
-            warehouse_id: warehouseId || null,
+            warehouse_id: validEntries.length === 1 ? validEntries[0].warehouseId : null,
           })
           .select('id')
           .single();
@@ -502,14 +496,14 @@ export function usePurchaseOrders() {
           if (order.vendorId && item.unitCost && item.unitCost > 0) {
             await updateVendorPriceFromPO(user!.id, newItem.id, order.vendorId, item.unitCost);
           }
-          // Save location quantity for the newly created item
-          if (warehouseId) {
+          // Save location quantities for the newly created item
+          for (const entry of validEntries) {
             await supabase
               .from('item_location_quantities')
               .insert({
                 item_id: newItem.id,
-                warehouse_id: warehouseId,
-                quantity: item.quantity,
+                warehouse_id: entry.warehouseId,
+                quantity: entry.quantity,
                 user_id: user!.id,
               });
           }

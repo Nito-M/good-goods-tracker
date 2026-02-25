@@ -55,10 +55,10 @@ export function PurchaseOrders() {
     setReceiveDialogOpen(true);
   };
 
-  const handleConfirmReceive = async (warehouseId: string | null) => {
+  const handleConfirmReceive = async (entries: import('@/components/ReceiveLocationDialog').ReceiveLocationEntry[]) => {
     if (!receivingOrderId) return;
     setProcessingId(receivingOrderId);
-    await markAsReceived(receivingOrderId, warehouseId);
+    await markAsReceived(receivingOrderId, entries);
     setProcessingId(null);
     setReceiveDialogOpen(false);
     setReceivingOrderId(null);
@@ -347,6 +347,7 @@ export function PurchaseOrders() {
         onOpenChange={setReceiveDialogOpen}
         onConfirm={handleConfirmReceive}
         warehouses={warehouses}
+        totalQuantity={receivingOrderId ? (orders.find(o => o.id === receivingOrderId)?.items.reduce((sum, i) => sum + i.quantity, 0) ?? 0) : 0}
         loading={!!processingId}
       />
     </div>
