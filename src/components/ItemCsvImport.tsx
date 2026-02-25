@@ -9,13 +9,42 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { InventoryItem } from '@/types/inventory';
+import { useAuth } from '@/contexts/AuthContext';
+import { InventoryItem, QuantityUnit } from '@/types/inventory';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ParsedItem {
   name: string;
   description: string;
+  tags: string[];
+  quantityUnit: QuantityUnit;
+  vendorNames: string[];
 }
+
+const UNIT_MAP: Record<string, QuantityUnit> = {
+  piece: 'pcs',
+  pieces: 'pcs',
+  pcs: 'pcs',
+  pc: 'pcs',
+  each: 'pcs',
+  ea: 'pcs',
+  foot: 'ft',
+  feet: 'ft',
+  ft: 'ft',
+  meter: 'm',
+  meters: 'm',
+  m: 'm',
+  yard: 'yd',
+  yards: 'yd',
+  yd: 'yd',
+  inch: 'in',
+  inches: 'in',
+  in: 'in',
+  sqft: 'sqft',
+  'sq ft': 'sqft',
+};
 
 function parseCSVRows(text: string): string[][] {
   const rows: string[][] = [];
@@ -60,6 +89,11 @@ function parseCSVRows(text: string): string[][] {
   return rows;
 }
 
+function parseUnit(raw: string): QuantityUnit {
+  const key = raw.toLowerCase().trim();
+  return UNIT_MAP[key] || 'pcs';
+}
+
 function parseCSV(text: string): { rows: ParsedItem[]; warnings: string[] } {
   const allRows = parseCSVRows(text);
   if (allRows.length < 2) return { rows: [], warnings: ['CSV must have a header row and at least one data row.'] };
@@ -73,7 +107,19 @@ function parseCSV(text: string): { rows: ParsedItem[]; warnings: string[] } {
       warnings.push(`Row ${i + 1}: missing name, skipped.`);
       continue;
     }
-    rows.push({ name, description: cols[1] || '' });
+    const tagsRaw = cols[2] || '';
+    const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const unitRaw = cols[3] || '';
+    const vendorsRaw = cols[4] || '';
+    const vendorNames = vendorsRaw ? vendorsRaw.split(',').map(v => v.trim()).filter(Boolean) : [];
+
+    rows.push({
+      name,
+      description: cols[1] || '',
+      tags,
+      quantityUnit: parseUnit(unitRaw),
+      vendorNames,
+    });
   }
 
   return { rows, warnings };
@@ -86,6 +132,7 @@ interface Props {
 export function ItemCsvImport({ addItem }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [rows, setRows] = useState<ParsedItem[]>([]);
@@ -112,9 +159,21 @@ export function ItemCsvImport({ addItem }: Props) {
   };
 
   const handleConfirm = async () => {
+    if (!user) return;
     setImporting(true);
 
+    // Fetch vendors to match by name
+    const { data: vendorData } = await supabase
+      .from('vendors')
+      .select('id, name');
+    const vendors = vendorData || [];
+    const vendorByName = new Map<string, string>();
+    for (const v of vendors) {
+      vendorByName.set(v.name.toLowerCase(), v.id);
+    }
+
     let created = 0;
+    let vendorLinked = 0;
     for (const row of rows) {
       const id = await addItem({
         name: row.name,
@@ -122,7 +181,7 @@ export function ItemCsvImport({ addItem }: Props) {
         sku: '',
         category: 'Other',
         quantity: 0,
-        quantityUnit: 'pcs',
+        quantityUnit: row.quantityUnit,
         price: 0,
         cost: 0,
         minStock: 0,
@@ -131,13 +190,35 @@ export function ItemCsvImport({ addItem }: Props) {
         dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
         colors: [],
       });
-      if (id) created++;
+      if (!id) continue;
+      created++;
+
+      // Link vendors
+      for (const vName of row.vendorNames) {
+        const vendorId = vendorByName.get(vName.toLowerCase());
+        if (vendorId) {
+          const { error } = await supabase
+            .from('item_vendor_prices')
+            .insert({
+              item_id: id,
+              vendor_id: vendorId,
+              price: 0,
+              user_id: user.id,
+            });
+          if (!error) vendorLinked++;
+        }
+      }
     }
 
     setImporting(false);
     setPreviewOpen(false);
-    toast({ title: `${created} item${created !== 1 ? 's' : ''} created` });
+    const parts = [`${created} item${created !== 1 ? 's' : ''} created`];
+    if (vendorLinked > 0) parts.push(`${vendorLinked} vendor link${vendorLinked !== 1 ? 's' : ''} added`);
+    toast({ title: parts.join(', ') });
   };
+
+  // Collect all unique vendor names for preview
+  const allVendors = [...new Set(rows.flatMap(r => r.vendorNames))];
 
   return (
     <>
@@ -160,6 +241,9 @@ export function ItemCsvImport({ addItem }: Props) {
 
           <p className="text-sm text-muted-foreground">
             {rows.length} item{rows.length !== 1 ? 's' : ''} will be created.
+            {allVendors.length > 0 && (
+              <> Vendors: <span className="font-medium text-foreground">{allVendors.join(', ')}</span></>
+            )}
           </p>
 
           <ScrollArea className="max-h-[400px]">
@@ -168,6 +252,17 @@ export function ItemCsvImport({ addItem }: Props) {
                 <div key={i} className="border border-border rounded-lg px-3 py-2">
                   <span className="font-medium text-sm">{r.name}</span>
                   {r.description && <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>}
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {r.quantityUnit !== 'pcs' && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{r.quantityUnit}</Badge>
+                    )}
+                    {r.vendorNames.map((v, vi) => (
+                      <Badge key={vi} variant="secondary" className="text-[10px] px-1.5 py-0">{v}</Badge>
+                    ))}
+                    {r.tags.map((t, ti) => (
+                      <Badge key={ti} variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30">{t}</Badge>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
