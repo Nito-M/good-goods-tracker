@@ -58,6 +58,7 @@ interface OrgUser {
   memberId: string;
   userId: string;
   displayName: string | null;
+  email: string | null;
   role: string;
   orgId: string;
   orgName: string;
@@ -165,12 +166,29 @@ export function UsersSettings() {
             memberId: member.id,
             userId: member.user_id,
             displayName: profile?.display_name || null,
+            email: null,
             role: member.role,
             orgId: org.id,
             orgName: org.name,
             permissions: userPerms,
             linkedRequesterName: linkedReq?.name || null,
           });
+        }
+      }
+      // Fetch emails for all users via edge function
+      const allUserIds = allUsers.map(u => u.userId);
+      if (allUserIds.length > 0) {
+        try {
+          const { data: emailData } = await supabase.functions.invoke('lookup-users-by-ids', {
+            body: { user_ids: allUserIds },
+          });
+          if (emailData?.users) {
+            for (const u of allUsers) {
+              u.email = emailData.users[u.userId] || null;
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching user emails:', e);
         }
       }
       setUsers(allUsers);
@@ -413,8 +431,11 @@ export function UsersSettings() {
                   className="flex items-center justify-between p-4 rounded-lg border bg-card"
                 >
                   <div className="space-y-1 flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium">{u.displayName || 'Unknown'}</span>
+                      {u.email && (
+                        <span className="text-xs text-muted-foreground">{u.email}</span>
+                      )}
                       <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
                         {u.role}
                       </span>
