@@ -5,13 +5,15 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useParts } from '@/hooks/useParts';
 
 interface ParsedPart {
   name: string;
-  sku: string;
   description: string;
+  tags: string;
+  unitOfMeasure: string;
 }
 
 function parseCSVRows(text: string): string[][] {
@@ -56,8 +58,9 @@ function parseCSV(text: string): { rows: ParsedPart[]; warnings: string[] } {
     if (!name) { warnings.push(`Row ${i + 1}: missing name, skipped.`); continue; }
     rows.push({
       name,
-      sku: cols[1] || '',
-      description: cols[2] || '',
+      description: cols[1] || '',
+      tags: cols[2] || '',
+      unitOfMeasure: cols[3] || '',
     });
   }
   return { rows, warnings };
@@ -102,7 +105,7 @@ export function PartsCsvImport({ currentFolderId }: Props) {
     for (const row of rows) {
       const id = await addPart({
         name: row.name,
-        sku: row.sku || row.name.substring(0, 100),
+        sku: row.name.substring(0, 100),
         description: row.description || undefined,
         folderId: currentFolderId,
       });
@@ -134,7 +137,7 @@ export function PartsCsvImport({ currentFolderId }: Props) {
 
           <p className="text-sm text-muted-foreground">
             {rows.length} part{rows.length !== 1 ? 's' : ''} will be created.
-            Expected CSV columns: <span className="font-medium text-foreground">Name, SKU, Description</span>
+            Expected CSV columns: <span className="font-medium text-foreground">Number, Description, Tags, Unit Of Measure</span>
           </p>
 
           <ScrollArea className="max-h-[400px]">
@@ -142,7 +145,8 @@ export function PartsCsvImport({ currentFolderId }: Props) {
               {rows.map((r, i) => (
                 <div key={i} className="border border-border rounded-lg px-3 py-2">
                   <span className="font-medium text-sm">{r.name}</span>
-                  {r.sku && <span className="text-xs text-muted-foreground ml-2">SKU: {r.sku}</span>}
+                  {r.tags && <Badge variant="secondary" className="ml-2 text-xs">{r.tags}</Badge>}
+                  {r.unitOfMeasure && <Badge variant="outline" className="ml-1 text-xs">{r.unitOfMeasure}</Badge>}
                   {r.description && <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>}
                 </div>
               ))}
