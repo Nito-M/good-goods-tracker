@@ -1,29 +1,34 @@
 
 
-## Show Member Emails on Organizations Screen
+# Update Parts CSV Import to Match New Format
 
-### Problem
-The Organizations settings screen shows member names and roles but not their email addresses. Since emails are stored in the auth system (not in public tables), we need to use the existing `lookup-users-by-ids` edge function to fetch them.
+## Problem
+The current Parts CSV import expects 3 columns (Name, SKU, Description), but the CSV file has 4 columns: **Number**, **Description**, **Tags**, and **Unit Of Measure**. The column mapping needs to change to match.
 
-### Implementation
+## Column Mapping (New)
 
-**File: `src/components/OrganizationsSettings.tsx`**
+| CSV Column | Maps To |
+|---|---|
+| Col 0: Number (e.g. "Library Item: A1-001") | Part **name** |
+| Col 1: Description (e.g. "A1 - 001 \| 14Ft Skid...") | Part **description** |
+| Col 2: Tags (e.g. "Hopper Parts") | Displayed in preview only (parts don't have a tags system) |
+| Col 3: Unit Of Measure (e.g. "Piece") | Displayed in preview only (parts don't have a unit field) |
 
-1. Add `email` to the `OrgMember` interface (it's already there but not populated).
+The SKU will be auto-derived from the Number column (truncated to 100 chars) since the CSV doesn't have a dedicated SKU column.
 
-2. In `fetchOrganizations`, after fetching profiles for each org's members, collect all unique user IDs across all orgs and make a single call to the `lookup-users-by-ids` edge function to get their emails.
+## Changes
 
-3. Merge the returned emails into each member object in `membersMap`.
+### File: `src/components/PartsCsvImport.tsx`
 
-4. In the member list UI, display the email below or next to the display name using a secondary text style (e.g., `text-xs text-muted-foreground`).
+1. Update the `ParsedPart` interface to include `tags` and `unitOfMeasure` fields for preview display
+2. Update the `parseCSV` function to map:
+   - Col 0 -> `name`
+   - Col 1 -> `description`
+   - Col 2 -> `tags` (preview only)
+   - Col 3 -> `unitOfMeasure` (preview only)
+3. Update the SKU logic: derive SKU from the name (Col 0) instead of expecting a dedicated column
+4. Update the preview UI to show tags and unit of measure badges
+5. Update the expected columns help text from "Name, SKU, Description" to "Number, Description, Tags, Unit Of Measure"
 
-### Technical Details
-
-- After the existing member/profile fetch loop, gather all user IDs into a flat array.
-- Call `supabase.functions.invoke('lookup-users-by-ids', { body: { user_ids: allUserIds } })`.
-- Map the returned `{ users: { [id]: email } }` into each org's member entries.
-- In the render, show: `{member.email && <span className="text-xs text-muted-foreground">{member.email}</span>}`.
-
-### Files to Modify
-- `src/components/OrganizationsSettings.tsx` (only file)
+No database changes are needed -- tags and unit of measure will be shown in preview but stored parts will use the existing schema (name, sku, description, folder).
 
