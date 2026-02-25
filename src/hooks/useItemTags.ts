@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -68,7 +68,7 @@ export function useItemTags(itemId?: string) {
     fetchItemTags();
   };
 
-  const selectedTagIds = itemTags.map((it) => it.tag_id);
+  const selectedTagIds = useMemo(() => itemTags.map((it) => it.tag_id), [itemTags]);
 
   return { itemTags, selectedTagIds, loading, setTagsForItem, refetch: fetchItemTags };
 }
