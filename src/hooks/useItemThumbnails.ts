@@ -4,10 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 /** Extract the storage path from a signed URL or return the value as-is */
 function extractPathFromUrl(imageUrl: string): string {
   if (!imageUrl.startsWith('http')) return imageUrl;
-  const match = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?(?:sign|upload\/sign)\/item-images\/(.+?)(?:\?|$)/);
+  const match = imageUrl.match(/\/item-images\/(.+?)(?:\?|$)/);
   if (match) return decodeURIComponent(match[1]);
-  const pubMatch = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?public\/item-images\/(.+?)(?:\?|$)/);
-  if (pubMatch) return decodeURIComponent(pubMatch[1]);
   return imageUrl;
 }
 

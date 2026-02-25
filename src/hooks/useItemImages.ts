@@ -16,15 +16,9 @@ export interface ItemImage {
 
 /** Extract the storage path from a signed URL or return the value as-is if it's already a path */
 function extractPathFromUrl(imageUrl: string): string {
-  // If it's already a plain path (no http), return as-is
   if (!imageUrl.startsWith('http')) return imageUrl;
-  // Try to extract the path after /object/sign/item-images/ or /object/upload/sign/item-images/
-  const match = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?(?:sign|upload\/sign)\/item-images\/(.+?)(?:\?|$)/);
+  const match = imageUrl.match(/\/item-images\/(.+?)(?:\?|$)/);
   if (match) return decodeURIComponent(match[1]);
-  // Try /object/public/item-images/
-  const pubMatch = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?public\/item-images\/(.+?)(?:\?|$)/);
-  if (pubMatch) return decodeURIComponent(pubMatch[1]);
-  // Fallback: return original (will be used as-is)
   return imageUrl;
 }
 
