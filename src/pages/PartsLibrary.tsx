@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
+import { PartsCsvImport } from '@/components/PartsCsvImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -105,6 +106,7 @@ export function PartsLibrary() {
               <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Parts Library</h1>
             </div>
             <div className="flex items-center gap-2">
+              <PartsCsvImport currentFolderId={currentFolderId} />
               <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2">
                 <FolderPlus className="h-4 w-4" />
                 New Folder
