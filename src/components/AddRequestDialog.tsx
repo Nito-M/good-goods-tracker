@@ -218,10 +218,14 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start" style={{ width: "var(--radix-popover-trigger-width)" }}>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-popover z-50" align="start">
                 <Command>
                   <CommandInput placeholder="Search items..." />
-                  <CommandList>
+                  <CommandList
+                    className="max-h-[min(50vh,20rem)] overflow-y-auto overscroll-contain"
+                    onWheel={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                  >
                     <CommandEmpty>No items found.</CommandEmpty>
                     <CommandGroup>
                       <CommandItem value="custom" onSelect={() => { handleItemSelect("custom"); setItemSearchOpen(false); }}>
