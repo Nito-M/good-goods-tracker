@@ -1,43 +1,29 @@
 
-Goal: fix the remaining transparency on the Jobs page when using a picture background by making table-related surfaces fully solid.
 
-What I found
-- The shared table primitive (`src/components/ui/table.tsx`) still renders the table wrapper with no explicit background, so on picture backgrounds the Jobs list table can look transparent.
-- In `src/pages/Jobs.tsx`, there are still explicit semi-transparent classes in the Job Detail section:
-  - Category row toggle: `bg-muted/50`
-  - Fallback image cell tile: `bg-muted/50`
-- The main Jobs list header row currently has no explicit header background class in this page (it relies on table defaults), so if defaults are transparent it appears see-through.
+## Show Member Emails on Organizations Screen
 
-Implementation approach
-1. Update shared table defaults so tables render on a solid surface
-- File: `src/components/ui/table.tsx`
-- Changes:
-  - Add a solid table surface on the wrapper (`bg-card`) so all tables using this component are opaque over image backgrounds.
-  - Add a default solid header background (`[&_tr]:bg-muted`) in `TableHeader` so headers are visibly solid by default.
+### Problem
+The Organizations settings screen shows member names and roles but not their email addresses. Since emails are stored in the auth system (not in public tables), we need to use the existing `lookup-users-by-ids` edge function to fetch them.
 
-2. Patch Jobs page-specific remaining translucent classes
-- File: `src/pages/Jobs.tsx`
-- Changes:
-  - Change category accordion row from `bg-muted/50` to `bg-muted`.
-  - Change placeholder thumbnail tile from `bg-muted/50` to `bg-muted`.
-  - Ensure the Jobs list header row stays explicitly solid by adding `className="bg-muted hover:bg-muted"` to its header `TableRow` (defensive page-level clarity even with shared defaults).
+### Implementation
 
-Why this fixes your issue
-- The table container itself becomes opaque (`bg-card`), so non-hovered table areas are no longer transparent.
-- Header rows and category strip rows are solid (`bg-muted`), eliminating the last translucent table-like bands in Jobs UI.
-- This preserves your existing theme system while removing unintended transparency in this workflow.
+**File: `src/components/OrganizationsSettings.tsx`**
 
-Validation checklist
-- On `/jobs` with picture background enabled:
-  - Jobs list table background is solid.
-  - Jobs list header row is solid.
-  - Hover states remain usable and readable.
-- Open a job detail:
-  - Category header strip is solid.
-  - Empty thumbnail placeholder tile is solid.
-- Verify in both dark and light custom-background modes.
-- Quick regression pass on another table screen (e.g., Inventory) to confirm shared table update still looks correct.
+1. Add `email` to the `OrgMember` interface (it's already there but not populated).
 
-Files to modify
-- `src/components/ui/table.tsx`
-- `src/pages/Jobs.tsx`
+2. In `fetchOrganizations`, after fetching profiles for each org's members, collect all unique user IDs across all orgs and make a single call to the `lookup-users-by-ids` edge function to get their emails.
+
+3. Merge the returned emails into each member object in `membersMap`.
+
+4. In the member list UI, display the email below or next to the display name using a secondary text style (e.g., `text-xs text-muted-foreground`).
+
+### Technical Details
+
+- After the existing member/profile fetch loop, gather all user IDs into a flat array.
+- Call `supabase.functions.invoke('lookup-users-by-ids', { body: { user_ids: allUserIds } })`.
+- Map the returned `{ users: { [id]: email } }` into each org's member entries.
+- In the render, show: `{member.email && <span className="text-xs text-muted-foreground">{member.email}</span>}`.
+
+### Files to Modify
+- `src/components/OrganizationsSettings.tsx` (only file)
+
