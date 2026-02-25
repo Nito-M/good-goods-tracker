@@ -88,17 +88,25 @@ export function useBulkItemTags(itemIds: string[]) {
       return;
     }
 
-    const fetchBulk = async () => {
-      // Fetch all item_tags for these items
-      const { data: itemTagsData, error: itError } = await supabase
-        .from('item_tags')
-        .select('item_id, tag_id')
-        .in('item_id', itemIds);
+    const BATCH_SIZE = 50;
 
-      if (itError) {
-        console.error('Error fetching bulk item tags:', itError);
-        return;
+    const fetchBulk = async () => {
+      // Fetch all item_tags for these items in batches to avoid URL length limits
+      const allItemTagsData: { item_id: string; tag_id: string }[] = [];
+      for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
+        const batch = itemIds.slice(i, i + BATCH_SIZE);
+        const { data, error } = await supabase
+          .from('item_tags')
+          .select('item_id, tag_id')
+          .in('item_id', batch);
+
+        if (error) {
+          console.error('Error fetching bulk item tags:', error);
+          continue;
+        }
+        if (data) allItemTagsData.push(...data);
       }
+      const itemTagsData = allItemTagsData;
 
       // Build item -> tag_ids map
       const map = new Map<string, string[]>();

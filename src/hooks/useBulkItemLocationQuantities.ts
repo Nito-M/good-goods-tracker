@@ -25,7 +25,7 @@ export function useBulkItemLocationQuantities(itemIds: string[]) {
 
     // Batch in chunks of 500 to avoid query limits
     const allRows: { item_id: string; warehouse_id: string; quantity: number }[] = [];
-    for (let i = 0; i < itemIds.length; i += 500) {
+    for (let i = 0; i < itemIds.length; i += 50) {
       const chunk = itemIds.slice(i, i + 500);
       const { data } = await supabase
         .from('item_location_quantities')
