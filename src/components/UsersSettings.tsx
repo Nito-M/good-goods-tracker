@@ -153,7 +153,6 @@ export function UsersSettings() {
           .eq('organization_id', org.id);
 
         for (const member of members) {
-          if (member.user_id === user?.id) continue;
 
           const profile = profiles?.find(p => p.user_id === member.user_id);
           const userPerms = permissions
