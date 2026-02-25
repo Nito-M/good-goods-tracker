@@ -15,6 +15,8 @@ export function ItemImageGallery({ images, itemName, fallbackImageUrl }: ItemIma
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
 
+  const getUrl = (img: ItemImage) => img.signed_url || img.image_url;
+
   // Combine gallery images with fallback single image
   const allImages = images.length > 0 
     ? images 
@@ -46,10 +48,10 @@ export function ItemImageGallery({ images, itemName, fallbackImageUrl }: ItemIma
       {/* Main Image */}
       <div 
         className="aspect-square w-full max-w-md mx-auto bg-muted rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative group"
-        onClick={() => primaryImage && handleImageClick(primaryImage.image_url)}
+        onClick={() => primaryImage && handleImageClick(getUrl(primaryImage))}
       >
         <img
-          src={primaryImage?.image_url}
+          src={primaryImage ? getUrl(primaryImage) : undefined}
           alt={itemName}
           className="w-full h-full object-contain"
         />
@@ -75,7 +77,7 @@ export function ItemImageGallery({ images, itemName, fallbackImageUrl }: ItemIma
           {thumbnailImages.map((image, index) => (
             <button
               key={image.id}
-              onClick={() => handleImageClick(image.image_url)}
+              onClick={() => handleImageClick(getUrl(image))}
               className={cn(
                 "w-16 h-16 rounded-md overflow-hidden border-2 transition-all hover:opacity-80",
                 image.is_primary 
@@ -84,7 +86,7 @@ export function ItemImageGallery({ images, itemName, fallbackImageUrl }: ItemIma
               )}
             >
               <img
-                src={image.image_url}
+                src={getUrl(image)}
                 alt={`${itemName} - Image ${index + 1}`}
                 className="w-full h-full object-cover"
               />
@@ -93,7 +95,7 @@ export function ItemImageGallery({ images, itemName, fallbackImageUrl }: ItemIma
           {allImages.length > 6 && (
             <div 
               className="w-16 h-16 rounded-md border-2 border-dashed border-border flex items-center justify-center bg-muted cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() => primaryImage && handleImageClick(primaryImage.image_url)}
+              onClick={() => primaryImage && handleImageClick(getUrl(primaryImage))}
             >
               <span className="text-xs font-medium text-muted-foreground">
                 +{allImages.length - 6}

@@ -244,10 +244,10 @@ export function MultiImageUploader({
             )}
           >
             <img
-              src={image.image_url}
+              src={image.signed_url || image.image_url}
               alt="Product"
               className="w-full h-full object-cover hover:opacity-80 transition-opacity"
-              onClick={() => handleImageClick(image.image_url)}
+              onClick={() => handleImageClick(image.signed_url || image.image_url)}
               draggable={false}
             />
             

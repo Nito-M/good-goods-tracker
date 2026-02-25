@@ -8,9 +8,36 @@ export interface ItemImage {
   item_id: string;
   user_id: string;
   image_url: string;
+  signed_url?: string;
   display_order: number;
   is_primary: boolean;
   created_at: string;
+}
+
+/** Extract the storage path from a signed URL or return the value as-is if it's already a path */
+function extractPathFromUrl(imageUrl: string): string {
+  // If it's already a plain path (no http), return as-is
+  if (!imageUrl.startsWith('http')) return imageUrl;
+  // Try to extract the path after /object/sign/item-images/ or /object/upload/sign/item-images/
+  const match = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?(?:sign|upload\/sign)\/item-images\/(.+?)(?:\?|$)/);
+  if (match) return decodeURIComponent(match[1]);
+  // Try /object/public/item-images/
+  const pubMatch = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?public\/item-images\/(.+?)(?:\?|$)/);
+  if (pubMatch) return decodeURIComponent(pubMatch[1]);
+  // Fallback: return original (will be used as-is)
+  return imageUrl;
+}
+
+async function resolveSignedUrls(rows: ItemImage[]): Promise<ItemImage[]> {
+  if (rows.length === 0) return rows;
+  const paths = rows.map(r => extractPathFromUrl(r.image_url));
+  const { data } = await supabase.storage
+    .from('item-images')
+    .createSignedUrls(paths, 3600); // 1 hour
+  return rows.map((row, i) => ({
+    ...row,
+    signed_url: data?.[i]?.signedUrl ?? row.image_url,
+  }));
 }
 
 export function useItemImages(itemId: string | undefined) {
@@ -31,7 +58,8 @@ export function useItemImages(itemId: string | undefined) {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      setImages(data || []);
+      const resolved = await resolveSignedUrls(data || []);
+      setImages(resolved);
     } catch (error) {
       console.error('Error fetching item images:', error);
     } finally {
@@ -84,7 +112,7 @@ export function useItemImages(itemId: string | undefined) {
         .insert({
           item_id: itemId,
           user_id: user.id,
-          image_url: signedData.signedUrl,
+          image_url: fileName,
           display_order: maxOrder + 1,
           is_primary: shouldBePrimary,
         })
@@ -93,7 +121,8 @@ export function useItemImages(itemId: string | undefined) {
 
       if (error) throw error;
 
-      setImages(prev => [...prev, data]);
+      const withUrl = { ...data, signed_url: signedData.signedUrl };
+      setImages(prev => [...prev, withUrl]);
       return signedData.signedUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -207,7 +236,7 @@ export function useItemImages(itemId: string | undefined) {
         .insert({
           item_id: targetItemId,
           user_id: user.id,
-          image_url: signedData.signedUrl,
+          image_url: fileName,
           display_order: 0,
           is_primary: isPrimary,
         })
