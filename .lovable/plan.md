@@ -1,23 +1,54 @@
 
+Goal: Make the item picker in “Create New Request” scroll independently so users can browse long inventory lists.
 
-## Fix: Independent Scrolling for Assembly List
+What I found in the code
+- The create-request form is in `src/components/AddRequestDialog.tsx`.
+- The item picker uses a Popover + Command list:
+  - `PopoverContent` at the item selector block.
+  - `CommandList` for inventory rows.
+- Base `CommandList` already has `max-h-[300px] overflow-y-auto` in `src/components/ui/command.tsx`, but inside a scrollable dialog (`DialogContent` uses `overflow-y-auto`) wheel/touch scroll can still bubble and feel like the dropdown is not scrolling.
+- The current `PopoverContent` width is set with inline style and `w-full`; I’ll switch this to the same stable pattern used elsewhere in your app (`w-[--radix-popover-trigger-width]`) for consistency.
 
-### Problem
-The previous fix (adding `min-h-0`) didn't resolve the scrolling issue. The assembly list on the left (red circled area) still scrolls together with everything else. The root cause is that `h-full` on the page wrapper doesn't properly resolve height constraints through the flexbox chain, so the content grows unbounded instead of being contained.
+Implementation plan
+1. Update only the request-creation item dropdown container
+   - File: `src/components/AddRequestDialog.tsx`
+   - In the item selection Popover:
+     - Change `PopoverContent` class to:
+       - fixed trigger width (`w-[--radix-popover-trigger-width]`)
+       - `p-0`
+       - explicit solid background and strong stacking context (`bg-popover`, higher `z-index`) to avoid any overlay/pointer oddities.
+   - Keep alignment as `start`.
 
-### Solution
-Replace the relative `h-full` on the outer page wrapper with an absolute viewport height calculation that accounts for the AppLayout header bars (56px on mobile, 48px on desktop). This guarantees the page container has a fixed height, making the flex children properly constrain and enabling `overflow-auto` on just the assembly list.
+2. Force the dropdown list itself to own scrolling
+   - File: `src/components/AddRequestDialog.tsx`
+   - On the `CommandList` used for items:
+     - Add explicit classes such as:
+       - `max-h-[min(50vh,20rem)]`
+       - `overflow-y-auto`
+       - `overscroll-contain`
+     - Add wheel/touch propagation guards (stop propagation) so dialog/page scrolling does not steal the scroll gesture while pointer is over the item list.
 
-### Changes
+3. Keep behavior unchanged for selection/search
+   - Preserve existing search/filter behavior and `onSelect` handlers.
+   - No data, backend, or permissions changes required.
 
-**`src/pages/Assemblies.tsx`**
+Why this approach
+- It targets the exact control the user reported (Create Request item dropdown) without risking side effects to every combobox globally.
+- It addresses the two common failure points in nested scroll UIs:
+  - weak scroll ownership (list not clearly constrained),
+  - event bubbling to parent scroll containers.
 
-1. **Line 413** - Change the outer wrapper class from `h-full` to explicit viewport-based heights:
-   - From: `"flex h-full overflow-hidden flex-col"`
-   - To: `"flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3rem)] overflow-hidden flex-col"`
-   - 3.5rem = 56px (mobile header), 3rem = 48px (desktop header)
+Validation checklist (end-to-end)
+1. Open Requests → New Request.
+2. Open Item dropdown with many inventory items.
+3. Scroll with mouse wheel/trackpad/touch inside dropdown:
+   - Item list should move.
+   - Dialog body should not move while pointer is over list.
+4. Type in search and verify filtered results still scroll.
+5. Select an item near bottom of list and confirm it fills name/SKU correctly.
 
-This single change ensures the entire page is height-constrained to the viewport minus the AppLayout header. The existing `min-h-0` and `flex-1 overflow-auto` on the list (line 442) will then work correctly, making only the assembly cards scroll while the sidebar header (type name, buttons, search) and the right detail panel remain fixed.
-
-### Why the previous fix didn't work
-`h-full` resolves to 100% of the parent's height. In a flexbox layout where the parent's height is computed by `flex-1` rather than set explicitly, percentage-based heights can fail to resolve in some browsers. Using viewport units (`100vh - header`) bypasses this entirely.
+Technical notes
+- Planned files to modify:
+  - `src/components/AddRequestDialog.tsx` (only)
+- No database, schema, auth, or backend function changes.
+- If you want this same fix applied app-wide after this, I can follow up by hardening `src/components/ui/command.tsx` globally in a separate pass.
