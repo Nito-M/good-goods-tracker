@@ -226,7 +226,7 @@ export function Jobs() {
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="bg-muted hover:bg-muted">
                     <TableHead className="w-10"></TableHead>
                     <TableHead>Job #</TableHead>
                     <TableHead>Title</TableHead>
@@ -460,7 +460,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                       <div key={category} className="border border-border rounded-lg mb-3 overflow-hidden">
                         <button
                           onClick={() => toggleCategory(category)}
-                          className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted transition-colors text-left"
+                          className="w-full flex items-center justify-between px-4 py-3 bg-muted hover:bg-muted transition-colors text-left"
                         >
                           <div className="flex items-center gap-2">
                             <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
@@ -495,7 +495,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                           onClick={(e) => { e.stopPropagation(); setViewerImage({ url: thumbUrl, alt: item.itemName }); }}
                                         />
                                       ) : (
-                                        <div className="w-16 h-16 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                                        <div className="w-16 h-16 rounded-md border border-border bg-muted flex items-center justify-center">
                                           <ImageIcon className="h-5 w-5 text-muted-foreground" />
                                         </div>
                                       )}
