@@ -51,6 +51,7 @@ function parseCSVRows(text: string): string[][] {
   let row: string[] = [];
   let cell = '';
   let inQuotes = false;
+  let cellStart = true;
 
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
@@ -66,20 +67,27 @@ function parseCSVRows(text: string): string[][] {
         cell += ch;
       }
     } else {
-      if (ch === '"') {
+      if (ch === '"' && cellStart) {
         inQuotes = true;
+        cellStart = false;
+      } else if (ch === '"') {
+        // Quote in the middle of an unquoted cell — treat as literal
+        cell += ch;
       } else if (ch === ',') {
         row.push(cell.trim());
         cell = '';
+        cellStart = true;
       } else if (ch === '\r') {
         // skip
       } else if (ch === '\n') {
         row.push(cell.trim());
         cell = '';
+        cellStart = true;
         if (row.some(c => c !== '')) rows.push(row);
         row = [];
       } else {
         cell += ch;
+        cellStart = false;
       }
     }
   }
