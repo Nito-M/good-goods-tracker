@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput } from 'lucide-react';
+import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
 import { PartsCsvImport } from '@/components/PartsCsvImport';
@@ -30,6 +31,9 @@ export function PartsLibrary() {
   const [newFolderName, setNewFolderName] = useState('');
   const [renamingFolder, setRenamingFolder] = useState<{ id: string; name: string } | null>(null);
   const [movingPartId, setMovingPartId] = useState<string | null>(null);
+  const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
+  const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
   const { toast } = useToast();
 
   const loading = partsLoading || foldersLoading;
@@ -87,6 +91,26 @@ export function PartsLibrary() {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedPartIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkMove = async (targetFolderId: string | null) => {
+    let moved = 0;
+    for (const id of selectedPartIds) {
+      const ok = await updatePart(id, { folderId: targetFolderId });
+      if (ok) moved++;
+    }
+    toast({ title: `${moved} part${moved !== 1 ? 's' : ''} moved` });
+    setSelectedPartIds(new Set());
+    setSelectMode(false);
+    setBulkMoveOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -106,15 +130,38 @@ export function PartsLibrary() {
               <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Parts Library</h1>
             </div>
             <div className="flex items-center gap-2">
-              <PartsCsvImport currentFolderId={currentFolderId} />
-              <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2">
-                <FolderPlus className="h-4 w-4" />
-                New Folder
-              </Button>
-              <Button onClick={() => navigate('/parts/library/new')} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Part
-              </Button>
+              {selectMode ? (
+                <>
+                  <span className="text-sm text-muted-foreground">{selectedPartIds.size} selected</span>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    disabled={selectedPartIds.size === 0}
+                    onClick={() => setBulkMoveOpen(true)}
+                    className="gap-2"
+                  >
+                    <FolderInput className="h-4 w-4" /> Move Selected
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => { setSelectMode(false); setSelectedPartIds(new Set()); }}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="icon" onClick={() => setSelectMode(true)} title="Select multiple">
+                    <CheckSquare className="h-4 w-4" />
+                  </Button>
+                  <PartsCsvImport currentFolderId={currentFolderId} />
+                  <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2">
+                    <FolderPlus className="h-4 w-4" />
+                    New Folder
+                  </Button>
+                  <Button onClick={() => navigate('/parts/library/new')} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Part
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -213,10 +260,21 @@ export function PartsLibrary() {
                 {filtered.map(part => (
                   <Card
                     key={part.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow group relative"
-                    onClick={() => navigate(`/parts/library/${part.id}`)}
+                    className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
+                    onClick={() => {
+                      if (selectMode) { toggleSelect(part.id); }
+                      else { navigate(`/parts/library/${part.id}`); }
+                    }}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 relative">
+                      {selectMode && (
+                        <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedPartIds.has(part.id)}
+                            onCheckedChange={() => toggleSelect(part.id)}
+                          />
+                        </div>
+                      )}
                       <div className="aspect-square bg-muted rounded-md mb-3 overflow-hidden flex items-center justify-center">
                         {part.imageUrl ? (
                           <PartImage storagePath={part.imageUrl} />
@@ -344,6 +402,38 @@ export function PartsLibrary() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setMovingPartId(null)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Move Dialog */}
+      <Dialog open={bulkMoveOpen} onOpenChange={open => !open && setBulkMoveOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move {selectedPartIds.size} part{selectedPartIds.size !== 1 ? 's' : ''} to folder</DialogTitle>
+            <DialogDescription>Select a destination folder.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            <button
+              onClick={() => handleBulkMove(null)}
+              className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+            >
+              <Folder className="h-4 w-4 text-muted-foreground" />
+              Root (no folder)
+            </button>
+            {folders.map(folder => (
+              <button
+                key={folder.id}
+                onClick={() => handleBulkMove(folder.id)}
+                className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+              >
+                <Folder className="h-4 w-4 text-primary" />
+                {getBreadcrumb(folder.id).map(f => f.name).join(' / ')}
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkMoveOpen(false)}>Cancel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
