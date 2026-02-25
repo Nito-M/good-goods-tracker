@@ -156,12 +156,14 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     }
   }, [isEditing, existingLocations]);
 
-  // Sync pending tags from loaded item tags
+  // Sync pending tags from loaded item tags (only on initial load)
+  const [tagsInitialized, setTagsInitialized] = useState(false);
   useEffect(() => {
-    if (isEditing && selectedTagIds.length > 0) {
+    if (isEditing && selectedTagIds.length > 0 && !tagsInitialized) {
       setPendingTagIds(selectedTagIds);
+      setTagsInitialized(true);
     }
-  }, [isEditing, selectedTagIds]);
+  }, [isEditing, selectedTagIds, tagsInitialized]);
 
   // Initialize vendor prices from existing data when editing
   useEffect(() => {
