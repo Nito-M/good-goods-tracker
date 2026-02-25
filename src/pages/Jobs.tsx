@@ -414,7 +414,21 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Job Details</h1>
                 <div className="flex items-center gap-2">
                   <button onClick={() => navigate(`/jobs/${job.id}/description`)} className="text-xs font-mono text-muted-foreground hover:underline cursor-pointer">{job.jobNumber}</button>
-                  <Badge className={statusColors[job.status] || ''}>{job.status}</Badge>
+                  <Select value={job.status} onValueChange={(val) => onUpdateStatus(val)}>
+                    <SelectTrigger className="h-7 w-auto gap-1 px-2 text-xs font-semibold border-0 shadow-none">
+                      <Badge className={statusColors[job.status] || ''}>{STATUS_OPTIONS.find(s => s.value === job.status)?.label || job.status}</Badge>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map(s => (
+                        <SelectItem key={s.value} value={s.value}>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block w-2 h-2 rounded-full ${statusColors[s.value]?.split(' ')[0] || ''}`} />
+                            {s.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <p className="text-sm text-muted-foreground">{job.title}</p>
               </div>
