@@ -102,6 +102,21 @@ export function OrganizationsSettings() {
           membersMap[org.id] = [];
         }
       }
+      // Fetch emails for all members via edge function
+      const allUserIds = [...new Set(Object.values(membersMap).flat().map(m => m.user_id))];
+      if (allUserIds.length > 0) {
+        const { data: emailData } = await supabase.functions.invoke('lookup-users-by-ids', {
+          body: { user_ids: allUserIds },
+        });
+        if (emailData?.users) {
+          for (const orgId of Object.keys(membersMap)) {
+            membersMap[orgId] = membersMap[orgId].map(m => ({
+              ...m,
+              email: emailData.users[m.user_id] || null,
+            }));
+          }
+        }
+      }
       setOrgMembers(membersMap);
     }
     setLoading(false);
@@ -328,12 +343,17 @@ export function OrganizationsSettings() {
                             className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
                           >
                             <div>
-                              <span className="font-medium">
-                                {member.display_name || 'Unknown'}
-                              </span>
-                              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
-                                {member.role}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  {member.display_name || 'Unknown'}
+                                </span>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
+                                  {member.role}
+                                </span>
+                              </div>
+                              {member.email && (
+                                <span className="text-xs text-muted-foreground">{member.email}</span>
+                              )}
                             </div>
                             <Button
                               variant="ghost"
