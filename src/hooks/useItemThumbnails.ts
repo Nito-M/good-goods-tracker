@@ -1,6 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+/** Extract the storage path from a signed URL or return the value as-is */
+function extractPathFromUrl(imageUrl: string): string {
+  if (!imageUrl.startsWith('http')) return imageUrl;
+  const match = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?(?:sign|upload\/sign)\/item-images\/(.+?)(?:\?|$)/);
+  if (match) return decodeURIComponent(match[1]);
+  const pubMatch = imageUrl.match(/\/(?:object|storage)\/(?:v1\/)?public\/item-images\/(.+?)(?:\?|$)/);
+  if (pubMatch) return decodeURIComponent(pubMatch[1]);
+  return imageUrl;
+}
+
 export function useItemThumbnails(itemIds: string[]) {
   const [thumbnailMap, setThumbnailMap] = useState<Map<string, string>>(new Map());
 
@@ -24,9 +34,21 @@ export function useItemThumbnails(itemIds: string[]) {
         return;
       }
 
+      if (!data || data.length === 0) {
+        setThumbnailMap(new Map());
+        return;
+      }
+
+      // Generate fresh signed URLs for all paths
+      const paths = data.map(row => extractPathFromUrl(row.image_url));
+      const { data: signedData } = await supabase.storage
+        .from('item-images')
+        .createSignedUrls(paths, 3600);
+
       const map = new Map<string, string>();
-      data?.forEach((row) => {
-        map.set(row.item_id, row.image_url);
+      data.forEach((row, i) => {
+        const url = signedData?.[i]?.signedUrl ?? row.image_url;
+        map.set(row.item_id, url);
       });
       setThumbnailMap(map);
     };
