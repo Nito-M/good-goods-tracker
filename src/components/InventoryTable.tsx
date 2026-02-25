@@ -29,11 +29,13 @@ import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 interface InventoryTableProps {
   items: InventoryItem[];
   onDelete: (id: string) => void;
+  warehouseFilter?: string;
+  warehouseItemQtyMap?: Map<string, number>;
 }
 
 const PAGE_SIZE = 40;
 
-export function InventoryTable({ items, onDelete }: InventoryTableProps) {
+export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItemQtyMap }: InventoryTableProps) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   useEffect(() => { setCurrentPage(1); }, [items]);
@@ -71,6 +73,9 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
             </TableRow>
           ) : (
             pagedItems.map((item) => {
+              const displayQty = warehouseFilter && warehouseItemQtyMap
+                ? (warehouseItemQtyMap.get(`${warehouseFilter}:${item.id}`) ?? 0)
+                : item.quantity;
               const isLowStock = item.quantity <= item.minStock;
               return (
                 <TableRow
@@ -126,11 +131,11 @@ export function InventoryTable({ items, onDelete }: InventoryTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {item.quantity} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                    {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatCurrency(item.price)}</TableCell>
                   <TableCell className="text-right tabular-nums font-medium">
-                    {formatCurrency(item.quantity * item.price)}
+                    {formatCurrency(displayQty * item.price)}
                   </TableCell>
                   <TableCell>
                     <Badge

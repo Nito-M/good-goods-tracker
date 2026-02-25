@@ -71,7 +71,7 @@ export const Items = ({
   const { warehouses, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const { itemTagsMap } = useBulkItemTags(itemIds);
-  const { warehouseItemMap } = useBulkItemLocationQuantities(itemIds);
+  const { warehouseItemMap, warehouseItemQtyMap } = useBulkItemLocationQuantities(itemIds);
 
   // Location management state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -251,6 +251,8 @@ export const Items = ({
           <InventoryTable
             items={filteredItems}
             onDelete={onDelete}
+            warehouseFilter={warehouseFilter !== 'all' ? warehouseFilter : undefined}
+            warehouseItemQtyMap={warehouseItemQtyMap}
           />
         )}
       </main>
