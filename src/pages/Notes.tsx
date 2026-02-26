@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNotes } from "@/hooks/useNotes";
 import { Note, NoteColor } from "@/types/note";
 import { Button } from "@/components/ui/button";
@@ -69,6 +69,7 @@ export function Notes() {
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newColor, setNewColor] = useState<NoteColor>("default");
+  const editContentRef = useRef<HTMLTextAreaElement>(null);
 
   // Filter notes by search
   const filteredNotes = notes.filter(
@@ -449,7 +450,10 @@ export function Notes() {
 
       {/* Edit Note Dialog */}
       <Dialog open={!!editingNote} onOpenChange={(open) => !open && handleUpdateNote()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          setTimeout(() => editContentRef.current?.focus(), 0);
+        }}>
           <DialogHeader>
             <DialogTitle>Edit Note</DialogTitle>
           </DialogHeader>
@@ -485,6 +489,7 @@ export function Notes() {
                   }
                 />
                 <Textarea
+                  ref={editContentRef}
                   placeholder="Write your note..."
                   value={editingNote.content}
                   onChange={(e) =>
