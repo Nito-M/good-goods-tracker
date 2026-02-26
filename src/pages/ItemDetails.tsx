@@ -567,6 +567,7 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                               day: 'numeric',
                               year: 'numeric',
                             })}
+                            {vp.lead_time_days && ` • Lead time: ${vp.lead_time_days} day${vp.lead_time_days !== 1 ? 's' : ''}`}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">

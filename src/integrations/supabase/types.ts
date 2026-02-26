@@ -578,6 +578,7 @@ export type Database = {
           created_at: string
           id: string
           item_id: string
+          lead_time_days: number | null
           link: string | null
           price: number
           updated_at: string
@@ -589,6 +590,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_id: string
+          lead_time_days?: number | null
           link?: string | null
           price?: number
           updated_at?: string
@@ -600,6 +602,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_id?: string
+          lead_time_days?: number | null
           link?: string | null
           price?: number
           updated_at?: string

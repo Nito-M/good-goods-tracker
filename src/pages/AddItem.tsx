@@ -45,6 +45,7 @@ interface VendorPriceEntry {
   price: string;
   link?: string;
   vendorSku?: string;
+  leadTimeDays?: string;
   isNew?: boolean;
 }
 
@@ -185,6 +186,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
           price: String(p.price),
           link: p.link || '',
           vendorSku: p.vendor_sku || '',
+          leadTimeDays: p.lead_time_days ? String(p.lead_time_days) : '',
           isNew: false,
         }))
       );
@@ -341,6 +343,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                 price: parseFloat(vp.price),
                 link: vp.link || null,
                 vendor_sku: vp.vendorSku || null,
+                lead_time_days: vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null,
                 user_id: user.id,
               });
               if (error) {
@@ -389,7 +392,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       }
       for (const vp of vendorPrices) {
         if (vp.price) {
-          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
+          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null);
         }
       }
       toast({ title: 'Vendor prices saved successfully' });
