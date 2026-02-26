@@ -682,6 +682,52 @@ All colors MUST be HSL.
   --sidebar-foreground: 330 81% 60%;
 }
 
+/* Border Color Overrides */
+.border-color-normal {
+  --border: 200 60% 50%;
+  --input: 200 60% 50%;
+}
+.border-color-green {
+  --border: 142 76% 36%;
+  --input: 142 76% 36%;
+}
+.border-color-blue {
+  --border: 217 91% 60%;
+  --input: 217 91% 60%;
+}
+.border-color-grey {
+  --border: 215 16% 47%;
+  --input: 215 16% 47%;
+}
+.border-color-red {
+  --border: 0 72% 50%;
+  --input: 0 72% 50%;
+}
+.border-color-yellow {
+  --border: 48 96% 53%;
+  --input: 48 96% 53%;
+}
+.border-color-white {
+  --border: 0 0% 95%;
+  --input: 0 0% 95%;
+}
+.border-color-purple {
+  --border: 271 76% 53%;
+  --input: 271 76% 53%;
+}
+.border-color-pink {
+  --border: 330 81% 60%;
+  --input: 330 81% 60%;
+}
+.border-color-orange {
+  --border: 24 95% 53%;
+  --input: 24 95% 53%;
+}
+.border-color-gold {
+  --border: 43 90% 55%;
+  --input: 43 90% 55%;
+}
+
 @layer base {
   * {
     @apply border-border;

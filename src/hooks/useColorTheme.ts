@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export type ColorTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'yellow' | 'white' | 'purple' | 'pink' | 'orange' | 'gold';
 export type BackgroundTheme = 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'black' | 'black-gold' | 'midnight-silver' | 'dark-emerald' | 'charcoal-rose' | 'custom';
 export type CustomTextColor = 'default' | 'black' | 'white' | 'gold' | 'red' | 'blue' | 'grey' | 'green' | 'orange' | 'purple' | 'pink';
+export type BorderColor = 'default' | 'normal' | 'green' | 'blue' | 'grey' | 'red' | 'yellow' | 'white' | 'purple' | 'pink' | 'orange' | 'gold';
 
 export type CardOpacity = 0 | 25 | 50 | 75 | 100;
 
@@ -14,6 +15,7 @@ const CUSTOM_BG_LIGHT_KEY = 'custom-bg-light';
 const CUSTOM_TEXT_COLOR_KEY = 'custom-text-color';
 const BACKGROUND_IMAGE_URL_KEY = 'background-image-url';
 const CARD_OPACITY_KEY = 'card-opacity';
+const BORDER_COLOR_KEY = 'border-color';
 
 export function useColorTheme() {
   const { user } = useAuth();
@@ -54,6 +56,13 @@ export function useColorTheme() {
     return 100;
   });
 
+  const [borderColor, setBorderColorState] = useState<BorderColor>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem(BORDER_COLOR_KEY) as BorderColor) || 'default';
+    }
+    return 'default';
+  });
+
   const [loaded, setLoaded] = useState(false);
 
   const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(() => {
@@ -74,7 +83,7 @@ export function useColorTheme() {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('color_theme, background_theme, background_image_url, custom_bg_light, custom_text_color, card_opacity')
+          .select('color_theme, background_theme, background_image_url, custom_bg_light, custom_text_color, card_opacity, border_color')
           .eq('user_id', user.id)
           .single();
 
@@ -104,6 +113,10 @@ export function useColorTheme() {
           const opacity = (data.card_opacity ?? 100) as CardOpacity;
           setCardOpacityState(opacity);
           localStorage.setItem(CARD_OPACITY_KEY, String(opacity));
+          if (data.border_color) {
+            setBorderColorState(data.border_color as BorderColor);
+            localStorage.setItem(BORDER_COLOR_KEY, data.border_color);
+          }
         }
       } catch (error) {
         console.error('Error loading theme from database:', error);
@@ -199,6 +212,18 @@ export function useColorTheme() {
     }
   }, [cardOpacity, backgroundTheme]);
 
+  // Apply border color
+  useEffect(() => {
+    const root = document.documentElement;
+    const borderColorClasses = ['border-color-normal', 'border-color-green', 'border-color-blue', 'border-color-grey', 'border-color-red', 'border-color-yellow', 'border-color-white', 'border-color-purple', 'border-color-pink', 'border-color-orange', 'border-color-gold'];
+    root.classList.remove(...borderColorClasses);
+    
+    if (borderColor && borderColor !== 'default') {
+      root.classList.add(`border-color-${borderColor}`);
+    }
+    localStorage.setItem(BORDER_COLOR_KEY, borderColor);
+  }, [borderColor]);
+
   const setColorTheme = (theme: ColorTheme) => {
     setColorThemeState(theme);
     saveToDatabase(theme, backgroundTheme);
@@ -269,5 +294,19 @@ export function useColorTheme() {
     }
   };
 
-  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, loaded };
+  const setBorderColor = async (color: BorderColor) => {
+    setBorderColorState(color);
+    localStorage.setItem(BORDER_COLOR_KEY, color);
+    if (!user) return;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ border_color: color === 'default' ? null : color })
+        .eq('user_id', user.id);
+    } catch (error) {
+      console.error('Error saving border color:', error);
+    }
+  };
+
+  return { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, borderColor, setBorderColor, loaded };
 }

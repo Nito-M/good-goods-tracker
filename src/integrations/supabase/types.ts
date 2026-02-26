@@ -1224,6 +1224,7 @@ export type Database = {
           background_image_url: string | null
           background_theme: string | null
           birth_year: number | null
+          border_color: string | null
           business_address: string | null
           business_email: string | null
           business_name: string | null
@@ -1256,6 +1257,7 @@ export type Database = {
           background_image_url?: string | null
           background_theme?: string | null
           birth_year?: number | null
+          border_color?: string | null
           business_address?: string | null
           business_email?: string | null
           business_name?: string | null
@@ -1288,6 +1290,7 @@ export type Database = {
           background_image_url?: string | null
           background_theme?: string | null
           birth_year?: number | null
+          border_color?: string | null
           business_address?: string | null
           business_email?: string | null
           business_name?: string | null
