@@ -349,6 +349,8 @@ export type Database = {
       }
       inventory_items: {
         Row: {
+          box_amount: number
+          bundle_amount: number
           category: string
           colors: string[] | null
           cost: number
@@ -364,6 +366,8 @@ export type Database = {
           image_url: string | null
           min_stock: number
           name: string
+          pallet_amount: number
+          piece_length: number
           price: number
           quantity: number
           quantity_unit: string
@@ -376,6 +380,8 @@ export type Database = {
           weight_unit: string
         }
         Insert: {
+          box_amount?: number
+          bundle_amount?: number
           category: string
           colors?: string[] | null
           cost?: number
@@ -391,6 +397,8 @@ export type Database = {
           image_url?: string | null
           min_stock?: number
           name: string
+          pallet_amount?: number
+          piece_length?: number
           price?: number
           quantity?: number
           quantity_unit?: string
@@ -403,6 +411,8 @@ export type Database = {
           weight_unit?: string
         }
         Update: {
+          box_amount?: number
+          bundle_amount?: number
           category?: string
           colors?: string[] | null
           cost?: number
@@ -418,6 +428,8 @@ export type Database = {
           image_url?: string | null
           min_stock?: number
           name?: string
+          pallet_amount?: number
+          piece_length?: number
           price?: number
           quantity?: number
           quantity_unit?: string

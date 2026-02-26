@@ -97,6 +97,10 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
       dimensions,
       colors: colors.split(',').map((c) => c.trim()).filter(Boolean),
       description,
+      palletAmount: 0,
+      boxAmount: 0,
+      bundleAmount: 0,
+      pieceLength: 0,
     };
 
     if (editItem && onUpdate) {

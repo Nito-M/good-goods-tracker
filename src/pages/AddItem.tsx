@@ -112,6 +112,10 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [isSavingVendors, setIsSavingVendors] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [palletAmount, setPalletAmount] = useState('');
+  const [boxAmount, setBoxAmount] = useState('');
+  const [bundleAmount, setBundleAmount] = useState('');
+  const [pieceLength, setPieceLength] = useState('');
   // Staged images for new item creation (before saving)
   const [stagedImages, setStagedImages] = useState<StagedImage[]>([]);
   useEffect(() => {
@@ -137,6 +141,10 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       }
       setColors(editItem.colors.join(', '));
       setDescription(editItem.description);
+      setPalletAmount(String(editItem.palletAmount || ''));
+      setBoxAmount(String(editItem.boxAmount || ''));
+      setBundleAmount(String(editItem.bundleAmount || ''));
+      setPieceLength(String(editItem.pieceLength || ''));
       // Location entries will be populated from existingLocations effect below
       // Keep backward compat: if item has warehouseId but no location entries, seed one
       if (editItem.warehouseId) {
@@ -275,6 +283,10 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       description,
       imageUrl: finalImageUrl,
       warehouseId: null,
+      palletAmount: parseFloat(palletAmount) || 0,
+      boxAmount: parseFloat(boxAmount) || 0,
+      bundleAmount: parseFloat(bundleAmount) || 0,
+      pieceLength: parseFloat(pieceLength) || 0,
     };
 
     const locationData = locationEntries
@@ -608,6 +620,63 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   onChange={(e) => setMinStock(e.target.value)}
                   placeholder="0"
                   required
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Packaging & Bundling */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Packaging & Bundling</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="palletAmount">Pallet Amount</Label>
+                <Input
+                  id="palletAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={palletAmount}
+                  onChange={(e) => setPalletAmount(e.target.value)}
+                  placeholder="Qty per pallet"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="boxAmount">Box Amount</Label>
+                <Input
+                  id="boxAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={boxAmount}
+                  onChange={(e) => setBoxAmount(e.target.value)}
+                  placeholder="Qty per box"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bundleAmount">Bundle Amount</Label>
+                <Input
+                  id="bundleAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={bundleAmount}
+                  onChange={(e) => setBundleAmount(e.target.value)}
+                  placeholder="Qty per bundle"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pieceLength">Length per Piece</Label>
+                <Input
+                  id="pieceLength"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={pieceLength}
+                  onChange={(e) => setPieceLength(e.target.value)}
+                  placeholder="Length of 1 piece"
                 />
               </div>
             </CardContent>
