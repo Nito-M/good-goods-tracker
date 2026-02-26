@@ -147,7 +147,7 @@ export function AssemblyTypes() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        {!loading && typeGroups.length > 0 && (
+        {!loading && assemblies.length > 0 && (
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -164,11 +164,21 @@ export function AssemblyTypes() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-20 text-center">
               <Layers className="h-16 w-16 text-muted-foreground mb-4 opacity-30" />
-              <h3 className="text-lg font-semibold mb-2">No assembly types yet</h3>
-              <p className="text-muted-foreground mb-6">Create a type to start organizing your assemblies.</p>
-              <Button onClick={() => setCreateOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" /> New Type
-              </Button>
+              {searchQuery.trim() ? (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">No matching assemblies</h3>
+                  <p className="text-muted-foreground mb-6">Try a different search term.</p>
+                  <Button variant="outline" onClick={() => setSearchQuery('')}>Clear Search</Button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">No assembly types yet</h3>
+                  <p className="text-muted-foreground mb-6">Create a type to start organizing your assemblies.</p>
+                  <Button onClick={() => setCreateOpen(true)} className="gap-2">
+                    <Plus className="h-4 w-4" /> New Type
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         ) : (
