@@ -139,12 +139,58 @@ export function useCategories() {
     fetchCategories();
   };
 
+  const moveCategoryToSubcategory = async (categoryId: string, targetParentCategoryId: string) => {
+    if (!user) return;
+
+    const sourceCategory = categories.find((c) => c.id === categoryId);
+    const targetCategory = categories.find((c) => c.id === targetParentCategoryId);
+    if (!sourceCategory || !targetCategory) {
+      toast({ title: 'Category not found', variant: 'destructive' });
+      return;
+    }
+
+    // 1. Create subcategory under the target parent
+    const { error: subError } = await supabase.from('subcategories').insert({
+      category_id: targetParentCategoryId,
+      name: sourceCategory.name,
+      user_id: user.id,
+    });
+    if (subError) {
+      console.error('Error creating subcategory:', subError);
+      toast({ title: 'Error moving category', description: subError.message, variant: 'destructive' });
+      return;
+    }
+
+    // 2. Update all inventory items with the old category
+    const { error: updateError } = await supabase
+      .from('inventory_items')
+      .update({ category: targetCategory.name, subcategory: sourceCategory.name })
+      .eq('category', sourceCategory.name);
+    if (updateError) {
+      console.error('Error updating items:', updateError);
+      toast({ title: 'Error updating items', description: updateError.message, variant: 'destructive' });
+      return;
+    }
+
+    // 3. Delete the old category
+    const { error: deleteError } = await supabase.from('categories').delete().eq('id', categoryId);
+    if (deleteError) {
+      console.error('Error deleting old category:', deleteError);
+      toast({ title: 'Error removing old category', description: deleteError.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: `"${sourceCategory.name}" moved under "${targetCategory.name}"` });
+    fetchCategories();
+  };
+
   return {
     categories,
     allCategories,
     loading,
     addCategory,
     deleteCategory,
+    moveCategoryToSubcategory,
     refetch: fetchCategories,
   };
 }
