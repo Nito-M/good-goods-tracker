@@ -18,18 +18,18 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   useEffect(() => {
     const fetchOrgName = async () => {
-      if (!user) { setOrgName(null); return; }
-      const { data } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .limit(1);
+      if (!user) {setOrgName(null);return;}
+      const { data } = await supabase.
+      from('organization_members').
+      select('organization_id').
+      eq('user_id', user.id).
+      limit(1);
       if (data && data.length > 0) {
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('name')
-          .eq('id', data[0].organization_id)
-          .single();
+        const { data: org } = await supabase.
+        from('organizations').
+        select('name').
+        eq('id', data[0].organization_id).
+        single();
         setOrgName(org?.name || null);
       }
     };
@@ -53,12 +53,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Menu className="h-5 w-5" />
               </SidebarTrigger>
               <span className="ml-3 font-semibold text-foreground">Zumy</span>
-              {orgName && (
-                <span className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
+              {orgName &&
+              <span className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
                   <Building2 className="h-3 w-3" />
                   {orgName}
                 </span>
-              )}
+              }
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -66,29 +66,29 @@ export function AppLayout({ children }: AppLayoutProps) {
                 size="icon"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="h-9 w-9"
-              >
+                className="h-9 w-9">
+
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
               <OfflineIndicator />
             </div>
           </header>
           {/* Desktop header with offline indicator */}
-          <header className="hidden md:flex items-center justify-between h-12 border-b border-border px-4 bg-background sticky top-0 z-40 gap-2">
-            {orgName ? (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <header className="hidden md:flex items-center justify-between h-12 border-b border-border px-4 bg-background sticky top-0 z-40 gap-2 opacity-0">
+            {orgName ?
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
                 {orgName}
-              </span>
-            ) : <span />}
+              </span> :
+            <span />}
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="h-8 w-8"
-              >
+                className="h-8 w-8">
+
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
               <OfflineIndicator />
@@ -99,6 +99,6 @@ export function AppLayout({ children }: AppLayoutProps) {
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>);
+
 }
