@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,6 +43,7 @@ import { ResetPassword } from "./pages/ResetPassword";
 import { CompanyDetail } from "./pages/CompanyDetail";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
+import { useSubcategories } from "@/hooks/useSubcategories";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
@@ -66,8 +68,22 @@ function AppContent() {
     uploadItemImage,
   } = useInventory();
 
-  const { allCategories } = useCategories();
+  const { allCategories, categories } = useCategories();
+  const { subcategories } = useSubcategories();
 
+  // Build a map of category name -> subcategories for AddItemPage
+  const subcategoriesByCategory = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }[]>();
+    for (const cat of categories) {
+      const subs = subcategories
+        .filter((s) => s.category_id === cat.id)
+        .map((s) => ({ id: s.id, name: s.name }));
+      if (subs.length > 0) {
+        map.set(cat.name, subs);
+      }
+    }
+    return map;
+  }, [categories, subcategories]);
 
   return (
     <>
@@ -126,6 +142,7 @@ function AppContent() {
                   onDelete={deleteItem}
                   items={allItems}
                   uploadItemImage={uploadItemImage}
+                  subcategoriesByCategory={subcategoriesByCategory}
                 />
               </AppLayout>
             </ProtectedRoute>
@@ -143,6 +160,7 @@ function AppContent() {
                   onDelete={deleteItem}
                   items={allItems}
                   uploadItemImage={uploadItemImage}
+                  subcategoriesByCategory={subcategoriesByCategory}
                 />
               </AppLayout>
             </ProtectedRoute>

@@ -368,6 +368,7 @@ export type Database = {
           quantity: number
           quantity_unit: string
           sku: string
+          subcategory: string | null
           updated_at: string
           user_id: string | null
           warehouse_id: string | null
@@ -394,6 +395,7 @@ export type Database = {
           quantity?: number
           quantity_unit?: string
           sku: string
+          subcategory?: string | null
           updated_at?: string
           user_id?: string | null
           warehouse_id?: string | null
@@ -420,6 +422,7 @@ export type Database = {
           quantity?: number
           quantity_unit?: string
           sku?: string
+          subcategory?: string | null
           updated_at?: string
           user_id?: string | null
           warehouse_id?: string | null
@@ -1868,6 +1871,41 @@ export type Database = {
             columns: ["quote_item_id"]
             isOneToOne: false
             referencedRelation: "quote_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcategories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcategories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]

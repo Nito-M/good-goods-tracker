@@ -21,6 +21,7 @@ export interface InventoryItem {
   name: string;
   sku: string;
   category: string;
+  subcategory?: string | null;
   quantity: number;
   quantityUnit: QuantityUnit;
   price: number;

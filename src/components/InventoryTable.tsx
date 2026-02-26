@@ -128,6 +128,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                   <TableCell>
                     <Badge variant="secondary" className="font-normal">
                       {item.category}
+                      {item.subcategory ? ` > ${item.subcategory}` : ''}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">

@@ -18,6 +18,7 @@ interface DbInventoryItem {
   name: string;
   sku: string;
   category: string;
+  subcategory: string | null;
   quantity: number;
   quantity_unit: string;
   price: number;
@@ -46,6 +47,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     name: db.name,
     sku: db.sku,
     category: db.category,
+    subcategory: db.subcategory,
     quantity: db.quantity,
     quantityUnit: (db.quantity_unit || 'pcs') as QuantityUnit,
     price: Number(db.price),
@@ -80,6 +82,7 @@ function inventoryItemToDb(
     name: item.name,
     sku: item.sku,
     category: item.category,
+    subcategory: item.subcategory || null,
     quantity: item.quantity,
     quantity_unit: item.quantityUnit || 'pcs',
     price: item.price,
@@ -226,6 +229,7 @@ export function useInventory() {
         name: item.name,
         sku: item.sku,
         category: item.category,
+        subcategory: item.subcategory || null,
         quantity: item.quantity,
         quantity_unit: item.quantityUnit || 'pcs',
         price: item.price,
@@ -279,6 +283,7 @@ export function useInventory() {
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
     if (updates.category !== undefined) dbUpdates.category = updates.category;
+    if (updates.subcategory !== undefined) dbUpdates.subcategory = updates.subcategory;
     if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
     if (updates.quantityUnit !== undefined) dbUpdates.quantity_unit = updates.quantityUnit;
     if (updates.price !== undefined) dbUpdates.price = updates.price;
