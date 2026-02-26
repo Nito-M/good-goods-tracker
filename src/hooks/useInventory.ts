@@ -39,6 +39,10 @@ interface DbInventoryItem {
   user_id: string;
   deleted_at: string | null;
   warehouse_id: string | null;
+  pallet_amount: number;
+  box_amount: number;
+  bundle_amount: number;
+  piece_length: number;
 }
 
 function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
@@ -66,6 +70,10 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     imageUrl: db.image_url,
     dxfUrl: db.dxf_url,
     warehouseId: db.warehouse_id,
+    palletAmount: Number(db.pallet_amount) || 0,
+    boxAmount: Number(db.box_amount) || 0,
+    bundleAmount: Number(db.bundle_amount) || 0,
+    pieceLength: Number(db.piece_length) || 0,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
   };
@@ -103,6 +111,10 @@ function inventoryItemToDb(
     user_id: userId,
     deleted_at: null,
     warehouse_id: item.warehouseId || null,
+    pallet_amount: item.palletAmount || 0,
+    box_amount: item.boxAmount || 0,
+    bundle_amount: item.bundleAmount || 0,
+    piece_length: item.pieceLength || 0,
   };
 }
 
@@ -246,6 +258,10 @@ export function useInventory() {
         image_url: item.imageUrl || null,
         user_id: user.id,
         warehouse_id: item.warehouseId || null,
+        pallet_amount: item.palletAmount || 0,
+        box_amount: item.boxAmount || 0,
+        bundle_amount: item.bundleAmount || 0,
+        piece_length: item.pieceLength || 0,
       });
 
       if (error) {
@@ -301,6 +317,10 @@ export function useInventory() {
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
     if (updates.warehouseId !== undefined) dbUpdates.warehouse_id = updates.warehouseId;
+    if (updates.palletAmount !== undefined) dbUpdates.pallet_amount = updates.palletAmount;
+    if (updates.boxAmount !== undefined) dbUpdates.box_amount = updates.boxAmount;
+    if (updates.bundleAmount !== undefined) dbUpdates.bundle_amount = updates.bundleAmount;
+    if (updates.pieceLength !== undefined) dbUpdates.piece_length = updates.pieceLength;
     dbUpdates.updated_at = new Date().toISOString();
 
     // Get current item from local DB and merge updates

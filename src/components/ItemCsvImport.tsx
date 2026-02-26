@@ -197,6 +197,10 @@ export function ItemCsvImport({ addItem }: Props) {
         weightUnit: 'lb',
         dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
         colors: [],
+        palletAmount: 0,
+        boxAmount: 0,
+        bundleAmount: 0,
+        pieceLength: 0,
       });
       if (!id) continue;
       created++;

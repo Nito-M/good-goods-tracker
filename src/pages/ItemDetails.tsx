@@ -400,6 +400,43 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
           )}
 
 
+          {/* Packaging & Bundling */}
+          {(item.palletAmount > 0 || item.boxAmount > 0 || item.bundleAmount > 0 || item.pieceLength > 0) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Packaging & Bundling</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {item.palletAmount > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pallet Amount</p>
+                      <p className="text-xl font-semibold text-card-foreground">{item.palletAmount}</p>
+                    </div>
+                  )}
+                  {item.boxAmount > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Box Amount</p>
+                      <p className="text-xl font-semibold text-card-foreground">{item.boxAmount}</p>
+                    </div>
+                  )}
+                  {item.bundleAmount > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Bundle Amount</p>
+                      <p className="text-xl font-semibold text-card-foreground">{item.bundleAmount}</p>
+                    </div>
+                  )}
+                  {item.pieceLength > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Length per Piece</p>
+                      <p className="text-xl font-semibold text-card-foreground">{item.pieceLength}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Physical Details</CardTitle>

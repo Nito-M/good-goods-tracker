@@ -35,6 +35,10 @@ export interface InventoryItem {
   imageUrl?: string | null;
   dxfUrl?: string | null;
   warehouseId?: string | null;
+  palletAmount: number;
+  boxAmount: number;
+  bundleAmount: number;
+  pieceLength: number;
   createdAt: Date;
   updatedAt: Date;
 }
