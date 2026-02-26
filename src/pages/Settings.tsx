@@ -25,7 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { InvoiceLayoutEditor } from '@/components/InvoiceLayoutEditor';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 
-import { useColorTheme, ColorTheme, BackgroundTheme, CustomTextColor } from '@/hooks/useColorTheme';
+import { useColorTheme, ColorTheme, BackgroundTheme, CustomTextColor, BorderColor } from '@/hooks/useColorTheme';
 import {
   Dialog,
   DialogContent,
@@ -58,7 +58,7 @@ export function Settings() {
   const { isOrgAdmin } = useIsOrgAdmin();
   const showUsersTab = isAdmin || isOrgAdmin;
   const { theme, setTheme } = useTheme();
-  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity } = useColorTheme();
+  const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, borderColor, setBorderColor } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, updateCategory, deleteCategory, moveCategoryToSubcategory } = useCategories();
@@ -513,6 +513,42 @@ export function Settings() {
                         onClick={() => setColorTheme(option.value)}
                         className={`w-8 h-8 rounded-full ${option.color} transition-all ${
                           colorTheme === option.value
+                            ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
+                            : 'hover:scale-105'
+                        }`}
+                        title={option.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="space-y-0.5">
+                    <Label>Border Color</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Choose your preferred border color
+                    </p>
+                  </div>
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    {([
+                      { value: 'default' as BorderColor, label: 'Default', color: 'bg-foreground/30', border: true },
+                      { value: 'normal' as BorderColor, label: 'Teal', color: 'bg-[hsl(200,98%,39%)]' },
+                      { value: 'green' as BorderColor, label: 'Green', color: 'bg-[hsl(142,76%,36%)]' },
+                      { value: 'blue' as BorderColor, label: 'Blue', color: 'bg-[hsl(217,91%,60%)]' },
+                      { value: 'grey' as BorderColor, label: 'Grey', color: 'bg-[hsl(215,16%,47%)]' },
+                      { value: 'red' as BorderColor, label: 'Red', color: 'bg-[hsl(0,72%,50%)]' },
+                      { value: 'yellow' as BorderColor, label: 'Yellow', color: 'bg-[hsl(48,96%,53%)]' },
+                      { value: 'white' as BorderColor, label: 'White', color: 'bg-[hsl(0,0%,95%)] border border-border' },
+                      { value: 'purple' as BorderColor, label: 'Purple', color: 'bg-[hsl(271,76%,53%)]' },
+                      { value: 'pink' as BorderColor, label: 'Pink', color: 'bg-[hsl(330,81%,60%)]' },
+                      { value: 'orange' as BorderColor, label: 'Orange', color: 'bg-[hsl(24,95%,53%)]' },
+                      { value: 'gold' as BorderColor, label: 'Gold', color: 'bg-[hsl(43,90%,55%)]' },
+                    ]).map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setBorderColor(option.value)}
+                        className={`w-8 h-8 rounded-full ${option.color} transition-all ${
+                          borderColor === option.value
                             ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110'
                             : 'hover:scale-105'
                         }`}
