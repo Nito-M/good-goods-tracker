@@ -432,7 +432,7 @@ export function Notes() {
 
       {/* Edit Note Dialog */}
       <Dialog open={!!editingNote} onOpenChange={(open) => !open && handleUpdateNote()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => {
+        <DialogContent className="max-w-none w-screen h-screen m-0 p-6 rounded-none flex flex-col" onOpenAutoFocus={(e) => {
           e.preventDefault();
           setTimeout(() => editContentRef.current?.focus(), 0);
         }}>
@@ -440,7 +440,7 @@ export function Notes() {
             <DialogTitle>Edit Note</DialogTitle>
           </DialogHeader>
           {editingNote && (
-            <div className="space-y-4">
+            <div className="flex flex-col flex-1 min-h-0 gap-4">
               <Input
                 placeholder="Title"
                 value={editingNote.title}
@@ -449,7 +449,7 @@ export function Notes() {
                 }
                 className="text-lg font-semibold"
               />
-              <div className="border rounded-md overflow-hidden">
+              <div className="border rounded-md overflow-hidden flex-1 flex flex-col min-h-0">
                 <FormatToolbar
                   onFormat={(fmt) =>
                     insertFormatting(
@@ -477,7 +477,7 @@ export function Notes() {
                   onChange={(e) =>
                     setEditingNote({ ...editingNote, content: e.target.value })
                   }
-                  className="min-h-[200px] border-0 focus-visible:ring-0 resize-none"
+                  className="flex-1 min-h-0 border-0 focus-visible:ring-0 resize-none"
                 />
               </div>
               <div className="flex items-center justify-between">
