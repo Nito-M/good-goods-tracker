@@ -312,7 +312,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       // Upsert current vendor prices
       for (const vp of vendorPrices) {
         if (vp.price) {
-          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku);
+          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null);
         }
       }
 
