@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight, ArrowRightLeft, Pencil, Check } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
@@ -61,8 +61,8 @@ export function Settings() {
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
-  const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory, moveCategoryToSubcategory } = useCategories();
-  const { subcategories, getSubcategoriesForCategory, addSubcategory, deleteSubcategory } = useSubcategories();
+  const { categories, allCategories, loading: categoriesLoading, addCategory, updateCategory, deleteCategory, moveCategoryToSubcategory } = useCategories();
+  const { subcategories, getSubcategoriesForCategory, addSubcategory, updateSubcategory, deleteSubcategory } = useSubcategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
   // Save theme to database when changed
@@ -221,6 +221,10 @@ export function Settings() {
   const [newCategory, setNewCategory] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [newSubcategoryInputs, setNewSubcategoryInputs] = useState<Record<string, string>>({});
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState<string | null>(null);
+  const [editingSubcategoryName, setEditingSubcategoryName] = useState('');
 
   // Delete confirmation state
   const [deleteVendorId, setDeleteVendorId] = useState<string | null>(null);
@@ -938,29 +942,66 @@ export function Settings() {
                       return (
                         <div key={cat.id} className="border border-border rounded-lg">
                           <div className="flex items-center justify-between px-3 py-2">
-                            <button
-                              type="button"
-                              className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
-                              onClick={() => {
-                                setExpandedCategories((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(cat.id)) next.delete(cat.id);
-                                  else next.add(cat.id);
-                                  return next;
-                                });
-                              }}
-                            >
-                              {isExpanded ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
-                              )}
-                              {cat.name}
-                              <span className="text-xs text-muted-foreground">
-                                ({catSubs.length})
-                              </span>
-                            </button>
+                            {editingCategoryId === cat.id ? (
+                              <form
+                                className="flex items-center gap-2 flex-1"
+                                onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  await updateCategory(cat.id, editingCategoryName);
+                                  setEditingCategoryId(null);
+                                }}
+                              >
+                                <Input
+                                  value={editingCategoryName}
+                                  onChange={(e) => setEditingCategoryName(e.target.value)}
+                                  className="h-7 text-sm"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Escape') setEditingCategoryId(null);
+                                  }}
+                                />
+                                <Button type="submit" size="sm" variant="ghost" className="h-7 w-7 p-0">
+                                  <Check className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingCategoryId(null)}>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </form>
+                            ) : (
+                              <button
+                                type="button"
+                                className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                                onClick={() => {
+                                  setExpandedCategories((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(cat.id)) next.delete(cat.id);
+                                    else next.add(cat.id);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                                {cat.name}
+                                <span className="text-xs text-muted-foreground">
+                                  ({catSubs.length})
+                                </span>
+                              </button>
+                            )}
                             <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditingCategoryId(cat.id);
+                                  setEditingCategoryName(cat.name);
+                                }}
+                                className="text-muted-foreground hover:text-primary p-1"
+                                title="Edit category"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
                               <button
                                 onClick={() => {
                                   setMoveCategoryId(cat.id);
@@ -1018,13 +1059,51 @@ export function Settings() {
                                       key={sub.id}
                                       className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 rounded-md text-xs"
                                     >
-                                      {sub.name}
-                                      <button
-                                        onClick={() => deleteSubcategory(sub.id)}
-                                        className="ml-0.5 text-muted-foreground hover:text-destructive"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </button>
+                                      {editingSubcategoryId === sub.id ? (
+                                        <form
+                                          className="flex items-center gap-1"
+                                          onSubmit={async (e) => {
+                                            e.preventDefault();
+                                            await updateSubcategory(sub.id, editingSubcategoryName);
+                                            setEditingSubcategoryId(null);
+                                          }}
+                                        >
+                                          <Input
+                                            value={editingSubcategoryName}
+                                            onChange={(e) => setEditingSubcategoryName(e.target.value)}
+                                            className="h-6 text-xs w-24"
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Escape') setEditingSubcategoryId(null);
+                                            }}
+                                          />
+                                          <button type="submit" className="text-primary hover:text-primary/80">
+                                            <Check className="h-3 w-3" />
+                                          </button>
+                                          <button type="button" onClick={() => setEditingSubcategoryId(null)} className="text-muted-foreground hover:text-foreground">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </form>
+                                      ) : (
+                                        <>
+                                          {sub.name}
+                                          <button
+                                            onClick={() => {
+                                              setEditingSubcategoryId(sub.id);
+                                              setEditingSubcategoryName(sub.name);
+                                            }}
+                                            className="ml-0.5 text-muted-foreground hover:text-primary"
+                                          >
+                                            <Pencil className="h-3 w-3" />
+                                          </button>
+                                          <button
+                                            onClick={() => deleteSubcategory(sub.id)}
+                                            className="ml-0.5 text-muted-foreground hover:text-destructive"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </button>
+                                        </>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
