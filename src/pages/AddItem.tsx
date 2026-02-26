@@ -87,8 +87,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
 
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
-  const [category, setCategory] = useState<string>(categories[0] || 'Other');
-  const [subcategory, setSubcategory] = useState<string>('');
+  const [category, setCategory] = useState<string>(editItem?.category || categories[0] || 'Other');
+  const [subcategory, setSubcategory] = useState<string>(editItem?.subcategory || '');
   const [quantity, setQuantity] = useState('');
   const [quantityUnit, setQuantityUnit] = useState<QuantityUnit>('pcs');
   const [price, setPrice] = useState('');
