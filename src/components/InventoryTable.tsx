@@ -45,9 +45,9 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
     const start = (currentPage - 1) * PAGE_SIZE;
     return sortedItems.slice(start, start + PAGE_SIZE);
   }, [sortedItems, currentPage]);
-  const itemIds = useMemo(() => sortedItems.map((item) => item.id), [sortedItems]);
-  const thumbnailMap = useItemThumbnails(itemIds);
-  const { getTagsForItem } = useBulkItemTags(itemIds);
+  const pagedItemIds = useMemo(() => pagedItems.map((item) => item.id), [pagedItems]);
+  const thumbnailMap = useItemThumbnails(pagedItemIds);
+  const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
 
   return (
