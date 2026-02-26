@@ -151,8 +151,8 @@ export const Items = ({
     setSubcategoryFilter('all');
   };
 
-  // If a category is selected and has subcategories, require a subcategory pick
-  const mustPickSubcategory = categoryFilter !== 'all' && categoryFilter && subcategoryOptions.length > 0 && subcategoryFilter === 'all';
+  // No longer require subcategory pick — "All Subcategories" shows all items in category
+  const mustPickSubcategory = false;
 
   // Filter items by tag, warehouse, and subcategory
   const filteredItems = useMemo(() => {
