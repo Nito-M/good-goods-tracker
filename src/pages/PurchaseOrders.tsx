@@ -26,7 +26,7 @@ export function PurchaseOrders() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
-    usePurchaseOrders();
+  usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -76,9 +76,9 @@ export function PurchaseOrders() {
   };
 
   const getSettingsForOrder = (order: PurchaseOrder) => {
-    const company = order.companyId
-      ? companies.find(c => c.id === order.companyId)
-      : companies.find(c => c.isDefault) || companies[0] || null;
+    const company = order.companyId ?
+    companies.find((c) => c.id === order.companyId) :
+    companies.find((c) => c.isDefault) || companies[0] || null;
     if (company) {
       return {
         businessName: company.name,
@@ -88,7 +88,7 @@ export function PurchaseOrders() {
         businessNumber: company.businessNumber,
         thankYouNote: company.invoiceThankYouNote || null,
         logoUrl: company.logoUrl,
-        layout: company.invoiceLayout || null,
+        layout: company.invoiceLayout || null
       };
     }
     return profile ? {
@@ -99,7 +99,7 @@ export function PurchaseOrders() {
       businessNumber: profile.businessNumber,
       thankYouNote: profile.invoiceThankYouNote,
       logoUrl: profile.logoUrl,
-      layout: profile.invoiceLayout || null,
+      layout: profile.invoiceLayout || null
     } : undefined;
   };
 
@@ -125,11 +125,11 @@ export function PurchaseOrders() {
     const query = searchQuery.toLowerCase();
     return orders.filter((order) => {
       const matchesPO = order.poNumber?.toLowerCase().includes(query);
-      const matchesVendor = order.vendorId && vendors.find(v => v.id === order.vendorId)?.name.toLowerCase().includes(query);
+      const matchesVendor = order.vendorId && vendors.find((v) => v.id === order.vendorId)?.name.toLowerCase().includes(query);
       const matchesItems = order.items?.some(
         (item) => item.itemName?.toLowerCase().includes(query) || item.sku?.toLowerCase().includes(query)
       );
-      const matchesJob = order.jobNumbers?.some(jn => jn.toLowerCase().includes(query));
+      const matchesJob = order.jobNumbers?.some((jn) => jn.toLowerCase().includes(query));
       return matchesPO || matchesVendor || matchesItems || matchesJob;
     });
   }, [orders, searchQuery, vendors]);
@@ -169,8 +169,8 @@ export function PurchaseOrders() {
                 variant="outline"
                 size="icon"
                 onClick={signOut}
-                title="Sign out"
-              >
+                title="Sign out">
+
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
@@ -180,14 +180,14 @@ export function PurchaseOrders() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
+        {loading ?
+        <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground">
               Loading purchase orders...
             </div>
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
+          </div> :
+        orders.length === 0 ?
+        <div className="flex flex-col items-center justify-center py-12 text-center">
             <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
             <h2 className="text-lg font-semibold">No purchase orders yet</h2>
             <p className="text-muted-foreground mb-4">
@@ -197,159 +197,159 @@ export function PurchaseOrders() {
               <Plus className="h-4 w-4" />
               New Order
             </Button>
-          </div>
-        ) : (
-          <Tabs defaultValue="draft" className="space-y-6">
+          </div> :
+
+        <Tabs defaultValue="draft" className="space-y-6">
             {/* Search bar for purchase orders */}
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
-                type="text"
-                placeholder="Search by PO number, vendor, or item..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 pl-10 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm"
-              />
+              type="text"
+              placeholder="Search by PO number, vendor, or item..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 pl-10 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm" />
+
             </div>
             
             <TabsList>
               <TabsTrigger value="draft" className="gap-2">
                 Drafts
-                {draftOrders.length > 0 && (
-                  <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-yellow-500 text-white">
+                {draftOrders.length > 0 &&
+              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-yellow-500 text-white">
                     {draftOrders.length}
                   </span>
-                )}
+              }
               </TabsTrigger>
               <TabsTrigger value="ordered" className="gap-2">
                 Ordered
-                {orderedOrders.length > 0 && (
-                  <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">
+                {orderedOrders.length > 0 &&
+              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">
                     {orderedOrders.length}
                   </span>
-                )}
+              }
               </TabsTrigger>
               <TabsTrigger value="received" className="gap-2">
                 Received
-                {receivedOrders.length > 0 && (
-                  <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-muted-foreground text-background">
+                {receivedOrders.length > 0 &&
+              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-secondary text-primary-foreground">
                     {receivedOrders.length}
                   </span>
-                )}
+              }
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="draft" className="space-y-4">
-              {draftOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No draft orders</p>
-              ) : (
-                draftOrders.map((order) => (
-                  <PurchaseOrderCard
-                    key={order.id}
-                    order={order}
-                    onMarkOrdered={handleMarkOrdered}
-                    onMarkReceived={handleMarkReceived}
-                    onMarkPaid={handleMarkPaid}
-                    onDelete={deleteOrder}
-                    onEdit={handleEdit}
-                    onDownload={handleDownload}
-                    onPreview={handlePreview}
-                    onAddAttachment={(file) => addAttachment(order.id, file)}
-                    onDeleteAttachment={deleteAttachment}
-                    onDeleteImage={() => deleteImageForOrder(order.id)}
-                    onDeletePdf={() => deletePdfForOrder(order.id)}
-                    loading={processingId === order.id}
-                    bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
-                  />
-                ))
-              )}
+              {draftOrders.length === 0 ?
+            <p className="text-muted-foreground text-center py-8">No draft orders</p> :
+
+            draftOrders.map((order) =>
+            <PurchaseOrderCard
+              key={order.id}
+              order={order}
+              onMarkOrdered={handleMarkOrdered}
+              onMarkReceived={handleMarkReceived}
+              onMarkPaid={handleMarkPaid}
+              onDelete={deleteOrder}
+              onEdit={handleEdit}
+              onDownload={handleDownload}
+              onPreview={handlePreview}
+              onAddAttachment={(file) => addAttachment(order.id, file)}
+              onDeleteAttachment={deleteAttachment}
+              onDeleteImage={() => deleteImageForOrder(order.id)}
+              onDeletePdf={() => deletePdfForOrder(order.id)}
+              loading={processingId === order.id}
+              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null} />
+
+            )
+            }
             </TabsContent>
 
             <TabsContent value="ordered" className="space-y-4">
-              {orderedOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No pending orders</p>
-              ) : (
-                orderedOrders.map((order) => (
-                  <PurchaseOrderCard
-                    key={order.id}
-                    order={order}
-                    onMarkOrdered={handleMarkOrdered}
-                    onMarkReceived={handleMarkReceived}
-                    onMarkPaid={handleMarkPaid}
-                    onDelete={deleteOrder}
-                    onEdit={handleEdit}
-                    onDownload={handleDownload}
-                    onPreview={handlePreview}
-                    onAddAttachment={(file) => addAttachment(order.id, file)}
-                    onDeleteAttachment={deleteAttachment}
-                    onDeleteImage={() => deleteImageForOrder(order.id)}
-                    onDeletePdf={() => deletePdfForOrder(order.id)}
-                    loading={processingId === order.id}
-                    bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
-                  />
-                ))
-              )}
+              {orderedOrders.length === 0 ?
+            <p className="text-muted-foreground text-center py-8">No pending orders</p> :
+
+            orderedOrders.map((order) =>
+            <PurchaseOrderCard
+              key={order.id}
+              order={order}
+              onMarkOrdered={handleMarkOrdered}
+              onMarkReceived={handleMarkReceived}
+              onMarkPaid={handleMarkPaid}
+              onDelete={deleteOrder}
+              onEdit={handleEdit}
+              onDownload={handleDownload}
+              onPreview={handlePreview}
+              onAddAttachment={(file) => addAttachment(order.id, file)}
+              onDeleteAttachment={deleteAttachment}
+              onDeleteImage={() => deleteImageForOrder(order.id)}
+              onDeletePdf={() => deletePdfForOrder(order.id)}
+              loading={processingId === order.id}
+              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null} />
+
+            )
+            }
             </TabsContent>
 
             <TabsContent value="received" className="space-y-4">
-              {receivedOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No received orders yet</p>
-              ) : (
-                receivedOrders.map((order) => (
-                  <PurchaseOrderCard
-                    key={order.id}
-                    order={order}
-                    onMarkOrdered={handleMarkOrdered}
-                    onMarkReceived={handleMarkReceived}
-                    onMarkPaid={handleMarkPaid}
-                    onDelete={deleteOrder}
-                    onEdit={handleEdit}
-                    onDownload={handleDownload}
-                    onPreview={handlePreview}
-                    onAddAttachment={(file) => addAttachment(order.id, file)}
-                    onDeleteAttachment={deleteAttachment}
-                    onDeleteImage={() => deleteImageForOrder(order.id)}
-                    onDeletePdf={() => deletePdfForOrder(order.id)}
-                    loading={processingId === order.id}
-                    bankCardName={order.bankCardId ? (bankCards.find(c => c.id === order.bankCardId)?.name ?? null) : null}
-                  />
-                ))
-              )}
+              {receivedOrders.length === 0 ?
+            <p className="text-muted-foreground text-center py-8">No received orders yet</p> :
+
+            receivedOrders.map((order) =>
+            <PurchaseOrderCard
+              key={order.id}
+              order={order}
+              onMarkOrdered={handleMarkOrdered}
+              onMarkReceived={handleMarkReceived}
+              onMarkPaid={handleMarkPaid}
+              onDelete={deleteOrder}
+              onEdit={handleEdit}
+              onDownload={handleDownload}
+              onPreview={handlePreview}
+              onAddAttachment={(file) => addAttachment(order.id, file)}
+              onDeleteAttachment={deleteAttachment}
+              onDeleteImage={() => deleteImageForOrder(order.id)}
+              onDeletePdf={() => deletePdfForOrder(order.id)}
+              loading={processingId === order.id}
+              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null} />
+
+            )
+            }
             </TabsContent>
           </Tabs>
-        )}
+        }
       </main>
 
-      {editingOrder && (
-        <EditPurchaseOrderDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          order={editingOrder}
-          onSave={updateOrder}
-          inventoryItems={inventoryItems}
-          vendors={vendors}
-          jobs={jobs}
-        />
-      )}
+      {editingOrder &&
+      <EditPurchaseOrderDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        order={editingOrder}
+        onSave={updateOrder}
+        inventoryItems={inventoryItems}
+        vendors={vendors}
+        jobs={jobs} />
 
-      {previewOrder && (
-        <PurchaseOrderPreviewDialog
-          open={!!previewOrder}
-          onOpenChange={(open) => !open && setPreviewOrder(null)}
-          order={previewOrder}
-          settings={getSettingsForOrder(previewOrder)}
-          onDownload={() => handleDownload(previewOrder)}
-        />
-      )}
+      }
+
+      {previewOrder &&
+      <PurchaseOrderPreviewDialog
+        open={!!previewOrder}
+        onOpenChange={(open) => !open && setPreviewOrder(null)}
+        order={previewOrder}
+        settings={getSettingsForOrder(previewOrder)}
+        onDownload={() => handleDownload(previewOrder)} />
+
+      }
 
       <ReceiveLocationDialog
         open={receiveDialogOpen}
         onOpenChange={setReceiveDialogOpen}
         onConfirm={handleConfirmReceive}
         warehouses={warehouses}
-        totalQuantity={receivingOrderId ? (orders.find(o => o.id === receivingOrderId)?.items.reduce((sum, i) => sum + i.quantity, 0) ?? 0) : 0}
-        loading={!!processingId}
-      />
-    </div>
-  );
+        totalQuantity={receivingOrderId ? orders.find((o) => o.id === receivingOrderId)?.items.reduce((sum, i) => sum + i.quantity, 0) ?? 0 : 0}
+        loading={!!processingId} />
+
+    </div>);
+
 }
