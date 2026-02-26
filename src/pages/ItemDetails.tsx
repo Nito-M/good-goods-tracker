@@ -429,7 +429,7 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                   {item.pieceLength > 0 && (
                     <div>
                       <p className="text-sm text-muted-foreground">Length per Piece</p>
-                      <p className="text-xl font-semibold text-card-foreground">{item.pieceLength}</p>
+                      <p className="text-xl font-semibold text-card-foreground">{item.pieceLength} {QUANTITY_UNIT_LABELS[item.quantityUnit] || item.quantityUnit}</p>
                     </div>
                   )}
                 </div>
