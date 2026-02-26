@@ -74,7 +74,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
           </header>
           {/* Desktop header with offline indicator */}
-          <header className="hidden md:flex items-center justify-between h-12 border-b border-border px-4 bg-background sticky top-0 z-40 gap-2 opacity-0">
+          <header className="hidden md:flex items-center justify-between h-12 border-b border-border px-4 bg-background sticky top-0 z-40 gap-2">
             {orgName ?
             <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
