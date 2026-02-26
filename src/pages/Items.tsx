@@ -151,8 +151,14 @@ export const Items = ({
     setSubcategoryFilter('all');
   };
 
+  // If a category is selected and has subcategories, require a subcategory pick
+  const mustPickSubcategory = categoryFilter !== 'all' && categoryFilter && subcategoryOptions.length > 0 && subcategoryFilter === 'all';
+
   // Filter items by tag, warehouse, and subcategory
   const filteredItems = useMemo(() => {
+    // If user must pick a subcategory first, show no items
+    if (mustPickSubcategory) return [];
+
     let result = items;
     if (tagFilter !== 'all') {
       result = result.filter((item) => {
@@ -173,7 +179,7 @@ export const Items = ({
       }
     }
     return result;
-  }, [items, tagFilter, itemTagsMap, warehouseFilter, subcategoryFilter, subcategoryOptions]);
+  }, [items, tagFilter, itemTagsMap, warehouseFilter, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -270,6 +276,10 @@ export const Items = ({
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground">Loading items...</div>
+          </div>
+        ) : mustPickSubcategory ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-muted-foreground">Please select a subcategory to view items.</div>
           </div>
         ) : (
           <InventoryTable
