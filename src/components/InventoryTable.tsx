@@ -9,8 +9,8 @@ import {
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+  PaginationPrevious } from
+'@/components/ui/pagination';
 
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,8 +19,8 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableRow } from
+'@/components/ui/table';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useBulkItemTags } from '@/hooks/useItemTags';
@@ -38,7 +38,7 @@ const PAGE_SIZE = 40;
 export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItemQtyMap }: InventoryTableProps) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  useEffect(() => { setCurrentPage(1); }, [items]);
+  useEffect(() => {setCurrentPage(1);}, [items]);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.name.localeCompare(b.name)), [items]);
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
   const pagedItems = useMemo(() => {
@@ -48,7 +48,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const pagedItemIds = useMemo(() => pagedItems.map((item) => item.id), [pagedItems]);
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
-  const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
+  const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
@@ -65,64 +65,64 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.length === 0 ? (
-            <TableRow>
+          {items.length === 0 ?
+          <TableRow>
               <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                 No items found.
               </TableCell>
-            </TableRow>
-          ) : (
-            pagedItems.map((item) => {
-              const displayQty = warehouseFilter && warehouseItemQtyMap
-                ? (warehouseItemQtyMap.get(`${warehouseFilter}:${item.id}`) ?? 0)
-                : item.quantity;
-              const isLowStock = item.quantity <= item.minStock;
-              return (
-                <TableRow
-                  key={item.id}
-                  className="transition-colors hover:bg-muted/30"
-                >
+            </TableRow> :
+
+          pagedItems.map((item) => {
+            const displayQty = warehouseFilter && warehouseItemQtyMap ?
+            warehouseItemQtyMap.get(`${warehouseFilter}:${item.id}`) ?? 0 :
+            item.quantity;
+            const isLowStock = item.quantity <= item.minStock;
+            return (
+              <TableRow
+                key={item.id}
+                className="transition-colors hover:bg-muted/30">
+
                   <TableCell className="w-14 py-1">
-                    {(thumbnailMap.get(item.id) || item.imageUrl) ? (
-                      <img
-                        src={thumbnailMap.get(item.id) || item.imageUrl!}
-                        alt={item.name}
-                        className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setViewerImage({ url: thumbnailMap.get(item.id) || item.imageUrl!, alt: item.name });
-                        }}
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center">
+                    {thumbnailMap.get(item.id) || item.imageUrl ?
+                  <img
+                    src={thumbnailMap.get(item.id) || item.imageUrl!}
+                    alt={item.name}
+                    className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer transition-opacity opacity-100 shadow-none"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewerImage({ url: thumbnailMap.get(item.id) || item.imageUrl!, alt: item.name });
+                    }} /> :
+
+
+                  <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center px-0">
                         <ImageIcon className="h-5 w-5 text-muted-foreground" />
                       </div>
-                    )}
+                  }
                   </TableCell>
                   <TableCell
-                    className="font-medium text-card-foreground cursor-pointer hover:underline"
-                    onClick={() => navigate(`/item/${item.id}`)}
-                  >
+                  className="font-medium text-card-foreground cursor-pointer hover:underline"
+                  onClick={() => navigate(`/item/${item.id}`)}>
+
                     <div>
                       {item.name}
                       {(() => {
-                        const itemTags = getTagsForItem(item.id);
-                        if (itemTags.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {itemTags.slice(0, 3).map((t, i) => (
-                              <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
+                      const itemTags = getTagsForItem(item.id);
+                      if (itemTags.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                            {itemTags.slice(0, 3).map((t, i) =>
+                          <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
                                 {t.name}
                               </Badge>
-                            ))}
-                            {itemTags.length > 3 && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          )}
+                            {itemTags.length > 3 &&
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                                 +{itemTags.length - 3}
                               </Badge>
-                            )}
-                          </div>
-                        );
-                      })()}
+                          }
+                          </div>);
+
+                    })()}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -140,24 +140,24 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                   </TableCell>
                   <TableCell>
                     <Badge
-                      className={cn(
-                        'font-medium',
-                        isLowStock
-                          ? 'bg-warning/10 text-warning hover:bg-warning/20'
-                          : 'bg-success/10 text-success hover:bg-success/20'
-                      )}
-                    >
+                    className={cn(
+                      'font-medium',
+                      isLowStock ?
+                      'bg-warning/10 text-warning hover:bg-warning/20' :
+                      'bg-success/10 text-success hover:bg-success/20'
+                    )}>
+
                       {isLowStock ? 'Low Stock' : 'In Stock'}
                     </Badge>
                   </TableCell>
-                </TableRow>
-              );
-            })
-          )}
+                </TableRow>);
+
+          })
+          }
         </TableBody>
       </Table>
-      {totalPages > 1 && (
-        <div className="border-t border-border px-4 py-3 flex items-center justify-between">
+      {totalPages > 1 &&
+      <div className="border-t border-border px-4 py-3 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, sortedItems.length)} of {sortedItems.length} items
           </p>
@@ -165,50 +165,50 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
-                .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
-                  if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
-                  acc.push(page);
-                  return acc;
-                }, [])
-                .map((page, idx) =>
-                  page === 'ellipsis' ? (
-                    <PaginationItem key={`e-${idx}`}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).
+            filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1).
+            reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
+              if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+              acc.push(page);
+              return acc;
+            }, []).
+            map((page, idx) =>
+            page === 'ellipsis' ?
+            <PaginationItem key={`e-${idx}`}>
                       <PaginationEllipsis />
-                    </PaginationItem>
-                  ) : (
-                    <PaginationItem key={page}>
+                    </PaginationItem> :
+
+            <PaginationItem key={page}>
                       <PaginationLink
-                        isActive={page === currentPage}
-                        onClick={() => setCurrentPage(page as number)}
-                        className="cursor-pointer"
-                      >
+                isActive={page === currentPage}
+                onClick={() => setCurrentPage(page as number)}
+                className="cursor-pointer">
+
                         {page}
                       </PaginationLink>
                     </PaginationItem>
-                  )
-                )}
+
+            )}
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
+
               </PaginationItem>
             </PaginationContent>
           </Pagination>
         </div>
-      )}
+      }
       <ImageViewerDialog
         imageUrl={viewerImage?.url ?? null}
         alt={viewerImage?.alt ?? ''}
         open={!!viewerImage}
-        onOpenChange={(open) => { if (!open) setViewerImage(null); }}
-      />
-    </div>
-  );
+        onOpenChange={(open) => {if (!open) setViewerImage(null);}} />
+
+    </div>);
+
 }
