@@ -153,19 +153,19 @@ export function Requests() {
       }
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-secondary">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-inherit">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Requests</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+          </h1>
           <p className="text-muted-foreground">
 
           </p>
         </div>
-        <AddRequestDialog
-          items={allItems}
-          requesterNames={visibleRequesterNames}
-          onSave={addRequest}
-          onUploadImage={uploadImage}
-          onUploadPdf={uploadPdf} />
+        <AddRequestDialog items={allItems}
+        requesterNames={visibleRequesterNames}
+        onSave={addRequest}
+        onUploadImage={uploadImage}
+        onUploadPdf={uploadPdf} />
 
       </div>
 
