@@ -1,47 +1,24 @@
 
 
-# Add Trailer Parts Subcategories
+# Remove Trailer Parts Subcategories
 
 ## What this does
-Seed the "Trailer Parts" category with the following subcategories:
-- Axles
-- Brake Parts
-- Couplers
-- Electric Trailer Parts
-- Hydraulics
-- Jacks
-- Tires and Rims
-- Springs
-- Vinyls
-- Wiring
+Deletes the 10 subcategories (Axles, Brake Parts, Couplers, Electric Trailer Parts, Hydraulics, Jacks, Tires and Rims, Springs, Vinyls, Wiring) from under the "Trailer Parts" category, while keeping any top-level categories with those same names untouched.
 
 ## How
-A single database migration that:
-1. Looks up (or creates) the "Trailer Parts" category for your user
-2. Inserts each subcategory under it, skipping any that already exist
+A single data deletion query targeting only the subcategories table where the parent category is "Trailer Parts".
 
-### Technical: Migration SQL
+### Technical Details
 ```sql
--- Insert subcategories under "Trailer Parts" for all users who have that category
-INSERT INTO public.subcategories (category_id, user_id, name)
-SELECT c.id, c.user_id, sub.name
-FROM public.categories c
-CROSS JOIN (
-  VALUES
-    ('Axles'),
-    ('Brake Parts'),
-    ('Couplers'),
-    ('Electric Trailer Parts'),
-    ('Hydraulics'),
-    ('Jacks'),
-    ('Tires and Rims'),
-    ('Springs'),
-    ('Vinyls'),
-    ('Wiring')
-) AS sub(name)
-WHERE c.name = 'Trailer Parts'
-ON CONFLICT (category_id, name) DO NOTHING;
+DELETE FROM public.subcategories
+WHERE name IN (
+  'Axles', 'Brake Parts', 'Couplers', 'Electric Trailer Parts',
+  'Hydraulics', 'Jacks', 'Tires and Rims', 'Springs', 'Vinyls', 'Wiring'
+)
+AND category_id IN (
+  SELECT id FROM public.categories WHERE name = 'Trailer Parts'
+);
 ```
 
-No code file changes needed -- this is purely a data migration.
+No code changes needed -- this only removes data from the subcategories table.
 
