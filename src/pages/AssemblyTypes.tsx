@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Plus, ChevronRight, CheckCircle2, Clock, Pencil, Check, X, Trash2 } from 'lucide-react';
+import { Layers, Plus, ChevronRight, CheckCircle2, Clock, Pencil, Check, X, Trash2, Search } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { Button } from '@/components/ui/button';
@@ -46,11 +46,21 @@ export function AssemblyTypes() {
 
   const [deleteType, setDeleteType] = useState<string | null>(null);
   const [deletingType, setDeletingType] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Group assemblies by type
+  // Group assemblies by type, filtering by search query on name + description
   const typeGroups = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    const filtered = q
+      ? assemblies.filter(a =>
+          a.name.toLowerCase().includes(q) ||
+          (a.description && a.description.toLowerCase().includes(q)) ||
+          (a.type || 'General').toLowerCase().includes(q)
+        )
+      : assemblies;
+
     const map = new Map<string, { count: number; finished: number; totalCost: number }>();
-    for (const a of assemblies) {
+    for (const a of filtered) {
       const t = a.type || 'General';
       const existing = map.get(t) || { count: 0, finished: 0, totalCost: 0 };
       existing.count += 1;
@@ -58,7 +68,7 @@ export function AssemblyTypes() {
       map.set(t, existing);
     }
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [assemblies]);
+  }, [assemblies, searchQuery]);
 
   const handleCreateType = async () => {
     const name = newTypeName.trim();
@@ -137,6 +147,17 @@ export function AssemblyTypes() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        {!loading && typeGroups.length > 0 && (
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by type, name, or description..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        )}
         {loading ? (
           <div className="text-center py-16 text-muted-foreground">Loading...</div>
         ) : typeGroups.length === 0 ? (
