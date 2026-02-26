@@ -420,24 +420,6 @@ export function Notes() {
                 className="min-h-[200px] border-0 focus-visible:ring-0 resize-none"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-muted-foreground" />
-              <ToggleGroup
-                type="single"
-                value={newColor}
-                onValueChange={(v) => v && setNewColor(v as NoteColor)}
-                className="justify-start"
-              >
-                {COLOR_OPTIONS.map((color) => (
-                  <ToggleGroupItem
-                    key={color.value}
-                    value={color.value}
-                    className={cn("w-6 h-6 rounded-full p-0", color.bg, color.border)}
-                    title={color.label}
-                  />
-                ))}
-              </ToggleGroup>
-            </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsCreating(false)}>
                 Cancel
@@ -497,26 +479,6 @@ export function Notes() {
                   }
                   className="min-h-[200px] border-0 focus-visible:ring-0 resize-none"
                 />
-              </div>
-              <div className="flex items-center gap-2">
-                <Palette className="h-4 w-4 text-muted-foreground" />
-                <ToggleGroup
-                  type="single"
-                  value={editingNote.color}
-                  onValueChange={(v) =>
-                    v && setEditingNote({ ...editingNote, color: v as NoteColor })
-                  }
-                  className="justify-start"
-                >
-                  {COLOR_OPTIONS.map((color) => (
-                    <ToggleGroupItem
-                      key={color.value}
-                      value={color.value}
-                      className={cn("w-6 h-6 rounded-full p-0", color.bg, color.border)}
-                      title={color.label}
-                    />
-                  ))}
-                </ToggleGroup>
               </div>
               <div className="flex items-center justify-between">
                 <Button
