@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCustomers, Customer } from '@/hooks/useCustomers';
 import { useCategories } from '@/hooks/useCategories';
+import { useSubcategories } from '@/hooks/useSubcategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,6 +62,7 @@ export function Settings() {
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
+  const { subcategories, getSubcategoriesForCategory, addSubcategory, deleteSubcategory } = useSubcategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
   // Save theme to database when changed
@@ -217,6 +219,8 @@ export function Settings() {
 
   // Category state
   const [newCategory, setNewCategory] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [newSubcategoryInputs, setNewSubcategoryInputs] = useState<Record<string, string>>({});
 
   // Delete confirmation state
   const [deleteVendorId, setDeleteVendorId] = useState<string | null>(null);
@@ -251,7 +255,11 @@ export function Settings() {
   // Filtered categories
   const filteredCategories = categories.filter((cat) => {
     if (!categorySearchQuery) return true;
-    return cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase());
+    const q = categorySearchQuery.toLowerCase();
+    const matchesCat = cat.name.toLowerCase().includes(q);
+    const catSubs = getSubcategoriesForCategory(cat.id);
+    const matchesSub = catSubs.some((s) => s.name.toLowerCase().includes(q));
+    return matchesCat || matchesSub;
   });
 
   // Filtered customers
@@ -883,7 +891,7 @@ export function Settings() {
             <Card>
               <CardHeader>
                 <CardTitle>Categories</CardTitle>
-                <CardDescription>Add custom categories for your inventory items</CardDescription>
+                <CardDescription>Add custom categories and subcategories for your inventory items</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <form onSubmit={handleAddCategory} className="flex gap-2">
@@ -921,21 +929,97 @@ export function Settings() {
                     No categories match your search.
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {filteredCategories.map((cat) => (
-                      <div
-                        key={cat.id}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 rounded-md text-sm"
-                      >
-                        {cat.name}
-                        <button
-                          onClick={() => setDeleteCategoryId(cat.id)}
-                          className="ml-1 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="space-y-1">
+                    {filteredCategories.map((cat) => {
+                      const isExpanded = expandedCategories.has(cat.id);
+                      const catSubs = getSubcategoriesForCategory(cat.id);
+                      return (
+                        <div key={cat.id} className="border border-border rounded-lg">
+                          <div className="flex items-center justify-between px-3 py-2">
+                            <button
+                              type="button"
+                              className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors"
+                              onClick={() => {
+                                setExpandedCategories((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(cat.id)) next.delete(cat.id);
+                                  else next.add(cat.id);
+                                  return next;
+                                });
+                              }}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              {cat.name}
+                              <span className="text-xs text-muted-foreground">
+                                ({catSubs.length})
+                              </span>
+                            </button>
+                            <button
+                              onClick={() => setDeleteCategoryId(cat.id)}
+                              className="text-muted-foreground hover:text-destructive p-1"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          {isExpanded && (
+                            <div className="border-t border-border px-3 py-3 space-y-3 bg-muted/30">
+                              {/* Add subcategory input */}
+                              <form
+                                onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  const val = newSubcategoryInputs[cat.id]?.trim();
+                                  if (!val) return;
+                                  await addSubcategory(cat.id, val);
+                                  setNewSubcategoryInputs((prev) => ({ ...prev, [cat.id]: '' }));
+                                }}
+                                className="flex gap-2"
+                              >
+                                <Input
+                                  placeholder="New subcategory..."
+                                  value={newSubcategoryInputs[cat.id] || ''}
+                                  onChange={(e) =>
+                                    setNewSubcategoryInputs((prev) => ({
+                                      ...prev,
+                                      [cat.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="h-8 text-sm"
+                                />
+                                <Button type="submit" size="sm" variant="outline" className="h-8 gap-1">
+                                  <Plus className="h-3 w-3" />
+                                  Add
+                                </Button>
+                              </form>
+                              {/* Subcategory list */}
+                              {catSubs.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">No subcategories yet.</p>
+                              ) : (
+                                <div className="flex flex-wrap gap-2">
+                                  {catSubs.map((sub) => (
+                                    <div
+                                      key={sub.id}
+                                      className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 rounded-md text-xs"
+                                    >
+                                      {sub.name}
+                                      <button
+                                        onClick={() => deleteSubcategory(sub.id)}
+                                        className="ml-0.5 text-muted-foreground hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

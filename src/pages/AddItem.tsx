@@ -55,11 +55,12 @@ interface AddItemPageProps {
   onDelete?: (id: string) => void;
   items: InventoryItem[];
   uploadItemImage?: (file: File) => Promise<string | null>;
+  subcategoriesByCategory?: Map<string, { id: string; name: string }[]>;
 }
 
 const DEFAULT_DIMENSIONS: Dimensions = { length: 0, width: 0, height: 0, unit: 'in' };
 
-export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, uploadItemImage }: AddItemPageProps) {
+export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, uploadItemImage, subcategoriesByCategory }: AddItemPageProps) {
   const navigate = useNavigate();
   const { id } = useParams();
   const editItem = id ? items.find(item => item.id === id) : null;
@@ -87,6 +88,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [category, setCategory] = useState<string>(categories[0] || 'Other');
+  const [subcategory, setSubcategory] = useState<string>('');
   const [quantity, setQuantity] = useState('');
   const [quantityUnit, setQuantityUnit] = useState<QuantityUnit>('pcs');
   const [price, setPrice] = useState('');
@@ -117,6 +119,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setName(editItem.name);
       setSku(editItem.sku);
       setCategory(editItem.category);
+      setSubcategory(editItem.subcategory || '');
       setQuantity(String(editItem.quantity));
       setQuantityUnit(editItem.quantityUnit || 'pcs');
       setPrice(String(editItem.price));
@@ -259,6 +262,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       name,
       sku,
       category,
+      subcategory: subcategory || null,
       quantity: parseFloat(quantity) || 0,
       quantityUnit,
       price: parseFloat(price) || 0,
@@ -461,7 +465,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select value={category} onValueChange={setCategory}>
+                  <Select value={category} onValueChange={(v) => { setCategory(v); setSubcategory(''); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -474,6 +478,29 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Subcategory selector */}
+                {(() => {
+                  const subs = subcategoriesByCategory?.get(category) || [];
+                  if (subs.length === 0) return null;
+                  return (
+                    <div className="space-y-2">
+                      <Label htmlFor="subcategory">Subcategory</Label>
+                      <Select value={subcategory || '__none__'} onValueChange={(v) => setSubcategory(v === '__none__' ? '' : v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select subcategory (optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">None</SelectItem>
+                          {subs.map((sub) => (
+                            <SelectItem key={sub.id} value={sub.name}>
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Image Upload */}
