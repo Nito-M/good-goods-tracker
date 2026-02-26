@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown, Hash } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown, Hash, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,6 +15,7 @@ interface VendorPriceEntry {
   price: string;
   link?: string;
   vendorSku?: string;
+  leadTimeDays?: string;
   isNew?: boolean;
 }
 
@@ -54,6 +55,7 @@ export function ItemVendorPricing({
       if (String(existing.price) !== vp.price) return true;
       if ((existing.link || '') !== (vp.link || '')) return true;
       if ((existing.vendor_sku || '') !== (vp.vendorSku || '')) return true;
+      if (String(existing.lead_time_days || '') !== (vp.leadTimeDays || '')) return true;
     }
     return false;
   }, [isEditing, existingPrices, vendorPrices]);
@@ -76,6 +78,7 @@ export function ItemVendorPricing({
         price: existingPrice ? String(existingPrice.price) : '',
         link: existingPrice?.link || '',
         vendorSku: existingPrice?.vendor_sku || '',
+        leadTimeDays: existingPrice?.lead_time_days ? String(existingPrice.lead_time_days) : '',
         isNew: !existingPrice,
       },
     ]);
@@ -102,6 +105,14 @@ export function ItemVendorPricing({
     onVendorPricesChange(
       vendorPrices.map((vp) =>
         vp.vendorId === vendorId ? { ...vp, vendorSku } : vp
+      )
+    );
+  };
+
+  const handleLeadTimeChange = (vendorId: string, leadTimeDays: string) => {
+    onVendorPricesChange(
+      vendorPrices.map((vp) =>
+        vp.vendorId === vendorId ? { ...vp, leadTimeDays } : vp
       )
     );
   };
@@ -281,6 +292,19 @@ export function ItemVendorPricing({
                         value={vp.link || ''}
                         onChange={(e) => handleLinkChange(vp.vendorId, e.target.value)}
                         className="pl-8"
+                      />
+                    </div>
+                    <div className="relative w-24">
+                      <Clock className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Days"
+                        value={vp.leadTimeDays || ''}
+                        onChange={(e) => handleLeadTimeChange(vp.vendorId, e.target.value)}
+                        className="pl-7"
+                        title="Lead time in days"
                       />
                     </div>
                     {vp.link && (
