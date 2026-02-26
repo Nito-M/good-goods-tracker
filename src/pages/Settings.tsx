@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight, ArrowRightLeft } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
@@ -61,7 +61,7 @@ export function Settings() {
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
-  const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
+  const { categories, allCategories, loading: categoriesLoading, addCategory, deleteCategory, moveCategoryToSubcategory } = useCategories();
   const { subcategories, getSubcategoriesForCategory, addSubcategory, deleteSubcategory } = useSubcategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
@@ -225,6 +225,8 @@ export function Settings() {
   // Delete confirmation state
   const [deleteVendorId, setDeleteVendorId] = useState<string | null>(null);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
+  const [moveCategoryId, setMoveCategoryId] = useState<string | null>(null);
+  const [moveTargetCategoryId, setMoveTargetCategoryId] = useState<string>('');
   
   // Search state
   const [vendorSearchQuery, setVendorSearchQuery] = useState('');
@@ -958,12 +960,24 @@ export function Settings() {
                                 ({catSubs.length})
                               </span>
                             </button>
-                            <button
-                              onClick={() => setDeleteCategoryId(cat.id)}
-                              className="text-muted-foreground hover:text-destructive p-1"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  setMoveCategoryId(cat.id);
+                                  setMoveTargetCategoryId('');
+                                }}
+                                className="text-muted-foreground hover:text-primary p-1"
+                                title="Move to subcategory"
+                              >
+                                <ArrowRightLeft className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteCategoryId(cat.id)}
+                                className="text-muted-foreground hover:text-destructive p-1"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                           {isExpanded && (
                             <div className="border-t border-border px-3 py-3 space-y-3 bg-muted/30">
@@ -1263,6 +1277,48 @@ export function Settings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Move Category Dialog */}
+      <Dialog open={!!moveCategoryId} onOpenChange={() => setMoveCategoryId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move to Subcategory</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            "{categories.find((c) => c.id === moveCategoryId)?.name}" will become a subcategory. All items in this category will be reassigned. Pick the parent category:
+          </p>
+          <Select value={moveTargetCategoryId} onValueChange={setMoveTargetCategoryId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select parent category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories
+                .filter((c) => c.id !== moveCategoryId)
+                .map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveCategoryId(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!moveTargetCategoryId}
+              onClick={async () => {
+                if (moveCategoryId && moveTargetCategoryId) {
+                  await moveCategoryToSubcategory(moveCategoryId, moveTargetCategoryId);
+                  setMoveCategoryId(null);
+                }
+              }}
+            >
+              Move
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
