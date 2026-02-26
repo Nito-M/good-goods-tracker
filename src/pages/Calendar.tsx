@@ -56,24 +56,26 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 // Check if an event occurs on a given day based on recurrence
 function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
   const eventDate = new Date(event.eventDate + "T12:00:00");
+  // Normalize day to noon to match eventDate and avoid off-by-one from differenceInDays
+  const dayNoon = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12, 0, 0);
 
-  if (isSameDay(eventDate, day)) return true;
-  if (day < eventDate) return false;
+  if (isSameDay(eventDate, dayNoon)) return true;
+  if (dayNoon < eventDate) return false;
 
   // Show recurring events up to 1 year ahead from today (rolls forward continuously)
   const oneYearFromToday = new Date();
   oneYearFromToday.setFullYear(oneYearFromToday.getFullYear() + 1);
-  if (day > oneYearFromToday) return false;
+  if (dayNoon > oneYearFromToday) return false;
 
   switch (event.recurrence) {
     case "daily":
       return true;
     case "weekly":
-      return eventDate.getDay() === day.getDay() && differenceInDays(day, eventDate) % 7 === 0;
+      return eventDate.getDay() === dayNoon.getDay() && differenceInDays(dayNoon, eventDate) % 7 === 0;
     case "biweekly":
-      return eventDate.getDay() === day.getDay() && differenceInDays(day, eventDate) % 14 === 0;
+      return eventDate.getDay() === dayNoon.getDay() && differenceInDays(dayNoon, eventDate) % 14 === 0;
     case "yearly":
-      return getMonth(eventDate) === getMonth(day) && getDate(eventDate) === getDate(day);
+      return getMonth(eventDate) === getMonth(dayNoon) && getDate(eventDate) === getDate(dayNoon);
     default:
       return false;
   }
