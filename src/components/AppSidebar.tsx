@@ -17,24 +17,24 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-  useSidebar,
-} from "@/components/ui/sidebar";
+  useSidebar } from
+"@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home, pageKey: "dashboard" },
-  { title: "Items", url: "/items", icon: Package, pageKey: "items" },
-  { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList, pageKey: "purchase-orders" },
-  { title: "Requests", url: "/requests", icon: ListTodo, pageKey: "requests" },
-  { title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
-  { title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
-  { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
-  { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
-  { title: "Parts Library", url: "/parts", icon: Puzzle, pageKey: "parts" },
-  { title: "Tax Documents", url: "/tax-documents", icon: FileText, pageKey: "tax-documents" },
-];
+{ title: "Dashboard", url: "/", icon: Home, pageKey: "dashboard" },
+{ title: "Items", url: "/items", icon: Package, pageKey: "items" },
+{ title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList, pageKey: "purchase-orders" },
+{ title: "Requests", url: "/requests", icon: ListTodo, pageKey: "requests" },
+{ title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
+{ title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
+{ title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
+{ title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
+{ title: "Parts Library", url: "/parts", icon: Puzzle, pageKey: "parts" },
+{ title: "Tax Documents", url: "/tax-documents", icon: FileText, pageKey: "tax-documents" }];
+
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
@@ -48,7 +48,7 @@ export function AppSidebar() {
   const [addingLink, setAddingLink] = useState(false);
   const [newLinkLabel, setNewLinkLabel] = useState("");
 
-  const filteredMenuItems = menuItems.filter(item => isPageAllowed(item.pageKey));
+  const filteredMenuItems = menuItems.filter((item) => isPageAllowed(item.pageKey));
 
   const isActive = (path: string) => {
     if (path === "/items") {
@@ -74,16 +74,16 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          {!collapsed && (
-            <div className="flex flex-col">
+          {!collapsed &&
+          <div className="flex flex-col">
               <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground">
                 Zumy
               </h1>
               <p className="text-xs text-muted-foreground">
-                Inventory Management
-              </p>
+
+            </p>
             </div>
-          )}
+          }
         </div>
       </SidebarHeader>
 
@@ -92,27 +92,27 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {filteredMenuItems.map((item) =>
+              <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
+                  asChild
+                  isActive={isActive(item.url)}
+                  tooltip={item.title}>
+
                     <NavLink
-                      to={item.url}
-                      className="flex items-center gap-3"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
-                    >
+                    to={item.url}
+                    className="flex items-center gap-3"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground">
+
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
+              )}
 
               {/* Sales with Quotes subitem */}
-              {isPageAllowed('sales') && (
+              {isPageAllowed('sales') &&
               <SidebarMenuItem>
                 <Collapsible open={salesOpen} onOpenChange={setSalesOpen}>
                   <div className="flex items-center">
@@ -120,55 +120,55 @@ export function AppSidebar() {
                       asChild
                       isActive={location.pathname.startsWith("/sales") || location.pathname.startsWith("/quotes")}
                       tooltip="Sales"
-                      className="flex-1"
-                    >
+                      className="flex-1">
+
                       <NavLink
                         to="/sales"
                         className="flex items-center gap-3"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
-                      >
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground">
+
                         <ShoppingCart className="h-4 w-4" />
                         <span>Sales</span>
                       </NavLink>
                     </SidebarMenuButton>
-                    {!collapsed && (
-                      <CollapsibleTrigger asChild>
+                    {!collapsed &&
+                    <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
                           <ChevronDown className={`h-3 w-3 transition-transform ${salesOpen ? '' : '-rotate-90'}`} />
                         </Button>
                       </CollapsibleTrigger>
-                    )}
+                    }
                   </div>
-                  {!collapsed && (
-                    <CollapsibleContent>
+                  {!collapsed &&
+                  <CollapsibleContent>
                       <div className="ml-7 border-l border-border pl-2 mt-1 space-y-0.5">
-                        {isPageAllowed('quotes') && (
-                          <NavLink
-                            to="/quotes"
-                            className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
-                            activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
-                          >
+                        {isPageAllowed('quotes') &&
+                      <NavLink
+                        to="/quotes"
+                        className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                        activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
+
                             Quotes
                           </NavLink>
-                        )}
-                        {isPageAllowed('sales-orders') && (
-                          <NavLink
-                            to="/sales-orders"
-                            className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
-                            activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
-                          >
+                      }
+                        {isPageAllowed('sales-orders') &&
+                      <NavLink
+                        to="/sales-orders"
+                        className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                        activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
+
                             Sales Orders
                           </NavLink>
-                        )}
+                      }
                       </div>
                     </CollapsibleContent>
-                  )}
+                  }
                 </Collapsible>
               </SidebarMenuItem>
-              )}
+              }
 
               {/* Jobs with collapsible subitems */}
-              {isPageAllowed('jobs') && (
+              {isPageAllowed('jobs') &&
               <SidebarMenuItem>
                 <Collapsible open={jobsOpen} onOpenChange={setJobsOpen}>
                   <div className="flex items-center">
@@ -176,97 +176,97 @@ export function AppSidebar() {
                       asChild
                       isActive={location.pathname.startsWith("/jobs")}
                       tooltip="Jobs"
-                      className="flex-1"
-                    >
+                      className="flex-1">
+
                       <NavLink
                         to="/jobs"
                         className="flex items-center gap-3"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
-                      >
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground">
+
                         <Briefcase className="h-4 w-4" />
                         <span>Jobs</span>
                       </NavLink>
                     </SidebarMenuButton>
-                    {!collapsed && (
-                      <CollapsibleTrigger asChild>
+                    {!collapsed &&
+                    <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
                           <ChevronDown className={`h-3 w-3 transition-transform ${jobsOpen ? '' : '-rotate-90'}`} />
                         </Button>
                       </CollapsibleTrigger>
-                    )}
+                    }
                   </div>
-                  {!collapsed && (
-                    <CollapsibleContent>
+                  {!collapsed &&
+                  <CollapsibleContent>
                       <div className="ml-7 border-l border-border pl-2 mt-1 space-y-0.5">
-                        {links.map(link => (
-                          <NavLink
-                            key={link.id}
-                            to={`/jobs/link/${link.id}`}
-                            className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
-                            activeClassName="text-sidebar-accent-foreground bg-sidebar-accent"
-                          >
+                        {links.map((link) =>
+                      <NavLink
+                        key={link.id}
+                        to={`/jobs/link/${link.id}`}
+                        className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                        activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
+
                             {link.label}
                           </NavLink>
-                        ))}
-                        {addingLink ? (
-                          <div className="flex items-center gap-1 px-1">
+                      )}
+                        {addingLink ?
+                      <div className="flex items-center gap-1 px-1">
                             <Input
-                              autoFocus
-                              value={newLinkLabel}
-                              onChange={e => setNewLinkLabel(e.target.value)}
-                              onKeyDown={e => { if (e.key === 'Enter') handleAddLink(); if (e.key === 'Escape') { setAddingLink(false); setNewLinkLabel(''); } }}
-                              placeholder="Link name..."
-                              className="h-6 text-xs"
-                            />
+                          autoFocus
+                          value={newLinkLabel}
+                          onChange={(e) => setNewLinkLabel(e.target.value)}
+                          onKeyDown={(e) => {if (e.key === 'Enter') handleAddLink();if (e.key === 'Escape') {setAddingLink(false);setNewLinkLabel('');}}}
+                          placeholder="Link name..."
+                          className="h-6 text-xs" />
+
                             <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0" onClick={handleAddLink}>
                               <Plus className="h-3 w-3" />
                             </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs text-muted-foreground h-6 px-2"
-                            onClick={() => setAddingLink(true)}
-                          >
+                          </div> :
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-xs text-muted-foreground h-6 px-2"
+                        onClick={() => setAddingLink(true)}>
+
                             <Plus className="h-3 w-3 mr-1" />
                             Add subitem
                           </Button>
-                        )}
+                      }
                       </div>
                     </CollapsibleContent>
-                  )}
+                  }
                 </Collapsible>
               </SidebarMenuItem>
-              )}
+              }
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
-        {isPageAllowed('settings') && (
-          <SidebarMenuButton
-            asChild
-            isActive={isActive("/settings")}
-            tooltip="Settings"
-          >
+        {isPageAllowed('settings') &&
+        <SidebarMenuButton
+          asChild
+          isActive={isActive("/settings")}
+          tooltip="Settings">
+
             <NavLink
-              to="/settings"
-              className="flex items-center gap-3"
-              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
-            >
+            to="/settings"
+            className="flex items-center gap-3"
+            activeClassName="bg-sidebar-accent text-sidebar-accent-foreground">
+
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </NavLink>
           </SidebarMenuButton>
-        )}
+        }
         <Button
           variant="ghost"
           size="sm"
           onClick={signOut}
-          className="w-full justify-start text-muted-foreground hover:text-destructive"
-        >
+          className="w-full justify-start text-muted-foreground hover:text-destructive">
+
           <LogOut className="h-4 w-4 mr-2" />
           {!collapsed && <span>Logout</span>}
         </Button>
@@ -274,18 +274,18 @@ export function AppSidebar() {
           variant="ghost"
           size="sm"
           onClick={toggleSidebar}
-          className="w-full justify-center"
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <>
+          className="w-full justify-center">
+
+          {collapsed ?
+          <ChevronRight className="h-4 w-4" /> :
+
+          <>
               <ChevronLeft className="h-4 w-4 mr-2" />
               <span>Collapse</span>
             </>
-          )}
+          }
         </Button>
       </SidebarFooter>
-    </Sidebar>
-  );
+    </Sidebar>);
+
 }
