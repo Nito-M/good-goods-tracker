@@ -1,12 +1,20 @@
 
-# Show Measurement Unit for Length per Piece
 
-## What changes
-On the Item Details page, the "Length per Piece" value currently shows just a number (e.g., "12"). It should also display the item's quantity unit so it reads something like "12 ft" or "12 in".
+## Fix: Focus Note Content Instead of Title on Edit
 
-## Technical detail
+When clicking a note card, the edit dialog currently focuses the title input. The user wants focus to go to the content textarea instead.
 
-### File: `src/pages/ItemDetails.tsx` (1 small edit)
-- On the line that displays `item.pieceLength`, append the unit label from `QUANTITY_UNIT_LABELS[item.quantityUnit]` (or fall back to the raw `quantityUnit` value)
-- Change from: `{item.pieceLength}` to: `{item.pieceLength} {QUANTITY_UNIT_LABELS[item.quantityUnit]}`
-- Import `QUANTITY_UNIT_LABELS` from `@/types/inventory`
+### Changes
+
+**File: `src/pages/Notes.tsx`**
+- Add a `useRef` for the content textarea in the edit dialog
+- Use a `useEffect` to focus the content textarea when `editingNote` is set
+- Attach the ref to the edit dialog's `Textarea` component
+
+### Technical Details
+
+- Add `useRef<HTMLTextAreaElement>(null)` for the content textarea
+- When `editingNote` changes to a non-null value, call `contentRef.current?.focus()` with a small timeout (to allow the dialog to render)
+- Pass `autoFocus={false}` on the title input to prevent it from stealing focus
+- The Dialog's `onOpenAutoFocus` can be used to prevent default focus behavior and instead focus the textarea
+
