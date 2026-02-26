@@ -1,34 +1,42 @@
 
+# Speeding Up the Items & Inventory Page
 
-# Update Parts CSV Import to Match New Format
+## Problem Analysis
 
-## Problem
-The current Parts CSV import expects 3 columns (Name, SKU, Description), but the CSV file has 4 columns: **Number**, **Description**, **Tags**, and **Unit Of Measure**. The column mapping needs to change to match.
+The page is slow because of three issues:
 
-## Column Mapping (New)
+1. **Thumbnails and tags fetch ALL item IDs, not just the current page.** The `InventoryTable` passes all `sortedItems` IDs (could be hundreds/thousands) to `useItemThumbnails` and `useBulkItemTags`, triggering dozens of batched database queries -- even though only 40 items are displayed per page.
 
-| CSV Column | Maps To |
-|---|---|
-| Col 0: Number (e.g. "Library Item: A1-001") | Part **name** |
-| Col 1: Description (e.g. "A1 - 001 \| 14Ft Skid...") | Part **description** |
-| Col 2: Tags (e.g. "Hopper Parts") | Displayed in preview only (parts don't have a tags system) |
-| Col 3: Unit Of Measure (e.g. "Piece") | Displayed in preview only (parts don't have a unit field) |
+2. **Redundant signed URL generation for thumbnails.** Every time the item list changes, ALL thumbnails are re-fetched and signed URLs regenerated for every item, not just the visible ones.
 
-The SKU will be auto-derived from the Number column (truncated to 100 chars) since the CSV doesn't have a dedicated SKU column.
+3. **Bulk location quantities also fetch for ALL items** in the parent `Items` component, regardless of pagination.
 
-## Changes
+## Proposed Fix
 
-### File: `src/components/PartsCsvImport.tsx`
+Scope the bulk data hooks to only fetch data for the **current page's items** instead of all items.
 
-1. Update the `ParsedPart` interface to include `tags` and `unitOfMeasure` fields for preview display
-2. Update the `parseCSV` function to map:
-   - Col 0 -> `name`
-   - Col 1 -> `description`
-   - Col 2 -> `tags` (preview only)
-   - Col 3 -> `unitOfMeasure` (preview only)
-3. Update the SKU logic: derive SKU from the name (Col 0) instead of expecting a dedicated column
-4. Update the preview UI to show tags and unit of measure badges
-5. Update the expected columns help text from "Name, SKU, Description" to "Number, Description, Tags, Unit Of Measure"
+### Changes
 
-No database changes are needed -- tags and unit of measure will be shown in preview but stored parts will use the existing schema (name, sku, description, folder).
+**`src/components/InventoryTable.tsx`**
+- Change `useItemThumbnails` and `useBulkItemTags` to use `pagedItems` IDs (the 40 visible items) instead of all `sortedItems` IDs.
+- This reduces queries from potentially 20+ batches down to 1 batch per hook.
 
+```
+// Before (line 48-50):
+const itemIds = useMemo(() => sortedItems.map((item) => item.id), [sortedItems]);
+const thumbnailMap = useItemThumbnails(itemIds);
+const { getTagsForItem } = useBulkItemTags(itemIds);
+
+// After:
+const pagedItemIds = useMemo(() => pagedItems.map((item) => item.id), [pagedItems]);
+const thumbnailMap = useItemThumbnails(pagedItemIds);
+const { getTagsForItem } = useBulkItemTags(pagedItemIds);
+```
+
+**`src/pages/Items.tsx`**
+- The `useBulkItemLocationQuantities` hook currently receives ALL item IDs. This is needed for warehouse filtering (to know which items exist in a warehouse), so it must remain as-is for correctness. However, this hook already uses batching and is a single lightweight query (no signed URLs), so the impact is minimal.
+
+### Impact
+- For a user with 200 items: reduces thumbnail queries from ~4 batches + 4 signed URL batches to 1+1. Tags queries drop from ~4 to 1.
+- Page changes will re-fetch only the 40 visible items -- fast and focused.
+- No changes to the database or backend needed.
