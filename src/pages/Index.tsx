@@ -23,7 +23,7 @@ interface IndexProps {
 
 const Index = ({
   stats,
-  loading,
+  loading
 }: IndexProps) => {
   const { sales, loading: salesLoading } = useSales();
 
@@ -32,7 +32,7 @@ const Index = ({
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value);
   };
 
@@ -51,44 +51,44 @@ const Index = ({
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
+        {loading ?
+        <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground">Loading dashboard...</div>
-          </div>
-        ) : (
-          <>
+          </div> :
+
+        <>
             {/* Stats Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
               <StatCard
-                title="Total Items"
-                value={stats.totalItems.toLocaleString()}
-                icon={Package}
-                variant="default"
-              />
+              title="Total Items"
+              value={stats.totalItems.toLocaleString()}
+              icon={Package}
+              variant="default" />
+
               <StatCard
-                title="Total Value"
-                value={formatCurrency(stats.totalValue)}
-                icon={DollarSign}
-                variant="success"
-              />
+              title="Total Value"
+              value={formatCurrency(stats.totalValue)}
+              icon={DollarSign}
+              variant="success" />
+
               <StatCard
-                title="Low Stock Alerts"
-                value={stats.lowStockCount}
-                icon={AlertTriangle}
-                variant="warning"
-              />
+              title="Low Stock Alerts"
+              value={stats.lowStockCount}
+              icon={AlertTriangle}
+              variant="warning" />
+
             </div>
 
             {/* Sales Analytics */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold mb-4">Sales Analytics</h2>
-              {salesLoading ? (
-                <div className="flex items-center justify-center py-12">
+              <h2 className="text-lg font-semibold mb-4 text-left bg-inherit">Sales Analytics</h2>
+              {salesLoading ?
+            <div className="flex items-center justify-center py-12">
                   <div className="text-muted-foreground">Loading sales data...</div>
-                </div>
-              ) : (
-                <SalesAnalyticsChart sales={sales} />
-              )}
+                </div> :
+
+            <SalesAnalyticsChart sales={sales} />
+            }
             </div>
 
             {/* Quick Actions */}
@@ -104,10 +104,10 @@ const Index = ({
               </div>
             </div>
           </>
-        )}
+        }
       </main>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Index;
