@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Check, ChevronsUpDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,11 @@ interface WarehouseOption {
   name: string;
 }
 
+interface SubcategoryOption {
+  id: string;
+  name: string;
+}
+
 interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -40,6 +45,9 @@ interface SearchFilterProps {
   warehouseFilter?: string;
   onWarehouseChange?: (value: string) => void;
   warehouseOptions?: WarehouseOption[];
+  subcategoryFilter?: string;
+  onSubcategoryChange?: (value: string) => void;
+  subcategoryOptions?: SubcategoryOption[];
 }
 
 export function SearchFilter({
@@ -54,10 +62,14 @@ export function SearchFilter({
   warehouseFilter,
   onWarehouseChange,
   warehouseOptions,
+  subcategoryFilter,
+  onSubcategoryChange,
+  subcategoryOptions,
 }: SearchFilterProps) {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
   const [warehouseOpen, setWarehouseOpen] = useState(false);
+  const [subcategoryOpen, setSubcategoryOpen] = useState(false);
 
   const selectedCategoryLabel =
     categoryFilter === 'all' || !categoryFilter ? 'All Categories' : categoryFilter;
@@ -137,6 +149,69 @@ export function SearchFilter({
           </Command>
         </PopoverContent>
       </Popover>
+      {/* Subcategory combobox */}
+      {subcategoryOptions && subcategoryOptions.length > 0 && onSubcategoryChange && (
+        <Popover open={subcategoryOpen} onOpenChange={setSubcategoryOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={subcategoryOpen}
+              className="w-full sm:w-48 justify-between font-normal"
+            >
+              <span className="truncate">
+                {!subcategoryFilter || subcategoryFilter === 'all'
+                  ? 'All Subcategories'
+                  : subcategoryOptions.find((s) => s.id === subcategoryFilter)?.name || 'All Subcategories'}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search subcategories..." />
+              <CommandList>
+                <CommandEmpty>No subcategory found.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="all"
+                    onSelect={() => {
+                      onSubcategoryChange('all');
+                      setSubcategoryOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        !subcategoryFilter || subcategoryFilter === 'all' ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    All Subcategories
+                  </CommandItem>
+                  {subcategoryOptions.map((sub) => (
+                    <CommandItem
+                      key={sub.id}
+                      value={sub.name}
+                      onSelect={() => {
+                        onSubcategoryChange(sub.id);
+                        setSubcategoryOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          subcategoryFilter === sub.id ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      {sub.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
 
       {/* Tag combobox */}
       {tagOptions && tagOptions.length > 0 && onTagChange && (

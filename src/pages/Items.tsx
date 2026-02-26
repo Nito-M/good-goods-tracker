@@ -48,6 +48,7 @@ interface ItemsProps {
   categories: string[];
   onDelete: (id: string) => void;
   addItem: (item: Omit<import('@/types/inventory').InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
+  subcategoriesByCategory: Map<string, { id: string; name: string }[]>;
 }
 
 export const Items = ({
@@ -60,10 +61,12 @@ export const Items = ({
   categories,
   onDelete,
   addItem,
+  subcategoriesByCategory,
 }: ItemsProps) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tagFilter, setTagFilter] = useState('all');
+  const [subcategoryFilter, setSubcategoryFilter] = useState('all');
   const warehouseFilter = searchParams.get('warehouse') || 'all';
 
   const { tagCategories } = useTagCategories();
@@ -136,7 +139,19 @@ export const Items = ({
     });
   }, [tags, tagCategories]);
 
-  // Filter items by tag and warehouse
+  // Subcategory options based on selected category
+  const subcategoryOptions = useMemo(() => {
+    if (categoryFilter === 'all' || !categoryFilter) return [];
+    return subcategoriesByCategory.get(categoryFilter) || [];
+  }, [categoryFilter, subcategoriesByCategory]);
+
+  // Reset subcategory filter when category changes
+  const handleCategoryChange = (cat: string) => {
+    setCategoryFilter(cat);
+    setSubcategoryFilter('all');
+  };
+
+  // Filter items by tag, warehouse, and subcategory
   const filteredItems = useMemo(() => {
     let result = items;
     if (tagFilter !== 'all') {
@@ -151,8 +166,14 @@ export const Items = ({
         itemsInWarehouse?.has(item.id) || item.warehouseId === warehouseFilter
       );
     }
+    if (subcategoryFilter !== 'all') {
+      const subName = subcategoryOptions.find(s => s.id === subcategoryFilter)?.name;
+      if (subName) {
+        result = result.filter((item) => item.subcategory === subName);
+      }
+    }
     return result;
-  }, [items, tagFilter, itemTagsMap, warehouseFilter]);
+  }, [items, tagFilter, itemTagsMap, warehouseFilter, subcategoryFilter, subcategoryOptions]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -234,11 +255,14 @@ export const Items = ({
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             categoryFilter={categoryFilter}
-            onCategoryChange={setCategoryFilter}
+            onCategoryChange={handleCategoryChange}
             categories={categories}
             tagFilter={tagFilter}
             onTagChange={setTagFilter}
             tagOptions={tagOptions}
+            subcategoryFilter={subcategoryFilter}
+            onSubcategoryChange={setSubcategoryFilter}
+            subcategoryOptions={subcategoryOptions.map(s => ({ id: s.id, name: s.name }))}
           />
         </div>
 

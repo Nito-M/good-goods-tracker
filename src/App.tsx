@@ -125,6 +125,7 @@ function AppContent() {
                   categories={allCategories}
                   onDelete={deleteItem}
                   addItem={addItem}
+                  subcategoriesByCategory={subcategoriesByCategory}
                 />
               </AppLayout>
             </ProtectedRoute>
