@@ -119,6 +119,41 @@ export function useCategories() {
     fetchCategories();
   };
 
+  const updateCategory = async (id: string, newName: string) => {
+    if (!user) return;
+
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed.length > 100) {
+      toast({ title: 'Invalid category name', variant: 'destructive' });
+      return;
+    }
+
+    if (allCategories.some((n) => n.toLowerCase() === trimmed.toLowerCase() && categories.find((c) => c.id === id)?.name.toLowerCase() !== trimmed.toLowerCase())) {
+      toast({ title: 'Category already exists', variant: 'destructive' });
+      return;
+    }
+
+    const oldCategory = categories.find((c) => c.id === id);
+
+    const { error } = await supabase.from('categories').update({ name: trimmed }).eq('id', id);
+    if (error) {
+      console.error('Error updating category:', error);
+      toast({ title: 'Error updating category', variant: 'destructive' });
+      return;
+    }
+
+    // Update inventory items with the old category name
+    if (oldCategory && oldCategory.name !== trimmed) {
+      await supabase
+        .from('inventory_items')
+        .update({ category: trimmed })
+        .eq('category', oldCategory.name);
+    }
+
+    toast({ title: 'Category updated successfully' });
+    fetchCategories();
+  };
+
   const deleteCategory = async (id: string) => {
     const { error } = await supabase
       .from('categories')
@@ -189,6 +224,7 @@ export function useCategories() {
     allCategories,
     loading,
     addCategory,
+    updateCategory,
     deleteCategory,
     moveCategoryToSubcategory,
     refetch: fetchCategories,

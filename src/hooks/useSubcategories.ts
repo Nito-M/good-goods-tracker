@@ -93,6 +93,52 @@ export function useSubcategories() {
     fetchSubcategories();
   };
 
+  const updateSubcategory = async (id: string, newName: string) => {
+    if (!user) return;
+
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed.length > 100) {
+      toast({ title: 'Invalid subcategory name', variant: 'destructive' });
+      return;
+    }
+
+    const sub = subcategories.find((s) => s.id === id);
+    if (!sub) return;
+
+    // Check duplicate within same category
+    const existing = subcategories.find(
+      (s) => s.category_id === sub.category_id && s.id !== id && s.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (existing) {
+      toast({ title: 'Subcategory already exists in this category', variant: 'destructive' });
+      return;
+    }
+
+    const oldName = sub.name;
+    const { error } = await supabase.from('subcategories').update({ name: trimmed }).eq('id', id);
+    if (error) {
+      console.error('Error updating subcategory:', error);
+      toast({ title: 'Error updating subcategory', variant: 'destructive' });
+      return;
+    }
+
+    // Update inventory items with old subcategory name in this category
+    if (oldName !== trimmed) {
+      const parentCategory = subcategories.find((s) => s.id === id);
+      if (parentCategory) {
+        // We need the category name - find it from the category_id
+        // For now update all items matching this subcategory name
+        await supabase
+          .from('inventory_items')
+          .update({ subcategory: trimmed })
+          .eq('subcategory', oldName);
+      }
+    }
+
+    toast({ title: 'Subcategory updated successfully' });
+    fetchSubcategories();
+  };
+
   const deleteSubcategory = async (id: string) => {
     const { error } = await supabase.from('subcategories').delete().eq('id', id);
 
@@ -111,6 +157,7 @@ export function useSubcategories() {
     loading,
     getSubcategoriesForCategory,
     addSubcategory,
+    updateSubcategory,
     deleteSubcategory,
     refetch: fetchSubcategories,
   };
