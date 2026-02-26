@@ -465,7 +465,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select value={category} onValueChange={(v) => { setCategory(v); setSubcategory(''); }}>
+                  <Select value={category} onValueChange={(v) => { if (v !== category) { setCategory(v); setSubcategory(''); } }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
