@@ -308,6 +308,31 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                   </p>
                 </div>
               </div>
+              {item.pieceLength > 0 && (
+                <>
+                  <Separator />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Price per Piece</p>
+                      <p className="text-xl font-semibold text-card-foreground">
+                        {formatCurrency(item.price * item.pieceLength)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatCurrency(item.price)} × {item.pieceLength} {QUANTITY_UNIT_LABELS[item.quantityUnit] || item.quantityUnit}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Cost per Piece</p>
+                      <p className="text-xl font-semibold text-card-foreground">
+                        {formatCurrency(item.cost * item.pieceLength)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatCurrency(item.cost)} × {item.pieceLength} {QUANTITY_UNIT_LABELS[item.quantityUnit] || item.quantityUnit}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
               {/* Sheet count for sqft items — qty = total sq ft, sheets = qty / sheetSqFt */}
               {item.quantityUnit === 'sqft' && item.dimensions.length > 0 && item.dimensions.width > 0 && (() => {
                 const l = item.dimensions.length;
