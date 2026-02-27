@@ -124,6 +124,7 @@ export function useInventory() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [itemVendorMap, setItemVendorMap] = useState<Map<string, string[]>>(new Map());
   const { toast } = useToast();
   const { user } = useAuth();
   const { isOnline } = useOnlineStatus();
@@ -192,13 +193,43 @@ export function useInventory() {
     return () => window.removeEventListener('sync-complete', handleSyncComplete);
   }, [fetchItems]);
 
+  // Fetch vendor names per item for search
+  useEffect(() => {
+    if (!user || !isOnline) return;
+    (async () => {
+      const { data } = await supabase
+        .from('item_vendor_prices')
+        .select('item_id, vendors:vendor_id(name)');
+      if (data) {
+        const map = new Map<string, string[]>();
+        for (const row of data as any[]) {
+          const vendorName = row.vendors?.name;
+          if (!vendorName) continue;
+          const existing = map.get(row.item_id) || [];
+          if (!existing.includes(vendorName)) {
+            existing.push(vendorName);
+            map.set(row.item_id, existing);
+          }
+        }
+        setItemVendorMap(map);
+      }
+    })();
+  }, [user, isOnline]);
+
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-      return matchesSearch && matchesCategory;
+      if (!matchesCategory) return false;
+
+      if (!searchQuery.trim()) return true;
+
+      // Fuzzy token search: all tokens must match somewhere in name, SKU, category, or vendor names
+      const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+      const vendorNames = itemVendorMap.get(item.id)?.join(' ') || '';
+      const searchableText = `${item.name} ${item.sku} ${item.category} ${item.subcategory || ''} ${vendorNames}`.toLowerCase();
+      return tokens.every((token) => searchableText.includes(token));
     });
-  }, [items, searchQuery, categoryFilter]);
+  }, [items, searchQuery, categoryFilter, itemVendorMap]);
 
   const stats = useMemo(() => {
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
