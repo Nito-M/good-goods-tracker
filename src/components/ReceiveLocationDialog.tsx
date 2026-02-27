@@ -184,6 +184,7 @@ export function ReceiveLocationDialog({
       .map((l) => ({
         warehouseId: l.warehouseId,
         items: l.items
+          .filter((it) => poItems[it.poItemIndex])
           .map((it) => ({
             sku: poItems[it.poItemIndex].sku,
             itemName: poItems[it.poItemIndex].itemName,
