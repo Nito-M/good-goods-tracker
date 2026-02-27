@@ -369,7 +369,7 @@ export function usePurchaseOrders() {
     fetchOrders();
   };
 
-  const markAsReceived = async (orderId: string, locationEntries?: { warehouseId: string; quantity: number }[], selectedItems?: { sku: string; itemName: string; quantity: number }[]) => {
+  const markAsReceived = async (orderId: string, locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number }[] }[]) => {
     // Get the order to access its items and costs
     const order = orders.find((o) => o.id === orderId);
     if (!order) {
@@ -408,20 +408,23 @@ export function usePurchaseOrders() {
       return false;
     }
 
-    const validEntries = locationEntries?.filter(e => e.warehouseId && e.quantity > 0) || [];
+    const validLocations = locationItems?.filter(e => e.warehouseId && e.items.length > 0) || [];
 
-    // Determine which items to process: use selectedItems if provided, otherwise all order items
-    const itemsToReceive = selectedItems
-      ? order.items.filter(orderItem =>
-          selectedItems.some(sel => sel.sku === orderItem.sku)
-        ).map(orderItem => {
-          const sel = selectedItems.find(s => s.sku === orderItem.sku);
-          return { ...orderItem, quantity: sel ? sel.quantity : orderItem.quantity };
-        })
-      : order.items;
+    // Build per-item total quantities to add to inventory (sum across all locations)
+    const itemTotalMap = new Map<string, number>();
+    for (const loc of validLocations) {
+      for (const item of loc.items) {
+        itemTotalMap.set(item.sku, (itemTotalMap.get(item.sku) || 0) + item.quantity);
+      }
+    }
+
+    // Determine which items to process from order
+    const itemsToReceive = order.items.filter(oi => itemTotalMap.has(oi.sku));
 
     // Update inventory items with new costs and quantities, and save vendor prices
     for (const item of itemsToReceive) {
+      const receiveQty = itemTotalMap.get(item.sku) || 0;
+      
       const { data: inventoryItem } = await supabase
         .from('inventory_items')
         .select('id, quantity, cost')
@@ -432,7 +435,7 @@ export function usePurchaseOrders() {
       if (inventoryItem) {
         // Existing item - update quantity and cost
         const updates: Record<string, unknown> = {
-          quantity: inventoryItem.quantity + item.quantity,
+          quantity: inventoryItem.quantity + receiveQty,
         };
 
         // Update cost if provided in the PO
@@ -449,33 +452,37 @@ export function usePurchaseOrders() {
           .update(updates)
           .eq('id', inventoryItem.id);
 
-        // Update item_location_quantities for each location entry
-        for (const entry of validEntries) {
+        // Update item_location_quantities per location
+        for (const loc of validLocations) {
+          const locItem = loc.items.find(li => li.sku === item.sku);
+          if (!locItem || locItem.quantity <= 0) continue;
+
           const { data: existingLocQty } = await supabase
             .from('item_location_quantities')
             .select('id, quantity')
             .eq('item_id', inventoryItem.id)
-            .eq('warehouse_id', entry.warehouseId)
+            .eq('warehouse_id', loc.warehouseId)
             .single();
 
           if (existingLocQty) {
             await supabase
               .from('item_location_quantities')
-              .update({ quantity: existingLocQty.quantity + entry.quantity })
+              .update({ quantity: existingLocQty.quantity + locItem.quantity })
               .eq('id', existingLocQty.id);
           } else {
             await supabase
               .from('item_location_quantities')
               .insert({
                 item_id: inventoryItem.id,
-                warehouse_id: entry.warehouseId,
-                quantity: entry.quantity,
+                warehouse_id: loc.warehouseId,
+                quantity: locItem.quantity,
                 user_id: user!.id,
               });
           }
         }
       } else {
         // Custom item - create new inventory item
+        const firstLoc = validLocations.find(l => l.items.some(li => li.sku === item.sku));
         const { data: newItem, error: createError } = await supabase
           .from('inventory_items')
           .insert({
@@ -483,7 +490,7 @@ export function usePurchaseOrders() {
             sku: item.sku,
             name: item.itemName,
             category: 'Other',
-            quantity: item.quantity,
+            quantity: receiveQty,
             cost: item.unitCost || 0,
             price: 0,
             min_stock: 0,
@@ -494,7 +501,7 @@ export function usePurchaseOrders() {
             dimensions_width: 0,
             dimensions_height: 0,
             dimensions_unit: 'in',
-            warehouse_id: validEntries.length === 1 ? validEntries[0].warehouseId : null,
+            warehouse_id: validLocations.length === 1 ? validLocations[0].warehouseId : null,
           })
           .select('id')
           .single();
@@ -506,14 +513,16 @@ export function usePurchaseOrders() {
           if (order.vendorId && item.unitCost && item.unitCost > 0) {
             await updateVendorPriceFromPO(user!.id, newItem.id, order.vendorId, item.unitCost);
           }
-          // Save location quantities for the newly created item
-          for (const entry of validEntries) {
+          // Save location quantities per location
+          for (const loc of validLocations) {
+            const locItem = loc.items.find(li => li.sku === item.sku);
+            if (!locItem || locItem.quantity <= 0) continue;
             await supabase
               .from('item_location_quantities')
               .insert({
                 item_id: newItem.id,
-                warehouse_id: entry.warehouseId,
-                quantity: entry.quantity,
+                warehouse_id: loc.warehouseId,
+                quantity: locItem.quantity,
                 user_id: user!.id,
               });
           }
