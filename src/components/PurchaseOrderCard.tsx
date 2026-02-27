@@ -25,6 +25,7 @@ import {
   ImageIcon,
   X,
   Plus,
+  Undo2,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ interface PurchaseOrderCardProps {
   onMarkOrdered?: (id: string) => void;
   onMarkReceived: (id: string) => void;
   onMarkPaid: (id: string) => void;
+  onRevert?: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (order: PurchaseOrder) => void;
   onDownload: (order: PurchaseOrder) => void;
@@ -51,6 +53,7 @@ export function PurchaseOrderCard({
   onMarkOrdered,
   onMarkReceived,
   onMarkPaid,
+  onRevert,
   onDelete,
   onEdit,
   onDownload,
@@ -424,6 +427,12 @@ export function PurchaseOrderCard({
                     <Button size="sm" onClick={() => onMarkReceived(order.id)} disabled={loading} className="gap-2">
                       <Check className="h-4 w-4" />
                       Mark Received
+                    </Button>
+                  )}
+                  {order.status === 'received' && onRevert && (
+                    <Button size="sm" variant="outline" onClick={() => onRevert(order.id)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
+                      <Undo2 className="h-4 w-4" />
+                      Revert
                     </Button>
                   )}
                   {!order.paidAt && (

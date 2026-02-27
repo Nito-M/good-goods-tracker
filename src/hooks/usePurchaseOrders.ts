@@ -939,6 +939,72 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const revertOrder = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) {
+      toast({ title: 'Order not found', variant: 'destructive' });
+      return false;
+    }
+
+    if (order.status !== 'received') {
+      toast({ title: 'Only received orders can be reverted', variant: 'destructive' });
+      return false;
+    }
+
+    // Remove quantities from inventory for each item
+    for (const item of order.items) {
+      const { data: inventoryItem } = await supabase
+        .from('inventory_items')
+        .select('id, quantity')
+        .eq('sku', item.sku)
+        .eq('user_id', user!.id)
+        .single();
+
+      if (inventoryItem) {
+        const newQty = Math.max(0, inventoryItem.quantity - item.quantity);
+        await supabase
+          .from('inventory_items')
+          .update({ quantity: newQty })
+          .eq('id', inventoryItem.id);
+
+        // Also reduce location quantities
+        const { data: locQtys } = await supabase
+          .from('item_location_quantities')
+          .select('id, quantity')
+          .eq('item_id', inventoryItem.id)
+          .eq('user_id', user!.id);
+
+        if (locQtys) {
+          let remaining = item.quantity;
+          for (const loc of locQtys) {
+            if (remaining <= 0) break;
+            const reduce = Math.min(loc.quantity, remaining);
+            await supabase
+              .from('item_location_quantities')
+              .update({ quantity: loc.quantity - reduce })
+              .eq('id', loc.id);
+            remaining -= reduce;
+          }
+        }
+      }
+    }
+
+    // Revert PO status back to ordered
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ status: 'ordered', received_at: null })
+      .eq('id', orderId);
+
+    if (error) {
+      toast({ title: 'Error reverting order', variant: 'destructive' });
+      return false;
+    }
+
+    toast({ title: 'Order reverted', description: 'Items removed from inventory' });
+    fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
@@ -947,6 +1013,7 @@ export function usePurchaseOrders() {
     markAsOrdered,
     markAsReceived,
     markAsPaid,
+    revertOrder,
     deleteOrder,
     uploadImageForOrder,
     deleteImageForOrder,
