@@ -158,6 +158,7 @@ export function ReceiveLocationDialog({
   // Per-item assignment summary
   const itemAssignments = poItems.map((item, itemIdx) => {
     const assigned = locations.reduce((sum, loc) => {
+      if (!loc.items) return sum;
       const found = loc.items.find((it) => it.poItemIndex === itemIdx);
       return sum + (found ? parseFloat(found.quantity) || 0 : 0);
     }, 0);
