@@ -25,7 +25,7 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 export function PurchaseOrders() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
+  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, revertOrder, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
   usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
@@ -67,6 +67,12 @@ export function PurchaseOrders() {
   const handleMarkPaid = async (orderId: string) => {
     setProcessingId(orderId);
     await markAsPaid(orderId, addWithdrawal);
+    setProcessingId(null);
+  };
+
+  const handleRevert = async (orderId: string) => {
+    setProcessingId(orderId);
+    await revertOrder(orderId);
     setProcessingId(null);
   };
 
@@ -250,6 +256,7 @@ export function PurchaseOrders() {
               onMarkOrdered={handleMarkOrdered}
               onMarkReceived={handleMarkReceived}
               onMarkPaid={handleMarkPaid}
+              onRevert={handleRevert}
               onDelete={deleteOrder}
               onEdit={handleEdit}
               onDownload={handleDownload}
@@ -276,6 +283,7 @@ export function PurchaseOrders() {
               onMarkOrdered={handleMarkOrdered}
               onMarkReceived={handleMarkReceived}
               onMarkPaid={handleMarkPaid}
+              onRevert={handleRevert}
               onDelete={deleteOrder}
               onEdit={handleEdit}
               onDownload={handleDownload}
@@ -302,6 +310,7 @@ export function PurchaseOrders() {
               onMarkOrdered={handleMarkOrdered}
               onMarkReceived={handleMarkReceived}
               onMarkPaid={handleMarkPaid}
+              onRevert={handleRevert}
               onDelete={deleteOrder}
               onEdit={handleEdit}
               onDownload={handleDownload}
