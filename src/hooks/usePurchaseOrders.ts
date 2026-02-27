@@ -369,7 +369,7 @@ export function usePurchaseOrders() {
     fetchOrders();
   };
 
-  const markAsReceived = async (orderId: string, locationEntries?: { warehouseId: string; quantity: number }[]) => {
+  const markAsReceived = async (orderId: string, locationEntries?: { warehouseId: string; quantity: number }[], selectedItems?: { sku: string; itemName: string; quantity: number }[]) => {
     // Get the order to access its items and costs
     const order = orders.find((o) => o.id === orderId);
     if (!order) {
@@ -410,8 +410,18 @@ export function usePurchaseOrders() {
 
     const validEntries = locationEntries?.filter(e => e.warehouseId && e.quantity > 0) || [];
 
+    // Determine which items to process: use selectedItems if provided, otherwise all order items
+    const itemsToReceive = selectedItems
+      ? order.items.filter(orderItem =>
+          selectedItems.some(sel => sel.sku === orderItem.sku)
+        ).map(orderItem => {
+          const sel = selectedItems.find(s => s.sku === orderItem.sku);
+          return { ...orderItem, quantity: sel ? sel.quantity : orderItem.quantity };
+        })
+      : order.items;
+
     // Update inventory items with new costs and quantities, and save vendor prices
-    for (const item of order.items) {
+    for (const item of itemsToReceive) {
       const { data: inventoryItem } = await supabase
         .from('inventory_items')
         .select('id, quantity, cost')
