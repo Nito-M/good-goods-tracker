@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Plus, Trash2, AlertCircle, Check } from 'lucide-react';
+import { MapPin, Plus, Trash2, AlertCircle, Check, Package } from 'lucide-react';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
 
 interface Warehouse {
@@ -19,7 +19,6 @@ interface Warehouse {
   name: string;
 }
 
-/** Per-location, per-item quantity assignment */
 export interface LocationItemEntry {
   warehouseId: string;
   items: { sku: string; itemName: string; quantity: number }[];
@@ -34,10 +33,15 @@ interface ReceiveLocationDialogProps {
   loading?: boolean;
 }
 
+interface LocationItemRow {
+  poItemIndex: number;
+  quantity: string;
+}
+
 interface LocationRow {
   warehouseId: string;
-  /** quantities indexed same as poItems */
-  quantities: string[];
+  items: LocationItemRow[];
+  showItemPicker: boolean;
 }
 
 export function ReceiveLocationDialog({
@@ -52,11 +56,7 @@ export function ReceiveLocationDialog({
 
   useEffect(() => {
     if (open && warehouses.length > 0) {
-      // Start with one empty location row
-      setLocations([{
-        warehouseId: '',
-        quantities: poItems.map((item) => String(item.quantity)),
-      }]);
+      setLocations([{ warehouseId: '', items: [], showItemPicker: false }]);
     } else if (open) {
       setLocations([]);
     }
@@ -67,10 +67,7 @@ export function ReceiveLocationDialog({
   const addLocation = () => {
     const available = warehouses.filter((w) => !usedWarehouseIds.includes(w.id));
     if (available.length === 0) return;
-    setLocations((prev) => [
-      ...prev,
-      { warehouseId: '', quantities: poItems.map(() => '0') },
-    ]);
+    setLocations((prev) => [...prev, { warehouseId: '', items: [], showItemPicker: false }]);
   };
 
   const removeLocation = (index: number) => {
@@ -83,40 +80,87 @@ export function ReceiveLocationDialog({
     );
   };
 
-  const updateItemQty = (locIndex: number, itemIndex: number, value: string) => {
+  const toggleItemPicker = (locIndex: number) => {
+    setLocations((prev) =>
+      prev.map((l, i) => (i === locIndex ? { ...l, showItemPicker: !l.showItemPicker } : l))
+    );
+  };
+
+  const addItemToLocation = (locIndex: number, poItemIndex: number) => {
+    const item = poItems[poItemIndex];
+    // Calculate remaining for this item
+    const alreadyAssigned = locations.reduce((sum, loc, li) => {
+      if (li === locIndex) return sum;
+      const found = loc.items.find((it) => it.poItemIndex === poItemIndex);
+      return sum + (found ? parseFloat(found.quantity) || 0 : 0);
+    }, 0);
+    const remaining = Math.max(0, item.quantity - alreadyAssigned);
+
     setLocations((prev) =>
       prev.map((l, i) => {
         if (i !== locIndex) return l;
-        const quantities = [...l.quantities];
-        quantities[itemIndex] = value;
-        return { ...l, quantities };
+        // Don't add duplicates
+        if (l.items.some((it) => it.poItemIndex === poItemIndex)) return l;
+        return {
+          ...l,
+          items: [...l.items, { poItemIndex, quantity: String(remaining) }],
+          showItemPicker: false,
+        };
       })
     );
   };
 
-  const setAllForLocation = (locIndex: number) => {
+  const removeItemFromLocation = (locIndex: number, itemRowIndex: number) => {
     setLocations((prev) =>
       prev.map((l, i) => {
         if (i !== locIndex) return l;
-        // For each item, set remaining = total - sum of other locations
-        const quantities = poItems.map((item, itemIdx) => {
-          const othersSum = prev.reduce(
-            (sum, loc, li) => li !== locIndex ? sum + (parseFloat(loc.quantities[itemIdx]) || 0) : sum,
-            0
-          );
-          return String(Math.max(0, item.quantity - othersSum));
+        return { ...l, items: l.items.filter((_, j) => j !== itemRowIndex) };
+      })
+    );
+  };
+
+  const updateItemQty = (locIndex: number, itemRowIndex: number, value: string) => {
+    setLocations((prev) =>
+      prev.map((l, i) => {
+        if (i !== locIndex) return l;
+        const items = l.items.map((it, j) =>
+          j === itemRowIndex ? { ...it, quantity: value } : it
+        );
+        return { ...l, items };
+      })
+    );
+  };
+
+  const addAllRemainingToLocation = (locIndex: number) => {
+    setLocations((prev) =>
+      prev.map((l, i) => {
+        if (i !== locIndex) return l;
+        const newItems: LocationItemRow[] = [];
+        poItems.forEach((item, poIdx) => {
+          const alreadyInThisLoc = l.items.find((it) => it.poItemIndex === poIdx);
+          const othersSum = prev.reduce((sum, loc, li) => {
+            if (li === locIndex) return sum;
+            const found = loc.items.find((it) => it.poItemIndex === poIdx);
+            return sum + (found ? parseFloat(found.quantity) || 0 : 0);
+          }, 0);
+          const remaining = Math.max(0, item.quantity - othersSum);
+          if (alreadyInThisLoc) {
+            newItems.push({ poItemIndex: poIdx, quantity: String(remaining) });
+          } else if (remaining > 0) {
+            newItems.push({ poItemIndex: poIdx, quantity: String(remaining) });
+          }
         });
-        return { ...l, quantities };
+        return { ...l, items: newItems, showItemPicker: false };
       })
     );
   };
 
-  // Calculate per-item totals across all locations
+  // Per-item assignment summary
   const itemAssignments = poItems.map((item, itemIdx) => {
-    const assigned = locations.reduce(
-      (sum, loc) => sum + (parseFloat(loc.quantities[itemIdx]) || 0),
-      0
-    );
+    const assigned = locations.reduce((sum, loc) => {
+      const found = loc.items.find((it) => it.poItemIndex === itemIdx);
+      return sum + (found ? parseFloat(found.quantity) || 0 : 0);
+    }, 0);
     return {
       sku: item.sku,
       itemName: item.itemName,
@@ -130,18 +174,19 @@ export function ReceiveLocationDialog({
   const allComplete = itemAssignments.every((a) => a.isComplete);
   const hasLocations = locations.length > 0;
   const allWarehousesSelected = locations.every((l) => l.warehouseId);
-  const canConfirm = hasLocations && allComplete && allWarehousesSelected && !loading;
+  const allHaveItems = locations.every((l) => l.items.length > 0);
+  const canConfirm = hasLocations && allComplete && allWarehousesSelected && allHaveItems && !loading;
 
   const handleConfirm = () => {
     const entries: LocationItemEntry[] = locations
-      .filter((l) => l.warehouseId)
+      .filter((l) => l.warehouseId && l.items.length > 0)
       .map((l) => ({
         warehouseId: l.warehouseId,
-        items: poItems
-          .map((item, idx) => ({
-            sku: item.sku,
-            itemName: item.itemName,
-            quantity: parseFloat(l.quantities[idx]) || 0,
+        items: l.items
+          .map((it) => ({
+            sku: poItems[it.poItemIndex].sku,
+            itemName: poItems[it.poItemIndex].itemName,
+            quantity: parseFloat(it.quantity) || 0,
           }))
           .filter((item) => item.quantity > 0),
       }))
@@ -178,7 +223,7 @@ export function ReceiveLocationDialog({
                 {itemAssignments.map((a, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm">
                     {a.isComplete ? (
-                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      <Check className="h-4 w-4 text-primary shrink-0" />
                     ) : (
                       <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
                     )}
@@ -186,7 +231,7 @@ export function ReceiveLocationDialog({
                       {a.itemName}
                       {a.sku && <span className="text-muted-foreground ml-1">({a.sku})</span>}
                     </span>
-                    <span className={`tabular-nums ${a.isComplete ? 'text-green-600' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    <span className={`tabular-nums ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
                       {a.assigned} / {a.needed}
                     </span>
                   </div>
@@ -199,6 +244,11 @@ export function ReceiveLocationDialog({
               const rowAvailable = warehouses.filter(
                 (w) => w.id === loc.warehouseId || !usedWarehouseIds.includes(w.id)
               );
+              const assignedPoIndices = loc.items.map((it) => it.poItemIndex);
+              const unassignedPoItems = poItems
+                .map((item, idx) => ({ item, idx }))
+                .filter(({ idx }) => !assignedPoIndices.includes(idx));
+
               return (
                 <div key={locIndex} className="rounded-md border p-4 space-y-3">
                   <div className="flex items-center gap-2">
@@ -219,15 +269,6 @@ export function ReceiveLocationDialog({
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setAllForLocation(locIndex)}
-                      className="text-xs whitespace-nowrap"
-                    >
-                      All Remaining
-                    </Button>
                     {locations.length > 1 && (
                       <Button
                         type="button"
@@ -241,36 +282,100 @@ export function ReceiveLocationDialog({
                     )}
                   </div>
 
-                  {/* Items for this location */}
-                  <div className="space-y-2">
-                    {poItems.map((item, itemIdx) => (
-                      <div key={itemIdx} className="flex items-center gap-3">
-                        <span className="flex-1 text-sm truncate">
-                          {item.itemName}
-                          {item.sku && (
-                            <span className="text-muted-foreground ml-1">({item.sku})</span>
-                          )}
-                        </span>
-                        <Input
-                          type="number"
-                          min="0"
-                          max={item.quantity}
-                          step="0.01"
-                          value={loc.quantities[itemIdx] || '0'}
-                          onChange={(e) => updateItemQty(locIndex, itemIdx, e.target.value)}
-                          className="w-20 h-8 text-sm"
-                        />
-                        <span className="text-xs text-muted-foreground w-12">
-                          / {item.quantity}
-                        </span>
+                  {/* Show items and actions only when warehouse is selected */}
+                  {loc.warehouseId && (
+                    <>
+                      {/* Assigned items */}
+                      {loc.items.length > 0 && (
+                        <div className="space-y-2 pl-1">
+                          {loc.items.map((itemRow, itemRowIdx) => {
+                            const poItem = poItems[itemRow.poItemIndex];
+                            return (
+                              <div key={itemRowIdx} className="flex items-center gap-2">
+                                <span className="flex-1 text-sm truncate">
+                                  {poItem.itemName}
+                                  {poItem.sku && (
+                                    <span className="text-muted-foreground ml-1">({poItem.sku})</span>
+                                  )}
+                                </span>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max={poItem.quantity}
+                                  step="0.01"
+                                  value={itemRow.quantity}
+                                  onChange={(e) => updateItemQty(locIndex, itemRowIdx, e.target.value)}
+                                  className="w-20 h-8 text-sm"
+                                />
+                                <span className="text-xs text-muted-foreground w-12">
+                                  / {poItem.quantity}
+                                </span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={() => removeItemFromLocation(locIndex, itemRowIdx)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Add item button + picker */}
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleItemPicker(locIndex)}
+                            className="gap-1"
+                            disabled={unassignedPoItems.length === 0}
+                          >
+                            <Package className="h-3.5 w-3.5" />
+                            Add Item
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addAllRemainingToLocation(locIndex)}
+                            className="gap-1 text-xs"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            All Remaining
+                          </Button>
+                        </div>
+
+                        {loc.showItemPicker && unassignedPoItems.length > 0 && (
+                          <div className="rounded-md border bg-muted/30 p-2 space-y-1">
+                            {unassignedPoItems.map(({ item, idx }) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                className="w-full text-left text-sm px-2 py-1.5 rounded hover:bg-accent transition-colors"
+                                onClick={() => addItemToLocation(locIndex, idx)}
+                              >
+                                {item.itemName}
+                                {item.sku && (
+                                  <span className="text-muted-foreground ml-1">({item.sku})</span>
+                                )}
+                                <span className="text-muted-foreground ml-2">×{item.quantity}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    </>
+                  )}
                 </div>
               );
             })}
 
-            {/* Add location button */}
             {warehouses.filter((w) => !usedWarehouseIds.includes(w.id)).length > 0 && (
               <Button
                 type="button"
