@@ -248,7 +248,8 @@ export function ReceiveLocationDialog({
               const assignedPoIndices = loc.items.map((it) => it.poItemIndex);
               const unassignedPoItems = poItems
                 .map((item, idx) => ({ item, idx }))
-                .filter(({ idx }) => !assignedPoIndices.includes(idx));
+                .filter(({ idx }) => !assignedPoIndices.includes(idx))
+                .filter(({ idx }) => !itemAssignments[idx]?.isComplete);
 
               return (
                 <div key={locIndex} className="rounded-md border p-4 space-y-3">
