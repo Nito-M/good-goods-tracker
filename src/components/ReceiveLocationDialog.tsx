@@ -130,7 +130,7 @@ export function ReceiveLocationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-none w-screen h-screen m-0 p-6 rounded-none flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
@@ -141,7 +141,7 @@ export function ReceiveLocationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0">
           {/* Item selection */}
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5 text-sm font-medium">
