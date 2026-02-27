@@ -1,0 +1,2 @@
+ALTER TABLE public.inventory_items DROP CONSTRAINT IF EXISTS inventory_items_quantity_unit_check;
+ALTER TABLE public.inventory_items ADD CONSTRAINT inventory_items_quantity_unit_check CHECK (quantity_unit IN ('pcs', 'ft', 'm', 'yd', 'in', 'sqft', 'lt', 'lbs'));
