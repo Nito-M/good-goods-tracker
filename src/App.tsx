@@ -17,6 +17,7 @@ import { Quotes } from "./pages/Quotes";
 import { SalesOrders } from "./pages/SalesOrders";
 import { SalesOrderDetail } from "./pages/SalesOrderDetail";
 import { Requests } from "./pages/Requests";
+import { AddRequest } from "./pages/AddRequest";
 import { Calendar } from "./pages/Calendar";
 import { Notes } from "./pages/Notes";
 import { Settings } from "./pages/Settings";
@@ -244,6 +245,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Requests />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/requests/new"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddRequest />
               </AppLayout>
             </ProtectedRoute>
           }

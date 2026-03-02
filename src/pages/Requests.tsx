@@ -1,18 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRequests } from "@/hooks/useRequests";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { useBankCards } from "@/hooks/useBankCards";
-import { AddRequestDialog } from "@/components/AddRequestDialog";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
+import { Button } from "@/components/ui/button";
 import { RequestCard } from "@/components/RequestCard";
 import { RequestersManager } from "@/components/RequestersManager";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle } from "lucide-react";
+import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -26,6 +27,7 @@ const STATUS_CONFIG: Record<RequestStatus, {label: string;icon: React.ReactNode;
 };
 
 export function Requests() {
+  const navigate = useNavigate();
   const { requests, loading, addRequest, updateRequest, updateStatus, updateCardId, deleteRequest, uploadImage, uploadPdf } = useRequests();
   const { allItems } = useInventory();
   const { profile } = useProfile();
@@ -154,12 +156,10 @@ export function Requests() {
 
       {/* Header */}
       <div className="flex justify-end gap-4 bg-inherit">
-        <AddRequestDialog items={allItems}
-        requesterNames={visibleRequesterNames}
-        onSave={addRequest}
-        onUploadImage={uploadImage}
-        onUploadPdf={uploadPdf} />
-
+        <Button onClick={() => navigate("/requests/new")}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Request
+        </Button>
       </div>
 
       {/* Search */}
