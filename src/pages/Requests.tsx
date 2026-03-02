@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus, CreditCard, CalendarClock, User, FileText, Upload, Trash2 } from "lucide-react";
+import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus, CreditCard, CalendarClock, User, FileText, Upload, Trash2, Pencil } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -181,42 +181,37 @@ export function Requests() {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {grouped.map((group) => {
-          if (group.requests.length === 1) {
-            const request = group.requests[0];
-            const isOwnRequest = linkedName && request.requesterName === linkedName;
-            const canManage = isAdminUser || isOwnRequest;
-            return (
-              <RequestCard
-                key={request.id}
-                request={request}
-                cards={cards}
-                onStatusChange={isAdminUser ? handleStatusChange : undefined}
-                onCardChange={(cardId) => updateCardId(request.id, cardId)}
-                onDelete={canManage ? handleDelete : undefined}
-                onEdit={canManage ? handleEdit : undefined} />
-            );
-          }
-
-          // Grouped requests — compact summary card with inline controls
           const groupTotal = group.requests.reduce((s, r) => s + getRequestTotal(r), 0);
           const firstReq = group.requests[0];
           const isOwnGroup = linkedName && firstReq.requesterName === linkedName;
           const canManageGroup = isAdminUser || isOwnGroup;
           const isOverdue = firstReq.needByDate && new Date(firstReq.needByDate) < new Date() && firstReq.status !== 'received' && firstReq.status !== 'cancelled';
 
+
           return (
             <Card key={group.key} className="flex flex-col">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <span
-                    className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded cursor-pointer hover:bg-primary/20 transition-colors"
-                    onClick={() => navigate(`/requests/view/${encodeURIComponent(group.key)}`)}
-                  >
-                    {group.key}
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    {group.requests.length} items
-                  </Badge>
+                  {firstReq.requestNumber && (
+                    <span
+                      className={`text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded ${group.requests.length > 1 ? 'cursor-pointer hover:bg-primary/20 transition-colors' : ''}`}
+                      onClick={group.requests.length > 1 ? () => navigate(`/requests/view/${encodeURIComponent(group.key)}`) : undefined}
+                    >
+                      {firstReq.requestNumber}
+                    </span>
+                  )}
+                  <div className="flex items-center gap-1">
+                    {group.requests.length > 1 && (
+                      <Badge variant="outline" className="text-xs">
+                        {group.requests.length} items
+                      </Badge>
+                    )}
+                    {canManageGroup && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/requests/edit/${firstReq.id}`)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 {/* Requester name */}
                 {firstReq.requesterName && (
