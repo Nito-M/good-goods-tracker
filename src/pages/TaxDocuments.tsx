@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
-import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2, Sparkles, CreditCard } from "lucide-react";
+import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2, Sparkles, CreditCard, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,8 @@ export function TaxDocuments() {
   const [extractingIds, setExtractingIds] = useState<Set<string>>(new Set());
   const [poExtractedData, setPoExtractedData] = useState<Record<string, { vendor?: string | null; date?: string | null; total?: number | null; gst?: number | null }>>({});
   const [poCardOverrides, setPoCardOverrides] = useState<Record<string, string | null>>({});
+  const [selectedVendor, setSelectedVendor] = useState<string>("all");
+  const [vendorSearch, setVendorSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loading = poLoading || salesLoading;
@@ -322,10 +325,42 @@ export function TaxDocuments() {
     return { poDocuments: poDocs, invoiceDocuments: invDocs };
   }, [orders, sales, selectedYear]);
 
+  // Collect unique vendor names from all documents
+  const vendorOptions = useMemo(() => {
+    const vendors = new Set<string>();
+    poDocuments.forEach(d => { if (d.vendorName) vendors.add(d.vendorName); });
+    invoiceDocuments.forEach(d => { if (d.vendorName) vendors.add(d.vendorName); });
+    uploadedDocs.forEach(d => {
+      if (d.extractedVendor) vendors.add(d.extractedVendor);
+      if (d.vendorName) vendors.add(d.vendorName);
+    });
+    return Array.from(vendors).sort((a, b) => a.localeCompare(b));
+  }, [poDocuments, invoiceDocuments, uploadedDocs]);
+
+  const filteredVendorOptions = useMemo(() => {
+    if (!vendorSearch) return vendorOptions;
+    const q = vendorSearch.toLowerCase();
+    return vendorOptions.filter(v => v.toLowerCase().includes(q));
+  }, [vendorOptions, vendorSearch]);
+
   const filteredUploads = useMemo(() => {
     const yearNum = parseInt(selectedYear);
-    return uploadedDocs.filter(d => d.date.getFullYear() === yearNum);
-  }, [uploadedDocs, selectedYear]);
+    let docs = uploadedDocs.filter(d => d.date.getFullYear() === yearNum);
+    if (selectedVendor !== "all") {
+      docs = docs.filter(d => (d.extractedVendor || d.vendorName) === selectedVendor);
+    }
+    return docs;
+  }, [uploadedDocs, selectedYear, selectedVendor]);
+
+  const filteredPoDocuments = useMemo(() => {
+    if (selectedVendor === "all") return poDocuments;
+    return poDocuments.filter(d => d.vendorName === selectedVendor);
+  }, [poDocuments, selectedVendor]);
+
+  const filteredInvoiceDocuments = useMemo(() => {
+    if (selectedVendor === "all") return invoiceDocuments;
+    return invoiceDocuments.filter(d => d.vendorName === selectedVendor);
+  }, [invoiceDocuments, selectedVendor]);
 
   const handleOpenFile = async (doc: TaxDocument) => {
     if (doc.type === "invoice") return;
@@ -349,6 +384,30 @@ export function TaxDocuments() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Select value={selectedVendor} onValueChange={(v) => { setSelectedVendor(v); setVendorSearch(""); }}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Vendors" />
+            </SelectTrigger>
+            <SelectContent>
+              <div className="px-2 pb-1.5">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search vendors..."
+                    value={vendorSearch}
+                    onChange={(e) => setVendorSearch(e.target.value)}
+                    className="h-8 pl-7 text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+              <SelectItem value="all">All Vendors</SelectItem>
+              {filteredVendorOptions.map(v => (
+                <SelectItem key={v} value={v}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
@@ -414,21 +473,21 @@ export function TaxDocuments() {
         <Tabs defaultValue="all">
           <TabsList>
             <TabsTrigger value="all">
-              All Costs ({filteredUploads.length + poDocuments.length})
+              All Costs ({filteredUploads.length + filteredPoDocuments.length})
             </TabsTrigger>
             <TabsTrigger value="uploads">
               Uploads ({filteredUploads.length})
             </TabsTrigger>
             <TabsTrigger value="purchase-orders">
-              Purchase Orders ({poDocuments.length})
+              Purchase Orders ({filteredPoDocuments.length})
             </TabsTrigger>
             <TabsTrigger value="invoices">
-              Invoices ({invoiceDocuments.length})
+              Invoices ({filteredInvoiceDocuments.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-4">
-            {filteredUploads.length + poDocuments.length === 0 ? (
+            {filteredUploads.length + filteredPoDocuments.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">
                 No documents for {selectedYear}
               </p>
@@ -446,7 +505,7 @@ export function TaxDocuments() {
                     onAssignCard={handleAssignBankCard}
                   />
                 ))}
-                {poDocuments.map(doc => {
+                {filteredPoDocuments.map(doc => {
                   const cardId = doc.purchaseOrderId && poCardOverrides[doc.purchaseOrderId] !== undefined ? poCardOverrides[doc.purchaseOrderId] : doc.bankCardId;
                   return (
                   <DocumentCard key={doc.id} doc={{
@@ -490,13 +549,13 @@ export function TaxDocuments() {
           </TabsContent>
 
           <TabsContent value="purchase-orders" className="mt-4">
-            {poDocuments.length === 0 ? (
+            {filteredPoDocuments.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">
                 No PO documents found for {selectedYear}
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {poDocuments.map(doc => {
+                {filteredPoDocuments.map(doc => {
                   const cardId = doc.purchaseOrderId && poCardOverrides[doc.purchaseOrderId] !== undefined ? poCardOverrides[doc.purchaseOrderId] : doc.bankCardId;
                   return (
                   <DocumentCard key={doc.id} doc={{
@@ -517,13 +576,13 @@ export function TaxDocuments() {
           </TabsContent>
 
           <TabsContent value="invoices" className="mt-4">
-            {invoiceDocuments.length === 0 ? (
+            {filteredInvoiceDocuments.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">
                 No invoices found for {selectedYear}
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {invoiceDocuments.map(doc => (
+                {filteredInvoiceDocuments.map(doc => (
                   <DocumentCard key={doc.id} doc={doc} onOpen={handleOpenFile} isInvoice />
                 ))}
               </div>
