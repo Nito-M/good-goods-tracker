@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { useRequests } from "@/hooks/useRequests";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
@@ -10,9 +11,10 @@ import { RequestersManager } from "@/components/RequestersManager";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus } from "lucide-react";
+import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus, CreditCard, CalendarClock, User, FileText, Upload, Trash2 } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -25,9 +27,39 @@ const STATUS_CONFIG: Record<RequestStatus, {label: string;icon: React.ReactNode;
   cancelled: { label: "Cancelled", icon: <XCircle className="h-4 w-4" /> }
 };
 
+function GroupPdfUpload({ uploadPdf }: { requests: Request[]; uploadPdf: (file: File) => Promise<string | null> }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    await uploadPdf(file);
+    setUploading(false);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <input ref={inputRef} type="file" accept=".pdf" className="hidden" onChange={handleUpload} />
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full text-xs h-7"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload className="h-3 w-3 mr-1" />
+        {uploading ? "Uploading..." : "Upload PDF"}
+      </Button>
+    </div>
+  );
+}
+
 export function Requests() {
   const navigate = useNavigate();
-  const { requests, loading, updateStatus, updateCardId, deleteRequest } = useRequests();
+  const { requests, loading, updateStatus, updateCardId, deleteRequest, uploadPdf } = useRequests();
   const { profile } = useProfile();
   const { linkedName, allOrgRequesterNames, isAdminUser, refetch: refetchRequesters } = useLinkedRequester();
   const { cards } = useBankCards();
@@ -165,39 +197,173 @@ export function Requests() {
             );
           }
 
-          // Grouped requests — compact summary card
+          // Grouped requests — compact summary card with inline controls
           const groupTotal = group.requests.reduce((s, r) => s + getRequestTotal(r), 0);
           const firstReq = group.requests[0];
+          const isOwnGroup = linkedName && firstReq.requesterName === linkedName;
+          const canManageGroup = isAdminUser || isOwnGroup;
+          const isOverdue = firstReq.needByDate && new Date(firstReq.needByDate) < new Date() && firstReq.status !== 'received' && firstReq.status !== 'cancelled';
+
           return (
-            <Card
-              key={group.key}
-              className="cursor-pointer hover:border-primary/40 transition-colors"
-              onClick={() => navigate(`/requests/view/${encodeURIComponent(group.key)}`)}
-            >
+            <Card key={group.key} className="flex flex-col">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                  <span
+                    className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded cursor-pointer hover:bg-primary/20 transition-colors"
+                    onClick={() => navigate(`/requests/view/${encodeURIComponent(group.key)}`)}
+                  >
                     {group.key}
                   </span>
                   <Badge variant="outline" className="text-xs">
                     {group.requests.length} items
                   </Badge>
                 </div>
+                {/* Requester name */}
                 {firstReq.requesterName && (
-                  <p className="text-xs text-muted-foreground mt-1">{firstReq.requesterName}</p>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                    <User className="h-3 w-3" />
+                    <span>{firstReq.requesterName}</span>
+                  </div>
+                )}
+                {/* Need by date */}
+                {firstReq.needByDate && (
+                  <div className={`flex items-center gap-1 text-xs mt-1 ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                    <CalendarClock className="h-3 w-3" />
+                    <span>Need by: {format(new Date(firstReq.needByDate), "MMM d, yyyy")}</span>
+                    {isOverdue && <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4">Overdue</Badge>}
+                  </div>
                 )}
               </CardHeader>
-              <CardContent className="space-y-1 pt-0">
-                {group.requests.map((r) => (
-                  <div key={r.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0 border-border/50">
-                    <span className="truncate flex-1 mr-2">{r.itemName}</span>
-                    <span className="text-muted-foreground whitespace-nowrap mr-3">×{r.quantity}</span>
-                    <span className="font-medium whitespace-nowrap">{formatCurrency(getRequestTotal(r))}</span>
+              <CardContent className="space-y-2 pt-0 flex-1 flex flex-col">
+                {/* Item rows */}
+                <div className="space-y-0">
+                  {group.requests.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0 border-border/50">
+                      <span className="truncate flex-1 mr-2">{r.itemName}</span>
+                      <span className="text-muted-foreground whitespace-nowrap mr-3">×{r.quantity}</span>
+                      <span className="font-medium whitespace-nowrap">{formatCurrency(getRequestTotal(r))}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between pt-2 border-t font-semibold">
+                    <span>Total</span>
+                    <span className="text-green-600">{formatCurrency(groupTotal)}</span>
                   </div>
-                ))}
-                <div className="flex items-center justify-between pt-2 border-t font-semibold">
-                  <span>Total</span>
-                  <span className="text-green-600">{formatCurrency(groupTotal)}</span>
+                </div>
+
+                {/* PDF attachments display */}
+                {group.requests.some(r => r.pdfUrl) && (
+                  <div className="flex flex-wrap gap-1">
+                    {group.requests.filter(r => r.pdfUrl).map(r => (
+                      <a key={r.id} href={r.pdfUrl!} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline bg-primary/5 border border-primary/20 rounded px-2 py-1">
+                        <FileText className="h-3 w-3" />
+                        <span className="truncate max-w-[100px]">{r.itemName}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                {/* PDF Upload for first item (applies to group) */}
+                <GroupPdfUpload
+                  requests={group.requests}
+                  uploadPdf={uploadPdf}
+                />
+
+                {/* Card selector */}
+                {cards.length > 0 && (
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    {firstReq.bankCardId ? (
+                      <div className={`h-4 w-4 rounded-full bg-gradient-to-br ${cards.find(c => c.id === firstReq.bankCardId)?.color ?? 'from-gray-600 to-gray-800'} shrink-0`} />
+                    ) : (
+                      <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+                    )}
+                    <Select
+                      value={firstReq.bankCardId ?? ""}
+                      onValueChange={async (val) => {
+                        const cardId = val || null;
+                        for (const r of group.requests) {
+                          await updateCardId(r.id, cardId);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="flex-1 h-8 text-sm">
+                        <SelectValue placeholder="Select card..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cards.map((card) => (
+                          <SelectItem key={card.id} value={card.id}>
+                            <div className="flex items-center gap-2">
+                              <div className={`h-3 w-3 rounded-full bg-gradient-to-br ${card.color} shrink-0`} />
+                              {card.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Status selector */}
+                <div onClick={(e) => e.stopPropagation()}>
+                  {isAdminUser && firstReq.status !== 'cancelled' ? (
+                    <Select
+                      value={firstReq.status}
+                      onValueChange={async (value: RequestStatus) => {
+                        if (value === 'approved') {
+                          const allHaveCard = group.requests.every(r => r.bankCardId);
+                          if (!allHaveCard) {
+                            toast({ title: "Card required", description: "Assign a bank card before approving.", variant: "destructive" });
+                            return;
+                          }
+                        }
+                        for (const r of group.requests) {
+                          await updateStatus(r.id, value);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="ordered">Ordered</SelectItem>
+                        <SelectItem value="received">Received</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant="outline" className={`w-full justify-center py-2 ${
+                      firstReq.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
+                      firstReq.status === 'approved' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                      firstReq.status === 'ordered' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
+                      firstReq.status === 'received' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                      'bg-red-500/10 text-red-500 border-red-500/20'
+                    }`}>
+                      {firstReq.status.charAt(0).toUpperCase() + firstReq.status.slice(1)}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Footer with delete */}
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(firstReq.createdAt), "MMM d, yyyy")}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {canManageGroup && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!confirm(`Delete all ${group.requests.length} items in ${group.key}?`)) return;
+                          for (const r of group.requests) {
+                            await deleteRequest(r.id);
+                          }
+                        }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
