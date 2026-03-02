@@ -385,7 +385,7 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
                         </a>
                       )}
                     </div>
-                    {si.notes && <p className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap break-words">{si.notes}</p>}
+                    {si.notes && <p className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap break-all overflow-hidden max-w-full">{si.notes}</p>}
                   </div>
                   {canManage && (
                     <div className="flex items-center gap-1 shrink-0">
