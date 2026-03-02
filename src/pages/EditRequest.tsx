@@ -1,0 +1,439 @@
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useRequests } from "@/hooks/useRequests";
+import { useInventory } from "@/hooks/useInventory";
+import { useLinkedRequester } from "@/hooks/useLinkedRequester";
+import { useProfile } from "@/hooks/useProfile";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Upload, X, Link as LinkIcon, CalendarIcon, User, FileText, ArrowLeft } from "lucide-react";
+import { format } from "date-fns";
+import { cn, formatCurrency } from "@/lib/utils";
+import { CreateRequestInput } from "@/types/request";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export function EditRequest() {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { requests, loading: requestsLoading, updateRequest, uploadImage, uploadPdf } = useRequests();
+  const { allItems } = useInventory();
+  const { profile } = useProfile();
+  const { linkedName, allOrgRequesterNames, isAdminUser } = useLinkedRequester();
+
+  const visibleRequesterNames = isAdminUser
+    ? allOrgRequesterNames.length > 0 ? allOrgRequesterNames : profile?.requesterNames || []
+    : linkedName ? [linkedName] : [];
+
+  const request = requests.find((r) => r.id === id);
+
+  const [loading, setLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [itemName, setItemName] = useState("");
+  const [sku, setSku] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [quantityUnit, setQuantityUnit] = useState("pcs");
+  const [price, setPrice] = useState(0);
+  const [gstRate, setGstRate] = useState(0);
+  const [extraCost, setExtraCost] = useState(0);
+  const [extraCostLabel, setExtraCostLabel] = useState("Shipping");
+  const [link, setLink] = useState("");
+  const [notes, setNotes] = useState("");
+  const [needByDate, setNeedByDate] = useState<Date | undefined>(undefined);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedRequester, setSelectedRequester] = useState<string>("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [existingPdfUrl, setExistingPdfUrl] = useState<string | null>(null);
+  const [pdfDragOver, setPdfDragOver] = useState(false);
+
+  const subtotal = quantity * price;
+  const gstAmount = subtotal * (gstRate / 100);
+  const totalPrice = subtotal + gstAmount + extraCost;
+
+  useEffect(() => {
+    if (request && !initialized) {
+      setSelectedItemId(request.inventoryItemId || "custom");
+      setItemName(request.itemName);
+      setSku(request.sku || "");
+      setQuantity(request.quantity);
+      setQuantityUnit(request.quantityUnit);
+      setPrice(request.price || 0);
+      setGstRate(request.gstRate || 0);
+      setExtraCost(request.extraCost || 0);
+      setExtraCostLabel(request.extraCostLabel || "Shipping");
+      setLink(request.link || "");
+      setNotes(request.notes || "");
+      setNeedByDate(request.needByDate ? new Date(request.needByDate) : undefined);
+      setImageUrl(request.imageUrl);
+      setImagePreview(request.imageUrl);
+      setImageFile(null);
+      setSelectedRequester(request.requesterName || "");
+      setPdfFile(null);
+      setExistingPdfUrl(request.pdfUrl);
+      setInitialized(true);
+    }
+  }, [request, initialized]);
+
+  const handleItemSelect = (value: string) => {
+    setSelectedItemId(value);
+    if (value === "custom") {
+      setItemName("");
+      setSku("");
+      setQuantityUnit("pcs");
+    } else {
+      const item = allItems.find((i) => i.id === value);
+      if (item) {
+        setItemName(item.name);
+        setSku(item.sku);
+        setQuantityUnit(item.quantityUnit || "pcs");
+      }
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setImageUrl(null);
+  };
+
+  const handlePdfFile = (file: File) => {
+    if (file.type === "application/pdf") {
+      setPdfFile(file);
+      setExistingPdfUrl(null);
+    }
+  };
+
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handlePdfFile(file);
+  };
+
+  const handlePdfDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setPdfDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handlePdfFile(file);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!request || !itemName.trim() || !selectedRequester) return;
+
+    setLoading(true);
+    try {
+      let uploadedImageUrl = imageUrl;
+      if (imageFile) uploadedImageUrl = await uploadImage(imageFile);
+
+      let finalPdfUrl: string | null = existingPdfUrl;
+      if (pdfFile) finalPdfUrl = await uploadPdf(pdfFile);
+
+      const success = await updateRequest(request.id, {
+        inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
+        itemName: itemName.trim(),
+        sku: sku.trim() || null,
+        quantity,
+        quantityUnit,
+        price,
+        gstRate,
+        extraCost,
+        extraCostLabel: extraCostLabel.trim() || "Shipping",
+        link: link.trim() || null,
+        notes: notes.trim() || null,
+        imageUrl: uploadedImageUrl,
+        pdfUrl: finalPdfUrl,
+        needByDate: needByDate ? needByDate.toISOString() : null,
+        requesterName: selectedRequester,
+      });
+
+      if (success) navigate("/requests");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (requestsLoading || !request) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-[600px]" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/requests")}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Edit Request</h1>
+          {request.requestNumber && (
+            <p className="text-sm text-muted-foreground">{request.requestNumber}</p>
+          )}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Requester */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Requester *
+          </Label>
+          {visibleRequesterNames.length === 0 ? (
+            <p className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/50">
+              No requesters configured. Please add requesters in Settings first.
+            </p>
+          ) : (
+            <Select value={selectedRequester} onValueChange={setSelectedRequester}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select who is making this request" />
+              </SelectTrigger>
+              <SelectContent>
+                {visibleRequesterNames.map((name) => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        {/* Item Selection */}
+        <div className="space-y-2">
+          <Label>Item</Label>
+          <Select value={selectedItemId} onValueChange={handleItemSelect}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an item or create custom" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="custom">Custom Item</SelectItem>
+              {allItems.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name} ({item.sku})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Item Name */}
+        <div className="space-y-2">
+          <Label htmlFor="editItemName">Item Name *</Label>
+          <Input id="editItemName" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Enter item name" required />
+        </div>
+
+        {/* SKU */}
+        <div className="space-y-2">
+          <Label htmlFor="editSku">SKU</Label>
+          <Input id="editSku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="Enter SKU" />
+        </div>
+
+        {/* Quantity & Unit */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="editQuantity">Quantity *</Label>
+            <Input id="editQuantity" type="number" min={0.01} step="0.01" value={quantity} onChange={(e) => setQuantity(parseFloat(e.target.value) || 1)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="editQuantityUnit">Unit</Label>
+            <Select value={quantityUnit} onValueChange={setQuantityUnit}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pcs">pcs</SelectItem>
+                <SelectItem value="kg">kg</SelectItem>
+                <SelectItem value="lb">lb</SelectItem>
+                <SelectItem value="m">m</SelectItem>
+                <SelectItem value="ft">ft</SelectItem>
+                <SelectItem value="box">box</SelectItem>
+                <SelectItem value="pack">pack</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Price & GST */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="editPrice">Unit Price ($) <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+            <Input id="editPrice" type="number" min={0} step={0.00001} value={price} onChange={(e) => setPrice(parseFloat(e.target.value) || 0)} placeholder="0.00" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="editGstRate">GST Rate (%) <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+            <Input id="editGstRate" type="number" min={0} max={100} step={0.1} value={gstRate} onChange={(e) => setGstRate(parseFloat(e.target.value) || 0)} placeholder="0" />
+          </div>
+        </div>
+
+        {/* Extra Cost */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="editExtraCostLabel">Extra Cost Label <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+            <Input id="editExtraCostLabel" value={extraCostLabel} onChange={(e) => setExtraCostLabel(e.target.value)} placeholder="e.g. Shipping" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="editExtraCost">Extra Cost ($) <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+            <Input id="editExtraCost" type="number" min={0} step={0.01} value={extraCost} onChange={(e) => setExtraCost(parseFloat(e.target.value) || 0)} placeholder="0.00" />
+          </div>
+        </div>
+
+        {/* Price Breakdown */}
+        {price > 0 && (
+          <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal ({quantity} × {formatCurrency(price)})</span>
+              <span className="font-medium">{formatCurrency(subtotal)}</span>
+            </div>
+            {gstRate > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">GST ({gstRate}%)</span>
+                <span className="font-medium">{formatCurrency(gstAmount)}</span>
+              </div>
+            )}
+            {extraCost > 0 && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{extraCostLabel || "Extra Cost"}</span>
+                <span className="font-medium">{formatCurrency(extraCost)}</span>
+              </div>
+            )}
+            <div className="flex justify-between border-t pt-2">
+              <span className="font-semibold">Total</span>
+              <span className="font-bold text-primary">{formatCurrency(totalPrice)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Need By Date */}
+        <div className="space-y-2">
+          <Label>Need By Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !needByDate && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {needByDate ? format(needByDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={needByDate} onSelect={setNeedByDate} initialFocus className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+          {needByDate && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setNeedByDate(undefined)} className="text-muted-foreground">
+              Clear date
+            </Button>
+          )}
+        </div>
+
+        {/* Link */}
+        <div className="space-y-2">
+          <Label htmlFor="editLink" className="flex items-center gap-2">
+            <LinkIcon className="h-4 w-4" />
+            Link
+          </Label>
+          <Input id="editLink" type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://example.com/product" />
+        </div>
+
+        {/* Notes */}
+        <div className="space-y-2">
+          <Label htmlFor="editNotes">Notes</Label>
+          <Textarea id="editNotes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add any notes or specifications..." rows={4} />
+        </div>
+
+        {/* Image Upload */}
+        <div className="space-y-2">
+          <Label>Image</Label>
+          {imagePreview ? (
+            <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2" onClick={removeImage}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+              <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+              <span className="text-sm text-muted-foreground">Click to upload an image</span>
+              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            </label>
+          )}
+        </div>
+
+        {/* PDF Upload */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            PDF Attachment
+          </Label>
+          {pdfFile ? (
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+              <FileText className="h-8 w-8 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{pdfFile.name}</p>
+                <p className="text-xs text-muted-foreground">{(pdfFile.size / 1024).toFixed(1)} KB</p>
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={() => setPdfFile(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : existingPdfUrl ? (
+            <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+              <FileText className="h-8 w-8 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <a href={existingPdfUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline truncate block">
+                  View attached PDF
+                </a>
+                <p className="text-xs text-muted-foreground">Click to replace or remove</p>
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={() => setExistingPdfUrl(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg transition-colors",
+                pdfDragOver ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+              )}
+              onDragOver={(e) => { e.preventDefault(); setPdfDragOver(true); }}
+              onDragLeave={() => setPdfDragOver(false)}
+              onDrop={handlePdfDrop}
+            >
+              <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+                <span className="text-sm text-muted-foreground">Drag & drop a PDF or click to upload</span>
+                <input type="file" accept="application/pdf" onChange={handlePdfChange} className="hidden" />
+              </label>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={() => navigate("/requests")} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading || !itemName.trim() || !selectedRequester}>
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
