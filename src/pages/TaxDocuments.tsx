@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
-import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2, Sparkles, CreditCard, Search } from "lucide-react";
+import { FileText, Image, Upload, Plus, X, Loader2, ShoppingCart, Receipt, Trash2, Sparkles, CreditCard, Search, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -647,8 +647,7 @@ function DocumentCard({
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-md transition-shadow group relative"
-      onClick={() => !isInvoice && onOpen(doc)}
+      className="hover:shadow-md transition-shadow group relative"
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
@@ -758,6 +757,17 @@ function DocumentCard({
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{format(doc.date, "MMM d, yyyy")}</span>
           <div className="flex items-center gap-1">
+            {!isInvoice && doc.url && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-xs gap-1"
+                onClick={() => onOpen(doc)}
+              >
+                <Eye className="h-3 w-3" />
+                View
+              </Button>
+            )}
             {isExtracting && (
               <span className="flex items-center gap-1 text-xs text-primary">
                 <Loader2 className="h-3 w-3 animate-spin" />
