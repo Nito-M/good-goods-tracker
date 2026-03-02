@@ -752,14 +752,6 @@ export function usePurchaseOrders() {
         }
 
         const newBalance = Number(cardData.balance) - totalCost;
-        if (newBalance < 0) {
-          toast({
-            title: 'Insufficient card funds',
-            description: `"${cardData.name}" doesn't have enough balance for this payment.`,
-            variant: 'destructive',
-          });
-          return false;
-        }
 
         const { error: cardUpdateError } = await supabase
           .from('bank_cards')
