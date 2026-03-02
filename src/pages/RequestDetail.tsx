@@ -41,7 +41,7 @@ export function RequestDetail() {
   );
 
   const requestIds = useMemo(() => groupRequests.map((r) => r.id), [groupRequests]);
-  const { subItems, addSubItem, deleteSubItem, toggleSelected } = useRequestSubItems(requestIds);
+  const { subItems, addSubItem, updateSubItem, deleteSubItem, toggleSelected } = useRequestSubItems(requestIds);
 
   const getTotal = (r: Request) => {
     const subtotal = r.quantity * r.price;
@@ -206,6 +206,7 @@ export function RequestDetail() {
                     canManage={!!canManage}
                     subItems={itemSubItems}
                     onAddSubItem={(input) => addSubItem(r.id, input)}
+                    onUpdateSubItem={updateSubItem}
                     onDeleteSubItem={deleteSubItem}
                     onToggleSelected={(id) => toggleSelected(id, r.id)}
                     onEdit={() => navigate(`/requests/edit/${r.id}`)}
@@ -233,14 +234,16 @@ interface RequestItemRowProps {
   canManage: boolean;
   subItems: { id: string; vendorName: string; unitPrice: number; quantity: number; link: string | null; notes: string | null; isSelected: boolean }[];
   onAddSubItem: (input: { vendorName: string; unitPrice: number; quantity?: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
+  onUpdateSubItem: (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
   onDeleteSubItem: (id: string) => Promise<boolean>;
   onToggleSelected: (id: string) => Promise<boolean>;
   onEdit: () => void;
 }
 
-function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubItem, onDeleteSubItem, onToggleSelected, onEdit }: RequestItemRowProps) {
+function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubItem, onUpdateSubItem, onDeleteSubItem, onToggleSelected, onEdit }: RequestItemRowProps) {
   const [open, setOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [vendorName, setVendorName] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -248,24 +251,48 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleAdd = async () => {
+  const resetForm = () => {
+    setVendorName("");
+    setUnitPrice("");
+    setQuantity("1");
+    setLink("");
+    setNotes("");
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const startEdit = (si: typeof subItems[0]) => {
+    setEditingId(si.id);
+    setVendorName(si.vendorName);
+    setUnitPrice(String(si.unitPrice));
+    setQuantity(String(si.quantity));
+    setLink(si.link || "");
+    setNotes(si.notes || "");
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
     if (!vendorName.trim()) return;
     setSaving(true);
-    const ok = await onAddSubItem({
-      vendorName: vendorName.trim(),
-      unitPrice: parseFloat(unitPrice) || 0,
-      quantity: parseFloat(quantity) || 1,
-      link: link.trim() || null,
-      notes: notes.trim() || null,
-    });
-    if (ok) {
-      setVendorName("");
-      setUnitPrice("");
-      setQuantity("1");
-      setLink("");
-      setNotes("");
-      setShowForm(false);
+    let ok: boolean;
+    if (editingId) {
+      ok = await onUpdateSubItem(editingId, {
+        vendorName: vendorName.trim(),
+        unitPrice: parseFloat(unitPrice) || 0,
+        quantity: parseFloat(quantity) || 1,
+        link: link.trim() || null,
+        notes: notes.trim() || null,
+      });
+    } else {
+      ok = await onAddSubItem({
+        vendorName: vendorName.trim(),
+        unitPrice: parseFloat(unitPrice) || 0,
+        quantity: parseFloat(quantity) || 1,
+        link: link.trim() || null,
+        notes: notes.trim() || null,
+      });
     }
+    if (ok) resetForm();
     setSaving(false);
   };
 
@@ -328,7 +355,7 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Vendor Options</span>
                 {canManage && (
-                  <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setShowForm(!showForm)}>
+                  <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => { resetForm(); setShowForm(true); }}>
                     <Plus className="h-3 w-3 mr-1" /> Add Option
                   </Button>
                 )}
@@ -361,9 +388,14 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
                     {si.notes && <p className="text-xs text-muted-foreground mt-0.5">{si.notes}</p>}
                   </div>
                   {canManage && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => onDeleteSubItem(si.id)}>
-                      <X className="h-3 w-3" />
-                    </Button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEdit(si)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onDeleteSubItem(si.id)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -376,10 +408,10 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
                   <Input placeholder="Link (optional)" value={link} onChange={(e) => setLink(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} className="col-span-2 h-8 text-sm" />
                   <div className="col-span-2 flex gap-2">
-                    <Button size="sm" className="h-7 text-xs" onClick={handleAdd} disabled={saving || !vendorName.trim()}>
-                      {saving ? "Saving..." : "Add"}
+                    <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={saving || !vendorName.trim()}>
+                      {saving ? "Saving..." : editingId ? "Update" : "Add"}
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowForm(false)}>Cancel</Button>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={resetForm}>Cancel</Button>
                   </div>
                 </div>
               )}

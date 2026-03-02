@@ -89,6 +89,25 @@ export function useRequestSubItems(requestIds: string[]) {
     }
   };
 
+  const updateSubItem = async (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null }): Promise<boolean> => {
+    try {
+      const dbUpdates: Record<string, any> = {};
+      if (updates.vendorName !== undefined) dbUpdates.vendor_name = updates.vendorName;
+      if (updates.unitPrice !== undefined) dbUpdates.unit_price = updates.unitPrice;
+      if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+      if (updates.link !== undefined) dbUpdates.link = updates.link;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+
+      const { error } = await supabase.from("request_sub_items").update(dbUpdates).eq("id", id);
+      if (error) throw error;
+      await fetchSubItems();
+      return true;
+    } catch (error: any) {
+      console.error("Error updating sub item:", error);
+      return false;
+    }
+  };
+
   const toggleSelected = async (id: string, requestId: string): Promise<boolean> => {
     try {
       // Deselect all others for same request
@@ -112,5 +131,5 @@ export function useRequestSubItems(requestIds: string[]) {
     }
   };
 
-  return { subItems, loading, addSubItem, deleteSubItem, toggleSelected, refetch: fetchSubItems };
+  return { subItems, loading, addSubItem, updateSubItem, deleteSubItem, toggleSelected, refetch: fetchSubItems };
 }
