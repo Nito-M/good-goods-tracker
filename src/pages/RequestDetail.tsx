@@ -231,8 +231,8 @@ interface RequestItemRowProps {
   request: Request;
   lineTotal: number;
   canManage: boolean;
-  subItems: { id: string; vendorName: string; unitPrice: number; link: string | null; notes: string | null; isSelected: boolean }[];
-  onAddSubItem: (input: { vendorName: string; unitPrice: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
+  subItems: { id: string; vendorName: string; unitPrice: number; quantity: number; link: string | null; notes: string | null; isSelected: boolean }[];
+  onAddSubItem: (input: { vendorName: string; unitPrice: number; quantity?: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
   onDeleteSubItem: (id: string) => Promise<boolean>;
   onToggleSelected: (id: string) => Promise<boolean>;
   onEdit: () => void;
@@ -243,6 +243,7 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
   const [showForm, setShowForm] = useState(false);
   const [vendorName, setVendorName] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
+  const [quantity, setQuantity] = useState("1");
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
@@ -253,12 +254,14 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
     const ok = await onAddSubItem({
       vendorName: vendorName.trim(),
       unitPrice: parseFloat(unitPrice) || 0,
+      quantity: parseFloat(quantity) || 1,
       link: link.trim() || null,
       notes: notes.trim() || null,
     });
     if (ok) {
       setVendorName("");
       setUnitPrice("");
+      setQuantity("1");
       setLink("");
       setNotes("");
       setShowForm(false);
@@ -346,7 +349,9 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{si.vendorName}</div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>{formatCurrency(si.unitPrice)}</span>
+                      <span>×{si.quantity}</span>
+                      <span>@ {formatCurrency(si.unitPrice)}</span>
+                      <span className="font-semibold text-foreground">= {formatCurrency(si.unitPrice * si.quantity)}</span>
                       {si.link && (
                         <a href={si.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-0.5">
                           <ExternalLink className="h-3 w-3" /> Link
@@ -366,7 +371,8 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
               {showForm && (
                 <div className="grid grid-cols-2 gap-2 p-2 bg-background border rounded">
                   <Input placeholder="Vendor name *" value={vendorName} onChange={(e) => setVendorName(e.target.value)} className="col-span-2 h-8 text-sm" />
-                  <Input placeholder="Unit price" type="number" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} className="h-8 text-sm" />
+                  <Input placeholder="Quantity" type="number" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="h-8 text-sm" />
+                  <Input placeholder="Unit price" type="number" step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Link (optional)" value={link} onChange={(e) => setLink(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} className="col-span-2 h-8 text-sm" />
                   <div className="col-span-2 flex gap-2">
