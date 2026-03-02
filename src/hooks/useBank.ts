@@ -331,6 +331,46 @@ export function useBank() {
     }
   };
 
+  const updateTransactionAmount = async (transactionId: string, newAmount: number) => {
+    if (!user) return false;
+    try {
+      const tx = transactions.find(t => t.id === transactionId);
+      if (!tx) return false;
+
+      const diff = newAmount - tx.amount;
+
+      const { error } = await supabase
+        .from('bank_transactions')
+        .update({ amount: newAmount })
+        .eq('id', transactionId);
+      if (error) throw error;
+
+      // Adjust card balance if linked
+      if (tx.bankCardId) {
+        const { data: card, error: cardErr } = await supabase
+          .from('bank_cards')
+          .select('balance')
+          .eq('id', tx.bankCardId)
+          .single();
+        if (!cardErr && card) {
+          const adjustment = tx.type === 'withdrawal' ? -diff : diff;
+          await supabase
+            .from('bank_cards')
+            .update({ balance: Number(card.balance) + adjustment })
+            .eq('id', tx.bankCardId);
+        }
+      }
+
+      toast({ title: 'Transaction updated', description: `Amount changed to $${newAmount.toFixed(2)}` });
+      await fetchTransactions();
+      return true;
+    } catch (error) {
+      console.error('Error updating transaction amount:', error);
+      toast({ title: 'Error updating transaction', variant: 'destructive' });
+      return false;
+    }
+  };
+
   return {
     transactions,
     balance,
@@ -342,6 +382,7 @@ export function useBank() {
     removeSaleProfit,
     deleteTransaction,
     assignCardToTransaction,
+    updateTransactionAmount,
     refetch: fetchTransactions,
   };
 }
