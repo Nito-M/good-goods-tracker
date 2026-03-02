@@ -110,7 +110,6 @@ export function Requests() {
           <Skeleton key={i} className="h-64" />
           )}
         </div>);
-
     }
 
     if (filteredRequests.length === 0) {
@@ -124,28 +123,77 @@ export function Requests() {
             `No requests with ${STATUS_CONFIG[status].label.toLowerCase()} status`}
           </p>
         </div>);
-
     }
+
+    // Group requests by requestNumber; ungrouped requests (no requestNumber) stay solo
+    const grouped: { key: string; requests: Request[] }[] = [];
+    const seen = new Set<string>();
+
+    filteredRequests.forEach((request) => {
+      if (seen.has(request.id)) return;
+      if (request.requestNumber) {
+        const siblings = filteredRequests.filter(
+          (r) => r.requestNumber === request.requestNumber
+        );
+        if (siblings.length > 1 && !seen.has(siblings[0].id)) {
+          siblings.forEach((s) => seen.add(s.id));
+          grouped.push({ key: request.requestNumber, requests: siblings });
+          return;
+        }
+      }
+      seen.add(request.id);
+      grouped.push({ key: request.id, requests: [request] });
+    });
 
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredRequests.map((request) => {
-          const isOwnRequest = linkedName && request.requesterName === linkedName;
-          const canManage = isAdminUser || isOwnRequest;
+        {grouped.map((group) => {
+          if (group.requests.length === 1) {
+            const request = group.requests[0];
+            const isOwnRequest = linkedName && request.requesterName === linkedName;
+            const canManage = isAdminUser || isOwnRequest;
+            return (
+              <RequestCard
+                key={request.id}
+                request={request}
+                cards={cards}
+                onStatusChange={isAdminUser ? handleStatusChange : undefined}
+                onCardChange={(cardId) => updateCardId(request.id, cardId)}
+                onDelete={canManage ? handleDelete : undefined}
+                onEdit={canManage ? handleEdit : undefined} />
+            );
+          }
+
+          // Grouped requests — render inside a shared container
+          const groupTotal = group.requests.reduce((s, r) => s + getRequestTotal(r), 0);
           return (
-            <RequestCard
-              key={request.id}
-              request={request}
-              cards={cards}
-              onStatusChange={isAdminUser ? handleStatusChange : undefined}
-              onCardChange={(cardId) => updateCardId(request.id, cardId)}
-              onDelete={canManage ? handleDelete : undefined}
-              onEdit={canManage ? handleEdit : undefined} />);
-
-
+            <div key={group.key} className="rounded-xl border-2 border-primary/20 bg-primary/[0.02] p-2 space-y-2">
+              <div className="flex items-center justify-between px-2 pt-1 pb-1">
+                <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                  {group.key}
+                </span>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {group.requests.length} items · {formatCurrency(groupTotal)}
+                </span>
+              </div>
+              {group.requests.map((request) => {
+                const isOwnRequest = linkedName && request.requesterName === linkedName;
+                const canManage = isAdminUser || isOwnRequest;
+                return (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    cards={cards}
+                    onStatusChange={isAdminUser ? handleStatusChange : undefined}
+                    onCardChange={(cardId) => updateCardId(request.id, cardId)}
+                    onDelete={canManage ? handleDelete : undefined}
+                    onEdit={canManage ? handleEdit : undefined} />
+                );
+              })}
+            </div>
+          );
         })}
       </div>);
-
   };
 
   return (
