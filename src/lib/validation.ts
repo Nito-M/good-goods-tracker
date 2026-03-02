@@ -64,6 +64,7 @@ export const inventoryItemSchema = z.object({
   name: z.string().min(1, 'Name is required').max(500, 'Name must be less than 500 characters'),
   sku: z.string().min(1, 'SKU is required').max(100, 'SKU must be less than 100 characters'),
   category: z.string().min(1, 'Category is required').max(100, 'Category must be less than 100 characters'),
+  subcategory: z.string().max(100, 'Subcategory must be less than 100 characters').nullable().optional(),
   quantity: z.number().min(0, 'Quantity cannot be negative'),
   quantityUnit: z.enum(['pcs', 'ft', 'm', 'yd', 'in', 'sqft', 'lt', 'lbs'], { errorMap: () => ({ message: 'Invalid quantity unit' }) }).optional().default('pcs'),
   price: z.number().min(0, 'Price cannot be negative'),
