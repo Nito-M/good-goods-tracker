@@ -308,18 +308,18 @@ export function TaxDocuments() {
       invDocs.push({ id: sale.id, type: "invoice", refNumber: sale.invoiceNumber || "INV-????", vendorName: sale.vendorName || null, date: saleDate, fileType: "pdf", saleId: sale.id });
     }
 
-    // Sort POs by PO number ascending (numeric extraction)
+    // Sort POs by PO number descending (highest first, lowest at bottom)
     poDocs.sort((a, b) => {
       const numA = parseInt((a.refNumber.match(/\d+/) || ["0"])[0], 10);
       const numB = parseInt((b.refNumber.match(/\d+/) || ["0"])[0], 10);
-      return numA - numB;
+      return numB - numA;
     });
 
-    // Sort invoices by invoice number ascending (numeric extraction)
+    // Sort invoices by invoice number descending (highest first, lowest at bottom)
     invDocs.sort((a, b) => {
       const numA = parseInt((a.refNumber.match(/\d+/) || ["0"])[0], 10);
       const numB = parseInt((b.refNumber.match(/\d+/) || ["0"])[0], 10);
-      return numA - numB;
+      return numB - numA;
     });
 
     return { poDocuments: poDocs, invoiceDocuments: invDocs };
