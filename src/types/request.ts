@@ -25,6 +25,18 @@ export interface Request {
   updatedAt: string;
 }
 
+export interface RequestSubItem {
+  id: string;
+  requestId: string;
+  userId: string;
+  vendorName: string;
+  unitPrice: number;
+  link: string | null;
+  notes: string | null;
+  isSelected: boolean;
+  createdAt: string;
+}
+
 export interface CreateRequestInput {
   inventoryItemId: string | null;
   itemName: string;

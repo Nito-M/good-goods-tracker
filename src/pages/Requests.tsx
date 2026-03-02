@@ -189,14 +189,15 @@ export function Requests() {
 
 
           return (
-            <Card key={group.key} className="flex flex-col">
+            <Card key={group.key} className="flex flex-col cursor-pointer hover:border-primary/40 transition-colors"
+              onClick={() => {
+                const navKey = firstReq.requestNumber || group.key;
+                navigate(`/requests/view/${encodeURIComponent(navKey)}`);
+              }}>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   {firstReq.requestNumber && (
-                    <span
-                      className={`text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded ${group.requests.length > 1 ? 'cursor-pointer hover:bg-primary/20 transition-colors' : ''}`}
-                      onClick={group.requests.length > 1 ? () => navigate(`/requests/view/${encodeURIComponent(group.key)}`) : undefined}
-                    >
+                    <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
                       {firstReq.requestNumber}
                     </span>
                   )}

@@ -1595,6 +1595,50 @@ export type Database = {
           },
         ]
       }
+      request_sub_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_selected: boolean
+          link: string | null
+          notes: string | null
+          request_id: string
+          unit_price: number
+          user_id: string
+          vendor_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_selected?: boolean
+          link?: string | null
+          notes?: string | null
+          request_id: string
+          unit_price?: number
+          user_id: string
+          vendor_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_selected?: boolean
+          link?: string | null
+          notes?: string | null
+          request_id?: string
+          unit_price?: number
+          user_id?: string
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_sub_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           bank_card_id: string | null
