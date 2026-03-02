@@ -9,6 +9,7 @@ import { RequestCard } from "@/components/RequestCard";
 import { RequestersManager } from "@/components/RequestersManager";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus } from "lucide-react";
@@ -164,33 +165,42 @@ export function Requests() {
             );
           }
 
-          // Grouped requests — render inside a shared container
+          // Grouped requests — compact summary card
           const groupTotal = group.requests.reduce((s, r) => s + getRequestTotal(r), 0);
+          const firstReq = group.requests[0];
           return (
-            <div key={group.key} className="rounded-xl border-2 border-primary/20 bg-primary/[0.02] p-2 space-y-2">
-              <div className="flex items-center justify-between px-2 pt-1 pb-1">
-                <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                  {group.key}
-                </span>
-                <span className="text-xs font-semibold text-muted-foreground">
-                  {group.requests.length} items · {formatCurrency(groupTotal)}
-                </span>
-              </div>
-              {group.requests.map((request) => {
-                const isOwnRequest = linkedName && request.requesterName === linkedName;
-                const canManage = isAdminUser || isOwnRequest;
-                return (
-                  <RequestCard
-                    key={request.id}
-                    request={request}
-                    cards={cards}
-                    onStatusChange={isAdminUser ? handleStatusChange : undefined}
-                    onCardChange={(cardId) => updateCardId(request.id, cardId)}
-                    onDelete={canManage ? handleDelete : undefined}
-                    onEdit={canManage ? handleEdit : undefined} />
-                );
-              })}
-            </div>
+            <Card
+              key={group.key}
+              className="cursor-pointer hover:border-primary/40 transition-colors"
+              onClick={() => navigate(`/requests/view/${encodeURIComponent(group.key)}`)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                    {group.key}
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    {group.requests.length} items
+                  </Badge>
+                </div>
+                {firstReq.requesterName && (
+                  <p className="text-xs text-muted-foreground mt-1">{firstReq.requesterName}</p>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-1 pt-0">
+                {group.requests.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0 border-border/50">
+                    <span className="truncate flex-1 mr-2">{r.itemName}</span>
+                    <span className="text-muted-foreground whitespace-nowrap mr-3">×{r.quantity}</span>
+                    <span className="font-medium whitespace-nowrap">{formatCurrency(getRequestTotal(r))}</span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between pt-2 border-t font-semibold">
+                  <span>Total</span>
+                  <span className="text-green-600">{formatCurrency(groupTotal)}</span>
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>);

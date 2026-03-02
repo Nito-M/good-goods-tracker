@@ -19,6 +19,7 @@ import { SalesOrderDetail } from "./pages/SalesOrderDetail";
 import { Requests } from "./pages/Requests";
 import { AddRequest } from "./pages/AddRequest";
 import { EditRequest } from "./pages/EditRequest";
+import { RequestDetail } from "./pages/RequestDetail";
 import { Calendar } from "./pages/Calendar";
 import { Notes } from "./pages/Notes";
 import { Settings } from "./pages/Settings";
@@ -266,6 +267,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <EditRequest />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/requests/view/:requestNumber"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <RequestDetail />
               </AppLayout>
             </ProtectedRoute>
           }
