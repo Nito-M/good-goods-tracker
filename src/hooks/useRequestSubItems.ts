@@ -32,6 +32,7 @@ export function useRequestSubItems(requestIds: string[]) {
         userId: r.user_id,
         vendorName: r.vendor_name,
         unitPrice: r.unit_price || 0,
+        quantity: r.quantity || 1,
         link: r.link,
         notes: r.notes,
         isSelected: r.is_selected || false,
@@ -50,7 +51,7 @@ export function useRequestSubItems(requestIds: string[]) {
     fetchSubItems();
   }, [fetchSubItems]);
 
-  const addSubItem = async (requestId: string, input: { vendorName: string; unitPrice: number; link?: string | null; notes?: string | null }): Promise<boolean> => {
+  const addSubItem = async (requestId: string, input: { vendorName: string; unitPrice: number; quantity?: number; link?: string | null; notes?: string | null }): Promise<boolean> => {
     if (!user) return false;
     try {
       const { error } = await supabase
@@ -60,6 +61,7 @@ export function useRequestSubItems(requestIds: string[]) {
           user_id: user.id,
           vendor_name: input.vendorName,
           unit_price: input.unitPrice || 0,
+          quantity: input.quantity || 1,
           link: input.link || null,
           notes: input.notes || null,
         } as any);

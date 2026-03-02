@@ -31,6 +31,7 @@ export interface RequestSubItem {
   userId: string;
   vendorName: string;
   unitPrice: number;
+  quantity: number;
   link: string | null;
   notes: string | null;
   isSelected: boolean;
