@@ -1,20 +1,44 @@
 
 
-## Fix: Focus Note Content Instead of Title on Edit
+## Merge Grouped Requests into a Compact Summary Card
 
-When clicking a note card, the edit dialog currently focuses the title input. The user wants focus to go to the content textarea instead.
+### What changes
 
-### Changes
+**1. Compact grouped request card (`src/pages/Requests.tsx`)**
 
-**File: `src/pages/Notes.tsx`**
-- Add a `useRef` for the content textarea in the edit dialog
-- Use a `useEffect` to focus the content textarea when `editingNote` is set
-- Attach the ref to the edit dialog's `Textarea` component
+Replace the current stacked `RequestCard` rendering for grouped requests with a single compact card that shows:
+- Request number header (e.g. REQ-0012)
+- Requester name
+- A simple table/list of items: Item Name | Qty | Unit Price | Line Total
+- Group total at the bottom
+- Status selector, bank card selector, and action buttons (edit/delete) at the group level
+- Click on the card or a "View Details" button navigates to a new full-page detail view
 
-### Technical Details
+**2. New full-page grouped request detail page (`src/pages/RequestDetail.tsx`)**
 
-- Add `useRef<HTMLTextAreaElement>(null)` for the content textarea
-- When `editingNote` changes to a non-null value, call `contentRef.current?.focus()` with a small timeout (to allow the dialog to render)
-- Pass `autoFocus={false}` on the title input to prevent it from stealing focus
-- The Dialog's `onOpenAutoFocus` can be used to prevent default focus behavior and instead focus the textarea
+A dedicated page at route `/requests/:requestNumber` that:
+- Fetches all requests sharing that `requestNumber`
+- Displays each item as a row with full details (name, SKU, qty, unit price, GST, extra cost, line total)
+- Shows image/PDF attachments per item
+- Shows notes per item
+- Displays the combined total for the entire request
+- Allows editing individual items (navigate to existing edit page)
+- Allows status changes and card assignment (for admins)
+
+**3. Route registration (`src/App.tsx`)**
+
+Add a new route: `/requests/view/:requestNumber` pointing to `RequestDetail`.
+
+### Technical details
+
+- The grouped card in `Requests.tsx` replaces the current `group.requests.length > 1` block with a single `Card` containing a mini table (div-based rows) showing item name, quantity, and total per line
+- Single-item requests continue using `RequestCard` as-is
+- The detail page reuses existing hooks (`useRequests`, `useBankCards`, `useLinkedRequester`) and filters by `requestNumber`
+- Status/card changes on the detail page apply to all items in the group simultaneously
+- Delete on the detail page deletes all items in the group (with confirmation)
+
+### Files to create/modify
+- **Create** `src/pages/RequestDetail.tsx` -- full-page view for a grouped request
+- **Modify** `src/pages/Requests.tsx` -- compact summary card for grouped requests
+- **Modify** `src/App.tsx` -- add route for detail page
 
