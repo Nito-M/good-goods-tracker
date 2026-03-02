@@ -29,6 +29,8 @@ interface TaxDocument {
   saleId?: string;
   bankCardId?: string | null;
   purchaseOrderId?: string;
+  poTotal?: number | null;
+  poTax?: number | null;
   // Extracted fields
   extractedVendor?: string | null;
   extractedDate?: string | null;
@@ -289,15 +291,23 @@ export function TaxDocuments() {
       if (poDate.getFullYear() !== yearNum) continue;
       const ref = po.poNumber || "PO-????";
 
+      // Calculate PO subtotal, discount, tax, and total
+      const subtotal = po.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+      const discount = po.discountAmount || 0;
+      const afterDiscount = subtotal - discount;
+      const tax = afterDiscount * 0.05;
+      const total = afterDiscount + tax;
+      const poShared = { poTotal: total, poTax: tax };
+
       if (po.pdfUrl) {
-        poDocs.push({ id: `${po.id}-pdf`, type: "po-pdf", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "pdf", url: po.pdfUrl, fileName: `${ref}.pdf`, bankCardId: po.bankCardId, purchaseOrderId: po.id });
+        poDocs.push({ id: `${po.id}-pdf`, type: "po-pdf", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "pdf", url: po.pdfUrl, fileName: `${ref}.pdf`, bankCardId: po.bankCardId, purchaseOrderId: po.id, ...poShared });
       }
       if (po.imageUrl) {
-        poDocs.push({ id: `${po.id}-img`, type: "po-image", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "image", url: po.imageUrl, fileName: `${ref}-receipt`, bankCardId: po.bankCardId, purchaseOrderId: po.id });
+        poDocs.push({ id: `${po.id}-img`, type: "po-image", refNumber: ref, vendorName: po.vendorName || null, date: poDate, fileType: "image", url: po.imageUrl, fileName: `${ref}-receipt`, bankCardId: po.bankCardId, purchaseOrderId: po.id, ...poShared });
       }
       if (po.attachments) {
         for (const att of po.attachments) {
-          poDocs.push({ id: att.id, type: "po-attachment", refNumber: ref, vendorName: po.vendorName || null, date: new Date(att.createdAt), fileType: att.fileType, url: att.url, fileName: att.fileName || `${ref}-attachment`, bankCardId: po.bankCardId, purchaseOrderId: po.id });
+          poDocs.push({ id: att.id, type: "po-attachment", refNumber: ref, vendorName: po.vendorName || null, date: new Date(att.createdAt), fileType: att.fileType, url: att.url, fileName: att.fileName || `${ref}-attachment`, bankCardId: po.bankCardId, purchaseOrderId: po.id, ...poShared });
         }
       }
     }
@@ -671,6 +681,22 @@ function DocumentCard({
             )}
           </div>
         </div>
+
+        {/* PO total & tax from order data */}
+        {doc.poTotal != null && (
+          <div className="space-y-1 rounded-md bg-primary/5 p-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-semibold">${Number(doc.poTotal).toFixed(2)}</span>
+            </div>
+            {doc.poTax != null && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Tax (5%)</span>
+                <span className="font-medium">${Number(doc.poTax).toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Extracted data display */}
         {hasExtractedData && (
