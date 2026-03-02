@@ -1,44 +1,71 @@
 
 
-## Merge Grouped Requests into a Compact Summary Card
+## Allow Full-Page Access for All Requests + Add Vendor Pricing Sub-Items
 
-### What changes
+### Overview
+Two changes: (1) make every request card clickable to open the full-page detail view (not just multi-item groups), and (2) add a "sub-items" system to the request detail page where users can add vendor pricing alternatives for each item (e.g., different vendors offering different prices for the same requested item).
 
-**1. Compact grouped request card (`src/pages/Requests.tsx`)**
+### 1. Make All Request Cards Navigate to Detail Page
 
-Replace the current stacked `RequestCard` rendering for grouped requests with a single compact card that shows:
-- Request number header (e.g. REQ-0012)
-- Requester name
-- A simple table/list of items: Item Name | Qty | Unit Price | Line Total
-- Group total at the bottom
-- Status selector, bank card selector, and action buttons (edit/delete) at the group level
-- Click on the card or a "View Details" button navigates to a new full-page detail view
+Currently only multi-item grouped request numbers are clickable. Change all cards (single and multi-item) so clicking them opens the full-page `RequestDetail` view.
 
-**2. New full-page grouped request detail page (`src/pages/RequestDetail.tsx`)**
+**File: `src/pages/Requests.tsx`**
+- Make the entire card clickable with `onClick={() => navigate(...)}`
+- For single-item requests, navigate using their `requestNumber` (same route as grouped)
+- Add `cursor-pointer hover:border-primary/40` styling to all cards
 
-A dedicated page at route `/requests/:requestNumber` that:
-- Fetches all requests sharing that `requestNumber`
-- Displays each item as a row with full details (name, SKU, qty, unit price, GST, extra cost, line total)
-- Shows image/PDF attachments per item
-- Shows notes per item
-- Displays the combined total for the entire request
-- Allows editing individual items (navigate to existing edit page)
-- Allows status changes and card assignment (for admins)
+### 2. Create `request_sub_items` Database Table
 
-**3. Route registration (`src/App.tsx`)**
+A new table to store vendor pricing alternatives per request item.
 
-Add a new route: `/requests/view/:requestNumber` pointing to `RequestDetail`.
+```text
+request_sub_items
+-----------------
+id              uuid (PK, default gen_random_uuid())
+request_id      uuid (FK -> requests.id ON DELETE CASCADE)
+user_id         uuid (NOT NULL)
+vendor_name     text (NOT NULL)
+unit_price      numeric (default 0)
+link            text (nullable)
+notes           text (nullable)
+is_selected     boolean (default false)
+created_at      timestamptz (default now())
+```
 
-### Technical details
+RLS policies: same org-based pattern as requests (owner CRUD + org members can view/update).
 
-- The grouped card in `Requests.tsx` replaces the current `group.requests.length > 1` block with a single `Card` containing a mini table (div-based rows) showing item name, quantity, and total per line
-- Single-item requests continue using `RequestCard` as-is
-- The detail page reuses existing hooks (`useRequests`, `useBankCards`, `useLinkedRequester`) and filters by `requestNumber`
-- Status/card changes on the detail page apply to all items in the group simultaneously
-- Delete on the detail page deletes all items in the group (with confirmation)
+### 3. Create `useRequestSubItems` Hook
 
-### Files to create/modify
-- **Create** `src/pages/RequestDetail.tsx` -- full-page view for a grouped request
-- **Modify** `src/pages/Requests.tsx` -- compact summary card for grouped requests
-- **Modify** `src/App.tsx` -- add route for detail page
+**File: `src/hooks/useRequestSubItems.ts`** (new)
+- Fetch sub-items for a given list of request IDs
+- CRUD operations: `addSubItem`, `updateSubItem`, `deleteSubItem`, `toggleSelected`
+- Follow the same pattern as other hooks in the project
 
+### 4. Update Request Detail Page with Sub-Items UI
+
+**File: `src/pages/RequestDetail.tsx`**
+- Below each item row in the table, add an expandable section showing vendor pricing alternatives
+- Each sub-item row shows: vendor name, unit price, link, notes, and a "select" toggle
+- Add an "Add Option" button per item to create a new sub-item
+- Inline form for adding: vendor name (required), unit price, link, notes
+- The selected sub-item (if any) is highlighted with a subtle accent background
+
+### 5. Update TypeScript Types
+
+**File: `src/types/request.ts`**
+- Add `RequestSubItem` interface with fields matching the table
+
+### Technical Details
+
+- The sub-items table uses `request_id` as a foreign key with `ON DELETE CASCADE` so deleting a request cleans up its alternatives
+- The `is_selected` boolean lets users mark their preferred vendor option
+- The detail page uses a collapsible (`Collapsible` component) per item row to show/hide sub-items
+- No changes needed to the requests table itself -- sub-items are a separate related table
+- The sub-items are only visible/manageable on the full-page detail view, keeping the card view clean
+
+### Files to Create/Modify
+- **Migration**: Create `request_sub_items` table with RLS
+- **Create** `src/hooks/useRequestSubItems.ts`
+- **Modify** `src/types/request.ts` -- add `RequestSubItem` interface
+- **Modify** `src/pages/Requests.tsx` -- make all cards clickable to detail page
+- **Modify** `src/pages/RequestDetail.tsx` -- add sub-items UI per item row
