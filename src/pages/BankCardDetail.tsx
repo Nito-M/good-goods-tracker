@@ -87,7 +87,7 @@ const CARD_COLORS = [
 export function BankCardDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { transactions, loading: txLoading, deleteTransaction, addCardDeposit, addDeposit, addWithdrawal } = useBank();
+  const { transactions, loading: txLoading, deleteTransaction, addCardDeposit, addDeposit, addWithdrawal, updateTransactionAmount } = useBank();
   const { cards, loading: cardsLoading, refetch: refetchCards, updateCard, deleteCard } = useBankCards();
 
   const [depositOpen, setDepositOpen] = useState(false);
@@ -107,6 +107,11 @@ export function BankCardDetail() {
 
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+
+  const [editTxOpen, setEditTxOpen] = useState(false);
+  const [editTxId, setEditTxId] = useState('');
+  const [editTxAmount, setEditTxAmount] = useState('');
+  const [editTxSaving, setEditTxSaving] = useState(false);
 
   const card = cards.find((c) => c.id === id);
   const cardTx = transactions.filter((t) => t.bankCardId === id);
@@ -167,6 +172,24 @@ export function BankCardDetail() {
     if (!id) return;
     await deleteCard(id);
     navigate('/bank');
+  };
+
+  const openEditTx = (txId: string, currentAmount: number) => {
+    setEditTxId(txId);
+    setEditTxAmount(String(currentAmount));
+    setEditTxOpen(true);
+  };
+
+  const handleEditTx = async () => {
+    const newAmount = parseFloat(editTxAmount);
+    if (isNaN(newAmount) || newAmount <= 0) return;
+    setEditTxSaving(true);
+    const ok = await updateTransactionAmount(editTxId, newAmount);
+    if (ok) {
+      await refetchCards();
+      setEditTxOpen(false);
+    }
+    setEditTxSaving(false);
   };
 
   const getTypeIcon = (type: TransactionType) => {
@@ -328,6 +351,27 @@ export function BankCardDetail() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Transaction Amount Dialog */}
+      <Dialog open={editTxOpen} onOpenChange={setEditTxOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Transaction Amount</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label>New Amount</Label>
+              <Input type="number" min="0.01" step="0.01" value={editTxAmount} onChange={(e) => setEditTxAmount(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTxOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditTx} disabled={editTxSaving || !editTxAmount}>
+              {editTxSaving ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
@@ -449,7 +493,7 @@ export function BankCardDetail() {
                     <TableHead>Type</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="w-[80px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -492,9 +536,14 @@ export function BankCardDetail() {
                       </TableCell>
                       <TableCell>
                         {t.type !== 'sale_profit' && (
-                          <Button variant="ghost" size="icon" onClick={() => deleteTransaction(t.id)}>
-                            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEditTx(t.id, t.amount)} title="Edit amount">
+                              <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteTransaction(t.id)}>
+                              <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
