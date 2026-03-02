@@ -83,7 +83,13 @@ function RequestItemForm({
     } else {
       const item = items.find((i) => i.id === value);
       if (item) {
-        onChange(line.id, { selectedItemId: value, itemName: item.name, sku: item.sku, quantityUnit: item.quantityUnit || "pcs" });
+        onChange(line.id, {
+          selectedItemId: value,
+          itemName: item.name,
+          sku: item.sku,
+          quantityUnit: item.quantityUnit || "pcs",
+          price: item.cost > 0 ? item.cost : item.price,
+        });
       }
     }
   };
