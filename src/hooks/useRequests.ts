@@ -63,6 +63,22 @@ export function useRequests() {
 
   useEffect(() => {
     fetchRequests();
+
+    // Subscribe to realtime changes on the requests table
+    const channel = supabase
+      .channel('requests-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'requests' },
+        () => {
+          fetchRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchRequests]);
 
   const addRequest = async (input: CreateRequestInput): Promise<Request | null> => {
