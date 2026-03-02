@@ -758,17 +758,6 @@ function DocumentCard({
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{format(doc.date, "MMM d, yyyy")}</span>
           <div className="flex items-center gap-1">
-            {canExtract && onExtract && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs gap-1"
-                onClick={(e) => { e.stopPropagation(); onExtract(doc.id); }}
-              >
-                <Sparkles className="h-3 w-3" />
-                Extract
-              </Button>
-            )}
             {isExtracting && (
               <span className="flex items-center gap-1 text-xs text-primary">
                 <Loader2 className="h-3 w-3 animate-spin" />
