@@ -5,6 +5,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import {
   FileText,
@@ -72,6 +82,7 @@ export function PurchaseOrderCard({
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const cardRef = React.useRef<HTMLDivElement>(null);
 
@@ -439,7 +450,7 @@ export function PurchaseOrderCard({
                     </Button>
                   )}
                   {order.status === 'received' && onRevert && (
-                    <Button size="sm" variant="outline" onClick={() => onRevert(order.id)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
+                    <Button size="sm" variant="outline" onClick={() => setRevertConfirmOpen(true)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
                       <Undo2 className="h-4 w-4" />
                       Revert
                     </Button>
@@ -481,6 +492,42 @@ export function PurchaseOrderCard({
         open={imageViewerOpen}
         onOpenChange={setImageViewerOpen}
       />
+
+      {/* Revert Confirmation Dialog */}
+      <AlertDialog open={revertConfirmOpen} onOpenChange={setRevertConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Undo2 className="h-5 w-5 text-orange-500" />
+              Revert {order.poNumber || 'this order'}?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>Reverting this order will perform the following actions:</p>
+                <ul className="list-disc list-inside space-y-1.5 text-foreground/80">
+                  <li>Status will change from <strong>Received</strong> back to <strong>Ordered</strong></li>
+                  <li>Received date will be cleared</li>
+                  {order.items.map((item, idx) => (
+                    <li key={idx}>
+                      <strong>{item.quantity}×</strong> {item.itemName} ({item.sku}) will be <strong>deducted</strong> from inventory (both global and location quantities)
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-orange-600 font-medium">This may cause inventory quantities to drop to zero if stock has already been used.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onRevert!(order.id)}
+              className="bg-orange-500 text-white hover:bg-orange-600"
+            >
+              Revert Order
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
