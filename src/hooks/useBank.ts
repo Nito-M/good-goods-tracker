@@ -151,7 +151,7 @@ export function useBank() {
     }
   };
 
-  const addWithdrawal = async (amount: number, description?: string) => {
+  const addWithdrawal = async (amount: number, description?: string, cardId?: string) => {
     if (!user) return false;
 
     try {
@@ -160,9 +160,26 @@ export function useBank() {
         amount,
         type: 'withdrawal',
         description: description || 'Manual withdrawal',
+        bank_card_id: cardId || null,
       });
 
       if (error) throw error;
+
+      // Update card balance if linked
+      if (cardId) {
+        const { data: card, error: cardFetchError } = await supabase
+          .from('bank_cards')
+          .select('balance')
+          .eq('id', cardId)
+          .single();
+
+        if (!cardFetchError && card) {
+          await supabase
+            .from('bank_cards')
+            .update({ balance: Number(card.balance) - amount })
+            .eq('id', cardId);
+        }
+      }
 
       toast({
         title: 'Withdrawal processed',

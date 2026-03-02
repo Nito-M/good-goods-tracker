@@ -163,7 +163,7 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
 
 export function Bank() {
   const navigate = useNavigate();
-  const { transactions, balance, loading, addDeposit, addWithdrawal, deleteTransaction, assignCardToTransaction } = useBank();
+  const { transactions, balance, loading, addDeposit, addCardDeposit, addWithdrawal, deleteTransaction, assignCardToTransaction } = useBank();
   const { cards, addCard, refetch: refetchCards } = useBankCards();
   const { orders } = usePurchaseOrders();
 
@@ -172,19 +172,28 @@ export function Bank() {
   const [addCardOpen, setAddCardOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedCardId, setSelectedCardId] = useState<string>('none');
 
   const handleDeposit = async () => {
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) return;
-    const success = await addDeposit(numAmount, description || undefined);
-    if (success) { setDepositOpen(false); setAmount(''); setDescription(''); }
+    let success: boolean;
+    if (selectedCardId && selectedCardId !== 'none') {
+      success = await addCardDeposit(selectedCardId, numAmount, description || undefined);
+      if (success) await refetchCards();
+    } else {
+      success = await addDeposit(numAmount, description || undefined);
+    }
+    if (success) { setDepositOpen(false); setAmount(''); setDescription(''); setSelectedCardId('none'); }
   };
 
   const handleWithdraw = async () => {
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) return;
-    const success = await addWithdrawal(numAmount, description || undefined);
-    if (success) { setWithdrawOpen(false); setAmount(''); setDescription(''); }
+    const cardId = selectedCardId && selectedCardId !== 'none' ? selectedCardId : undefined;
+    const success = await addWithdrawal(numAmount, description || undefined, cardId);
+    if (success && cardId) await refetchCards();
+    if (success) { setWithdrawOpen(false); setAmount(''); setDescription(''); setSelectedCardId('none'); }
   };
 
 
@@ -267,6 +276,22 @@ export function Bank() {
                       <Label htmlFor="deposit-description">Description <span className="text-sky-400 font-normal">(optional)</span></Label>
                       <Input id="deposit-description" placeholder="e.g., Initial capital" value={description} onChange={(e) => setDescription(e.target.value)} />
                     </div>
+                    {cards.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Card <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                        <Select value={selectedCardId} onValueChange={setSelectedCardId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="No card (general bank)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No card (general bank)</SelectItem>
+                            {cards.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <Button onClick={handleDeposit} className="w-full">Add Deposit</Button>
                   </div>
                 </DialogContent>
@@ -282,13 +307,29 @@ export function Bank() {
                   <div className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="withdraw-amount">Amount</Label>
-                      <Input id="withdraw-amount" type="number" step="0.00001" min="0" max={balance} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                      <Input id="withdraw-amount" type="number" step="0.00001" min="0" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
                       <p className="text-xs text-muted-foreground">Available: {formatCurrency(balance)}</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="withdraw-description">Description <span className="text-sky-400 font-normal">(optional)</span></Label>
                       <Input id="withdraw-description" placeholder="e.g., Business expense" value={description} onChange={(e) => setDescription(e.target.value)} />
                     </div>
+                    {cards.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Card <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                        <Select value={selectedCardId} onValueChange={setSelectedCardId}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="No card (general bank)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No card (general bank)</SelectItem>
+                            {cards.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <Button onClick={handleWithdraw} className="w-full">Withdraw</Button>
                   </div>
                 </DialogContent>
