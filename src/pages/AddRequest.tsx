@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Upload, X, Link as LinkIcon, CalendarIcon, User, Check, ChevronsUpDown, FileText, ArrowLeft, Trash2 } from "lucide-react";
+import { Plus, Upload, X, Link as LinkIcon, CalendarIcon, User, Check, ChevronsUpDown, FileText, ArrowLeft, Trash2, ChevronDown, ChevronsDownUp } from "lucide-react";
 import { format } from "date-fns";
 import { cn, formatCurrency } from "@/lib/utils";
 import { CreateRequestInput } from "@/types/request";
@@ -67,6 +68,8 @@ function RequestItemForm({
   onChange,
   onRemove,
   canRemove,
+  isOpen,
+  onToggle,
 }: {
   line: RequestLineItem;
   index: number;
@@ -74,6 +77,8 @@ function RequestItemForm({
   onChange: (id: string, updates: Partial<RequestLineItem>) => void;
   onRemove: (id: string) => void;
   canRemove: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
 }) {
   const [itemSearchOpen, setItemSearchOpen] = useState(false);
 
@@ -114,24 +119,39 @@ function RequestItemForm({
     if (file?.type === "application/pdf") onChange(line.id, { pdfFile: file });
   }, [line.id, onChange]);
 
-  const qty = typeof line.quantity === "number" ? line.quantity : 0;
-  const unitPrice = typeof line.price === "number" ? line.price : 0;
+  const qtyVal = typeof line.quantity === "number" ? line.quantity : 0;
+  const unitPriceVal = typeof line.price === "number" ? line.price : 0;
   const gst = typeof line.gstRate === "number" ? line.gstRate : 0;
   const extra = typeof line.extraCost === "number" ? line.extraCost : 0;
 
+  const summary = line.itemName || "Untitled item";
+  const qty = typeof line.quantity === "number" ? line.quantity : 0;
+  const unitPrice = typeof line.price === "number" ? line.price : 0;
+  const totalLine = unitPrice > 0 ? ` — ${formatCurrency((qty || 1) * unitPrice)}` : "";
+
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Item {index + 1}</CardTitle>
-          {canRemove && (
-            <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(line.id)} className="text-destructive hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <button type="button" className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity">
+                <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+                <CardTitle className="text-base">
+                  Item {index + 1}
+                  {!isOpen && <span className="ml-2 font-normal text-sm text-muted-foreground">{summary}{totalLine}</span>}
+                </CardTitle>
+              </button>
+            </CollapsibleTrigger>
+            {canRemove && (
+              <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(line.id)} className="text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CollapsibleContent>
+          <CardContent className="space-y-4">
         {/* Item Selection */}
         <div className="space-y-2">
           <Label>Item</Label>
@@ -224,16 +244,16 @@ function RequestItemForm({
         </div>
 
         {/* Price Breakdown */}
-        {unitPrice > 0 && (
+        {unitPriceVal > 0 && (
           <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal ({qty || 1} × {formatCurrency(unitPrice)})</span>
-              <span className="font-medium">{formatCurrency((qty || 1) * unitPrice)}</span>
+              <span className="text-muted-foreground">Subtotal ({qtyVal || 1} × {formatCurrency(unitPriceVal)})</span>
+              <span className="font-medium">{formatCurrency((qtyVal || 1) * unitPriceVal)}</span>
             </div>
             {gst > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">GST ({gst}%)</span>
-                <span className="font-medium">{formatCurrency(((qty || 1) * unitPrice) * (gst / 100))}</span>
+                <span className="font-medium">{formatCurrency(((qtyVal || 1) * unitPriceVal) * (gst / 100))}</span>
               </div>
             )}
             {extra > 0 && (
@@ -244,7 +264,7 @@ function RequestItemForm({
             )}
             <div className="flex justify-between border-t pt-1">
               <span className="font-semibold">Total</span>
-              <span className="font-bold text-primary">{formatCurrency(((qty || 1) * unitPrice) * (1 + gst / 100) + extra)}</span>
+              <span className="font-bold text-primary">{formatCurrency(((qtyVal || 1) * unitPriceVal) * (1 + gst / 100) + extra)}</span>
             </div>
           </div>
         )}
@@ -323,7 +343,9 @@ function RequestItemForm({
           </div>
         </div>
       </CardContent>
-    </Card>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
 
@@ -341,7 +363,19 @@ export function AddRequest() {
 
   const [selectedRequester, setSelectedRequester] = useState("");
   const [lines, setLines] = useState<RequestLineItem[]>([createEmptyLine()]);
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set([lines[0]?.id]));
   const [loading, setLoading] = useState(false);
+
+  const toggleItem = useCallback((id: string) => {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const collapseAll = () => setOpenItems(new Set());
 
   const updateLine = useCallback((id: string, updates: Partial<RequestLineItem>) => {
     setLines((prev) => prev.map((l) => (l.id === id ? { ...l, ...updates } : l)));
@@ -351,7 +385,12 @@ export function AddRequest() {
     setLines((prev) => prev.filter((l) => l.id !== id));
   }, []);
 
-  const addLine = () => setLines((prev) => [...prev, createEmptyLine()]);
+  const addLine = () => {
+    const newLine = createEmptyLine();
+    setLines((prev) => [...prev, newLine]);
+    // Collapse all existing, open only the new one
+    setOpenItems(new Set([newLine.id]));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -447,6 +486,16 @@ export function AddRequest() {
           </CardContent>
         </Card>
 
+        {/* Collapse All button */}
+        {lines.length > 1 && (
+          <div className="flex justify-end">
+            <Button type="button" variant="ghost" size="sm" onClick={collapseAll} className="text-muted-foreground">
+              <ChevronsDownUp className="h-4 w-4 mr-1" />
+              Collapse All
+            </Button>
+          </div>
+        )}
+
         {/* Line Items */}
         {lines.map((line, idx) => (
           <RequestItemForm
@@ -457,6 +506,8 @@ export function AddRequest() {
             onChange={updateLine}
             onRemove={removeLine}
             canRemove={lines.length > 1}
+            isOpen={openItems.has(line.id)}
+            onToggle={() => toggleItem(line.id)}
           />
         ))}
 
