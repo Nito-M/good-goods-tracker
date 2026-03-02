@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useRequests } from "@/hooks/useRequests";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import { useJobs } from "@/hooks/useJobs";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { AddCalendarEventDialog } from "@/components/AddCalendarEventDialog";
 import { EditCalendarEventDialog } from "@/components/EditCalendarEventDialog";
@@ -8,6 +9,7 @@ import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
 import { Request, RequestStatus } from "@/types/request";
 import { CalendarEvent } from "@/types/calendarEvent";
+import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +25,8 @@ import {
   CalendarDays,
   Plus,
   Trash2,
-  Repeat } from
+  Repeat,
+  Briefcase } from
 "lucide-react";
 import {
   format,
@@ -84,6 +87,7 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
 export function Calendar() {
   const { requests, updateRequest, uploadImage, uploadPdf } = useRequests();
   const { events, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
+  const { jobs } = useJobs();
   const { allItems } = useInventory();
   const { profile } = useProfile();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -115,6 +119,18 @@ export function Calendar() {
     return map;
   }, [requests]);
 
+  const jobsByDate = useMemo(() => {
+    const map = new Map<string, Job[]>();
+    jobs.forEach((job) => {
+      if (job.dueDate) {
+        const dateKey = format(parseLocalDate(job.dueDate), "yyyy-MM-dd");
+        const existing = map.get(dateKey) || [];
+        map.set(dateKey, [...existing, job]);
+      }
+    });
+    return map;
+  }, [jobs]);
+
   // Get events for a specific day (including recurring)
   const getEventsForDay = (day: Date): CalendarEvent[] => {
     return events.filter((e) => eventOccursOnDay(e, day));
@@ -129,6 +145,11 @@ export function Calendar() {
     if (!selectedDate) return [];
     return getEventsForDay(selectedDate);
   }, [selectedDate, events]);
+
+  const selectedDateJobs = useMemo(() => {
+    if (!selectedDate) return [];
+    return jobsByDate.get(format(selectedDate, "yyyy-MM-dd")) || [];
+  }, [selectedDate, jobsByDate]);
 
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -188,7 +209,8 @@ export function Calendar() {
                 const dateKey = format(day, "yyyy-MM-dd");
                 const dayRequests = requestsByDate.get(dateKey) || [];
                 const dayEvents = getEventsForDay(day);
-                const totalItems = dayRequests.length + dayEvents.length;
+                const dayJobs = jobsByDate.get(dateKey) || [];
+                const totalItems = dayRequests.length + dayEvents.length + dayJobs.length;
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
                 const isDayToday = isToday(day);
@@ -231,7 +253,15 @@ export function Calendar() {
                           {event.title}
                         </div>
                       )}
-                      {dayRequests.slice(0, Math.max(0, 3 - dayEvents.length)).map((request) =>
+                      {dayJobs.slice(0, Math.max(0, 3 - dayEvents.length)).map((job) =>
+                      <div
+                        key={`job-${job.id}`}
+                        className="text-xs px-1.5 py-0.5 rounded truncate text-white bg-orange-500"
+                        title={`${job.jobNumber || "JOB"}: ${job.title}`}>
+                          📋 {job.title}
+                        </div>
+                      )}
+                      {dayRequests.slice(0, Math.max(0, 3 - dayEvents.length - dayJobs.length)).map((request) =>
                       <div
                         key={request.id}
                         className={cn(
@@ -352,7 +382,35 @@ export function Calendar() {
                   </div>
               }
 
-                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 &&
+                {/* Job Deadlines */}
+                {selectedDateJobs.length > 0 &&
+              <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Job Deadlines</p>
+                    {selectedDateJobs.map((job) =>
+                <a
+                  key={job.id}
+                  href={`/jobs/${job.id}/description`}
+                  className="block w-full text-left p-3 border rounded-lg hover:bg-accent transition-colors">
+                        <div className="flex items-start gap-2">
+                          <div className="p-1 rounded bg-orange-500 text-white mt-0.5">
+                            <Briefcase className="h-3 w-3" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{job.title}</p>
+                            {job.jobNumber &&
+                      <p className="text-xs text-muted-foreground">{job.jobNumber}</p>
+                      }
+                            <Badge variant="outline" className="text-xs capitalize mt-1">
+                              {job.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </a>
+                )}
+                  </div>
+              }
+
+                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 && selectedDateJobs.length === 0 &&
               <p className="text-sm text-muted-foreground">Nothing on this date</p>
               }
               </>
@@ -372,6 +430,10 @@ export function Calendar() {
                 <span className="text-sm text-muted-foreground">{STATUS_CONFIG[status].label}</span>
               </div>
             )}
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-orange-500" />
+              <span className="text-sm text-muted-foreground">Job Deadline</span>
+            </div>
           </div>
         </CardContent>
       </Card>
