@@ -648,6 +648,82 @@ export function usePurchaseOrders() {
       );
     }
 
+    // If the PO is already paid and a card is being added/changed, handle the financial transaction
+    const existingOrder = orders.find(o => o.id === orderId);
+    if (existingOrder?.paidAt && updates.bankCardId) {
+      const oldCardId = existingOrder.bankCardId;
+      const newCardId = updates.bankCardId;
+
+      if (oldCardId !== newCardId) {
+        const TAX_RATE = 0.05;
+        const subtotal = updates.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+        const discountAmount = updates.discountAmount || 0;
+        const afterDiscount = Math.max(0, subtotal - discountAmount);
+        const totalCost = afterDiscount + (afterDiscount * TAX_RATE);
+        const poLabel = updates.poNumber || existingOrder.poNumber || `PO-${orderId.slice(0, 8).toUpperCase()}`;
+
+        if (totalCost > 0) {
+          // If there was an old card, refund it
+          if (oldCardId) {
+            const { data: oldCard } = await supabase
+              .from('bank_cards')
+              .select('balance, name')
+              .eq('id', oldCardId)
+              .single();
+            if (oldCard) {
+              await supabase
+                .from('bank_cards')
+                .update({ balance: Number(oldCard.balance) + totalCost })
+                .eq('id', oldCardId);
+            }
+            // Update existing bank transaction to remove old card link
+            const { data: existingTx } = await supabase
+              .from('bank_transactions')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('type', 'withdrawal')
+              .eq('bank_card_id', oldCardId)
+              .ilike('description', `%${poLabel}%`)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            if (existingTx) {
+              await supabase.from('bank_transactions').update({ bank_card_id: newCardId } as any).eq('id', existingTx.id);
+            }
+          }
+
+          // Deduct from the new card
+          const { data: newCard } = await supabase
+            .from('bank_cards')
+            .select('balance, name')
+            .eq('id', newCardId)
+            .single();
+          if (newCard) {
+            await supabase
+              .from('bank_cards')
+              .update({ balance: Number(newCard.balance) - totalCost })
+              .eq('id', newCardId);
+          }
+
+          // If there was no old card, tag the existing bank transaction with the new card
+          if (!oldCardId) {
+            const { data: existingTx } = await supabase
+              .from('bank_transactions')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('type', 'withdrawal')
+              .ilike('description', `%${poLabel}%`)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            if (existingTx) {
+              await supabase.from('bank_transactions').update({ bank_card_id: newCardId } as any).eq('id', existingTx.id);
+            }
+          }
+        }
+      }
+    }
+
     toast({ title: 'Purchase order updated successfully' });
     fetchOrders();
   };
