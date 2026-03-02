@@ -46,6 +46,7 @@ interface PurchaseOrderCardProps {
   onDeletePdf?: () => Promise<boolean>;
   loading?: boolean;
   bankCardName?: string | null;
+  defaultOpen?: boolean;
 }
 
 export function PurchaseOrderCard({
@@ -64,13 +65,21 @@ export function PurchaseOrderCard({
   onDeletePdf,
   loading,
   bankCardName,
+  defaultOpen = false,
 }: PurchaseOrderCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const cardRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (defaultOpen && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [defaultOpen]);
 
   const handleAddAttachment = async (file: File) => {
     if (!onAddAttachment) return;
@@ -116,7 +125,7 @@ export function PurchaseOrderCard({
 
   return (
     <>
-      <Card className="overflow-hidden">
+      <Card ref={cardRef} className={`overflow-hidden ${defaultOpen ? 'ring-2 ring-primary' : ''}`}>
         <CardContent className="p-0">
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             {/* Always-visible header */}

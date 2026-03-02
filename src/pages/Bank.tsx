@@ -447,7 +447,7 @@ export function Bank() {
                             <TableCell>
                               {linkedPo ? (
                                 <button
-                                  onClick={() => navigate(`/purchase-orders`)}
+                                  onClick={() => navigate(`/purchase-orders?po=${encodeURIComponent(linkedPo.poNumber)}`)}
                                   className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
                                   title={`Go to ${linkedPo.poNumber}`}
                                 >
