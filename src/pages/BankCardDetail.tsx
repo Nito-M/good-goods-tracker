@@ -14,6 +14,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -80,7 +87,7 @@ const CARD_COLORS = [
 export function BankCardDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { transactions, loading: txLoading, deleteTransaction, addCardDeposit, addWithdrawal } = useBank();
+  const { transactions, loading: txLoading, deleteTransaction, addCardDeposit, addDeposit, addWithdrawal } = useBank();
   const { cards, loading: cardsLoading, refetch: refetchCards, updateCard, deleteCard } = useBankCards();
 
   const [depositOpen, setDepositOpen] = useState(false);
@@ -91,10 +98,12 @@ export function BankCardDetail() {
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
   const [depositing, setDepositing] = useState(false);
+  const [depositCardId, setDepositCardId] = useState(id || '');
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawDescription, setWithdrawDescription] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawCardId, setWithdrawCardId] = useState(id || '');
 
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
@@ -105,28 +114,37 @@ export function BankCardDetail() {
 
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
-    if (!id || isNaN(amount) || amount <= 0) return;
+    if (isNaN(amount) || amount <= 0) return;
     setDepositing(true);
-    const ok = await addCardDeposit(id, amount, depositDescription || undefined);
+    const targetCardId = depositCardId && depositCardId !== 'none' ? depositCardId : undefined;
+    let ok: boolean;
+    if (targetCardId) {
+      ok = await addCardDeposit(targetCardId, amount, depositDescription || undefined);
+    } else {
+      ok = await addDeposit(amount, depositDescription || undefined);
+    }
     if (ok) {
       await refetchCards();
       setDepositOpen(false);
       setDepositAmount('');
       setDepositDescription('');
+      setDepositCardId(id || '');
     }
     setDepositing(false);
   };
 
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
-    if (!id || isNaN(amount) || amount <= 0) return;
+    if (isNaN(amount) || amount <= 0) return;
     setWithdrawing(true);
-    const ok = await addWithdrawal(amount, withdrawDescription || undefined);
+    const targetCardId = withdrawCardId && withdrawCardId !== 'none' ? withdrawCardId : undefined;
+    const ok = await addWithdrawal(amount, withdrawDescription || undefined, targetCardId);
     if (ok) {
       await refetchCards();
       setWithdrawOpen(false);
       setWithdrawAmount('');
       setWithdrawDescription('');
+      setWithdrawCardId(id || '');
     }
     setWithdrawing(false);
   };
@@ -199,10 +217,10 @@ export function BankCardDetail() {
   return (
     <div className="min-h-screen bg-background">
       {/* Deposit Dialog */}
-      <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
+      <Dialog open={depositOpen} onOpenChange={(open) => { setDepositOpen(open); if (open) setDepositCardId(id || ''); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Deposit to {card.name}</DialogTitle>
+            <DialogTitle>Add Deposit</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -212,6 +230,20 @@ export function BankCardDetail() {
             <div className="space-y-1">
               <Label>Description (optional)</Label>
               <Input placeholder="e.g. Monthly funding" value={depositDescription} onChange={(e) => setDepositDescription(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Card</Label>
+              <Select value={depositCardId} onValueChange={setDepositCardId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No card (general bank)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No card (general bank)</SelectItem>
+                  {cards.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -224,10 +256,10 @@ export function BankCardDetail() {
       </Dialog>
 
       {/* Withdraw Dialog */}
-      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+      <Dialog open={withdrawOpen} onOpenChange={(open) => { setWithdrawOpen(open); if (open) setWithdrawCardId(id || ''); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Withdraw from {card.name}</DialogTitle>
+            <DialogTitle>Withdraw Funds</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -237,6 +269,20 @@ export function BankCardDetail() {
             <div className="space-y-1">
               <Label>Description (optional)</Label>
               <Input placeholder="e.g. Business expense" value={withdrawDescription} onChange={(e) => setWithdrawDescription(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Card</Label>
+              <Select value={withdrawCardId} onValueChange={setWithdrawCardId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No card (general bank)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No card (general bank)</SelectItem>
+                  {cards.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
