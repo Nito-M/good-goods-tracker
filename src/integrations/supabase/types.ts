@@ -1602,6 +1602,7 @@ export type Database = {
           is_selected: boolean
           link: string | null
           notes: string | null
+          quantity: number
           request_id: string
           unit_price: number
           user_id: string
@@ -1613,6 +1614,7 @@ export type Database = {
           is_selected?: boolean
           link?: string | null
           notes?: string | null
+          quantity?: number
           request_id: string
           unit_price?: number
           user_id: string
@@ -1624,6 +1626,7 @@ export type Database = {
           is_selected?: boolean
           link?: string | null
           notes?: string | null
+          quantity?: number
           request_id?: string
           unit_price?: number
           user_id?: string
