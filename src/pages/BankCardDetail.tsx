@@ -464,7 +464,27 @@ export function BankCardDetail() {
                           {getTypeBadge(t.type)}
                         </div>
                       </TableCell>
-                      <TableCell>{t.description || '-'}</TableCell>
+                      <TableCell>
+                        {t.description ? (() => {
+                          const poMatch = t.description.match(/(PO-\d+)/);
+                          if (poMatch) {
+                            const parts = t.description.split(poMatch[1]);
+                            return (
+                              <span>
+                                {parts[0]}
+                                <button
+                                  onClick={() => navigate('/purchase-orders')}
+                                  className="text-primary hover:underline font-medium"
+                                >
+                                  {poMatch[1]}
+                                </button>
+                                {parts[1]}
+                              </span>
+                            );
+                          }
+                          return t.description;
+                        })() : '-'}
+                      </TableCell>
                       <TableCell className={`text-right font-medium ${
                         t.type === 'withdrawal' ? 'text-destructive' : 'text-success'
                       }`}>
