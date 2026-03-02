@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRequests } from "@/hooks/useRequests";
-import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { useBankCards } from "@/hooks/useBankCards";
-import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { Button } from "@/components/ui/button";
 import { RequestCard } from "@/components/RequestCard";
 import { RequestersManager } from "@/components/RequestersManager";
@@ -28,14 +26,12 @@ const STATUS_CONFIG: Record<RequestStatus, {label: string;icon: React.ReactNode;
 
 export function Requests() {
   const navigate = useNavigate();
-  const { requests, loading, addRequest, updateRequest, updateStatus, updateCardId, deleteRequest, uploadImage, uploadPdf } = useRequests();
-  const { allItems } = useInventory();
+  const { requests, loading, updateStatus, updateCardId, deleteRequest } = useRequests();
   const { profile } = useProfile();
   const { linkedName, allOrgRequesterNames, isAdminUser, refetch: refetchRequesters } = useLinkedRequester();
   const { cards } = useBankCards();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
 
   // For regular members, only show their own requester name; admins see all
@@ -96,7 +92,7 @@ export function Requests() {
   };
 
   const handleEdit = (request: Request) => {
-    setEditingRequest(request);
+    navigate(`/requests/edit/${request.id}`);
   };
 
   const renderRequestGrid = (status: RequestStatus) => {
@@ -196,17 +192,6 @@ export function Requests() {
           </TabsContent>
         )}
       </Tabs>
-
-      {/* Edit Dialog */}
-      <EditRequestDialog
-        request={editingRequest}
-        items={allItems}
-        requesterNames={visibleRequesterNames}
-        open={!!editingRequest}
-        onOpenChange={(open) => !open && setEditingRequest(null)}
-        onSave={updateRequest}
-        onUploadImage={uploadImage}
-        onUploadPdf={uploadPdf} />
 
     </div>);
 
