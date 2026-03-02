@@ -72,27 +72,34 @@ export function useRequests() {
       // Use requester name from profile if not provided
       const requesterName = input.requesterName || profile?.requesterName || null;
 
+      const insertPayload: Record<string, any> = {
+        user_id: user.id,
+        inventory_item_id: input.inventoryItemId,
+        item_name: input.itemName,
+        sku: input.sku || null,
+        quantity: input.quantity,
+        quantity_unit: input.quantityUnit,
+        price: input.price || 0,
+        gst_rate: input.gstRate || 0,
+        extra_cost: input.extraCost || 0,
+        extra_cost_label: input.extraCostLabel || 'Shipping',
+        link: input.link || null,
+        notes: input.notes || null,
+        image_url: input.imageUrl || null,
+        pdf_url: input.pdfUrl || null,
+        need_by_date: input.needByDate || null,
+        requester_name: requesterName,
+        status: "pending",
+      };
+
+      // If a request number is explicitly provided, use it (for grouped single-request mode)
+      if (input.requestNumber) {
+        insertPayload.request_number = input.requestNumber;
+      }
+
       const { data, error } = await supabase
         .from("requests")
-        .insert({
-          user_id: user.id,
-          inventory_item_id: input.inventoryItemId,
-          item_name: input.itemName,
-          sku: input.sku || null,
-          quantity: input.quantity,
-          quantity_unit: input.quantityUnit,
-          price: input.price || 0,
-          gst_rate: input.gstRate || 0,
-          extra_cost: input.extraCost || 0,
-          extra_cost_label: input.extraCostLabel || 'Shipping',
-          link: input.link || null,
-          notes: input.notes || null,
-          image_url: input.imageUrl || null,
-          pdf_url: input.pdfUrl || null,
-          need_by_date: input.needByDate || null,
-          requester_name: requesterName,
-          status: "pending",
-        })
+        .insert(insertPayload as any)
         .select()
         .single();
 

@@ -41,4 +41,5 @@ export interface CreateRequestInput {
   pdfUrl?: string | null;
   needByDate: string | null;
   requesterName: string | null;
+  requestNumber?: string | null;
 }

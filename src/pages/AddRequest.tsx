@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Upload, X, Link as LinkIcon, CalendarIcon, User, Check, ChevronsUpDown, FileText, ArrowLeft, Trash2, ChevronDown, ChevronsDownUp } from "lucide-react";
 import { format } from "date-fns";
@@ -363,6 +364,7 @@ export function AddRequest() {
 
   const [selectedRequester, setSelectedRequester] = useState("");
   const [lines, setLines] = useState<RequestLineItem[]>([createEmptyLine()]);
+  const [requestMode, setRequestMode] = useState<"multiple" | "single">("multiple");
   const [openItems, setOpenItems] = useState<Set<string>>(new Set([lines[0]?.id]));
   const [loading, setLoading] = useState(false);
 
@@ -407,6 +409,8 @@ export function AddRequest() {
 
     setLoading(true);
     try {
+      let sharedRequestNumber: string | null = null;
+
       for (const line of validLines) {
         let uploadedImageUrl: string | null = null;
         if (line.imageFile) uploadedImageUrl = await uploadImage(line.imageFile);
@@ -419,7 +423,7 @@ export function AddRequest() {
         const gst = typeof line.gstRate === "number" ? line.gstRate : 0;
         const extra = typeof line.extraCost === "number" ? line.extraCost : 0;
 
-        await addRequest({
+        const result = await addRequest({
           inventoryItemId: line.selectedItemId && line.selectedItemId !== "custom" ? line.selectedItemId : null,
           itemName: line.itemName.trim(),
           sku: line.sku.trim() || null,
@@ -435,10 +439,20 @@ export function AddRequest() {
           pdfUrl: uploadedPdfUrl,
           needByDate: line.needByDate ? line.needByDate.toISOString() : null,
           requesterName: selectedRequester,
+          // In single mode, reuse the first item's request number for all subsequent items
+          requestNumber: requestMode === "single" ? sharedRequestNumber : null,
         });
+
+        // Capture the first request's number for single-request mode
+        if (requestMode === "single" && !sharedRequestNumber && result) {
+          sharedRequestNumber = result.requestNumber;
+        }
       }
 
-      toast({ title: "Success", description: `${validLines.length} request(s) created successfully` });
+      const desc = requestMode === "single"
+        ? `Request ${sharedRequestNumber || ''} created with ${validLines.length} item(s)`
+        : `${validLines.length} request(s) created successfully`;
+      toast({ title: "Success", description: desc });
       navigate("/requests");
     } catch {
       toast({ title: "Error", description: "Failed to create requests", variant: "destructive" });
@@ -486,6 +500,33 @@ export function AddRequest() {
           </CardContent>
         </Card>
 
+        {/* Request Mode */}
+        {lines.length > 1 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Request Mode</Label>
+                <RadioGroup value={requestMode} onValueChange={(v) => setRequestMode(v as "multiple" | "single")} className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="multiple" id="mode-multiple" />
+                    <Label htmlFor="mode-multiple" className="font-normal cursor-pointer">
+                      <span className="font-medium">Separate requests</span>
+                      <span className="text-muted-foreground text-xs ml-1">— each item gets its own REQ #</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="single" id="mode-single" />
+                    <Label htmlFor="mode-single" className="font-normal cursor-pointer">
+                      <span className="font-medium">Single request</span>
+                      <span className="text-muted-foreground text-xs ml-1">— all items share one REQ #</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Collapse All button */}
         {lines.length > 1 && (
           <div className="flex justify-end">
@@ -523,7 +564,13 @@ export function AddRequest() {
             Cancel
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Submitting..." : `Submit ${lines.length > 1 ? `${lines.length} Requests` : "Request"}`}
+            {loading
+              ? "Submitting..."
+              : lines.length > 1
+                ? requestMode === "single"
+                  ? `Submit 1 Request (${lines.length} items)`
+                  : `Submit ${lines.length} Requests`
+                : "Submit Request"}
           </Button>
         </div>
       </form>
