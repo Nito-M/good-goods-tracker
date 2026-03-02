@@ -500,33 +500,6 @@ export function AddRequest() {
           </CardContent>
         </Card>
 
-        {/* Request Mode */}
-        {lines.length > 1 && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Request Mode</Label>
-                <RadioGroup value={requestMode} onValueChange={(v) => setRequestMode(v as "multiple" | "single")} className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="multiple" id="mode-multiple" />
-                    <Label htmlFor="mode-multiple" className="font-normal cursor-pointer">
-                      <span className="font-medium">Separate requests</span>
-                      <span className="text-muted-foreground text-xs ml-1">— each item gets its own REQ #</span>
-                    </Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="single" id="mode-single" />
-                    <Label htmlFor="mode-single" className="font-normal cursor-pointer">
-                      <span className="font-medium">Single request</span>
-                      <span className="text-muted-foreground text-xs ml-1">— all items share one REQ #</span>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Collapse All button */}
         {lines.length > 1 && (
           <div className="flex justify-end">
@@ -557,6 +530,33 @@ export function AddRequest() {
           <Plus className="h-4 w-4 mr-2" />
           Add Another Item
         </Button>
+
+        {/* Request Mode */}
+        {lines.length > 1 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Request Mode</Label>
+                <RadioGroup value={requestMode} onValueChange={(v) => setRequestMode(v as "multiple" | "single")} className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="multiple" id="mode-multiple" />
+                    <Label htmlFor="mode-multiple" className="font-normal cursor-pointer">
+                      <span className="font-medium">Separate requests</span>
+                      <span className="text-muted-foreground text-xs ml-1">— each item gets its own REQ #</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="single" id="mode-single" />
+                    <Label htmlFor="mode-single" className="font-normal cursor-pointer">
+                      <span className="font-medium">Single request</span>
+                      <span className="text-muted-foreground text-xs ml-1">— all items share one REQ #</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Submit */}
         <div className="flex gap-3 justify-end">
