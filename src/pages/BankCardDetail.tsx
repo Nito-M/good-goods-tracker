@@ -473,7 +473,7 @@ export function BankCardDetail() {
                               <span>
                                 {parts[0]}
                                 <button
-                                  onClick={() => navigate('/purchase-orders')}
+                                  onClick={() => navigate(`/purchase-orders?po=${encodeURIComponent(poMatch[1])}`)}
                                   className="text-primary hover:underline font-medium"
                                 >
                                   {poMatch[1]}

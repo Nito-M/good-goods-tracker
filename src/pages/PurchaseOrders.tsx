@@ -16,7 +16,7 @@ import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { PurchaseOrderPreviewDialog } from '@/components/PurchaseOrderPreviewDialog';
 import { ReceiveLocationDialog } from '@/components/ReceiveLocationDialog';
 import { useToast } from '@/hooks/use-toast';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +24,8 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 
 export function PurchaseOrders() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const highlightPo = searchParams.get('po');
   const { signOut } = useAuth();
   const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, revertOrder, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
   usePurchaseOrders();
@@ -144,6 +146,14 @@ export function PurchaseOrders() {
   const orderedOrders = filteredOrders.filter((o) => o.status === 'ordered').sort(sortByPoNumber);
   const receivedOrders = filteredOrders.filter((o) => o.status === 'received').sort(sortByPoNumber);
 
+  // Determine which tab the highlighted PO belongs to
+  const defaultTab = useMemo(() => {
+    if (!highlightPo) return 'draft';
+    const match = orders.find((o) => o.poNumber === highlightPo);
+    if (match) return match.status === 'received' ? 'received' : match.status === 'ordered' ? 'ordered' : 'draft';
+    return 'draft';
+  }, [highlightPo, orders]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -205,7 +215,7 @@ export function PurchaseOrders() {
             </Button>
           </div> :
 
-        <Tabs defaultValue="draft" className="space-y-6">
+        <Tabs defaultValue={defaultTab} className="space-y-6">
             {/* Search bar for purchase orders */}
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -293,7 +303,8 @@ export function PurchaseOrders() {
               onDeleteImage={() => deleteImageForOrder(order.id)}
               onDeletePdf={() => deletePdfForOrder(order.id)}
               loading={processingId === order.id}
-              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null} />
+              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
+              defaultOpen={highlightPo === order.poNumber} />
 
             )
             }
@@ -320,7 +331,8 @@ export function PurchaseOrders() {
               onDeleteImage={() => deleteImageForOrder(order.id)}
               onDeletePdf={() => deletePdfForOrder(order.id)}
               loading={processingId === order.id}
-              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null} />
+              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
+              defaultOpen={highlightPo === order.poNumber} />
 
             )
             }
