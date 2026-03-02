@@ -293,6 +293,7 @@ export function ReceiveLocationDialog({
                         <div className="space-y-2 pl-1">
                           {loc.items.map((itemRow, itemRowIdx) => {
                             const poItem = poItems[itemRow.poItemIndex];
+                            if (!poItem) return null;
                             return (
                               <div key={itemRowIdx} className="flex items-center gap-2">
                                 <span className="flex-1 text-sm truncate">
