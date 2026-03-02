@@ -46,10 +46,15 @@ export function Requests() {
 
   const getFilteredRequests = (status: RequestStatus) => {
     return visibleRequests.filter((request) => {
-      const matchesSearch =
-      request.itemName.toLowerCase().includes(searchQuery.toLowerCase()) || (
-      request.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || (
-      request.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+      const searchableText = [
+        request.itemName,
+        request.sku,
+        request.notes,
+        request.requesterName,
+        request.requestNumber,
+      ].filter(Boolean).join(" ").toLowerCase();
+      const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => searchableText.includes(term));
       return matchesSearch && request.status === status;
     });
   };
