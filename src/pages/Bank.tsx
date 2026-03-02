@@ -15,6 +15,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -156,8 +163,8 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
 
 export function Bank() {
   const navigate = useNavigate();
-  const { transactions, balance, loading, addDeposit, addWithdrawal, deleteTransaction } = useBank();
-  const { cards, addCard } = useBankCards();
+  const { transactions, balance, loading, addDeposit, addWithdrawal, deleteTransaction, assignCardToTransaction } = useBank();
+  const { cards, addCard, refetch: refetchCards } = useBankCards();
   const { orders } = usePurchaseOrders();
 
   const [depositOpen, setDepositOpen] = useState(false);
@@ -373,6 +380,25 @@ export function Bank() {
                                   <CreditCard className="h-3.5 w-3.5" />
                                   {linkedCard.name}
                                 </button>
+                              ) : cards.length > 0 ? (
+                                <Select
+                                  value=""
+                                  onValueChange={async (cardId) => {
+                                    const ok = await assignCardToTransaction(t.id, cardId);
+                                    if (ok) refetchCards();
+                                  }}
+                                >
+                                  <SelectTrigger className="h-7 w-[130px] text-xs">
+                                    <SelectValue placeholder="Assign card" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {cards.map((c) => (
+                                      <SelectItem key={c.id} value={c.id} className="text-xs">
+                                        {c.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               ) : (
                                 <span className="text-muted-foreground text-xs">—</span>
                               )}

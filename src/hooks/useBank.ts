@@ -262,6 +262,58 @@ export function useBank() {
     }
   };
 
+  const assignCardToTransaction = async (transactionId: string, cardId: string) => {
+    if (!user) return false;
+
+    try {
+      const tx = transactions.find(t => t.id === transactionId);
+      if (!tx) return false;
+
+      // Update the transaction with the card id
+      const { error: txError } = await supabase
+        .from('bank_transactions')
+        .update({ bank_card_id: cardId } as any)
+        .eq('id', transactionId);
+
+      if (txError) throw txError;
+
+      // Adjust the card balance based on transaction type
+      const { data: card, error: cardFetchError } = await supabase
+        .from('bank_cards')
+        .select('balance, name')
+        .eq('id', cardId)
+        .single();
+
+      if (cardFetchError || !card) throw cardFetchError;
+
+      const adjustment = tx.type === 'withdrawal' ? -tx.amount : tx.amount;
+      const newBalance = Number(card.balance) + adjustment;
+
+      const { error: cardUpdateError } = await supabase
+        .from('bank_cards')
+        .update({ balance: newBalance })
+        .eq('id', cardId);
+
+      if (cardUpdateError) throw cardUpdateError;
+
+      toast({
+        title: 'Card assigned',
+        description: `Transaction linked to "${card.name}"`,
+      });
+
+      await fetchTransactions();
+      return true;
+    } catch (error) {
+      console.error('Error assigning card to transaction:', error);
+      toast({
+        title: 'Error assigning card',
+        description: 'Unable to assign card. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     transactions,
     balance,
@@ -272,6 +324,7 @@ export function useBank() {
     addSaleRevenue,
     removeSaleProfit,
     deleteTransaction,
+    assignCardToTransaction,
     refetch: fetchTransactions,
   };
 }
