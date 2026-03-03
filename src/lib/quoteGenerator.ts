@@ -39,9 +39,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.setFontSize(10);
       doc.text('Item', tableX + 2, y);
       doc.text('SKU', tableX + 72, y);
-      doc.text('Qty', tableX + 105, y);
+      doc.text('Qty', tableX + 105, y, { align: 'center' });
       if (!quote.hidePrices) {
-        doc.text('Price', tableX + 130, y);
+        doc.text('Price', tableX + 145, y, { align: 'right' });
         doc.text('Total', pageWidth - 22, y, { align: 'right' });
       }
       doc.setFont('helvetica', 'normal');
@@ -135,8 +135,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       leftY += 7;
     }
 
-    // RIGHT: Terms
+    // RIGHT: Terms & Status
     doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailsY, { align: 'right' });
+    doc.text(`Status: ${quote.status.toUpperCase()}`, pageWidth - 20, detailsY + 7, { align: 'right' });
 
     flowY = Math.max(flowY, leftY + 2);
   }
@@ -174,9 +175,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.setFontSize(10);
     doc.text('Item', tableX + 2, y);
     doc.text('SKU', tableX + 72, y);
-    doc.text('Qty', tableX + 105, y);
+    doc.text('Qty', tableX + 105, y, { align: 'center' });
     if (!hidePrices) {
-      doc.text('Price', tableX + 130, y);
+      doc.text('Price', tableX + 145, y, { align: 'right' });
       doc.text('Total', pageWidth - 22, y, { align: 'right' });
     }
     y += 10;
@@ -209,11 +210,13 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       isFirstItem = false;
 
       doc.text(nameLines, tableX + 2, y);
+      doc.setTextColor(100, 100, 100);
       doc.text(skuLines, tableX + 72, y);
+      doc.setTextColor(0, 0, 0);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
-      doc.text(qtyDisplay, tableX + 105, y);
+      doc.text(qtyDisplay, tableX + 105, y, { align: 'center' });
       if (!hidePrices) {
-        doc.text(formatCurrency(item.unitPrice), tableX + 130, y);
+        doc.text(formatCurrency(item.unitPrice), tableX + 145, y, { align: 'right' });
         doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
       }
       y += rowHeight;
