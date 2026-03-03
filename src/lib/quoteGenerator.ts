@@ -38,10 +38,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.text('Item', tableX + 2, y);
-      doc.text('SKU', tableX + 60, y);
-      doc.text('Qty', tableX + 95, y);
+      doc.text('SKU', tableX + 72, y);
+      doc.text('Qty', tableX + 105, y);
       if (!quote.hidePrices) {
-        doc.text('Price', tableX + 115, y);
+        doc.text('Price', tableX + 130, y);
         doc.text('Total', pageWidth - 22, y, { align: 'right' });
       }
       doc.setFont('helvetica', 'normal');
@@ -68,7 +68,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       }
 
       doc.addImage(img, 'PNG', layout.logo.x, layout.logo.y, imgWidth, imgHeight);
-      flowY = Math.max(flowY, layout.logo.y + imgHeight + 5);
+      flowY = Math.max(flowY, layout.logo.y + imgHeight + 2);
     } catch (error) {
       console.error('Failed to load logo:', error);
     }
@@ -104,7 +104,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       businessY += 5;
     }
 
-    flowY = Math.max(flowY, businessY + 5);
+    flowY = Math.max(flowY, businessY + 2);
   }
 
   // Quote Title
@@ -116,7 +116,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.text('QUOTE', getXPosition(layout.invoiceTitle.x, titleAlign), titleY, {
       align: titleAlign as 'left' | 'center' | 'right',
     });
-    flowY = Math.max(flowY, titleY + 15);
+    flowY = Math.max(flowY, titleY + 10);
   }
 
   // Quote Details
@@ -138,7 +138,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     // RIGHT: Terms
     doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailsY, { align: 'right' });
 
-    flowY = Math.max(flowY, leftY + 3);
+    flowY = Math.max(flowY, leftY + 2);
   }
 
   // Quote For (Bill To)
@@ -157,7 +157,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
         vendorY += 5;
       });
     }
-    flowY = Math.max(flowY, vendorY + 10);
+    flowY = Math.max(flowY, vendorY + 5);
   }
 
   // Items Table
@@ -173,10 +173,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Item', tableX + 2, y);
-    doc.text('SKU', tableX + 60, y);
-    doc.text('Qty', tableX + 95, y);
+    doc.text('SKU', tableX + 72, y);
+    doc.text('Qty', tableX + 105, y);
     if (!hidePrices) {
-      doc.text('Price', tableX + 115, y);
+      doc.text('Price', tableX + 130, y);
       doc.text('Total', pageWidth - 22, y, { align: 'right' });
     }
     y += 10;
@@ -187,8 +187,8 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
 
     let isFirstItem = true;
     quote.items.forEach((item) => {
-      const nameLines = doc.splitTextToSize(item.itemName, 55);
-      const skuLines = doc.splitTextToSize(item.sku, 32);
+      const nameLines = doc.splitTextToSize(item.itemName, 67);
+      const skuLines = doc.splitTextToSize(item.sku, 30);
       const rowHeight = Math.max(nameLines.length, skuLines.length, 1) * LINE_HEIGHT;
 
       // Calculate total height this item needs (name/sku rows + optional note rows)
@@ -209,11 +209,11 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       isFirstItem = false;
 
       doc.text(nameLines, tableX + 2, y);
-      doc.text(skuLines, tableX + 60, y);
+      doc.text(skuLines, tableX + 72, y);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
-      doc.text(qtyDisplay, tableX + 95, y);
+      doc.text(qtyDisplay, tableX + 105, y);
       if (!hidePrices) {
-        doc.text(formatCurrency(item.unitPrice), tableX + 115, y);
+        doc.text(formatCurrency(item.unitPrice), tableX + 130, y);
         doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
       }
       y += rowHeight;
@@ -233,16 +233,12 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       y += 4;
     });
 
-    // Separator line
-    y += 5;
-    // Page break before separator + totals if needed (need ~40mm for totals block)
+    // Page break before totals if needed
+    y += 2;
     if (y + 40 > safeBottom) {
       doc.addPage();
       y = 20;
     }
-    doc.setDrawColor(200, 200, 200);
-    doc.line(tableX, y, pageWidth - 20, y);
-    y += 10;
 
     flowY = y;
   }
