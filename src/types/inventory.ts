@@ -5,7 +5,7 @@ export interface Dimensions {
   unit: 'in' | 'cm' | 'ft';
 }
 
-export type QuantityUnit = 'pcs' | 'ft' | 'm' | 'yd' | 'in' | 'sqft' | 'lt' | 'lbs';
+export type QuantityUnit = 'pcs' | 'ft' | 'm' | 'yd' | 'in' | 'sqft' | 'lt' | 'lbs' | 'bundle';
 
 export const QUANTITY_UNIT_LABELS: Record<QuantityUnit, string> = {
   pcs: 'Pieces',
@@ -16,6 +16,7 @@ export const QUANTITY_UNIT_LABELS: Record<QuantityUnit, string> = {
   sqft: 'Sq Ft',
   lt: 'Litres',
   lbs: 'Pounds',
+  bundle: 'Bundle',
 };
 
 export interface InventoryItem {
