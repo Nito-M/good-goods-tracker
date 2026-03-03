@@ -169,6 +169,7 @@ export function Quotes() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [hidePrices, setHidePrices] = useState(false);
+  const [activeTab, setActiveTab] = useState('new-quote');
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
@@ -353,6 +354,8 @@ export function Quotes() {
       } else {
         setValidUntil('');
       }
+      // Switch to history tab after creation
+      setActiveTab('history');
     }
 
     setIsProcessing(false);
@@ -440,7 +443,7 @@ export function Quotes() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="new-quote" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="new-quote" className="gap-2">
               <FileText className="h-4 w-4" />
