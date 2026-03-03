@@ -182,7 +182,7 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
 
           {/* Need By Date */}
           {request.needByDate && (
-            <div className={`flex items-center gap-2 text-sm ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+            <div className="flex items-center gap-2 text-sm text-destructive font-medium">
               <CalendarClock className="h-4 w-4" />
               <span>Need by: {format(new Date(request.needByDate), "MMM d, yyyy")}</span>
               {isOverdue && <Badge variant="destructive" className="text-xs">Overdue</Badge>}
