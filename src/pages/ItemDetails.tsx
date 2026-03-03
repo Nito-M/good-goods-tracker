@@ -177,7 +177,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                 onClick={() => setConsumeDialogOpen(true)}
               >
                 <Minus className="h-4 w-4" />
-                Consumed
+                Consume
               </Button>
               <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
                 setDeleteDialogOpen(open);
