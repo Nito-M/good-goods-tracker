@@ -90,9 +90,6 @@ export function QuotePreviewDialog({
                   {settings.businessEmail && (
                     <p className="text-gray-600">{settings.businessEmail}</p>
                   )}
-                  {settings.businessNumber && (
-                    <p className="text-gray-600">Business #: {settings.businessNumber}</p>
-                  )}
                 </div>
               )}
             </div>
