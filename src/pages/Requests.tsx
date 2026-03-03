@@ -226,7 +226,7 @@ export function Requests() {
                 )}
                 {/* Need by date */}
                 {firstReq.needByDate && (
-                  <div className={`flex items-center gap-1 text-xs mt-1 ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                  <div className="flex items-center gap-1 text-xs mt-1 text-destructive font-medium">
                     <CalendarClock className="h-3 w-3" />
                     <span>Need by: {format(new Date(firstReq.needByDate), "MMM d, yyyy")}</span>
                     {isOverdue && <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4">Overdue</Badge>}

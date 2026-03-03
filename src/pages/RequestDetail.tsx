@@ -199,7 +199,7 @@ export function RequestDetail() {
           )}
 
           {firstReq?.needByDate && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-destructive font-medium">
               Need by: {format(new Date(firstReq.needByDate), "MMM d, yyyy")}
             </div>
           )}
