@@ -400,13 +400,13 @@ function AssemblyDetail({
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              <span>Item</span><span className="w-20 text-center">SKU</span><span className="w-20 text-right">Cost</span><span className="w-16 text-center">Qty</span><span className="w-8" />
+            <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <span>Item</span><span className="w-20 text-center">SKU</span><span className="w-20 text-right">Cost</span><span className="w-16 text-center">Qty</span><span className="w-20 text-right">Total</span><span className="w-8" />
             </div>
             {items.map((item) => {
               const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : null;
               return (
-              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
+              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
                   <p className="font-medium text-sm">{item.item_name}</p>
                   {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
@@ -428,6 +428,7 @@ function AssemblyDetail({
                     })()}
                   </button>
                 )}
+                <span className="w-20 text-right text-sm font-medium">{itemCost !== null ? formatCurrency(itemCost * item.quantity) : '—'}</span>
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteItemId(item.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
