@@ -164,6 +164,8 @@ function AssemblyDetail({
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editNoteValue, setEditNoteValue] = useState('');
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(assembly.name);
@@ -210,6 +212,8 @@ function AssemblyDetail({
 
   const startEditQty = (item: { id: string; quantity: number }) => { setEditingId(item.id); setEditQty(item.quantity); };
   const handleSaveQty = async (id: string) => { await updateItem(id, { quantity: editQty }); setEditingId(null); };
+  const startEditNote = (item: { id: string; notes: string | null }) => { setEditingNoteId(item.id); setEditNoteValue(item.notes || ''); };
+  const handleSaveNote = async (id: string) => { await updateItem(id, { notes: editNoteValue.trim() || null }); setEditingNoteId(null); };
 
   const otherAssemblies = allAssemblies.filter(a => a.id !== assembly.id);
 
@@ -409,7 +413,17 @@ function AssemblyDetail({
               <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
                   <p className="font-medium text-sm">{item.item_name}</p>
-                  {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
+                  {editingNoteId === item.id ? (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Input value={editNoteValue} onChange={(e) => setEditNoteValue(e.target.value)} placeholder="Add a note..." className="h-6 text-xs px-2 flex-1" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleSaveNote(item.id); if (e.key === 'Escape') setEditingNoteId(null); }} />
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleSaveNote(item.id)}><Check className="h-3 w-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingNoteId(null)}><X className="h-3 w-3" /></Button>
+                    </div>
+                  ) : (
+                    <button className="text-xs text-muted-foreground hover:text-foreground cursor-pointer mt-0.5 flex items-center gap-1" onClick={() => startEditNote(item)}>
+                      {item.notes ? <><Pencil className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />{item.notes}</> : <span className="opacity-50 hover:opacity-100">+ Add note</span>}
+                    </button>
+                  )}
                 </div>
                 <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.sku || '—'}</span>
                 <span className="w-20 text-right text-sm text-muted-foreground">{itemCost !== null ? formatCurrency(itemCost) : '—'}</span>
