@@ -29,7 +29,8 @@ export function useQuotes() {
           const { data: items } = await supabase
             .from('quote_items')
             .select('*')
-            .eq('quote_id', quote.id);
+            .eq('quote_id', quote.id)
+            .order('created_at', { ascending: true });
 
           const mappedItems: QuoteItem[] = (items || []).map((item) => ({
             id: item.id,
