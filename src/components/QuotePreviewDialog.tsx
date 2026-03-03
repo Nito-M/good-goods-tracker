@@ -64,7 +64,7 @@ export function QuotePreviewDialog({
             }}
           >
             {/* Header */}
-            <div className="flex justify-between items-start mb-8">
+            <div className="flex justify-between items-start mb-4">
               {layout.logo.visible && settings.logoUrl && (
                 <div>
                   <img
@@ -96,12 +96,12 @@ export function QuotePreviewDialog({
 
             {/* Title */}
             {layout.invoiceTitle.visible && (
-              <h1 className="text-3xl font-bold text-center my-6">QUOTE</h1>
+              <h1 className="text-3xl font-bold text-center my-3">QUOTE</h1>
             )}
 
             {/* Quote Details */}
             {layout.invoiceDetails.visible && (
-              <div className="flex justify-between text-sm mb-6">
+              <div className="flex justify-between text-sm mb-4">
                 <div>
                   <p><span className="font-medium">Quote #:</span> {quote.quoteNumber}</p>
                   <p><span className="font-medium">Date:</span> {formatDate(quote.createdAt)}</p>
@@ -118,7 +118,7 @@ export function QuotePreviewDialog({
 
             {/* Quote For */}
             {layout.billTo.visible && quote.vendorName && (
-              <div className="mb-6">
+              <div className="mb-4">
                 <p className="font-bold text-sm">Quote For:</p>
                 <p className="text-sm">{quote.vendorName}</p>
                 {quote.vendorAddress && (
@@ -131,7 +131,7 @@ export function QuotePreviewDialog({
 
             {/* Items Table */}
             {layout.itemsTable.visible && (
-              <div className="mb-6">
+              <div className="mb-4">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-100">
@@ -174,7 +174,7 @@ export function QuotePreviewDialog({
 
             {/* Totals */}
             {layout.totals.visible && !quote.hidePrices && (
-              <div className="flex justify-end mb-6">
+              <div className="flex justify-end mb-4">
                 <div className="w-64 text-sm">
                   <div className="flex justify-between py-1">
                     <span>Subtotal:</span>
@@ -202,7 +202,7 @@ export function QuotePreviewDialog({
 
             {/* Notes */}
             {layout.notes.visible && quote.notes && (
-              <div className="mb-6 text-sm">
+              <div className="mb-4 text-sm">
                 <p className="font-bold">Notes:</p>
                 <p className="text-gray-600 whitespace-pre-line">{quote.notes}</p>
               </div>
