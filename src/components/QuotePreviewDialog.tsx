@@ -146,8 +146,8 @@ export function QuotePreviewDialog({
                     </tr>
                   </thead>
                   <tbody>
-                    {quote.items.map((item) => (
-                      <tr key={item.id} className="border-b border-gray-200">
+                      {quote.items.map((item, index) => (
+                      <tr key={item.id} className="border-b border-gray-300">
                         <td className="p-2">
                           {item.itemName}
                           {item.notes && (
