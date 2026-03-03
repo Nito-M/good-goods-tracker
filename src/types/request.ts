@@ -20,6 +20,7 @@ export interface Request {
   needByDate: string | null;
   requesterName: string | null;
   bankCardId: string | null;
+  vendorName: string | null;
   status: RequestStatus;
   createdAt: string;
   updatedAt: string;
@@ -55,4 +56,5 @@ export interface CreateRequestInput {
   needByDate: string | null;
   requesterName: string | null;
   requestNumber?: string | null;
+  vendorName?: string | null;
 }

@@ -4,6 +4,7 @@ import { useRequests } from "@/hooks/useRequests";
 import { useRequestSubItems } from "@/hooks/useRequestSubItems";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { useBankCards } from "@/hooks/useBankCards";
+import { useVendors } from "@/hooks/useVendors";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, Plus, Star, X } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, Plus, Star, X, Store } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
 
@@ -28,9 +29,10 @@ const statusColors: Record<RequestStatus, string> = {
 export function RequestDetail() {
   const { requestNumber } = useParams<{ requestNumber: string }>();
   const navigate = useNavigate();
-  const { requests, loading, updateStatus, updateCardId, deleteRequest } = useRequests();
+  const { requests, loading, updateStatus, updateCardId, updateRequest, deleteRequest } = useRequests();
   const { linkedName, isAdminUser } = useLinkedRequester();
   const { cards } = useBankCards();
+  const { vendors } = useVendors();
   const { toast } = useToast();
 
   const decodedNumber = requestNumber ? decodeURIComponent(requestNumber) : "";
@@ -144,6 +146,34 @@ export function RequestDetail() {
               <Badge variant="outline" className={statusColors[firstReq?.status || "pending"]}>
                 {firstReq?.status?.charAt(0).toUpperCase()}{firstReq?.status?.slice(1)}
               </Badge>
+            )}
+          </div>
+
+          {/* Vendor */}
+          <div className="flex items-center gap-2 p-2 bg-accent/50 rounded-lg border border-accent">
+            <Store className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-xs font-semibold text-primary uppercase tracking-wide mr-1">Vendor</span>
+            {vendors.length > 0 && (
+              <Select
+                value={vendors.some(v => v.name === firstReq?.vendorName) ? (firstReq?.vendorName ?? "") : ""}
+                onValueChange={async (val) => {
+                  for (const r of groupRequests) {
+                    await updateRequest(r.id, { vendorName: val || null });
+                  }
+                }}
+              >
+                <SelectTrigger className="w-40 h-8 text-sm">
+                  <SelectValue placeholder={firstReq?.vendorName || "Select..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendors.map((v) => (
+                    <SelectItem key={v.id} value={v.name}>{v.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {firstReq?.vendorName && !vendors.some(v => v.name === firstReq?.vendorName) && (
+              <Badge variant="secondary" className="text-sm">{firstReq.vendorName}</Badge>
             )}
           </div>
 

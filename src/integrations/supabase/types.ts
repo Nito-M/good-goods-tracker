@@ -1666,6 +1666,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          vendor_name: string | null
         }
         Insert: {
           bank_card_id?: string | null
@@ -1690,6 +1691,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          vendor_name?: string | null
         }
         Update: {
           bank_card_id?: string | null
@@ -1714,6 +1716,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          vendor_name?: string | null
         }
         Relationships: [
           {

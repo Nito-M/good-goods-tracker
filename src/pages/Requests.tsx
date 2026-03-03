@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { useRequests } from "@/hooks/useRequests";
+import { useVendors } from "@/hooks/useVendors";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { useBankCards } from "@/hooks/useBankCards";
@@ -14,7 +15,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus, CreditCard, CalendarClock, User, FileText, Upload, Trash2, Pencil } from "lucide-react";
+import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCircle, Plus, CreditCard, CalendarClock, User, FileText, Upload, Trash2, Pencil, Store } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -59,7 +60,8 @@ function GroupPdfUpload({ uploadPdf }: { requests: Request[]; uploadPdf: (file: 
 
 export function Requests() {
   const navigate = useNavigate();
-  const { requests, loading, updateStatus, updateCardId, deleteRequest, uploadPdf } = useRequests();
+  const { requests, loading, updateStatus, updateCardId, updateRequest, deleteRequest, uploadPdf } = useRequests();
+  const { vendors } = useVendors();
   const { profile } = useProfile();
   const { linkedName, allOrgRequesterNames, isAdminUser, refetch: refetchRequesters } = useLinkedRequester();
   const { cards } = useBankCards();
@@ -86,6 +88,7 @@ export function Requests() {
         request.notes,
         request.requesterName,
         request.requestNumber,
+        request.vendorName,
       ].filter(Boolean).join(" ").toLowerCase();
       const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => searchableText.includes(term));
       return matchesSearch && request.status === status;
@@ -264,6 +267,57 @@ export function Requests() {
                   requests={group.requests}
                   uploadPdf={uploadPdf}
                 />
+
+                {/* Vendor selector — highly visible */}
+                <div className="p-2 bg-accent/50 rounded-lg border border-accent space-y-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2">
+                    <Store className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-xs font-semibold text-primary uppercase tracking-wide">Vendor</span>
+                  </div>
+                  {vendors.length > 0 && (
+                    <Select
+                      value={vendors.some(v => v.name === firstReq.vendorName) ? (firstReq.vendorName ?? "") : ""}
+                      onValueChange={async (val) => {
+                        for (const r of group.requests) {
+                          await updateRequest(r.id, { vendorName: val || null });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-sm font-medium">
+                        <SelectValue placeholder={firstReq.vendorName || "Select vendor..."} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vendors.map((v) => (
+                          <SelectItem key={v.id} value={v.name}>{v.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Input
+                    placeholder="Or type custom vendor..."
+                    className="h-8 text-sm"
+                    defaultValue={vendors.some(v => v.name === firstReq.vendorName) ? "" : (firstReq.vendorName || "")}
+                    onBlur={async (e) => {
+                      const val = e.target.value.trim();
+                      if (val) {
+                        for (const r of group.requests) {
+                          await updateRequest(r.id, { vendorName: val });
+                        }
+                      }
+                    }}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (val) {
+                          for (const r of group.requests) {
+                            await updateRequest(r.id, { vendorName: val });
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
 
                 {/* Card selector */}
                 {cards.length > 0 && (
