@@ -5,6 +5,7 @@ import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
+import { useParts } from '@/hooks/useParts';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,9 +46,11 @@ import { Assembly } from '@/hooks/useAssemblies';
 
 function ItemSearchCombobox({
   inventoryItems,
+  partsItems,
   onSelect,
 }: {
   inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
+  partsItems?: { id: string; name: string; sku: string; price: number }[];
   onSelect: (item: { id: string | null; name: string; sku: string; quantityUnit?: string }) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -55,7 +58,7 @@ function ItemSearchCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-full justify-between">
-          Search inventory items...
+          Search inventory or parts...
           <Search className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -64,12 +67,14 @@ function ItemSearchCombobox({
           <CommandInput placeholder="Search by name or SKU..." />
           <CommandList>
             <CommandEmpty>No items found.</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup heading="Actions">
               <CommandItem value="__custom__" onSelect={() => { onSelect({ id: null, name: '', sku: '', quantityUnit: 'pcs' }); setOpen(false); }}>
                 <Plus className="mr-2 h-4 w-4" /> Add custom item...
               </CommandItem>
+            </CommandGroup>
+            <CommandGroup heading="Inventory">
               {inventoryItems.map((item) => (
-                <CommandItem key={item.id} value={`${item.name} ${item.sku}`} onSelect={() => { onSelect({ id: item.id, name: item.name, sku: item.sku, quantityUnit: item.quantityUnit }); setOpen(false); }}>
+                <CommandItem key={`inv-${item.id}`} value={`inv ${item.name} ${item.sku}`} onSelect={() => { onSelect({ id: item.id, name: item.name, sku: item.sku, quantityUnit: item.quantityUnit }); setOpen(false); }}>
                   <div className="flex flex-col">
                     <span>{item.name}</span>
                     <span className="text-xs text-muted-foreground">{item.sku}</span>
@@ -77,6 +82,18 @@ function ItemSearchCombobox({
                 </CommandItem>
               ))}
             </CommandGroup>
+            {partsItems && partsItems.length > 0 && (
+              <CommandGroup heading="Parts Library">
+                {partsItems.map((part) => (
+                  <CommandItem key={`part-${part.id}`} value={`part ${part.name} ${part.sku}`} onSelect={() => { onSelect({ id: null, name: part.name, sku: part.sku }); setOpen(false); }}>
+                    <div className="flex flex-col">
+                      <span>{part.name}</span>
+                      <span className="text-xs text-muted-foreground">{part.sku}{part.price > 0 ? ` · ${formatCurrency(part.price)}` : ''}</span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
@@ -85,9 +102,10 @@ function ItemSearchCombobox({
 }
 
 function AddItemForm({
-  inventoryItems, onAdd, onCancel,
+  inventoryItems, partsItems, onAdd, onCancel,
 }: {
   inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
+  partsItems?: { id: string; name: string; sku: string; price: number }[];
   onAdd: (item: { inventory_item_id?: string | null; item_name: string; sku: string; quantity: number; notes?: string }) => Promise<boolean>;
   onCancel: () => void;
 }) {
@@ -114,7 +132,7 @@ function AddItemForm({
     <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
       <div className="space-y-1">
         <Label className="text-xs">Select from inventory</Label>
-        <ItemSearchCombobox inventoryItems={inventoryItems} onSelect={handleSelect} />
+        <ItemSearchCombobox inventoryItems={inventoryItems} partsItems={partsItems} onSelect={handleSelect} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
@@ -147,9 +165,10 @@ function AddItemForm({
 }
 
 function AssemblyDetail({
-  assembly, inventoryItems, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
+  assembly, inventoryItems, partsItems, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
 }: {
   assembly: Assembly;
+  partsItems?: { id: string; name: string; sku: string; price: number }[];
   inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string; cost?: number }[];
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
@@ -379,7 +398,7 @@ function AssemblyDetail({
           )}
         </div>
         {showAddForm && (
-          <AddItemForm inventoryItems={inventoryItems} onAdd={async (item) => {
+          <AddItemForm inventoryItems={inventoryItems} partsItems={partsItems} onAdd={async (item) => {
             // If item already exists in the list, update its quantity instead
             const existing = items.find(i =>
               (item.inventory_item_id && i.inventory_item_id === item.inventory_item_id) ||
@@ -476,6 +495,7 @@ export function Assemblies() {
 
   const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly } = useAssemblies();
   const { allItems: inventoryItems } = useInventory();
+  const { parts } = useParts();
   const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -495,6 +515,7 @@ export function Assemblies() {
     (a.description ?? '').toLowerCase().includes(searchTerm)
   );
   const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost }));
+  const sortedParts = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }));
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost]));
 
   const handleCreate = async () => {
@@ -581,7 +602,7 @@ export function Assemblies() {
         {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
