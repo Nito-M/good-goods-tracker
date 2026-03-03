@@ -232,9 +232,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       }
 
       // Draw separator line between items
-      doc.setDrawColor(220, 220, 220);
+      doc.setDrawColor(200, 200, 200);
       doc.line(tableX, y, pageWidth - 20, y);
-      y += 2;
+      y += 4;
     });
 
     // Separator line
