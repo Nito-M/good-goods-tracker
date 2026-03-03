@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -147,7 +147,7 @@ function AddItemForm({
 }
 
 function AssemblyDetail({
-  assembly, inventoryItems, summary, onDelete, onUpdate, onItemsChanged,
+  assembly, inventoryItems, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
 }: {
   assembly: Assembly;
   inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
@@ -155,9 +155,12 @@ function AssemblyDetail({
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => Promise<void>;
   onItemsChanged?: () => void;
+  allAssemblies: Assembly[];
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
+  const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -206,6 +209,31 @@ function AssemblyDetail({
 
   const startEditQty = (item: { id: string; quantity: number }) => { setEditingId(item.id); setEditQty(item.quantity); };
   const handleSaveQty = async (id: string) => { await updateItem(id, { quantity: editQty }); setEditingId(null); };
+
+  const otherAssemblies = allAssemblies.filter(a => a.id !== assembly.id);
+
+  const handleAddAssemblyItems = async (sourceAssemblyId: string) => {
+    setAddingAssemblyId(sourceAssemblyId);
+    const { data, error } = await (await import('@/integrations/supabase/client')).supabase
+      .from('assembly_items')
+      .select('*')
+      .eq('assembly_id', sourceAssemblyId)
+      .order('created_at');
+    if (!error && data) {
+      for (const row of data) {
+        await addItem({
+          inventory_item_id: row.inventory_item_id,
+          item_name: row.item_name,
+          sku: row.sku,
+          quantity: row.quantity,
+          notes: row.notes || undefined,
+        });
+      }
+      onItemsChanged?.();
+    }
+    setAddingAssemblyId(null);
+    setShowAssemblyPicker(false);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -309,7 +337,41 @@ function AssemblyDetail({
       <div className="flex-1 overflow-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
-          {!showAddForm && <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>}
+          {!showAddForm && (
+            <div className="flex gap-2">
+              {otherAssemblies.length > 0 && (
+                <Popover open={showAssemblyPicker} onOpenChange={setShowAssemblyPicker}>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1"><PackagePlus className="h-4 w-4" /> Add Assembly</Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[320px] p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Search assemblies..." />
+                      <CommandList>
+                        <CommandEmpty>No assemblies found.</CommandEmpty>
+                        <CommandGroup>
+                          {otherAssemblies.map((a) => (
+                            <CommandItem
+                              key={a.id}
+                              value={`${a.name} ${a.description || ''} ${a.type}`}
+                              onSelect={() => handleAddAssemblyItems(a.id)}
+                              disabled={!!addingAssemblyId}
+                              className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
+                            >
+                              <span className="font-medium text-sm">{a.name}</span>
+                              {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
+                              {addingAssemblyId === a.id && <span className="text-xs text-primary">Adding items...</span>}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              )}
+              <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
+            </div>
+          )}
         </div>
         {showAddForm && (
           <AddItemForm inventoryItems={inventoryItems} onAdd={async (item) => { const ok = await addItem(item); if (ok) onItemsChanged?.(); return ok; }} onCancel={() => setShowAddForm(false)} />
@@ -484,7 +546,7 @@ export function Assemblies() {
         {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
