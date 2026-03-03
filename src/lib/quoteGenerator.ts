@@ -56,15 +56,18 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
   if (settings.logoUrl && layout.logo.visible) {
     try {
       const img = await loadImage(settings.logoUrl);
-      const maxSize = 160 * 0.352778;
-      let imgWidth = maxSize;
-      let imgHeight = maxSize;
+      const maxHeight = 25; // mm – keep logo compact
+      const maxWidth = 50;  // mm
 
       const aspectRatio = img.width / img.height;
-      if (aspectRatio > 1) {
-        imgHeight = imgWidth / aspectRatio;
+      let imgWidth: number;
+      let imgHeight: number;
+      if (aspectRatio > maxWidth / maxHeight) {
+        imgWidth = maxWidth;
+        imgHeight = maxWidth / aspectRatio;
       } else {
-        imgWidth = imgHeight * aspectRatio;
+        imgHeight = maxHeight;
+        imgWidth = maxHeight * aspectRatio;
       }
 
       doc.addImage(img, 'PNG', layout.logo.x, layout.logo.y, imgWidth, imgHeight);
