@@ -211,11 +211,12 @@ export function Quotes() {
   }, [quoteSettings.validityDays, validUntilInitialized]);
 
   const filteredItems = useMemo(() => {
-    return inventoryItems.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.sku.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    if (!searchQuery.trim()) return inventoryItems;
+    const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    return inventoryItems.filter((item) => {
+      const haystack = `${item.name} ${item.sku}`.toLowerCase();
+      return tokens.every((token) => haystack.includes(token));
+    });
   }, [inventoryItems, searchQuery]);
 
   const addToCart = (item: InventoryItem) => {
