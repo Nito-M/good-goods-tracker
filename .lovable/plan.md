@@ -1,71 +1,42 @@
 
 
-## Allow Full-Page Access for All Requests + Add Vendor Pricing Sub-Items
+## Plan: Improve Quote PDF Layout and Alignment
 
-### Overview
-Two changes: (1) make every request card clickable to open the full-page detail view (not just multi-item groups), and (2) add a "sub-items" system to the request detail page where users can add vendor pricing alternatives for each item (e.g., different vendors offering different prices for the same requested item).
+### Problems Identified (from the PDF)
+1. Excessive vertical gaps between header, title, details, bill-to, and table sections
+2. Table column positions are not well-distributed -- Item column too narrow, SKU cramped
+3. Redundant double separator line after the last item (one from the item loop + one after the loop)
+4. Too much spacing after the items table before totals/notes, pushing content to page 2 unnecessarily
+5. The separator lines between items need consistent full-width rendering
 
-### 1. Make All Request Cards Navigate to Detail Page
+### Changes
 
-Currently only multi-item grouped request numbers are clickable. Change all cards (single and multi-item) so clicking them opens the full-page `RequestDetail` view.
+#### File: `src/lib/quoteGenerator.ts`
 
-**File: `src/pages/Requests.tsx`**
-- Make the entire card clickable with `onClick={() => navigate(...)}`
-- For single-item requests, navigate using their `requestNumber` (same route as grouped)
-- Add `cursor-pointer hover:border-primary/40` styling to all cards
+1. **Reduce vertical spacing between sections**:
+   - Reduce gap after logo from `+5` to `+2`
+   - Reduce gap after business info from `+5` to `+2`
+   - Reduce title bottom margin from `+15` to `+10`
+   - Reduce gap after quote details from `+3` to `+2`
+   - Reduce gap after bill-to from `+10` to `+5`
 
-### 2. Create `request_sub_items` Database Table
+2. **Better table column distribution** (full page width = 210mm, margins 20mm each side = 170mm usable):
+   - Item: `tableX + 2` (keep) -- allocate ~70mm width for item names
+   - SKU: `tableX + 72` (was 60) -- shift right, allocate ~30mm
+   - Qty: `tableX + 105` (was 95) -- shift right  
+   - Price: `tableX + 130` (was 115) -- shift right (when visible)
+   - Total: `pageWidth - 22` right-aligned (keep)
+   - Update `splitTextToSize` width for item names from 55 to 67, SKU from 32 to 30
 
-A new table to store vendor pricing alternatives per request item.
+3. **Remove duplicate separator line** after the items loop (lines 236-244) -- the per-item separator is sufficient. Just add small spacing before totals.
 
-```text
-request_sub_items
------------------
-id              uuid (PK, default gen_random_uuid())
-request_id      uuid (FK -> requests.id ON DELETE CASCADE)
-user_id         uuid (NOT NULL)
-vendor_name     text (NOT NULL)
-unit_price      numeric (default 0)
-link            text (nullable)
-notes           text (nullable)
-is_selected     boolean (default false)
-created_at      timestamptz (default now())
-```
+4. **Reduce post-table spacing**: Change `y += 5` + separator + `y += 10` to just `y += 6`
 
-RLS policies: same org-based pattern as requests (owner CRUD + org members can view/update).
+5. **Apply same column positions** in `addPageWithHeader` function for consistency
 
-### 3. Create `useRequestSubItems` Hook
+#### File: `src/components/QuotePreviewDialog.tsx`
 
-**File: `src/hooks/useRequestSubItems.ts`** (new)
-- Fetch sub-items for a given list of request IDs
-- CRUD operations: `addSubItem`, `updateSubItem`, `deleteSubItem`, `toggleSelected`
-- Follow the same pattern as other hooks in the project
+6. **Tighten preview spacing** to match the PDF improvements:
+   - Reduce margins between header, title, details, bill-to sections (`mb-8` → `mb-4`, `my-6` → `my-3`, `mb-6` → `mb-4`)
+   - Adjust table column widths for better distribution
 
-### 4. Update Request Detail Page with Sub-Items UI
-
-**File: `src/pages/RequestDetail.tsx`**
-- Below each item row in the table, add an expandable section showing vendor pricing alternatives
-- Each sub-item row shows: vendor name, unit price, link, notes, and a "select" toggle
-- Add an "Add Option" button per item to create a new sub-item
-- Inline form for adding: vendor name (required), unit price, link, notes
-- The selected sub-item (if any) is highlighted with a subtle accent background
-
-### 5. Update TypeScript Types
-
-**File: `src/types/request.ts`**
-- Add `RequestSubItem` interface with fields matching the table
-
-### Technical Details
-
-- The sub-items table uses `request_id` as a foreign key with `ON DELETE CASCADE` so deleting a request cleans up its alternatives
-- The `is_selected` boolean lets users mark their preferred vendor option
-- The detail page uses a collapsible (`Collapsible` component) per item row to show/hide sub-items
-- No changes needed to the requests table itself -- sub-items are a separate related table
-- The sub-items are only visible/manageable on the full-page detail view, keeping the card view clean
-
-### Files to Create/Modify
-- **Migration**: Create `request_sub_items` table with RLS
-- **Create** `src/hooks/useRequestSubItems.ts`
-- **Modify** `src/types/request.ts` -- add `RequestSubItem` interface
-- **Modify** `src/pages/Requests.tsx` -- make all cards clickable to detail page
-- **Modify** `src/pages/RequestDetail.tsx` -- add sub-items UI per item row
