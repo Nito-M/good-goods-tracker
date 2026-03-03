@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ interface EditQuoteDialogProps {
     paymentTerms: string;
     validUntil: string | null;
     companyId: string | null;
+    hidePrices: boolean;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
@@ -67,6 +69,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const [validUntil, setValidUntil] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>('');
+  const [hidePrices, setHidePrices] = useState(false);
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
@@ -90,6 +93,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       setPaymentTerms(quote.paymentTerms || 'Due on receipt');
       setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
       setCompanyId((quote as any).companyId || defaultCompany?.id || '');
+      setHidePrices(quote.hidePrices || false);
     }
   }, [quote, defaultCompany]);
 
@@ -144,6 +148,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       paymentTerms,
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: companyId || null,
+      hidePrices,
     });
     setIsSaving(false);
     onOpenChange(false);
@@ -342,6 +347,18 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
                 placeholder="0"
               />
             </div>
+          </div>
+
+          {/* Hide Prices */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="editHidePrices"
+              checked={hidePrices}
+              onCheckedChange={(checked) => setHidePrices(checked === true)}
+            />
+            <Label htmlFor="editHidePrices" className="text-sm font-normal cursor-pointer">
+              Hide prices on quote
+            </Label>
           </div>
 
           {/* Notes */}

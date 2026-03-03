@@ -9,8 +9,10 @@ import {
   Receipt,
   Search,
   Layers,
+  EyeOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -166,6 +168,7 @@ export function Quotes() {
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
+  const [hidePrices, setHidePrices] = useState(false);
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
@@ -330,6 +333,7 @@ export function Quotes() {
       paymentTerms,
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: selectedCompanyId || null,
+      hidePrices,
     });
 
     if (quote) {
@@ -339,6 +343,7 @@ export function Quotes() {
       setTaxRate(null);
       setDiscountRate(null);
       setNotes('');
+      setHidePrices(false);
       setSelectedCompanyId(defaultCompany?.id || '');
       setValidUntilInitialized(false);
       if (quoteSettings.validityDays) {
@@ -765,6 +770,17 @@ export function Quotes() {
                           <SelectItem value="Net 60">Net 60</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="hidePrices"
+                        checked={hidePrices}
+                        onCheckedChange={(checked) => setHidePrices(checked === true)}
+                      />
+                      <Label htmlFor="hidePrices" className="text-sm font-normal cursor-pointer">
+                        Hide prices on quote
+                      </Label>
                     </div>
 
                     <div className="space-y-2">

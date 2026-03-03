@@ -40,8 +40,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.text('Item', tableX + 2, y);
       doc.text('SKU', tableX + 60, y);
       doc.text('Qty', tableX + 95, y);
-      doc.text('Price', tableX + 115, y);
-      doc.text('Total', pageWidth - 22, y, { align: 'right' });
+      if (!quote.hidePrices) {
+        doc.text('Price', tableX + 115, y);
+        doc.text('Total', pageWidth - 22, y, { align: 'right' });
+      }
       doc.setFont('helvetica', 'normal');
       y += 10;
     }
@@ -167,6 +169,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     const tableX = layout.itemsTable.x;
     const tableY = layout.itemsTable.y > 0 ? layout.itemsTable.y : flowY;
     let y = tableY;
+    const hidePrices = quote.hidePrices;
 
     // Table Header (first page)
     doc.setFillColor(240, 240, 240);
@@ -176,8 +179,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.text('Item', tableX + 2, y);
     doc.text('SKU', tableX + 60, y);
     doc.text('Qty', tableX + 95, y);
-    doc.text('Price', tableX + 115, y);
-    doc.text('Total', pageWidth - 22, y, { align: 'right' });
+    if (!hidePrices) {
+      doc.text('Price', tableX + 115, y);
+      doc.text('Total', pageWidth - 22, y, { align: 'right' });
+    }
     y += 10;
 
     // Items
@@ -211,8 +216,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.text(skuLines, tableX + 60, y);
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
       doc.text(qtyDisplay, tableX + 95, y);
-      doc.text(formatCurrency(item.unitPrice), tableX + 115, y);
-      doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
+      if (!hidePrices) {
+        doc.text(formatCurrency(item.unitPrice), tableX + 115, y);
+        doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
+      }
       y += rowHeight;
 
       if (item.notes && noteLines.length > 0) {
@@ -245,14 +252,16 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
   }
 
   // Totals — estimate height needed
-  const totalsLineCount = 1 + (quote.discountAmount > 0 ? 1 : 0) + (quote.taxAmount > 0 ? 1 : 0) + 1;
-  const totalsHeight = totalsLineCount * 7 + 10;
-  if (flowY + totalsHeight > safeBottom) {
-    doc.addPage();
-    flowY = 20;
+  if (!quote.hidePrices) {
+    const totalsLineCount = 1 + (quote.discountAmount > 0 ? 1 : 0) + (quote.taxAmount > 0 ? 1 : 0) + 1;
+    const totalsHeight = totalsLineCount * 7 + 10;
+    if (flowY + totalsHeight > safeBottom) {
+      doc.addPage();
+      flowY = 20;
+    }
   }
 
-  if (layout.totals.visible) {
+  if (layout.totals.visible && !quote.hidePrices) {
     const totalsY = layout.totals.y > 0 ? layout.totals.y : flowY;
     let y = totalsY;
     const totalsX = pageWidth - 70;
