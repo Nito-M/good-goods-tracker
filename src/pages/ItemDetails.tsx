@@ -171,6 +171,14 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                 <Edit2 className="h-4 w-4" />
                 Edit
               </Button>
+              <Button
+                variant="destructive"
+                className="gap-2"
+                onClick={() => setConsumeDialogOpen(true)}
+              >
+                <Minus className="h-4 w-4" />
+                Consumed
+              </Button>
               <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
                 setDeleteDialogOpen(open);
                 if (!open) setDeleteError(null);
@@ -344,17 +352,6 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                     {item.minStock} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </p>
                 </div>
-              </div>
-              {/* Consumed Button */}
-              <div className="pt-1">
-                <Button
-                  variant="destructive"
-                  className="gap-2"
-                  onClick={() => setConsumeDialogOpen(true)}
-                >
-                  <Minus className="h-4 w-4" />
-                  Consumed
-                </Button>
               </div>
               {item.pieceLength > 0 && (
                 <>
