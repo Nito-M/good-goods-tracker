@@ -30,7 +30,7 @@ export function useQuotes() {
             .from('quote_items')
             .select('*')
             .eq('quote_id', quote.id)
-            .order('created_at', { ascending: true });
+            .order('item_name', { ascending: true });
 
           const mappedItems: QuoteItem[] = (items || []).map((item) => ({
             id: item.id,
