@@ -150,7 +150,7 @@ function AssemblyDetail({
   assembly, inventoryItems, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
 }: {
   assembly: Assembly;
-  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
+  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string; cost?: number }[];
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => Promise<void>;
@@ -158,6 +158,7 @@ function AssemblyDetail({
   allAssemblies: Assembly[];
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
+  const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
@@ -385,16 +386,19 @@ function AssemblyDetail({
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              <span>Item</span><span className="w-20 text-center">SKU</span><span className="w-16 text-center">Qty</span><span className="w-8" />
+            <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <span>Item</span><span className="w-20 text-center">SKU</span><span className="w-20 text-right">Cost</span><span className="w-16 text-center">Qty</span><span className="w-8" />
             </div>
-            {items.map((item) => (
-              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
+            {items.map((item) => {
+              const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : null;
+              return (
+              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
                   <p className="font-medium text-sm">{item.item_name}</p>
                   {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
                 </div>
                 <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.sku || '—'}</span>
+                <span className="w-20 text-right text-sm text-muted-foreground">{itemCost !== null ? formatCurrency(itemCost) : '—'}</span>
                 {editingId === item.id ? (
                   <div className="flex items-center gap-1 w-24">
                     <Input type="number" min={1} value={editQty} onChange={(e) => setEditQty(Number(e.target.value))} className="h-7 w-16 text-center text-sm px-1" />
@@ -414,7 +418,8 @@ function AssemblyDetail({
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -460,7 +465,8 @@ export function Assemblies() {
     a.name.toLowerCase().includes(searchTerm) ||
     (a.description ?? '').toLowerCase().includes(searchTerm)
   );
-  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit }));
+  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost }));
+  const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost]));
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
