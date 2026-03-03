@@ -103,10 +103,6 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.text(settings.businessEmail, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
       businessY += 5;
     }
-    if (settings.businessNumber) {
-      doc.text(`Business #: ${settings.businessNumber}`, xPos, businessY, { align: align as 'left' | 'center' | 'right' });
-      businessY += 5;
-    }
 
     flowY = Math.max(flowY, businessY + 5);
   }
