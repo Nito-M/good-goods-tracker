@@ -223,6 +223,11 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
       }
+
+      // Draw separator line between items
+      doc.setDrawColor(220, 220, 220);
+      doc.line(tableX, y, pageWidth - 20, y);
+      y += 2;
     });
 
     // Separator line
