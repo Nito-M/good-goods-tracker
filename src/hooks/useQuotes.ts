@@ -69,6 +69,7 @@ export function useQuotes() {
             convertedToJobId: (quote as any).converted_to_job_id || null,
             companyId: (quote as any).company_id || null,
             items: mappedItems,
+            hidePrices: (quote as any).hide_prices || false,
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
           };
@@ -124,6 +125,7 @@ export function useQuotes() {
           payment_terms: input.paymentTerms,
           valid_until: input.validUntil,
           company_id: input.companyId || null,
+          hide_prices: input.hidePrices || false,
         })
         .select()
         .single();
@@ -320,6 +322,7 @@ export function useQuotes() {
       paymentTerms: string;
       validUntil: string | null;
       companyId?: string | null;
+      hidePrices?: boolean;
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -351,7 +354,8 @@ export function useQuotes() {
           payment_terms: input.paymentTerms,
           valid_until: input.validUntil,
           company_id: input.companyId || null,
-        })
+          hide_prices: input.hidePrices || false,
+        } as any)
         .eq('id', quoteId);
 
       if (quoteError) throw quoteError;

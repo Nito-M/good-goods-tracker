@@ -40,6 +40,7 @@ export interface Quote {
   convertedToJobId: string | null;
   companyId?: string | null;
   items: QuoteItem[];
+  hidePrices: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -63,6 +64,7 @@ export interface CreateQuoteInput {
   paymentTerms: string;
   validUntil: string | null;
   companyId?: string | null;
+  hidePrices?: boolean;
 }
 
 export interface QuoteSettings {
@@ -75,4 +77,5 @@ export interface QuoteSettings {
   logoUrl: string | null;
   layout?: InvoiceLayout | null;
   validityDays?: number | null;
+  defaultHidePrices?: boolean;
 }

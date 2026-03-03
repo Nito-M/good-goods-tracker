@@ -141,12 +141,16 @@ export function QuotePreviewDialog({
                       <th className="text-left p-2 font-medium">Item</th>
                       <th className="text-left p-2 font-medium">SKU</th>
                       <th className="text-center p-2 font-medium">Qty</th>
-                      <th className="text-right p-2 font-medium">Price</th>
-                      <th className="text-right p-2 font-medium">Total</th>
+                      {!quote.hidePrices && (
+                        <>
+                          <th className="text-right p-2 font-medium">Price</th>
+                          <th className="text-right p-2 font-medium">Total</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                      {quote.items.map((item, index) => (
+                    {quote.items.map((item, index) => (
                       <tr key={item.id} className="border-b border-gray-300">
                         <td className="p-2">
                           {item.itemName}
@@ -158,8 +162,12 @@ export function QuotePreviewDialog({
                         <td className="p-2 text-center">
                           {item.quantity} {item.quantityUnit}
                         </td>
-                        <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
-                        <td className="p-2 text-right">{formatCurrency(item.totalPrice)}</td>
+                        {!quote.hidePrices && (
+                          <>
+                            <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
+                            <td className="p-2 text-right">{formatCurrency(item.totalPrice)}</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -168,7 +176,7 @@ export function QuotePreviewDialog({
             )}
 
             {/* Totals */}
-            {layout.totals.visible && (
+            {layout.totals.visible && !quote.hidePrices && (
               <div className="flex justify-end mb-6">
                 <div className="w-64 text-sm">
                   <div className="flex justify-between py-1">

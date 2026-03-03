@@ -257,6 +257,7 @@ export type Database = {
           po_next_number: number
           po_prefix: string
           po_thank_you_note: string
+          quote_hide_prices: boolean
           quote_layout: Json | null
           quote_thank_you_note: string
           quote_validity_days: number
@@ -280,6 +281,7 @@ export type Database = {
           po_next_number?: number
           po_prefix?: string
           po_thank_you_note?: string
+          quote_hide_prices?: boolean
           quote_layout?: Json | null
           quote_thank_you_note?: string
           quote_validity_days?: number
@@ -303,6 +305,7 @@ export type Database = {
           po_next_number?: number
           po_prefix?: string
           po_thank_you_note?: string
+          quote_hide_prices?: boolean
           quote_layout?: Json | null
           quote_thank_you_note?: string
           quote_validity_days?: number
@@ -1542,6 +1545,7 @@ export type Database = {
           created_at: string
           discount_amount: number
           discount_rate: number
+          hide_prices: boolean
           id: string
           notes: string | null
           payment_terms: string | null
@@ -1565,6 +1569,7 @@ export type Database = {
           created_at?: string
           discount_amount?: number
           discount_rate?: number
+          hide_prices?: boolean
           id?: string
           notes?: string | null
           payment_terms?: string | null
@@ -1588,6 +1593,7 @@ export type Database = {
           created_at?: string
           discount_amount?: number
           discount_rate?: number
+          hide_prices?: boolean
           id?: string
           notes?: string | null
           payment_terms?: string | null
