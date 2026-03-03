@@ -43,6 +43,7 @@ export function useRequests() {
         needByDate: r.need_by_date,
         requesterName: r.requester_name,
         bankCardId: (r as any).bank_card_id ?? null,
+        vendorName: (r as any).vendor_name ?? null,
         status: r.status as RequestStatus,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
@@ -105,6 +106,7 @@ export function useRequests() {
         pdf_url: input.pdfUrl || null,
         need_by_date: input.needByDate || null,
         requester_name: requesterName,
+        vendor_name: input.vendorName || null,
         status: "pending",
       };
 
@@ -141,6 +143,7 @@ export function useRequests() {
         needByDate: data.need_by_date,
         requesterName: data.requester_name,
         bankCardId: (data as any).bank_card_id ?? null,
+        vendorName: (data as any).vendor_name ?? null,
         status: data.status as RequestStatus,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
@@ -182,6 +185,7 @@ export function useRequests() {
       if (updates.pdfUrl !== undefined) dbUpdates.pdf_url = updates.pdfUrl;
       if (updates.needByDate !== undefined) dbUpdates.need_by_date = updates.needByDate;
       if (updates.requesterName !== undefined) dbUpdates.requester_name = updates.requesterName;
+      if (updates.vendorName !== undefined) dbUpdates.vendor_name = updates.vendorName;
 
       const { error } = await supabase
         .from("requests")

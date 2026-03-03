@@ -1,0 +1,1 @@
+ALTER TABLE public.requests ADD COLUMN vendor_name text;
