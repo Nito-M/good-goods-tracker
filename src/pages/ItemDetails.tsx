@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DxfFileCard } from '@/components/DxfFileCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +34,7 @@ import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
 import { useItemLocationQuantities } from '@/hooks/useItemLocationQuantities';
 import { useWarehouses } from '@/hooks/useWarehouses';
+import { useItemConsumptions } from '@/hooks/useItemConsumptions';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 
@@ -46,8 +51,11 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<{ message: string; poNumbers?: string[] } | null>(null);
-  const [adjustQty, setAdjustQty] = useState('1');
-  const [isAdjusting, setIsAdjusting] = useState(false);
+  const [consumeDialogOpen, setConsumeDialogOpen] = useState(false);
+  const [consumeQty, setConsumeQty] = useState('1');
+  const [consumeDescription, setConsumeDescription] = useState('');
+  const [consumeWarehouseId, setConsumeWarehouseId] = useState<string>('');
+  const [isConsuming, setIsConsuming] = useState(false);
   
   const item = items.find((i) => i.id === id);
 
@@ -67,6 +75,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { tagCategories } = useTagCategories();
   const { tags, getTagsByCategory } = useTags();
   const { locations: itemLocations } = useItemLocationQuantities(item?.id);
+  const { consumptions, addConsumption } = useItemConsumptions(item?.id);
   const { warehouses } = useWarehouses();
 
   const getVendorName = (vendorId: string) => {
@@ -93,19 +102,29 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
     );
   }
 
-  const handleAdjustQuantity = async (direction: 'add' | 'remove') => {
+  const handleConsume = async () => {
     if (!item) return;
-    const amount = parseFloat(adjustQty) || 0;
+    const amount = parseFloat(consumeQty) || 0;
     if (amount <= 0) return;
-    const newQty = direction === 'add' ? item.quantity + amount : Math.max(0, item.quantity - amount);
-    setIsAdjusting(true);
+    setIsConsuming(true);
     try {
+      const newQty = Math.max(0, item.quantity - amount);
       await onUpdate(item.id, { quantity: newQty });
-      toast({ title: `${direction === 'add' ? 'Added' : 'Removed'} ${amount} — new quantity: ${newQty}` });
+      await addConsumption({
+        itemId: item.id,
+        quantity: amount,
+        description: consumeDescription.trim() || undefined,
+        warehouseId: consumeWarehouseId || undefined,
+      });
+      toast({ title: `Consumed ${amount} — new quantity: ${newQty}` });
+      setConsumeDialogOpen(false);
+      setConsumeQty('1');
+      setConsumeDescription('');
+      setConsumeWarehouseId('');
     } catch {
-      toast({ title: 'Error adjusting quantity', variant: 'destructive' });
+      toast({ title: 'Error recording consumption', variant: 'destructive' });
     }
-    setIsAdjusting(false);
+    setIsConsuming(false);
   };
 
   const isLowStock = item.quantity <= item.minStock;
@@ -326,35 +345,16 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                   </p>
                 </div>
               </div>
-              {/* Quick Adjust Quantity */}
-              <div className="flex items-center gap-2 pt-1">
+              {/* Consumed Button */}
+              <div className="pt-1">
                 <Button
                   variant="destructive"
-                  size="icon"
-                  className="h-9 w-9 shrink-0"
-                  disabled={isAdjusting}
-                  onClick={() => handleAdjustQuantity('remove')}
+                  className="gap-2"
+                  onClick={() => setConsumeDialogOpen(true)}
                 >
                   <Minus className="h-4 w-4" />
+                  Consumed
                 </Button>
-                <Input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={adjustQty}
-                  onChange={(e) => setAdjustQty(e.target.value)}
-                  className="w-24 text-center h-9"
-                />
-                <Button
-                  variant="default"
-                  size="icon"
-                  className="h-9 w-9 shrink-0"
-                  disabled={isAdjusting}
-                  onClick={() => handleAdjustQuantity('add')}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <span className="text-xs text-muted-foreground ml-1">Quick adjust</span>
               </div>
               {item.pieceLength > 0 && (
                 <>
@@ -700,7 +700,97 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Consumption History */}
+        {consumptions.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Consumption History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {consumptions.map((c) => {
+                  const wh = warehouses.find((w) => w.id === c.warehouse_id);
+                  return (
+                    <div key={c.id} className="flex items-start justify-between border-b border-border pb-3 last:border-0 last:pb-0">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-card-foreground">
+                          -{c.quantity} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : 'pcs'}
+                        </p>
+                        {c.description && (
+                          <p className="text-sm text-muted-foreground">{c.description}</p>
+                        )}
+                        {wh && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {wh.name}
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </main>
+
+      {/* Consume Dialog */}
+      <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Consumption</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Quantity</Label>
+              <Input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={consumeQty}
+                onChange={(e) => setConsumeQty(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Where was it consumed?</Label>
+              <Textarea
+                placeholder="e.g. Used for Job #123, customer order..."
+                value={consumeDescription}
+                onChange={(e) => setConsumeDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <Select value={consumeWarehouseId} onValueChange={setConsumeWarehouseId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select location (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {warehouses.map((wh) => (
+                    <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConsumeDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={isConsuming || (parseFloat(consumeQty) || 0) <= 0}
+              onClick={handleConsume}
+            >
+              <Minus className="h-4 w-4 mr-1" />
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
