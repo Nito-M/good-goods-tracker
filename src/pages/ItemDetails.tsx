@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Plus, Minus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { DxfFileCard } from '@/components/DxfFileCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,15 +36,18 @@ import { formatCurrency } from '@/lib/utils';
 interface ItemDetailsProps {
   items: InventoryItem[];
   onDelete: (id: string, forceDelete?: boolean) => Promise<{ success: boolean; error?: string; poNumbers?: string[]; warning?: boolean }>;
+  onUpdate: (id: string, updates: Partial<InventoryItem>) => Promise<void>;
 }
 
-export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
+export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [dxfUrl, setDxfUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<{ message: string; poNumbers?: string[] } | null>(null);
+  const [adjustQty, setAdjustQty] = useState('1');
+  const [isAdjusting, setIsAdjusting] = useState(false);
   
   const item = items.find((i) => i.id === id);
 
@@ -89,6 +93,20 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
     );
   }
 
+  const handleAdjustQuantity = async (direction: 'add' | 'remove') => {
+    if (!item) return;
+    const amount = parseFloat(adjustQty) || 0;
+    if (amount <= 0) return;
+    const newQty = direction === 'add' ? item.quantity + amount : Math.max(0, item.quantity - amount);
+    setIsAdjusting(true);
+    try {
+      await onUpdate(item.id, { quantity: newQty });
+      toast({ title: `${direction === 'add' ? 'Added' : 'Removed'} ${amount} — new quantity: ${newQty}` });
+    } catch {
+      toast({ title: 'Error adjusting quantity', variant: 'destructive' });
+    }
+    setIsAdjusting(false);
+  };
 
   const isLowStock = item.quantity <= item.minStock;
   const profitMargin = item.price > 0 ? ((item.price - item.cost) / item.price) * 100 : 0;
@@ -307,6 +325,36 @@ export function ItemDetails({ items, onDelete }: ItemDetailsProps) {
                     {item.minStock} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </p>
                 </div>
+              </div>
+              {/* Quick Adjust Quantity */}
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  disabled={isAdjusting}
+                  onClick={() => handleAdjustQuantity('remove')}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={adjustQty}
+                  onChange={(e) => setAdjustQty(e.target.value)}
+                  className="w-24 text-center h-9"
+                />
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  disabled={isAdjusting}
+                  onClick={() => handleAdjustQuantity('add')}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground ml-1">Quick adjust</span>
               </div>
               {item.pieceLength > 0 && (
                 <>

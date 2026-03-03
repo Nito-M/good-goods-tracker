@@ -178,6 +178,7 @@ function AppContent() {
                 <ItemDetails
                   items={allItems}
                   onDelete={deleteItem}
+                  onUpdate={updateItem}
                 />
               </AppLayout>
             </ProtectedRoute>
