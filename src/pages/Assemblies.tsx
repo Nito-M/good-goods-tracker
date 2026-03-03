@@ -375,7 +375,21 @@ function AssemblyDetail({
           )}
         </div>
         {showAddForm && (
-          <AddItemForm inventoryItems={inventoryItems} onAdd={async (item) => { const ok = await addItem(item); if (ok) onItemsChanged?.(); return ok; }} onCancel={() => setShowAddForm(false)} />
+          <AddItemForm inventoryItems={inventoryItems} onAdd={async (item) => {
+            // If item already exists in the list, update its quantity instead
+            const existing = items.find(i =>
+              (item.inventory_item_id && i.inventory_item_id === item.inventory_item_id) ||
+              (!item.inventory_item_id && i.item_name === item.item_name && i.sku === item.sku)
+            );
+            if (existing) {
+              await updateItem(existing.id, { quantity: existing.quantity + item.quantity });
+              onItemsChanged?.();
+              return true;
+            }
+            const ok = await addItem(item);
+            if (ok) onItemsChanged?.();
+            return ok;
+          }} onCancel={() => setShowAddForm(false)} />
         )}
         {loading ? (
           <div className="text-muted-foreground text-sm text-center py-8">Loading items...</div>
