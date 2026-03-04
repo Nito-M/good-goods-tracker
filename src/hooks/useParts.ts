@@ -10,6 +10,8 @@ export interface Part {
   price: number;
   hours: number;
   hourlyRate: number;
+  paintingHours: number;
+  paintingHourlyRate: number;
   imageUrl: string | null;
   dxfUrl1: string | null;
   dxfUrl2: string | null;
@@ -45,6 +47,8 @@ export function useParts() {
         price: d.price ?? 0,
         hours: (d as any).hours ?? 0,
         hourlyRate: (d as any).hourly_rate ?? 0,
+        paintingHours: (d as any).painting_hours ?? 0,
+        paintingHourlyRate: (d as any).painting_hourly_rate ?? 0,
         imageUrl: d.image_url,
         dxfUrl1: d.dxf_url_1,
         dxfUrl2: d.dxf_url_2,
@@ -82,7 +86,7 @@ export function useParts() {
     return data?.id || null;
   };
 
-  const updatePart = async (id: string, updates: Partial<{ name: string; sku: string; description: string; price: number; hours: number; hourlyRate: number; imageUrl: string; dxfUrl1: string; dxfUrl2: string; dxfLabel1: string; dxfLabel2: string; folderId: string | null }>) => {
+  const updatePart = async (id: string, updates: Partial<{ name: string; sku: string; description: string; price: number; hours: number; hourlyRate: number; paintingHours: number; paintingHourlyRate: number; imageUrl: string; dxfUrl1: string; dxfUrl2: string; dxfLabel1: string; dxfLabel2: string; folderId: string | null }>) => {
     const dbUpdates: Record<string, unknown> = {};
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
@@ -90,6 +94,8 @@ export function useParts() {
     if (updates.price !== undefined) dbUpdates.price = updates.price;
     if (updates.hours !== undefined) dbUpdates.hours = updates.hours;
     if (updates.hourlyRate !== undefined) dbUpdates.hourly_rate = updates.hourlyRate;
+    if (updates.paintingHours !== undefined) dbUpdates.painting_hours = updates.paintingHours;
+    if (updates.paintingHourlyRate !== undefined) dbUpdates.painting_hourly_rate = updates.paintingHourlyRate;
     if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
     if (updates.dxfUrl1 !== undefined) dbUpdates.dxf_url_1 = updates.dxfUrl1;
     if (updates.dxfUrl2 !== undefined) dbUpdates.dxf_url_2 = updates.dxfUrl2;

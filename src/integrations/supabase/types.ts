@@ -1036,6 +1036,8 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          painting_hourly_rate: number
+          painting_hours: number
           price: number
           sku: string
           updated_at: string
@@ -1054,6 +1056,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          painting_hourly_rate?: number
+          painting_hours?: number
           price?: number
           sku?: string
           updated_at?: string
@@ -1072,6 +1076,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          painting_hourly_rate?: number
+          painting_hours?: number
           price?: number
           sku?: string
           updated_at?: string

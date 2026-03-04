@@ -79,6 +79,8 @@ export function PartDetail() {
   const [saving, setSaving] = useState(false);
   const [editHours, setEditHours] = useState('');
   const [editHourlyRate, setEditHourlyRate] = useState('');
+  const [editPaintingHours, setEditPaintingHours] = useState('');
+  const [editPaintingHourlyRate, setEditPaintingHourlyRate] = useState('');
 
   useEffect(() => {
     if (!part) return;
@@ -120,6 +122,8 @@ export function PartDetail() {
     setEditPrice(String(part.price ?? 0));
     setEditHours(String(part.hours ?? 0));
     setEditHourlyRate(String(part.hourlyRate ?? 0));
+    setEditPaintingHours(String(part.paintingHours ?? 0));
+    setEditPaintingHourlyRate(String(part.paintingHourlyRate ?? 0));
     setEditDescription(part.description || '');
     setEditDxfLabel1(part.dxfLabel1);
     setEditDxfLabel2(part.dxfLabel2);
@@ -159,6 +163,8 @@ export function PartDetail() {
       price: parseFloat(editPrice) || 0,
       hours: parseFloat(editHours) || 0,
       hourlyRate: parseFloat(editHourlyRate) || 0,
+      paintingHours: parseFloat(editPaintingHours) || 0,
+      paintingHourlyRate: parseFloat(editPaintingHourlyRate) || 0,
       description: editDescription.trim(),
       dxfLabel1: editDxfLabel1.trim() || 'Plasma DXF',
       dxfLabel2: editDxfLabel2.trim() || 'Laser DXF',
@@ -349,42 +355,86 @@ export function PartDetail() {
               <Clock className="h-5 w-5" /> Labor Hours
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {editing ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-hours">Hours</Label>
-                  <Input id="edit-hours" type="number" min={0} step="0.25" value={editHours} onChange={e => setEditHours(e.target.value)} />
+          <CardContent className="space-y-6">
+            {/* Fabrication Labor */}
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-3">Fabrication</p>
+              {editing ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-hours">Hours</Label>
+                    <Input id="edit-hours" type="number" min={0} step="0.25" value={editHours} onChange={e => setEditHours(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-hourly-rate">Hourly Rate ($)</Label>
+                    <Input id="edit-hourly-rate" type="number" min={0} step="0.01" value={editHourlyRate} onChange={e => setEditHourlyRate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Total</Label>
+                    <p className="h-10 flex items-center font-semibold text-foreground">
+                      {formatCurrency((parseFloat(editHours) || 0) * (parseFloat(editHourlyRate) || 0))}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-hourly-rate">Hourly Rate ($)</Label>
-                  <Input id="edit-hourly-rate" type="number" min={0} step="0.01" value={editHourlyRate} onChange={e => setEditHourlyRate(e.target.value)} />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Hours</p>
+                    <p className="text-foreground">{part.hours > 0 ? part.hours : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Hourly Rate</p>
+                    <p className="text-foreground">{part.hourlyRate > 0 ? formatCurrency(part.hourlyRate) : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total</p>
+                    <p className="text-foreground font-semibold">
+                      {part.hours > 0 && part.hourlyRate > 0 ? formatCurrency(part.hours * part.hourlyRate) : '—'}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Total Labor Cost</Label>
-                  <p className="h-10 flex items-center font-semibold text-foreground">
-                    {formatCurrency((parseFloat(editHours) || 0) * (parseFloat(editHourlyRate) || 0))}
-                  </p>
+              )}
+            </div>
+
+            {/* Painting Labor */}
+            <div className="border-t border-border pt-4">
+              <p className="text-sm font-medium text-muted-foreground mb-3">Painting</p>
+              {editing ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-painting-hours">Hours</Label>
+                    <Input id="edit-painting-hours" type="number" min={0} step="0.25" value={editPaintingHours} onChange={e => setEditPaintingHours(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-painting-rate">Hourly Rate ($)</Label>
+                    <Input id="edit-painting-rate" type="number" min={0} step="0.01" value={editPaintingHourlyRate} onChange={e => setEditPaintingHourlyRate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Total</Label>
+                    <p className="h-10 flex items-center font-semibold text-foreground">
+                      {formatCurrency((parseFloat(editPaintingHours) || 0) * (parseFloat(editPaintingHourlyRate) || 0))}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Hours</p>
-                  <p className="text-foreground">{part.hours > 0 ? part.hours : '—'}</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Hours</p>
+                    <p className="text-foreground">{part.paintingHours > 0 ? part.paintingHours : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Hourly Rate</p>
+                    <p className="text-foreground">{part.paintingHourlyRate > 0 ? formatCurrency(part.paintingHourlyRate) : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total</p>
+                    <p className="text-foreground font-semibold">
+                      {part.paintingHours > 0 && part.paintingHourlyRate > 0 ? formatCurrency(part.paintingHours * part.paintingHourlyRate) : '—'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Hourly Rate</p>
-                  <p className="text-foreground">{part.hourlyRate > 0 ? formatCurrency(part.hourlyRate) : '—'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Labor Cost</p>
-                  <p className="text-foreground font-semibold">
-                    {part.hours > 0 && part.hourlyRate > 0 ? formatCurrency(part.hours * part.hourlyRate) : '—'}
-                  </p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -530,12 +580,18 @@ export function PartDetail() {
             )}
 
             {/* Grand totals */}
-            {(materialsCost > 0 || (part.hours > 0 && part.hourlyRate > 0)) && (
+            {(materialsCost > 0 || (part.hours > 0 && part.hourlyRate > 0) || (part.paintingHours > 0 && part.paintingHourlyRate > 0)) && (
               <div className="mt-6 pt-4 border-t-2 border-border space-y-2">
                 {part.hours > 0 && part.hourlyRate > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Labor ({part.hours}h × {formatCurrency(part.hourlyRate)}/h)</span>
+                    <span className="text-muted-foreground">Fabrication Labor ({part.hours}h × {formatCurrency(part.hourlyRate)}/h)</span>
                     <span className="font-medium">{formatCurrency(part.hours * part.hourlyRate)}</span>
+                  </div>
+                )}
+                {part.paintingHours > 0 && part.paintingHourlyRate > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Painting Labor ({part.paintingHours}h × {formatCurrency(part.paintingHourlyRate)}/h)</span>
+                    <span className="font-medium">{formatCurrency(part.paintingHours * part.paintingHourlyRate)}</span>
                   </div>
                 )}
                 {materialsCost > 0 && (
@@ -547,7 +603,11 @@ export function PartDetail() {
                 <div className="flex justify-between pt-2 border-t border-border">
                   <span className="font-semibold">Total Part Cost</span>
                   <span className="text-lg font-bold text-foreground">
-                    {formatCurrency(materialsCost + (part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0))}
+                    {formatCurrency(
+                      materialsCost
+                      + (part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
+                      + (part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0)
+                    )}
                   </span>
                 </div>
               </div>
