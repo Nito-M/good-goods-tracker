@@ -244,22 +244,33 @@ function AssemblyDetail({
 
   const handleAddAssemblyItems = async (sourceAssemblyId: string) => {
     setAddingAssemblyId(sourceAssemblyId);
-    const { data, error } = await (await import('@/integrations/supabase/client')).supabase
-      .from('assembly_items')
-      .select('*')
-      .eq('assembly_id', sourceAssemblyId)
-      .order('created_at');
-    if (!error && data) {
-      for (const row of data) {
-        await addItem({
-          inventory_item_id: row.inventory_item_id,
-          item_name: row.item_name,
-          sku: row.sku,
-          quantity: row.quantity,
-          unit_cost: row.unit_cost ?? 0,
-          notes: row.notes || undefined,
-        });
+    const sourceAssembly = allAssemblies.find(a => a.id === sourceAssemblyId);
+    if (sourceAssembly) {
+      // Calculate the total cost of items in the source assembly
+      const { data: sourceItems } = await (await import('@/integrations/supabase/client')).supabase
+        .from('assembly_items')
+        .select('quantity, unit_cost, inventory_item_id, inventory_items ( cost )')
+        .eq('assembly_id', sourceAssemblyId);
+      
+      let totalCost = 0;
+      if (sourceItems) {
+        for (const row of sourceItems as any[]) {
+          const cost = row.inventory_items?.cost ?? row.unit_cost ?? 0;
+          totalCost += row.quantity * cost;
+        }
       }
+
+      // Use selling_price if set, otherwise use total cost of items
+      const price = sourceAssembly.selling_price > 0 ? sourceAssembly.selling_price : totalCost;
+
+      await addItem({
+        inventory_item_id: null,
+        item_name: sourceAssembly.name,
+        sku: '',
+        quantity: 1,
+        unit_cost: price,
+        notes: sourceAssembly.description || undefined,
+      });
       onItemsChanged?.();
     }
     setAddingAssemblyId(null);
