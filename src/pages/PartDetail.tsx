@@ -403,11 +403,10 @@ export function PartDetail() {
               <PopoverContent className="w-[320px] p-0" align="end">
                 <Command>
                   <CommandInput placeholder="Search inventory..." value={addItemSearch} onValueChange={setAddItemSearch} />
-                  <CommandList>
+                  <CommandList className="max-h-[300px]">
                     <CommandEmpty>No items found.</CommandEmpty>
                     <CommandGroup heading="Inventory">
                       {inventoryItems
-                        .slice(0, 20)
                         .map(item => (
                           <CommandItem
                             key={item.id}
