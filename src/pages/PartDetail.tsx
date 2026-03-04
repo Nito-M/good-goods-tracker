@@ -1,6 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus } from 'lucide-react';
+
+// Convert decimal hours to "H:MM" string
+const decimalToHM = (decimal: number): string => {
+  if (!decimal || decimal <= 0) return '0:00';
+  const h = Math.floor(decimal);
+  const m = Math.round((decimal - h) * 60);
+  return `${h}:${m.toString().padStart(2, '0')}`;
+};
+
+// Convert "H:MM" string to decimal hours
+const hmToDecimal = (hm: string): number | null => {
+  const match = hm.trim().match(/^(\d+):(\d{1,2})$/);
+  if (!match) return null;
+  const h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  if (m < 0 || m > 59) return null;
+  return h + m / 60;
+};
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -120,9 +138,9 @@ export function PartDetail() {
     setEditName(part.name);
     setEditSku(part.sku);
     setEditPrice(String(part.price ?? 0));
-    setEditHours(String(part.hours ?? 0));
+    setEditHours(decimalToHM(part.hours ?? 0));
     setEditHourlyRate(String(part.hourlyRate ?? 0));
-    setEditPaintingHours(String(part.paintingHours ?? 0));
+    setEditPaintingHours(decimalToHM(part.paintingHours ?? 0));
     setEditPaintingHourlyRate(String(part.paintingHourlyRate ?? 0));
     setEditDescription(part.description || '');
     setEditDxfLabel1(part.dxfLabel1);
@@ -161,9 +179,9 @@ export function PartDetail() {
       name: editName.trim(),
       sku: editSku.trim(),
       price: parseFloat(editPrice) || 0,
-      hours: parseFloat(editHours) || 0,
+      hours: hmToDecimal(editHours) ?? 0,
       hourlyRate: parseFloat(editHourlyRate) || 0,
-      paintingHours: parseFloat(editPaintingHours) || 0,
+      paintingHours: hmToDecimal(editPaintingHours) ?? 0,
       paintingHourlyRate: parseFloat(editPaintingHourlyRate) || 0,
       description: editDescription.trim(),
       dxfLabel1: editDxfLabel1.trim() || 'Plasma DXF',
@@ -362,8 +380,8 @@ export function PartDetail() {
               {editing ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-hours">Hours</Label>
-                    <Input id="edit-hours" type="number" min={0} step="0.25" value={editHours} onChange={e => setEditHours(e.target.value)} />
+                    <Label htmlFor="edit-hours">Hours (H:MM)</Label>
+                    <Input id="edit-hours" type="text" placeholder="0:00" value={editHours} onChange={e => setEditHours(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-hourly-rate">Hourly Rate ($)</Label>
@@ -372,7 +390,7 @@ export function PartDetail() {
                   <div className="space-y-2">
                     <Label>Total</Label>
                     <p className="h-10 flex items-center font-semibold text-foreground">
-                      {formatCurrency((parseFloat(editHours) || 0) * (parseFloat(editHourlyRate) || 0))}
+                      {formatCurrency((hmToDecimal(editHours) ?? 0) * (parseFloat(editHourlyRate) || 0))}
                     </p>
                   </div>
                 </div>
@@ -380,7 +398,7 @@ export function PartDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Hours</p>
-                    <p className="text-foreground">{part.hours > 0 ? part.hours : '—'}</p>
+                    <p className="text-foreground">{part.hours > 0 ? decimalToHM(part.hours) : '—'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Hourly Rate</p>
@@ -389,7 +407,7 @@ export function PartDetail() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total</p>
                     <p className="text-foreground font-semibold">
-                      {part.hours > 0 && part.hourlyRate > 0 ? formatCurrency(part.hours * part.hourlyRate) : '—'}
+                      {part.hours > 0 && part.hourlyRate > 0 ? `${decimalToHM(part.hours)} × ${formatCurrency(part.hourlyRate)} = ${formatCurrency(part.hours * part.hourlyRate)}` : '—'}
                     </p>
                   </div>
                 </div>
@@ -402,8 +420,8 @@ export function PartDetail() {
               {editing ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                   <div className="space-y-2">
-                    <Label htmlFor="edit-painting-hours">Hours</Label>
-                    <Input id="edit-painting-hours" type="number" min={0} step="0.25" value={editPaintingHours} onChange={e => setEditPaintingHours(e.target.value)} />
+                    <Label htmlFor="edit-painting-hours">Hours (H:MM)</Label>
+                    <Input id="edit-painting-hours" type="text" placeholder="0:00" value={editPaintingHours} onChange={e => setEditPaintingHours(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-painting-rate">Hourly Rate ($)</Label>
@@ -412,7 +430,7 @@ export function PartDetail() {
                   <div className="space-y-2">
                     <Label>Total</Label>
                     <p className="h-10 flex items-center font-semibold text-foreground">
-                      {formatCurrency((parseFloat(editPaintingHours) || 0) * (parseFloat(editPaintingHourlyRate) || 0))}
+                      {formatCurrency((hmToDecimal(editPaintingHours) ?? 0) * (parseFloat(editPaintingHourlyRate) || 0))}
                     </p>
                   </div>
                 </div>
@@ -420,7 +438,7 @@ export function PartDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Hours</p>
-                    <p className="text-foreground">{part.paintingHours > 0 ? part.paintingHours : '—'}</p>
+                    <p className="text-foreground">{part.paintingHours > 0 ? decimalToHM(part.paintingHours) : '—'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Hourly Rate</p>
@@ -429,7 +447,7 @@ export function PartDetail() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total</p>
                     <p className="text-foreground font-semibold">
-                      {part.paintingHours > 0 && part.paintingHourlyRate > 0 ? formatCurrency(part.paintingHours * part.paintingHourlyRate) : '—'}
+                      {part.paintingHours > 0 && part.paintingHourlyRate > 0 ? `${decimalToHM(part.paintingHours)} × ${formatCurrency(part.paintingHourlyRate)} = ${formatCurrency(part.paintingHours * part.paintingHourlyRate)}` : '—'}
                     </p>
                   </div>
                 </div>
@@ -584,13 +602,13 @@ export function PartDetail() {
               <div className="mt-6 pt-4 border-t-2 border-border space-y-2">
                 {part.hours > 0 && part.hourlyRate > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Fabrication Labor ({part.hours}h × {formatCurrency(part.hourlyRate)}/h)</span>
+                    <span className="text-muted-foreground">Fabrication Labor ({decimalToHM(part.hours)} × {formatCurrency(part.hourlyRate)}/h)</span>
                     <span className="font-medium">{formatCurrency(part.hours * part.hourlyRate)}</span>
                   </div>
                 )}
                 {part.paintingHours > 0 && part.paintingHourlyRate > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Painting Labor ({part.paintingHours}h × {formatCurrency(part.paintingHourlyRate)}/h)</span>
+                    <span className="text-muted-foreground">Painting Labor ({decimalToHM(part.paintingHours)} × {formatCurrency(part.paintingHourlyRate)}/h)</span>
                     <span className="font-medium">{formatCurrency(part.paintingHours * part.paintingHourlyRate)}</span>
                   </div>
                 )}
