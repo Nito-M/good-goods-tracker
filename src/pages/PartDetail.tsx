@@ -50,10 +50,12 @@ export function PartDetail() {
   const navigate = useNavigate();
   const { parts, loading, deletePart, updatePart, uploadPartImage, uploadPartDxf, getSignedUrl } = useParts();
   const { items: inventoryItems } = useInventory();
-  const { items: partItems, addItem: addPartItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
+  const { items: partItems, addItem: addPartItem, addCustomItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
   const { toast } = useToast();
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [addItemSearch, setAddItemSearch] = useState('');
+  const [customName, setCustomName] = useState('');
+  const [customCost, setCustomCost] = useState('');
 
   const part = parts.find(p => p.id === id);
 
@@ -398,14 +400,13 @@ export function PartDetail() {
                   <Plus className="h-4 w-4" /> Add Item
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0" align="end">
+              <PopoverContent className="w-[320px] p-0" align="end">
                 <Command>
                   <CommandInput placeholder="Search inventory..." value={addItemSearch} onValueChange={setAddItemSearch} />
                   <CommandList>
                     <CommandEmpty>No items found.</CommandEmpty>
-                    <CommandGroup>
+                    <CommandGroup heading="Inventory">
                       {inventoryItems
-                        .filter(item => !partItems.some(pi => pi.inventoryItemId === item.id))
                         .slice(0, 20)
                         .map(item => (
                           <CommandItem
@@ -419,7 +420,7 @@ export function PartDetail() {
                             <div className="flex flex-col">
                               <span>{item.name}</span>
                               <span className="text-xs text-muted-foreground">
-                                {item.sku} · Cost: {formatCurrency(item.cost)} · Price: {formatCurrency(item.price)}
+                                {item.sku} · Cost: {formatCurrency(item.cost)}
                               </span>
                             </div>
                           </CommandItem>
@@ -427,6 +428,24 @@ export function PartDetail() {
                     </CommandGroup>
                   </CommandList>
                 </Command>
+                <div className="border-t border-border p-3 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Or add custom item</p>
+                  <Input placeholder="Item name" value={customName} onChange={e => setCustomName(e.target.value)} className="h-8 text-sm" />
+                  <Input placeholder="Unit cost" type="number" min={0} step="0.01" value={customCost} onChange={e => setCustomCost(e.target.value)} className="h-8 text-sm" />
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    disabled={!customName.trim()}
+                    onClick={async () => {
+                      await addCustomItem(customName.trim(), parseFloat(customCost) || 0);
+                      setCustomName('');
+                      setCustomCost('');
+                      setAddItemOpen(false);
+                    }}
+                  >
+                    Add Custom Item
+                  </Button>
+                </div>
               </PopoverContent>
             </Popover>
           </CardHeader>
@@ -452,7 +471,7 @@ export function PartDetail() {
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.itemName}</TableCell>
                         <TableCell className="text-muted-foreground">{item.itemSku}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.itemCost)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.unitCost)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(item.itemPrice)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1">
@@ -476,7 +495,7 @@ export function PartDetail() {
                             </Button>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(item.itemCost * item.quantity)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(item.unitCost * item.quantity)}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removePartItem(item.id)}>
                             <X className="h-3.5 w-3.5" />
