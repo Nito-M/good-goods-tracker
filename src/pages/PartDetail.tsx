@@ -394,7 +394,7 @@ export function PartDetail() {
                     </p>
                   </div>
                 </div>
-              ) : (
+              ) : part.hours > 0 || part.hourlyRate > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Hours</p>
@@ -411,6 +411,10 @@ export function PartDetail() {
                     </p>
                   </div>
                 </div>
+              ) : (
+                <Button variant="outline" size="sm" onClick={startEditing} className="gap-2">
+                  <Plus className="h-4 w-4" /> Add Hours
+                </Button>
               )}
             </div>
 
@@ -434,7 +438,7 @@ export function PartDetail() {
                     </p>
                   </div>
                 </div>
-              ) : (
+              ) : part.paintingHours > 0 || part.paintingHourlyRate > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Hours</p>
@@ -451,6 +455,10 @@ export function PartDetail() {
                     </p>
                   </div>
                 </div>
+              ) : (
+                <Button variant="outline" size="sm" onClick={startEditing} className="gap-2">
+                  <Plus className="h-4 w-4" /> Add Hours
+                </Button>
               )}
             </div>
           </CardContent>
