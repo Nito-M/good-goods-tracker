@@ -528,6 +528,30 @@ export function PartDetail() {
                 </div>
               </>
             )}
+
+            {/* Grand totals */}
+            {(materialsCost > 0 || (part.hours > 0 && part.hourlyRate > 0)) && (
+              <div className="mt-6 pt-4 border-t-2 border-border space-y-2">
+                {part.hours > 0 && part.hourlyRate > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Labor ({part.hours}h × {formatCurrency(part.hourlyRate)}/h)</span>
+                    <span className="font-medium">{formatCurrency(part.hours * part.hourlyRate)}</span>
+                  </div>
+                )}
+                {materialsCost > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Materials</span>
+                    <span className="font-medium">{formatCurrency(materialsCost)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2 border-t border-border">
+                  <span className="font-semibold">Total Part Cost</span>
+                  <span className="text-lg font-bold text-foreground">
+                    {formatCurrency(materialsCost + (part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0))}
+                  </span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
