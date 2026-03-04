@@ -483,7 +483,17 @@ export function PartDetail() {
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="w-8 text-center text-sm">{item.quantity}</span>
+                            <Input
+                              type="number"
+                              min={0.01}
+                              step="any"
+                              value={item.quantity}
+                              onChange={e => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val > 0) updatePartItem(item.id, { quantity: val });
+                              }}
+                              className="w-16 h-7 text-center text-sm px-1"
+                            />
                             <Button
                               variant="ghost"
                               size="icon"
