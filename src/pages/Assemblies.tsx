@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
@@ -499,7 +499,15 @@ function AssemblyDetail({
               return (
               <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
-                  <p className="font-medium text-sm">{item.item_name}</p>
+                  {(() => {
+                    const partMatch = !item.inventory_item_id && partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku);
+                    const linkTo = item.inventory_item_id ? `/items/${item.inventory_item_id}` : partMatch ? `/parts/${partMatch.id}` : null;
+                    return linkTo ? (
+                      <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
+                    ) : (
+                      <p className="font-medium text-sm">{item.item_name}</p>
+                    );
+                  })()}
                   {editingNoteId === item.id ? (
                     <div className="flex items-center gap-1 mt-1">
                       <Input value={editNoteValue} onChange={(e) => setEditNoteValue(e.target.value)} placeholder="Add a note..." className="h-6 text-xs px-2 flex-1" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleSaveNote(item.id); if (e.key === 'Escape') setEditingNoteId(null); }} />
