@@ -980,6 +980,8 @@ export type Database = {
           dxf_url_1: string | null
           dxf_url_2: string | null
           folder_id: string | null
+          hourly_rate: number
+          hours: number
           id: string
           image_url: string | null
           name: string
@@ -996,6 +998,8 @@ export type Database = {
           dxf_url_1?: string | null
           dxf_url_2?: string | null
           folder_id?: string | null
+          hourly_rate?: number
+          hours?: number
           id?: string
           image_url?: string | null
           name: string
@@ -1012,6 +1016,8 @@ export type Database = {
           dxf_url_1?: string | null
           dxf_url_2?: string | null
           folder_id?: string | null
+          hourly_rate?: number
+          hours?: number
           id?: string
           image_url?: string | null
           name?: string
