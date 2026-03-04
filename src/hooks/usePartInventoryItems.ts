@@ -6,14 +6,14 @@ import { useToast } from '@/hooks/use-toast';
 export interface PartInventoryItem {
   id: string;
   partId: string;
-  inventoryItemId: string;
+  inventoryItemId: string | null;
   quantity: number;
   notes: string | null;
-  // joined fields
   itemName: string;
   itemSku: string;
-  itemCost: number;
+  unitCost: number;
   itemPrice: number;
+  isCustom: boolean;
 }
 
 export function usePartInventoryItems(partId: string | undefined) {
@@ -27,24 +27,28 @@ export function usePartInventoryItems(partId: string | undefined) {
     setLoading(true);
     const { data, error } = await supabase
       .from('part_inventory_items' as any)
-      .select('*, inventory_items!inner(name, sku, cost, price)')
+      .select('*, inventory_items(name, sku, cost, price)')
       .eq('part_id', partId)
       .order('created_at', { ascending: true });
 
     if (error) {
       toast({ title: 'Error loading part items', description: error.message, variant: 'destructive' });
     } else {
-      setItems((data || []).map((d: any) => ({
-        id: d.id,
-        partId: d.part_id,
-        inventoryItemId: d.inventory_item_id,
-        quantity: d.quantity ?? 1,
-        notes: d.notes,
-        itemName: d.inventory_items?.name || '',
-        itemSku: d.inventory_items?.sku || '',
-        itemCost: d.inventory_items?.cost ?? 0,
-        itemPrice: d.inventory_items?.price ?? 0,
-      })));
+      setItems((data || []).map((d: any) => {
+        const isCustom = !d.inventory_item_id;
+        return {
+          id: d.id,
+          partId: d.part_id,
+          inventoryItemId: d.inventory_item_id,
+          quantity: d.quantity ?? 1,
+          notes: d.notes,
+          itemName: isCustom ? (d.item_name || 'Custom Item') : (d.inventory_items?.name || ''),
+          itemSku: isCustom ? '' : (d.inventory_items?.sku || ''),
+          unitCost: isCustom ? (d.unit_cost ?? 0) : (d.inventory_items?.cost ?? 0),
+          itemPrice: isCustom ? 0 : (d.inventory_items?.price ?? 0),
+          isCustom,
+        };
+      }));
     }
     setLoading(false);
   }, [user, partId, toast]);
@@ -60,18 +64,32 @@ export function usePartInventoryItems(partId: string | undefined) {
       user_id: user.id,
     } as any);
     if (error) {
-      if (error.code === '23505') {
-        toast({ title: 'Item already added', variant: 'destructive' });
-      } else {
-        toast({ title: 'Error adding item', description: error.message, variant: 'destructive' });
-      }
+      toast({ title: 'Error adding item', description: error.message, variant: 'destructive' });
       return false;
     }
     await fetchItems();
     return true;
   };
 
-  const updateItem = async (id: string, updates: { quantity?: number; notes?: string }) => {
+  const addCustomItem = async (name: string, unitCost: number, quantity: number = 1) => {
+    if (!user || !partId) return false;
+    const { error } = await supabase.from('part_inventory_items' as any).insert({
+      part_id: partId,
+      inventory_item_id: null,
+      item_name: name,
+      unit_cost: unitCost,
+      quantity,
+      user_id: user.id,
+    } as any);
+    if (error) {
+      toast({ title: 'Error adding item', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    await fetchItems();
+    return true;
+  };
+
+  const updateItem = async (id: string, updates: { quantity?: number; notes?: string; item_name?: string; unit_cost?: number }) => {
     const { error } = await supabase.from('part_inventory_items' as any).update(updates as any).eq('id', id);
     if (error) {
       toast({ title: 'Error updating item', description: error.message, variant: 'destructive' });
@@ -91,7 +109,7 @@ export function usePartInventoryItems(partId: string | undefined) {
     return true;
   };
 
-  const totalCost = items.reduce((sum, i) => sum + (i.itemCost * i.quantity), 0);
+  const totalCost = items.reduce((sum, i) => sum + (i.unitCost * i.quantity), 0);
 
-  return { items, loading, addItem, updateItem, removeItem, totalCost, refetch: fetchItems };
+  return { items, loading, addItem, addCustomItem, updateItem, removeItem, totalCost, refetch: fetchItems };
 }
