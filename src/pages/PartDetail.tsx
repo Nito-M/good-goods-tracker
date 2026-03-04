@@ -485,13 +485,19 @@ export function PartDetail() {
                             </Button>
                             <Input
                               type="number"
-                              min={0.01}
+                              min={0}
                               step="any"
-                              value={item.quantity}
-                              onChange={e => {
+                              defaultValue={item.quantity}
+                              key={`${item.id}-${item.quantity}`}
+                              onBlur={e => {
                                 const val = parseFloat(e.target.value);
-                                if (!isNaN(val) && val > 0) updatePartItem(item.id, { quantity: val });
+                                if (!isNaN(val) && val > 0) {
+                                  updatePartItem(item.id, { quantity: val });
+                                } else {
+                                  e.target.value = String(item.quantity);
+                                }
                               }}
+                              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                               className="w-16 h-7 text-center text-sm px-1"
                             />
                             <Button
