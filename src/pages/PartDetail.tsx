@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,6 +48,8 @@ export function PartDetail() {
   const [editDxfLabel1, setEditDxfLabel1] = useState('');
   const [editDxfLabel2, setEditDxfLabel2] = useState('');
   const [saving, setSaving] = useState(false);
+  const [editHours, setEditHours] = useState('');
+  const [editHourlyRate, setEditHourlyRate] = useState('');
 
   useEffect(() => {
     if (!part) return;
@@ -87,6 +89,8 @@ export function PartDetail() {
     setEditName(part.name);
     setEditSku(part.sku);
     setEditPrice(String(part.price ?? 0));
+    setEditHours(String(part.hours ?? 0));
+    setEditHourlyRate(String(part.hourlyRate ?? 0));
     setEditDescription(part.description || '');
     setEditDxfLabel1(part.dxfLabel1);
     setEditDxfLabel2(part.dxfLabel2);
@@ -124,6 +128,8 @@ export function PartDetail() {
       name: editName.trim(),
       sku: editSku.trim(),
       price: parseFloat(editPrice) || 0,
+      hours: parseFloat(editHours) || 0,
+      hourlyRate: parseFloat(editHourlyRate) || 0,
       description: editDescription.trim(),
       dxfLabel1: editDxfLabel1.trim() || 'Plasma DXF',
       dxfLabel2: editDxfLabel2.trim() || 'Laser DXF',
@@ -306,6 +312,52 @@ export function PartDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Hours & Labor */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" /> Labor Hours
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {editing ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-hours">Hours</Label>
+                  <Input id="edit-hours" type="number" min={0} step="0.25" value={editHours} onChange={e => setEditHours(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-hourly-rate">Hourly Rate ($)</Label>
+                  <Input id="edit-hourly-rate" type="number" min={0} step="0.01" value={editHourlyRate} onChange={e => setEditHourlyRate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Total Labor Cost</Label>
+                  <p className="h-10 flex items-center font-semibold text-foreground">
+                    {formatCurrency((parseFloat(editHours) || 0) * (parseFloat(editHourlyRate) || 0))}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Hours</p>
+                  <p className="text-foreground">{part.hours > 0 ? part.hours : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Hourly Rate</p>
+                  <p className="text-foreground">{part.hourlyRate > 0 ? formatCurrency(part.hourlyRate) : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Labor Cost</p>
+                  <p className="text-foreground font-semibold">
+                    {part.hours > 0 && part.hourlyRate > 0 ? formatCurrency(part.hours * part.hourlyRate) : '—'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* DXF Previews - Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
