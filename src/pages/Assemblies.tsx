@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
+import { usePartFolders } from '@/hooks/usePartFolders';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -165,10 +166,12 @@ function AddItemForm({
 }
 
 function AssemblyDetail({
-  assembly, inventoryItems, partsItems, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
+  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
 }: {
   assembly: Assembly;
   partsItems?: { id: string; name: string; sku: string; price: number }[];
+  partsRaw?: { id: string; name: string; sku: string; price: number; folderId: string | null }[];
+  folders?: { id: string; name: string; parentId: string | null }[];
   inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string; cost?: number }[];
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
@@ -180,6 +183,8 @@ function AssemblyDetail({
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const [addingFolderId, setAddingFolderId] = useState<string | null>(null);
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
@@ -257,6 +262,35 @@ function AssemblyDetail({
     }
     setAddingAssemblyId(null);
     setShowAssemblyPicker(false);
+  };
+
+  const handleAddFolderParts = async (folderId: string) => {
+    if (!partsRaw || !folders) return;
+    setAddingFolderId(folderId);
+    // Get all folder IDs recursively (folder + all descendants)
+    const allFolderIds = new Set<string>();
+    const collectChildren = (parentId: string) => {
+      allFolderIds.add(parentId);
+      for (const f of folders) {
+        if (f.parentId === parentId && !allFolderIds.has(f.id)) {
+          collectChildren(f.id);
+        }
+      }
+    };
+    collectChildren(folderId);
+    
+    const folderParts = partsRaw.filter(p => p.folderId && allFolderIds.has(p.folderId));
+    for (const part of folderParts) {
+      const existing = items.find(i => i.item_name === part.name && i.sku === part.sku);
+      if (existing) {
+        await updateItem(existing.id, { quantity: existing.quantity + 1 });
+      } else {
+        await addItem({ inventory_item_id: null, item_name: part.name, sku: part.sku, quantity: 1 });
+      }
+    }
+    onItemsChanged?.();
+    setAddingFolderId(null);
+    setShowFolderPicker(false);
   };
 
   return (
@@ -362,7 +396,40 @@ function AssemblyDetail({
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
           {!showAddForm && (
-            <div className="flex gap-2">
+             <div className="flex gap-2">
+              {folders && folders.length > 0 && (
+                <Popover open={showFolderPicker} onOpenChange={setShowFolderPicker}>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1"><FolderPlus className="h-4 w-4" /> Add Folder</Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[320px] p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Search folders..." />
+                      <CommandList>
+                        <CommandEmpty>No folders found.</CommandEmpty>
+                        <CommandGroup>
+                          {folders.map((f) => {
+                            const partCount = partsRaw?.filter(p => p.folderId === f.id).length ?? 0;
+                            return (
+                              <CommandItem
+                                key={f.id}
+                                value={f.name}
+                                onSelect={() => handleAddFolderParts(f.id)}
+                                disabled={!!addingFolderId}
+                                className="flex items-center justify-between py-2 cursor-pointer"
+                              >
+                                <span className="font-medium text-sm">{f.name}</span>
+                                <span className="text-xs text-muted-foreground">{partCount} part{partCount !== 1 ? 's' : ''}</span>
+                                {addingFolderId === f.id && <span className="text-xs text-primary ml-2">Adding...</span>}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              )}
               {otherAssemblies.length > 0 && (
                 <Popover open={showAssemblyPicker} onOpenChange={setShowAssemblyPicker}>
                   <PopoverTrigger asChild>
@@ -496,6 +563,7 @@ export function Assemblies() {
   const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly } = useAssemblies();
   const { allItems: inventoryItems } = useInventory();
   const { parts } = useParts();
+  const { folders } = usePartFolders();
   const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -516,6 +584,8 @@ export function Assemblies() {
   );
   const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost }));
   const sortedParts = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }));
+  const partsWithFolder = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price, folderId: p.folderId }));
+  const sortedFolders = [...folders].sort((a, b) => a.name.localeCompare(b.name));
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost]));
 
   const handleCreate = async () => {
@@ -602,7 +672,7 @@ export function Assemblies() {
         {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
