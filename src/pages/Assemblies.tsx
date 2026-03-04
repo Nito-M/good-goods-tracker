@@ -52,7 +52,7 @@ function ItemSearchCombobox({
 }: {
   inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
   partsItems?: { id: string; name: string; sku: string; price: number }[];
-  onSelect: (item: { id: string | null; name: string; sku: string; quantityUnit?: string }) => void;
+  onSelect: (item: { id: string | null; name: string; sku: string; quantityUnit?: string; unitCost?: number }) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -86,7 +86,7 @@ function ItemSearchCombobox({
             {partsItems && partsItems.length > 0 && (
               <CommandGroup heading="Parts Library">
                 {partsItems.map((part) => (
-                  <CommandItem key={`part-${part.id}`} value={`part ${part.name} ${part.sku}`} onSelect={() => { onSelect({ id: null, name: part.name, sku: part.sku }); setOpen(false); }}>
+                  <CommandItem key={`part-${part.id}`} value={`part ${part.name} ${part.sku}`} onSelect={() => { onSelect({ id: null, name: part.name, sku: part.sku, unitCost: part.price }); setOpen(false); }}>
                     <div className="flex flex-col">
                       <span>{part.name}</span>
                       <span className="text-xs text-muted-foreground">{part.sku}{part.price > 0 ? ` · ${formatCurrency(part.price)}` : ''}</span>
@@ -107,24 +107,25 @@ function AddItemForm({
 }: {
   inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
   partsItems?: { id: string; name: string; sku: string; price: number }[];
-  onAdd: (item: { inventory_item_id?: string | null; item_name: string; sku: string; quantity: number; notes?: string }) => Promise<boolean>;
+  onAdd: (item: { inventory_item_id?: string | null; item_name: string; sku: string; quantity: number; unit_cost?: number; notes?: string }) => Promise<boolean>;
   onCancel: () => void;
 }) {
   const [selectedInventoryId, setSelectedInventoryId] = useState<string | null>(null);
+  const [unitCost, setUnitCost] = useState<number>(0);
   const [itemName, setItemName] = useState('');
   const [sku, setSku] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const handleSelect = (item: { id: string | null; name: string; sku: string }) => {
-    setSelectedInventoryId(item.id); setItemName(item.name); setSku(item.sku);
+  const handleSelect = (item: { id: string | null; name: string; sku: string; unitCost?: number }) => {
+    setSelectedInventoryId(item.id); setItemName(item.name); setSku(item.sku); setUnitCost(item.unitCost ?? 0);
   };
 
   const handleSubmit = async () => {
     if (!itemName.trim()) return;
     setSaving(true);
-    const ok = await onAdd({ inventory_item_id: selectedInventoryId, item_name: itemName.trim(), sku: sku.trim(), quantity, notes: notes.trim() || undefined });
+    const ok = await onAdd({ inventory_item_id: selectedInventoryId, item_name: itemName.trim(), sku: sku.trim(), quantity, unit_cost: unitCost, notes: notes.trim() || undefined });
     setSaving(false);
     if (ok) onCancel();
   };
@@ -285,7 +286,7 @@ function AssemblyDetail({
       if (existing) {
         await updateItem(existing.id, { quantity: existing.quantity + 1 });
       } else {
-        await addItem({ inventory_item_id: null, item_name: part.name, sku: part.sku, quantity: 1 });
+        await addItem({ inventory_item_id: null, item_name: part.name, sku: part.sku, quantity: 1, unit_cost: part.price });
       }
     }
     onItemsChanged?.();
@@ -494,7 +495,7 @@ function AssemblyDetail({
               <span>Item</span><span className="w-20 text-center">SKU</span><span className="w-20 text-right">Cost</span><span className="w-16 text-center">Qty</span><span className="w-20 text-right">Total</span><span className="w-8" />
             </div>
             {items.map((item) => {
-              const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : null;
+              const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : (item.unit_cost > 0 ? item.unit_cost : null);
               return (
               <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>

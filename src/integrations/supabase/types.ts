@@ -63,6 +63,7 @@ export type Database = {
           notes: string | null
           quantity: number
           sku: string
+          unit_cost: number
         }
         Insert: {
           assembly_id: string
@@ -73,6 +74,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           sku?: string
+          unit_cost?: number
         }
         Update: {
           assembly_id?: string
@@ -83,6 +85,7 @@ export type Database = {
           notes?: string | null
           quantity?: number
           sku?: string
+          unit_cost?: number
         }
         Relationships: [
           {
