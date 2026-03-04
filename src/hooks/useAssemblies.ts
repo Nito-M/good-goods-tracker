@@ -23,6 +23,7 @@ export interface AssemblyItem {
   item_name: string;
   sku: string;
   quantity: number;
+  unit_cost: number;
   notes: string | null;
   created_at: string;
 }
@@ -126,6 +127,7 @@ export function useAssemblyItems(assemblyId: string | null) {
     item_name: string;
     sku: string;
     quantity: number;
+    unit_cost?: number;
     notes?: string;
   }): Promise<boolean> => {
     if (!assemblyId) return false;
@@ -135,6 +137,7 @@ export function useAssemblyItems(assemblyId: string | null) {
       item_name: item.item_name,
       sku: item.sku,
       quantity: item.quantity,
+      unit_cost: item.unit_cost ?? 0,
       notes: item.notes || null,
     });
     if (error) {
@@ -145,7 +148,7 @@ export function useAssemblyItems(assemblyId: string | null) {
     return true;
   };
 
-  const updateItem = async (id: string, updates: { quantity?: number; notes?: string | null }) => {
+  const updateItem = async (id: string, updates: { quantity?: number; notes?: string | null; unit_cost?: number }) => {
     const { error } = await supabase.from('assembly_items').update(updates).eq('id', id);
     if (error) {
       toast({ title: 'Error', description: 'Failed to update item.', variant: 'destructive' });
@@ -185,6 +188,7 @@ export function useAssemblySummaries(assemblyIds: string[]) {
       .select(`
         assembly_id,
         quantity,
+        unit_cost,
         inventory_item_id,
         inventory_items ( cost )
       `)
@@ -194,7 +198,7 @@ export function useAssemblySummaries(assemblyIds: string[]) {
       const map = new Map<string, AssemblySummary>();
       for (const row of data as any[]) {
         const existing = map.get(row.assembly_id) || { totalCost: 0, itemCount: 0, hasCustomItems: false };
-        const cost = row.inventory_items?.cost ?? 0;
+        const cost = row.inventory_items?.cost ?? row.unit_cost ?? 0;
         existing.totalCost += row.quantity * cost;
         existing.itemCount += 1;
         if (!row.inventory_item_id) existing.hasCustomItems = true;
