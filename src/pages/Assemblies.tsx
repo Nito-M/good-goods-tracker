@@ -256,6 +256,7 @@ function AssemblyDetail({
           item_name: row.item_name,
           sku: row.sku,
           quantity: row.quantity,
+          unit_cost: row.unit_cost ?? 0,
           notes: row.notes || undefined,
         });
       }
