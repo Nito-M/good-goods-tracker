@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,8 +8,31 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import { useParts } from '@/hooks/useParts';
+import { usePartInventoryItems } from '@/hooks/usePartInventoryItems';
+import { useInventory } from '@/hooks/useInventory';
 import { DxfThreeViewer } from '@/components/DxfThreeViewer';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +49,11 @@ export function PartDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { parts, loading, deletePart, updatePart, uploadPartImage, uploadPartDxf, getSignedUrl } = useParts();
+  const { items: inventoryItems } = useInventory();
+  const { items: partItems, addItem: addPartItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
   const { toast } = useToast();
+  const [addItemOpen, setAddItemOpen] = useState(false);
+  const [addItemSearch, setAddItemSearch] = useState('');
 
   const part = parts.find(p => p.id === id);
 
@@ -355,6 +382,117 @@ export function PartDetail() {
                   </p>
                 </div>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Inventory Items Reference */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" /> Materials / Inventory Items
+            </CardTitle>
+            <Popover open={addItemOpen} onOpenChange={setAddItemOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" /> Add Item
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="end">
+                <Command>
+                  <CommandInput placeholder="Search inventory..." value={addItemSearch} onValueChange={setAddItemSearch} />
+                  <CommandList>
+                    <CommandEmpty>No items found.</CommandEmpty>
+                    <CommandGroup>
+                      {inventoryItems
+                        .filter(item => !partItems.some(pi => pi.inventoryItemId === item.id))
+                        .slice(0, 20)
+                        .map(item => (
+                          <CommandItem
+                            key={item.id}
+                            onSelect={async () => {
+                              await addPartItem(item.id);
+                              setAddItemOpen(false);
+                              setAddItemSearch('');
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span>{item.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {item.sku} · Cost: {formatCurrency(item.cost)} · Price: {formatCurrency(item.price)}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </CardHeader>
+          <CardContent>
+            {partItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No inventory items linked yet. Click "Add Item" to reference materials used in this part.</p>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead className="text-right">Cost</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-center">Qty</TableHead>
+                      <TableHead className="text-right">Total Cost</TableHead>
+                      <TableHead className="w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {partItems.map(item => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.itemName}</TableCell>
+                        <TableCell className="text-muted-foreground">{item.itemSku}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.itemCost)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.itemPrice)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => item.quantity > 1 && updatePartItem(item.id, { quantity: item.quantity - 1 })}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center text-sm">{item.quantity}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => updatePartItem(item.id, { quantity: item.quantity + 1 })}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(item.itemCost * item.quantity)}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removePartItem(item.id)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="flex justify-end mt-3 pt-3 border-t border-border">
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Total Materials Cost</p>
+                    <p className="text-lg font-semibold text-foreground">{formatCurrency(materialsCost)}</p>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
