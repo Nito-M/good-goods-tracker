@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRequests } from "@/hooks/useRequests";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useJobs } from "@/hooks/useJobs";
@@ -8,8 +9,6 @@ import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { AddCalendarEventDialog } from "@/components/AddCalendarEventDialog";
 import { EditCalendarEventDialog } from "@/components/EditCalendarEventDialog";
 import { AddTripPlanDialog } from "@/components/AddTripPlanDialog";
-import { EditTripPlanDialog } from "@/components/EditTripPlanDialog";
-import { TripPlan } from "@/hooks/useTripPlans";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
 import { Request, RequestStatus } from "@/types/request";
@@ -91,10 +90,11 @@ function eventOccursOnDay(event: CalendarEvent, day: Date): boolean {
 }
 
 export function Calendar() {
+  const navigate = useNavigate();
   const { requests, updateRequest, uploadImage, uploadPdf } = useRequests();
   const { events, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
   const { jobs } = useJobs();
-  const { tripPlans, createTripPlan, updateTripPlan, deleteTripPlan } = useTripPlans();
+  const { tripPlans, createTripPlan, deleteTripPlan } = useTripPlans();
   const { orders: purchaseOrders } = usePurchaseOrders();
   const { allItems } = useInventory();
   const { profile } = useProfile();
@@ -104,7 +104,6 @@ export function Calendar() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addTripOpen, setAddTripOpen] = useState(false);
-  const [editingTrip, setEditingTrip] = useState<TripPlan | null>(null);
 
   const parseLocalDate = (dateString: string): Date => {
     const [year, month, day] = dateString.split("T")[0].split("-").map(Number);
@@ -453,7 +452,7 @@ export function Calendar() {
                 <div
                   key={trip.id}
                   className="p-3 border rounded-lg cursor-pointer hover:bg-accent transition-colors"
-                  onClick={() => setEditingTrip(trip)}>
+                  onClick={() => navigate(`/calendar/trip/${trip.id}`)}>
                         <div className="flex items-start gap-2">
                           <div className={cn("w-3 h-3 rounded-full mt-1 shrink-0", trip.color)} />
                           <div className="flex-1 min-w-0">
@@ -559,13 +558,6 @@ export function Calendar() {
         onSave={createTripPlan}
         purchaseOrders={purchaseOrders}
         selectedDate={selectedDate} />
-
-      <EditTripPlanDialog
-        open={!!editingTrip}
-        onOpenChange={(open) => !open && setEditingTrip(null)}
-        onSave={updateTripPlan}
-        purchaseOrders={purchaseOrders}
-        tripPlan={editingTrip} />
 
     </div>);
 
