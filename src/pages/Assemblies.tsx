@@ -186,6 +186,7 @@ function AssemblyDetail({
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
   const [addingFolderId, setAddingFolderId] = useState<string | null>(null);
+  const [assemblySearchQuery, setAssemblySearchQuery] = useState('');
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
@@ -444,30 +445,36 @@ function AssemblyDetail({
                 </Popover>
               )}
               {otherAssemblies.length > 0 && (
-                <Popover open={showAssemblyPicker} onOpenChange={setShowAssemblyPicker}>
+                <Popover open={showAssemblyPicker} onOpenChange={(open) => { setShowAssemblyPicker(open); if (!open) setAssemblySearchQuery(''); }}>
                   <PopoverTrigger asChild>
                     <Button size="sm" variant="outline" className="gap-1"><PackagePlus className="h-4 w-4" /> Add Assembly</Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[320px] p-0" align="end">
-                    <Command>
-                      <CommandInput placeholder="Search assemblies..." />
+                    <Command shouldFilter={true}>
+                      <CommandInput placeholder="Search assemblies..." value={assemblySearchQuery} onValueChange={setAssemblySearchQuery} />
                       <CommandList>
-                        <CommandEmpty>No assemblies found.</CommandEmpty>
-                        <CommandGroup>
-                          {otherAssemblies.map((a) => (
-                            <CommandItem
-                              key={a.id}
-                              value={`${a.name} ${a.description || ''} ${a.type}`}
-                              onSelect={() => handleAddAssemblyItems(a.id)}
-                              disabled={!!addingAssemblyId}
-                              className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
-                            >
-                              <span className="font-medium text-sm">{a.name}</span>
-                              {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
-                              {addingAssemblyId === a.id && <span className="text-xs text-primary">Adding items...</span>}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+                        {assemblySearchQuery.trim().length > 0 ? (
+                          <>
+                            <CommandEmpty>No assemblies found.</CommandEmpty>
+                            <CommandGroup>
+                              {otherAssemblies.map((a) => (
+                                <CommandItem
+                                  key={a.id}
+                                  value={`${a.name} ${a.description || ''} ${a.type}`}
+                                  onSelect={() => handleAddAssemblyItems(a.id)}
+                                  disabled={!!addingAssemblyId}
+                                  className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
+                                >
+                                  <span className="font-medium text-sm">{a.name}</span>
+                                  {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
+                                  {addingAssemblyId === a.id && <span className="text-xs text-primary">Adding...</span>}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </>
+                        ) : (
+                          <div className="py-6 text-center text-sm text-muted-foreground">Type to search assemblies...</div>
+                        )}
                       </CommandList>
                     </Command>
                   </PopoverContent>
