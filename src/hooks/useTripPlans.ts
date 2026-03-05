@@ -160,6 +160,54 @@ export function useTripPlans() {
     }
   };
 
+  const updateTripPlan = async (id: string, input: CreateTripPlanInput) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from("trip_plans")
+        .update({
+          title: input.title,
+          start_date: input.startDate,
+          end_date: input.endDate || null,
+          notes: input.notes || null,
+          color: input.color,
+        })
+        .eq("id", id);
+      if (error) throw error;
+
+      // Replace locations
+      await supabase.from("trip_plan_locations").delete().eq("trip_plan_id", id);
+      if (input.locations.length > 0) {
+        const { error: locErr } = await supabase.from("trip_plan_locations").insert(
+          input.locations.map((loc, i) => ({
+            trip_plan_id: id,
+            name: loc.name,
+            address: loc.address || null,
+            display_order: i,
+          }))
+        );
+        if (locErr) throw locErr;
+      }
+
+      // Replace PO links
+      await supabase.from("trip_plan_pos").delete().eq("trip_plan_id", id);
+      if (input.poIds.length > 0) {
+        const { error: poErr } = await supabase.from("trip_plan_pos").insert(
+          input.poIds.map((poId) => ({
+            trip_plan_id: id,
+            purchase_order_id: poId,
+          }))
+        );
+        if (poErr) throw poErr;
+      }
+
+      toast({ title: "Trip plan updated" });
+      fetchTripPlans();
+    } catch {
+      toast({ title: "Error updating trip plan", variant: "destructive" });
+    }
+  };
+
   const deleteTripPlan = async (id: string) => {
     try {
       const { error } = await supabase.from("trip_plans").delete().eq("id", id);
@@ -171,5 +219,5 @@ export function useTripPlans() {
     }
   };
 
-  return { tripPlans, loading, createTripPlan, deleteTripPlan, refetch: fetchTripPlans };
+  return { tripPlans, loading, createTripPlan, updateTripPlan, deleteTripPlan, refetch: fetchTripPlans };
 }
