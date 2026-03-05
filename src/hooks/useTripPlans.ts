@@ -15,6 +15,7 @@ export interface TripPlanPo {
   id: string;
   tripPlanId: string;
   purchaseOrderId: string;
+  locationIndex: number | null;
   poNumber?: string | null;
   vendorName?: string | null;
 }
@@ -40,6 +41,7 @@ export interface CreateTripPlanInput {
   color: string;
   locations: { name: string; address?: string }[];
   poIds: string[];
+  locationPoMap?: Record<number, string[]>; // locationIndex -> poIds
 }
 
 export function useTripPlans() {
@@ -95,6 +97,7 @@ export function useTripPlans() {
               id: po.id,
               tripPlanId: po.trip_plan_id,
               purchaseOrderId: po.purchase_order_id,
+              locationIndex: po.location_index ?? null,
               poNumber: po.purchase_orders?.po_number,
               vendorName: po.purchase_orders?.vendors?.name,
             })),
@@ -111,6 +114,23 @@ export function useTripPlans() {
   useEffect(() => {
     fetchTripPlans();
   }, [fetchTripPlans]);
+
+  const buildPoInserts = (planId: string, input: CreateTripPlanInput) => {
+    const rows: { trip_plan_id: string; purchase_order_id: string; location_index: number | null }[] = [];
+    // Trip-level POs (no location)
+    for (const poId of input.poIds) {
+      rows.push({ trip_plan_id: planId, purchase_order_id: poId, location_index: null });
+    }
+    // Location-level POs
+    if (input.locationPoMap) {
+      for (const [locIdx, poIds] of Object.entries(input.locationPoMap)) {
+        for (const poId of poIds) {
+          rows.push({ trip_plan_id: planId, purchase_order_id: poId, location_index: parseInt(locIdx) });
+        }
+      }
+    }
+    return rows;
+  };
 
   const createTripPlan = async (input: CreateTripPlanInput) => {
     if (!user) return;
@@ -129,7 +149,6 @@ export function useTripPlans() {
         .single();
       if (error) throw error;
 
-      // Insert locations
       if (input.locations.length > 0) {
         const { error: locErr } = await supabase.from("trip_plan_locations").insert(
           input.locations.map((loc, i) => ({
@@ -142,14 +161,9 @@ export function useTripPlans() {
         if (locErr) throw locErr;
       }
 
-      // Insert PO links
-      if (input.poIds.length > 0) {
-        const { error: poErr } = await supabase.from("trip_plan_pos").insert(
-          input.poIds.map((poId) => ({
-            trip_plan_id: plan.id,
-            purchase_order_id: poId,
-          }))
-        );
+      const poRows = buildPoInserts(plan.id, input);
+      if (poRows.length > 0) {
+        const { error: poErr } = await supabase.from("trip_plan_pos").insert(poRows);
         if (poErr) throw poErr;
       }
 
@@ -175,7 +189,6 @@ export function useTripPlans() {
         .eq("id", id);
       if (error) throw error;
 
-      // Replace locations
       await supabase.from("trip_plan_locations").delete().eq("trip_plan_id", id);
       if (input.locations.length > 0) {
         const { error: locErr } = await supabase.from("trip_plan_locations").insert(
@@ -189,15 +202,10 @@ export function useTripPlans() {
         if (locErr) throw locErr;
       }
 
-      // Replace PO links
       await supabase.from("trip_plan_pos").delete().eq("trip_plan_id", id);
-      if (input.poIds.length > 0) {
-        const { error: poErr } = await supabase.from("trip_plan_pos").insert(
-          input.poIds.map((poId) => ({
-            trip_plan_id: id,
-            purchase_order_id: poId,
-          }))
-        );
+      const poRows = buildPoInserts(id, input);
+      if (poRows.length > 0) {
+        const { error: poErr } = await supabase.from("trip_plan_pos").insert(poRows);
         if (poErr) throw poErr;
       }
 
