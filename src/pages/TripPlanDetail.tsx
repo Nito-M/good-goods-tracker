@@ -1,11 +1,14 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useMemo } from "react";
 import { useTripPlans } from "@/hooks/useTripPlans";
 import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
+import { useBankCards } from "@/hooks/useBankCards";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
+import { PurchaseOrder } from "@/types/purchaseOrder";
 import {
   ChevronLeft,
   MapPinned,
@@ -15,6 +18,9 @@ import {
   ExternalLink,
   CalendarDays,
   StickyNote,
+  CreditCard,
+  DollarSign,
+  CheckCircle2,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -28,13 +34,38 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-function PoBadgeLink({ poNumber, vendorName, poId }: { poNumber?: string | null; vendorName?: string | null; poId: string }) {
+function getPoTotal(po: PurchaseOrder) {
+  const subtotal = po.items.reduce((sum, item) => sum + item.quantity * (item.unitCost || 0), 0);
+  const discount = po.discountAmount || 0;
+  return (subtotal - discount) * 1.05;
+}
+
+function PoBadgeLink({
+  poNumber,
+  vendorName,
+  poId,
+  total,
+  isPaid,
+}: {
+  poNumber?: string | null;
+  vendorName?: string | null;
+  poId: string;
+  total?: number;
+  isPaid?: boolean;
+}) {
   return (
     <Link to={`/purchase-orders${poNumber ? `?po=${encodeURIComponent(poNumber)}` : ''}`} className="inline-block">
-      <Badge variant="outline" className="text-xs py-1 px-2 cursor-pointer hover:bg-accent transition-colors">
-        {poNumber || "PO"}
-        {vendorName ? ` — ${vendorName}` : ""}
-        <ExternalLink className="h-3 w-3 ml-1" />
+      <Badge variant="outline" className="text-xs py-1 px-2 cursor-pointer hover:bg-accent transition-colors gap-1.5">
+        <span className="font-medium">{poNumber || "PO"}</span>
+        {vendorName && <span className="text-muted-foreground">— {vendorName}</span>}
+        {total !== undefined && <span className="font-semibold">{formatCurrency(total)}</span>}
+        {isPaid && (
+          <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="h-3 w-3" />
+            Paid
+          </span>
+        )}
+        <ExternalLink className="h-3 w-3" />
       </Badge>
     </Link>
   );
@@ -44,9 +75,47 @@ export function TripPlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { tripPlans, loading, deleteTripPlan } = useTripPlans();
+  const { orders: purchaseOrders } = usePurchaseOrders();
+  const { cards: bankCards } = useBankCards();
   const { toast } = useToast();
 
   const trip = tripPlans.find((t) => t.id === id);
+
+  // Build a lookup of PO details for all trip POs
+  const poLookup = useMemo(() => {
+    if (!trip) return new Map<string, PurchaseOrder>();
+    const map = new Map<string, PurchaseOrder>();
+    for (const tp of trip.pos) {
+      const po = purchaseOrders.find((p) => p.id === tp.purchaseOrderId);
+      if (po) map.set(po.id, po);
+    }
+    return map;
+  }, [trip, purchaseOrders]);
+
+  // Summary grouped by bank card
+  const cardSummary = useMemo(() => {
+    if (!trip) return [];
+    const groups: Record<string, { cardName: string; total: number; paid: number; unpaid: number; count: number }> = {};
+    for (const tp of trip.pos) {
+      const po = poLookup.get(tp.purchaseOrderId);
+      if (!po) continue;
+      const total = getPoTotal(po);
+      const cardKey = po.bankCardId || "__none__";
+      if (!groups[cardKey]) {
+        const card = bankCards.find((c) => c.id === po.bankCardId);
+        groups[cardKey] = { cardName: card?.name || "No Card", total: 0, paid: 0, unpaid: 0, count: 0 };
+      }
+      groups[cardKey].total += total;
+      groups[cardKey].count += 1;
+      if (po.paidAt) groups[cardKey].paid += total;
+      else groups[cardKey].unpaid += total;
+    }
+    return Object.entries(groups).map(([key, val]) => ({ cardId: key, ...val }));
+  }, [trip, poLookup, bankCards]);
+
+  const grandTotal = cardSummary.reduce((s, g) => s + g.total, 0);
+  const grandPaid = cardSummary.reduce((s, g) => s + g.paid, 0);
+  const grandUnpaid = cardSummary.reduce((s, g) => s + g.unpaid, 0);
 
   if (loading) {
     return (
@@ -82,7 +151,6 @@ export function TripPlanDetail() {
     navigate("/calendar");
   };
 
-  // Separate trip-level POs from location-level POs
   const tripLevelPos = trip.pos.filter((po) => po.locationIndex === null);
   const getPosForLocation = (idx: number) => trip.pos.filter((po) => po.locationIndex === idx);
 
@@ -185,9 +253,19 @@ export function TripPlanDetail() {
                         )}
                         {locPos.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
-                            {locPos.map((po) => (
-                              <PoBadgeLink key={po.id} poId={po.purchaseOrderId} poNumber={po.poNumber} vendorName={po.vendorName} />
-                            ))}
+                            {locPos.map((tp) => {
+                              const po = poLookup.get(tp.purchaseOrderId);
+                              return (
+                                <PoBadgeLink
+                                  key={tp.id}
+                                  poId={tp.purchaseOrderId}
+                                  poNumber={tp.poNumber}
+                                  vendorName={tp.vendorName}
+                                  total={po ? getPoTotal(po) : undefined}
+                                  isPaid={!!po?.paidAt}
+                                />
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -234,10 +312,76 @@ export function TripPlanDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {tripLevelPos.map((po) => (
-                <PoBadgeLink key={po.id} poId={po.purchaseOrderId} poNumber={po.poNumber} vendorName={po.vendorName} />
-              ))}
+              {tripLevelPos.map((tp) => {
+                const po = poLookup.get(tp.purchaseOrderId);
+                return (
+                  <PoBadgeLink
+                    key={tp.id}
+                    poId={tp.purchaseOrderId}
+                    poNumber={tp.poNumber}
+                    vendorName={tp.vendorName}
+                    total={po ? getPoTotal(po) : undefined}
+                    isPaid={!!po?.paidAt}
+                  />
+                );
+              })}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Financial Summary by Card */}
+      {cardSummary.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <DollarSign className="h-4 w-4" /> Trip Cost Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {cardSummary.map((group) => (
+              <div key={group.cardId} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{group.cardName}</span>
+                  <Badge variant="secondary" className="text-xs">{group.count} PO{group.count !== 1 ? "s" : ""}</Badge>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  {group.paid > 0 && (
+                    <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {formatCurrency(group.paid)} paid
+                    </span>
+                  )}
+                  {group.unpaid > 0 && (
+                    <span className="text-muted-foreground">
+                      {formatCurrency(group.unpaid)} unpaid
+                    </span>
+                  )}
+                  <span className="font-semibold">{formatCurrency(group.total)}</span>
+                </div>
+              </div>
+            ))}
+
+            {/* Grand total */}
+            {cardSummary.length > 1 && (
+              <div className="flex items-center justify-between pt-2 border-t">
+                <span className="text-sm font-semibold">Grand Total</span>
+                <div className="flex items-center gap-4 text-sm">
+                  {grandPaid > 0 && (
+                    <span className="text-emerald-600 dark:text-emerald-400">
+                      {formatCurrency(grandPaid)} paid
+                    </span>
+                  )}
+                  {grandUnpaid > 0 && (
+                    <span className="text-muted-foreground">
+                      {formatCurrency(grandUnpaid)} unpaid
+                    </span>
+                  )}
+                  <span className="font-bold">{formatCurrency(grandTotal)}</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
