@@ -43,6 +43,7 @@ import { PartDetail } from "./pages/PartDetail";
 import { TaxDocuments } from "./pages/TaxDocuments";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
+import { TripPlanDetail } from "./pages/TripPlanDetail";
 import { CompanyDetail } from "./pages/CompanyDetail";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
@@ -288,6 +289,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Calendar />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar/trip/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <TripPlanDetail />
               </AppLayout>
             </ProtectedRoute>
           }
