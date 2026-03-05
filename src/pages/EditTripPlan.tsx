@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, parseISO } from "date-fns";
-import { Plus, X, MapPin, ChevronLeft } from "lucide-react";
+import { Plus, X, MapPin, ChevronLeft, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -175,8 +175,24 @@ export function EditTripPlan() {
       const k = parseInt(key);
       if (k < idx) newMap[k] = val;
       else if (k > idx) newMap[k - 1] = val;
-      // k === idx is removed
     });
+    setLocationPoMap(newMap);
+  };
+
+  const handleMoveLocation = (idx: number, direction: "up" | "down") => {
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= locations.length) return;
+    const newLocs = [...locations];
+    [newLocs[idx], newLocs[targetIdx]] = [newLocs[targetIdx], newLocs[idx]];
+    setLocations(newLocs);
+    // Swap PO assignments
+    const newMap: Record<number, string[]> = { ...locationPoMap };
+    const aPos = newMap[idx];
+    const bPos = newMap[targetIdx];
+    delete newMap[idx];
+    delete newMap[targetIdx];
+    if (aPos?.length) newMap[targetIdx] = aPos;
+    if (bPos?.length) newMap[idx] = bPos;
     setLocationPoMap(newMap);
   };
 
@@ -375,14 +391,34 @@ export function EditTripPlan() {
                           <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <span className="font-medium">{loc.name}</span>
                           {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 ml-auto shrink-0"
-                            onClick={() => handleRemoveLocation(idx)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => handleMoveLocation(idx, "up")}
+                              disabled={idx === 0}
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => handleMoveLocation(idx, "down")}
+                              disabled={idx === locations.length - 1}
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={() => handleRemoveLocation(idx)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
 
                         {/* POs for this location */}
