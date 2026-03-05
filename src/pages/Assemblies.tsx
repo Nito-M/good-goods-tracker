@@ -520,7 +520,8 @@ function AssemblyDetail({
                 <div>
                   {(() => {
                     const partMatch = !item.inventory_item_id && partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku);
-                    const linkTo = item.inventory_item_id ? `/items/${item.inventory_item_id}` : partMatch ? `/parts/${partMatch.id}` : null;
+                    const assemblyMatch = !item.inventory_item_id && !partMatch && allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name);
+                    const linkTo = item.inventory_item_id ? `/items/${item.inventory_item_id}` : partMatch ? `/parts/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : null;
                     return linkTo ? (
                       <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
                     ) : (
