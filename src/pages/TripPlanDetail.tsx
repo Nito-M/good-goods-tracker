@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTripPlans } from "@/hooks/useTripPlans";
 import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
-import { EditTripPlanDialog } from "@/components/EditTripPlanDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,10 +31,9 @@ import {
 export function TripPlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tripPlans, loading, updateTripPlan, deleteTripPlan } = useTripPlans();
+  const { tripPlans, loading, deleteTripPlan } = useTripPlans();
   const { orders: purchaseOrders } = usePurchaseOrders();
   const { toast } = useToast();
-  const [editOpen, setEditOpen] = useState(false);
 
   const trip = tripPlans.find((t) => t.id === id);
 
@@ -88,7 +85,7 @@ export function TripPlanDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/calendar/trip/${trip.id}/edit`)}>
             <Pencil className="h-4 w-4 mr-1" /> Edit
           </Button>
           <AlertDialog>
@@ -221,13 +218,6 @@ export function TripPlanDetail() {
         </Card>
       )}
 
-      <EditTripPlanDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSave={updateTripPlan}
-        purchaseOrders={purchaseOrders}
-        tripPlan={trip}
-      />
     </div>
   );
 }
