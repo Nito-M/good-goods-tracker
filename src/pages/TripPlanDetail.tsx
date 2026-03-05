@@ -30,7 +30,7 @@ import {
 
 function PoBadgeLink({ poNumber, vendorName, poId }: { poNumber?: string | null; vendorName?: string | null; poId: string }) {
   return (
-    <Link to="/purchase-orders" className="inline-block">
+    <Link to={`/purchase-orders${poNumber ? `?po=${encodeURIComponent(poNumber)}` : ''}`} className="inline-block">
       <Badge variant="outline" className="text-xs py-1 px-2 cursor-pointer hover:bg-accent transition-colors">
         {poNumber || "PO"}
         {vendorName ? ` — ${vendorName}` : ""}
