@@ -2246,18 +2246,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          location_index: number | null
           purchase_order_id: string
           trip_plan_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          location_index?: number | null
           purchase_order_id: string
           trip_plan_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          location_index?: number | null
           purchase_order_id?: string
           trip_plan_id?: string
         }

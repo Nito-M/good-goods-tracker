@@ -26,6 +26,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { PurchaseOrder } from "@/types/purchaseOrder";
 
 const COLOR_OPTIONS = [
   { value: "bg-teal-500", label: "Teal" },
@@ -35,6 +36,67 @@ const COLOR_OPTIONS = [
   { value: "bg-rose-500", label: "Rose" },
   { value: "bg-amber-500", label: "Amber" },
 ];
+
+function PoSearchPicker({
+  purchaseOrders,
+  selectedPoIds,
+  onToggle,
+  allSelectedPoIds,
+}: {
+  purchaseOrders: PurchaseOrder[];
+  selectedPoIds: string[];
+  onToggle: (poId: string) => void;
+  allSelectedPoIds?: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const filtered = purchaseOrders.filter(
+    (po) =>
+      query.trim().length > 0 &&
+      ((po.poNumber || "").toLowerCase().includes(query.toLowerCase()) ||
+        (po.vendorName || "").toLowerCase().includes(query.toLowerCase()))
+  );
+
+  return (
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setQuery(""); }}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="w-full justify-start">
+          <Plus className="h-4 w-4 mr-1" /> Add PO
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search POs..." value={query} onValueChange={setQuery} />
+          <CommandList>
+            {query.trim().length > 0 ? (
+              <>
+                <CommandEmpty>No POs found.</CommandEmpty>
+                <CommandGroup>
+                  {filtered.map((po) => (
+                    <CommandItem
+                      key={po.id}
+                      onSelect={() => { onToggle(po.id); setOpen(false); setQuery(""); }}
+                    >
+                      <span className="font-medium text-sm">
+                        {po.poNumber || "PO"}{po.vendorName ? ` — ${po.vendorName}` : ""}
+                      </span>
+                      {(selectedPoIds.includes(po.id) || allSelectedPoIds?.includes(po.id)) && (
+                        <Badge variant="outline" className="ml-auto text-xs">Added</Badge>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            ) : (
+              <div className="py-6 text-center text-sm text-muted-foreground">Type to search POs...</div>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function EditTripPlan() {
   const { id } = useParams<{ id: string }>();
@@ -52,9 +114,8 @@ export function EditTripPlan() {
   const [locations, setLocations] = useState<{ name: string; address: string }[]>([]);
   const [locName, setLocName] = useState("");
   const [locAddress, setLocAddress] = useState("");
-  const [selectedPoIds, setSelectedPoIds] = useState<string[]>([]);
-  const [poSearchQuery, setPoSearchQuery] = useState("");
-  const [poPickerOpen, setPoPickerOpen] = useState(false);
+  const [selectedPoIds, setSelectedPoIds] = useState<string[]>([]); // trip-level POs
+  const [locationPoMap, setLocationPoMap] = useState<Record<number, string[]>>({}); // idx -> poIds
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -66,7 +127,16 @@ export function EditTripPlan() {
       setNotes(trip.notes || "");
       setColor(trip.color);
       setLocations(trip.locations.map((l) => ({ name: l.name, address: l.address || "" })));
-      setSelectedPoIds(trip.pos.map((p) => p.purchaseOrderId));
+      // Trip-level POs
+      setSelectedPoIds(trip.pos.filter((p) => p.locationIndex === null).map((p) => p.purchaseOrderId));
+      // Location-level POs
+      const locMap: Record<number, string[]> = {};
+      trip.pos.filter((p) => p.locationIndex !== null).forEach((p) => {
+        const idx = p.locationIndex!;
+        if (!locMap[idx]) locMap[idx] = [];
+        locMap[idx].push(p.purchaseOrderId);
+      });
+      setLocationPoMap(locMap);
       setInitialized(true);
     }
   }, [trip, initialized]);
@@ -99,12 +169,35 @@ export function EditTripPlan() {
 
   const handleRemoveLocation = (idx: number) => {
     setLocations(locations.filter((_, i) => i !== idx));
+    // Re-index locationPoMap
+    const newMap: Record<number, string[]> = {};
+    Object.entries(locationPoMap).forEach(([key, val]) => {
+      const k = parseInt(key);
+      if (k < idx) newMap[k] = val;
+      else if (k > idx) newMap[k - 1] = val;
+      // k === idx is removed
+    });
+    setLocationPoMap(newMap);
   };
 
-  const togglePo = (poId: string) => {
+  const toggleTripPo = (poId: string) => {
     setSelectedPoIds((prev) =>
       prev.includes(poId) ? prev.filter((id) => id !== poId) : [...prev, poId]
     );
+  };
+
+  const toggleLocationPo = (locIdx: number, poId: string) => {
+    setLocationPoMap((prev) => {
+      const existing = prev[locIdx] || [];
+      if (existing.includes(poId)) {
+        const updated = existing.filter((id) => id !== poId);
+        const newMap = { ...prev };
+        if (updated.length === 0) delete newMap[locIdx];
+        else newMap[locIdx] = updated;
+        return newMap;
+      }
+      return { ...prev, [locIdx]: [...existing, poId] };
+    });
   };
 
   const handleSave = async () => {
@@ -118,17 +211,17 @@ export function EditTripPlan() {
       color,
       locations,
       poIds: selectedPoIds,
+      locationPoMap,
     });
     setSaving(false);
     navigate(`/calendar/trip/${trip.id}`);
   };
 
-  const filteredPos = purchaseOrders.filter(
-    (po) =>
-      poSearchQuery.trim().length > 0 &&
-      ((po.poNumber || "").toLowerCase().includes(poSearchQuery.toLowerCase()) ||
-        (po.vendorName || "").toLowerCase().includes(poSearchQuery.toLowerCase()))
-  );
+  // Collect all PO IDs that are already assigned anywhere
+  const allAssignedPoIds = [
+    ...selectedPoIds,
+    ...Object.values(locationPoMap).flat(),
+  ];
 
   return (
     <div className="space-y-6">
@@ -232,9 +325,40 @@ export function EditTripPlan() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Trip-level POs */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">General Purchase Orders</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {selectedPoIds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedPoIds.map((poId) => {
+                    const po = purchaseOrders.find((p) => p.id === poId);
+                    return (
+                      <Badge key={poId} variant="secondary" className="gap-1 py-1">
+                        {po?.poNumber || "PO"}
+                        {po?.vendorName && ` — ${po.vendorName}`}
+                        <button onClick={() => toggleTripPo(poId)}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+              <PoSearchPicker
+                purchaseOrders={purchaseOrders}
+                selectedPoIds={selectedPoIds}
+                onToggle={toggleTripPo}
+                allSelectedPoIds={allAssignedPoIds}
+              />
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Right column */}
+        {/* Right column - Locations */}
         <div className="space-y-6">
           <Card>
             <CardHeader className="pb-3">
@@ -242,22 +366,53 @@ export function EditTripPlan() {
             </CardHeader>
             <CardContent className="space-y-3">
               {locations.length > 0 && (
-                <div className="space-y-1.5">
-                  {locations.map((loc, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm border rounded-md px-3 py-2">
-                      <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="font-medium">{loc.name}</span>
-                      {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 ml-auto shrink-0"
-                        onClick={() => handleRemoveLocation(idx)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
+                <div className="space-y-3">
+                  {locations.map((loc, idx) => {
+                    const locPoIds = locationPoMap[idx] || [];
+                    return (
+                      <div key={idx} className="border rounded-lg p-3 space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="font-medium">{loc.name}</span>
+                          {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 ml-auto shrink-0"
+                            onClick={() => handleRemoveLocation(idx)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+
+                        {/* POs for this location */}
+                        {locPoIds.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pl-5">
+                            {locPoIds.map((poId) => {
+                              const po = purchaseOrders.find((p) => p.id === poId);
+                              return (
+                                <Badge key={poId} variant="outline" className="gap-1 text-xs">
+                                  {po?.poNumber || "PO"}
+                                  {po?.vendorName && ` — ${po.vendorName}`}
+                                  <button onClick={() => toggleLocationPo(idx, poId)}>
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <div className="pl-5">
+                          <PoSearchPicker
+                            purchaseOrders={purchaseOrders}
+                            selectedPoIds={locPoIds}
+                            onToggle={(poId) => toggleLocationPo(idx, poId)}
+                            allSelectedPoIds={allAssignedPoIds}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <div className="flex gap-2">
@@ -279,64 +434,6 @@ export function EditTripPlan() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Linked Purchase Orders</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {selectedPoIds.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedPoIds.map((poId) => {
-                    const po = purchaseOrders.find((p) => p.id === poId);
-                    return (
-                      <Badge key={poId} variant="secondary" className="gap-1 py-1">
-                        {po?.poNumber || "PO"}
-                        {po?.vendorName && ` — ${po.vendorName}`}
-                        <button onClick={() => togglePo(poId)}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-              <Popover open={poPickerOpen} onOpenChange={(o) => { setPoPickerOpen(o); if (!o) setPoSearchQuery(""); }}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Plus className="h-4 w-4 mr-1" /> Add PO
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search POs..." value={poSearchQuery} onValueChange={setPoSearchQuery} />
-                    <CommandList>
-                      {poSearchQuery.trim().length > 0 ? (
-                        <>
-                          <CommandEmpty>No POs found.</CommandEmpty>
-                          <CommandGroup>
-                            {filteredPos.map((po) => (
-                              <CommandItem
-                                key={po.id}
-                                onSelect={() => { togglePo(po.id); setPoPickerOpen(false); setPoSearchQuery(""); }}
-                              >
-                                <span className="font-medium text-sm">
-                                  {po.poNumber || "PO"}{po.vendorName ? ` — ${po.vendorName}` : ""}
-                                </span>
-                                {selectedPoIds.includes(po.id) && <Badge variant="outline" className="ml-auto text-xs">Added</Badge>}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </>
-                      ) : (
-                        <div className="py-6 text-center text-sm text-muted-foreground">Type to search POs...</div>
-                      )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
             </CardContent>
           </Card>
         </div>
