@@ -2,9 +2,12 @@ import { useState, useMemo } from "react";
 import { useRequests } from "@/hooks/useRequests";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useJobs } from "@/hooks/useJobs";
+import { useTripPlans } from "@/hooks/useTripPlans";
+import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { AddCalendarEventDialog } from "@/components/AddCalendarEventDialog";
 import { EditCalendarEventDialog } from "@/components/EditCalendarEventDialog";
+import { AddTripPlanDialog } from "@/components/AddTripPlanDialog";
 import { useInventory } from "@/hooks/useInventory";
 import { useProfile } from "@/hooks/useProfile";
 import { Request, RequestStatus } from "@/types/request";
@@ -26,7 +29,8 @@ import {
   Plus,
   Trash2,
   Repeat,
-  Briefcase } from
+  Briefcase,
+  MapPinned } from
 "lucide-react";
 import {
   format,
@@ -88,6 +92,8 @@ export function Calendar() {
   const { requests, updateRequest, uploadImage, uploadPdf } = useRequests();
   const { events, createEvent, updateEvent, deleteEvent } = useCalendarEvents();
   const { jobs } = useJobs();
+  const { tripPlans, createTripPlan, deleteTripPlan } = useTripPlans();
+  const { orders: purchaseOrders } = usePurchaseOrders();
   const { allItems } = useInventory();
   const { profile } = useProfile();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -95,6 +101,7 @@ export function Calendar() {
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
+  const [addTripOpen, setAddTripOpen] = useState(false);
 
   const parseLocalDate = (dateString: string): Date => {
     const [year, month, day] = dateString.split("T")[0].split("-").map(Number);
@@ -150,6 +157,17 @@ export function Calendar() {
     if (!selectedDate) return [];
     return jobsByDate.get(format(selectedDate, "yyyy-MM-dd")) || [];
   }, [selectedDate, jobsByDate]);
+
+  const selectedDateTrips = useMemo(() => {
+    if (!selectedDate) return [];
+    const dateKey = format(selectedDate, "yyyy-MM-dd");
+    return tripPlans.filter((tp) => {
+      if (tp.endDate) {
+        return dateKey >= tp.startDate && dateKey <= tp.endDate;
+      }
+      return tp.startDate === dateKey;
+    });
+  }, [selectedDate, tripPlans]);
 
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -210,7 +228,8 @@ export function Calendar() {
                 const dayRequests = requestsByDate.get(dateKey) || [];
                 const dayEvents = getEventsForDay(day);
                 const dayJobs = jobsByDate.get(dateKey) || [];
-                const totalItems = dayRequests.length + dayEvents.length + dayJobs.length;
+                const dayTrips = tripPlans.filter((tp) => tp.endDate ? dateKey >= tp.startDate && dateKey <= tp.endDate : tp.startDate === dateKey);
+                const totalItems = dayRequests.length + dayEvents.length + dayJobs.length + dayTrips.length;
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
                 const isDayToday = isToday(day);
@@ -273,6 +292,14 @@ export function Calendar() {
                           {request.itemName}
                         </div>
                       )}
+                      {dayTrips.slice(0, Math.max(0, 3 - dayEvents.length - dayJobs.length - dayRequests.length)).map((trip) =>
+                      <div
+                        key={`trip-${trip.id}`}
+                        className={cn("text-xs px-1.5 py-0.5 rounded truncate text-white", trip.color)}
+                        title={trip.title}>
+                          📍 {trip.title}
+                        </div>
+                      )}
                       {totalItems > 3 &&
                       <div className="text-xs text-muted-foreground pl-1">
                           +{totalItems - 3} more
@@ -294,9 +321,14 @@ export function Calendar() {
                 {selectedDate ? format(selectedDate, "EEEE, MMM d") : "Select a date"}
               </CardTitle>
               {selectedDate &&
-              <Button size="sm" variant="outline" onClick={() => setAddEventOpen(true)}>
+              <div className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={() => setAddEventOpen(true)}>
                   <Plus className="h-4 w-4 mr-1" /> Event
                 </Button>
+                <Button size="sm" variant="outline" onClick={() => setAddTripOpen(true)}>
+                  <MapPinned className="h-4 w-4 mr-1" /> Plan
+                </Button>
+              </div>
               }
             </div>
           </CardHeader>
@@ -410,7 +442,59 @@ export function Calendar() {
                   </div>
               }
 
-                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 && selectedDateJobs.length === 0 &&
+                {/* Trip Plans */}
+                {selectedDateTrips.length > 0 &&
+              <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Trip Plans</p>
+                    {selectedDateTrips.map((trip) =>
+                <div
+                  key={trip.id}
+                  className="p-3 border rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <div className={cn("w-3 h-3 rounded-full mt-1 shrink-0", trip.color)} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{trip.title}</p>
+                            {trip.endDate && (
+                              <p className="text-xs text-muted-foreground">
+                                {trip.startDate} → {trip.endDate}
+                              </p>
+                            )}
+                            {trip.notes && <p className="text-xs text-muted-foreground mt-0.5">{trip.notes}</p>}
+                            {trip.locations.length > 0 && (
+                              <div className="mt-1.5 space-y-0.5">
+                                {trip.locations.map((loc, idx) => (
+                                  <div key={loc.id} className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <MapPinned className="h-3 w-3 shrink-0" />
+                                    <span>{idx + 1}. {loc.name}</span>
+                                    {loc.address && <span className="truncate">— {loc.address}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {trip.pos.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {trip.pos.map((po) => (
+                                  <Badge key={po.id} variant="outline" className="text-xs">
+                                    {po.poNumber || "PO"}{po.vendorName ? ` — ${po.vendorName}` : ""}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 shrink-0"
+                      onClick={() => deleteTripPlan(trip.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                )}
+                  </div>
+              }
+
+                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 && selectedDateJobs.length === 0 && selectedDateTrips.length === 0 &&
               <p className="text-sm text-muted-foreground">Nothing on this date</p>
               }
               </>
@@ -433,6 +517,10 @@ export function Calendar() {
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded bg-orange-500" />
               <span className="text-sm text-muted-foreground">Job Deadline</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-teal-500" />
+              <span className="text-sm text-muted-foreground">Trip Plan</span>
             </div>
           </div>
         </CardContent>
@@ -460,6 +548,13 @@ export function Calendar() {
         open={!!editingEvent}
         onOpenChange={(open) => !open && setEditingEvent(null)}
         onSave={updateEvent} />
+
+      <AddTripPlanDialog
+        open={addTripOpen}
+        onOpenChange={setAddTripOpen}
+        onSave={createTripPlan}
+        purchaseOrders={purchaseOrders}
+        selectedDate={selectedDate} />
 
     </div>);
 

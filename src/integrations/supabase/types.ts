@@ -2207,6 +2207,113 @@ export type Database = {
           },
         ]
       }
+      trip_plan_locations: {
+        Row: {
+          address: string | null
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          trip_plan_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          trip_plan_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          trip_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_plan_locations_trip_plan_id_fkey"
+            columns: ["trip_plan_id"]
+            isOneToOne: false
+            referencedRelation: "trip_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_plan_pos: {
+        Row: {
+          created_at: string
+          id: string
+          purchase_order_id: string
+          trip_plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          purchase_order_id: string
+          trip_plan_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          purchase_order_id?: string
+          trip_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_plan_pos_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_plan_pos_trip_plan_id_fkey"
+            columns: ["trip_plan_id"]
+            isOneToOne: false
+            referencedRelation: "trip_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_plans: {
+        Row: {
+          color: string
+          created_at: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          start_date: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_page_permissions: {
         Row: {
           created_at: string
