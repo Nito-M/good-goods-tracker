@@ -4,6 +4,7 @@ export interface PurchaseOrderItem {
   quantity: number;
   unitCost?: number;
   notes?: string;
+  receivedQuantity?: number;
 }
 
 export interface PoAttachment {
