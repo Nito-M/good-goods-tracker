@@ -598,7 +598,8 @@ function AssemblyDetail({
                   {(() => {
                     const partMatch = !item.inventory_item_id && partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku);
                     const assemblyMatch = !item.inventory_item_id && !partMatch && allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name);
-                    const linkTo = item.inventory_item_id ? `/items/${item.inventory_item_id}` : partMatch ? `/parts/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : null;
+                    const partsAssemblyMatch = !item.inventory_item_id && !partMatch && !assemblyMatch && partsAssemblies?.find(pa => pa.name === item.item_name);
+                    const linkTo = item.inventory_item_id ? `/items/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : partsAssemblyMatch ? `/parts/assemblies/${encodeURIComponent(partsAssemblyMatch.type)}?id=${partsAssemblyMatch.id}` : null;
                     return linkTo ? (
                       <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
                     ) : (
