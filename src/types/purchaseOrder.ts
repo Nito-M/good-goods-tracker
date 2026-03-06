@@ -29,7 +29,7 @@ export interface PurchaseOrder {
   imageUrl: string | null;
   attachments?: PoAttachment[];
   items: PurchaseOrderItem[];
-  status: 'draft' | 'ordered' | 'received';
+  status: 'draft' | 'ordered' | 'partially_received' | 'received';
   orderedAt: Date;
   receivedAt: Date | null;
   paidAt: Date | null;
@@ -88,7 +88,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     pdfUrl: db.pdf_url,
     imageUrl: db.image_url,
     items,
-    status: db.status as 'draft' | 'ordered' | 'received',
+    status: db.status as 'draft' | 'ordered' | 'partially_received' | 'received',
     orderedAt: new Date(db.ordered_at),
     receivedAt: db.received_at ? new Date(db.received_at) : null,
     paidAt: db.paid_at ? new Date(db.paid_at) : null,

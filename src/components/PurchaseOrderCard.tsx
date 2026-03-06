@@ -171,12 +171,14 @@ export function PurchaseOrderCard({
                         className={
                           order.status === 'received'
                             ? 'bg-green-600 hover:bg-green-700 text-xs'
+                            : order.status === 'partially_received'
+                            ? 'bg-orange-500 hover:bg-orange-600 text-white text-xs'
                             : order.status === 'draft'
                             ? 'border-yellow-500 text-yellow-600 text-xs'
                             : 'text-xs'
                         }
                       >
-                        {order.status === 'received' ? 'Received' : order.status === 'draft' ? 'Draft' : 'Ordered'}
+                        {order.status === 'received' ? 'Received' : order.status === 'partially_received' ? 'Partial' : order.status === 'draft' ? 'Draft' : 'Ordered'}
                       </Badge>
                       {order.paidAt ? (
                         <Badge variant="outline" className="border-blue-500 text-blue-600 text-xs">Paid</Badge>

@@ -144,13 +144,19 @@ export function PurchaseOrders() {
 
   const draftOrders = filteredOrders.filter((o) => o.status === 'draft').sort(sortByPoNumber);
   const orderedOrders = filteredOrders.filter((o) => o.status === 'ordered').sort(sortByPoNumber);
+  const partiallyReceivedOrders = filteredOrders.filter((o) => o.status === 'partially_received').sort(sortByPoNumber);
   const receivedOrders = filteredOrders.filter((o) => o.status === 'received').sort(sortByPoNumber);
 
   // Determine which tab the highlighted PO belongs to
   const defaultTab = useMemo(() => {
     if (!highlightPo) return 'draft';
     const match = orders.find((o) => o.poNumber === highlightPo);
-    if (match) return match.status === 'received' ? 'received' : match.status === 'ordered' ? 'ordered' : 'draft';
+    if (match) {
+      if (match.status === 'received') return 'received';
+      if (match.status === 'partially_received') return 'partially_received';
+      if (match.status === 'ordered') return 'ordered';
+      return 'draft';
+    }
     return 'draft';
   }, [highlightPo, orders]);
 
@@ -245,6 +251,14 @@ export function PurchaseOrders() {
                   </span>
               }
               </TabsTrigger>
+              <TabsTrigger value="partially_received" className="gap-2">
+                Partial
+                {partiallyReceivedOrders.length > 0 &&
+              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-orange-500 text-white">
+                    {partiallyReceivedOrders.length}
+                  </span>
+              }
+              </TabsTrigger>
               <TabsTrigger value="received" className="gap-2">
                 Received
                 {receivedOrders.length > 0 &&
@@ -306,6 +320,33 @@ export function PurchaseOrders() {
               bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
               defaultOpen={highlightPo === order.poNumber} />
 
+            )
+            }
+            </TabsContent>
+
+            <TabsContent value="partially_received" className="space-y-4">
+              {partiallyReceivedOrders.length === 0 ?
+            <p className="text-muted-foreground text-center py-8">No partially received orders</p> :
+
+            partiallyReceivedOrders.map((order) =>
+            <PurchaseOrderCard
+              key={order.id}
+              order={order}
+              onMarkOrdered={handleMarkOrdered}
+              onMarkReceived={handleMarkReceived}
+              onMarkPaid={handleMarkPaid}
+              onRevert={handleRevert}
+              onDelete={deleteOrder}
+              onEdit={handleEdit}
+              onDownload={handleDownload}
+              onPreview={handlePreview}
+              onAddAttachment={(file) => addAttachment(order.id, file)}
+              onDeleteAttachment={deleteAttachment}
+              onDeleteImage={() => deleteImageForOrder(order.id)}
+              onDeletePdf={() => deletePdfForOrder(order.id)}
+              loading={processingId === order.id}
+              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
+              defaultOpen={highlightPo === order.poNumber} />
             )
             }
             </TabsContent>
