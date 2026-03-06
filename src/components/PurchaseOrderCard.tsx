@@ -41,6 +41,7 @@ import { formatCurrency } from '@/lib/utils';
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
+  onMarkPartiallyReceived?: (id: string) => void;
   onMarkOrdered?: (id: string) => void;
   onMarkReceived: (id: string) => void;
   onMarkPaid: (id: string) => void;
@@ -61,6 +62,7 @@ interface PurchaseOrderCardProps {
 
 export function PurchaseOrderCard({
   order,
+  onMarkPartiallyReceived,
   onMarkOrdered,
   onMarkReceived,
   onMarkPaid,
@@ -445,7 +447,13 @@ export function PurchaseOrderCard({
                       Place Order
                     </Button>
                   )}
-                  {order.status === 'ordered' && (
+                  {order.status === 'ordered' && onMarkPartiallyReceived && (
+                    <Button size="sm" variant="outline" onClick={() => onMarkPartiallyReceived(order.id)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
+                      <Package className="h-4 w-4" />
+                      Partial Receive
+                    </Button>
+                  )}
+                  {(order.status === 'ordered' || order.status === 'partially_received') && (
                     <Button size="sm" onClick={() => onMarkReceived(order.id)} disabled={loading} className="gap-2">
                       <Check className="h-4 w-4" />
                       Mark Received
