@@ -391,6 +391,16 @@ export function usePurchaseOrders() {
 
     // Update the purchase order status and items with received quantities
     const newStatus = partial ? 'partially_received' : 'received';
+
+    const validLocations = locationItems?.filter(e => e.warehouseId && e.items.length > 0) || [];
+
+    // Build per-item total quantities to add to inventory (sum across all locations)
+    const itemTotalMap = new Map<string, number>();
+    for (const loc of validLocations) {
+      for (const item of loc.items) {
+        itemTotalMap.set(item.sku, (itemTotalMap.get(item.sku) || 0) + item.quantity);
+      }
+    }
     
     // Build updated items with receivedQuantity tracking
     const updatedItems = order.items.map(item => {
@@ -419,16 +429,6 @@ export function usePurchaseOrders() {
         variant: 'destructive',
       });
       return false;
-    }
-
-    const validLocations = locationItems?.filter(e => e.warehouseId && e.items.length > 0) || [];
-
-    // Build per-item total quantities to add to inventory (sum across all locations)
-    const itemTotalMap = new Map<string, number>();
-    for (const loc of validLocations) {
-      for (const item of loc.items) {
-        itemTotalMap.set(item.sku, (itemTotalMap.get(item.sku) || 0) + item.quantity);
-      }
     }
 
     // Determine which items to process from order
