@@ -58,6 +58,7 @@ export function PurchaseOrders() {
     setProcessingId(null);
   };
 
+  const handleMarkReceived = (orderId: string) => {
     setReceivingOrderId(orderId);
     setReceiveDialogOpen(true);
   };
