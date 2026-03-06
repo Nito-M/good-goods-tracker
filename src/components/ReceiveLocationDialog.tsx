@@ -233,8 +233,10 @@ export function ReceiveLocationDialog({
               <Label className="text-sm font-medium">Item Distribution Summary</Label>
               <div className="rounded-md border p-3 space-y-1.5">
                 {itemAssignments.map((a, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm">
-                    {a.isComplete ? (
+                  <div key={idx} className={`flex items-center gap-2 text-sm ${a.fullyReceived ? 'opacity-50' : ''}`}>
+                    {a.fullyReceived ? (
+                      <Check className="h-4 w-4 text-muted-foreground shrink-0" />
+                    ) : a.isComplete ? (
                       <Check className="h-4 w-4 text-primary shrink-0" />
                     ) : (
                       <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
@@ -242,10 +244,18 @@ export function ReceiveLocationDialog({
                     <span className="flex-1 truncate">
                       {a.itemName}
                       {a.sku && <span className="text-muted-foreground ml-1">({a.sku})</span>}
+                      {a.fullyReceived && <span className="text-muted-foreground ml-1 italic">— Already received</span>}
                     </span>
-                    <span className={`tabular-nums ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      {a.assigned} / {a.needed}
-                    </span>
+                    {a.fullyReceived ? (
+                      <span className="tabular-nums text-muted-foreground">
+                        {a.prevReceived} / {poItems[idx].quantity} ✓
+                      </span>
+                    ) : (
+                      <span className={`tabular-nums ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {a.assigned} / {a.needed}
+                        {a.prevReceived > 0 && <span className="text-xs text-muted-foreground ml-1">({a.prevReceived} prev)</span>}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
