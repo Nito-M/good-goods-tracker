@@ -186,10 +186,13 @@ function AssemblyDetail({
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
+  const [showPartsAssemblyPicker, setShowPartsAssemblyPicker] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
   const [addingFolderId, setAddingFolderId] = useState<string | null>(null);
   const [assemblySearchQuery, setAssemblySearchQuery] = useState('');
+  const [partsAssemblySearchQuery, setPartsAssemblySearchQuery] = useState('');
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
+  const [addingPartsAssemblyId, setAddingPartsAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
