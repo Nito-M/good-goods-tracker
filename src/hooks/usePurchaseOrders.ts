@@ -389,12 +389,24 @@ export function usePurchaseOrders() {
       return false;
     }
 
-    // Update the purchase order status
+    // Update the purchase order status and items with received quantities
     const newStatus = partial ? 'partially_received' : 'received';
+    
+    // Build updated items with receivedQuantity tracking
+    const updatedItems = order.items.map(item => {
+      const prevReceived = item.receivedQuantity || 0;
+      const newlyReceived = itemTotalMap.get(item.sku) || 0;
+      return {
+        ...item,
+        receivedQuantity: prevReceived + newlyReceived,
+      };
+    });
+
     const { error } = await supabase
       .from('purchase_orders')
       .update({
         status: newStatus,
+        items: JSON.parse(JSON.stringify(updatedItems)),
         ...(partial ? {} : { received_at: new Date().toISOString() }),
       })
       .eq('id', orderId);

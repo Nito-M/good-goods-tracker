@@ -88,13 +88,14 @@ export function ReceiveLocationDialog({
 
   const addItemToLocation = (locIndex: number, poItemIndex: number) => {
     const item = poItems[poItemIndex];
-    // Calculate remaining for this item
+    // Calculate remaining for this item (accounting for previously received)
+    const prevReceived = item.receivedQuantity || 0;
     const alreadyAssigned = locations.reduce((sum, loc, li) => {
       if (li === locIndex) return sum;
       const found = loc.items.find((it) => it.poItemIndex === poItemIndex);
       return sum + (found ? parseFloat(found.quantity) || 0 : 0);
     }, 0);
-    const remaining = Math.max(0, item.quantity - alreadyAssigned);
+    const remaining = Math.max(0, item.quantity - prevReceived - alreadyAssigned);
 
     setLocations((prev) =>
       prev.map((l, i) => {
