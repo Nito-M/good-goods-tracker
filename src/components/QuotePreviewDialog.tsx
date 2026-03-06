@@ -111,7 +111,6 @@ export function QuotePreviewDialog({
                 </div>
                 <div className="text-right">
                   <p><span className="font-medium">Terms:</span> {quote.paymentTerms}</p>
-                  <p><span className="font-medium">Status:</span> {quote.status.toUpperCase()}</p>
                 </div>
               </div>
             )}

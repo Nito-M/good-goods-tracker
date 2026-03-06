@@ -103,9 +103,8 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     doc.setFont('helvetica', 'normal');
     doc.text(`PO Number: ${poNumber}`, layout.invoiceDetails.x, detailsY);
     doc.text(`Order Date: ${formatDate(order.orderedAt)}`, pageWidth - 20, detailsY, { align: 'right' });
-    doc.text(`Status: ${order.status.toUpperCase()}`, layout.invoiceDetails.x, detailsY + 7);
     if (order.receivedAt) {
-      doc.text(`Received: ${formatDate(order.receivedAt)}`, pageWidth - 20, detailsY + 7, { align: 'right' });
+      doc.text(`Received: ${formatDate(order.receivedAt)}`, layout.invoiceDetails.x, detailsY + 7);
     }
     flowY = Math.max(flowY, detailsY + 20);
   }

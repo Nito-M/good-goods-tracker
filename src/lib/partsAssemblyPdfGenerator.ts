@@ -43,17 +43,9 @@ export function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
-  const statusText = assembly.status === 'finished' ? 'Finished' : 'Not Finished';
-  const priceText = assembly.sellingPrice > 0 ? `Selling Price: ${formatCurrency(assembly.sellingPrice)}` : '';
-  doc.text(`Status: ${statusText}${priceText ? '    |    ' + priceText : ''}`, margin, y);
-  y += 5;
-
-  if (assembly.status !== 'finished' && assembly.statusNotes) {
-    doc.setTextColor(100, 100, 100);
-    const noteLines = doc.splitTextToSize(`Note: ${assembly.statusNotes}`, contentWidth);
-    doc.text(noteLines, margin, y);
-    y += noteLines.length * 5;
-    doc.setTextColor(0, 0, 0);
+  if (assembly.sellingPrice > 0) {
+    doc.text(`Selling Price: ${formatCurrency(assembly.sellingPrice)}`, margin, y);
+    y += 5;
   }
 
   y += 5;

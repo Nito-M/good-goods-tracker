@@ -114,7 +114,6 @@ export function InvoicePreviewDialog({
               <div className="flex justify-between text-sm mb-6">
                 <div>
                   <p><span className="font-medium">Invoice Number:</span> {sale.invoiceNumber}</p>
-                  <p><span className="font-medium">Status:</span> {sale.status.toUpperCase()}</p>
                 </div>
                 <div className="text-right">
                   <p><span className="font-medium">Date:</span> {formatDate(sale.createdAt)}</p>

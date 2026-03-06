@@ -109,7 +109,6 @@ export function PurchaseOrderPreviewDialog({
             <div className="flex justify-between text-sm mb-6">
               <div>
                 <p><span className="font-medium">PO Number:</span> {poNumber}</p>
-                <p><span className="font-medium">Status:</span> {order.status.toUpperCase()}</p>
               </div>
               <div className="text-right">
                 <p><span className="font-medium">Order Date:</span> {formatDate(order.orderedAt)}</p>

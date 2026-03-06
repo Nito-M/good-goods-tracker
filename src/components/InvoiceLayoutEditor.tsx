@@ -89,7 +89,7 @@ function ElementContent({
         <div className="w-full h-full flex flex-col justify-center p-1 overflow-hidden" style={{ fontSize: '5.5px', lineHeight: '1.5' }}>
           <div className="flex justify-between"><span className="text-muted-foreground">{docLabel} #:</span><span className="font-medium">{numPrefix}-0001</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Date:</span><span>Feb 17, 2026</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Status:</span><span className="font-medium">PENDING</span></div>
+          
         </div>
       );
     case 'billTo':
