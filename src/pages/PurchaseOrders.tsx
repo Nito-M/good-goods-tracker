@@ -52,7 +52,12 @@ export function PurchaseOrders() {
     setProcessingId(null);
   };
 
-  const handleMarkReceived = (orderId: string) => {
+  const handleMarkPartiallyReceived = async (orderId: string) => {
+    setProcessingId(orderId);
+    await markAsPartiallyReceived(orderId);
+    setProcessingId(null);
+  };
+
     setReceivingOrderId(orderId);
     setReceiveDialogOpen(true);
   };
