@@ -283,6 +283,7 @@ export function PurchaseOrders() {
             <PurchaseOrderCard
               key={order.id}
               order={order}
+              onMarkPartiallyReceived={handleMarkPartiallyReceived}
               onMarkOrdered={handleMarkOrdered}
               onMarkReceived={handleMarkReceived}
               onMarkPaid={handleMarkPaid}
@@ -310,6 +311,7 @@ export function PurchaseOrders() {
             <PurchaseOrderCard
               key={order.id}
               order={order}
+              onMarkPartiallyReceived={handleMarkPartiallyReceived}
               onMarkOrdered={handleMarkOrdered}
               onMarkReceived={handleMarkReceived}
               onMarkPaid={handleMarkPaid}
@@ -338,6 +340,7 @@ export function PurchaseOrders() {
             <PurchaseOrderCard
               key={order.id}
               order={order}
+              onMarkPartiallyReceived={handleMarkPartiallyReceived}
               onMarkOrdered={handleMarkOrdered}
               onMarkReceived={handleMarkReceived}
               onMarkPaid={handleMarkPaid}
@@ -365,6 +368,7 @@ export function PurchaseOrders() {
             <PurchaseOrderCard
               key={order.id}
               order={order}
+              onMarkPartiallyReceived={handleMarkPartiallyReceived}
               onMarkOrdered={handleMarkOrdered}
               onMarkReceived={handleMarkReceived}
               onMarkPaid={handleMarkPaid}
