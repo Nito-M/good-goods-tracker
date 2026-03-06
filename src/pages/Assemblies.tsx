@@ -312,6 +312,41 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
+  const handleAddPartsAssembly = async (partsAssemblyId: string) => {
+    if (!partsAssemblies) return;
+    setAddingPartsAssemblyId(partsAssemblyId);
+    const pa = partsAssemblies.find(a => a.id === partsAssemblyId);
+    if (pa) {
+      // Fetch parts assembly items to calculate total cost
+      const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
+        .from('parts_assembly_items')
+        .select('quantity, part_id, parts ( price )')
+        .eq('assembly_id', partsAssemblyId);
+
+      let totalCost = 0;
+      if (paItems) {
+        for (const row of paItems as any[]) {
+          const cost = row.parts?.price ?? 0;
+          totalCost += row.quantity * cost;
+        }
+      }
+
+      const price = pa.selling_price > 0 ? pa.selling_price : totalCost;
+
+      await addItem({
+        inventory_item_id: null,
+        item_name: pa.name,
+        sku: '',
+        quantity: 1,
+        unit_cost: price,
+        notes: pa.description || undefined,
+      });
+      onItemsChanged?.();
+    }
+    setAddingPartsAssemblyId(null);
+    setShowPartsAssemblyPicker(false);
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
