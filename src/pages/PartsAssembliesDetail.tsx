@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssemblyItem } from '@/hooks/usePartsAssemblies';
 import { useParts } from '@/hooks/useParts';
 import { supabase } from '@/integrations/supabase/client';
@@ -372,7 +372,13 @@ export function PartsAssembliesDetail() {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [creating, setCreating] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const idFromUrl = searchParams.get('id');
+  const [selectedId, setSelectedId] = useState<string | null>(idFromUrl);
+
+  useEffect(() => {
+    if (idFromUrl) setSelectedId(idFromUrl);
+  }, [idFromUrl]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Type rename/delete state
