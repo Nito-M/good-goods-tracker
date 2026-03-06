@@ -63,18 +63,25 @@ export function Jobs() {
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverJobId, setDragOverJobId] = useState<string | null>(null);
+  const [statusTab, setStatusTab] = useState('all');
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
   const filteredJobs = useMemo(() => {
-    if (!searchQuery) return jobs;
-    const q = searchQuery.toLowerCase();
-    return jobs.filter(j =>
-      j.title.toLowerCase().includes(q) ||
-      j.jobNumber?.toLowerCase().includes(q) ||
-      j.description?.toLowerCase().includes(q)
-    );
-  }, [jobs, searchQuery]);
+    let result = jobs;
+    if (statusTab !== 'all') {
+      result = result.filter(j => j.status === statusTab);
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(j =>
+        j.title.toLowerCase().includes(q) ||
+        j.jobNumber?.toLowerCase().includes(q) ||
+        j.description?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [jobs, searchQuery, statusTab]);
 
   const openCreate = () => {
     navigate('/jobs/new');
