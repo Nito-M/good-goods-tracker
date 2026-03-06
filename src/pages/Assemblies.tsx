@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
 import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
@@ -673,7 +673,13 @@ export function Assemblies() {
   const { folders } = usePartFolders();
   const { assemblies: partsAssembliesList } = usePartsAssemblies();
   const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const idFromUrl = searchParams.get('id');
+  const [selectedId, setSelectedId] = useState<string | null>(idFromUrl);
+
+  useEffect(() => {
+    if (idFromUrl) setSelectedId(idFromUrl);
+  }, [idFromUrl]);
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
