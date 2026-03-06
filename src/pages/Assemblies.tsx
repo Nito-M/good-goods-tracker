@@ -520,6 +520,43 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
+              {partsAssemblies && partsAssemblies.length > 0 && (
+                <Popover open={showPartsAssemblyPicker} onOpenChange={(open) => { setShowPartsAssemblyPicker(open); if (!open) setPartsAssemblySearchQuery(''); }}>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1"><PackagePlus className="h-4 w-4" /> Parts Assembly</Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[320px] p-0" align="end">
+                    <Command shouldFilter={true}>
+                      <CommandInput placeholder="Search parts assemblies..." value={partsAssemblySearchQuery} onValueChange={setPartsAssemblySearchQuery} />
+                      <CommandList>
+                        {partsAssemblySearchQuery.trim().length > 0 ? (
+                          <>
+                            <CommandEmpty>No parts assemblies found.</CommandEmpty>
+                            <CommandGroup>
+                              {partsAssemblies.map((a) => (
+                                <CommandItem
+                                  key={a.id}
+                                  value={`${a.name} ${a.description || ''} ${a.type}`}
+                                  onSelect={() => handleAddPartsAssembly(a.id)}
+                                  disabled={!!addingPartsAssemblyId}
+                                  className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
+                                >
+                                  <span className="font-medium text-sm">{a.name}</span>
+                                  {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
+                                  {a.selling_price > 0 && <span className="text-xs text-muted-foreground">Sell: {formatCurrency(a.selling_price)}</span>}
+                                  {addingPartsAssemblyId === a.id && <span className="text-xs text-primary">Adding...</span>}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </>
+                        ) : (
+                          <div className="py-6 text-center text-sm text-muted-foreground">Type to search parts assemblies...</div>
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              )}
               <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
             </div>
           )}
