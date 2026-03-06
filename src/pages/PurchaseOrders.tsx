@@ -27,7 +27,7 @@ export function PurchaseOrders() {
   const [searchParams] = useSearchParams();
   const highlightPo = searchParams.get('po');
   const { signOut } = useAuth();
-  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPaid, revertOrder, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
+  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPartiallyReceived, markAsPaid, revertOrder, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
   usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
