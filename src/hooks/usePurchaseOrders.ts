@@ -1082,6 +1082,22 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const markAsPartiallyReceived = async (orderId: string) => {
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ status: 'partially_received' })
+      .eq('id', orderId);
+
+    if (error) {
+      toast({ title: 'Error updating order', variant: 'destructive' });
+      return false;
+    }
+
+    toast({ title: 'Order marked as partially received' });
+    fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
@@ -1089,6 +1105,7 @@ export function usePurchaseOrders() {
     updateOrder,
     markAsOrdered,
     markAsReceived,
+    markAsPartiallyReceived,
     markAsPaid,
     revertOrder,
     deleteOrder,
