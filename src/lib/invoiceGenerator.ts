@@ -113,8 +113,7 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     doc.setFont('helvetica', 'normal');
     doc.text(`Invoice Number: ${sale.invoiceNumber}`, layout.invoiceDetails.x, detailsY);
     doc.text(`Date: ${formatDate(sale.createdAt)}`, pageWidth - 20, detailsY, { align: 'right' });
-    doc.text(`Status: ${sale.status.toUpperCase()}`, layout.invoiceDetails.x, detailsY + 7);
-    doc.text(`Payment Terms: ${sale.paymentTerms}`, pageWidth - 20, detailsY + 7, { align: 'right' });
+    doc.text(`Payment Terms: ${sale.paymentTerms}`, layout.invoiceDetails.x, detailsY + 7);
     flowY = Math.max(flowY, detailsY + 20);
   }
 

@@ -136,9 +136,8 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       leftY += 7;
     }
 
-    // RIGHT: Terms & Status
+    // RIGHT: Terms
     doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailsY, { align: 'right' });
-    doc.text(`Status: ${quote.status.toUpperCase()}`, pageWidth - 20, detailsY + 7, { align: 'right' });
 
     flowY = Math.max(flowY, leftY + 2);
   }
