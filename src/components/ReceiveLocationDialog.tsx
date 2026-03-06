@@ -27,7 +27,7 @@ export interface LocationItemEntry {
 interface ReceiveLocationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (locationItems: LocationItemEntry[]) => void;
+  onConfirm: (locationItems: LocationItemEntry[], isPartial: boolean) => void;
   warehouses: Warehouse[];
   poItems: PurchaseOrderItem[];
   loading?: boolean;
@@ -176,7 +176,8 @@ export function ReceiveLocationDialog({
   const hasLocations = locations.length > 0;
   const allWarehousesSelected = locations.every((l) => l.warehouseId);
   const allHaveItems = locations.every((l) => l.items.length > 0);
-  const canConfirm = hasLocations && allComplete && allWarehousesSelected && allHaveItems && !loading;
+  const hasAnyAssigned = itemAssignments.some((a) => a.assigned > 0);
+  const canConfirm = hasLocations && hasAnyAssigned && allWarehousesSelected && allHaveItems && !loading;
 
   const handleConfirm = () => {
     const entries: LocationItemEntry[] = locations
@@ -194,7 +195,7 @@ export function ReceiveLocationDialog({
       }))
       .filter((e) => e.items.length > 0);
 
-    onConfirm(entries);
+    onConfirm(entries, !allComplete);
   };
 
   const noWarehouses = warehouses.length === 0;
@@ -400,7 +401,7 @@ export function ReceiveLocationDialog({
             Cancel
           </Button>
           <Button onClick={handleConfirm} disabled={!canConfirm}>
-            {loading ? 'Receiving…' : 'Confirm Receive'}
+            {loading ? 'Receiving…' : allComplete ? 'Confirm Receive' : 'Partial Receive'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -63,10 +63,14 @@ export function PurchaseOrders() {
     setReceiveDialogOpen(true);
   };
 
-  const handleConfirmReceive = async (locationItems: import('@/components/ReceiveLocationDialog').LocationItemEntry[]) => {
+  const handleConfirmReceive = async (locationItems: import('@/components/ReceiveLocationDialog').LocationItemEntry[], isPartial: boolean) => {
     if (!receivingOrderId) return;
     setProcessingId(receivingOrderId);
-    await markAsReceived(receivingOrderId, locationItems);
+    if (isPartial) {
+      await markAsReceived(receivingOrderId, locationItems, true);
+    } else {
+      await markAsReceived(receivingOrderId, locationItems);
+    }
     setProcessingId(null);
     setReceiveDialogOpen(false);
     setReceivingOrderId(null);
