@@ -167,10 +167,22 @@ export function Jobs() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search jobs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
-        </div>
+        <Tabs value={statusTab} onValueChange={setStatusTab}>
+          <div className="overflow-x-auto">
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
+              {STATUS_OPTIONS.map(s => {
+                const count = jobs.filter(j => j.status === s.value).length;
+                if (count === 0) return null;
+                return <TabsTrigger key={s.value} value={s.value}>{s.label} ({count})</TabsTrigger>;
+              })}
+            </TabsList>
+          </div>
+
+          <div className="relative max-w-md mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search jobs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+          </div>
 
         {loading ? (
           <p className="text-muted-foreground text-center py-12">Loading jobs...</p>
@@ -178,7 +190,7 @@ export function Jobs() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No jobs yet</h3>
+              <h3 className="text-lg font-semibold mb-2">No jobs {statusTab !== 'all' ? `with status "${STATUS_OPTIONS.find(s => s.value === statusTab)?.label}"` : 'yet'}</h3>
               <p className="text-muted-foreground mb-4">Create your first job to get started</p>
               <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Create Job</Button>
             </CardContent>
@@ -275,6 +287,7 @@ export function Jobs() {
             </div>
           )
         )}
+        </Tabs>
       </main>
 
       {/* Delete Subitem Confirmation */}
