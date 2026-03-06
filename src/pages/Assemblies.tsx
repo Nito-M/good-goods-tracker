@@ -7,6 +7,7 @@ import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary 
 import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
+import { usePartsAssemblies, PartsAssembly } from '@/hooks/usePartsAssemblies';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,7 +168,7 @@ function AddItemForm({
 }
 
 function AssemblyDetail({
-  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
+  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies, partsAssemblies,
 }: {
   assembly: Assembly;
   partsItems?: { id: string; name: string; sku: string; price: number }[];
@@ -179,15 +180,19 @@ function AssemblyDetail({
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => Promise<void>;
   onItemsChanged?: () => void;
   allAssemblies: Assembly[];
+  partsAssemblies?: PartsAssembly[];
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
+  const [showPartsAssemblyPicker, setShowPartsAssemblyPicker] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
   const [addingFolderId, setAddingFolderId] = useState<string | null>(null);
   const [assemblySearchQuery, setAssemblySearchQuery] = useState('');
+  const [partsAssemblySearchQuery, setPartsAssemblySearchQuery] = useState('');
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
+  const [addingPartsAssemblyId, setAddingPartsAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -305,6 +310,41 @@ function AssemblyDetail({
     onItemsChanged?.();
     setAddingFolderId(null);
     setShowFolderPicker(false);
+  };
+
+  const handleAddPartsAssembly = async (partsAssemblyId: string) => {
+    if (!partsAssemblies) return;
+    setAddingPartsAssemblyId(partsAssemblyId);
+    const pa = partsAssemblies.find(a => a.id === partsAssemblyId);
+    if (pa) {
+      // Fetch parts assembly items to calculate total cost
+      const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
+        .from('parts_assembly_items')
+        .select('quantity, part_id, parts ( price )')
+        .eq('assembly_id', partsAssemblyId);
+
+      let totalCost = 0;
+      if (paItems) {
+        for (const row of paItems as any[]) {
+          const cost = row.parts?.price ?? 0;
+          totalCost += row.quantity * cost;
+        }
+      }
+
+      const price = pa.selling_price > 0 ? pa.selling_price : totalCost;
+
+      await addItem({
+        inventory_item_id: null,
+        item_name: pa.name,
+        sku: '',
+        quantity: 1,
+        unit_cost: price,
+        notes: pa.description || undefined,
+      });
+      onItemsChanged?.();
+    }
+    setAddingPartsAssemblyId(null);
+    setShowPartsAssemblyPicker(false);
   };
 
   return (
@@ -480,6 +520,43 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
+              {partsAssemblies && partsAssemblies.length > 0 && (
+                <Popover open={showPartsAssemblyPicker} onOpenChange={(open) => { setShowPartsAssemblyPicker(open); if (!open) setPartsAssemblySearchQuery(''); }}>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1"><PackagePlus className="h-4 w-4" /> Parts Assembly</Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[320px] p-0" align="end">
+                    <Command shouldFilter={true}>
+                      <CommandInput placeholder="Search parts assemblies..." value={partsAssemblySearchQuery} onValueChange={setPartsAssemblySearchQuery} />
+                      <CommandList>
+                        {partsAssemblySearchQuery.trim().length > 0 ? (
+                          <>
+                            <CommandEmpty>No parts assemblies found.</CommandEmpty>
+                            <CommandGroup>
+                              {partsAssemblies.map((a) => (
+                                <CommandItem
+                                  key={a.id}
+                                  value={`${a.name} ${a.description || ''} ${a.type}`}
+                                  onSelect={() => handleAddPartsAssembly(a.id)}
+                                  disabled={!!addingPartsAssemblyId}
+                                  className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
+                                >
+                                  <span className="font-medium text-sm">{a.name}</span>
+                                  {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
+                                  {a.selling_price > 0 && <span className="text-xs text-muted-foreground">Sell: {formatCurrency(a.selling_price)}</span>}
+                                  {addingPartsAssemblyId === a.id && <span className="text-xs text-primary">Adding...</span>}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </>
+                        ) : (
+                          <div className="py-6 text-center text-sm text-muted-foreground">Type to search parts assemblies...</div>
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              )}
               <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
             </div>
           )}
@@ -593,6 +670,7 @@ export function Assemblies() {
   const { allItems: inventoryItems } = useInventory();
   const { parts } = useParts();
   const { folders } = usePartFolders();
+  const { assemblies: partsAssembliesList } = usePartsAssemblies();
   const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -701,7 +779,7 @@ export function Assemblies() {
         {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
