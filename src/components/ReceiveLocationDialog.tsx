@@ -88,13 +88,14 @@ export function ReceiveLocationDialog({
 
   const addItemToLocation = (locIndex: number, poItemIndex: number) => {
     const item = poItems[poItemIndex];
-    // Calculate remaining for this item
+    // Calculate remaining for this item (accounting for previously received)
+    const prevReceived = item.receivedQuantity || 0;
     const alreadyAssigned = locations.reduce((sum, loc, li) => {
       if (li === locIndex) return sum;
       const found = loc.items.find((it) => it.poItemIndex === poItemIndex);
       return sum + (found ? parseFloat(found.quantity) || 0 : 0);
     }, 0);
-    const remaining = Math.max(0, item.quantity - alreadyAssigned);
+    const remaining = Math.max(0, item.quantity - prevReceived - alreadyAssigned);
 
     setLocations((prev) =>
       prev.map((l, i) => {
@@ -137,13 +138,16 @@ export function ReceiveLocationDialog({
         if (i !== locIndex) return l;
         const newItems: LocationItemRow[] = [];
         poItems.forEach((item, poIdx) => {
+          const prevReceived = item.receivedQuantity || 0;
+          // Skip fully received items
+          if (prevReceived >= item.quantity) return;
           const alreadyInThisLoc = l.items.find((it) => it.poItemIndex === poIdx);
           const othersSum = prev.reduce((sum, loc, li) => {
             if (li === locIndex) return sum;
             const found = loc.items.find((it) => it.poItemIndex === poIdx);
             return sum + (found ? parseFloat(found.quantity) || 0 : 0);
           }, 0);
-          const remaining = Math.max(0, item.quantity - othersSum);
+          const remaining = Math.max(0, item.quantity - prevReceived - othersSum);
           if (alreadyInThisLoc) {
             newItems.push({ poItemIndex: poIdx, quantity: String(remaining) });
           } else if (remaining > 0) {
@@ -157,6 +161,9 @@ export function ReceiveLocationDialog({
 
   // Per-item assignment summary
   const itemAssignments = poItems.map((item, itemIdx) => {
+    const prevReceived = item.receivedQuantity || 0;
+    const remainingToReceive = item.quantity - prevReceived;
+    const fullyReceived = prevReceived >= item.quantity;
     const assigned = locations.reduce((sum, loc) => {
       if (!loc.items) return sum;
       const found = loc.items.find((it) => it.poItemIndex === itemIdx);
@@ -165,10 +172,12 @@ export function ReceiveLocationDialog({
     return {
       sku: item.sku,
       itemName: item.itemName,
-      needed: item.quantity,
+      needed: remainingToReceive,
       assigned,
-      isComplete: Math.abs(assigned - item.quantity) < 0.001,
-      isOver: assigned > item.quantity + 0.001,
+      prevReceived,
+      fullyReceived,
+      isComplete: fullyReceived || Math.abs(assigned - remainingToReceive) < 0.001,
+      isOver: !fullyReceived && assigned > remainingToReceive + 0.001,
     };
   });
 
@@ -224,8 +233,10 @@ export function ReceiveLocationDialog({
               <Label className="text-sm font-medium">Item Distribution Summary</Label>
               <div className="rounded-md border p-3 space-y-1.5">
                 {itemAssignments.map((a, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm">
-                    {a.isComplete ? (
+                  <div key={idx} className={`flex items-center gap-2 text-sm ${a.fullyReceived ? 'opacity-50' : ''}`}>
+                    {a.fullyReceived ? (
+                      <Check className="h-4 w-4 text-muted-foreground shrink-0" />
+                    ) : a.isComplete ? (
                       <Check className="h-4 w-4 text-primary shrink-0" />
                     ) : (
                       <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
@@ -233,10 +244,18 @@ export function ReceiveLocationDialog({
                     <span className="flex-1 truncate">
                       {a.itemName}
                       {a.sku && <span className="text-muted-foreground ml-1">({a.sku})</span>}
+                      {a.fullyReceived && <span className="text-muted-foreground ml-1 italic">— Already received</span>}
                     </span>
-                    <span className={`tabular-nums ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      {a.assigned} / {a.needed}
-                    </span>
+                    {a.fullyReceived ? (
+                      <span className="tabular-nums text-muted-foreground">
+                        {a.prevReceived} / {poItems[idx].quantity} ✓
+                      </span>
+                    ) : (
+                      <span className={`tabular-nums ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {a.assigned} / {a.needed}
+                        {a.prevReceived > 0 && <span className="text-xs text-muted-foreground ml-1">({a.prevReceived} prev)</span>}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -250,6 +269,7 @@ export function ReceiveLocationDialog({
               const assignedPoIndices = loc.items.map((it) => it.poItemIndex);
               const unassignedPoItems = poItems
                 .map((item, idx) => ({ item, idx }))
+                .filter(({ item }) => !(item.receivedQuantity && item.receivedQuantity >= item.quantity))
                 .filter(({ idx }) => !assignedPoIndices.includes(idx))
                 .filter(({ idx }) => !itemAssignments[idx]?.isComplete);
 
