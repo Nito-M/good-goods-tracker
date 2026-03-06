@@ -369,7 +369,7 @@ export function usePurchaseOrders() {
     fetchOrders();
   };
 
-  const markAsReceived = async (orderId: string, locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number }[] }[]) => {
+  const markAsReceived = async (orderId: string, locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number }[] }[], partial?: boolean) => {
     // Get the order to access its items and costs
     const order = orders.find((o) => o.id === orderId);
     if (!order) {
@@ -390,11 +390,12 @@ export function usePurchaseOrders() {
     }
 
     // Update the purchase order status
+    const newStatus = partial ? 'partially_received' : 'received';
     const { error } = await supabase
       .from('purchase_orders')
       .update({
-        status: 'received',
-        received_at: new Date().toISOString(),
+        status: newStatus,
+        ...(partial ? {} : { received_at: new Date().toISOString() }),
       })
       .eq('id', orderId);
 
