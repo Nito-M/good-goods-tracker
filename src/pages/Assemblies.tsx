@@ -7,6 +7,7 @@ import { useAssemblies, useAssemblyItems, useAssemblySummaries, AssemblySummary 
 import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
+import { usePartsAssemblies, PartsAssembly } from '@/hooks/usePartsAssemblies';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,7 +168,7 @@ function AddItemForm({
 }
 
 function AssemblyDetail({
-  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies,
+  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies, partsAssemblies,
 }: {
   assembly: Assembly;
   partsItems?: { id: string; name: string; sku: string; price: number }[];
@@ -179,6 +180,7 @@ function AssemblyDetail({
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => Promise<void>;
   onItemsChanged?: () => void;
   allAssemblies: Assembly[];
+  partsAssemblies?: PartsAssembly[];
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
