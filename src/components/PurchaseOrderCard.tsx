@@ -41,6 +41,7 @@ import { formatCurrency } from '@/lib/utils';
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
+  onMarkPartiallyReceived?: (id: string) => void;
   onMarkOrdered?: (id: string) => void;
   onMarkReceived: (id: string) => void;
   onMarkPaid: (id: string) => void;
@@ -61,6 +62,7 @@ interface PurchaseOrderCardProps {
 
 export function PurchaseOrderCard({
   order,
+  onMarkPartiallyReceived,
   onMarkOrdered,
   onMarkReceived,
   onMarkPaid,
@@ -171,12 +173,14 @@ export function PurchaseOrderCard({
                         className={
                           order.status === 'received'
                             ? 'bg-green-600 hover:bg-green-700 text-xs'
+                            : order.status === 'partially_received'
+                            ? 'bg-orange-500 hover:bg-orange-600 text-white text-xs'
                             : order.status === 'draft'
                             ? 'border-yellow-500 text-yellow-600 text-xs'
                             : 'text-xs'
                         }
                       >
-                        {order.status === 'received' ? 'Received' : order.status === 'draft' ? 'Draft' : 'Ordered'}
+                        {order.status === 'received' ? 'Received' : order.status === 'partially_received' ? 'Partial' : order.status === 'draft' ? 'Draft' : 'Ordered'}
                       </Badge>
                       {order.paidAt ? (
                         <Badge variant="outline" className="border-blue-500 text-blue-600 text-xs">Paid</Badge>
@@ -443,14 +447,20 @@ export function PurchaseOrderCard({
                       Place Order
                     </Button>
                   )}
-                  {order.status === 'ordered' && (
+                  {order.status === 'ordered' && onMarkPartiallyReceived && (
+                    <Button size="sm" variant="outline" onClick={() => onMarkPartiallyReceived(order.id)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
+                      <Package className="h-4 w-4" />
+                      Partial Receive
+                    </Button>
+                  )}
+                  {(order.status === 'ordered' || order.status === 'partially_received') && (
                     <Button size="sm" onClick={() => onMarkReceived(order.id)} disabled={loading} className="gap-2">
                       <Check className="h-4 w-4" />
                       Mark Received
                     </Button>
                   )}
-                  {order.status === 'received' && onRevert && (
-                    <Button size="sm" variant="outline" onClick={() => setRevertConfirmOpen(true)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
+                  {(order.status === 'received' || order.status === 'partially_received') && onRevert && (
+                    <Button size="sm" variant="outline" onClick={() => order.status === 'partially_received' ? onRevert(order.id) : setRevertConfirmOpen(true)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
                       <Undo2 className="h-4 w-4" />
                       Revert
                     </Button>
