@@ -138,13 +138,16 @@ export function ReceiveLocationDialog({
         if (i !== locIndex) return l;
         const newItems: LocationItemRow[] = [];
         poItems.forEach((item, poIdx) => {
+          const prevReceived = item.receivedQuantity || 0;
+          // Skip fully received items
+          if (prevReceived >= item.quantity) return;
           const alreadyInThisLoc = l.items.find((it) => it.poItemIndex === poIdx);
           const othersSum = prev.reduce((sum, loc, li) => {
             if (li === locIndex) return sum;
             const found = loc.items.find((it) => it.poItemIndex === poIdx);
             return sum + (found ? parseFloat(found.quantity) || 0 : 0);
           }, 0);
-          const remaining = Math.max(0, item.quantity - othersSum);
+          const remaining = Math.max(0, item.quantity - prevReceived - othersSum);
           if (alreadyInThisLoc) {
             newItems.push({ poItemIndex: poIdx, quantity: String(remaining) });
           } else if (remaining > 0) {
@@ -158,6 +161,9 @@ export function ReceiveLocationDialog({
 
   // Per-item assignment summary
   const itemAssignments = poItems.map((item, itemIdx) => {
+    const prevReceived = item.receivedQuantity || 0;
+    const remainingToReceive = item.quantity - prevReceived;
+    const fullyReceived = prevReceived >= item.quantity;
     const assigned = locations.reduce((sum, loc) => {
       if (!loc.items) return sum;
       const found = loc.items.find((it) => it.poItemIndex === itemIdx);
@@ -166,10 +172,12 @@ export function ReceiveLocationDialog({
     return {
       sku: item.sku,
       itemName: item.itemName,
-      needed: item.quantity,
+      needed: remainingToReceive,
       assigned,
-      isComplete: Math.abs(assigned - item.quantity) < 0.001,
-      isOver: assigned > item.quantity + 0.001,
+      prevReceived,
+      fullyReceived,
+      isComplete: fullyReceived || Math.abs(assigned - remainingToReceive) < 0.001,
+      isOver: !fullyReceived && assigned > remainingToReceive + 0.001,
     };
   });
 
