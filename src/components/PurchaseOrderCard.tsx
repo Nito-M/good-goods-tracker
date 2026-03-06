@@ -459,8 +459,8 @@ export function PurchaseOrderCard({
                       Mark Received
                     </Button>
                   )}
-                  {order.status === 'received' && onRevert && (
-                    <Button size="sm" variant="outline" onClick={() => setRevertConfirmOpen(true)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
+                  {(order.status === 'received' || order.status === 'partially_received') && onRevert && (
+                    <Button size="sm" variant="outline" onClick={() => order.status === 'partially_received' ? onRevert(order.id) : setRevertConfirmOpen(true)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
                       <Undo2 className="h-4 w-4" />
                       Revert
                     </Button>
