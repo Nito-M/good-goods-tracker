@@ -233,6 +233,7 @@ export function PublicShop() {
           accentColor={settings?.accent_color}
           buttonColor={settings?.button_color}
           textColor={settings?.text_color}
+          categories={categoryPages}
         />
 
         {/* Banner */}
