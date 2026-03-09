@@ -2069,6 +2069,44 @@ export type Database = {
           },
         ]
       }
+      storefront_categories: {
+        Row: {
+          category_name: string
+          created_at: string
+          display_order: number
+          id: string
+          is_visible: boolean
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_name: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_visible?: boolean
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_name?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_visible?: boolean
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       storefront_settings: {
         Row: {
           accent_color: string | null
