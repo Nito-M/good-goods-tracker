@@ -332,6 +332,12 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     if (editItem && onUpdate) {
       await onUpdate(editItem.id, itemData);
       
+      // Save storefront_page
+      await supabase
+        .from('inventory_items')
+        .update({ storefront_page: storefrontPage || null } as any)
+        .eq('id', editItem.id);
+      
       // Handle vendor price updates
       const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
       const existingVendorIds = existingPrices.map((p) => p.vendor_id);
