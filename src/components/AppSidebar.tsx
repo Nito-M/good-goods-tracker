@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle, Store, ExternalLink } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
@@ -37,7 +37,11 @@ const menuItems = [
 { title: "Storefront", url: "/storefront", icon: ShoppingCart, pageKey: "storefront" }];
 
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  shopSlug?: string | null;
+}
+
+export function AppSidebar({ shopSlug }: AppSidebarProps = {}) {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -246,6 +250,23 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
+        {shopSlug && (
+          <SidebarMenuButton
+            asChild
+            tooltip="View Public Shop">
+            <a
+              href={`/shop/${shopSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-primary">
+              <Store className="h-4 w-4" />
+              <span className="flex items-center gap-1">
+                View Shop
+                <ExternalLink className="h-3 w-3" />
+              </span>
+            </a>
+          </SidebarMenuButton>
+        )}
         {isPageAllowed('settings') &&
         <SidebarMenuButton
           asChild
