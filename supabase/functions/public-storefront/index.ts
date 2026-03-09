@@ -107,6 +107,18 @@ Deno.serve(async (req) => {
       return settings ? { ...settings, logo_signed: logoSigned, banner_signed: bannerSigned, bg_image_signed: bgImageSigned } : null;
     };
 
+    // Fetch category pages
+    const fetchCategoryPages = async () => {
+      const { data: categories } = await supabase
+        .from("storefront_categories")
+        .select("category_name, is_visible")
+        .eq("organization_id", org.id)
+        .eq("is_visible", true)
+        .order("display_order");
+      
+      return (categories || []).map(c => c.category_name);
+    };
+
     // Settings only request
     if (settingsOnly === "true") {
       const settings = await fetchSettings();
