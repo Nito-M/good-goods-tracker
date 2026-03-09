@@ -178,6 +178,9 @@ export function PublicProductDetail() {
           accentColor={settings?.accent_color}
           buttonColor={settings?.button_color}
           textColor={settings?.text_color}
+          headerBgColor={settings?.header_bg_color}
+          headerTextColor={settings?.header_text_color}
+          headerNavColor={settings?.header_nav_color}
         />
 
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-4">

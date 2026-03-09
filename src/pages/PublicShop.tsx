@@ -236,6 +236,9 @@ export function PublicShop() {
           accentColor={settings?.accent_color}
           buttonColor={settings?.button_color}
           textColor={settings?.text_color}
+          headerBgColor={settings?.header_bg_color}
+          headerTextColor={settings?.header_text_color}
+          headerNavColor={settings?.header_nav_color}
           categories={categoryPages}
         />
 
