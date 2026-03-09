@@ -19,6 +19,8 @@ interface CartContextValue {
   totalPrice: number;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  cartMessage: string;
+  setCartMessage: (msg: string) => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -41,6 +43,7 @@ function saveCart(items: CartItem[]) {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadCart);
   const [isOpen, setIsOpen] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
 
   useEffect(() => {
     saveCart(items);
@@ -81,7 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice, isOpen, setIsOpen }}
+      value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice, isOpen, setIsOpen, cartMessage, setCartMessage }}
     >
       {children}
     </CartContext.Provider>

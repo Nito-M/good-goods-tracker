@@ -57,6 +57,7 @@ interface StoreSettings {
   contact_button_url: string;
   link_button_text: string;
   link_button_url: string;
+  cart_message: string;
 }
 
 function buildShopStyles(s: StoreSettings | null): React.CSSProperties {
@@ -101,7 +102,7 @@ export function PublicShop() {
   const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc'>('name');
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [categoryPages, setCategoryPages] = useState<string[]>([]);
-  const { addToCart } = useCart();
+  const { addToCart, setCartMessage } = useCart();
 
   useEffect(() => {
     if (urlCategory) {
@@ -132,6 +133,9 @@ export function PublicShop() {
           setThumbnails(result.thumbnails || {});
           setSettings(result.settings || null);
           setCategoryPages(result.categories || []);
+          if (result.settings?.cart_message) {
+            setCartMessage(result.settings.cart_message);
+          }
         }
       } catch (e) {
         console.error('Error loading shop:', e);
