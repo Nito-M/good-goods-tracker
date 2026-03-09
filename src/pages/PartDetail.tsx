@@ -29,6 +29,7 @@ import { useParts } from '@/hooks/useParts';
 import { usePartInventoryItems } from '@/hooks/usePartInventoryItems';
 import { useInventory } from '@/hooks/useInventory';
 import { DxfThreeViewer } from '@/components/DxfThreeViewer';
+import { ManufacturingInstructions } from '@/components/ManufacturingInstructions';
 import { useToast } from '@/hooks/use-toast';
 import {
   Command,
@@ -640,6 +641,9 @@ export function PartDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Manufacturing Instructions */}
+        {id && <ManufacturingInstructions partId={id} />}
 
         {/* DXF Previews - Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
