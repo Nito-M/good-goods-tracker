@@ -50,7 +50,7 @@ export function Storefront({ items, loading, categories }: StorefrontProps) {
   }, [availableItems, search, category, sortBy]);
 
   const itemIds = useMemo(() => filtered.map((i) => i.id), [filtered]);
-  const { thumbnailMap } = useItemThumbnails(itemIds);
+  const thumbnailMap = useItemThumbnails(itemIds);
 
   return (
     <div className="min-h-screen bg-background">
