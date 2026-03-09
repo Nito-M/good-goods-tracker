@@ -217,9 +217,10 @@ Deno.serve(async (req) => {
     }
 
     const settings = await fetchSettings();
+    const categories = await fetchCategoryPages();
 
     return new Response(
-      JSON.stringify({ products, thumbnails: thumbnailMap, settings }),
+      JSON.stringify({ products, thumbnails: thumbnailMap, settings, categories }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
