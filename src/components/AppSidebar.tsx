@@ -37,11 +37,18 @@ const menuItems = [
 { title: "Storefront", url: "/storefront", icon: ShoppingCart, pageKey: "storefront" }];
 
 
-interface AppSidebarProps {
-  shopSlug?: string | null;
+interface OrgShop {
+  id: string;
+  name: string;
+  slug: string;
 }
 
-export function AppSidebar({ shopSlug }: AppSidebarProps = {}) {
+interface AppSidebarProps {
+  shopSlug?: string | null;
+  shops?: OrgShop[];
+}
+
+export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
