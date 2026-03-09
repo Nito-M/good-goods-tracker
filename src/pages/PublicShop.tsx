@@ -57,6 +57,7 @@ interface StoreSettings {
   contact_button_url: string;
   link_button_text: string;
   link_button_url: string;
+  cart_message: string;
 }
 
 function buildShopStyles(s: StoreSettings | null): React.CSSProperties {
