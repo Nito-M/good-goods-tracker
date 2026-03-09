@@ -51,6 +51,7 @@ interface StorefrontSettings {
   contact_button_url: string;
   link_button_text: string;
   link_button_url: string;
+  cart_message: string;
 }
 
 const defaultSettings: StorefrontSettings = {
