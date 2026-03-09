@@ -102,7 +102,7 @@ export function PublicShop() {
   const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc'>('name');
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [categoryPages, setCategoryPages] = useState<string[]>([]);
-  const { addToCart } = useCart();
+  const { addToCart, setCartMessage } = useCart();
 
   useEffect(() => {
     if (urlCategory) {
