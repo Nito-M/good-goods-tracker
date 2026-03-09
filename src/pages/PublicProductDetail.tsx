@@ -197,11 +197,19 @@ export function PublicProductDetail() {
           <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-4">
               <div
-                className="aspect-square rounded-lg overflow-hidden flex items-center justify-center"
+                className="aspect-square rounded-lg overflow-hidden flex items-center justify-center relative group cursor-pointer"
                 style={{ backgroundColor: settings?.product_card_bg_color || 'hsl(var(--muted)/0.3)' }}
+                onClick={() => selectedImage && setViewerOpen(true)}
               >
                 {selectedImage ? (
-                  <img src={selectedImage} alt={product.name} className="h-full w-full object-contain" />
+                  <>
+                    <img src={selectedImage} alt={product.name} className="h-full w-full object-contain" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 rounded-full p-3">
+                        <ZoomIn className="h-6 w-6" style={{ color: settings?.text_color || undefined }} />
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <Package className="h-24 w-24" style={{ color: settings?.secondary_color || undefined, opacity: 0.3 }} />
                 )}
