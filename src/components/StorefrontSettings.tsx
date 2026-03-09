@@ -80,6 +80,13 @@ const defaultSettings: StorefrontSettings = {
   link_button_url: '',
 };
 
+interface CategoryPage {
+  id?: string;
+  category_name: string;
+  is_visible: boolean;
+  display_order: number;
+}
+
 export function StorefrontSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -96,6 +103,10 @@ export function StorefrontSettings() {
 
   // All storefront settings
   const [settings, setSettings] = useState<StorefrontSettings>(defaultSettings);
+
+  // Category pages
+  const [categoryPages, setCategoryPages] = useState<CategoryPage[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // Load orgs the user is admin/owner of
   useEffect(() => {
