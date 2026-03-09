@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useCart } from '@/contexts/CartContext';
 
 export function CartDrawer() {
-  const { items, totalItems, totalPrice, removeFromCart, updateQuantity, clearCart, isOpen, setIsOpen } = useCart();
+  const { items, totalItems, totalPrice, removeFromCart, updateQuantity, clearCart, isOpen, setIsOpen, cartMessage } = useCart();
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
