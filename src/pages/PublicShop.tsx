@@ -46,11 +46,6 @@ export function PublicShop() {
     if (!slug) return;
     (async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('public-storefront', {
-          body: null,
-          headers: {},
-        });
-        // Use fetch directly to pass slug as query param
         const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-storefront?slug=${encodeURIComponent(slug)}`;
         const res = await fetch(url, {
           headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
