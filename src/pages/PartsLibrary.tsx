@@ -345,8 +345,6 @@ export function PartsLibrary() {
                   ))}
                 </div>
               )
-                ))}
-              </div>
             )}
           </>
         )}
