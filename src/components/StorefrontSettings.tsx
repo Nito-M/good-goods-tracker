@@ -288,9 +288,29 @@ export function StorefrontSettings() {
 
     if (settingsError) {
       toast({ title: 'Error saving storefront settings', description: settingsError.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Storefront settings saved successfully!' });
+      setSaving(false);
+      return;
     }
+
+    // Save category pages
+    // Delete existing pages for this org
+    await supabase
+      .from('storefront_categories')
+      .delete()
+      .eq('organization_id', selectedOrgId);
+
+    // Insert current pages
+    if (categoryPages.length > 0) {
+      const pagesToInsert = categoryPages.map((cp, idx) => ({
+        organization_id: selectedOrgId,
+        category_name: cp.category_name,
+        is_visible: cp.is_visible,
+        display_order: idx,
+      }));
+      await supabase.from('storefront_categories').insert(pagesToInsert as any);
+    }
+
+    toast({ title: 'Storefront settings saved successfully!' });
     setSaving(false);
   };
 
