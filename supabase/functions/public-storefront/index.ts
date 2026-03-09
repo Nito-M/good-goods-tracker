@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     if (productId) {
       const { data, error } = await supabase
         .from("inventory_items")
-        .select("id, name, sku, category, subcategory, quantity, quantity_unit, price, description, image_url, show_in_storefront, user_id")
+        .select("id, name, sku, category, subcategory, quantity, quantity_unit, price, description, image_url, show_in_storefront, user_id, storefront_page")
         .eq("id", productId)
         .eq("show_in_storefront", true)
         .is("deleted_at", null)
