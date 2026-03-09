@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight, ArrowRightLeft, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight, ArrowRightLeft, Pencil, Check, Store } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
