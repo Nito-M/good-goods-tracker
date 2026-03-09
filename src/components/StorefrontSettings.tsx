@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Store, Save, ExternalLink, Globe, Palette, Layout, Eye, Image as ImageIcon, Upload } from 'lucide-react';
+import { Store, Save, ExternalLink, Globe, Palette, Layout, Eye, Image as ImageIcon, Upload, Plus, X, GripVertical, Tags } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
