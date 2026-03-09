@@ -43,6 +43,7 @@ function saveCart(items: CartItem[]) {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadCart);
   const [isOpen, setIsOpen] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
 
   useEffect(() => {
     saveCart(items);
