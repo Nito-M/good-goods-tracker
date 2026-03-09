@@ -133,6 +133,9 @@ export function PublicShop() {
           setThumbnails(result.thumbnails || {});
           setSettings(result.settings || null);
           setCategoryPages(result.categories || []);
+          if (result.settings?.cart_message) {
+            setCartMessage(result.settings.cart_message);
+          }
         }
       } catch (e) {
         console.error('Error loading shop:', e);
