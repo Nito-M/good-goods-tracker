@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X } from 'lucide-react';
+import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +34,9 @@ export function PartsLibrary() {
   const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'lines' | 'cards'>(() => {
+    return (localStorage.getItem('partsLibraryViewMode') as 'lines' | 'cards') || 'lines';
+  });
   const { toast } = useToast();
 
   const loading = partsLoading || foldersLoading;
@@ -148,6 +151,26 @@ export function PartsLibrary() {
                 </>
               ) : (
                 <>
+                  <div className="flex items-center border border-border rounded-md overflow-hidden">
+                    <Button
+                      variant={viewMode === 'lines' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="rounded-none h-9 w-9"
+                      onClick={() => { setViewMode('lines'); localStorage.setItem('partsLibraryViewMode', 'lines'); }}
+                      title="List view"
+                    >
+                      <LayoutList className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="rounded-none h-9 w-9"
+                      onClick={() => { setViewMode('cards'); localStorage.setItem('partsLibraryViewMode', 'cards'); }}
+                      title="Card view"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Button variant="outline" size="icon" onClick={() => setSelectMode(true)} title="Select multiple">
                     <CheckSquare className="h-4 w-4" />
                   </Button>
@@ -252,76 +275,76 @@ export function PartsLibrary() {
                 )}
               </div>
             ) : filtered.length > 0 && (
-              <div className="border border-border rounded-md overflow-hidden">
-                {filtered.map((part, i) => (
-                  <div
-                    key={part.id}
-                    className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
-                    onClick={() => {
-                      if (selectMode) { toggleSelect(part.id); }
-                      else { navigate(`/parts/library/${part.id}`); }
-                    }}
-                  >
-                    {selectMode && (
-                      <div onClick={e => e.stopPropagation()} className="shrink-0">
-                        <Checkbox
-                          checked={selectedPartIds.has(part.id)}
-                          onCheckedChange={() => toggleSelect(part.id)}
-                        />
-                      </div>
-                    )}
-                    <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0">
-                      {part.imageUrl ? (
-                        <PartImage storagePath={part.imageUrl} />
-                      ) : (
-                        <span className="text-muted-foreground text-[10px]">—</span>
+              viewMode === 'lines' ? (
+                <div className="border border-border rounded-md overflow-hidden">
+                  {filtered.map((part, i) => (
+                    <div
+                      key={part.id}
+                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
+                      onClick={() => {
+                        if (selectMode) { toggleSelect(part.id); }
+                        else { navigate(`/parts/library/${part.id}`); }
+                      }}
+                    >
+                      {selectMode && (
+                        <div onClick={e => e.stopPropagation()} className="shrink-0">
+                          <Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} />
+                        </div>
                       )}
+                      <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0">
+                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>}
+                      </div>
+                      <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
+                      <span className="text-sm text-muted-foreground truncate w-28 shrink-0 hidden sm:block">{part.sku || '—'}</span>
+                      <span className="text-sm font-medium text-primary w-24 text-right shrink-0 hidden sm:block">
+                        {part.price > 0 ? formatCurrency(part.price) : '—'}
+                      </span>
+                      <div className="flex gap-1 shrink-0 hidden md:flex">
+                        {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
+                        {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
+                      </div>
+                      <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
                     </div>
-                    <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
-                    <span className="text-sm text-muted-foreground truncate w-28 shrink-0 hidden sm:block">{part.sku || '—'}</span>
-                    <span className="text-sm font-medium text-primary w-24 text-right shrink-0 hidden sm:block">
-                      {part.price > 0 ? formatCurrency(part.price) : '—'}
-                    </span>
-                    <div className="flex gap-1 shrink-0 hidden md:flex">
-                      {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
-                      {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost" size="icon"
-                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent onClick={e => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => setMovingPartId(part.id)}>
-                          <FolderInput className="h-4 w-4 mr-2" /> Move to folder
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem className="text-destructive" onSelect={e => e.preventDefault()}>
-                              <Trash2 className="h-4 w-4 mr-2" /> Delete
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent onClick={e => e.stopPropagation()}>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete part?</AlertDialogTitle>
-                              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={(e) => handleDelete(part.id, e)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  {filtered.map((part) => (
+                    <Card
+                      key={part.id}
+                      className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
+                      onClick={() => {
+                        if (selectMode) { toggleSelect(part.id); }
+                        else { navigate(`/parts/library/${part.id}`); }
+                      }}
+                    >
+                      {selectMode && (
+                        <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}>
+                          <Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} />
+                        </div>
+                      )}
+                      <div className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center">
+                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-3xl">—</span>}
+                      </div>
+                      <CardContent className="p-3">
+                        <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{part.sku || 'No SKU'}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-sm font-medium text-primary">
+                            {part.price > 0 ? formatCurrency(part.price) : '—'}
+                          </span>
+                          <div className="flex gap-1">
+                            {part.dxfUrl1 && <span className="text-[10px] bg-accent text-accent-foreground px-1 py-0.5 rounded">DXF</span>}
+                          </div>
+                        </div>
+                      </CardContent>
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )
             )}
           </>
         )}
@@ -432,6 +455,40 @@ export function PartsLibrary() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onMove: () => void; onDelete: (id: string, e: React.MouseEvent) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent onClick={e => e.stopPropagation()}>
+        <DropdownMenuItem onClick={onMove}>
+          <FolderInput className="h-4 w-4 mr-2" /> Move to folder
+        </DropdownMenuItem>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem className="text-destructive" onSelect={e => e.preventDefault()}>
+              <Trash2 className="h-4 w-4 mr-2" /> Delete
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={e => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete part?</AlertDialogTitle>
+              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={(e) => onDelete(partId, e)}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
