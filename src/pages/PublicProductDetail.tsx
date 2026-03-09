@@ -237,8 +237,6 @@ export function PublicProductDetail() {
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary">{product.category}</Badge>
-                  {product.subcategory && <Badge variant="outline">{product.subcategory}</Badge>}
                   {outOfStock && <Badge variant="destructive">Out of Stock</Badge>}
                 </div>
                 <h1 className="text-3xl font-bold" style={{ color: settings?.text_color || undefined }}>{product.name}</h1>
