@@ -30,7 +30,7 @@ interface ProductImage {
 }
 
 export function PublicProductDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { slug, id } = useParams<{ slug: string; id: string }>();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,16 +38,16 @@ export function PublicProductDetail() {
   const [addQty, setAddQty] = useState(1);
   const { addToCart } = useCart();
 
+  const shopBase = `/shop/${slug}`;
+
   useEffect(() => {
-    if (!id) return;
+    if (!id || !slug) return;
     (async () => {
       setLoading(true);
       try {
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-storefront?id=${id}`;
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-storefront?slug=${encodeURIComponent(slug)}&id=${id}`;
         const res = await fetch(url, {
-          headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
+          headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
         });
         if (res.ok) {
           const data = await res.json();
@@ -63,7 +63,7 @@ export function PublicProductDetail() {
       }
       setLoading(false);
     })();
-  }, [id]);
+  }, [id, slug]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
@@ -83,7 +83,7 @@ export function PublicProductDetail() {
           <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-card-foreground mb-2">Product Not Found</h2>
           <p className="text-muted-foreground mb-4">This product is no longer available.</p>
-          <Link to="/shop">
+          <Link to={shopBase}>
             <Button>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Shop
@@ -112,11 +112,10 @@ export function PublicProductDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <ShopHeader />
+      <ShopHeader shopBasePath={shopBase} />
 
-      {/* Back nav */}
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-4">
-        <Link to="/shop">
+        <Link to={shopBase}>
           <Button variant="ghost" className="gap-2 -ml-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Shop
@@ -126,15 +125,10 @@ export function PublicProductDetail() {
 
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-2">
-          {/* Image Gallery */}
           <div className="space-y-4">
             <div className="aspect-square bg-muted/30 rounded-lg overflow-hidden flex items-center justify-center">
               {selectedImage ? (
-                <img
-                  src={selectedImage}
-                  alt={product.name}
-                  className="h-full w-full object-contain"
-                />
+                <img src={selectedImage} alt={product.name} className="h-full w-full object-contain" />
               ) : (
                 <Package className="h-24 w-24 text-muted-foreground/30" />
               )}
@@ -146,73 +140,45 @@ export function PublicProductDetail() {
                     key={img.id}
                     onClick={() => setSelectedImage(img.signed_url)}
                     className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-colors ${
-                      selectedImage === img.signed_url
-                        ? 'border-primary'
-                        : 'border-border hover:border-primary/50'
+                      selectedImage === img.signed_url ? 'border-primary' : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <img
-                      src={img.signed_url}
-                      alt=""
-                      className="h-full w-full object-contain"
-                    />
+                    <img src={img.signed_url} alt="" className="h-full w-full object-contain" />
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Product Info */}
           <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="secondary">{product.category}</Badge>
-                {product.subcategory && (
-                  <Badge variant="outline">{product.subcategory}</Badge>
-                )}
-                {outOfStock && (
-                  <Badge variant="destructive">Out of Stock</Badge>
-                )}
+                {product.subcategory && <Badge variant="outline">{product.subcategory}</Badge>}
+                {outOfStock && <Badge variant="destructive">Out of Stock</Badge>}
               </div>
               <h1 className="text-3xl font-bold text-card-foreground">{product.name}</h1>
               <p className="text-muted-foreground mt-1">SKU: {product.sku}</p>
             </div>
 
-            <div className="text-3xl font-bold text-primary">
-              {formatPrice(product.price)}
-            </div>
+            <div className="text-3xl font-bold text-primary">{formatPrice(product.price)}</div>
 
             <Separator />
 
-            {/* Add to Cart */}
             {!outOfStock && (
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-card-foreground">Quantity:</span>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      disabled={addQty <= 1}
-                      onClick={() => setAddQty((q) => Math.max(1, q - 1))}
-                    >
+                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={addQty <= 1} onClick={() => setAddQty((q) => Math.max(1, q - 1))}>
                       <Minus className="h-3.5 w-3.5" />
                     </Button>
                     <span className="w-10 text-center font-semibold">{addQty}</span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      disabled={addQty >= product.quantity}
-                      onClick={() => setAddQty((q) => Math.min(product.quantity, q + 1))}
-                    >
+                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={addQty >= product.quantity} onClick={() => setAddQty((q) => Math.min(product.quantity, q + 1))}>
                       <Plus className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    ({product.quantity} available)
-                  </span>
+                  <span className="text-xs text-muted-foreground">({product.quantity} available)</span>
                 </div>
                 <Button className="w-full gap-2" size="lg" onClick={handleAddToCart}>
                   <ShoppingCart className="h-5 w-5" />
@@ -222,9 +188,7 @@ export function PublicProductDetail() {
             )}
 
             {outOfStock && (
-              <Button className="w-full" size="lg" disabled>
-                Out of Stock
-              </Button>
+              <Button className="w-full" size="lg" disabled>Out of Stock</Button>
             )}
 
             <Separator />
