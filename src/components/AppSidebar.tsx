@@ -250,6 +250,23 @@ export function AppSidebar({ shopSlug }: AppSidebarProps = {}) {
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
+        {shopSlug && (
+          <SidebarMenuButton
+            asChild
+            tooltip="View Public Shop">
+            <a
+              href={`/shop/${shopSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-primary">
+              <Store className="h-4 w-4" />
+              <span className="flex items-center gap-1">
+                View Shop
+                <ExternalLink className="h-3 w-3" />
+              </span>
+            </a>
+          </SidebarMenuButton>
+        )}
         {isPageAllowed('settings') &&
         <SidebarMenuButton
           asChild
