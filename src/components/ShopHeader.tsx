@@ -11,9 +11,20 @@ interface ShopHeaderProps {
   accentColor?: string;
   buttonColor?: string;
   textColor?: string;
+  categories?: string[];
 }
 
-export function ShopHeader({ storeName = 'Shop', tagline, logoUrl, announcement, shopBasePath = '/shop', accentColor, buttonColor, textColor }: ShopHeaderProps) {
+export function ShopHeader({ 
+  storeName = 'Shop', 
+  tagline, 
+  logoUrl, 
+  announcement, 
+  shopBasePath = '/shop', 
+  accentColor, 
+  buttonColor, 
+  textColor,
+  categories = []
+}: ShopHeaderProps) {
   return (
     <>
       {announcement && (
@@ -47,6 +58,27 @@ export function ShopHeader({ storeName = 'Shop', tagline, logoUrl, announcement,
             </Link>
             <CartDrawer />
           </div>
+          {categories.length > 0 && (
+            <nav className="flex gap-1 border-t border-border py-2 overflow-x-auto">
+              <Link 
+                to={shopBasePath}
+                className="px-3 py-1.5 text-sm font-medium rounded hover:bg-muted transition-colors whitespace-nowrap"
+                style={{ color: textColor || undefined }}
+              >
+                All Products
+              </Link>
+              {categories.map(cat => (
+                <Link
+                  key={cat}
+                  to={`${shopBasePath}/category/${encodeURIComponent(cat)}`}
+                  className="px-3 py-1.5 text-sm font-medium rounded hover:bg-muted transition-colors whitespace-nowrap"
+                  style={{ color: textColor || undefined }}
+                >
+                  {cat}
+                </Link>
+              ))}
+            </nav>
+          )}
         </div>
       </header>
     </>

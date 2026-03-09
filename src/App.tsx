@@ -44,6 +44,7 @@ import { PartDetail } from "./pages/PartDetail";
 import { TaxDocuments } from "./pages/TaxDocuments";
 import { Storefront } from "./pages/Storefront";
 import { PublicShop } from "./pages/PublicShop";
+import { PublicShopCategory } from "./pages/PublicShopCategory";
 import { PublicProductDetail } from "./pages/PublicProductDetail";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
@@ -552,6 +553,7 @@ function AppContent() {
         />
         {/* Public shop routes - no auth required, wrapped in CartProvider */}
         <Route path="/shop/:slug" element={<CartProvider><PublicShop /></CartProvider>} />
+        <Route path="/shop/:slug/category/:category" element={<CartProvider><PublicShopCategory /></CartProvider>} />
         <Route path="/shop/:slug/:id" element={<CartProvider><PublicProductDetail /></CartProvider>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

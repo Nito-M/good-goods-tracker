@@ -87,16 +87,25 @@ function getSpacingGap(spacing: string | undefined) {
 }
 
 export function PublicShop() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, category: urlCategory } = useParams<{ slug: string; category?: string }>();
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState(urlCategory || 'all');
   const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc'>('name');
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [categoryPages, setCategoryPages] = useState<string[]>([]);
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    if (urlCategory) {
+      setCategory(decodeURIComponent(urlCategory));
+    } else {
+      setCategory('all');
+    }
+  }, [urlCategory]);
 
   useEffect(() => {
     if (!slug) return;
@@ -118,6 +127,7 @@ export function PublicShop() {
           setProducts(result.products || []);
           setThumbnails(result.thumbnails || {});
           setSettings(result.settings || null);
+          setCategoryPages(result.categories || []);
         }
       } catch (e) {
         console.error('Error loading shop:', e);
@@ -223,6 +233,7 @@ export function PublicShop() {
           accentColor={settings?.accent_color}
           buttonColor={settings?.button_color}
           textColor={settings?.text_color}
+          categories={categoryPages}
         />
 
         {/* Banner */}

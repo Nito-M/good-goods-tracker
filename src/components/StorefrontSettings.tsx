@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Store, Save, ExternalLink, Globe, Palette, Layout, Eye, Image as ImageIcon, Upload } from 'lucide-react';
+import { Store, Save, ExternalLink, Globe, Palette, Layout, Eye, Image as ImageIcon, Upload, Plus, X, GripVertical, Tags } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,6 +80,13 @@ const defaultSettings: StorefrontSettings = {
   link_button_url: '',
 };
 
+interface CategoryPage {
+  id?: string;
+  category_name: string;
+  is_visible: boolean;
+  display_order: number;
+}
+
 export function StorefrontSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -96,6 +103,34 @@ export function StorefrontSettings() {
 
   // All storefront settings
   const [settings, setSettings] = useState<StorefrontSettings>(defaultSettings);
+
+  // Category pages
+  const [categoryPages, setCategoryPages] = useState<CategoryPage[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+
+  // Load available categories from inventory
+  useEffect(() => {
+    if (!selectedOrgId) return;
+    (async () => {
+      const { data: members } = await supabase
+        .from('organization_members')
+        .select('user_id')
+        .eq('organization_id', selectedOrgId);
+      
+      if (members && members.length > 0) {
+        const userIds = members.map(m => m.user_id);
+        const { data: items } = await supabase
+          .from('inventory_items')
+          .select('category')
+          .in('user_id', userIds);
+        
+        if (items) {
+          const cats = [...new Set(items.map(i => i.category))].sort();
+          setAvailableCategories(cats);
+        }
+      }
+    })();
+  }, [selectedOrgId]);
 
   // Load orgs the user is admin/owner of
   useEffect(() => {
@@ -138,6 +173,24 @@ export function StorefrontSettings() {
 
     // Load storefront_settings for this org
     (async () => {
+      // Load category pages
+      const { data: catPages } = await supabase
+        .from('storefront_categories')
+        .select('*')
+        .eq('organization_id', selectedOrgId)
+        .order('display_order');
+      
+      if (catPages) {
+        setCategoryPages(catPages.map(c => ({
+          id: c.id,
+          category_name: c.category_name,
+          is_visible: c.is_visible,
+          display_order: c.display_order,
+        })));
+      } else {
+        setCategoryPages([]);
+      }
+
       const { data } = await supabase
         .from('storefront_settings')
         .select('*')
@@ -563,6 +616,84 @@ export function StorefrontSettings() {
                   placeholder="https://example.com"
                 />
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Categories Tab */}
+        <TabsContent value="categories" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Tags className="h-5 w-5" />
+                Category Navigation
+              </CardTitle>
+              <CardDescription>
+                Add category pages to your shop header navigation. Customers can browse products by category.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {categoryPages.map((cat, idx) => (
+                <div key={cat.id || idx} className="flex items-center gap-2 p-3 border rounded">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1 text-sm font-medium">{cat.category_name}</div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">Visible</Label>
+                    <Switch
+                      checked={cat.is_visible}
+                      onCheckedChange={(checked) => {
+                        const updated = [...categoryPages];
+                        updated[idx].is_visible = checked;
+                        setCategoryPages(updated);
+                      }}
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setCategoryPages(categoryPages.filter((_, i) => i !== idx));
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              {availableCategories.length > 0 && (
+                <Select
+                  value=""
+                  onValueChange={(catName) => {
+                    if (catName && !categoryPages.find(c => c.category_name === catName)) {
+                      setCategoryPages([
+                        ...categoryPages,
+                        {
+                          category_name: catName,
+                          is_visible: true,
+                          display_order: categoryPages.length,
+                        },
+                      ]);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Add a category page..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories
+                      .filter(c => !categoryPages.find(cp => cp.category_name === c))
+                      .map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              )}
+              
+              {categoryPages.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No category pages added. Add categories to enable navigation in your shop header.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

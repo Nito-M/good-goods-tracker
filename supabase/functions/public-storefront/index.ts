@@ -107,11 +107,24 @@ Deno.serve(async (req) => {
       return settings ? { ...settings, logo_signed: logoSigned, banner_signed: bannerSigned, bg_image_signed: bgImageSigned } : null;
     };
 
+    // Fetch category pages
+    const fetchCategoryPages = async () => {
+      const { data: categories } = await supabase
+        .from("storefront_categories")
+        .select("category_name, is_visible")
+        .eq("organization_id", org.id)
+        .eq("is_visible", true)
+        .order("display_order");
+      
+      return (categories || []).map(c => c.category_name);
+    };
+
     // Settings only request
     if (settingsOnly === "true") {
       const settings = await fetchSettings();
+      const categories = await fetchCategoryPages();
       return new Response(
-        JSON.stringify({ settings }),
+        JSON.stringify({ settings, categories }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -204,9 +217,10 @@ Deno.serve(async (req) => {
     }
 
     const settings = await fetchSettings();
+    const categories = await fetchCategoryPages();
 
     return new Response(
-      JSON.stringify({ products, thumbnails: thumbnailMap, settings }),
+      JSON.stringify({ products, thumbnails: thumbnailMap, settings, categories }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
