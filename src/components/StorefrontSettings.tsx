@@ -620,6 +620,84 @@ export function StorefrontSettings() {
           </Card>
         </TabsContent>
 
+        {/* Categories Tab */}
+        <TabsContent value="categories" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Tags className="h-5 w-5" />
+                Category Navigation
+              </CardTitle>
+              <CardDescription>
+                Add category pages to your shop header navigation. Customers can browse products by category.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {categoryPages.map((cat, idx) => (
+                <div key={cat.id || idx} className="flex items-center gap-2 p-3 border rounded">
+                  <GripVertical className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1 text-sm font-medium">{cat.category_name}</div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">Visible</Label>
+                    <Switch
+                      checked={cat.is_visible}
+                      onCheckedChange={(checked) => {
+                        const updated = [...categoryPages];
+                        updated[idx].is_visible = checked;
+                        setCategoryPages(updated);
+                      }}
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setCategoryPages(categoryPages.filter((_, i) => i !== idx));
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              {availableCategories.length > 0 && (
+                <Select
+                  value=""
+                  onValueChange={(catName) => {
+                    if (catName && !categoryPages.find(c => c.category_name === catName)) {
+                      setCategoryPages([
+                        ...categoryPages,
+                        {
+                          category_name: catName,
+                          is_visible: true,
+                          display_order: categoryPages.length,
+                        },
+                      ]);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Add a category page..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories
+                      .filter(c => !categoryPages.find(cp => cp.category_name === c))
+                      .map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              )}
+              
+              {categoryPages.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No category pages added. Add categories to enable navigation in your shop header.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Colors Tab */}
         <TabsContent value="colors" className="space-y-6">
           <Card>
