@@ -551,8 +551,8 @@ function AppContent() {
           }
         />
         {/* Public shop routes - no auth required, wrapped in CartProvider */}
-        <Route path="/shop" element={<CartProvider><PublicShop /></CartProvider>} />
-        <Route path="/shop/:id" element={<CartProvider><PublicProductDetail /></CartProvider>} />
+        <Route path="/shop/:slug" element={<CartProvider><PublicShop /></CartProvider>} />
+        <Route path="/shop/:slug/:id" element={<CartProvider><PublicProductDetail /></CartProvider>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
