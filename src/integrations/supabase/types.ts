@@ -2063,6 +2063,39 @@ export type Database = {
           },
         ]
       }
+      storefront_settings: {
+        Row: {
+          announcement_text: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          store_name: string
+          tagline: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_text?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          store_name?: string
+          tagline?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_text?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          store_name?: string
+          tagline?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subcategories: {
         Row: {
           category_id: string
