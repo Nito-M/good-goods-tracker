@@ -121,6 +121,41 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [availableShopPages, setAvailableShopPages] = useState<string[]>([]);
   // Staged images for new item creation (before saving)
   const [stagedImages, setStagedImages] = useState<StagedImage[]>([]);
+  // Load available shop pages from storefront_categories
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data: memberships } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id);
+      if (memberships && memberships.length > 0) {
+        const orgId = memberships[0].organization_id;
+        const { data: pages } = await supabase
+          .from('storefront_categories')
+          .select('category_name')
+          .eq('organization_id', orgId)
+          .order('display_order');
+        if (pages) {
+          setAvailableShopPages(pages.map(p => p.category_name));
+        }
+      }
+    })();
+  }, [user]);
+
+  // Load storefront_page for editing
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('inventory_items')
+        .select('storefront_page')
+        .eq('id', id)
+        .single();
+      if (data) setStorefrontPage((data as any).storefront_page || '');
+    })();
+  }, [id]);
+
   useEffect(() => {
     if (editItem) {
       setName(editItem.name);
@@ -135,7 +170,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setWeight(String(editItem.weight));
       setWeightUnit(editItem.weightUnit);
       setDimensions(editItem.dimensions);
-      // Populate sheet size state for sqft items
       if (editItem.quantityUnit === 'sqft') {
         const dimUnit = editItem.dimensions.unit as 'ft' | 'in';
         setSheetUnit(dimUnit === 'ft' || dimUnit === 'in' ? dimUnit : 'ft');
@@ -148,8 +182,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setBoxAmount(String(editItem.boxAmount || ''));
       setBundleAmount(String(editItem.bundleAmount || ''));
       setPieceLength(String(editItem.pieceLength || ''));
-      // Location entries will be populated from existingLocations effect below
-      // Keep backward compat: if item has warehouseId but no location entries, seed one
       if (editItem.warehouseId) {
         setLocationEntries([{ warehouseId: editItem.warehouseId, quantity: String(editItem.quantity) }]);
       }
