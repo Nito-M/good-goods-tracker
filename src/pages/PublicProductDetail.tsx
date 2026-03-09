@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Package, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Package, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
+import { ShopHeader } from '@/components/ShopHeader';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProductData {
   id: string;
@@ -34,13 +35,14 @@ export function PublicProductDetail() {
   const [images, setImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [addQty, setAddQty] = useState(1);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (!id) return;
     (async () => {
       setLoading(true);
       try {
-        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-storefront?id=${id}`;
         const res = await fetch(url, {
           headers: {
@@ -51,7 +53,6 @@ export function PublicProductDetail() {
           const data = await res.json();
           setProduct(data.product || null);
           setImages(data.images || []);
-          // Set initial selected image
           const primary = (data.images || []).find((img: ProductImage) => img.is_primary);
           setSelectedImage(
             primary?.signed_url || data.images?.[0]?.signed_url || data.product?.main_image_signed || null
@@ -95,27 +96,35 @@ export function PublicProductDetail() {
 
   const outOfStock = product.quantity <= 0;
 
+  const handleAddToCart = () => {
+    addToCart(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        maxQuantity: product.quantity,
+        imageUrl: selectedImage,
+      },
+      addQty
+    );
+    setAddQty(1);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-10">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link to="/shop">
-              <Button variant="ghost" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Shop
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-card-foreground">Shop</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <ShopHeader />
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Back nav */}
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-4">
+        <Link to="/shop">
+          <Button variant="ghost" className="gap-2 -ml-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Shop
+          </Button>
+        </Link>
+      </div>
+
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-2">
           {/* Image Gallery */}
           <div className="space-y-4">
@@ -175,14 +184,57 @@ export function PublicProductDetail() {
 
             <Separator />
 
+            {/* Add to Cart */}
+            {!outOfStock && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-card-foreground">Quantity:</span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={addQty <= 1}
+                      onClick={() => setAddQty((q) => Math.max(1, q - 1))}
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="w-10 text-center font-semibold">{addQty}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={addQty >= product.quantity}
+                      onClick={() => setAddQty((q) => Math.min(product.quantity, q + 1))}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    ({product.quantity} available)
+                  </span>
+                </div>
+                <Button className="w-full gap-2" size="lg" onClick={handleAddToCart}>
+                  <ShoppingCart className="h-5 w-5" />
+                  Add to Cart — {formatPrice(product.price * addQty)}
+                </Button>
+              </div>
+            )}
+
+            {outOfStock && (
+              <Button className="w-full" size="lg" disabled>
+                Out of Stock
+              </Button>
+            )}
+
+            <Separator />
+
             {product.description && (
               <div>
                 <h3 className="font-semibold text-card-foreground mb-2">Description</h3>
                 <p className="text-muted-foreground whitespace-pre-line">{product.description}</p>
               </div>
             )}
-
-            <Separator />
 
             <Card>
               <CardContent className="p-4">

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { CartProvider } from "@/contexts/CartContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -549,9 +550,9 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-        {/* Public shop routes - no auth required */}
-        <Route path="/shop" element={<PublicShop />} />
-        <Route path="/shop/:id" element={<PublicProductDetail />} />
+        {/* Public shop routes - no auth required, wrapped in CartProvider */}
+        <Route path="/shop" element={<CartProvider><PublicShop /></CartProvider>} />
+        <Route path="/shop/:id" element={<CartProvider><PublicProductDetail /></CartProvider>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

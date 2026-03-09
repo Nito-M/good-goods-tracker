@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight, ArrowRightLeft, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monitor, FileText, Palette, Upload, X, Search, ExternalLink, User, ShieldCheck, Users, Contact, Briefcase, ImagePlus, ChevronDown, ChevronRight, ArrowRightLeft, Pencil, Check, Store } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
@@ -7,6 +7,7 @@ import { OrganizationsSettings } from '@/components/OrganizationsSettings';
 import { UsersSettings } from '@/components/UsersSettings';
 import { TagsSettings } from '@/components/TagsSettings';
 import { CompaniesSettings } from '@/components/CompaniesSettings';
+import { StorefrontSettings } from '@/components/StorefrontSettings';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -413,7 +414,7 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-4xl ${isAdmin ? 'grid-cols-8' : showUsersTab ? 'grid-cols-7' : 'grid-cols-6'}`}>
+          <TabsList className={`grid w-full max-w-5xl ${isAdmin ? 'grid-cols-9' : showUsersTab ? 'grid-cols-8' : 'grid-cols-7'}`}>
             <TabsTrigger value="general" className="gap-2">
               <Monitor className="h-4 w-4" />
               General
@@ -421,6 +422,10 @@ export function Settings() {
             <TabsTrigger value="companies" className="gap-2">
               <Briefcase className="h-4 w-4" />
               Companies
+            </TabsTrigger>
+            <TabsTrigger value="storefront" className="gap-2">
+              <Store className="h-4 w-4" />
+              Storefront
             </TabsTrigger>
             <TabsTrigger value="vendors" className="gap-2">
               <Building2 className="h-4 w-4" />
@@ -455,6 +460,11 @@ export function Settings() {
           {/* Companies Tab */}
           <TabsContent value="companies" className="mt-6">
             <CompaniesSettings />
+          </TabsContent>
+
+          {/* Storefront Tab */}
+          <TabsContent value="storefront" className="mt-6">
+            <StorefrontSettings />
           </TabsContent>
 
           {/* General Tab */}

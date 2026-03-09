@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingBag, Package, Filter } from 'lucide-react';
+import { Search, Package, Filter, ShoppingCart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { ShopHeader } from '@/components/ShopHeader';
+import { useCart } from '@/contexts/CartContext';
 
 interface PublicProduct {
   id: string;
@@ -19,6 +22,14 @@ interface PublicProduct {
   description: string | null;
 }
 
+interface StoreSettings {
+  store_name: string;
+  tagline: string;
+  logo_url: string | null;
+  logo_signed: string | null;
+  announcement_text: string;
+}
+
 export function PublicShop() {
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
@@ -26,6 +37,8 @@ export function PublicShop() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc'>('name');
+  const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     (async () => {
@@ -34,6 +47,7 @@ export function PublicShop() {
         if (!error && data) {
           setProducts(data.products || []);
           setThumbnails(data.thumbnails || {});
+          setSettings(data.settings || null);
         }
       } catch (e) {
         console.error('Error loading shop:', e);
@@ -72,24 +86,36 @@ export function PublicShop() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
 
+  const handleAddToCart = (e: React.MouseEvent, product: PublicProduct) => {
+    e.preventDefault(); // Prevent Link navigation
+    e.stopPropagation();
+    if (product.quantity <= 0) return;
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      maxQuantity: product.quantity,
+      imageUrl: thumbnails[product.id] || null,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <ShoppingBag className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Shop</h1>
-            </div>
-            <Badge variant="secondary" className="text-sm">
-              {filtered.length} product{filtered.length !== 1 ? 's' : ''}
-            </Badge>
-          </div>
-        </div>
-      </header>
+      <ShopHeader
+        storeName={settings?.store_name}
+        tagline={settings?.tagline}
+        logoUrl={settings?.logo_signed}
+        announcement={settings?.announcement_text}
+      />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Product count */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} product{filtered.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <div className="relative flex-1">
@@ -142,7 +168,7 @@ export function PublicShop() {
               const outOfStock = product.quantity <= 0;
               return (
                 <Link to={`/shop/${product.id}`} key={product.id} className="block">
-                  <Card className="group overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 h-full">
+                  <Card className="group overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 h-full flex flex-col">
                     {/* Image */}
                     <div className="relative aspect-square bg-muted/30 flex items-center justify-center overflow-hidden">
                       {thumb ? (
@@ -162,20 +188,28 @@ export function PublicShop() {
                       )}
                     </div>
 
-                    <CardContent className="p-4 space-y-2">
+                    <CardContent className="p-4 space-y-2 flex-1 flex flex-col">
                       <h3 className="font-semibold text-card-foreground truncate">{product.name}</h3>
-                      <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                      <Badge variant="outline" className="text-xs w-fit">{product.category}</Badge>
                       {product.description && (
                         <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
                       )}
-                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <div className="flex items-center justify-between pt-2 border-t border-border mt-auto">
                         <span className="text-lg font-bold text-primary">
                           {formatPrice(product.price)}
                         </span>
-                        {!outOfStock && (
-                          <span className="text-xs text-muted-foreground">
-                            {product.quantity} available
-                          </span>
+                        {!outOfStock ? (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="gap-1.5 h-8"
+                            onClick={(e) => handleAddToCart(e, product)}
+                          >
+                            <ShoppingCart className="h-3.5 w-3.5" />
+                            Add
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Sold out</span>
                         )}
                       </div>
                     </CardContent>
