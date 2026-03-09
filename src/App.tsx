@@ -549,6 +549,9 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        {/* Public shop routes - no auth required */}
+        <Route path="/shop" element={<PublicShop />} />
+        <Route path="/shop/:id" element={<PublicProductDetail />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
