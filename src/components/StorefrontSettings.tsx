@@ -171,7 +171,25 @@ export function StorefrontSettings() {
     setStorefrontEnabled(org.storefront_enabled);
     setSlug(org.slug || '');
 
-    // Load storefront_settings for this org
+      // Load category pages
+      const { data: catPages } = await supabase
+        .from('storefront_categories')
+        .select('*')
+        .eq('organization_id', orgId)
+        .order('display_order');
+      
+      if (catPages) {
+        setCategoryPages(catPages.map(c => ({
+          id: c.id,
+          category_name: c.category_name,
+          is_visible: c.is_visible,
+          display_order: c.display_order,
+        })));
+      } else {
+        setCategoryPages([]);
+      }
+
+      // Load storefront_settings for this org
     (async () => {
       const { data } = await supabase
         .from('storefront_settings')
