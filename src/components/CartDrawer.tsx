@@ -92,6 +92,11 @@ export function CartDrawer() {
             <Separator />
 
             <div className="space-y-3 pt-4">
+              {cartMessage && (
+                <div className="p-3 rounded-md bg-muted/50 border border-border">
+                  <p className="text-sm text-muted-foreground">{cartMessage}</p>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-card-foreground">Total</span>
                 <span className="text-xl font-bold text-primary">{formatPrice(totalPrice)}</span>
