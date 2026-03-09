@@ -8,31 +8,40 @@ interface ShopHeaderProps {
   logoUrl?: string | null;
   announcement?: string;
   shopBasePath?: string;
+  accentColor?: string;
+  buttonColor?: string;
+  textColor?: string;
 }
 
-export function ShopHeader({ storeName = 'Shop', tagline, logoUrl, announcement, shopBasePath = '/shop' }: ShopHeaderProps) {
+export function ShopHeader({ storeName = 'Shop', tagline, logoUrl, announcement, shopBasePath = '/shop', accentColor, buttonColor, textColor }: ShopHeaderProps) {
   return (
     <>
       {announcement && (
-        <div className="bg-primary text-primary-foreground text-center text-sm py-2 px-4">
+        <div
+          className="text-center text-sm py-2 px-4"
+          style={{ backgroundColor: accentColor || undefined, color: '#fff' }}
+        >
           {announcement}
         </div>
       )}
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-20 items-center justify-between">
             <Link to={shopBasePath} className="flex items-center gap-3">
               {logoUrl ? (
                 <img src={logoUrl} alt={storeName} className="h-16 w-auto max-w-[200px] object-contain rounded" />
               ) : (
-                <ShoppingBag className="h-8 w-8 text-primary" />
+                <ShoppingBag className="h-8 w-8" style={{ color: accentColor || undefined }} />
               )}
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-card-foreground leading-tight">
+                <h1
+                  className="text-xl font-bold tracking-tight leading-tight"
+                  style={{ color: textColor || undefined }}
+                >
                   {storeName}
                 </h1>
                 {tagline && (
-                  <p className="text-xs text-muted-foreground leading-tight">{tagline}</p>
+                  <p className="text-xs leading-tight" style={{ color: textColor ? `${textColor}99` : undefined }}>{tagline}</p>
                 )}
               </div>
             </Link>
