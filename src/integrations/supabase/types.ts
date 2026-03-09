@@ -2123,6 +2123,9 @@ export type Database = {
           enable_search: boolean | null
           grid_columns: number | null
           header_banner_url: string | null
+          header_bg_color: string | null
+          header_nav_color: string | null
+          header_text_color: string | null
           id: string
           link_button_text: string | null
           link_button_url: string | null
@@ -2157,6 +2160,9 @@ export type Database = {
           enable_search?: boolean | null
           grid_columns?: number | null
           header_banner_url?: string | null
+          header_bg_color?: string | null
+          header_nav_color?: string | null
+          header_text_color?: string | null
           id?: string
           link_button_text?: string | null
           link_button_url?: string | null
@@ -2191,6 +2197,9 @@ export type Database = {
           enable_search?: boolean | null
           grid_columns?: number | null
           header_banner_url?: string | null
+          header_bg_color?: string | null
+          header_nav_color?: string | null
+          header_text_color?: string | null
           id?: string
           link_button_text?: string | null
           link_button_url?: string | null
