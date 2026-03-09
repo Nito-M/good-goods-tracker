@@ -7,6 +7,7 @@ import { OrganizationsSettings } from '@/components/OrganizationsSettings';
 import { UsersSettings } from '@/components/UsersSettings';
 import { TagsSettings } from '@/components/TagsSettings';
 import { CompaniesSettings } from '@/components/CompaniesSettings';
+import { StorefrontSettings } from '@/components/StorefrontSettings';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
