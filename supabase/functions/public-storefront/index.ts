@@ -19,6 +19,35 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const productId = url.searchParams.get("id");
+    const settingsOnly = url.searchParams.get("settings");
+
+    // Fetch storefront settings (first one found - multi-tenant could be expanded)
+    if (settingsOnly === "true") {
+      const { data: settings } = await supabase
+        .from("storefront_settings")
+        .select("store_name, tagline, logo_url, announcement_text")
+        .limit(1)
+        .single();
+
+      // If logo_url exists, sign it
+      let logoSigned = null;
+      if (settings?.logo_url) {
+        const match = settings.logo_url.match(/logos\/(.+)/);
+        if (match) {
+          const { data: signed } = await supabase.storage
+            .from("logos")
+            .createSignedUrl(match[1], 3600);
+          if (signed) logoSigned = signed.signedUrl;
+        } else {
+          logoSigned = settings.logo_url;
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ settings: settings ? { ...settings, logo_signed: logoSigned } : null }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (productId) {
       // Single product detail
@@ -95,42 +124,66 @@ Deno.serve(async (req) => {
     const itemIds = (data || []).map((d: any) => d.id);
     
     // Fetch primary images for all items
-    const { data: allImages } = await supabase
-      .from("item_images")
-      .select("item_id, image_url, is_primary, display_order")
-      .in("item_id", itemIds)
-      .order("display_order", { ascending: true });
+    let thumbnailMap: Record<string, string> = {};
+    if (itemIds.length > 0) {
+      const { data: allImages } = await supabase
+        .from("item_images")
+        .select("item_id, image_url, is_primary, display_order")
+        .in("item_id", itemIds)
+        .order("display_order", { ascending: true });
 
-    // Build thumbnail map: first primary, else first by order
-    const thumbnailMap: Record<string, string> = {};
-    for (const img of allImages || []) {
-      if (!thumbnailMap[img.item_id] || img.is_primary) {
-        const match = img.image_url.match(/item-images\/(.+)/);
-        if (match) {
-          const { data: signed } = await supabase.storage
-            .from("item-images")
-            .createSignedUrl(match[1], 3600);
-          if (signed) thumbnailMap[img.item_id] = signed.signedUrl;
+      for (const img of allImages || []) {
+        if (!thumbnailMap[img.item_id] || img.is_primary) {
+          const match = img.image_url.match(/item-images\/(.+)/);
+          if (match) {
+            const { data: signed } = await supabase.storage
+              .from("item-images")
+              .createSignedUrl(match[1], 3600);
+            if (signed) thumbnailMap[img.item_id] = signed.signedUrl;
+          }
         }
-        if (img.is_primary) continue; // primary wins, stop overwriting
+      }
+
+      // Also try main image_url as fallback
+      for (const item of data || []) {
+        if (!thumbnailMap[item.id] && item.image_url) {
+          const match = item.image_url.match(/item-images\/(.+)/);
+          if (match) {
+            const { data: signed } = await supabase.storage
+              .from("item-images")
+              .createSignedUrl(match[1], 3600);
+            if (signed) thumbnailMap[item.id] = signed.signedUrl;
+          }
+        }
       }
     }
 
-    // Also try main image_url as fallback
-    for (const item of data || []) {
-      if (!thumbnailMap[item.id] && item.image_url) {
-        const match = item.image_url.match(/item-images\/(.+)/);
-        if (match) {
-          const { data: signed } = await supabase.storage
-            .from("item-images")
-            .createSignedUrl(match[1], 3600);
-          if (signed) thumbnailMap[item.id] = signed.signedUrl;
-        }
+    // Also fetch settings
+    const { data: settings } = await supabase
+      .from("storefront_settings")
+      .select("store_name, tagline, logo_url, announcement_text")
+      .limit(1)
+      .single();
+
+    let logoSigned = null;
+    if (settings?.logo_url) {
+      const match = settings.logo_url.match(/logos\/(.+)/);
+      if (match) {
+        const { data: signed } = await supabase.storage
+          .from("logos")
+          .createSignedUrl(match[1], 3600);
+        if (signed) logoSigned = signed.signedUrl;
+      } else {
+        logoSigned = settings.logo_url;
       }
     }
 
     return new Response(
-      JSON.stringify({ products: data, thumbnails: thumbnailMap }),
+      JSON.stringify({
+        products: data,
+        thumbnails: thumbnailMap,
+        settings: settings ? { ...settings, logo_signed: logoSigned } : null,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
