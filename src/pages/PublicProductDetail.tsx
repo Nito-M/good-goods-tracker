@@ -34,6 +34,9 @@ interface StoreSettings {
   tagline: string;
   logo_signed: string | null;
   announcement_text: string;
+  header_bg_color: string;
+  header_text_color: string;
+  header_nav_color: string;
   background_color: string;
   bg_image_signed: string | null;
   background_overlay_opacity: number;

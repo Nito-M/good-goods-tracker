@@ -720,6 +720,60 @@ export function StorefrontSettings() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label>Header Background Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={settings.header_bg_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_bg_color: e.target.value }))}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      value={settings.header_bg_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_bg_color: e.target.value }))}
+                      placeholder="#ffffff"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Header Text Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={settings.header_text_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_text_color: e.target.value }))}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      value={settings.header_text_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_text_color: e.target.value }))}
+                      placeholder="#000000"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Header Navigation Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={settings.header_nav_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_nav_color: e.target.value }))}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      value={settings.header_nav_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_nav_color: e.target.value }))}
+                      placeholder="#6b7280"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                   <Label>Primary Color</Label>
                   <div className="flex items-center gap-2">
                     <Input

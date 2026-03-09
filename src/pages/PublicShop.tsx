@@ -30,6 +30,9 @@ interface StoreSettings {
   announcement_text: string;
   header_banner_url: string | null;
   banner_signed: string | null;
+  header_bg_color: string;
+  header_text_color: string;
+  header_nav_color: string;
   background_color: string;
   background_image_url: string | null;
   bg_image_signed: string | null;
