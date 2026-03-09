@@ -41,6 +41,7 @@ import { PartsAssembliesDetail } from "./pages/PartsAssembliesDetail";
 import { AddPart } from "./pages/AddPart";
 import { PartDetail } from "./pages/PartDetail";
 import { TaxDocuments } from "./pages/TaxDocuments";
+import { Storefront } from "./pages/Storefront";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { TripPlanDetail } from "./pages/TripPlanDetail";
