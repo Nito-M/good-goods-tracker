@@ -642,6 +642,9 @@ export function PartDetail() {
           </CardContent>
         </Card>
 
+        {/* Manufacturing Instructions */}
+        {id && <ManufacturingInstructions partId={id} />}
+
         {/* DXF Previews - Two Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
