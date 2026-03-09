@@ -85,6 +85,7 @@ const defaultSettings: StorefrontSettings = {
   contact_button_url: '',
   link_button_text: '',
   link_button_url: '',
+  cart_message: '',
 };
 
 interface CategoryPage {
