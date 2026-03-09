@@ -38,24 +38,6 @@ export function PublicProductDetail() {
   useEffect(() => {
     if (!id) return;
     (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('public-storefront', {
-          body: null,
-          headers: {},
-          method: 'GET',
-        });
-        // The invoke doesn't support query params easily, so let's use fetch directly
-      } catch (e) {
-        console.error(e);
-      }
-      setLoading(false);
-    })();
-  }, []);
-
-  // Use direct fetch for query param support
-  useEffect(() => {
-    if (!id) return;
-    (async () => {
       setLoading(true);
       try {
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
