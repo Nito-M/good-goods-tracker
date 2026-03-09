@@ -458,6 +458,40 @@ export function PartsLibrary() {
   );
 }
 
+function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onMove: () => void; onDelete: (id: string, e: React.MouseEvent) => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent onClick={e => e.stopPropagation()}>
+        <DropdownMenuItem onClick={onMove}>
+          <FolderInput className="h-4 w-4 mr-2" /> Move to folder
+        </DropdownMenuItem>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem className="text-destructive" onSelect={e => e.preventDefault()}>
+              <Trash2 className="h-4 w-4 mr-2" /> Delete
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={e => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete part?</AlertDialogTitle>
+              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={(e) => onDelete(partId, e)}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function PartImage({ storagePath }: { storagePath: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const { getSignedUrl } = useParts();
