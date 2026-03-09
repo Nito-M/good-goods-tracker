@@ -2071,37 +2071,106 @@ export type Database = {
       }
       storefront_settings: {
         Row: {
+          accent_color: string | null
           announcement_text: string | null
+          background_blur: number | null
+          background_color: string | null
+          background_image_url: string | null
+          background_overlay_opacity: number | null
+          button_color: string | null
+          contact_button_text: string | null
+          contact_button_url: string | null
           created_at: string
+          enable_categories: boolean | null
+          enable_search: boolean | null
+          grid_columns: number | null
+          header_banner_url: string | null
           id: string
+          link_button_text: string | null
+          link_button_url: string | null
           logo_url: string | null
           organization_id: string | null
+          primary_color: string | null
+          product_card_bg_color: string | null
+          product_card_spacing: string | null
+          product_image_shape: string | null
+          secondary_color: string | null
+          show_featured_section: boolean | null
+          show_prices: boolean | null
           store_name: string
           tagline: string | null
+          text_color: string | null
           updated_at: string
           user_id: string
+          welcome_message: string | null
         }
         Insert: {
+          accent_color?: string | null
           announcement_text?: string | null
+          background_blur?: number | null
+          background_color?: string | null
+          background_image_url?: string | null
+          background_overlay_opacity?: number | null
+          button_color?: string | null
+          contact_button_text?: string | null
+          contact_button_url?: string | null
           created_at?: string
+          enable_categories?: boolean | null
+          enable_search?: boolean | null
+          grid_columns?: number | null
+          header_banner_url?: string | null
           id?: string
+          link_button_text?: string | null
+          link_button_url?: string | null
           logo_url?: string | null
           organization_id?: string | null
+          primary_color?: string | null
+          product_card_bg_color?: string | null
+          product_card_spacing?: string | null
+          product_image_shape?: string | null
+          secondary_color?: string | null
+          show_featured_section?: boolean | null
+          show_prices?: boolean | null
           store_name?: string
           tagline?: string | null
+          text_color?: string | null
           updated_at?: string
           user_id: string
+          welcome_message?: string | null
         }
         Update: {
+          accent_color?: string | null
           announcement_text?: string | null
+          background_blur?: number | null
+          background_color?: string | null
+          background_image_url?: string | null
+          background_overlay_opacity?: number | null
+          button_color?: string | null
+          contact_button_text?: string | null
+          contact_button_url?: string | null
           created_at?: string
+          enable_categories?: boolean | null
+          enable_search?: boolean | null
+          grid_columns?: number | null
+          header_banner_url?: string | null
           id?: string
+          link_button_text?: string | null
+          link_button_url?: string | null
           logo_url?: string | null
           organization_id?: string | null
+          primary_color?: string | null
+          product_card_bg_color?: string | null
+          product_card_spacing?: string | null
+          product_image_shape?: string | null
+          secondary_color?: string | null
+          show_featured_section?: boolean | null
+          show_prices?: boolean | null
           store_name?: string
           tagline?: string | null
+          text_color?: string | null
           updated_at?: string
           user_id?: string
+          welcome_message?: string | null
         }
         Relationships: [
           {
