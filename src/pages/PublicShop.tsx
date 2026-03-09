@@ -87,15 +87,16 @@ function getSpacingGap(spacing: string | undefined) {
 }
 
 export function PublicShop() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, category: urlCategory } = useParams<{ slug: string; category?: string }>();
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState(urlCategory || 'all');
   const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc'>('name');
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [categoryPages, setCategoryPages] = useState<string[]>([]);
   const { addToCart } = useCart();
 
   useEffect(() => {
