@@ -58,6 +58,7 @@ export function PublicProductDetail() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [addQty, setAddQty] = useState(1);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const { addToCart } = useCart();
 
   const shopBase = `/shop/${slug}`;
