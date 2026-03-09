@@ -112,31 +112,7 @@ export function StorefrontSettings() {
 
   // Category pages
   const [categoryPages, setCategoryPages] = useState<CategoryPage[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-
-  // Load available categories from inventory
-  useEffect(() => {
-    if (!selectedOrgId) return;
-    (async () => {
-      const { data: members } = await supabase
-        .from('organization_members')
-        .select('user_id')
-        .eq('organization_id', selectedOrgId);
-      
-      if (members && members.length > 0) {
-        const userIds = members.map(m => m.user_id);
-        const { data: items } = await supabase
-          .from('inventory_items')
-          .select('category')
-          .in('user_id', userIds);
-        
-        if (items) {
-          const cats = [...new Set(items.map(i => i.category))].sort();
-          setAvailableCategories(cats);
-        }
-      }
-    })();
-  }, [selectedOrgId]);
+  const [newPageName, setNewPageName] = useState('');
 
   // Load orgs the user is admin/owner of
   useEffect(() => {
