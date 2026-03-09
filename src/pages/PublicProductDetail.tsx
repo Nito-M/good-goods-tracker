@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Package, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Package, ShoppingCart, Plus, Minus, ZoomIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ShopHeader } from '@/components/ShopHeader';
 import { useCart } from '@/contexts/CartContext';
-
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 interface ProductData {
   id: string;
   name: string;
