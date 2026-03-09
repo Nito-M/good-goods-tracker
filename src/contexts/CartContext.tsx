@@ -19,6 +19,8 @@ interface CartContextValue {
   totalPrice: number;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  cartMessage: string;
+  setCartMessage: (msg: string) => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
