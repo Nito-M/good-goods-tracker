@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     const fetchSettings = async () => {
       const { data: settings } = await supabase
         .from("storefront_settings")
-        .select("store_name, tagline, logo_url, announcement_text, header_banner_url, background_color, background_image_url, background_overlay_opacity, background_blur, primary_color, secondary_color, accent_color, button_color, text_color, product_card_spacing, product_image_shape, grid_columns, show_featured_section, welcome_message, product_card_bg_color, show_prices, enable_search, enable_categories, contact_button_text, contact_button_url, link_button_text, link_button_url")
+        .select("store_name, tagline, logo_url, announcement_text, header_banner_url, header_bg_color, header_text_color, header_nav_color, background_color, background_image_url, background_overlay_opacity, background_blur, primary_color, secondary_color, accent_color, button_color, text_color, product_card_spacing, product_image_shape, grid_columns, show_featured_section, welcome_message, product_card_bg_color, show_prices, enable_search, enable_categories, contact_button_text, contact_button_url, link_button_text, link_button_url")
         .eq("organization_id", org.id)
         .limit(1)
         .single();
