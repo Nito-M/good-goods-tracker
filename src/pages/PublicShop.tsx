@@ -20,6 +20,7 @@ interface PublicProduct {
   quantity_unit: string;
   price: number;
   description: string | null;
+  storefront_page: string | null;
 }
 
 interface StoreSettings {
