@@ -23,9 +23,9 @@ export function ShopHeader({ storeName = 'Shop', tagline, logoUrl, announcement,
           <div className="flex h-16 items-center justify-between">
             <Link to={shopBasePath} className="flex items-center gap-3">
               {logoUrl ? (
-                <img src={logoUrl} alt={storeName} className="h-10 w-10 object-contain rounded" />
+                <img src={logoUrl} alt={storeName} className="h-16 w-auto max-w-[200px] object-contain rounded" />
               ) : (
-                <ShoppingBag className="h-6 w-6 text-primary" />
+                <ShoppingBag className="h-8 w-8 text-primary" />
               )}
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-card-foreground leading-tight">

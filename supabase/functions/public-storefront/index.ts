@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     const fetchSettings = async () => {
       const { data: settings } = await supabase
         .from("storefront_settings")
-        .select("store_name, tagline, logo_url, announcement_text")
+        .select("store_name, tagline, logo_url, announcement_text, header_banner_url, background_color, background_image_url, background_overlay_opacity, background_blur, primary_color, secondary_color, accent_color, button_color, text_color, product_card_spacing, product_image_shape, grid_columns, show_featured_section, welcome_message, product_card_bg_color, show_prices, enable_search, enable_categories, contact_button_text, contact_button_url, link_button_text, link_button_url")
         .eq("organization_id", org.id)
         .limit(1)
         .single();
@@ -92,7 +92,19 @@ Deno.serve(async (req) => {
         if (!logoSigned) logoSigned = settings.logo_url;
       }
 
-      return settings ? { ...settings, logo_signed: logoSigned } : null;
+      let bannerSigned = null;
+      if (settings?.header_banner_url) {
+        bannerSigned = await signImageUrl(settings.header_banner_url, "logos");
+        if (!bannerSigned) bannerSigned = settings.header_banner_url;
+      }
+
+      let bgImageSigned = null;
+      if (settings?.background_image_url) {
+        bgImageSigned = await signImageUrl(settings.background_image_url, "backgrounds");
+        if (!bgImageSigned) bgImageSigned = settings.background_image_url;
+      }
+
+      return settings ? { ...settings, logo_signed: logoSigned, banner_signed: bannerSigned, bg_image_signed: bgImageSigned } : null;
     };
 
     // Settings only request
