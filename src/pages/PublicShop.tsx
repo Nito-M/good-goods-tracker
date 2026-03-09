@@ -373,7 +373,6 @@ export function PublicShop() {
                       </div>
                       <CardContent className="p-4 space-y-2 flex-1 flex flex-col">
                         <h3 className="font-semibold truncate" style={{ color: settings?.text_color || undefined }}>{product.name}</h3>
-                        <Badge variant="outline" className="text-xs w-fit">{product.category}</Badge>
                         {product.description && (
                           <p className="text-sm line-clamp-2" style={{ color: settings?.secondary_color || undefined }}>{product.description}</p>
                         )}
