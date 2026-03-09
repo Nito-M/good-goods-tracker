@@ -171,11 +171,13 @@ export function StorefrontSettings() {
     setStorefrontEnabled(org.storefront_enabled);
     setSlug(org.slug || '');
 
+    // Load storefront_settings for this org
+    (async () => {
       // Load category pages
       const { data: catPages } = await supabase
         .from('storefront_categories')
         .select('*')
-        .eq('organization_id', orgId)
+        .eq('organization_id', selectedOrgId)
         .order('display_order');
       
       if (catPages) {
@@ -189,8 +191,6 @@ export function StorefrontSettings() {
         setCategoryPages([]);
       }
 
-      // Load storefront_settings for this org
-    (async () => {
       const { data } = await supabase
         .from('storefront_settings')
         .select('*')
