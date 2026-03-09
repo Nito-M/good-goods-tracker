@@ -100,6 +100,14 @@ export function PublicShop() {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    if (urlCategory) {
+      setCategory(decodeURIComponent(urlCategory));
+    } else {
+      setCategory('all');
+    }
+  }, [urlCategory]);
+
+  useEffect(() => {
     if (!slug) return;
     (async () => {
       try {
@@ -119,6 +127,7 @@ export function PublicShop() {
           setProducts(result.products || []);
           setThumbnails(result.thumbnails || {});
           setSettings(result.settings || null);
+          setCategoryPages(result.categories || []);
         }
       } catch (e) {
         console.error('Error loading shop:', e);
