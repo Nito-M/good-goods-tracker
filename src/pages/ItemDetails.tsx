@@ -38,6 +38,7 @@ import { useWarehouses } from '@/hooks/useWarehouses';
 import { useItemConsumptions } from '@/hooks/useItemConsumptions';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
