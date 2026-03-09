@@ -214,6 +214,7 @@ export function StorefrontSettings() {
           contact_button_url: data.contact_button_url || defaultSettings.contact_button_url,
           link_button_text: data.link_button_text || defaultSettings.link_button_text,
           link_button_url: data.link_button_url || defaultSettings.link_button_url,
+          cart_message: (data as any).cart_message || defaultSettings.cart_message,
         });
       } else {
         setSettings(defaultSettings);
