@@ -2,3 +2,6 @@ project_id = "awzfdkhntiucfmuorbbr"
 
 [functions.lookup-users-by-ids]
 verify_jwt = false
+
+[functions.public-storefront]
+verify_jwt = false
