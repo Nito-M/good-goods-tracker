@@ -206,38 +206,34 @@ export function PartsLibrary() {
           <>
             {/* Folders */}
             {filteredFolders.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-                {filteredFolders.map(folder => (
-                  <Card
+              <div className="border border-border rounded-md overflow-hidden mb-4">
+                {filteredFolders.map((folder, i) => (
+                  <div
                     key={folder.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow group relative"
+                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''}`}
                     onClick={() => { setCurrentFolderId(folder.id); setSearch(''); }}
                   >
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <Folder className="h-8 w-8 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground truncate">{folder.name}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {folders.filter(f => f.parentId === folder.id).length} folders · {parts.filter(p => p.folderId === folder.id).length} parts
-                        </p>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent onClick={e => e.stopPropagation()}>
-                          <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name })}>
-                            <Pencil className="h-4 w-4 mr-2" /> Rename
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFolder(folder.id)}>
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </CardContent>
-                  </Card>
+                    <Folder className="h-5 w-5 text-primary shrink-0" />
+                    <span className="font-medium text-foreground truncate flex-1">{folder.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {folders.filter(f => f.parentId === folder.id).length} folders · {parts.filter(p => p.folderId === folder.id).length} parts
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent onClick={e => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name })}>
+                          <Pencil className="h-4 w-4 mr-2" /> Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFolder(folder.id)}>
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 ))}
               </div>
             )}
@@ -255,77 +251,75 @@ export function PartsLibrary() {
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filtered.map(part => (
-                  <Card
+            ) : filtered.length > 0 && (
+              <div className="border border-border rounded-md overflow-hidden">
+                {filtered.map((part, i) => (
+                  <div
                     key={part.id}
-                    className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
+                    className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
                     onClick={() => {
                       if (selectMode) { toggleSelect(part.id); }
                       else { navigate(`/parts/library/${part.id}`); }
                     }}
                   >
-                    <CardContent className="p-4 relative">
-                      {selectMode && (
-                        <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedPartIds.has(part.id)}
-                            onCheckedChange={() => toggleSelect(part.id)}
-                          />
-                        </div>
+                    {selectMode && (
+                      <div onClick={e => e.stopPropagation()} className="shrink-0">
+                        <Checkbox
+                          checked={selectedPartIds.has(part.id)}
+                          onCheckedChange={() => toggleSelect(part.id)}
+                        />
+                      </div>
+                    )}
+                    <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0">
+                      {part.imageUrl ? (
+                        <PartImage storagePath={part.imageUrl} />
+                      ) : (
+                        <span className="text-muted-foreground text-[10px]">—</span>
                       )}
-                      <div className="aspect-square bg-muted rounded-md mb-3 overflow-hidden flex items-center justify-center">
-                        {part.imageUrl ? (
-                          <PartImage storagePath={part.imageUrl} />
-                        ) : (
-                          <span className="text-muted-foreground text-sm">No image</span>
-                        )}
-                      </div>
-                      <h3 className="font-semibold text-foreground truncate">{part.name}</h3>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground truncate">SKU: {part.sku || '—'}</p>
-                        {part.price > 0 && <span className="text-sm font-semibold text-primary">{formatCurrency(part.price)}</span>}
-                      </div>
-                      <div className="flex gap-1 mt-1">
-                        {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
-                        {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost" size="icon"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
-                            onClick={e => e.stopPropagation()}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent onClick={e => e.stopPropagation()}>
-                          <DropdownMenuItem onClick={() => setMovingPartId(part.id)}>
-                            <FolderInput className="h-4 w-4 mr-2" /> Move to folder
-                          </DropdownMenuItem>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-destructive" onSelect={e => e.preventDefault()}>
-                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent onClick={e => e.stopPropagation()}>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete part?</AlertDialogTitle>
-                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={(e) => handleDelete(part.id, e)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
+                    <span className="text-sm text-muted-foreground truncate w-28 shrink-0 hidden sm:block">{part.sku || '—'}</span>
+                    <span className="text-sm font-medium text-primary w-24 text-right shrink-0 hidden sm:block">
+                      {part.price > 0 ? formatCurrency(part.price) : '—'}
+                    </span>
+                    <div className="flex gap-1 shrink-0 hidden md:flex">
+                      {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
+                      {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost" size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent onClick={e => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => setMovingPartId(part.id)}>
+                          <FolderInput className="h-4 w-4 mr-2" /> Move to folder
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-destructive" onSelect={e => e.preventDefault()}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={e => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete part?</AlertDialogTitle>
+                              <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={(e) => handleDelete(part.id, e)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 ))}
               </div>
             )}
