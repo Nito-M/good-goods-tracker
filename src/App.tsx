@@ -42,6 +42,8 @@ import { AddPart } from "./pages/AddPart";
 import { PartDetail } from "./pages/PartDetail";
 import { TaxDocuments } from "./pages/TaxDocuments";
 import { Storefront } from "./pages/Storefront";
+import { PublicShop } from "./pages/PublicShop";
+import { PublicProductDetail } from "./pages/PublicProductDetail";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { TripPlanDetail } from "./pages/TripPlanDetail";
@@ -547,6 +549,9 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        {/* Public shop routes - no auth required */}
+        <Route path="/shop" element={<PublicShop />} />
+        <Route path="/shop/:id" element={<PublicProductDetail />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

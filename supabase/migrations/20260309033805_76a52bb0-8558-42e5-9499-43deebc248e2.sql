@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory_items ADD COLUMN show_in_storefront boolean NOT NULL DEFAULT false;

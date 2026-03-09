@@ -377,6 +377,7 @@ export type Database = {
           price: number
           quantity: number
           quantity_unit: string
+          show_in_storefront: boolean
           sku: string
           subcategory: string | null
           updated_at: string
@@ -408,6 +409,7 @@ export type Database = {
           price?: number
           quantity?: number
           quantity_unit?: string
+          show_in_storefront?: boolean
           sku: string
           subcategory?: string | null
           updated_at?: string
@@ -439,6 +441,7 @@ export type Database = {
           price?: number
           quantity?: number
           quantity_unit?: string
+          show_in_storefront?: boolean
           sku?: string
           subcategory?: string | null
           updated_at?: string

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DxfFileCard } from '@/components/DxfFileCard';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +38,7 @@ import { useWarehouses } from '@/hooks/useWarehouses';
 import { useItemConsumptions } from '@/hooks/useItemConsumptions';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
@@ -56,8 +58,22 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [consumeDescription, setConsumeDescription] = useState('');
   const [consumeWarehouseId, setConsumeWarehouseId] = useState<string>('');
   const [isConsuming, setIsConsuming] = useState(false);
+  const [showInStorefront, setShowInStorefront] = useState(false);
   
   const item = items.find((i) => i.id === id);
+
+  // Fetch show_in_storefront value
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('inventory_items')
+        .select('show_in_storefront')
+        .eq('id', id)
+        .single();
+      if (data) setShowInStorefront(data.show_in_storefront ?? false);
+    })();
+  }, [id]);
 
   // Initialize DXF URL from item
   useEffect(() => {
@@ -289,7 +305,35 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           )}
         </div>
 
-        {/* Product Images Gallery */}
+        {/* Storefront Toggle */}
+        <Card className="mb-6">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Globe className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium text-card-foreground">Show in Storefront</p>
+                <p className="text-xs text-muted-foreground">Make this product visible on the public shop page</p>
+              </div>
+            </div>
+            <Switch
+              checked={showInStorefront}
+              onCheckedChange={async (checked) => {
+                setShowInStorefront(checked);
+                const { error } = await supabase
+                  .from('inventory_items')
+                  .update({ show_in_storefront: checked } as any)
+                  .eq('id', item.id);
+                if (error) {
+                  setShowInStorefront(!checked);
+                  toast({ title: 'Failed to update storefront visibility', variant: 'destructive' });
+                } else {
+                  toast({ title: checked ? 'Product now visible in shop' : 'Product hidden from shop' });
+                }
+              }}
+            />
+          </CardContent>
+        </Card>
+
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">Product Images</CardTitle>
