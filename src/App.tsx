@@ -532,6 +532,20 @@ function AppContent() {
               </AppLayout>
             </ProtectedRoute>
           }
+          />
+        <Route
+          path="/storefront"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Storefront
+                  items={items}
+                  loading={loading}
+                  categories={allCategories}
+                />
+              </AppLayout>
+            </ProtectedRoute>
+          }
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
