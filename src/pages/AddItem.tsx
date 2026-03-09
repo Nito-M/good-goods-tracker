@@ -984,6 +984,32 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             totalQuantity={parseFloat(quantity) || 0}
           />
 
+          {/* Shop Page Assignment */}
+          {availableShopPages.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Shop Page</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label>Assign to Shop Page</Label>
+                  <Select value={storefrontPage || 'none'} onValueChange={(v) => setStorefrontPage(v === 'none' ? '' : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a shop page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Page</SelectItem>
+                      {availableShopPages.map((page) => (
+                        <SelectItem key={page} value={page}>{page}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Choose which shop page this item appears under in the storefront navigation</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Tags */}
           <ItemTagSelector
             selectedTagIds={pendingTagIds}
