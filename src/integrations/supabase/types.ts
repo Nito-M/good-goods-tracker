@@ -924,6 +924,8 @@ export type Database = {
           id: string
           name: string
           requester_names: string[] | null
+          slug: string | null
+          storefront_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -931,6 +933,8 @@ export type Database = {
           id?: string
           name: string
           requester_names?: string[] | null
+          slug?: string | null
+          storefront_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -938,6 +942,8 @@ export type Database = {
           id?: string
           name?: string
           requester_names?: string[] | null
+          slug?: string | null
+          storefront_enabled?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -2069,6 +2075,7 @@ export type Database = {
           created_at: string
           id: string
           logo_url: string | null
+          organization_id: string | null
           store_name: string
           tagline: string | null
           updated_at: string
@@ -2079,6 +2086,7 @@ export type Database = {
           created_at?: string
           id?: string
           logo_url?: string | null
+          organization_id?: string | null
           store_name?: string
           tagline?: string | null
           updated_at?: string
@@ -2089,12 +2097,21 @@ export type Database = {
           created_at?: string
           id?: string
           logo_url?: string | null
+          organization_id?: string | null
           store_name?: string
           tagline?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "storefront_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subcategories: {
         Row: {
