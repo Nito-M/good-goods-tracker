@@ -58,8 +58,22 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [consumeDescription, setConsumeDescription] = useState('');
   const [consumeWarehouseId, setConsumeWarehouseId] = useState<string>('');
   const [isConsuming, setIsConsuming] = useState(false);
+  const [showInStorefront, setShowInStorefront] = useState(false);
   
   const item = items.find((i) => i.id === id);
+
+  // Fetch show_in_storefront value
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('inventory_items')
+        .select('show_in_storefront')
+        .eq('id', id)
+        .single();
+      if (data) setShowInStorefront(data.show_in_storefront ?? false);
+    })();
+  }, [id]);
 
   // Initialize DXF URL from item
   useEffect(() => {
