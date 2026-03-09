@@ -2119,6 +2119,7 @@ export type Database = {
           background_image_url: string | null
           background_overlay_opacity: number | null
           button_color: string | null
+          cart_message: string | null
           contact_button_text: string | null
           contact_button_url: string | null
           created_at: string
@@ -2156,6 +2157,7 @@ export type Database = {
           background_image_url?: string | null
           background_overlay_opacity?: number | null
           button_color?: string | null
+          cart_message?: string | null
           contact_button_text?: string | null
           contact_button_url?: string | null
           created_at?: string
@@ -2193,6 +2195,7 @@ export type Database = {
           background_image_url?: string | null
           background_overlay_opacity?: number | null
           button_color?: string | null
+          cart_message?: string | null
           contact_button_text?: string | null
           contact_button_url?: string | null
           created_at?: string
