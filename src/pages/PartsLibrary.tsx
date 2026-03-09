@@ -151,6 +151,26 @@ export function PartsLibrary() {
                 </>
               ) : (
                 <>
+                  <div className="flex items-center border border-border rounded-md overflow-hidden">
+                    <Button
+                      variant={viewMode === 'lines' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="rounded-none h-9 w-9"
+                      onClick={() => { setViewMode('lines'); localStorage.setItem('partsLibraryViewMode', 'lines'); }}
+                      title="List view"
+                    >
+                      <LayoutList className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                      size="icon"
+                      className="rounded-none h-9 w-9"
+                      onClick={() => { setViewMode('cards'); localStorage.setItem('partsLibraryViewMode', 'cards'); }}
+                      title="Card view"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Button variant="outline" size="icon" onClick={() => setSelectMode(true)} title="Select multiple">
                     <CheckSquare className="h-4 w-4" />
                   </Button>
