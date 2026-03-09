@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Store, Save, ExternalLink, Globe, Palette, Layout, Eye, Image as ImageIcon, Upload, Plus, X, GripVertical, Tags } from 'lucide-react';
+import { Store, Save, ExternalLink, Globe, Palette, Layout, Eye, Image as ImageIcon, Upload, Plus, X, GripVertical, Tags, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,31 +112,7 @@ export function StorefrontSettings() {
 
   // Category pages
   const [categoryPages, setCategoryPages] = useState<CategoryPage[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-
-  // Load available categories from inventory
-  useEffect(() => {
-    if (!selectedOrgId) return;
-    (async () => {
-      const { data: members } = await supabase
-        .from('organization_members')
-        .select('user_id')
-        .eq('organization_id', selectedOrgId);
-      
-      if (members && members.length > 0) {
-        const userIds = members.map(m => m.user_id);
-        const { data: items } = await supabase
-          .from('inventory_items')
-          .select('category')
-          .in('user_id', userIds);
-        
-        if (items) {
-          const cats = [...new Set(items.map(i => i.category))].sort();
-          setAvailableCategories(cats);
-        }
-      }
-    })();
-  }, [selectedOrgId]);
+  const [newPageName, setNewPageName] = useState('');
 
   // Load orgs the user is admin/owner of
   useEffect(() => {
@@ -312,9 +288,29 @@ export function StorefrontSettings() {
 
     if (settingsError) {
       toast({ title: 'Error saving storefront settings', description: settingsError.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Storefront settings saved successfully!' });
+      setSaving(false);
+      return;
     }
+
+    // Save category pages
+    // Delete existing pages for this org
+    await supabase
+      .from('storefront_categories')
+      .delete()
+      .eq('organization_id', selectedOrgId);
+
+    // Insert current pages
+    if (categoryPages.length > 0) {
+      const pagesToInsert = categoryPages.map((cp, idx) => ({
+        organization_id: selectedOrgId,
+        category_name: cp.category_name,
+        is_visible: cp.is_visible,
+        display_order: idx,
+      }));
+      await supabase.from('storefront_categories').insert(pagesToInsert as any);
+    }
+
+    toast({ title: 'Storefront settings saved successfully!' });
     setSaving(false);
   };
 
@@ -375,8 +371,9 @@ export function StorefrontSettings() {
       )}
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+        <TabsList className="grid w-full grid-cols-6 max-w-3xl">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="pages">Pages</TabsTrigger>
           <TabsTrigger value="header">Header</TabsTrigger>
           <TabsTrigger value="colors">Colors</TabsTrigger>
           <TabsTrigger value="layout">Layout</TabsTrigger>
@@ -629,16 +626,16 @@ export function StorefrontSettings() {
           </Card>
         </TabsContent>
 
-        {/* Categories Tab */}
-        <TabsContent value="categories" className="space-y-6">
+        {/* Pages Tab */}
+        <TabsContent value="pages" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Tags className="h-5 w-5" />
-                Category Navigation
+                <FileText className="h-5 w-5" />
+                Shop Pages
               </CardTitle>
               <CardDescription>
-                Add category pages to your shop header navigation. Customers can browse products by category.
+                Create pages that appear in your shop header navigation. Assign items to pages when editing each item.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -669,38 +666,41 @@ export function StorefrontSettings() {
                 </div>
               ))}
               
-              {availableCategories.length > 0 && (
-                <Select
-                  value=""
-                  onValueChange={(catName) => {
-                    if (catName && !categoryPages.find(c => c.category_name === catName)) {
-                      setCategoryPages([
-                        ...categoryPages,
-                        {
-                          category_name: catName,
-                          is_visible: true,
-                          display_order: categoryPages.length,
-                        },
-                      ]);
+              <div className="flex items-center gap-2">
+                <Input
+                  value={newPageName}
+                  onChange={(e) => setNewPageName(e.target.value)}
+                  placeholder="Enter page name (e.g. Axles, Brakes, Electric)"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const trimmed = newPageName.trim();
+                      if (trimmed && !categoryPages.find(c => c.category_name.toLowerCase() === trimmed.toLowerCase())) {
+                        setCategoryPages([...categoryPages, { category_name: trimmed, is_visible: true, display_order: categoryPages.length }]);
+                        setNewPageName('');
+                      }
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const trimmed = newPageName.trim();
+                    if (trimmed && !categoryPages.find(c => c.category_name.toLowerCase() === trimmed.toLowerCase())) {
+                      setCategoryPages([...categoryPages, { category_name: trimmed, is_visible: true, display_order: categoryPages.length }]);
+                      setNewPageName('');
                     }
                   }}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Add a category page..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCategories
-                      .filter(c => !categoryPages.find(cp => cp.category_name === c))
-                      .map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              )}
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
               
               {categoryPages.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No category pages added. Add categories to enable navigation in your shop header.
+                  No pages added yet. Add pages to enable navigation in your shop header.
                 </p>
               )}
             </CardContent>

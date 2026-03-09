@@ -117,8 +117,45 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [boxAmount, setBoxAmount] = useState('');
   const [bundleAmount, setBundleAmount] = useState('');
   const [pieceLength, setPieceLength] = useState('');
+  const [storefrontPage, setStorefrontPage] = useState('');
+  const [availableShopPages, setAvailableShopPages] = useState<string[]>([]);
   // Staged images for new item creation (before saving)
   const [stagedImages, setStagedImages] = useState<StagedImage[]>([]);
+  // Load available shop pages from storefront_categories
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data: memberships } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id);
+      if (memberships && memberships.length > 0) {
+        const orgId = memberships[0].organization_id;
+        const { data: pages } = await supabase
+          .from('storefront_categories')
+          .select('category_name')
+          .eq('organization_id', orgId)
+          .order('display_order');
+        if (pages) {
+          setAvailableShopPages(pages.map(p => p.category_name));
+        }
+      }
+    })();
+  }, [user]);
+
+  // Load storefront_page for editing
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('inventory_items')
+        .select('storefront_page')
+        .eq('id', id)
+        .single();
+      if (data) setStorefrontPage((data as any).storefront_page || '');
+    })();
+  }, [id]);
+
   useEffect(() => {
     if (editItem) {
       setName(editItem.name);
@@ -133,7 +170,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setWeight(String(editItem.weight));
       setWeightUnit(editItem.weightUnit);
       setDimensions(editItem.dimensions);
-      // Populate sheet size state for sqft items
       if (editItem.quantityUnit === 'sqft') {
         const dimUnit = editItem.dimensions.unit as 'ft' | 'in';
         setSheetUnit(dimUnit === 'ft' || dimUnit === 'in' ? dimUnit : 'ft');
@@ -146,8 +182,6 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setBoxAmount(String(editItem.boxAmount || ''));
       setBundleAmount(String(editItem.bundleAmount || ''));
       setPieceLength(String(editItem.pieceLength || ''));
-      // Location entries will be populated from existingLocations effect below
-      // Keep backward compat: if item has warehouseId but no location entries, seed one
       if (editItem.warehouseId) {
         setLocationEntries([{ warehouseId: editItem.warehouseId, quantity: String(editItem.quantity) }]);
       }
@@ -298,6 +332,12 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     if (editItem && onUpdate) {
       await onUpdate(editItem.id, itemData);
       
+      // Save storefront_page
+      await supabase
+        .from('inventory_items')
+        .update({ storefront_page: storefrontPage || null } as any)
+        .eq('id', editItem.id);
+      
       // Handle vendor price updates
       const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
       const existingVendorIds = existingPrices.map((p) => p.vendor_id);
@@ -327,6 +367,13 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       const newItemId = await onSave(itemData);
       
       if (newItemId) {
+        // Save storefront_page for new item
+        if (storefrontPage) {
+          await supabase
+            .from('inventory_items')
+            .update({ storefront_page: storefrontPage } as any)
+            .eq('id', newItemId);
+        }
         // Upload staged images using the new item's ID directly
         for (const staged of stagedImages) {
           if (staged.file) {
@@ -936,6 +983,32 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             onChange={setLocationEntries}
             totalQuantity={parseFloat(quantity) || 0}
           />
+
+          {/* Shop Page Assignment */}
+          {availableShopPages.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Shop Page</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label>Assign to Shop Page</Label>
+                  <Select value={storefrontPage || 'none'} onValueChange={(v) => setStorefrontPage(v === 'none' ? '' : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a shop page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Page</SelectItem>
+                      {availableShopPages.map((page) => (
+                        <SelectItem key={page} value={page}>{page}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Choose which shop page this item appears under in the storefront navigation</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Tags */}
           <ItemTagSelector

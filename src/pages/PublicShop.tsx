@@ -20,6 +20,7 @@ interface PublicProduct {
   quantity_unit: string;
   price: number;
   description: string | null;
+  storefront_page: string | null;
 }
 
 interface StoreSettings {
@@ -157,7 +158,7 @@ export function PublicShop() {
     }
 
     if (category !== 'all') {
-      result = result.filter((p) => p.category === category);
+      result = result.filter((p) => p.storefront_page === category);
     }
 
     if (sortBy === 'price-asc') result = [...result].sort((a, b) => a.price - b.price);

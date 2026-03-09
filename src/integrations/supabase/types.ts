@@ -379,6 +379,7 @@ export type Database = {
           quantity_unit: string
           show_in_storefront: boolean
           sku: string
+          storefront_page: string | null
           subcategory: string | null
           updated_at: string
           user_id: string | null
@@ -411,6 +412,7 @@ export type Database = {
           quantity_unit?: string
           show_in_storefront?: boolean
           sku: string
+          storefront_page?: string | null
           subcategory?: string | null
           updated_at?: string
           user_id?: string | null
@@ -443,6 +445,7 @@ export type Database = {
           quantity_unit?: string
           show_in_storefront?: boolean
           sku?: string
+          storefront_page?: string | null
           subcategory?: string | null
           updated_at?: string
           user_id?: string | null
