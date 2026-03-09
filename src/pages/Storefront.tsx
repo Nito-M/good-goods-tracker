@@ -24,7 +24,7 @@ export function Storefront({ items, loading, categories }: StorefrontProps) {
 
   // Only show in-stock items
   const availableItems = useMemo(() => {
-    return items.filter((i) => i.quantity > 0 && !i.deletedAt);
+    return items.filter((i) => i.quantity > 0);
   }, [items]);
 
   const filtered = useMemo(() => {
