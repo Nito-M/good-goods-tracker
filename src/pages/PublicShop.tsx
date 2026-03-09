@@ -30,6 +30,9 @@ interface StoreSettings {
   announcement_text: string;
   header_banner_url: string | null;
   banner_signed: string | null;
+  header_bg_color: string;
+  header_text_color: string;
+  header_nav_color: string;
   background_color: string;
   background_image_url: string | null;
   bg_image_signed: string | null;
@@ -233,6 +236,9 @@ export function PublicShop() {
           accentColor={settings?.accent_color}
           buttonColor={settings?.button_color}
           textColor={settings?.text_color}
+          headerBgColor={settings?.header_bg_color}
+          headerTextColor={settings?.header_text_color}
+          headerNavColor={settings?.header_nav_color}
           categories={categoryPages}
         />
 

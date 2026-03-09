@@ -26,6 +26,9 @@ interface StorefrontSettings {
   announcement_text: string;
   logo_url: string | null;
   header_banner_url: string | null;
+  header_bg_color: string;
+  header_text_color: string;
+  header_nav_color: string;
   background_color: string;
   background_image_url: string | null;
   background_overlay_opacity: number;
@@ -56,6 +59,9 @@ const defaultSettings: StorefrontSettings = {
   announcement_text: '',
   logo_url: null,
   header_banner_url: null,
+  header_bg_color: '#ffffff',
+  header_text_color: '#000000',
+  header_nav_color: '#6b7280',
   background_color: '#ffffff',
   background_image_url: null,
   background_overlay_opacity: 0,
@@ -205,6 +211,9 @@ export function StorefrontSettings() {
           announcement_text: data.announcement_text || defaultSettings.announcement_text,
           logo_url: data.logo_url || defaultSettings.logo_url,
           header_banner_url: data.header_banner_url || defaultSettings.header_banner_url,
+          header_bg_color: (data as any).header_bg_color || defaultSettings.header_bg_color,
+          header_text_color: (data as any).header_text_color || defaultSettings.header_text_color,
+          header_nav_color: (data as any).header_nav_color || defaultSettings.header_nav_color,
           background_color: data.background_color || defaultSettings.background_color,
           background_image_url: data.background_image_url || defaultSettings.background_image_url,
           background_overlay_opacity: data.background_overlay_opacity ?? defaultSettings.background_overlay_opacity,
@@ -710,6 +719,60 @@ export function StorefrontSettings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Header Background Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={settings.header_bg_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_bg_color: e.target.value }))}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      value={settings.header_bg_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_bg_color: e.target.value }))}
+                      placeholder="#ffffff"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Header Text Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={settings.header_text_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_text_color: e.target.value }))}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      value={settings.header_text_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_text_color: e.target.value }))}
+                      placeholder="#000000"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Header Navigation Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="color"
+                      value={settings.header_nav_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_nav_color: e.target.value }))}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      value={settings.header_nav_color}
+                      onChange={(e) => setSettings(prev => ({ ...prev, header_nav_color: e.target.value }))}
+                      placeholder="#6b7280"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Primary Color</Label>
                   <div className="flex items-center gap-2">

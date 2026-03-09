@@ -11,6 +11,9 @@ interface ShopHeaderProps {
   accentColor?: string;
   buttonColor?: string;
   textColor?: string;
+  headerBgColor?: string;
+  headerTextColor?: string;
+  headerNavColor?: string;
   categories?: string[];
 }
 
@@ -23,8 +26,13 @@ export function ShopHeader({
   accentColor, 
   buttonColor, 
   textColor,
+  headerBgColor,
+  headerTextColor,
+  headerNavColor,
   categories = []
 }: ShopHeaderProps) {
+  const resolvedTextColor = headerTextColor || textColor;
+
   return (
     <>
       {announcement && (
@@ -35,35 +43,38 @@ export function ShopHeader({
           {announcement}
         </div>
       )}
-      <header className="border-b border-border bg-card sticky top-0 z-10">
+      <header
+        className="border-b border-border sticky top-0 z-10"
+        style={{ backgroundColor: headerBgColor || undefined }}
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <Link to={shopBasePath} className="flex items-center gap-3">
               {logoUrl ? (
                 <img src={logoUrl} alt={storeName} className="h-16 w-auto max-w-[200px] object-contain rounded" />
               ) : (
-                <ShoppingBag className="h-8 w-8" style={{ color: accentColor || undefined }} />
+                <ShoppingBag className="h-8 w-8" style={{ color: accentColor || resolvedTextColor || undefined }} />
               )}
               <div>
                 <h1
                   className="text-xl font-bold tracking-tight leading-tight"
-                  style={{ color: textColor || undefined }}
+                  style={{ color: resolvedTextColor || undefined }}
                 >
                   {storeName}
                 </h1>
                 {tagline && (
-                  <p className="text-xs leading-tight" style={{ color: textColor ? `${textColor}99` : undefined }}>{tagline}</p>
+                  <p className="text-xs leading-tight" style={{ color: resolvedTextColor ? `${resolvedTextColor}aa` : undefined }}>{tagline}</p>
                 )}
               </div>
             </Link>
             <CartDrawer />
           </div>
           {categories.length > 0 && (
-            <nav className="flex gap-1 border-t border-border py-2 overflow-x-auto">
+            <nav className="flex gap-1 border-t py-2 overflow-x-auto" style={{ borderColor: resolvedTextColor ? `${resolvedTextColor}22` : undefined }}>
               <Link 
                 to={shopBasePath}
-                className="px-3 py-1.5 text-sm font-medium rounded hover:bg-muted transition-colors whitespace-nowrap"
-                style={{ color: textColor || undefined }}
+                className="px-3 py-1.5 text-sm font-medium rounded hover:opacity-80 transition-opacity whitespace-nowrap"
+                style={{ color: headerNavColor || resolvedTextColor || undefined }}
               >
                 All Products
               </Link>
@@ -71,8 +82,8 @@ export function ShopHeader({
                 <Link
                   key={cat}
                   to={`${shopBasePath}/category/${encodeURIComponent(cat)}`}
-                  className="px-3 py-1.5 text-sm font-medium rounded hover:bg-muted transition-colors whitespace-nowrap"
-                  style={{ color: textColor || undefined }}
+                  className="px-3 py-1.5 text-sm font-medium rounded hover:opacity-80 transition-opacity whitespace-nowrap"
+                  style={{ color: headerNavColor || resolvedTextColor || undefined }}
                 >
                   {cat}
                 </Link>
