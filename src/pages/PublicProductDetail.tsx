@@ -310,6 +310,14 @@ export function PublicProductDetail() {
             </div>
           </div>
         </main>
+
+        {/* Image Viewer Dialog */}
+        <ImageViewerDialog
+          imageUrl={selectedImage}
+          alt={product?.name || 'Product image'}
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+        />
       </div>
     </div>
   );
