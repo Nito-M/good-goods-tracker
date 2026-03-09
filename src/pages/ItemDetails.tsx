@@ -305,7 +305,35 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           )}
         </div>
 
-        {/* Product Images Gallery */}
+        {/* Storefront Toggle */}
+        <Card className="mb-6">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Globe className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium text-card-foreground">Show in Storefront</p>
+                <p className="text-xs text-muted-foreground">Make this product visible on the public shop page</p>
+              </div>
+            </div>
+            <Switch
+              checked={showInStorefront}
+              onCheckedChange={async (checked) => {
+                setShowInStorefront(checked);
+                const { error } = await supabase
+                  .from('inventory_items')
+                  .update({ show_in_storefront: checked } as any)
+                  .eq('id', item.id);
+                if (error) {
+                  setShowInStorefront(!checked);
+                  toast({ title: 'Failed to update storefront visibility', variant: 'destructive' });
+                } else {
+                  toast({ title: checked ? 'Product now visible in shop' : 'Product hidden from shop' });
+                }
+              }}
+            />
+          </CardContent>
+        </Card>
+
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">Product Images</CardTitle>
