@@ -367,6 +367,13 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       const newItemId = await onSave(itemData);
       
       if (newItemId) {
+        // Save storefront_page for new item
+        if (storefrontPage) {
+          await supabase
+            .from('inventory_items')
+            .update({ storefront_page: storefrontPage } as any)
+            .eq('id', newItemId);
+        }
         // Upload staged images using the new item's ID directly
         for (const staged of stagedImages) {
           if (staged.file) {
