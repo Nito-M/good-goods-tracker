@@ -516,6 +516,17 @@ export function StorefrontSettings() {
                   onCheckedChange={(v) => setSettings(prev => ({ ...prev, show_featured_section: v }))} 
                 />
               </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <Label>Cart Message</Label>
+                <Textarea
+                  value={settings.cart_message}
+                  onChange={(e) => setSettings(prev => ({ ...prev, cart_message: e.target.value }))}
+                  placeholder="e.g. Pickup only — no delivery available. or We deliver within 50km!"
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground">This message appears in the shopping cart to inform customers about delivery/pickup options</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
