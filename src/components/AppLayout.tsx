@@ -37,12 +37,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         return; 
       }
       
-      // Fetch all orgs user is admin/owner of
+      // Fetch all orgs user is a member of
       const { data: memberships } = await supabase
         .from('organization_members')
-        .select('organization_id, role')
-        .eq('user_id', user.id)
-        .in('role', ['owner', 'admin']);
+        .select('organization_id')
+        .eq('user_id', user.id);
 
       if (memberships && memberships.length > 0) {
         const orgIds = memberships.map(m => m.organization_id);
