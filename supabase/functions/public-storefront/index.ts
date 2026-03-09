@@ -122,8 +122,9 @@ Deno.serve(async (req) => {
     // Settings only request
     if (settingsOnly === "true") {
       const settings = await fetchSettings();
+      const categories = await fetchCategoryPages();
       return new Response(
-        JSON.stringify({ settings }),
+        JSON.stringify({ settings, categories }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
