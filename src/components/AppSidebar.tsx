@@ -37,11 +37,18 @@ const menuItems = [
 { title: "Storefront", url: "/storefront", icon: ShoppingCart, pageKey: "storefront" }];
 
 
-interface AppSidebarProps {
-  shopSlug?: string | null;
+interface OrgShop {
+  id: string;
+  name: string;
+  slug: string;
 }
 
-export function AppSidebar({ shopSlug }: AppSidebarProps = {}) {
+interface AppSidebarProps {
+  shopSlug?: string | null;
+  shops?: OrgShop[];
+}
+
+export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -250,7 +257,26 @@ export function AppSidebar({ shopSlug }: AppSidebarProps = {}) {
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
-        {shopSlug && (
+        {shops.length > 0 ? (
+          shops.map(shop => (
+            <SidebarMenuButton
+              key={shop.id}
+              asChild
+              tooltip={`View ${shop.name} Shop`}>
+              <a
+                href={`/shop/${shop.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-primary">
+                <Store className="h-4 w-4" />
+                <span className="flex items-center gap-1 truncate">
+                  {shops.length > 1 ? shop.name : 'View Shop'}
+                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                </span>
+              </a>
+            </SidebarMenuButton>
+          ))
+        ) : shopSlug && (
           <SidebarMenuButton
             asChild
             tooltip="View Public Shop">
