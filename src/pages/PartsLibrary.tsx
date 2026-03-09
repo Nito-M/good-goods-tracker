@@ -34,6 +34,9 @@ export function PartsLibrary() {
   const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'lines' | 'cards'>(() => {
+    return (localStorage.getItem('partsLibraryViewMode') as 'lines' | 'cards') || 'lines';
+  });
   const { toast } = useToast();
 
   const loading = partsLoading || foldersLoading;
