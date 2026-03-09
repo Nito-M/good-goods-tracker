@@ -1037,6 +1037,65 @@ export type Database = {
           },
         ]
       }
+      part_manufacturing_steps: {
+        Row: {
+          angle: string | null
+          created_at: string
+          hole_diameter: string | null
+          id: string
+          length: string | null
+          machine: string
+          notes: string | null
+          operation_type: string
+          part_id: string
+          position_offset: string | null
+          quantity: number | null
+          step_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          angle?: string | null
+          created_at?: string
+          hole_diameter?: string | null
+          id?: string
+          length?: string | null
+          machine?: string
+          notes?: string | null
+          operation_type?: string
+          part_id: string
+          position_offset?: string | null
+          quantity?: number | null
+          step_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          angle?: string | null
+          created_at?: string
+          hole_diameter?: string | null
+          id?: string
+          length?: string | null
+          machine?: string
+          notes?: string | null
+          operation_type?: string
+          part_id?: string
+          position_offset?: string | null
+          quantity?: number | null
+          step_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_manufacturing_steps_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parts: {
         Row: {
           created_at: string
