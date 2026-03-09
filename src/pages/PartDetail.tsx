@@ -29,6 +29,7 @@ import { useParts } from '@/hooks/useParts';
 import { usePartInventoryItems } from '@/hooks/usePartInventoryItems';
 import { useInventory } from '@/hooks/useInventory';
 import { DxfThreeViewer } from '@/components/DxfThreeViewer';
+import { ManufacturingInstructions } from '@/components/ManufacturingInstructions';
 import { useToast } from '@/hooks/use-toast';
 import {
   Command,
