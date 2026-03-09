@@ -178,13 +178,12 @@ export function Storefront({ items, loading, categories }: StorefrontProps) {
         )}
       </main>
 
-      {viewerImage && (
-        <ImageViewerDialog
-          imageUrl={viewerImage}
-          open={!!viewerImage}
-          onClose={() => setViewerImage(null)}
-        />
-      )}
+      <ImageViewerDialog
+        imageUrl={viewerImage}
+        alt="Product image"
+        open={!!viewerImage}
+        onOpenChange={(open) => { if (!open) setViewerImage(null); }}
+      />
     </div>
   );
 }
