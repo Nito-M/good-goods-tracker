@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, Plus, Star, X, Store } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, ChevronLeft, Plus, Star, X, Store } from "lucide-react";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
 
@@ -41,6 +41,27 @@ export function RequestDetail() {
     () => requests.filter((r) => r.requestNumber === decodedNumber),
     [requests, decodedNumber]
   );
+
+  // Unique request numbers sorted by most recent first for prev/next navigation
+  const allRequestNumbers = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const r of requests) {
+      if (r.requestNumber && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
+        seen.set(r.requestNumber, r.createdAt);
+      }
+    }
+    return Array.from(seen.entries())
+      .sort((a, b) => b[1].localeCompare(a[1]))
+      .map(([num]) => num);
+  }, [requests]);
+
+  const currentIndex = allRequestNumbers.indexOf(decodedNumber);
+  const prevRequestNumber = currentIndex > 0 ? allRequestNumbers[currentIndex - 1] : null;
+  const nextRequestNumber = currentIndex < allRequestNumbers.length - 1 ? allRequestNumbers[currentIndex + 1] : null;
+
+  const navigateToRequest = (reqNum: string) => {
+    navigate(`/requests/${encodeURIComponent(reqNum)}`);
+  };
 
   const requestIds = useMemo(() => groupRequests.map((r) => r.id), [groupRequests]);
   const { subItems, addSubItem, updateSubItem, deleteSubItem, toggleSelected } = useRequestSubItems(requestIds);
@@ -106,6 +127,15 @@ export function RequestDetail() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/requests")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!prevRequestNumber}
+            onClick={() => prevRequestNumber && navigateToRequest(prevRequestNumber)}
+            title={prevRequestNumber ? `Previous: ${prevRequestNumber}` : "No previous request"}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
           <div>
             <h1 className="text-2xl font-bold font-mono">{decodedNumber}</h1>
             {firstReq?.requesterName && (
@@ -114,6 +144,15 @@ export function RequestDetail() {
               </p>
             )}
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!nextRequestNumber}
+            onClick={() => nextRequestNumber && navigateToRequest(nextRequestNumber)}
+            title={nextRequestNumber ? `Next: ${nextRequestNumber}` : "No next request"}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
