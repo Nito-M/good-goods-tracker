@@ -8,6 +8,7 @@ import {
   getAll,
   put,
   putMany,
+  clearTable,
   deleteItem as deleteFromDb,
   addToSyncQueue,
 } from '@/lib/offlineDb';
@@ -177,6 +178,8 @@ export function useInventory() {
       }
 
       if (data) {
+        // Clear local cache first to remove stale entries, then write fresh server data
+        await clearTable('inventory_items');
         await putMany('inventory_items', data as unknown as Record<string, unknown>[]);
         setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
       }
