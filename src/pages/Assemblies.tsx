@@ -402,39 +402,46 @@ function AssemblyDetail({
                 )}
               </div>
             </div>
-            <div className="flex gap-2 shrink-0">
-              <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
-                <Eye className="h-3 w-3 mr-1" /> Preview
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                const totalCost = items.reduce((sum, i) => {
-                  const cost = inventoryCostMap.get(i.inventory_item_id || '') ?? i.unit_cost;
-                  return sum + i.quantity * cost;
-                }, 0);
-                generateAssemblyPDF({
-                  name: assembly.name,
-                  description: assembly.description,
-                  sellingPrice: assembly.selling_price,
-                  status: assembly.status,
-                  statusNotes: assembly.status_notes,
-                  totalCost,
-                  items: items.map(i => ({
-                    itemName: i.item_name,
-                    sku: i.sku,
-                    quantity: i.quantity,
-                    unitCost: i.unit_cost,
-                    notes: i.notes,
-                  })),
-                });
-              }}>
-                <Download className="h-3 w-3 mr-1" /> PDF
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
-                <Pencil className="h-3 w-3 mr-1" /> Edit
-              </Button>
-              <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => onDelete(assembly.id)}>
-                <Trash2 className="h-3 w-3" />
-              </Button>
+            <div className="flex flex-col gap-2 shrink-0 items-end">
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
+                  <Eye className="h-3 w-3 mr-1" /> Preview
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  const totalCost = items.reduce((sum, i) => {
+                    const cost = inventoryCostMap.get(i.inventory_item_id || '') ?? i.unit_cost;
+                    return sum + i.quantity * cost;
+                  }, 0);
+                  generateAssemblyPDF({
+                    name: assembly.name,
+                    description: assembly.description,
+                    sellingPrice: assembly.selling_price,
+                    status: assembly.status,
+                    statusNotes: assembly.status_notes,
+                    totalCost,
+                    hidePrices: hidePricesOnPdf,
+                    items: items.map(i => ({
+                      itemName: i.item_name,
+                      sku: i.sku,
+                      quantity: i.quantity,
+                      unitCost: i.unit_cost,
+                      notes: i.notes,
+                    })),
+                  });
+                }}>
+                  <Download className="h-3 w-3 mr-1" /> PDF
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
+                  <Pencil className="h-3 w-3 mr-1" /> Edit
+                </Button>
+                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => onDelete(assembly.id)}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                <input type="checkbox" checked={hidePricesOnPdf} onChange={(e) => setHidePricesOnPdf(e.target.checked)} className="rounded border-input" />
+                Hide prices on PDF
+              </label>
             </div>
           </div>
         )}
