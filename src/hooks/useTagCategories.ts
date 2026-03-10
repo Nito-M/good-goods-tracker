@@ -103,5 +103,25 @@ export function useTagCategories() {
     fetchTagCategories();
   };
 
-  return { tagCategories, loading, addTagCategory, deleteTagCategory, refetch: fetchTagCategories };
+  const renameTagCategory = async (id: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+
+    if (tagCategories.some((tc) => tc.id !== id && tc.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast({ title: 'Tag category name already exists', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase.from('tag_categories').update({ name: trimmed }).eq('id', id);
+    if (error) {
+      console.error('Error renaming tag category:', error);
+      toast({ title: 'Error renaming tag category', variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Tag category renamed' });
+    fetchTagCategories();
+  };
+
+  return { tagCategories, loading, addTagCategory, deleteTagCategory, renameTagCategory, refetch: fetchTagCategories };
 }

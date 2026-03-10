@@ -173,22 +173,74 @@ export function TagsSettings() {
                         ) : (
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span className="font-medium">{tc.name}</span>
+                        {editingCategoryId === tc.id ? (
+                          <input
+                            ref={editCategoryInputRef}
+                            value={editingCategoryName}
+                            onChange={(e) => setEditingCategoryName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') confirmEditCategory();
+                              if (e.key === 'Escape') cancelEditCategory();
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-transparent border-b border-primary outline-none w-40 text-sm font-medium"
+                          />
+                        ) : (
+                          <span className="font-medium">{tc.name}</span>
+                        )}
                         <Badge variant="secondary" className="text-xs">
                           {categoryTags.length}
                         </Badge>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteCategoryId(tc.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        {editingCategoryId === tc.id ? (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                confirmEditCategory();
+                              }}
+                              className="p-1 text-primary hover:text-primary/80"
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                cancelEditCategory();
+                              }}
+                              className="p-1 text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEditCategory(tc);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteCategoryId(tc.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     {isExpanded && (
