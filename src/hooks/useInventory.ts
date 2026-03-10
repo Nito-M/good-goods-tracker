@@ -71,6 +71,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     imageUrl: db.image_url,
     dxfUrl: db.dxf_url,
     warehouseId: db.warehouse_id,
+    internalPartNumber: db.internal_part_number,
     palletAmount: Number(db.pallet_amount) || 0,
     boxAmount: Number(db.box_amount) || 0,
     bundleAmount: Number(db.bundle_amount) || 0,
