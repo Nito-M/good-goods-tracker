@@ -211,7 +211,7 @@ export function AddPurchaseOrder() {
             if (lineItem.selectedItemId && lineItem.selectedItemId !== 'custom') {
               const vendorPrice = priceMap.get(lineItem.selectedItemId);
               if (vendorPrice !== undefined) {
-                return { ...lineItem, unitCost: vendorPrice.toFixed(2) };
+                return { ...lineItem, unitCost: String(vendorPrice) };
               }
             }
             return lineItem;
