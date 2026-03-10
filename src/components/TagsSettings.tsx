@@ -65,6 +65,23 @@ export function TagsSettings() {
     setEditingTagName('');
   };
 
+  const startEditCategory = (category: { id: string; name: string }) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name);
+  };
+
+  const confirmEditCategory = async () => {
+    if (editingCategoryId) {
+      await renameTagCategory(editingCategoryId, editingCategoryName);
+      setEditingCategoryId(null);
+    }
+  };
+
+  const cancelEditCategory = () => {
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
+  };
+
   const toggleCategory = (id: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
