@@ -370,6 +370,7 @@ export type Database = {
           dxf_url: string | null
           id: string
           image_url: string | null
+          internal_part_number: string | null
           min_stock: number
           name: string
           pallet_amount: number
@@ -403,6 +404,7 @@ export type Database = {
           dxf_url?: string | null
           id?: string
           image_url?: string | null
+          internal_part_number?: string | null
           min_stock?: number
           name: string
           pallet_amount?: number
@@ -436,6 +438,7 @@ export type Database = {
           dxf_url?: string | null
           id?: string
           image_url?: string | null
+          internal_part_number?: string | null
           min_stock?: number
           name?: string
           pallet_amount?: number
