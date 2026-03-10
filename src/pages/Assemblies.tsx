@@ -213,6 +213,8 @@ function AssemblyDetail({
   const [savingStatus, setSavingStatus] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  const isFinished = assembly.status === 'finished';
+
   const handleSaveMeta = async () => {
     setSavingMeta(true);
     await onUpdate(assembly.id, { name: nameValue.trim() || assembly.name, description: descValue.trim() || null, selling_price: parseFloat(sellingPriceValue) || 0 });
