@@ -60,7 +60,7 @@ export function RequestDetail() {
   const nextRequestNumber = currentIndex < allRequestNumbers.length - 1 ? allRequestNumbers[currentIndex + 1] : null;
 
   const navigateToRequest = (reqNum: string) => {
-    navigate(`/requests/${encodeURIComponent(reqNum)}`);
+    navigate(`/requests/view/${encodeURIComponent(reqNum)}`);
   };
 
   const requestIds = useMemo(() => groupRequests.map((r) => r.id), [groupRequests]);
