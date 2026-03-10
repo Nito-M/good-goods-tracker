@@ -117,6 +117,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [boxAmount, setBoxAmount] = useState('');
   const [bundleAmount, setBundleAmount] = useState('');
   const [pieceLength, setPieceLength] = useState('');
+  const [internalPartNumber, setInternalPartNumber] = useState('');
   const [storefrontPage, setStorefrontPage] = useState('');
   const [availableShopPages, setAvailableShopPages] = useState<string[]>([]);
   // Staged images for new item creation (before saving)
