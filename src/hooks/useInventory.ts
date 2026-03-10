@@ -229,7 +229,7 @@ export function useInventory() {
       // Fuzzy token search: all tokens must match somewhere in name, SKU, category, or vendor names
       const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
       const vendorNames = itemVendorMap.get(item.id)?.join(' ') || '';
-      const searchableText = `${item.name} ${item.sku} ${item.category} ${item.subcategory || ''} ${vendorNames}`.toLowerCase();
+      const searchableText = `${item.name} ${item.sku} ${item.category} ${item.subcategory || ''} ${item.internalPartNumber || ''} ${vendorNames}`.toLowerCase();
       return tokens.every((token) => searchableText.includes(token));
     });
   }, [items, searchQuery, categoryFilter, itemVendorMap]);
