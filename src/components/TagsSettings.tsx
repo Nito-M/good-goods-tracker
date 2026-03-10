@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Trash2, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Trash2, Search, ChevronDown, ChevronRight, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ import { useTags } from '@/hooks/useTags';
 
 export function TagsSettings() {
   const { tagCategories, loading: categoriesLoading, addTagCategory, deleteTagCategory } = useTagCategories();
-  const { tags, loading: tagsLoading, addTag, deleteTag, getTagsByCategory } = useTags();
+  const { tags, loading: tagsLoading, addTag, deleteTag, renameTag, getTagsByCategory } = useTags();
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newTagNames, setNewTagNames] = useState<Record<string, string>>({});
@@ -27,6 +27,33 @@ export function TagsSettings() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const [deleteTagId, setDeleteTagId] = useState<string | null>(null);
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editingTagName, setEditingTagName] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingTagId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingTagId]);
+
+  const startEditTag = (tag: { id: string; name: string }) => {
+    setEditingTagId(tag.id);
+    setEditingTagName(tag.name);
+  };
+
+  const confirmEditTag = async () => {
+    if (editingTagId) {
+      await renameTag(editingTagId, editingTagName);
+      setEditingTagId(null);
+    }
+  };
+
+  const cancelEditTag = () => {
+    setEditingTagId(null);
+    setEditingTagName('');
+  };
 
   const toggleCategory = (id: string) => {
     setExpandedCategories((prev) => {
@@ -167,13 +194,42 @@ export function TagsSettings() {
                                 key={tag.id}
                                 className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 rounded-md text-sm"
                               >
-                                {tag.name}
-                                <button
-                                  onClick={() => setDeleteTagId(tag.id)}
-                                  className="ml-1 text-muted-foreground hover:text-destructive"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
+                                {editingTagId === tag.id ? (
+                                  <>
+                                    <input
+                                      ref={editInputRef}
+                                      value={editingTagName}
+                                      onChange={(e) => setEditingTagName(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') confirmEditTag();
+                                        if (e.key === 'Escape') cancelEditTag();
+                                      }}
+                                      className="bg-transparent border-b border-primary outline-none w-24 text-sm"
+                                    />
+                                    <button onClick={confirmEditTag} className="text-primary hover:text-primary/80">
+                                      <Check className="h-3 w-3" />
+                                    </button>
+                                    <button onClick={cancelEditTag} className="text-muted-foreground hover:text-destructive">
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    {tag.name}
+                                    <button
+                                      onClick={() => startEditTag(tag)}
+                                      className="ml-1 text-muted-foreground hover:text-primary"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => setDeleteTagId(tag.id)}
+                                      className="ml-0.5 text-muted-foreground hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             ))}
                           </div>
