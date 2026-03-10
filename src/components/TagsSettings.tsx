@@ -19,7 +19,7 @@ import { useTags } from '@/hooks/useTags';
 
 export function TagsSettings() {
   const { tagCategories, loading: categoriesLoading, addTagCategory, deleteTagCategory } = useTagCategories();
-  const { tags, loading: tagsLoading, addTag, deleteTag, getTagsByCategory } = useTags();
+  const { tags, loading: tagsLoading, addTag, deleteTag, renameTag, getTagsByCategory } = useTags();
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newTagNames, setNewTagNames] = useState<Record<string, string>>({});
