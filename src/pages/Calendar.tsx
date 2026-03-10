@@ -386,7 +386,7 @@ export function Calendar() {
                 {selectedDateRequests.map((request) =>
                 <button
                   key={request.id}
-                  onClick={() => navigate(`/requests/${request.id}`)}
+                  onClick={() => request.requestNumber ? navigate(`/requests/view/${request.requestNumber}`) : setEditingRequest(request)}
                   className="w-full text-left p-3 border rounded-lg hover:bg-accent transition-colors">
 
                         <div className="flex items-start gap-2">
