@@ -321,6 +321,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       description,
       imageUrl: finalImageUrl,
       warehouseId: null,
+      internalPartNumber: internalPartNumber.trim() || null,
       palletAmount: parseFloat(palletAmount) || 0,
       boxAmount: parseFloat(boxAmount) || 0,
       bundleAmount: parseFloat(bundleAmount) || 0,
