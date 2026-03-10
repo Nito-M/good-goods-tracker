@@ -211,8 +211,7 @@ function AssemblyDetail({
   const [editingStatusNotes, setEditingStatusNotes] = useState(false);
   const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
   const [savingStatus, setSavingStatus] = useState(false);
-
-  const isFinished = assembly.status === 'finished';
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleSaveMeta = async () => {
     setSavingMeta(true);
