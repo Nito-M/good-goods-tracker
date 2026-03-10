@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, ChevronLeft, Plus, Star, X, Store } from "lucide-react";
+import { ImageViewerDialog } from "@/components/ImageViewerDialog";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
 
@@ -34,6 +35,8 @@ export function RequestDetail() {
   const { cards } = useBankCards();
   const { vendors } = useVendors();
   const { toast } = useToast();
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
 
   const decodedNumber = requestNumber ? decodeURIComponent(requestNumber) : "";
 
@@ -245,7 +248,53 @@ export function RequestDetail() {
         </CardContent>
       </Card>
 
-      {/* Items Table */}
+      {/* Request Images */}
+      {groupRequests.some(r => r.imageUrl) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Image className="h-5 w-5" /> Images
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {groupRequests.filter(r => r.imageUrl).map((r) => (
+                <div
+                  key={r.id}
+                  className="relative w-32 h-32 rounded-lg overflow-hidden border bg-muted cursor-pointer hover:opacity-90 transition-opacity group"
+                  onClick={() => {
+                    setViewerImageUrl(r.imageUrl);
+                    setImageViewerOpen(true);
+                  }}
+                >
+                  <img
+                    src={r.imageUrl!}
+                    alt={r.itemName}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                    <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Click to view</span>
+                  </div>
+                  {groupRequests.filter(r => r.imageUrl).length > 1 && (
+                    <div className="absolute bottom-1 left-1 bg-background/80 rounded px-1.5 py-0.5 text-[10px] font-medium truncate max-w-[90%]">
+                      {r.itemName}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <ImageViewerDialog
+        imageUrl={viewerImageUrl}
+        alt="Request Image"
+        open={imageViewerOpen}
+        onOpenChange={setImageViewerOpen}
+      />
+
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Items ({groupRequests.length})</CardTitle>
