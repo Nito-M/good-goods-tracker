@@ -35,6 +35,8 @@ export function RequestDetail() {
   const { cards } = useBankCards();
   const { vendors } = useVendors();
   const { toast } = useToast();
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
 
   const decodedNumber = requestNumber ? decodeURIComponent(requestNumber) : "";
 
