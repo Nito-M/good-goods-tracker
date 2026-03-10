@@ -85,6 +85,29 @@ export function useTags() {
     fetchTags();
   };
 
+  const renameTag = async (id: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+
+    const tag = tags.find((t) => t.id === id);
+    if (!tag) return;
+
+    if (tags.some((t) => t.id !== id && t.name.toLowerCase() === trimmed.toLowerCase() && t.tag_category_id === tag.tag_category_id)) {
+      toast({ title: 'Tag name already exists in this category', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase.from('tags').update({ name: trimmed }).eq('id', id);
+    if (error) {
+      console.error('Error renaming tag:', error);
+      toast({ title: 'Error renaming tag', variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Tag renamed' });
+    fetchTags();
+  };
+
   const getTagsByCategory = (categoryId: string) => tags.filter((t) => t.tag_category_id === categoryId);
 
   return { tags, loading, addTag, deleteTag, getTagsByCategory, refetch: fetchTags };
