@@ -194,13 +194,42 @@ export function TagsSettings() {
                                 key={tag.id}
                                 className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 rounded-md text-sm"
                               >
-                                {tag.name}
-                                <button
-                                  onClick={() => setDeleteTagId(tag.id)}
-                                  className="ml-1 text-muted-foreground hover:text-destructive"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
+                                {editingTagId === tag.id ? (
+                                  <>
+                                    <input
+                                      ref={editInputRef}
+                                      value={editingTagName}
+                                      onChange={(e) => setEditingTagName(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') confirmEditTag();
+                                        if (e.key === 'Escape') cancelEditTag();
+                                      }}
+                                      className="bg-transparent border-b border-primary outline-none w-24 text-sm"
+                                    />
+                                    <button onClick={confirmEditTag} className="text-primary hover:text-primary/80">
+                                      <Check className="h-3 w-3" />
+                                    </button>
+                                    <button onClick={cancelEditTag} className="text-muted-foreground hover:text-destructive">
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    {tag.name}
+                                    <button
+                                      onClick={() => startEditTag(tag)}
+                                      className="ml-1 text-muted-foreground hover:text-primary"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => setDeleteTagId(tag.id)}
+                                      className="ml-0.5 text-muted-foreground hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             ))}
                           </div>
