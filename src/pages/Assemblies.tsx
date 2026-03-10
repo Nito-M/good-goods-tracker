@@ -706,6 +706,7 @@ function AssemblyDetail({
           const cost = inventoryCostMap.get(i.inventory_item_id || '') ?? i.unit_cost;
           return sum + i.quantity * cost;
         }, 0)}
+        hidePrices={hidePricesOnPdf}
         items={items.map(i => ({
           itemName: i.item_name,
           sku: i.sku,

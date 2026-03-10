@@ -46,13 +46,15 @@ export function generateAssemblyPDF(assembly: AssemblyPdfData) {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(0, 0, 0);
-  if (assembly.sellingPrice > 0) {
-    doc.text(`Selling Price: ${formatCurrency(assembly.sellingPrice)}`, margin, y);
-    y += 5;
-  }
-  if (assembly.totalCost > 0) {
-    doc.text(`Total Cost: ${formatCurrency(assembly.totalCost)}`, margin, y);
-    y += 5;
+  if (!assembly.hidePrices) {
+    if (assembly.sellingPrice > 0) {
+      doc.text(`Selling Price: ${formatCurrency(assembly.sellingPrice)}`, margin, y);
+      y += 5;
+    }
+    if (assembly.totalCost > 0) {
+      doc.text(`Total Cost: ${formatCurrency(assembly.totalCost)}`, margin, y);
+      y += 5;
+    }
   }
 
   y += 5;
