@@ -40,10 +40,12 @@ export function AssemblyPreviewDialog({ open, onOpenChange, name, description, s
           )}
 
           {/* Pricing info */}
-          <div className="text-sm space-y-0.5">
-            {sellingPrice > 0 && <p>Selling Price: {formatCurrency(sellingPrice)}</p>}
-            {totalCost > 0 && <p>Total Cost: {formatCurrency(totalCost)}</p>}
-          </div>
+          {!hidePrices && (
+            <div className="text-sm space-y-0.5">
+              {sellingPrice > 0 && <p>Selling Price: {formatCurrency(sellingPrice)}</p>}
+              {totalCost > 0 && <p>Total Cost: {formatCurrency(totalCost)}</p>}
+            </div>
+          )}
 
           <Separator />
 
