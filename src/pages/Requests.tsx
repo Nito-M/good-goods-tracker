@@ -68,6 +68,8 @@ export function Requests() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
+  const [filterVendor, setFilterVendor] = useState<string>("all");
+  const [filterRequester, setFilterRequester] = useState<string>("all");
 
   // For regular members, only show their own requester name; admins see all
   const visibleRequesterNames = isAdminUser ?
