@@ -81,6 +81,10 @@ export function Requests() {
   requests :
   requests.filter((r) => r.requesterName === linkedName);
 
+  // Collect unique vendor names and requester names from visible requests
+  const uniqueVendors = Array.from(new Set(visibleRequests.map(r => r.vendorName).filter(Boolean) as string[])).sort();
+  const uniqueRequesters = Array.from(new Set(visibleRequests.map(r => r.requesterName).filter(Boolean) as string[])).sort();
+
   const getFilteredRequests = (status: RequestStatus) => {
     return visibleRequests.filter((request) => {
       const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
@@ -93,7 +97,9 @@ export function Requests() {
         request.vendorName,
       ].filter(Boolean).join(" ").toLowerCase();
       const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => searchableText.includes(term));
-      return matchesSearch && request.status === status;
+      const matchesVendor = filterVendor === "all" || request.vendorName === filterVendor;
+      const matchesRequester = filterRequester === "all" || request.requesterName === filterRequester;
+      return matchesSearch && matchesVendor && matchesRequester && request.status === status;
     });
   };
 
