@@ -70,17 +70,19 @@ export function generateAssemblyPDF(assembly: AssemblyPdfData) {
   doc.text(`Parts List (${assembly.items.length})`, margin, y);
   y += 8;
 
-  // Table columns
+  // Table columns - adjust based on hidePrices
+  const hp = !!assembly.hidePrices;
   const col1X = margin;
   const col2X = margin + 70;
   const col3X = margin + 105;
-  const col4X = margin + 123;
-  const col5X = margin + 148;
+  const col4X = hp ? col3X + 18 : margin + 123;
+  const col5X = hp ? col4X : margin + 148;
+  const notesX = hp ? col4X : col5X;
   const tableRight = pageWidth - margin;
 
   const nameColW = col2X - col1X - 4;
   const skuColW = col3X - col2X - 4;
-  const notesColW = tableRight - col5X - 2;
+  const notesColW = tableRight - notesX - 2;
 
   const headerH = 8;
   const rowPadding = 3;
@@ -95,8 +97,8 @@ export function generateAssemblyPDF(assembly: AssemblyPdfData) {
     doc.text('Item Name', col1X + 2, textY);
     doc.text('SKU', col2X + 2, textY);
     doc.text('Qty', col3X + 2, textY);
-    doc.text('Unit Cost', col4X + 2, textY);
-    doc.text('Notes', col5X + 2, textY);
+    if (!hp) doc.text('Unit Cost', col5X - 25 + 2, textY);
+    doc.text('Notes', notesX + 2, textY);
 
     doc.setDrawColor(180, 180, 180);
     doc.line(col1X, yPos, tableRight, yPos);
@@ -104,8 +106,8 @@ export function generateAssemblyPDF(assembly: AssemblyPdfData) {
     doc.line(col1X, yPos, col1X, yPos + headerH);
     doc.line(col2X, yPos, col2X, yPos + headerH);
     doc.line(col3X, yPos, col3X, yPos + headerH);
-    doc.line(col4X, yPos, col4X, yPos + headerH);
-    doc.line(col5X, yPos, col5X, yPos + headerH);
+    if (!hp) doc.line(col5X - 25, yPos, col5X - 25, yPos + headerH);
+    doc.line(notesX, yPos, notesX, yPos + headerH);
     doc.line(tableRight, yPos, tableRight, yPos + headerH);
 
     return yPos + headerH;
@@ -138,10 +140,10 @@ export function generateAssemblyPDF(assembly: AssemblyPdfData) {
     doc.text(nameLines, col1X + 2, textY);
     doc.text(skuLines, col2X + 2, textY);
     doc.text(String(item.quantity), col3X + 2, textY);
-    doc.text(item.unitCost > 0 ? formatCurrency(item.unitCost) : '—', col4X + 2, textY);
+    if (!hp) doc.text(item.unitCost > 0 ? formatCurrency(item.unitCost) : '—', col5X - 25 + 2, textY);
     if (notesLines.length > 0) {
       doc.setTextColor(100, 100, 100);
-      doc.text(notesLines, col5X + 2, textY);
+      doc.text(notesLines, notesX + 2, textY);
       doc.setTextColor(0, 0, 0);
     }
 
@@ -150,8 +152,8 @@ export function generateAssemblyPDF(assembly: AssemblyPdfData) {
     doc.line(col1X, y, col1X, y + rowHeight);
     doc.line(col2X, y, col2X, y + rowHeight);
     doc.line(col3X, y, col3X, y + rowHeight);
-    doc.line(col4X, y, col4X, y + rowHeight);
-    doc.line(col5X, y, col5X, y + rowHeight);
+    if (!hp) doc.line(col5X - 25, y, col5X - 25, y + rowHeight);
+    doc.line(notesX, y, notesX, y + rowHeight);
     doc.line(tableRight, y, tableRight, y + rowHeight);
 
     y += rowHeight;
