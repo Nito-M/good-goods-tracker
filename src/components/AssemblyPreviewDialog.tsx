@@ -17,10 +17,11 @@ interface AssemblyPreviewDialogProps {
   description: string | null;
   sellingPrice: number;
   totalCost: number;
+  hidePrices?: boolean;
   items: AssemblyPreviewItem[];
 }
 
-export function AssemblyPreviewDialog({ open, onOpenChange, name, description, sellingPrice, totalCost, items }: AssemblyPreviewDialogProps) {
+export function AssemblyPreviewDialog({ open, onOpenChange, name, description, sellingPrice, totalCost, hidePrices, items }: AssemblyPreviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
@@ -39,10 +40,12 @@ export function AssemblyPreviewDialog({ open, onOpenChange, name, description, s
           )}
 
           {/* Pricing info */}
-          <div className="text-sm space-y-0.5">
-            {sellingPrice > 0 && <p>Selling Price: {formatCurrency(sellingPrice)}</p>}
-            {totalCost > 0 && <p>Total Cost: {formatCurrency(totalCost)}</p>}
-          </div>
+          {!hidePrices && (
+            <div className="text-sm space-y-0.5">
+              {sellingPrice > 0 && <p>Selling Price: {formatCurrency(sellingPrice)}</p>}
+              {totalCost > 0 && <p>Total Cost: {formatCurrency(totalCost)}</p>}
+            </div>
+          )}
 
           <Separator />
 
@@ -57,7 +60,7 @@ export function AssemblyPreviewDialog({ open, onOpenChange, name, description, s
                   <th className="text-left px-2 py-1.5 font-semibold border-r">Item Name</th>
                   <th className="text-left px-2 py-1.5 font-semibold border-r">SKU</th>
                   <th className="text-left px-2 py-1.5 font-semibold border-r w-12">Qty</th>
-                  <th className="text-left px-2 py-1.5 font-semibold border-r w-20">Unit Cost</th>
+                  {!hidePrices && <th className="text-left px-2 py-1.5 font-semibold border-r w-20">Unit Cost</th>}
                   <th className="text-left px-2 py-1.5 font-semibold">Notes</th>
                 </tr>
               </thead>
@@ -67,12 +70,12 @@ export function AssemblyPreviewDialog({ open, onOpenChange, name, description, s
                     <td className="px-2 py-1.5 border-r">{item.itemName}</td>
                     <td className="px-2 py-1.5 border-r font-mono text-xs" style={{ color: '#646464' }}>{item.sku || '—'}</td>
                     <td className="px-2 py-1.5 border-r">{item.quantity}</td>
-                    <td className="px-2 py-1.5 border-r">{item.unitCost > 0 ? formatCurrency(item.unitCost) : '—'}</td>
+                    {!hidePrices && <td className="px-2 py-1.5 border-r">{item.unitCost > 0 ? formatCurrency(item.unitCost) : '—'}</td>}
                     <td className="px-2 py-1.5 text-xs" style={{ color: '#646464' }}>{item.notes || ''}</td>
                   </tr>
                 ))}
                 {items.length === 0 && (
-                  <tr><td colSpan={5} className="px-2 py-4 text-center" style={{ color: '#999' }}>No items</td></tr>
+                  <tr><td colSpan={hidePrices ? 4 : 5} className="px-2 py-4 text-center" style={{ color: '#999' }}>No items</td></tr>
                 )}
               </tbody>
             </table>
