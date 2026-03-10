@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye } from 'lucide-react';
+import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
+import { AssemblyPreviewDialog } from '@/components/AssemblyPreviewDialog';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
