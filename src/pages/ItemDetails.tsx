@@ -807,9 +807,13 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         {/* Consumption History */}
         {consumptions.length > 0 && (
           <Card className="mt-6">
-            <CardHeader>
+            <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Consumption History</CardTitle>
-            </CardHeader>
+              <Button variant="outline" size="sm" onClick={handleUndoLastConsumption} className="gap-1.5">
+                <Undo2 className="h-3.5 w-3.5" />
+                Undo Last
+              </Button>
+            </div>
             <CardContent>
               <div className="space-y-3">
                 {consumptions.map((c) => {
