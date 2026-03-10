@@ -132,6 +132,36 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         description: consumeDescription.trim() || undefined,
         warehouseId: consumeWarehouseId || undefined,
       });
+
+      // Also decrement the location-specific quantity if a warehouse was selected
+      if (consumeWarehouseId) {
+        const locationEntry = itemLocations.find(
+          (loc) => loc.warehouse_id === consumeWarehouseId
+        );
+        if (locationEntry) {
+          const newLocQty = Math.max(0, locationEntry.quantity - amount);
+          await supabase
+            .from('item_location_quantities')
+            .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
+            .eq('id', locationEntry.id);
+        }
+      } else if (itemLocations.length > 0) {
+        // No specific warehouse selected — distribute consumption across locations
+        let remaining = amount;
+        for (const loc of itemLocations) {
+          if (remaining <= 0) break;
+          const deduct = Math.min(loc.quantity, remaining);
+          if (deduct > 0) {
+            const newLocQty = loc.quantity - deduct;
+            await supabase
+              .from('item_location_quantities')
+              .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
+              .eq('id', loc.id);
+            remaining -= deduct;
+          }
+        }
+      }
+
       toast({ title: `Consumed ${amount} — new quantity: ${newQty}` });
       setConsumeDialogOpen(false);
       setConsumeQty('1');

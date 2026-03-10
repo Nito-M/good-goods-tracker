@@ -1,0 +1,1 @@
+UPDATE public.item_location_quantities SET quantity = 0 WHERE item_id = 'ac84e239-86dc-46b5-83fc-2dcca7057f76';
