@@ -246,7 +246,7 @@ export function AddPurchaseOrder() {
         if (updates.selectedItemId && updates.selectedItemId !== 'custom' && vendorId && vendorId !== 'none') {
           const vendorPrice = vendorPrices.find(vp => vp.itemId === updates.selectedItemId);
           if (vendorPrice) {
-            updated.unitCost = vendorPrice.price.toFixed(2);
+            updated.unitCost = String(vendorPrice.price);
           }
         }
         
