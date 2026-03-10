@@ -283,7 +283,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
             </Badge>
           </div>
           <h1 className="text-3xl font-bold text-card-foreground">{item.name}</h1>
-          <p className="text-muted-foreground mt-1">SKU: {item.sku}</p>
+          <p className="text-muted-foreground mt-1">SKU: {item.sku}{item.internalPartNumber ? ` • Part #: ${item.internalPartNumber}` : ''}</p>
           {/* Tags */}
           {selectedTagIds.length > 0 && (
             <div className="mt-3 space-y-2">

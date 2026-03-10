@@ -43,6 +43,7 @@ interface DbInventoryItem {
   box_amount: number;
   bundle_amount: number;
   piece_length: number;
+  internal_part_number: string | null;
 }
 
 function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
@@ -70,6 +71,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     imageUrl: db.image_url,
     dxfUrl: db.dxf_url,
     warehouseId: db.warehouse_id,
+    internalPartNumber: db.internal_part_number,
     palletAmount: Number(db.pallet_amount) || 0,
     boxAmount: Number(db.box_amount) || 0,
     bundleAmount: Number(db.bundle_amount) || 0,
@@ -111,6 +113,7 @@ function inventoryItemToDb(
     user_id: userId,
     deleted_at: null,
     warehouse_id: item.warehouseId || null,
+    internal_part_number: item.internalPartNumber || null,
     pallet_amount: item.palletAmount || 0,
     box_amount: item.boxAmount || 0,
     bundle_amount: item.bundleAmount || 0,
@@ -226,7 +229,7 @@ export function useInventory() {
       // Fuzzy token search: all tokens must match somewhere in name, SKU, category, or vendor names
       const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
       const vendorNames = itemVendorMap.get(item.id)?.join(' ') || '';
-      const searchableText = `${item.name} ${item.sku} ${item.category} ${item.subcategory || ''} ${vendorNames}`.toLowerCase();
+      const searchableText = `${item.name} ${item.sku} ${item.category} ${item.subcategory || ''} ${item.internalPartNumber || ''} ${vendorNames}`.toLowerCase();
       return tokens.every((token) => searchableText.includes(token));
     });
   }, [items, searchQuery, categoryFilter, itemVendorMap]);
@@ -289,6 +292,7 @@ export function useInventory() {
         image_url: item.imageUrl || null,
         user_id: user.id,
         warehouse_id: item.warehouseId || null,
+        internal_part_number: item.internalPartNumber || null,
         pallet_amount: item.palletAmount || 0,
         box_amount: item.boxAmount || 0,
         bundle_amount: item.bundleAmount || 0,
@@ -348,6 +352,7 @@ export function useInventory() {
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
     if (updates.warehouseId !== undefined) dbUpdates.warehouse_id = updates.warehouseId;
+    if (updates.internalPartNumber !== undefined) dbUpdates.internal_part_number = updates.internalPartNumber;
     if (updates.palletAmount !== undefined) dbUpdates.pallet_amount = updates.palletAmount;
     if (updates.boxAmount !== undefined) dbUpdates.box_amount = updates.boxAmount;
     if (updates.bundleAmount !== undefined) dbUpdates.bundle_amount = updates.bundleAmount;

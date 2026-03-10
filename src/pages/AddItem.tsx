@@ -117,6 +117,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [boxAmount, setBoxAmount] = useState('');
   const [bundleAmount, setBundleAmount] = useState('');
   const [pieceLength, setPieceLength] = useState('');
+  const [internalPartNumber, setInternalPartNumber] = useState('');
   const [storefrontPage, setStorefrontPage] = useState('');
   const [availableShopPages, setAvailableShopPages] = useState<string[]>([]);
   // Staged images for new item creation (before saving)
@@ -182,6 +183,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setBoxAmount(String(editItem.boxAmount || ''));
       setBundleAmount(String(editItem.bundleAmount || ''));
       setPieceLength(String(editItem.pieceLength || ''));
+      setInternalPartNumber(editItem.internalPartNumber || '');
       if (editItem.warehouseId) {
         setLocationEntries([{ warehouseId: editItem.warehouseId, quantity: String(editItem.quantity) }]);
       }
@@ -319,6 +321,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       description,
       imageUrl: finalImageUrl,
       warehouseId: null,
+      internalPartNumber: internalPartNumber.trim() || null,
       palletAmount: parseFloat(palletAmount) || 0,
       boxAmount: parseFloat(boxAmount) || 0,
       bundleAmount: parseFloat(bundleAmount) || 0,
@@ -523,6 +526,15 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                     onChange={(e) => setSku(e.target.value)}
                     placeholder="e.g. ELEC-001"
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="internalPartNumber">Internal Part #</Label>
+                  <Input
+                    id="internalPartNumber"
+                    value={internalPartNumber}
+                    onChange={(e) => setInternalPartNumber(e.target.value)}
+                    placeholder="e.g. IPN-0042"
                   />
                 </div>
                 <div className="space-y-2">
