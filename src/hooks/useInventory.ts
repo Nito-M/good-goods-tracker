@@ -8,6 +8,7 @@ import {
   getAll,
   put,
   putMany,
+  clearTable,
   deleteItem as deleteFromDb,
   addToSyncQueue,
 } from '@/lib/offlineDb';
