@@ -8,6 +8,7 @@ export interface AssemblyPdfData {
   status: string;
   statusNotes: string | null;
   totalCost: number;
+  hidePrices?: boolean;
   items: {
     itemName: string;
     sku: string;
