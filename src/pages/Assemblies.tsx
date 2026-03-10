@@ -212,6 +212,7 @@ function AssemblyDetail({
   const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
   const [savingStatus, setSavingStatus] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [hidePricesOnPdf, setHidePricesOnPdf] = useState(false);
 
   const isFinished = assembly.status === 'finished';
 
