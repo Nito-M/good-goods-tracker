@@ -127,6 +127,15 @@ export function RequestDetail() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/requests")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!prevRequestNumber}
+            onClick={() => prevRequestNumber && navigateToRequest(prevRequestNumber)}
+            title={prevRequestNumber ? `Previous: ${prevRequestNumber}` : "No previous request"}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
           <div>
             <h1 className="text-2xl font-bold font-mono">{decodedNumber}</h1>
             {firstReq?.requesterName && (
@@ -135,6 +144,15 @@ export function RequestDetail() {
               </p>
             )}
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            disabled={!nextRequestNumber}
+            onClick={() => nextRequestNumber && navigateToRequest(nextRequestNumber)}
+            title={nextRequestNumber ? `Next: ${nextRequestNumber}` : "No next request"}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
