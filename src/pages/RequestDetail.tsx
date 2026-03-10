@@ -42,6 +42,27 @@ export function RequestDetail() {
     [requests, decodedNumber]
   );
 
+  // Unique request numbers sorted by most recent first for prev/next navigation
+  const allRequestNumbers = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const r of requests) {
+      if (r.requestNumber && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
+        seen.set(r.requestNumber, r.createdAt);
+      }
+    }
+    return Array.from(seen.entries())
+      .sort((a, b) => b[1].localeCompare(a[1]))
+      .map(([num]) => num);
+  }, [requests]);
+
+  const currentIndex = allRequestNumbers.indexOf(decodedNumber);
+  const prevRequestNumber = currentIndex > 0 ? allRequestNumbers[currentIndex - 1] : null;
+  const nextRequestNumber = currentIndex < allRequestNumbers.length - 1 ? allRequestNumbers[currentIndex + 1] : null;
+
+  const navigateToRequest = (reqNum: string) => {
+    navigate(`/requests/${encodeURIComponent(reqNum)}`);
+  };
+
   const requestIds = useMemo(() => groupRequests.map((r) => r.id), [groupRequests]);
   const { subItems, addSubItem, updateSubItem, deleteSubItem, toggleSelected } = useRequestSubItems(requestIds);
 
