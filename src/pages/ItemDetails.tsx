@@ -173,6 +173,38 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
     setIsConsuming(false);
   };
 
+  const handleUndoLastConsumption = async () => {
+    if (!item || consumptions.length === 0) return;
+    const last = consumptions[0]; // already sorted desc by created_at
+    try {
+      // Restore main quantity
+      const restoredQty = item.quantity + last.quantity;
+      await onUpdate(item.id, { quantity: restoredQty });
+
+      // Restore location quantity if warehouse was specified
+      if (last.warehouse_id) {
+        const locationEntry = itemLocations.find(
+          (loc) => loc.warehouse_id === last.warehouse_id
+        );
+        if (locationEntry) {
+          await supabase
+            .from('item_location_quantities')
+            .update({ quantity: locationEntry.quantity + last.quantity, updated_at: new Date().toISOString() })
+            .eq('id', locationEntry.id);
+        }
+      }
+
+      // Delete the consumption record
+      await supabase.from('item_consumptions').delete().eq('id', last.id);
+
+      toast({ title: `Reverted consumption of ${last.quantity} — new quantity: ${restoredQty}` });
+      // Refetch consumptions
+      window.location.reload();
+    } catch {
+      toast({ title: 'Error reverting consumption', variant: 'destructive' });
+    }
+  };
+
   const isLowStock = item.quantity <= item.minStock;
   const profitMargin = item.price > 0 ? ((item.price - item.cost) / item.price) * 100 : 0;
 
