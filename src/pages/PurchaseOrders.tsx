@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Plus, LogOut, ArrowLeft, ClipboardList, Search } from 'lucide-react';
+import { MonthlyPOGroup, groupOrdersByMonth } from '@/components/MonthlyPOGroup';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
