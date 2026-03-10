@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Plus, LogOut, ArrowLeft, ClipboardList, Search } from 'lucide-react';
+import { MonthlyPOGroup, groupOrdersByMonth } from '@/components/MonthlyPOGroup';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -279,119 +280,50 @@ export function PurchaseOrders() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="draft" className="space-y-4">
-              {draftOrders.length === 0 ?
-            <p className="text-muted-foreground text-center py-8">No draft orders</p> :
-
-            draftOrders.map((order) =>
-            <PurchaseOrderCard
-              key={order.id}
-              order={order}
-              onMarkPartiallyReceived={handleMarkPartiallyReceived}
-              onMarkOrdered={handleMarkOrdered}
-              onMarkReceived={handleMarkReceived}
-              onMarkPaid={handleMarkPaid}
-              onRevert={handleRevert}
-              onDelete={deleteOrder}
-              onEdit={handleEdit}
-              onDownload={handleDownload}
-              onPreview={handlePreview}
-              onAddAttachment={(file) => addAttachment(order.id, file)}
-              onDeleteAttachment={deleteAttachment}
-              onDeleteImage={() => deleteImageForOrder(order.id)}
-              onDeletePdf={() => deletePdfForOrder(order.id)}
-              loading={processingId === order.id}
-              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null} />
-
-            )
-            }
-            </TabsContent>
-
-            <TabsContent value="ordered" className="space-y-4">
-              {orderedOrders.length === 0 ?
-            <p className="text-muted-foreground text-center py-8">No pending orders</p> :
-
-            orderedOrders.map((order) =>
-            <PurchaseOrderCard
-              key={order.id}
-              order={order}
-              onMarkPartiallyReceived={handleMarkPartiallyReceived}
-              onMarkOrdered={handleMarkOrdered}
-              onMarkReceived={handleMarkReceived}
-              onMarkPaid={handleMarkPaid}
-              onRevert={handleRevert}
-              onDelete={deleteOrder}
-              onEdit={handleEdit}
-              onDownload={handleDownload}
-              onPreview={handlePreview}
-              onAddAttachment={(file) => addAttachment(order.id, file)}
-              onDeleteAttachment={deleteAttachment}
-              onDeleteImage={() => deleteImageForOrder(order.id)}
-              onDeletePdf={() => deletePdfForOrder(order.id)}
-              loading={processingId === order.id}
-              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
-              defaultOpen={highlightPo === order.poNumber} />
-
-            )
-            }
-            </TabsContent>
-
-            <TabsContent value="partially_received" className="space-y-4">
-              {partiallyReceivedOrders.length === 0 ?
-            <p className="text-muted-foreground text-center py-8">No partially received orders</p> :
-
-            partiallyReceivedOrders.map((order) =>
-            <PurchaseOrderCard
-              key={order.id}
-              order={order}
-              onMarkPartiallyReceived={handleMarkPartiallyReceived}
-              onMarkOrdered={handleMarkOrdered}
-              onMarkReceived={handleMarkReceived}
-              onMarkPaid={handleMarkPaid}
-              onRevert={handleRevert}
-              onDelete={deleteOrder}
-              onEdit={handleEdit}
-              onDownload={handleDownload}
-              onPreview={handlePreview}
-              onAddAttachment={(file) => addAttachment(order.id, file)}
-              onDeleteAttachment={deleteAttachment}
-              onDeleteImage={() => deleteImageForOrder(order.id)}
-              onDeletePdf={() => deletePdfForOrder(order.id)}
-              loading={processingId === order.id}
-              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
-              defaultOpen={highlightPo === order.poNumber} />
-            )
-            }
-            </TabsContent>
-
-            <TabsContent value="received" className="space-y-4">
-              {receivedOrders.length === 0 ?
-            <p className="text-muted-foreground text-center py-8">No received orders yet</p> :
-
-            receivedOrders.map((order) =>
-            <PurchaseOrderCard
-              key={order.id}
-              order={order}
-              onMarkPartiallyReceived={handleMarkPartiallyReceived}
-              onMarkOrdered={handleMarkOrdered}
-              onMarkReceived={handleMarkReceived}
-              onMarkPaid={handleMarkPaid}
-              onRevert={handleRevert}
-              onDelete={deleteOrder}
-              onEdit={handleEdit}
-              onDownload={handleDownload}
-              onPreview={handlePreview}
-              onAddAttachment={(file) => addAttachment(order.id, file)}
-              onDeleteAttachment={deleteAttachment}
-              onDeleteImage={() => deleteImageForOrder(order.id)}
-              onDeletePdf={() => deletePdfForOrder(order.id)}
-              loading={processingId === order.id}
-              bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
-              defaultOpen={highlightPo === order.poNumber} />
-
-            )
-            }
-            </TabsContent>
+            {[
+              { value: 'draft', orders: draftOrders, emptyMsg: 'No draft orders' },
+              { value: 'ordered', orders: orderedOrders, emptyMsg: 'No pending orders' },
+              { value: 'partially_received', orders: partiallyReceivedOrders, emptyMsg: 'No partially received orders' },
+              { value: 'received', orders: receivedOrders, emptyMsg: 'No received orders yet' },
+            ].map((tab) => (
+              <TabsContent key={tab.value} value={tab.value} className="space-y-4">
+                {tab.orders.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">{tab.emptyMsg}</p>
+                ) : (
+                  groupOrdersByMonth(tab.orders).map((group, groupIdx) => (
+                    <MonthlyPOGroup
+                      key={group.key}
+                      label={group.label}
+                      count={group.orders.length}
+                      defaultOpen={groupIdx === 0 || !!group.orders.find((o) => o.poNumber === highlightPo)}
+                    >
+                      {group.orders.map((order) => (
+                        <PurchaseOrderCard
+                          key={order.id}
+                          order={order}
+                          onMarkPartiallyReceived={handleMarkPartiallyReceived}
+                          onMarkOrdered={handleMarkOrdered}
+                          onMarkReceived={handleMarkReceived}
+                          onMarkPaid={handleMarkPaid}
+                          onRevert={handleRevert}
+                          onDelete={deleteOrder}
+                          onEdit={handleEdit}
+                          onDownload={handleDownload}
+                          onPreview={handlePreview}
+                          onAddAttachment={(file) => addAttachment(order.id, file)}
+                          onDeleteAttachment={deleteAttachment}
+                          onDeleteImage={() => deleteImageForOrder(order.id)}
+                          onDeletePdf={() => deletePdfForOrder(order.id)}
+                          loading={processingId === order.id}
+                          bankCardName={order.bankCardId ? bankCards.find((c) => c.id === order.bankCardId)?.name ?? null : null}
+                          defaultOpen={highlightPo === order.poNumber}
+                        />
+                      ))}
+                    </MonthlyPOGroup>
+                  ))
+                )}
+              </TabsContent>
+            ))}
           </Tabs>
         }
       </main>
