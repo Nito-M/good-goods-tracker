@@ -687,6 +687,25 @@ function AssemblyDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AssemblyPreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        name={assembly.name}
+        description={assembly.description}
+        sellingPrice={assembly.selling_price}
+        totalCost={items.reduce((sum, i) => {
+          const cost = inventoryCostMap.get(i.inventory_item_id || '') ?? i.unit_cost;
+          return sum + i.quantity * cost;
+        }, 0)}
+        items={items.map(i => ({
+          itemName: i.item_name,
+          sku: i.sku,
+          quantity: i.quantity,
+          unitCost: i.unit_cost,
+          notes: i.notes,
+        }))}
+      />
     </div>
   );
 }
