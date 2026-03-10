@@ -27,6 +27,33 @@ export function TagsSettings() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const [deleteTagId, setDeleteTagId] = useState<string | null>(null);
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editingTagName, setEditingTagName] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingTagId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingTagId]);
+
+  const startEditTag = (tag: { id: string; name: string }) => {
+    setEditingTagId(tag.id);
+    setEditingTagName(tag.name);
+  };
+
+  const confirmEditTag = async () => {
+    if (editingTagId) {
+      await renameTag(editingTagId, editingTagName);
+      setEditingTagId(null);
+    }
+  };
+
+  const cancelEditTag = () => {
+    setEditingTagId(null);
+    setEditingTagName('');
+  };
 
   const toggleCategory = (id: string) => {
     setExpandedCategories((prev) => {
