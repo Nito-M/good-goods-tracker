@@ -110,5 +110,5 @@ export function useTags() {
 
   const getTagsByCategory = (categoryId: string) => tags.filter((t) => t.tag_category_id === categoryId);
 
-  return { tags, loading, addTag, deleteTag, getTagsByCategory, refetch: fetchTags };
+  return { tags, loading, addTag, deleteTag, renameTag, getTagsByCategory, refetch: fetchTags };
 }
