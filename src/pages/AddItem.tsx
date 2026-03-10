@@ -183,6 +183,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setBoxAmount(String(editItem.boxAmount || ''));
       setBundleAmount(String(editItem.bundleAmount || ''));
       setPieceLength(String(editItem.pieceLength || ''));
+      setInternalPartNumber(editItem.internalPartNumber || '');
       if (editItem.warehouseId) {
         setLocationEntries([{ warehouseId: editItem.warehouseId, quantity: String(editItem.quantity) }]);
       }
