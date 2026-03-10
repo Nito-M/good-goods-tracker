@@ -17,10 +17,11 @@ interface AssemblyPreviewDialogProps {
   description: string | null;
   sellingPrice: number;
   totalCost: number;
+  hidePrices?: boolean;
   items: AssemblyPreviewItem[];
 }
 
-export function AssemblyPreviewDialog({ open, onOpenChange, name, description, sellingPrice, totalCost, items }: AssemblyPreviewDialogProps) {
+export function AssemblyPreviewDialog({ open, onOpenChange, name, description, sellingPrice, totalCost, hidePrices, items }: AssemblyPreviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
