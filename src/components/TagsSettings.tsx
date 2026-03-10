@@ -18,7 +18,7 @@ import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
 
 export function TagsSettings() {
-  const { tagCategories, loading: categoriesLoading, addTagCategory, deleteTagCategory } = useTagCategories();
+  const { tagCategories, loading: categoriesLoading, addTagCategory, deleteTagCategory, renameTagCategory } = useTagCategories();
   const { tags, loading: tagsLoading, addTag, deleteTag, renameTag, getTagsByCategory } = useTags();
 
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -29,7 +29,10 @@ export function TagsSettings() {
   const [deleteTagId, setDeleteTagId] = useState<string | null>(null);
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingTagName, setEditingTagName] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
   const editInputRef = useRef<HTMLInputElement>(null);
+  const editCategoryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingTagId && editInputRef.current) {
@@ -37,6 +40,13 @@ export function TagsSettings() {
       editInputRef.current.select();
     }
   }, [editingTagId]);
+
+  useEffect(() => {
+    if (editingCategoryId && editCategoryInputRef.current) {
+      editCategoryInputRef.current.focus();
+      editCategoryInputRef.current.select();
+    }
+  }, [editingCategoryId]);
 
   const startEditTag = (tag: { id: string; name: string }) => {
     setEditingTagId(tag.id);
