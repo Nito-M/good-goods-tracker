@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus, Globe } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus, Globe, Undo2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -171,6 +171,38 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
       toast({ title: 'Error recording consumption', variant: 'destructive' });
     }
     setIsConsuming(false);
+  };
+
+  const handleUndoLastConsumption = async () => {
+    if (!item || consumptions.length === 0) return;
+    const last = consumptions[0]; // already sorted desc by created_at
+    try {
+      // Restore main quantity
+      const restoredQty = item.quantity + last.quantity;
+      await onUpdate(item.id, { quantity: restoredQty });
+
+      // Restore location quantity if warehouse was specified
+      if (last.warehouse_id) {
+        const locationEntry = itemLocations.find(
+          (loc) => loc.warehouse_id === last.warehouse_id
+        );
+        if (locationEntry) {
+          await supabase
+            .from('item_location_quantities')
+            .update({ quantity: locationEntry.quantity + last.quantity, updated_at: new Date().toISOString() })
+            .eq('id', locationEntry.id);
+        }
+      }
+
+      // Delete the consumption record
+      await supabase.from('item_consumptions').delete().eq('id', last.id);
+
+      toast({ title: `Reverted consumption of ${last.quantity} — new quantity: ${restoredQty}` });
+      // Refetch consumptions
+      window.location.reload();
+    } catch {
+      toast({ title: 'Error reverting consumption', variant: 'destructive' });
+    }
   };
 
   const isLowStock = item.quantity <= item.minStock;
@@ -776,7 +808,13 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         {consumptions.length > 0 && (
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle className="text-lg">Consumption History</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Consumption History</CardTitle>
+                <Button variant="outline" size="sm" onClick={handleUndoLastConsumption} className="gap-1.5">
+                  <Undo2 className="h-3.5 w-3.5" />
+                  Undo Last
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
