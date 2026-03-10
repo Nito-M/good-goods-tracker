@@ -18,7 +18,7 @@ import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
 
 export function TagsSettings() {
-  const { tagCategories, loading: categoriesLoading, addTagCategory, deleteTagCategory } = useTagCategories();
+  const { tagCategories, loading: categoriesLoading, addTagCategory, deleteTagCategory, renameTagCategory } = useTagCategories();
   const { tags, loading: tagsLoading, addTag, deleteTag, renameTag, getTagsByCategory } = useTags();
 
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -29,7 +29,10 @@ export function TagsSettings() {
   const [deleteTagId, setDeleteTagId] = useState<string | null>(null);
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingTagName, setEditingTagName] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
   const editInputRef = useRef<HTMLInputElement>(null);
+  const editCategoryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingTagId && editInputRef.current) {
@@ -37,6 +40,13 @@ export function TagsSettings() {
       editInputRef.current.select();
     }
   }, [editingTagId]);
+
+  useEffect(() => {
+    if (editingCategoryId && editCategoryInputRef.current) {
+      editCategoryInputRef.current.focus();
+      editCategoryInputRef.current.select();
+    }
+  }, [editingCategoryId]);
 
   const startEditTag = (tag: { id: string; name: string }) => {
     setEditingTagId(tag.id);
@@ -53,6 +63,23 @@ export function TagsSettings() {
   const cancelEditTag = () => {
     setEditingTagId(null);
     setEditingTagName('');
+  };
+
+  const startEditCategory = (category: { id: string; name: string }) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name);
+  };
+
+  const confirmEditCategory = async () => {
+    if (editingCategoryId) {
+      await renameTagCategory(editingCategoryId, editingCategoryName);
+      setEditingCategoryId(null);
+    }
+  };
+
+  const cancelEditCategory = () => {
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
   };
 
   const toggleCategory = (id: string) => {
@@ -146,22 +173,74 @@ export function TagsSettings() {
                         ) : (
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span className="font-medium">{tc.name}</span>
+                        {editingCategoryId === tc.id ? (
+                          <input
+                            ref={editCategoryInputRef}
+                            value={editingCategoryName}
+                            onChange={(e) => setEditingCategoryName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') confirmEditCategory();
+                              if (e.key === 'Escape') cancelEditCategory();
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-transparent border-b border-primary outline-none w-40 text-sm font-medium"
+                          />
+                        ) : (
+                          <span className="font-medium">{tc.name}</span>
+                        )}
                         <Badge variant="secondary" className="text-xs">
                           {categoryTags.length}
                         </Badge>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteCategoryId(tc.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        {editingCategoryId === tc.id ? (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                confirmEditCategory();
+                              }}
+                              className="p-1 text-primary hover:text-primary/80"
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                cancelEditCategory();
+                              }}
+                              className="p-1 text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEditCategory(tc);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteCategoryId(tc.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     {isExpanded && (
