@@ -80,6 +80,7 @@ export const inventoryItemSchema = z.object({
   }),
   colors: z.array(z.string().max(50)).max(20, 'Maximum 20 colors allowed').optional(),
   description: z.string().max(2000, 'Description must be less than 2000 characters').optional(),
+  internalPartNumber: z.string().max(100, 'Part number must be less than 100 characters').nullable().optional(),
 });
 
 export type InventoryItemInput = z.infer<typeof inventoryItemSchema>;
