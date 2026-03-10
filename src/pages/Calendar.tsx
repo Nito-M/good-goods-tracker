@@ -383,10 +383,10 @@ export function Calendar() {
                 {selectedDateRequests.length > 0 &&
               <div className="space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Requests</p>
-                    {selectedDateRequests.map((request) =>
+                {selectedDateRequests.map((request) =>
                 <button
                   key={request.id}
-                  onClick={() => setEditingRequest(request)}
+                  onClick={() => navigate(`/requests/${request.id}`)}
                   className="w-full text-left p-3 border rounded-lg hover:bg-accent transition-colors">
 
                         <div className="flex items-start gap-2">
