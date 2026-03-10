@@ -23,31 +23,80 @@ export function useRequests() {
 
       if (error) throw error;
 
-      const mapped: Request[] = (data || []).map((r) => ({
-        id: r.id,
-        userId: r.user_id,
-        requestNumber: r.request_number,
-        inventoryItemId: r.inventory_item_id,
-        itemName: r.item_name,
-        sku: r.sku,
-        quantity: r.quantity,
-        quantityUnit: r.quantity_unit,
-        price: r.price || 0,
-        gstRate: r.gst_rate || 0,
-        extraCost: (r as any).extra_cost ?? 0,
-        extraCostLabel: (r as any).extra_cost_label ?? 'Shipping',
-        link: r.link,
-        notes: r.notes,
-        imageUrl: r.image_url,
-        pdfUrl: (r as any).pdf_url ?? null,
-        needByDate: r.need_by_date,
-        requesterName: r.requester_name,
-        bankCardId: (r as any).bank_card_id ?? null,
-        vendorName: (r as any).vendor_name ?? null,
-        status: r.status as RequestStatus,
-        createdAt: r.created_at,
-        updatedAt: r.updated_at,
-      }));
+      // Re-sign any expired image/pdf URLs stored in request-images bucket
+      const pathsToSign: { index: number; field: 'image_url' | 'pdf_url'; path: string }[] = [];
+      (data || []).forEach((r, i) => {
+        for (const field of ['image_url', 'pdf_url'] as const) {
+          const url = (r as any)[field];
+          if (url && typeof url === 'string' && url.includes('/request-images/')) {
+            const match = url.match(/\/request-images\/(.+?)(?:\?|$)/);
+            if (match) {
+              pathsToSign.push({ index: i, field, path: decodeURIComponent(match[1]) });
+            }
+          }
+        }
+      });
+
+      // Batch sign all paths at once
+      const signedMap = new Map<string, string>();
+      if (pathsToSign.length > 0) {
+        const uniquePaths = [...new Set(pathsToSign.map(p => p.path))];
+        const { data: signedData } = await supabase.storage
+          .from('request-images')
+          .createSignedUrls(uniquePaths, 3600);
+        if (signedData) {
+          signedData.forEach((s, idx) => {
+            if (s.signedUrl) signedMap.set(uniquePaths[idx], s.signedUrl);
+          });
+        }
+      }
+
+      const mapped: Request[] = (data || []).map((r) => {
+        let imageUrl = r.image_url;
+        let pdfUrl = (r as any).pdf_url ?? null;
+
+        // Replace with fresh signed URLs if available
+        if (imageUrl && imageUrl.includes('/request-images/')) {
+          const match = imageUrl.match(/\/request-images\/(.+?)(?:\?|$)/);
+          if (match) {
+            const fresh = signedMap.get(decodeURIComponent(match[1]));
+            if (fresh) imageUrl = fresh;
+          }
+        }
+        if (pdfUrl && pdfUrl.includes('/request-images/')) {
+          const match = pdfUrl.match(/\/request-images\/(.+?)(?:\?|$)/);
+          if (match) {
+            const fresh = signedMap.get(decodeURIComponent(match[1]));
+            if (fresh) pdfUrl = fresh;
+          }
+        }
+
+        return {
+          id: r.id,
+          userId: r.user_id,
+          requestNumber: r.request_number,
+          inventoryItemId: r.inventory_item_id,
+          itemName: r.item_name,
+          sku: r.sku,
+          quantity: r.quantity,
+          quantityUnit: r.quantity_unit,
+          price: r.price || 0,
+          gstRate: r.gst_rate || 0,
+          extraCost: (r as any).extra_cost ?? 0,
+          extraCostLabel: (r as any).extra_cost_label ?? 'Shipping',
+          link: r.link,
+          notes: r.notes,
+          imageUrl,
+          pdfUrl,
+          needByDate: r.need_by_date,
+          requesterName: r.requester_name,
+          bankCardId: (r as any).bank_card_id ?? null,
+          vendorName: (r as any).vendor_name ?? null,
+          status: r.status as RequestStatus,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+        };
+      });
 
       setRequests(mapped);
     } catch (error: any) {
