@@ -352,6 +352,7 @@ export function useInventory() {
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
     if (updates.warehouseId !== undefined) dbUpdates.warehouse_id = updates.warehouseId;
+    if (updates.internalPartNumber !== undefined) dbUpdates.internal_part_number = updates.internalPartNumber;
     if (updates.palletAmount !== undefined) dbUpdates.pallet_amount = updates.palletAmount;
     if (updates.boxAmount !== undefined) dbUpdates.box_amount = updates.boxAmount;
     if (updates.bundleAmount !== undefined) dbUpdates.bundle_amount = updates.bundleAmount;
