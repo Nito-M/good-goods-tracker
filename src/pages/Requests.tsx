@@ -68,6 +68,8 @@ export function Requests() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
+  const [filterVendor, setFilterVendor] = useState<string>("all");
+  const [filterRequester, setFilterRequester] = useState<string>("all");
 
   // For regular members, only show their own requester name; admins see all
   const visibleRequesterNames = isAdminUser ?
@@ -78,6 +80,10 @@ export function Requests() {
   const visibleRequests = isAdminUser ?
   requests :
   requests.filter((r) => r.requesterName === linkedName);
+
+  // Collect unique vendor names and requester names from visible requests
+  const uniqueVendors = Array.from(new Set(visibleRequests.map(r => r.vendorName).filter(Boolean) as string[])).sort();
+  const uniqueRequesters = Array.from(new Set(visibleRequests.map(r => r.requesterName).filter(Boolean) as string[])).sort();
 
   const getFilteredRequests = (status: RequestStatus) => {
     return visibleRequests.filter((request) => {
@@ -91,7 +97,9 @@ export function Requests() {
         request.vendorName,
       ].filter(Boolean).join(" ").toLowerCase();
       const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => searchableText.includes(term));
-      return matchesSearch && request.status === status;
+      const matchesVendor = filterVendor === "all" || request.vendorName === filterVendor;
+      const matchesRequester = filterRequester === "all" || request.requesterName === filterRequester;
+      return matchesSearch && matchesVendor && matchesRequester && request.status === status;
     });
   };
 
@@ -437,15 +445,50 @@ export function Requests() {
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search requests..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9" />
+      {/* Search & Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search requests..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9" />
+        </div>
 
+        {uniqueVendors.length > 0 && (
+          <Select value={filterVendor} onValueChange={setFilterVendor}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="All Vendors" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Vendors</SelectItem>
+              {uniqueVendors.map((v) => (
+                <SelectItem key={v} value={v}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {uniqueRequesters.length > 1 && (
+          <Select value={filterRequester} onValueChange={setFilterRequester}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="All Requesters" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Requesters</SelectItem>
+              {uniqueRequesters.map((n) => (
+                <SelectItem key={n} value={n}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Tabs */}
