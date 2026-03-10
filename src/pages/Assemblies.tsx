@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye } from 'lucide-react';
+import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
+import { AssemblyPreviewDialog } from '@/components/AssemblyPreviewDialog';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { QUANTITY_UNIT_LABELS, QuantityUnit } from '@/types/inventory';
 import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
@@ -209,6 +211,7 @@ function AssemblyDetail({
   const [editingStatusNotes, setEditingStatusNotes] = useState(false);
   const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
   const [savingStatus, setSavingStatus] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const isFinished = assembly.status === 'finished';
 
@@ -399,6 +402,32 @@ function AssemblyDetail({
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
+                <Eye className="h-3 w-3 mr-1" /> Preview
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                const totalCost = items.reduce((sum, i) => {
+                  const cost = inventoryCostMap.get(i.inventory_item_id || '') ?? i.unit_cost;
+                  return sum + i.quantity * cost;
+                }, 0);
+                generateAssemblyPDF({
+                  name: assembly.name,
+                  description: assembly.description,
+                  sellingPrice: assembly.selling_price,
+                  status: assembly.status,
+                  statusNotes: assembly.status_notes,
+                  totalCost,
+                  items: items.map(i => ({
+                    itemName: i.item_name,
+                    sku: i.sku,
+                    quantity: i.quantity,
+                    unitCost: i.unit_cost,
+                    notes: i.notes,
+                  })),
+                });
+              }}>
+                <Download className="h-3 w-3 mr-1" /> PDF
+              </Button>
               <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                 <Pencil className="h-3 w-3 mr-1" /> Edit
               </Button>
@@ -658,6 +687,25 @@ function AssemblyDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AssemblyPreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        name={assembly.name}
+        description={assembly.description}
+        sellingPrice={assembly.selling_price}
+        totalCost={items.reduce((sum, i) => {
+          const cost = inventoryCostMap.get(i.inventory_item_id || '') ?? i.unit_cost;
+          return sum + i.quantity * cost;
+        }, 0)}
+        items={items.map(i => ({
+          itemName: i.item_name,
+          sku: i.sku,
+          quantity: i.quantity,
+          unitCost: i.unit_cost,
+          notes: i.notes,
+        }))}
+      />
     </div>
   );
 }
