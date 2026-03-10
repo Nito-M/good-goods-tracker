@@ -113,6 +113,7 @@ function inventoryItemToDb(
     user_id: userId,
     deleted_at: null,
     warehouse_id: item.warehouseId || null,
+    internal_part_number: item.internalPartNumber || null,
     pallet_amount: item.palletAmount || 0,
     box_amount: item.boxAmount || 0,
     bundle_amount: item.bundleAmount || 0,
