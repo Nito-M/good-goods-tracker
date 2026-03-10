@@ -529,6 +529,15 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="internalPartNumber">Internal Part #</Label>
+                  <Input
+                    id="internalPartNumber"
+                    value={internalPartNumber}
+                    onChange={(e) => setInternalPartNumber(e.target.value)}
+                    placeholder="e.g. IPN-0042"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
                   <Select value={category} onValueChange={(v) => { if (v !== category) { setCategory(v); setSubcategory(''); } }}>
                     <SelectTrigger>
