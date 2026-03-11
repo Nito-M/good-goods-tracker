@@ -147,6 +147,106 @@ export function Requests() {
     navigate(`/requests/edit/${request.id}`);
   };
 
+  const renderRequestList = (status: RequestStatus) => {
+    const filteredRequests = getFilteredRequests(status);
+
+    if (loading) {
+      return (
+        <div className="space-y-2">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-12" />)}
+        </div>
+      );
+    }
+
+    if (filteredRequests.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold">No {STATUS_CONFIG[status].label.toLowerCase()} requests</h3>
+          <p className="text-muted-foreground">
+            {searchQuery ? "Try adjusting your search" : `No requests with ${STATUS_CONFIG[status].label.toLowerCase()} status`}
+          </p>
+        </div>
+      );
+    }
+
+    // Group same as card view
+    const grouped: { key: string; requests: Request[] }[] = [];
+    const seen = new Set<string>();
+    filteredRequests.forEach((request) => {
+      if (seen.has(request.id)) return;
+      if (request.requestNumber) {
+        const siblings = filteredRequests.filter((r) => r.requestNumber === request.requestNumber);
+        if (siblings.length > 1 && !seen.has(siblings[0].id)) {
+          siblings.forEach((s) => seen.add(s.id));
+          grouped.push({ key: request.requestNumber, requests: siblings });
+          return;
+        }
+      }
+      seen.add(request.id);
+      grouped.push({ key: request.id, requests: [request] });
+    });
+
+    return (
+      <div className="border border-border rounded-md overflow-hidden">
+        {grouped.map((group, i) => {
+          const groupTotal = group.requests.reduce((s, r) => s + getRequestTotal(r), 0);
+          const firstReq = group.requests[0];
+          const isOverdue = firstReq.needByDate && new Date(firstReq.needByDate) < new Date() && firstReq.status !== 'received' && firstReq.status !== 'cancelled';
+
+          return (
+            <div
+              key={group.key}
+              className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors ${i > 0 ? 'border-t border-border' : ''}`}
+              onClick={() => {
+                const navKey = firstReq.requestNumber || group.key;
+                navigate(`/requests/view/${encodeURIComponent(navKey)}`);
+              }}
+            >
+              {/* Request number */}
+              <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded shrink-0 w-24 text-center truncate">
+                {firstReq.requestNumber || '—'}
+              </span>
+
+              {/* Item names */}
+              <span className="font-medium text-foreground truncate flex-1 min-w-0">
+                {group.requests.length === 1
+                  ? firstReq.itemName
+                  : `${firstReq.itemName} +${group.requests.length - 1} more`}
+              </span>
+
+              {/* Requester */}
+              {firstReq.requesterName && (
+                <span className="text-xs text-muted-foreground truncate w-24 shrink-0 hidden md:block">
+                  {firstReq.requesterName}
+                </span>
+              )}
+
+              {/* Vendor */}
+              <span className="text-xs text-muted-foreground truncate w-28 shrink-0 hidden lg:block">
+                {firstReq.vendorName || '—'}
+              </span>
+
+              {/* Need by date */}
+              {firstReq.needByDate ? (
+                <span className={`text-xs shrink-0 hidden sm:block w-24 ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                  {format(new Date(firstReq.needByDate), "MMM d, yyyy")}
+                </span>
+              ) : (
+                <span className="w-24 shrink-0 hidden sm:block" />
+              )}
+
+              {/* Total */}
+              <span className="text-sm font-medium text-primary w-24 text-right shrink-0">
+                {formatCurrency(groupTotal)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderRequestGrid = (status: RequestStatus) => {
     const filteredRequests = getFilteredRequests(status);
 
