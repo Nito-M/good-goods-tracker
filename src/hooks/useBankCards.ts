@@ -51,7 +51,7 @@ export function useBankCards() {
     fetchCards();
   }, [user]);
 
-  const addCard = async (name: string, balance: number, color: string) => {
+  const addCard = async (name: string, balance: number, color: string, category?: string | null) => {
     if (!user) return false;
     try {
       const { error } = await supabase.from('bank_cards').insert({
@@ -59,7 +59,8 @@ export function useBankCards() {
         name,
         balance,
         color,
-      });
+        category: category || null,
+      } as any);
       if (error) throw error;
       toast({ title: 'Card added', description: `"${name}" card created.` });
       await fetchCards();
