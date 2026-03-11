@@ -117,6 +117,14 @@ export function PartsLibrary() {
     setBulkMoveOpen(false);
   };
 
+  const openImageViewer = async (storagePath: string) => {
+    const url = await getSignedUrl('part-images', storagePath);
+    if (url) {
+      setViewerImageUrl(url);
+      setViewerOpen(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
