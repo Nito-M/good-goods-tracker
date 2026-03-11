@@ -359,7 +359,7 @@ interface RequestItemRowProps {
   onDelete?: () => void;
 }
 
-function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubItem, onUpdateSubItem, onDeleteSubItem, onToggleSelected, onEdit }: RequestItemRowProps) {
+function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubItem, onUpdateSubItem, onDeleteSubItem, onToggleSelected, onEdit, onDelete }: RequestItemRowProps) {
   const [open, setOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
