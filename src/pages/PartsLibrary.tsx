@@ -347,8 +347,7 @@ export function PartsLibrary() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (part.imageUrl) {
-                            setViewerImageUrl(part.imageUrl);
-                            setViewerOpen(true);
+                            openImageViewer(part.imageUrl);
                           }
                         }}
                       >
