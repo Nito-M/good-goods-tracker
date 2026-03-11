@@ -135,6 +135,7 @@ export function PurchaseOrderCard({
   // Gather all attachments: new table rows + legacy single fields
   const attachments = order.attachments || [];
   const hasAnyImage = !!order.imageUrl || attachments.some(a => a.fileType === 'image');
+  const hasAnyPdf = !!order.pdfUrl || attachments.some(a => a.fileType === 'pdf');
   const imageAttachments = attachments.filter(a => a.fileType === 'image');
   const pdfAttachments = attachments.filter(a => a.fileType === 'pdf');
 
