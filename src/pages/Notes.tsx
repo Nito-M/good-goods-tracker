@@ -45,6 +45,7 @@ import {
   Code,
   Minus,
   Palette,
+  ListTodo,
 } from "lucide-react";
 import { format } from "date-fns";
 
