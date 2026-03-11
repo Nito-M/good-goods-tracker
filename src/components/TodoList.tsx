@@ -111,23 +111,42 @@ export function TodoList() {
   return (
     <div className="space-y-4">
       {/* Add new todo */}
-      <div className="flex gap-2">
-        <Input
-          placeholder="Add a to-do..."
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1"
-        />
-        <Input
-          type="date"
-          value={newDueDate}
-          onChange={(e) => setNewDueDate(e.target.value)}
-          className="w-40"
-        />
-        <Button onClick={handleAdd} size="icon" disabled={!newTitle.trim()}>
-          <Plus className="h-4 w-4" />
-        </Button>
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Add a to-do..."
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !showAddNotes && handleAdd()}
+            className="flex-1"
+          />
+          <Input
+            type="date"
+            value={newDueDate}
+            onChange={(e) => setNewDueDate(e.target.value)}
+            className="w-40"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowAddNotes(!showAddNotes)}
+            className={cn("shrink-0", showAddNotes && "bg-accent")}
+            title="Add notes"
+          >
+            {showAddNotes ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </Button>
+          <Button onClick={handleAdd} size="icon" disabled={!newTitle.trim()}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        {showAddNotes && (
+          <Textarea
+            placeholder="Add notes (optional)..."
+            value={newNotes}
+            onChange={(e) => setNewNotes(e.target.value)}
+            className="min-h-[60px]"
+          />
+        )}
       </div>
 
       {/* Pending todos */}
