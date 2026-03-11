@@ -38,6 +38,8 @@ export function PartsLibrary() {
   const [viewMode, setViewMode] = useState<'lines' | 'cards'>(() => {
     return (localStorage.getItem('partsLibraryViewMode') as 'lines' | 'cards') || 'lines';
   });
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const { toast } = useToast();
 
   const loading = partsLoading || foldersLoading;
