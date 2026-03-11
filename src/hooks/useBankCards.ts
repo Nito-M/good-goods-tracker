@@ -29,12 +29,13 @@ export function useBankCards() {
         .order('created_at', { ascending: true });
       if (error) throw error;
       setCards(
-        (data || []).map((c) => ({
+        (data || []).map((c: any) => ({
           id: c.id,
           userId: c.user_id,
           name: c.name,
           balance: Number(c.balance),
           color: c.color,
+          category: c.category || null,
           createdAt: c.created_at,
           updatedAt: c.updated_at,
         }))
