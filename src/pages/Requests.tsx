@@ -633,7 +633,7 @@ export function Requests() {
 
         {(Object.keys(STATUS_CONFIG) as RequestStatus[]).map((status) =>
         <TabsContent key={status} value={status}>
-            {renderRequestGrid(status)}
+            {viewMode === 'lines' ? renderRequestList(status) : renderRequestGrid(status)}
           </TabsContent>
         )}
       </Tabs>
