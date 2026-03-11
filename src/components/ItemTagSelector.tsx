@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 import { useTagCategories } from '@/hooks/useTagCategories';
 import { useTags } from '@/hooks/useTags';
+import { cn } from '@/lib/utils';
 
 interface ItemTagSelectorProps {
   selectedTagIds: string[];
@@ -25,62 +30,81 @@ export function ItemTagSelector({ selectedTagIds, onTagsChange }: ItemTagSelecto
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Tags</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {tagCategories.map((tc) => {
-          const categoryTags = getTagsByCategory(tc.id);
-          if (categoryTags.length === 0) return null;
+    <div className="space-y-3">
+      {tagCategories.map((tc) => {
+        const categoryTags = getTagsByCategory(tc.id);
+        if (categoryTags.length === 0) return null;
 
-          return (
-            <div key={tc.id} className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">{tc.name}</p>
-              <div className="flex flex-wrap gap-2">
-                {categoryTags.map((tag) => {
-                  const isSelected = selectedTagIds.includes(tag.id);
-                  return (
-                    <label
-                      key={tag.id}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm cursor-pointer border transition-colors ${
-                        isSelected
-                          ? 'bg-primary/10 border-primary/30 text-primary'
-                          : 'bg-muted/50 border-transparent hover:bg-muted'
-                      }`}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleTag(tag.id)}
-                        className="h-3.5 w-3.5"
-                      />
-                      {tag.name}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+        const selectedInCategory = categoryTags.filter((t) => selectedTagIds.includes(t.id));
+        const label = selectedInCategory.length === 0
+          ? `Select ${tc.name}`
+          : selectedInCategory.map((t) => t.name).join(', ');
 
-        {/* Show selected tags summary */}
-        {selectedTagIds.length > 0 && (
-          <div className="pt-2 border-t">
-            <p className="text-xs text-muted-foreground mb-2">Selected ({selectedTagIds.length})</p>
-            <div className="flex flex-wrap gap-1">
-              {selectedTagIds.map((tagId) => {
-                const tag = tags.find((t) => t.id === tagId);
-                if (!tag) return null;
-                return (
-                  <Badge key={tagId} variant="secondary" className="text-xs">
-                    {tag.name}
-                  </Badge>
-                );
-              })}
-            </div>
+        return (
+          <div key={tc.id} className="space-y-2">
+            <Label>{tc.name}</Label>
+            <TagDropdown
+              label={label}
+              tags={categoryTags}
+              selectedTagIds={selectedTagIds}
+              onToggle={toggleTag}
+            />
           </div>
-        )}
-      </CardContent>
-    </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function TagDropdown({
+  label,
+  tags,
+  selectedTagIds,
+  onToggle,
+}: {
+  label: string;
+  tags: { id: string; name: string }[];
+  selectedTagIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasSelection = tags.some((t) => selectedTagIds.includes(t.id));
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          className={cn(
+            'w-full justify-between font-normal',
+            !hasSelection && 'text-muted-foreground'
+          )}
+        >
+          <span className="truncate">{label}</span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1" align="start">
+        <div className="max-h-60 overflow-y-auto">
+          {tags.map((tag) => {
+            const isSelected = selectedTagIds.includes(tag.id);
+            return (
+              <label
+                key={tag.id}
+                className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+              >
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() => onToggle(tag.id)}
+                  className="h-4 w-4"
+                />
+                {tag.name}
+              </label>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
