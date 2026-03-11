@@ -159,6 +159,7 @@ export function BankCardDetail() {
     if (!card) return;
     setEditName(card.name);
     setEditColor(card.color);
+    setEditCategory(card.category || '');
     setEditOpen(true);
   };
 
