@@ -201,7 +201,7 @@ export function VendorDetail() {
                 {vendorOrders.slice(0, 10).map((order) => (
                   <div key={order.id} className="flex items-center justify-between py-3">
                     <div>
-                      <div className="font-medium text-sm">{order.poNumber || order.sku}</div>
+                      <div className="font-medium text-sm">{order.poNumber || (order.items?.[0]?.itemName)}</div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(order.orderedAt).toLocaleDateString()}
                       </div>
