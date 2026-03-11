@@ -513,7 +513,7 @@ function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onM
   );
 }
 
-function PartImage({ storagePath }: { storagePath: string }) {
+function PartImage({ storagePath, className }: { storagePath: string; className?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const { getSignedUrl } = useParts();
 
@@ -522,5 +522,5 @@ function PartImage({ storagePath }: { storagePath: string }) {
   }, [storagePath]);
 
   if (!url) return <span className="text-muted-foreground text-sm">Loading...</span>;
-  return <img src={url} alt="Part" className="w-full h-full object-contain" />;
+  return <img src={url} alt="Part" className={className || "w-full h-full object-contain"} />;
 }
