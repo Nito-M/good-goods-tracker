@@ -475,6 +475,14 @@ export function PartsLibrary() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Image Viewer Dialog */}
+      <ImageViewerDialog
+        imageUrl={viewerImageUrl}
+        alt="Part"
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
     </div>
   );
 }
