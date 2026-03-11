@@ -9,6 +9,7 @@ export interface Todo {
   title: string;
   isDone: boolean;
   dueDate: string | null;
+  notes: string | null;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
