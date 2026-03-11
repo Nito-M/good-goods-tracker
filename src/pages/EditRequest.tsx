@@ -162,7 +162,10 @@ export function EditRequest() {
         requesterName: selectedRequester,
       });
 
-      if (success) navigate("/requests");
+      if (success) {
+        const navKey = request.requestNumber || request.id;
+        navigate(`/requests/view/${encodeURIComponent(navKey)}`);
+      }
     } finally {
       setLoading(false);
     }
