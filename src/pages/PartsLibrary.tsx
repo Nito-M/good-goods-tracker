@@ -24,7 +24,7 @@ import {
 
 export function PartsLibrary() {
   const navigate = useNavigate();
-  const { parts, loading: partsLoading, deletePart, updatePart } = useParts();
+  const { parts, loading: partsLoading, deletePart, updatePart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   const [search, setSearch] = useState('');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
@@ -115,6 +115,14 @@ export function PartsLibrary() {
     setSelectedPartIds(new Set());
     setSelectMode(false);
     setBulkMoveOpen(false);
+  };
+
+  const openImageViewer = async (storagePath: string) => {
+    const url = await getSignedUrl('part-images', storagePath);
+    if (url) {
+      setViewerImageUrl(url);
+      setViewerOpen(true);
+    }
   };
 
   return (
@@ -299,8 +307,7 @@ export function PartsLibrary() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (part.imageUrl) {
-                            setViewerImageUrl(part.imageUrl);
-                            setViewerOpen(true);
+                            openImageViewer(part.imageUrl);
                           }
                         }}
                       >
@@ -340,8 +347,7 @@ export function PartsLibrary() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (part.imageUrl) {
-                            setViewerImageUrl(part.imageUrl);
-                            setViewerOpen(true);
+                            openImageViewer(part.imageUrl);
                           }
                         }}
                       >
