@@ -94,12 +94,13 @@ export function useTodos() {
     }
   };
 
-  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; displayOrder: number }>): Promise<boolean> => {
+  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number }>): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.isDone !== undefined) dbUpdates.is_done = updates.isDone;
       if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
 
       const { error } = await (supabase as any).from("todos").update(dbUpdates).eq("id", id);
