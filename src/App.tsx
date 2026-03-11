@@ -49,6 +49,8 @@ import { PublicProductDetail } from "./pages/PublicProductDetail";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { TripPlanDetail } from "./pages/TripPlanDetail";
+import { VendorDetail } from "./pages/VendorDetail";
+import { AddVendor } from "./pages/AddVendor";
 import { EditTripPlan } from "./pages/EditTripPlan";
 import { CompanyDetail } from "./pages/CompanyDetail";
 import { useInventory } from "@/hooks/useInventory";
@@ -547,6 +549,36 @@ function AppContent() {
                   loading={loading}
                   categories={allCategories}
                 />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendors/new"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddVendor />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendors/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <VendorDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendors/:id/edit"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddVendor />
               </AppLayout>
             </ProtectedRoute>
           }
