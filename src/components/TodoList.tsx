@@ -135,7 +135,7 @@ export function TodoList() {
           className="text-xs shrink-0 cursor-pointer hover:bg-accent border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/requests/${todo.requestId}`);
+            navigate(`/requests/view/${req?.requestNumber || todo.requestId}`);
           }}
         >
           <FileText className="h-3 w-3 mr-1" />
