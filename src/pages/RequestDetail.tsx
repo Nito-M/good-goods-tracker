@@ -282,6 +282,11 @@ export function RequestDetail() {
                     onDeleteSubItem={deleteSubItem}
                     onToggleSelected={(id) => toggleSelected(id, r.id)}
                     onEdit={() => navigate(`/requests/edit/${r.id}`)}
+                    onDelete={canManage ? async () => {
+                      if (!confirm(`Delete "${r.itemName}" from this request?`)) return;
+                      await deleteRequest(r.id);
+                      if (groupRequests.length <= 1) navigate("/requests");
+                    } : undefined}
                   />
                 );
               })}
