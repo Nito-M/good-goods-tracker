@@ -826,6 +826,7 @@ export function Settings() {
                             {[vendor.contact_email, vendor.contact_phone].filter(Boolean).join(' • ') || 'No contact info'}
                           </div>
                         </div>
+                        </div>
                         <div className="flex items-center gap-2">
                           <Button variant="outline" size="sm" onClick={() => openVendorDialog(vendor)}>
                             Edit
