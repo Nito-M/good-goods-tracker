@@ -1111,6 +1111,60 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const revertPaid = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order || !order.paidAt) return false;
+
+    // Reverse the financial transaction
+    const TAX_RATE = 0.05;
+    const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
+    const afterDiscount = Math.max(0, subtotal - (order.discountAmount || 0));
+    const totalCost = afterDiscount + (afterDiscount * TAX_RATE);
+    const poLabel = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
+
+    if (totalCost > 0) {
+      // Refund bank card balance if applicable
+      if (order.bankCardId) {
+        const { data: cardData } = await supabase
+          .from('bank_cards')
+          .select('balance')
+          .eq('id', order.bankCardId)
+          .single();
+
+        if (cardData) {
+          await supabase
+            .from('bank_cards')
+            .update({ balance: Number(cardData.balance) + totalCost })
+            .eq('id', order.bankCardId);
+        }
+      }
+
+      // Add a refund deposit to reverse the withdrawal
+      await supabase.from('bank_transactions').insert({
+        user_id: user!.id,
+        type: 'deposit',
+        amount: totalCost,
+        description: `Revert payment for ${poLabel}`,
+        bank_card_id: order.bankCardId || null,
+      } as any);
+    }
+
+    // Clear paid_at
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ paid_at: null })
+      .eq('id', orderId);
+
+    if (error) {
+      toast({ title: 'Error reverting payment', variant: 'destructive' });
+      return false;
+    }
+
+    toast({ title: 'Payment reverted', description: totalCost > 0 ? `$${totalCost.toFixed(2)} refunded to bank` : undefined });
+    fetchOrders();
+    return true;
+  };
+
   return {
     orders,
     loading,
@@ -1120,6 +1174,7 @@ export function usePurchaseOrders() {
     markAsReceived,
     markAsPartiallyReceived,
     markAsPaid,
+    revertPaid,
     revertOrder,
     deleteOrder,
     uploadImageForOrder,
