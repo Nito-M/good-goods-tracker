@@ -13,6 +13,7 @@ export interface Todo {
   requestId: string | null;
   purchaseOrderId: string | null;
   displayOrder: number;
+  kgAmount: number;
   createdAt: string;
   updatedAt: string;
 }
