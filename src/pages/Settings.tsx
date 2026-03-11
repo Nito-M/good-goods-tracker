@@ -817,32 +817,32 @@ export function Settings() {
                 ) : (
                   <div className="divide-y divide-border">
                     {filteredVendors.map((vendor) => (
-                      <div key={vendor.id} className="flex items-center justify-between py-4">
+                      <Link to={`/vendors/${vendor.id}`} key={vendor.id} className="flex items-center justify-between py-4 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors cursor-pointer">
                         <div className="flex items-center gap-3">
                           {vendor.color && (
                             <div className="h-4 w-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: vendor.color }} />
                           )}
                           <div>
                             <div className="font-medium">{vendor.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {[vendor.contact_email, vendor.contact_phone].filter(Boolean).join(' • ') || 'No contact info'}
+                            <div className="text-sm text-muted-foreground">
+                              {[vendor.contact_email, vendor.contact_phone].filter(Boolean).join(' • ') || 'No contact info'}
+                            </div>
                           </div>
                         </div>
-                        </div>
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openVendorDialog(vendor)}>
-                            Edit
+                          <Button variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} asChild>
+                            <Link to={`/vendors/${vendor.id}/edit`}>Edit</Link>
                           </Button>
                           <Button
                             variant="outline"
                             size="icon"
                             className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                            onClick={() => setDeleteVendorId(vendor.id)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteVendorId(vendor.id); }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}
