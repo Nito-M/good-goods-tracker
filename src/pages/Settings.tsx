@@ -329,6 +329,7 @@ export function Settings() {
       setVendorAddress(vendor.address || '');
       setVendorNotes(vendor.notes || '');
       setVendorLink(vendor.link || '');
+      setVendorColor(vendor.color || '');
     } else {
       setEditingVendor(null);
       setVendorName('');
@@ -337,6 +338,7 @@ export function Settings() {
       setVendorAddress('');
       setVendorNotes('');
       setVendorLink('');
+      setVendorColor('');
     }
     setVendorDialogOpen(true);
   };
