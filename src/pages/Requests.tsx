@@ -256,6 +256,72 @@ export function Requests() {
                 </Select>
               </div>
 
+              {/* Card - inline select */}
+              <div className="shrink-0 hidden lg:block w-28" onClick={(e) => e.stopPropagation()}>
+                <Select
+                  value={firstReq.bankCardId || "__none__"}
+                  onValueChange={async (val) => {
+                    const newCardId = val === "__none__" ? null : val;
+                    for (const r of group.requests) {
+                      await updateCardId(r.id, newCardId);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-7 text-xs border-none bg-transparent shadow-none px-1">
+                    {(() => {
+                      const card = cards.find(c => c.id === firstReq.bankCardId);
+                      return card ? (
+                        <span className="flex items-center gap-1.5 truncate" style={{ color: card.color?.startsWith('bg-') ? undefined : card.color }}>
+                          <CreditCard className="h-3 w-3 shrink-0" />
+                          {card.name}
+                        </span>
+                      ) : <SelectValue placeholder="No card" />;
+                    })()}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No card</SelectItem>
+                    {cards.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-3 w-3 shrink-0" style={{ color: c.color?.startsWith('bg-') ? undefined : c.color }} />
+                          {c.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status - inline select */}
+              <div className="shrink-0 w-28" onClick={(e) => e.stopPropagation()}>
+                <Select
+                  value={firstReq.status}
+                  onValueChange={async (val) => {
+                    const newStatus = val as RequestStatus;
+                    for (const r of group.requests) {
+                      await handleStatusChange(r.id, newStatus);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-7 text-xs border-none bg-transparent shadow-none px-1">
+                    <span className="flex items-center gap-1.5">
+                      {STATUS_CONFIG[firstReq.status]?.icon}
+                      {STATUS_CONFIG[firstReq.status]?.label}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(STATUS_CONFIG) as RequestStatus[]).map((s) => (
+                      <SelectItem key={s} value={s}>
+                        <div className="flex items-center gap-2">
+                          {STATUS_CONFIG[s].icon}
+                          {STATUS_CONFIG[s].label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Need by date */}
               {firstReq.needByDate ? (
                 <span className={`text-xs shrink-0 hidden sm:block w-24 ${isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
@@ -266,7 +332,7 @@ export function Requests() {
               )}
 
               {/* Total */}
-              <span className="text-sm font-medium text-primary w-24 text-right shrink-0">
+              <span className="text-sm font-medium text-primary w-20 text-right shrink-0">
                 {formatCurrency(groupTotal)}
               </span>
             </div>
