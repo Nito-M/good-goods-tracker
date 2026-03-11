@@ -81,6 +81,7 @@ export function TodoList() {
     setEditNotes(todo.notes || "");
     setEditRequestId(todo.requestId || "");
     setEditPurchaseOrderId(todo.purchaseOrderId || "");
+    setEditKgAmount(todo.kgAmount ? String(todo.kgAmount) : "");
   };
 
   const saveEdit = async () => {
