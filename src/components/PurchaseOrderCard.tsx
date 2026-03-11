@@ -191,6 +191,19 @@ export function PurchaseOrderCard({
                         <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Unpaid</Badge>
                       )}
                     </div>
+                    {hasAnyPdf && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = pdfAttachments[0]?.url || order.pdfUrl;
+                          if (url) window.open(url, '_blank');
+                        }}
+                        className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                        title="View PDF"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                    )}
                     {hasAnyImage && (
                       <button
                         onClick={(e) => {
