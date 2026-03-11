@@ -283,7 +283,19 @@ export function RequestDetail() {
                     onAddSubItem={(input) => addSubItem(r.id, input)}
                     onUpdateSubItem={updateSubItem}
                     onDeleteSubItem={deleteSubItem}
-                    onToggleSelected={(id) => toggleSelected(id, r.id)}
+                    onToggleSelected={async (id) => {
+                      const ok = await toggleSelected(id, r.id);
+                      if (ok) {
+                        // Find the selected sub-item and sync its price/vendor to the parent request
+                        const selectedSub = itemSubItems.find(s => s.id === id);
+                        if (selectedSub) {
+                          await updateRequest(r.id, {
+                            price: selectedSub.unitPrice,
+                            vendorName: selectedSub.vendorName,
+                          });
+                        }
+                      }
+                    }}
                     onEdit={() => navigate(`/requests/edit/${r.id}`)}
                     onDelete={canManage ? async () => {
                       if (!confirm(`Delete "${r.itemName}" from this request?`)) return;
