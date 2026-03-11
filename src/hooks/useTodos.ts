@@ -9,6 +9,7 @@ export interface Todo {
   title: string;
   isDone: boolean;
   dueDate: string | null;
+  notes: string | null;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -37,6 +38,7 @@ export function useTodos() {
           title: t.title,
           isDone: t.is_done,
           dueDate: t.due_date,
+          notes: t.notes,
           displayOrder: t.display_order,
           createdAt: t.created_at,
           updatedAt: t.updated_at,
@@ -54,7 +56,7 @@ export function useTodos() {
     fetchTodos();
   }, [fetchTodos]);
 
-  const addTodo = async (title: string, dueDate?: string | null): Promise<Todo | null> => {
+  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null): Promise<Todo | null> => {
     if (!user) return null;
     try {
       const maxOrder = todos.length > 0 ? Math.max(...todos.map((t) => t.displayOrder)) + 1 : 0;
@@ -64,6 +66,7 @@ export function useTodos() {
           user_id: user.id,
           title,
           due_date: dueDate || null,
+          notes: notes || null,
           display_order: maxOrder,
         })
         .select()
@@ -77,6 +80,7 @@ export function useTodos() {
         title: data.title,
         isDone: data.is_done,
         dueDate: data.due_date,
+        notes: data.notes,
         displayOrder: data.display_order,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
@@ -90,12 +94,13 @@ export function useTodos() {
     }
   };
 
-  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; displayOrder: number }>): Promise<boolean> => {
+  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number }>): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.isDone !== undefined) dbUpdates.is_done = updates.isDone;
       if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
 
       const { error } = await (supabase as any).from("todos").update(dbUpdates).eq("id", id);
