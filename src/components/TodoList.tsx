@@ -132,6 +132,19 @@ export function TodoList() {
   const getLinkedBadges = (todo: Todo) => {
     const badges: React.ReactNode[] = [];
 
+    // Show kg amount if set
+    if (todo.kgAmount > 0) {
+      badges.push(
+        <Badge
+          key="kg"
+          variant="outline"
+          className="text-xs shrink-0 border-primary/30 text-primary"
+        >
+          {todo.kgAmount} kg
+        </Badge>
+      );
+    }
+
     if (todo.requestId) {
       const req = requests.find((r) => r.id === todo.requestId);
       badges.push(
