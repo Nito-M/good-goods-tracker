@@ -70,6 +70,9 @@ export function Requests() {
   const [activeTab, setActiveTab] = useState<RequestStatus>("pending");
   const [filterVendor, setFilterVendor] = useState<string>("all");
   const [filterRequester, setFilterRequester] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<'lines' | 'cards'>(() => {
+    return (localStorage.getItem('requestsViewMode') as 'lines' | 'cards') || 'cards';
+  });
 
   // For regular members, only show their own requester name; admins see all
   const visibleRequesterNames = isAdminUser ?
