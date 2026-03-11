@@ -5,17 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
   Plus,
   Trash2,
-  GripVertical,
   ChevronUp,
   ChevronDown,
   Calendar,
   Pencil,
   Check,
   X,
+  ChevronDown as ChevronDownIcon,
+  ChevronRight,
 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
 
