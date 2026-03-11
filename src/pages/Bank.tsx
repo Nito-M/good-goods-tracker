@@ -94,6 +94,9 @@ function BankCardVisual({ card, transactions }: {
           {formatCurrency(card.balance)}
         </div>
         <div className="text-sm font-medium opacity-80 truncate">{card.name}</div>
+        {card.category && (
+          <div className="text-xs opacity-60 truncate">{card.category}</div>
+        )}
         <div className="mt-3 text-xs opacity-70 flex items-center gap-1">
           <DollarSign className="h-3 w-3" />
           {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} — tap to view
