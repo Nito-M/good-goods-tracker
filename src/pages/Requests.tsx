@@ -297,14 +297,17 @@ export function Requests() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">No card</SelectItem>
-                    {cards.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-3 w-3 shrink-0" style={{ color: c.color?.startsWith('bg-') ? undefined : c.color }} />
-                          {c.name}
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {cards.map((c) => {
+                      const cColor = getCardCssColor(c.color);
+                      return (
+                        <SelectItem key={c.id} value={c.id}>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-3 w-3 shrink-0" style={cColor ? { color: cColor } : undefined} />
+                            {c.name}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
