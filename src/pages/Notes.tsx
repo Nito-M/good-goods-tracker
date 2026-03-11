@@ -332,11 +332,31 @@ export function Notes() {
             Capture ideas, lists, and more
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Note
-        </Button>
       </div>
+
+      <Tabs defaultValue="notes" className="w-full">
+        <div className="flex items-center justify-between gap-4">
+          <TabsList>
+            <TabsTrigger value="notes" className="gap-2">
+              <StickyNote className="h-4 w-4" />
+              Notes
+            </TabsTrigger>
+            <TabsTrigger value="todos" className="gap-2">
+              <ListTodo className="h-4 w-4" />
+              To-Do
+            </TabsTrigger>
+          </TabsList>
+          <Button onClick={() => setIsCreating(true)} className="shrink-0">
+            <Plus className="h-4 w-4 mr-2" />
+            New Note
+          </Button>
+        </div>
+
+        <TabsContent value="todos" className="mt-4">
+          <TodoList />
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-4">
 
       {/* Search */}
       <div className="relative max-w-md">
