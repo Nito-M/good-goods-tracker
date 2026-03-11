@@ -41,6 +41,8 @@ export function useTodos() {
           isDone: t.is_done,
           dueDate: t.due_date,
           notes: t.notes,
+          requestId: t.request_id,
+          purchaseOrderId: t.purchase_order_id,
           displayOrder: t.display_order,
           createdAt: t.created_at,
           updatedAt: t.updated_at,
