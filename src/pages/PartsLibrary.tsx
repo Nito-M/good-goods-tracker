@@ -335,8 +335,17 @@ export function PartsLibrary() {
                           <Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} />
                         </div>
                       )}
-                      <div className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center">
-                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-3xl">—</span>}
+                      <div 
+                        className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (part.imageUrl) {
+                            setViewerImageUrl(part.imageUrl);
+                            setViewerOpen(true);
+                          }
+                        }}
+                      >
+                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
                       </div>
                       <CardContent className="p-3">
                         <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
