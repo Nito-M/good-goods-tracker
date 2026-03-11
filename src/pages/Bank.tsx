@@ -105,8 +105,8 @@ function BankCardVisual({ card, transactions }: {
 
 
 interface CardFormProps {
-  initial?: { name: string; balance: string; color: string };
-  onSave: (name: string, balance: number, color: string) => void;
+  initial?: { name: string; balance: string; color: string; category: string };
+  onSave: (name: string, balance: number, color: string, category: string | null) => void;
   onCancel: () => void;
   saveLabel?: string;
 }
@@ -115,10 +115,11 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
   const [name, setName] = useState(initial?.name ?? '');
   const [balance, setBalance] = useState(initial?.balance ?? '');
   const [color, setColor] = useState(initial?.color ?? CARD_COLORS[0].value);
+  const [category, setCategory] = useState(initial?.category ?? '');
 
   const handleSave = () => {
     if (!name.trim()) return;
-    onSave(name.trim(), parseFloat(balance) || 0, color);
+    onSave(name.trim(), parseFloat(balance) || 0, color, category.trim() || null);
   };
 
   return (
@@ -126,6 +127,10 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
       <div className="space-y-2">
         <Label>Card Name</Label>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Business Visa" />
+      </div>
+      <div className="space-y-2">
+        <Label>Category <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Business, Personal, Petty Cash" />
       </div>
       <div className="space-y-2">
         <Label>Balance ($)</Label>
