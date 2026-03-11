@@ -44,6 +44,7 @@ export function TodoList() {
   const [newNotes, setNewNotes] = useState("");
   const [newRequestId, setNewRequestId] = useState<string>("");
   const [newPurchaseOrderId, setNewPurchaseOrderId] = useState<string>("");
+  const [newKgAmount, setNewKgAmount] = useState<string>("");
   const [showAddNotes, setShowAddNotes] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -51,6 +52,7 @@ export function TodoList() {
   const [editNotes, setEditNotes] = useState("");
   const [editRequestId, setEditRequestId] = useState<string>("");
   const [editPurchaseOrderId, setEditPurchaseOrderId] = useState<string>("");
+  const [editKgAmount, setEditKgAmount] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleAdd = async () => {
@@ -60,13 +62,15 @@ export function TodoList() {
       newDueDate || null,
       newNotes || null,
       newRequestId || null,
-      newPurchaseOrderId || null
+      newPurchaseOrderId || null,
+      newKgAmount ? parseFloat(newKgAmount) : 0
     );
     setNewTitle("");
     setNewDueDate("");
     setNewNotes("");
     setNewRequestId("");
     setNewPurchaseOrderId("");
+    setNewKgAmount("");
     setShowAddNotes(false);
   };
 
@@ -77,6 +81,7 @@ export function TodoList() {
     setEditNotes(todo.notes || "");
     setEditRequestId(todo.requestId || "");
     setEditPurchaseOrderId(todo.purchaseOrderId || "");
+    setEditKgAmount(todo.kgAmount ? String(todo.kgAmount) : "");
   };
 
   const saveEdit = async () => {
@@ -87,6 +92,7 @@ export function TodoList() {
       notes: editNotes || null,
       requestId: editRequestId || null,
       purchaseOrderId: editPurchaseOrderId || null,
+      kgAmount: editKgAmount ? parseFloat(editKgAmount) : 0,
     });
     setEditingId(null);
   };
@@ -125,6 +131,19 @@ export function TodoList() {
 
   const getLinkedBadges = (todo: Todo) => {
     const badges: React.ReactNode[] = [];
+
+    // Show kg amount if set
+    if (todo.kgAmount > 0) {
+      badges.push(
+        <Badge
+          key="kg"
+          variant="outline"
+          className="text-xs shrink-0 border-primary/30 text-primary"
+        >
+          {todo.kgAmount} kg
+        </Badge>
+      );
+    }
 
     if (todo.requestId) {
       const req = requests.find((r) => r.id === todo.requestId);
@@ -268,12 +287,23 @@ export function TodoList() {
               onChange={(e) => setNewNotes(e.target.value)}
               className="min-h-[60px]"
             />
-            <LinkSelectors
-              requestId={newRequestId}
-              setRequestId={(v) => setNewRequestId(v === "none" ? "" : v)}
-              purchaseOrderId={newPurchaseOrderId}
-              setPurchaseOrderId={(v) => setNewPurchaseOrderId(v === "none" ? "" : v)}
-            />
+            <div className="flex gap-2 flex-wrap items-center">
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={newKgAmount}
+                onChange={(e) => setNewKgAmount(e.target.value)}
+                placeholder="Amount (kg)..."
+                className="h-8 w-32"
+              />
+              <LinkSelectors
+                requestId={newRequestId}
+                setRequestId={(v) => setNewRequestId(v === "none" ? "" : v)}
+                purchaseOrderId={newPurchaseOrderId}
+                setPurchaseOrderId={(v) => setNewPurchaseOrderId(v === "none" ? "" : v)}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -410,12 +440,23 @@ export function TodoList() {
                     onChange={(e) => setEditNotes(e.target.value)}
                     className="min-h-[60px] text-sm"
                   />
-                  <LinkSelectors
-                    requestId={editRequestId}
-                    setRequestId={(v) => setEditRequestId(v === "none" ? "" : v)}
-                    purchaseOrderId={editPurchaseOrderId}
-                    setPurchaseOrderId={(v) => setEditPurchaseOrderId(v === "none" ? "" : v)}
-                  />
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editKgAmount}
+                      onChange={(e) => setEditKgAmount(e.target.value)}
+                      placeholder="Amount (kg)..."
+                      className="h-8 w-32 text-sm"
+                    />
+                    <LinkSelectors
+                      requestId={editRequestId}
+                      setRequestId={(v) => setEditRequestId(v === "none" ? "" : v)}
+                      purchaseOrderId={editPurchaseOrderId}
+                      setPurchaseOrderId={(v) => setEditPurchaseOrderId(v === "none" ? "" : v)}
+                    />
+                  </div>
                 </div>
               )}
             </div>

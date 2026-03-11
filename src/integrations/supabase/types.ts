@@ -2451,6 +2451,7 @@ export type Database = {
           due_date: string | null
           id: string
           is_done: boolean
+          kg_amount: number | null
           notes: string | null
           purchase_order_id: string | null
           request_id: string | null
@@ -2464,6 +2465,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_done?: boolean
+          kg_amount?: number | null
           notes?: string | null
           purchase_order_id?: string | null
           request_id?: string | null
@@ -2477,6 +2479,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_done?: boolean
+          kg_amount?: number | null
           notes?: string | null
           purchase_order_id?: string | null
           request_id?: string | null
