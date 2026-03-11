@@ -203,11 +203,14 @@ export function TodoList() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">No PO</SelectItem>
-          {orders.map((o) => (
-            <SelectItem key={o.id} value={o.id}>
-              {o.poNumber} — {o.itemName}
-            </SelectItem>
-          ))}
+          {orders.map((o) => {
+            const firstItem = Array.isArray(o.items) && o.items.length > 0 ? (o.items[0] as any)?.itemName : "";
+            return (
+              <SelectItem key={o.id} value={o.id}>
+                {o.poNumber} — {firstItem || "PO"}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>
