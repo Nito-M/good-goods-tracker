@@ -44,6 +44,7 @@ export function TodoList() {
   const [newNotes, setNewNotes] = useState("");
   const [newRequestId, setNewRequestId] = useState<string>("");
   const [newPurchaseOrderId, setNewPurchaseOrderId] = useState<string>("");
+  const [newKgAmount, setNewKgAmount] = useState<string>("");
   const [showAddNotes, setShowAddNotes] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -51,6 +52,7 @@ export function TodoList() {
   const [editNotes, setEditNotes] = useState("");
   const [editRequestId, setEditRequestId] = useState<string>("");
   const [editPurchaseOrderId, setEditPurchaseOrderId] = useState<string>("");
+  const [editKgAmount, setEditKgAmount] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleAdd = async () => {
