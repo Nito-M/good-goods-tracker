@@ -107,6 +107,7 @@ export type Database = {
       bank_cards: {
         Row: {
           balance: number
+          category: string | null
           color: string
           created_at: string
           id: string
@@ -116,6 +117,7 @@ export type Database = {
         }
         Insert: {
           balance?: number
+          category?: string | null
           color?: string
           created_at?: string
           id?: string
@@ -125,6 +127,7 @@ export type Database = {
         }
         Update: {
           balance?: number
+          category?: string | null
           color?: string
           created_at?: string
           id?: string
