@@ -553,6 +553,36 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/vendors/new"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddVendor />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendors/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <VendorDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vendors/:id/edit"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddVendor />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
         {/* Public shop routes - no auth required, wrapped in CartProvider */}
         <Route path="/shop/:slug" element={<CartProvider><PublicShop /></CartProvider>} />
         <Route path="/shop/:slug/category/:category" element={<CartProvider><PublicShopCategory /></CartProvider>} />
