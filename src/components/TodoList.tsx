@@ -1,11 +1,21 @@
 import { useState } from "react";
 import { useTodos, Todo } from "@/hooks/useTodos";
+import { useRequests } from "@/hooks/useRequests";
+import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   Plus,
@@ -18,27 +28,45 @@ import {
   X,
   ChevronDown as ChevronDownIcon,
   ChevronRight,
+  FileText,
+  ShoppingCart,
+  Link2,
 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
 
 export function TodoList() {
   const { todos, loading, addTodo, updateTodo, deleteTodo, reorderTodos } = useTodos();
+  const { requests } = useRequests();
+  const { orders } = usePurchaseOrders();
+  const navigate = useNavigate();
   const [newTitle, setNewTitle] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [newRequestId, setNewRequestId] = useState<string>("");
+  const [newPurchaseOrderId, setNewPurchaseOrderId] = useState<string>("");
   const [showAddNotes, setShowAddNotes] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [editRequestId, setEditRequestId] = useState<string>("");
+  const [editPurchaseOrderId, setEditPurchaseOrderId] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleAdd = async () => {
     if (!newTitle.trim()) return;
-    await addTodo(newTitle.trim(), newDueDate || null, newNotes || null);
+    await addTodo(
+      newTitle.trim(),
+      newDueDate || null,
+      newNotes || null,
+      newRequestId || null,
+      newPurchaseOrderId || null
+    );
     setNewTitle("");
     setNewDueDate("");
     setNewNotes("");
+    setNewRequestId("");
+    setNewPurchaseOrderId("");
     setShowAddNotes(false);
   };
 
@@ -47,6 +75,8 @@ export function TodoList() {
     setEditTitle(todo.title);
     setEditDueDate(todo.dueDate ? todo.dueDate.split("T")[0] : "");
     setEditNotes(todo.notes || "");
+    setEditRequestId(todo.requestId || "");
+    setEditPurchaseOrderId(todo.purchaseOrderId || "");
   };
 
   const saveEdit = async () => {
@@ -55,6 +85,8 @@ export function TodoList() {
       title: editTitle.trim(),
       dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
       notes: editNotes || null,
+      requestId: editRequestId || null,
+      purchaseOrderId: editPurchaseOrderId || null,
     });
     setEditingId(null);
   };
@@ -90,6 +122,96 @@ export function TodoList() {
       </Badge>
     );
   };
+
+  const getLinkedBadges = (todo: Todo) => {
+    const badges: React.ReactNode[] = [];
+
+    if (todo.requestId) {
+      const req = requests.find((r) => r.id === todo.requestId);
+      badges.push(
+        <Badge
+          key="req"
+          variant="outline"
+          className="text-xs shrink-0 cursor-pointer hover:bg-accent border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/requests/${todo.requestId}`);
+          }}
+        >
+          <FileText className="h-3 w-3 mr-1" />
+          {req?.requestNumber || "Request"}
+        </Badge>
+      );
+    }
+
+    if (todo.purchaseOrderId) {
+      const po = orders.find((o) => o.id === todo.purchaseOrderId);
+      badges.push(
+        <Badge
+          key="po"
+          variant="outline"
+          className="text-xs shrink-0 cursor-pointer hover:bg-accent border-green-300 dark:border-green-700 text-green-600 dark:text-green-400"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/purchase-orders`);
+          }}
+        >
+          <ShoppingCart className="h-3 w-3 mr-1" />
+          {po?.poNumber || "PO"}
+        </Badge>
+      );
+    }
+
+    return badges;
+  };
+
+  const LinkSelectors = ({
+    requestId,
+    setRequestId,
+    purchaseOrderId,
+    setPurchaseOrderId,
+  }: {
+    requestId: string;
+    setRequestId: (v: string) => void;
+    purchaseOrderId: string;
+    setPurchaseOrderId: (v: string) => void;
+  }) => (
+    <div className="flex gap-2 flex-wrap">
+      <Select value={requestId} onValueChange={setRequestId}>
+        <SelectTrigger className="h-8 w-48 text-xs">
+          <div className="flex items-center gap-1">
+            <FileText className="h-3 w-3" />
+            <SelectValue placeholder="Link Request..." />
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">No Request</SelectItem>
+          {requests.map((r) => (
+            <SelectItem key={r.id} value={r.id}>
+              {r.requestNumber} — {r.itemName}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={purchaseOrderId} onValueChange={setPurchaseOrderId}>
+        <SelectTrigger className="h-8 w-48 text-xs">
+          <div className="flex items-center gap-1">
+            <ShoppingCart className="h-3 w-3" />
+            <SelectValue placeholder="Link PO..." />
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">No PO</SelectItem>
+          {orders.map((o) => (
+            <SelectItem key={o.id} value={o.id}>
+              {o.poNumber} — {o.itemName}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   const pendingTodos = todos.filter((t) => !t.isDone);
   const doneTodos = todos.filter((t) => t.isDone);
@@ -127,7 +249,7 @@ export function TodoList() {
             size="icon"
             onClick={() => setShowAddNotes(!showAddNotes)}
             className={cn("shrink-0", showAddNotes && "bg-accent")}
-            title="Add notes"
+            title="More options"
           >
             {showAddNotes ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
@@ -136,12 +258,20 @@ export function TodoList() {
           </Button>
         </div>
         {showAddNotes && (
-          <Textarea
-            placeholder="Add notes (optional)..."
-            value={newNotes}
-            onChange={(e) => setNewNotes(e.target.value)}
-            className="min-h-[60px]"
-          />
+          <div className="space-y-2 ml-0">
+            <Textarea
+              placeholder="Add notes (optional)..."
+              value={newNotes}
+              onChange={(e) => setNewNotes(e.target.value)}
+              className="min-h-[60px]"
+            />
+            <LinkSelectors
+              requestId={newRequestId}
+              setRequestId={(v) => setNewRequestId(v === "none" ? "" : v)}
+              purchaseOrderId={newPurchaseOrderId}
+              setPurchaseOrderId={(v) => setNewPurchaseOrderId(v === "none" ? "" : v)}
+            />
+          </div>
         )}
       </div>
 
@@ -158,6 +288,7 @@ export function TodoList() {
           const isEditing = editingId === todo.id;
           const isExpanded = expandedId === todo.id;
           const itemNumber = idx + 1;
+          const linkedBadges = getLinkedBadges(todo);
 
           return (
             <div
@@ -205,6 +336,7 @@ export function TodoList() {
                     >
                       {todo.title}
                     </span>
+                    {linkedBadges}
                     {getDueDateBadge(todo.dueDate)}
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
@@ -212,7 +344,7 @@ export function TodoList() {
                         variant="ghost"
                         className="h-7 w-7"
                         onClick={() => setExpandedId(isExpanded ? null : todo.id)}
-                        title={isExpanded ? "Hide notes" : "Show notes"}
+                        title={isExpanded ? "Hide details" : "Show details"}
                       >
                         {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                       </Button>
@@ -255,21 +387,31 @@ export function TodoList() {
                 )}
               </div>
               
-              {/* Expanded notes section */}
-              {isExpanded && !isEditing && todo.notes && (
-                <div className="ml-12 text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
-                  {todo.notes}
+              {/* Expanded notes & links section */}
+              {isExpanded && !isEditing && (
+                <div className="ml-12 space-y-1">
+                  {todo.notes && (
+                    <div className="text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
+                      {todo.notes}
+                    </div>
+                  )}
                 </div>
               )}
               
-              {/* Edit notes section */}
+              {/* Edit section with link selectors */}
               {isEditing && (
-                <div className="ml-12">
+                <div className="ml-12 space-y-2">
                   <Textarea
                     placeholder="Add notes..."
                     value={editNotes}
                     onChange={(e) => setEditNotes(e.target.value)}
                     className="min-h-[60px] text-sm"
+                  />
+                  <LinkSelectors
+                    requestId={editRequestId}
+                    setRequestId={(v) => setEditRequestId(v === "none" ? "" : v)}
+                    purchaseOrderId={editPurchaseOrderId}
+                    setPurchaseOrderId={(v) => setEditPurchaseOrderId(v === "none" ? "" : v)}
                   />
                 </div>
               )}
@@ -286,6 +428,7 @@ export function TodoList() {
           </p>
           {doneTodos.map((todo, idx) => {
             const isExpanded = expandedId === todo.id;
+            const linkedBadges = getLinkedBadges(todo);
             return (
               <div
                 key={todo.id}
@@ -304,9 +447,10 @@ export function TodoList() {
                   <span className="flex-1 text-sm line-through text-muted-foreground">
                     {todo.title}
                   </span>
+                  {linkedBadges}
                   {getDueDateBadge(todo.dueDate)}
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {todo.notes && (
+                    {(todo.notes) && (
                       <Button
                         size="icon"
                         variant="ghost"
