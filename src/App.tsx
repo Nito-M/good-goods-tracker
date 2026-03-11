@@ -49,6 +49,8 @@ import { PublicProductDetail } from "./pages/PublicProductDetail";
 import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { TripPlanDetail } from "./pages/TripPlanDetail";
+import { VendorDetail } from "./pages/VendorDetail";
+import { AddVendor } from "./pages/AddVendor";
 import { EditTripPlan } from "./pages/EditTripPlan";
 import { CompanyDetail } from "./pages/CompanyDetail";
 import { useInventory } from "@/hooks/useInventory";
