@@ -10,6 +10,7 @@ import { usePartFolders } from '@/hooks/usePartFolders';
 import { PartsCsvImport } from '@/components/PartsCsvImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -37,6 +38,8 @@ export function PartsLibrary() {
   const [viewMode, setViewMode] = useState<'lines' | 'cards'>(() => {
     return (localStorage.getItem('partsLibraryViewMode') as 'lines' | 'cards') || 'lines';
   });
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const { toast } = useToast();
 
   const loading = partsLoading || foldersLoading;
@@ -291,7 +294,16 @@ export function PartsLibrary() {
                           <Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} />
                         </div>
                       )}
-                      <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0">
+                      <div 
+                        className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (part.imageUrl) {
+                            setViewerImageUrl(part.imageUrl);
+                            setViewerOpen(true);
+                          }
+                        }}
+                      >
                         {part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>}
                       </div>
                       <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
@@ -323,8 +335,17 @@ export function PartsLibrary() {
                           <Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} />
                         </div>
                       )}
-                      <div className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center">
-                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-3xl">—</span>}
+                      <div 
+                        className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (part.imageUrl) {
+                            setViewerImageUrl(part.imageUrl);
+                            setViewerOpen(true);
+                          }
+                        }}
+                      >
+                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
                       </div>
                       <CardContent className="p-3">
                         <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
@@ -454,6 +475,14 @@ export function PartsLibrary() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Image Viewer Dialog */}
+      <ImageViewerDialog
+        imageUrl={viewerImageUrl}
+        alt="Part"
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
     </div>
   );
 }
@@ -492,7 +521,7 @@ function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onM
   );
 }
 
-function PartImage({ storagePath }: { storagePath: string }) {
+function PartImage({ storagePath, className }: { storagePath: string; className?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const { getSignedUrl } = useParts();
 
@@ -501,5 +530,5 @@ function PartImage({ storagePath }: { storagePath: string }) {
   }, [storagePath]);
 
   if (!url) return <span className="text-muted-foreground text-sm">Loading...</span>;
-  return <img src={url} alt="Part" className="w-full h-full object-contain" />;
+  return <img src={url} alt="Part" className={className || "w-full h-full object-contain"} />;
 }
