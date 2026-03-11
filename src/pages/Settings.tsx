@@ -816,8 +816,12 @@ export function Settings() {
                   <div className="divide-y divide-border">
                     {filteredVendors.map((vendor) => (
                       <div key={vendor.id} className="flex items-center justify-between py-4">
-                        <div>
-                          <div className="font-medium">{vendor.name}</div>
+                        <div className="flex items-center gap-3">
+                          {vendor.color && (
+                            <div className="h-4 w-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: vendor.color }} />
+                          )}
+                          <div>
+                            <div className="font-medium">{vendor.name}</div>
                           <div className="text-sm text-muted-foreground">
                             {[vendor.contact_email, vendor.contact_phone].filter(Boolean).join(' • ') || 'No contact info'}
                           </div>
