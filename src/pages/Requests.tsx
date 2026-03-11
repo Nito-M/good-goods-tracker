@@ -286,8 +286,9 @@ export function Requests() {
                   <SelectTrigger className="h-7 text-xs border-none bg-transparent shadow-none px-1">
                     {(() => {
                       const card = cards.find(c => c.id === firstReq.bankCardId);
+                      const cardColor = card ? getCardCssColor(card.color) : undefined;
                       return card ? (
-                        <span className="flex items-center gap-1.5 truncate" style={{ color: card.color?.startsWith('bg-') ? undefined : card.color }}>
+                        <span className="flex items-center gap-1.5 truncate" style={cardColor ? { color: cardColor } : undefined}>
                           <CreditCard className="h-3 w-3 shrink-0" />
                           {card.name}
                         </span>
