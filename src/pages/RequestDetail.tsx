@@ -459,9 +459,16 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
         <TableCell className="text-right font-semibold">{formatCurrency(lineTotal)}</TableCell>
         <TableCell>
           {canManage && (
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              {onDelete && (
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
           )}
         </TableCell>
       </TableRow>
