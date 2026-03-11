@@ -2444,6 +2444,39 @@ export type Database = {
           },
         ]
       }
+      todos: {
+        Row: {
+          created_at: string
+          display_order: number
+          due_date: string | null
+          id: string
+          is_done: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          due_date?: string | null
+          id?: string
+          is_done?: boolean
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          due_date?: string | null
+          id?: string
+          is_done?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trip_plan_locations: {
         Row: {
           address: string | null

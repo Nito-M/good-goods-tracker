@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { useNotes } from "@/hooks/useNotes";
 import { Note, NoteColor } from "@/types/note";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TodoList } from "@/components/TodoList";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -43,6 +45,7 @@ import {
   Code,
   Minus,
   Palette,
+  ListTodo,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -329,11 +332,31 @@ export function Notes() {
             Capture ideas, lists, and more
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Note
-        </Button>
       </div>
+
+      <Tabs defaultValue="notes" className="w-full">
+        <div className="flex items-center justify-between gap-4">
+          <TabsList>
+            <TabsTrigger value="notes" className="gap-2">
+              <StickyNote className="h-4 w-4" />
+              Notes
+            </TabsTrigger>
+            <TabsTrigger value="todos" className="gap-2">
+              <ListTodo className="h-4 w-4" />
+              To-Do
+            </TabsTrigger>
+          </TabsList>
+          <Button onClick={() => setIsCreating(true)} className="shrink-0">
+            <Plus className="h-4 w-4 mr-2" />
+            New Note
+          </Button>
+        </div>
+
+        <TabsContent value="todos" className="mt-4">
+          <TodoList />
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-4">
 
       {/* Search */}
       <div className="relative max-w-md">
@@ -393,6 +416,8 @@ export function Notes() {
           )}
         </div>
       )}
+        </TabsContent>
+      </Tabs>
 
       {/* Create Note Dialog */}
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
