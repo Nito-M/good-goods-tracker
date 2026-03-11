@@ -542,6 +542,26 @@ export function Requests() {
 
       {/* Header */}
       <div className="flex justify-end gap-4 bg-inherit">
+        <div className="flex items-center border border-border rounded-md overflow-hidden">
+          <Button
+            variant={viewMode === 'lines' ? 'default' : 'ghost'}
+            size="icon"
+            className="rounded-none h-9 w-9"
+            onClick={() => { setViewMode('lines'); localStorage.setItem('requestsViewMode', 'lines'); }}
+            title="List view"
+          >
+            <LayoutList className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'cards' ? 'default' : 'ghost'}
+            size="icon"
+            className="rounded-none h-9 w-9"
+            onClick={() => { setViewMode('cards'); localStorage.setItem('requestsViewMode', 'cards'); }}
+            title="Card view"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
         <Button onClick={() => navigate("/requests/new")}>
           <Plus className="h-4 w-4 mr-2" />
           New Request
