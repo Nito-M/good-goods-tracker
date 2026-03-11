@@ -137,6 +137,9 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
                       <div className="flex items-center gap-2">
                         <div className={`h-3 w-3 rounded-full bg-gradient-to-br ${card.color} shrink-0`} />
                         {card.name}
+                        {card.category && (
+                          <span className="text-xs text-muted-foreground">({card.category})</span>
+                        )}
                       </div>
                     </SelectItem>
                   ))}
