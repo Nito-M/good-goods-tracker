@@ -282,6 +282,11 @@ export function RequestDetail() {
                     onDeleteSubItem={deleteSubItem}
                     onToggleSelected={(id) => toggleSelected(id, r.id)}
                     onEdit={() => navigate(`/requests/edit/${r.id}`)}
+                    onDelete={canManage ? async () => {
+                      if (!confirm(`Delete "${r.itemName}" from this request?`)) return;
+                      await deleteRequest(r.id);
+                      if (groupRequests.length <= 1) navigate("/requests");
+                    } : undefined}
                   />
                 );
               })}
@@ -356,9 +361,10 @@ interface RequestItemRowProps {
   onDeleteSubItem: (id: string) => Promise<boolean>;
   onToggleSelected: (id: string) => Promise<boolean>;
   onEdit: () => void;
+  onDelete?: () => void;
 }
 
-function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubItem, onUpdateSubItem, onDeleteSubItem, onToggleSelected, onEdit }: RequestItemRowProps) {
+function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubItem, onUpdateSubItem, onDeleteSubItem, onToggleSelected, onEdit, onDelete }: RequestItemRowProps) {
   const [open, setOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -458,9 +464,16 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
         <TableCell className="text-right font-semibold">{formatCurrency(lineTotal)}</TableCell>
         <TableCell>
           {canManage && (
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
+            <div className="flex items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              {onDelete && (
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={onDelete}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
           )}
         </TableCell>
       </TableRow>
