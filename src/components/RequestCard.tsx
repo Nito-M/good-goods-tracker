@@ -154,6 +154,9 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className={`h-4 w-4 rounded-full bg-gradient-to-br ${card.color} shrink-0`} />
                 <span>{card.name}</span>
+                {card.category && (
+                  <span className="text-xs">({card.category})</span>
+                )}
               </div>
             ) : null;
           })()}
