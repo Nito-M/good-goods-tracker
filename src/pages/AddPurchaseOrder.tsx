@@ -423,7 +423,7 @@ export function AddPurchaseOrder() {
               {vendorId && vendorId !== 'none' && lineItems.map((lineItem, index) => (
                 <div
                   key={lineItem.id}
-                  className="p-3 rounded-lg border bg-muted/30"
+                  className="p-3 rounded-lg border bg-muted/30 overflow-hidden"
                 >
                   {/* Custom item fields - only when explicitly custom */}
                   {lineItem.selectedItemId === 'custom' && (
@@ -440,7 +440,7 @@ export function AddPurchaseOrder() {
                           Switch to inventory
                         </Button>
                       </div>
-                      <div className="grid grid-cols-[1fr_100px_120px_100px_40px] gap-3 items-end">
+                      <div className="grid grid-cols-[minmax(0,1fr)_100px_120px_100px_40px] gap-3 items-end">
                         <div className="space-y-1">
                           <Label className="text-xs">Item Name *</Label>
                           <Input
@@ -509,7 +509,7 @@ export function AddPurchaseOrder() {
 
                   {/* Inventory item selection */}
                   {lineItem.selectedItemId !== 'custom' && (
-                    <div className="grid grid-cols-[1fr_100px_120px_100px_40px] gap-3 items-end">
+                    <div className="grid grid-cols-[minmax(0,1fr)_100px_120px_100px_40px] gap-3 items-end">
                       <div className="space-y-1">
                         <Label className="text-xs">Item</Label>
                         <ItemSearchCombobox
