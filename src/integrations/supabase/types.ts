@@ -2452,6 +2452,8 @@ export type Database = {
           id: string
           is_done: boolean
           notes: string | null
+          purchase_order_id: string | null
+          request_id: string | null
           title: string
           updated_at: string
           user_id: string
@@ -2463,6 +2465,8 @@ export type Database = {
           id?: string
           is_done?: boolean
           notes?: string | null
+          purchase_order_id?: string | null
+          request_id?: string | null
           title?: string
           updated_at?: string
           user_id: string
@@ -2474,11 +2478,28 @@ export type Database = {
           id?: string
           is_done?: boolean
           notes?: string | null
+          purchase_order_id?: string | null
+          request_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "todos_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "todos_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trip_plan_locations: {
         Row: {
