@@ -440,7 +440,7 @@ export function AddPurchaseOrder() {
                           Switch to inventory
                         </Button>
                       </div>
-                      <div className="grid grid-cols-[1fr_100px_120px_100px_40px] gap-3 items-end">
+                      <div className="grid grid-cols-[minmax(0,1fr)_100px_120px_100px_40px] gap-3 items-end">
                         <div className="space-y-1">
                           <Label className="text-xs">Item Name *</Label>
                           <Input
