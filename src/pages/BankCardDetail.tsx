@@ -165,7 +165,7 @@ export function BankCardDetail() {
 
   const handleEdit = async () => {
     if (!id || !editName.trim()) return;
-    await updateCard(id, { name: editName.trim(), color: editColor });
+    await updateCard(id, { name: editName.trim(), color: editColor, category: editCategory.trim() || null });
     await refetchCards();
     setEditOpen(false);
   };
