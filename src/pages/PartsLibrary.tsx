@@ -10,6 +10,7 @@ import { usePartFolders } from '@/hooks/usePartFolders';
 import { PartsCsvImport } from '@/components/PartsCsvImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
