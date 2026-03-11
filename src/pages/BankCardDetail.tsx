@@ -331,6 +331,10 @@ export function BankCardDetail() {
               <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="e.g. Business Visa" />
             </div>
             <div className="space-y-2">
+              <Label>Category <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} placeholder="e.g. Business, Personal, Petty Cash" />
+            </div>
+            <div className="space-y-2">
               <Label>Color</Label>
               <div className="flex gap-2 flex-wrap">
                 {CARD_COLORS.map((c) => (
