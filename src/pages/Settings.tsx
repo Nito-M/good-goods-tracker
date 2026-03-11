@@ -352,6 +352,7 @@ export function Settings() {
       address: vendorAddress || null,
       notes: vendorNotes || null,
       link: vendorLink || null,
+      color: vendorColor || null,
     };
 
     if (editingVendor) {
