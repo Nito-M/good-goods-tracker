@@ -94,6 +94,9 @@ function BankCardVisual({ card, transactions }: {
           {formatCurrency(card.balance)}
         </div>
         <div className="text-sm font-medium opacity-80 truncate">{card.name}</div>
+        {card.category && (
+          <div className="text-xs opacity-60 truncate">{card.category}</div>
+        )}
         <div className="mt-3 text-xs opacity-70 flex items-center gap-1">
           <DollarSign className="h-3 w-3" />
           {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} — tap to view
@@ -105,8 +108,8 @@ function BankCardVisual({ card, transactions }: {
 
 
 interface CardFormProps {
-  initial?: { name: string; balance: string; color: string };
-  onSave: (name: string, balance: number, color: string) => void;
+  initial?: { name: string; balance: string; color: string; category: string };
+  onSave: (name: string, balance: number, color: string, category: string | null) => void;
   onCancel: () => void;
   saveLabel?: string;
 }
@@ -115,10 +118,11 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
   const [name, setName] = useState(initial?.name ?? '');
   const [balance, setBalance] = useState(initial?.balance ?? '');
   const [color, setColor] = useState(initial?.color ?? CARD_COLORS[0].value);
+  const [category, setCategory] = useState(initial?.category ?? '');
 
   const handleSave = () => {
     if (!name.trim()) return;
-    onSave(name.trim(), parseFloat(balance) || 0, color);
+    onSave(name.trim(), parseFloat(balance) || 0, color, category.trim() || null);
   };
 
   return (
@@ -126,6 +130,10 @@ function CardForm({ initial, onSave, onCancel, saveLabel = 'Add Card' }: CardFor
       <div className="space-y-2">
         <Label>Card Name</Label>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Business Visa" />
+      </div>
+      <div className="space-y-2">
+        <Label>Category <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Business, Personal, Petty Cash" />
       </div>
       <div className="space-y-2">
         <Label>Balance ($)</Label>
@@ -251,8 +259,8 @@ export function Bank() {
                 <DialogContent>
                   <DialogHeader><DialogTitle>Add Bank Card</DialogTitle></DialogHeader>
                   <CardForm
-                    onSave={async (name, bal, color) => {
-                      const ok = await addCard(name, bal, color);
+                    onSave={async (name, bal, color, category) => {
+                      const ok = await addCard(name, bal, color, category);
                       if (ok) setAddCardOpen(false);
                     }}
                     onCancel={() => setAddCardOpen(false)}

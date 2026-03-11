@@ -9,6 +9,7 @@ export interface BankCard {
   name: string;
   balance: number;
   color: string;
+  category: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,12 +29,13 @@ export function useBankCards() {
         .order('created_at', { ascending: true });
       if (error) throw error;
       setCards(
-        (data || []).map((c) => ({
+        (data || []).map((c: any) => ({
           id: c.id,
           userId: c.user_id,
           name: c.name,
           balance: Number(c.balance),
           color: c.color,
+          category: c.category || null,
           createdAt: c.created_at,
           updatedAt: c.updated_at,
         }))
@@ -49,7 +51,7 @@ export function useBankCards() {
     fetchCards();
   }, [user]);
 
-  const addCard = async (name: string, balance: number, color: string) => {
+  const addCard = async (name: string, balance: number, color: string, category?: string | null) => {
     if (!user) return false;
     try {
       const { error } = await supabase.from('bank_cards').insert({
@@ -57,7 +59,8 @@ export function useBankCards() {
         name,
         balance,
         color,
-      });
+        category: category || null,
+      } as any);
       if (error) throw error;
       toast({ title: 'Card added', description: `"${name}" card created.` });
       await fetchCards();
@@ -69,12 +72,13 @@ export function useBankCards() {
     }
   };
 
-  const updateCard = async (id: string, updates: Partial<Pick<BankCard, 'name' | 'balance' | 'color'>>) => {
+  const updateCard = async (id: string, updates: Partial<Pick<BankCard, 'name' | 'balance' | 'color' | 'category'>>) => {
     try {
       const payload: Record<string, unknown> = {};
       if (updates.name !== undefined) payload.name = updates.name;
       if (updates.balance !== undefined) payload.balance = updates.balance;
       if (updates.color !== undefined) payload.color = updates.color;
+      if (updates.category !== undefined) payload.category = updates.category;
 
       const { error } = await supabase.from('bank_cards').update(payload).eq('id', id);
       if (error) throw error;

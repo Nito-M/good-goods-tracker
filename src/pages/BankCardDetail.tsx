@@ -107,6 +107,7 @@ export function BankCardDetail() {
 
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+  const [editCategory, setEditCategory] = useState('');
 
   const [editTxOpen, setEditTxOpen] = useState(false);
   const [editTxId, setEditTxId] = useState('');
@@ -158,12 +159,13 @@ export function BankCardDetail() {
     if (!card) return;
     setEditName(card.name);
     setEditColor(card.color);
+    setEditCategory(card.category || '');
     setEditOpen(true);
   };
 
   const handleEdit = async () => {
     if (!id || !editName.trim()) return;
-    await updateCard(id, { name: editName.trim(), color: editColor });
+    await updateCard(id, { name: editName.trim(), color: editColor, category: editCategory.trim() || null });
     await refetchCards();
     setEditOpen(false);
   };
@@ -327,6 +329,10 @@ export function BankCardDetail() {
             <div className="space-y-2">
               <Label>Card Name</Label>
               <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="e.g. Business Visa" />
+            </div>
+            <div className="space-y-2">
+              <Label>Category <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} placeholder="e.g. Business, Personal, Petty Cash" />
             </div>
             <div className="space-y-2">
               <Label>Color</Label>
