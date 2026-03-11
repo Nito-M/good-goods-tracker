@@ -787,10 +787,12 @@ export function Settings() {
                   <CardTitle>Vendors</CardTitle>
                   <CardDescription>Manage your suppliers and vendors</CardDescription>
                 </div>
-                <Button onClick={() => openVendorDialog()} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Vendor
-                </Button>
+                <Link to="/vendors/new">
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Vendor
+                  </Button>
+                </Link>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Search bar for vendors */}
