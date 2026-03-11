@@ -256,8 +256,8 @@ export function Bank() {
                 <DialogContent>
                   <DialogHeader><DialogTitle>Add Bank Card</DialogTitle></DialogHeader>
                   <CardForm
-                    onSave={async (name, bal, color) => {
-                      const ok = await addCard(name, bal, color);
+                    onSave={async (name, bal, color, category) => {
+                      const ok = await addCard(name, bal, color, category);
                       if (ok) setAddCardOpen(false);
                     }}
                     onCancel={() => setAddCardOpen(false)}
