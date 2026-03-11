@@ -473,6 +473,12 @@ export function PurchaseOrderCard({
                       Mark Paid
                     </Button>
                   )}
+                  {order.paidAt && onRevertPaid && (
+                    <Button size="sm" variant="outline" onClick={() => onRevertPaid(order.id)} disabled={loading} className="gap-2 border-amber-500 text-amber-600 hover:bg-amber-50">
+                      <Undo2 className="h-4 w-4" />
+                      Revert Paid
+                    </Button>
+                  )}
                   {onPreview && (
                     <Button size="sm" variant="outline" onClick={() => onPreview(order)} className="gap-2">
                       <Eye className="h-4 w-4" />
