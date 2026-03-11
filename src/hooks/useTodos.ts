@@ -10,6 +10,8 @@ export interface Todo {
   isDone: boolean;
   dueDate: string | null;
   notes: string | null;
+  requestId: string | null;
+  purchaseOrderId: string | null;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
