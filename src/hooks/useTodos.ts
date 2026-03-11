@@ -38,6 +38,7 @@ export function useTodos() {
           title: t.title,
           isDone: t.is_done,
           dueDate: t.due_date,
+          notes: t.notes,
           displayOrder: t.display_order,
           createdAt: t.created_at,
           updatedAt: t.updated_at,
