@@ -107,6 +107,7 @@ export function BankCardDetail() {
 
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+  const [editCategory, setEditCategory] = useState('');
 
   const [editTxOpen, setEditTxOpen] = useState(false);
   const [editTxId, setEditTxId] = useState('');
