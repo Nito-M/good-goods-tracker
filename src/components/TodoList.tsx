@@ -427,12 +427,23 @@ export function TodoList() {
                     onChange={(e) => setEditNotes(e.target.value)}
                     className="min-h-[60px] text-sm"
                   />
-                  <LinkSelectors
-                    requestId={editRequestId}
-                    setRequestId={(v) => setEditRequestId(v === "none" ? "" : v)}
-                    purchaseOrderId={editPurchaseOrderId}
-                    setPurchaseOrderId={(v) => setEditPurchaseOrderId(v === "none" ? "" : v)}
-                  />
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editKgAmount}
+                      onChange={(e) => setEditKgAmount(e.target.value)}
+                      placeholder="Amount (kg)..."
+                      className="h-8 w-32 text-sm"
+                    />
+                    <LinkSelectors
+                      requestId={editRequestId}
+                      setRequestId={(v) => setEditRequestId(v === "none" ? "" : v)}
+                      purchaseOrderId={editPurchaseOrderId}
+                      setPurchaseOrderId={(v) => setEditPurchaseOrderId(v === "none" ? "" : v)}
+                    />
+                  </div>
                 </div>
               )}
             </div>
