@@ -416,6 +416,8 @@ export function Notes() {
           )}
         </div>
       )}
+        </TabsContent>
+      </Tabs>
 
       {/* Create Note Dialog */}
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
