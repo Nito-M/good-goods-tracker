@@ -20,6 +20,22 @@ import { Request, RequestStatus } from "@/types/request";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
 
+const GRADIENT_COLOR_MAP: Record<string, string> = {
+  'from-blue-600': '#2563eb', 'from-purple-600': '#9333ea', 'from-green-600': '#16a34a',
+  'from-red-600': '#dc2626', 'from-orange-600': '#ea580c', 'from-pink-600': '#db2777',
+  'from-teal-600': '#0d9488', 'from-indigo-600': '#4f46e5', 'from-yellow-600': '#ca8a04',
+  'from-cyan-600': '#0891b2', 'from-emerald-600': '#059669', 'from-rose-600': '#e11d48',
+  'from-violet-600': '#7c3aed', 'from-amber-600': '#d97706', 'from-lime-600': '#65a30d',
+  'from-fuchsia-600': '#c026d3', 'from-sky-600': '#0284c7', 'from-stone-600': '#57534e',
+  'from-slate-600': '#475569', 'from-zinc-600': '#52525b', 'from-neutral-600': '#525252',
+  'from-gray-600': '#4b5563', 'from-red-500': '#ef4444', 'from-blue-500': '#3b82f6',
+  'from-green-500': '#22c55e', 'from-purple-500': '#a855f7',
+};
+function getCardCssColor(gradientClass: string): string | undefined {
+  const match = gradientClass.match(/from-\w+-\d+/);
+  return match ? GRADIENT_COLOR_MAP[match[0]] : undefined;
+}
+
 const STATUS_CONFIG: Record<RequestStatus, {label: string;icon: React.ReactNode;}> = {
   pending: { label: "Pending", icon: <Clock className="h-4 w-4" /> },
   approved: { label: "Approved", icon: <CheckCircle className="h-4 w-4" /> },
