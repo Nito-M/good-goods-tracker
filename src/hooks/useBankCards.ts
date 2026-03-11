@@ -9,6 +9,7 @@ export interface BankCard {
   name: string;
   balance: number;
   color: string;
+  category: string | null;
   createdAt: string;
   updatedAt: string;
 }
