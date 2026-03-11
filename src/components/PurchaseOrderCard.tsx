@@ -45,6 +45,7 @@ interface PurchaseOrderCardProps {
   onMarkOrdered?: (id: string) => void;
   onMarkReceived: (id: string) => void;
   onMarkPaid: (id: string) => void;
+  onRevertPaid?: (id: string) => void;
   onRevert?: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (order: PurchaseOrder) => void;
@@ -66,6 +67,7 @@ export function PurchaseOrderCard({
   onMarkOrdered,
   onMarkReceived,
   onMarkPaid,
+  onRevertPaid,
   onRevert,
   onDelete,
   onEdit,
@@ -469,6 +471,12 @@ export function PurchaseOrderCard({
                     <Button size="sm" variant="outline" onClick={() => onMarkPaid(order.id)} disabled={loading} className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50">
                       <Banknote className="h-4 w-4" />
                       Mark Paid
+                    </Button>
+                  )}
+                  {order.paidAt && onRevertPaid && (
+                    <Button size="sm" variant="outline" onClick={() => onRevertPaid(order.id)} disabled={loading} className="gap-2 border-amber-500 text-amber-600 hover:bg-amber-50">
+                      <Undo2 className="h-4 w-4" />
+                      Revert Paid
                     </Button>
                   )}
                   {onPreview && (

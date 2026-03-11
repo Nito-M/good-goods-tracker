@@ -28,7 +28,7 @@ export function PurchaseOrders() {
   const [searchParams] = useSearchParams();
   const highlightPo = searchParams.get('po');
   const { signOut } = useAuth();
-  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPartiallyReceived, markAsPaid, revertOrder, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
+  const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPartiallyReceived, markAsPaid, revertPaid, revertOrder, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
   usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
@@ -80,6 +80,12 @@ export function PurchaseOrders() {
   const handleMarkPaid = async (orderId: string) => {
     setProcessingId(orderId);
     await markAsPaid(orderId, addWithdrawal);
+    setProcessingId(null);
+  };
+
+  const handleRevertPaid = async (orderId: string) => {
+    setProcessingId(orderId);
+    await revertPaid(orderId);
     setProcessingId(null);
   };
 
@@ -305,6 +311,7 @@ export function PurchaseOrders() {
                           onMarkOrdered={handleMarkOrdered}
                           onMarkReceived={handleMarkReceived}
                           onMarkPaid={handleMarkPaid}
+                          onRevertPaid={handleRevertPaid}
                           onRevert={handleRevert}
                           onDelete={deleteOrder}
                           onEdit={handleEdit}
