@@ -106,7 +106,7 @@ export function useTodos() {
     }
   };
 
-  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number; requestId: string | null; purchaseOrderId: string | null }>): Promise<boolean> => {
+  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number; requestId: string | null; purchaseOrderId: string | null; kgAmount: number }>): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
@@ -116,6 +116,7 @@ export function useTodos() {
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
       if (updates.requestId !== undefined) dbUpdates.request_id = updates.requestId;
       if (updates.purchaseOrderId !== undefined) dbUpdates.purchase_order_id = updates.purchaseOrderId;
+      if (updates.kgAmount !== undefined) dbUpdates.kg_amount = updates.kgAmount;
 
       const { error } = await (supabase as any).from("todos").update(dbUpdates).eq("id", id);
       if (error) throw error;
