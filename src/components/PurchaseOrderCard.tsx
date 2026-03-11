@@ -67,6 +67,7 @@ export function PurchaseOrderCard({
   onMarkOrdered,
   onMarkReceived,
   onMarkPaid,
+  onRevertPaid,
   onRevert,
   onDelete,
   onEdit,
