@@ -24,7 +24,7 @@ import {
 
 export function PartsLibrary() {
   const navigate = useNavigate();
-  const { parts, loading: partsLoading, deletePart, updatePart } = useParts();
+  const { parts, loading: partsLoading, deletePart, updatePart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   const [search, setSearch] = useState('');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
