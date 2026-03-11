@@ -30,6 +30,11 @@ const GRADIENT_COLOR_MAP: Record<string, string> = {
   'from-slate-600': '#475569', 'from-zinc-600': '#52525b', 'from-neutral-600': '#525252',
   'from-gray-600': '#4b5563', 'from-red-500': '#ef4444', 'from-blue-500': '#3b82f6',
   'from-green-500': '#22c55e', 'from-purple-500': '#a855f7',
+  'from-orange-500': '#f97316', 'from-teal-500': '#14b8a6', 'from-cyan-500': '#06b6d4',
+  'from-pink-500': '#ec4899', 'from-rose-500': '#f43f5e', 'from-amber-500': '#f59e0b',
+  'from-yellow-500': '#eab308', 'from-lime-500': '#84cc16', 'from-sky-500': '#0ea5e9',
+  'from-blue-900': '#1e3a8a', 'from-green-700': '#15803d', 'from-purple-400': '#c084fc',
+  'from-red-700': '#b91c1c',
 };
 function getCardCssColor(gradientClass: string): string | undefined {
   const match = gradientClass.match(/from-\w+-\d+/);
