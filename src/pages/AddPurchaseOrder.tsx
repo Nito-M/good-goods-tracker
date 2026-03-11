@@ -423,7 +423,7 @@ export function AddPurchaseOrder() {
               {vendorId && vendorId !== 'none' && lineItems.map((lineItem, index) => (
                 <div
                   key={lineItem.id}
-                  className="p-3 rounded-lg border bg-muted/30"
+                  className="p-3 rounded-lg border bg-muted/30 overflow-hidden"
                 >
                   {/* Custom item fields - only when explicitly custom */}
                   {lineItem.selectedItemId === 'custom' && (
