@@ -1227,6 +1227,24 @@ export function Settings() {
                 rows={2}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="vendor-color">Color</Label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="vendor-color"
+                  type="color"
+                  value={vendorColor || '#6b7280'}
+                  onChange={(e) => setVendorColor(e.target.value)}
+                  className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+                />
+                <span className="text-sm text-muted-foreground">{vendorColor || 'No color set'}</span>
+                {vendorColor && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setVendorColor('')} className="text-xs h-7">
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setVendorDialogOpen(false)}>
                 Cancel
