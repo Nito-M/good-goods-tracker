@@ -10,6 +10,8 @@ export interface Todo {
   isDone: boolean;
   dueDate: string | null;
   notes: string | null;
+  requestId: string | null;
+  purchaseOrderId: string | null;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -39,6 +41,8 @@ export function useTodos() {
           isDone: t.is_done,
           dueDate: t.due_date,
           notes: t.notes,
+          requestId: t.request_id,
+          purchaseOrderId: t.purchase_order_id,
           displayOrder: t.display_order,
           createdAt: t.created_at,
           updatedAt: t.updated_at,
@@ -56,7 +60,7 @@ export function useTodos() {
     fetchTodos();
   }, [fetchTodos]);
 
-  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null): Promise<Todo | null> => {
+  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null, requestId?: string | null, purchaseOrderId?: string | null): Promise<Todo | null> => {
     if (!user) return null;
     try {
       const maxOrder = todos.length > 0 ? Math.max(...todos.map((t) => t.displayOrder)) + 1 : 0;
@@ -67,6 +71,8 @@ export function useTodos() {
           title,
           due_date: dueDate || null,
           notes: notes || null,
+          request_id: requestId || null,
+          purchase_order_id: purchaseOrderId || null,
           display_order: maxOrder,
         })
         .select()
@@ -81,6 +87,8 @@ export function useTodos() {
         isDone: data.is_done,
         dueDate: data.due_date,
         notes: data.notes,
+        requestId: data.request_id,
+        purchaseOrderId: data.purchase_order_id,
         displayOrder: data.display_order,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
@@ -94,7 +102,7 @@ export function useTodos() {
     }
   };
 
-  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number }>): Promise<boolean> => {
+  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number; requestId: string | null; purchaseOrderId: string | null }>): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
@@ -102,6 +110,8 @@ export function useTodos() {
       if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
       if (updates.displayOrder !== undefined) dbUpdates.display_order = updates.displayOrder;
+      if (updates.requestId !== undefined) dbUpdates.request_id = updates.requestId;
+      if (updates.purchaseOrderId !== undefined) dbUpdates.purchase_order_id = updates.purchaseOrderId;
 
       const { error } = await (supabase as any).from("todos").update(dbUpdates).eq("id", id);
       if (error) throw error;
