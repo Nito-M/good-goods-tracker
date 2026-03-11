@@ -72,12 +72,13 @@ export function useBankCards() {
     }
   };
 
-  const updateCard = async (id: string, updates: Partial<Pick<BankCard, 'name' | 'balance' | 'color'>>) => {
+  const updateCard = async (id: string, updates: Partial<Pick<BankCard, 'name' | 'balance' | 'color' | 'category'>>) => {
     try {
       const payload: Record<string, unknown> = {};
       if (updates.name !== undefined) payload.name = updates.name;
       if (updates.balance !== undefined) payload.balance = updates.balance;
       if (updates.color !== undefined) payload.color = updates.color;
+      if (updates.category !== undefined) payload.category = updates.category;
 
       const { error } = await supabase.from('bank_cards').update(payload).eq('id', id);
       if (error) throw error;
