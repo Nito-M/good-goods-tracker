@@ -157,8 +157,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     })();
   }, [id]);
 
+  const [formInitialized, setFormInitialized] = useState(false);
   useEffect(() => {
-    if (editItem) {
+    if (editItem && !formInitialized) {
       setName(editItem.name);
       setSku(editItem.sku);
       setCategory(editItem.category);
@@ -191,8 +192,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
         setImageUrl(editItem.imageUrl);
         setImagePreview(editItem.imageUrl);
       }
+      setFormInitialized(true);
     }
-  }, [editItem]);
+  }, [editItem, formInitialized]);
 
   // Sync location entries from existing data
   useEffect(() => {
