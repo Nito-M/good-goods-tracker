@@ -92,6 +92,7 @@ export function TodoList() {
       notes: editNotes || null,
       requestId: editRequestId || null,
       purchaseOrderId: editPurchaseOrderId || null,
+      kgAmount: editKgAmount ? parseFloat(editKgAmount) : 0,
     });
     setEditingId(null);
   };
