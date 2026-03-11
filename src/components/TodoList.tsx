@@ -25,15 +25,21 @@ export function TodoList() {
   const { todos, loading, addTodo, updateTodo, deleteTodo, reorderTodos } = useTodos();
   const [newTitle, setNewTitle] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
+  const [newNotes, setNewNotes] = useState("");
+  const [showAddNotes, setShowAddNotes] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleAdd = async () => {
     if (!newTitle.trim()) return;
-    await addTodo(newTitle.trim(), newDueDate || null);
+    await addTodo(newTitle.trim(), newDueDate || null, newNotes || null);
     setNewTitle("");
     setNewDueDate("");
+    setNewNotes("");
+    setShowAddNotes(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
