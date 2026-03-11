@@ -356,6 +356,7 @@ interface RequestItemRowProps {
   onDeleteSubItem: (id: string) => Promise<boolean>;
   onToggleSelected: (id: string) => Promise<boolean>;
   onEdit: () => void;
+  onDelete?: () => void;
 }
 
 function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubItem, onUpdateSubItem, onDeleteSubItem, onToggleSelected, onEdit }: RequestItemRowProps) {
