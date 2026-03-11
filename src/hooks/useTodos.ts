@@ -45,6 +45,7 @@ export function useTodos() {
           requestId: t.request_id,
           purchaseOrderId: t.purchase_order_id,
           displayOrder: t.display_order,
+          kgAmount: t.kg_amount || 0,
           createdAt: t.created_at,
           updatedAt: t.updated_at,
         }))
