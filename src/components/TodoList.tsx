@@ -160,59 +160,74 @@ export function TodoList() {
         {pendingTodos.map((todo, idx) => {
           const originalIndex = todos.indexOf(todo);
           const isEditing = editingId === todo.id;
+          const isExpanded = expandedId === todo.id;
+          const itemNumber = idx + 1;
 
           return (
             <div
               key={todo.id}
-              className="flex items-center gap-2 p-2 rounded-md border bg-card hover:bg-accent/50 transition-colors group"
+              className="flex flex-col gap-2 p-2 rounded-md border bg-card hover:bg-accent/50 transition-colors group"
             >
-              <Checkbox
-                checked={todo.isDone}
-                onCheckedChange={(checked) =>
-                  updateTodo(todo.id, { isDone: !!checked })
-                }
-              />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground w-5 text-center">
+                  {itemNumber}.
+                </span>
+                <Checkbox
+                  checked={todo.isDone}
+                  onCheckedChange={(checked) =>
+                    updateTodo(todo.id, { isDone: !!checked })
+                  }
+                />
 
-              {isEditing ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <Input
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                    className="h-8 flex-1"
-                    autoFocus
-                  />
-                  <Input
-                    type="date"
-                    value={editDueDate}
-                    onChange={(e) => setEditDueDate(e.target.value)}
-                    className="h-8 w-36"
-                  />
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={saveEdit}>
-                    <Check className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingId(null)}>
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <span
-                    className="flex-1 text-sm cursor-pointer"
-                    onDoubleClick={() => startEdit(todo)}
-                  >
-                    {todo.title}
-                  </span>
-                  {getDueDateBadge(todo.dueDate)}
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7"
-                      onClick={() => startEdit(todo)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
+                {isEditing ? (
+                  <div className="flex-1 flex items-center gap-2">
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                      className="h-8 flex-1"
+                      autoFocus
+                    />
+                    <Input
+                      type="date"
+                      value={editDueDate}
+                      onChange={(e) => setEditDueDate(e.target.value)}
+                      className="h-8 w-36"
+                    />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={saveEdit}>
+                      <Check className="h-3.5 w-3.5" />
                     </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingId(null)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <span
+                      className="flex-1 text-sm cursor-pointer"
+                      onDoubleClick={() => startEdit(todo)}
+                    >
+                      {todo.title}
+                    </span>
+                    {getDueDateBadge(todo.dueDate)}
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => setExpandedId(isExpanded ? null : todo.id)}
+                        title={isExpanded ? "Hide notes" : "Show notes"}
+                      >
+                        {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => startEdit(todo)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
                     <Button
                       size="icon"
                       variant="ghost"
