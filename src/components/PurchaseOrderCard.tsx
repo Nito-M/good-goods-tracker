@@ -45,6 +45,7 @@ interface PurchaseOrderCardProps {
   onMarkOrdered?: (id: string) => void;
   onMarkReceived: (id: string) => void;
   onMarkPaid: (id: string) => void;
+  onRevertPaid?: (id: string) => void;
   onRevert?: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (order: PurchaseOrder) => void;
