@@ -217,6 +217,7 @@ export function Settings() {
   const [vendorAddress, setVendorAddress] = useState('');
   const [vendorNotes, setVendorNotes] = useState('');
   const [vendorLink, setVendorLink] = useState('');
+  const [vendorColor, setVendorColor] = useState('');
 
   // Category state
   const [newCategory, setNewCategory] = useState('');
