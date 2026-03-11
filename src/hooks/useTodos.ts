@@ -62,7 +62,7 @@ export function useTodos() {
     fetchTodos();
   }, [fetchTodos]);
 
-  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null, requestId?: string | null, purchaseOrderId?: string | null): Promise<Todo | null> => {
+  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null, requestId?: string | null, purchaseOrderId?: string | null, kgAmount?: number): Promise<Todo | null> => {
     if (!user) return null;
     try {
       const maxOrder = todos.length > 0 ? Math.max(...todos.map((t) => t.displayOrder)) + 1 : 0;
@@ -76,6 +76,7 @@ export function useTodos() {
           request_id: requestId || null,
           purchase_order_id: purchaseOrderId || null,
           display_order: maxOrder,
+          kg_amount: kgAmount || 0,
         })
         .select()
         .single();
@@ -92,6 +93,7 @@ export function useTodos() {
         requestId: data.request_id,
         purchaseOrderId: data.purchase_order_id,
         displayOrder: data.display_order,
+        kgAmount: data.kg_amount || 0,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
