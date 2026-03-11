@@ -75,6 +75,7 @@ export function useVendors() {
       address: validation.data.address ?? null,
       notes: validation.data.notes ?? null,
       link: validation.data.link ?? null,
+      color: (vendor as any).color ?? null,
       user_id: user.id,
     }]);
 
