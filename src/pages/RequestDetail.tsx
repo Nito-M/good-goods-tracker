@@ -45,18 +45,21 @@ export function RequestDetail() {
     [requests, decodedNumber]
   );
 
-  // Unique request numbers sorted by most recent first for prev/next navigation
+  // Determine the status of the current request group for filtering navigation
+  const currentGroupStatus = groupRequests.length > 0 ? groupRequests[0].status : null;
+
+  // Unique request numbers filtered by same status, sorted by most recent first
   const allRequestNumbers = useMemo(() => {
     const seen = new Map<string, string>();
     for (const r of requests) {
-      if (r.requestNumber && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
+      if (r.requestNumber && r.status === currentGroupStatus && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
         seen.set(r.requestNumber, r.createdAt);
       }
     }
     return Array.from(seen.entries())
       .sort((a, b) => b[1].localeCompare(a[1]))
       .map(([num]) => num);
-  }, [requests]);
+  }, [requests, currentGroupStatus]);
 
   const currentIndex = allRequestNumbers.indexOf(decodedNumber);
   const prevRequestNumber = currentIndex > 0 ? allRequestNumbers[currentIndex - 1] : null;
