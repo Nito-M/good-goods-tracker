@@ -42,10 +42,6 @@ export function TodoList() {
     setShowAddNotes(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleAdd();
-  };
-
   const startEdit = (todo: Todo) => {
     setEditingId(todo.id);
     setEditTitle(todo.title);
@@ -228,34 +224,54 @@ export function TodoList() {
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7"
-                      onClick={() => moveItem(originalIndex, "up")}
-                      disabled={originalIndex === 0}
-                    >
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7"
-                      onClick={() => moveItem(originalIndex, "down")}
-                      disabled={originalIndex === todos.length - 1}
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => deleteTodo(todo.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => moveItem(originalIndex, "up")}
+                        disabled={originalIndex === 0}
+                      >
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => moveItem(originalIndex, "down")}
+                        disabled={originalIndex === todos.length - 1}
+                      >
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => deleteTodo(todo.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {/* Expanded notes section */}
+              {isExpanded && !isEditing && todo.notes && (
+                <div className="ml-12 text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
+                  {todo.notes}
+                </div>
+              )}
+              
+              {/* Edit notes section */}
+              {isEditing && (
+                <div className="ml-12">
+                  <Textarea
+                    placeholder="Add notes..."
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    className="min-h-[60px] text-sm"
+                  />
+                </div>
               )}
             </div>
           );
@@ -268,31 +284,57 @@ export function TodoList() {
           <p className="text-xs font-medium text-muted-foreground mt-4 mb-2">
             Completed ({doneTodos.length})
           </p>
-          {doneTodos.map((todo) => (
-            <div
-              key={todo.id}
-              className="flex items-center gap-2 p-2 rounded-md border bg-muted/30 group"
-            >
-              <Checkbox
-                checked={todo.isDone}
-                onCheckedChange={(checked) =>
-                  updateTodo(todo.id, { isDone: !!checked })
-                }
-              />
-              <span className="flex-1 text-sm line-through text-muted-foreground">
-                {todo.title}
-              </span>
-              {getDueDateBadge(todo.dueDate)}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => deleteTodo(todo.id)}
+          {doneTodos.map((todo, idx) => {
+            const isExpanded = expandedId === todo.id;
+            return (
+              <div
+                key={todo.id}
+                className="flex flex-col gap-2 p-2 rounded-md border bg-muted/30 group"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ))}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground w-5 text-center opacity-50">
+                    {idx + 1}.
+                  </span>
+                  <Checkbox
+                    checked={todo.isDone}
+                    onCheckedChange={(checked) =>
+                      updateTodo(todo.id, { isDone: !!checked })
+                    }
+                  />
+                  <span className="flex-1 text-sm line-through text-muted-foreground">
+                    {todo.title}
+                  </span>
+                  {getDueDateBadge(todo.dueDate)}
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {todo.notes && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => setExpandedId(isExpanded ? null : todo.id)}
+                        title={isExpanded ? "Hide notes" : "Show notes"}
+                      >
+                        {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                      </Button>
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => deleteTodo(todo.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                {isExpanded && todo.notes && (
+                  <div className="ml-12 text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
+                    {todo.notes}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
