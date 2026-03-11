@@ -50,6 +50,7 @@ export function TodoList() {
     setEditingId(todo.id);
     setEditTitle(todo.title);
     setEditDueDate(todo.dueDate ? todo.dueDate.split("T")[0] : "");
+    setEditNotes(todo.notes || "");
   };
 
   const saveEdit = async () => {
