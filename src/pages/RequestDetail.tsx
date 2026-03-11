@@ -286,7 +286,6 @@ export function RequestDetail() {
                     onToggleSelected={async (id) => {
                       const ok = await toggleSelected(id, r.id);
                       if (ok) {
-                        // Find the selected sub-item and sync its price/vendor to the parent request
                         const selectedSub = itemSubItems.find(s => s.id === id);
                         if (selectedSub) {
                           await updateRequest(r.id, {
@@ -295,6 +294,7 @@ export function RequestDetail() {
                           });
                         }
                       }
+                      return ok;
                     }}
                     onEdit={() => navigate(`/requests/edit/${r.id}`)}
                     onDelete={canManage ? async () => {
