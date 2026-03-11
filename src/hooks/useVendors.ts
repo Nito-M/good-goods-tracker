@@ -12,6 +12,7 @@ export interface Vendor {
   address: string | null;
   notes: string | null;
   link: string | null;
+  color: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -74,6 +75,7 @@ export function useVendors() {
       address: validation.data.address ?? null,
       notes: validation.data.notes ?? null,
       link: validation.data.link ?? null,
+      color: (vendor as any).color ?? null,
       user_id: user.id,
     }]);
 
@@ -104,9 +106,12 @@ export function useVendors() {
       return;
     }
 
+    const updateData: Record<string, any> = { ...validation.data };
+    if ('color' in updates) updateData.color = updates.color;
+    
     const { error } = await supabase
       .from('vendors')
-      .update(validation.data)
+      .update(updateData)
       .eq('id', id);
 
     if (error) {

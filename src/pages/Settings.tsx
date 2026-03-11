@@ -217,6 +217,7 @@ export function Settings() {
   const [vendorAddress, setVendorAddress] = useState('');
   const [vendorNotes, setVendorNotes] = useState('');
   const [vendorLink, setVendorLink] = useState('');
+  const [vendorColor, setVendorColor] = useState('');
 
   // Category state
   const [newCategory, setNewCategory] = useState('');
@@ -328,6 +329,7 @@ export function Settings() {
       setVendorAddress(vendor.address || '');
       setVendorNotes(vendor.notes || '');
       setVendorLink(vendor.link || '');
+      setVendorColor(vendor.color || '');
     } else {
       setEditingVendor(null);
       setVendorName('');
@@ -336,6 +338,7 @@ export function Settings() {
       setVendorAddress('');
       setVendorNotes('');
       setVendorLink('');
+      setVendorColor('');
     }
     setVendorDialogOpen(true);
   };
@@ -349,6 +352,7 @@ export function Settings() {
       address: vendorAddress || null,
       notes: vendorNotes || null,
       link: vendorLink || null,
+      color: vendorColor || null,
     };
 
     if (editingVendor) {
@@ -812,11 +816,16 @@ export function Settings() {
                   <div className="divide-y divide-border">
                     {filteredVendors.map((vendor) => (
                       <div key={vendor.id} className="flex items-center justify-between py-4">
-                        <div>
-                          <div className="font-medium">{vendor.name}</div>
+                        <div className="flex items-center gap-3">
+                          {vendor.color && (
+                            <div className="h-4 w-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: vendor.color }} />
+                          )}
+                          <div>
+                            <div className="font-medium">{vendor.name}</div>
                           <div className="text-sm text-muted-foreground">
                             {[vendor.contact_email, vendor.contact_phone].filter(Boolean).join(' • ') || 'No contact info'}
                           </div>
+                        </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button variant="outline" size="sm" onClick={() => openVendorDialog(vendor)}>
@@ -1217,6 +1226,24 @@ export function Settings() {
                 placeholder="Additional notes..."
                 rows={2}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vendor-color">Color</Label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="vendor-color"
+                  type="color"
+                  value={vendorColor || '#6b7280'}
+                  onChange={(e) => setVendorColor(e.target.value)}
+                  className="h-9 w-12 rounded border border-border cursor-pointer bg-transparent"
+                />
+                <span className="text-sm text-muted-foreground">{vendorColor || 'No color set'}</span>
+                {vendorColor && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setVendorColor('')} className="text-xs h-7">
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setVendorDialogOpen(false)}>

@@ -193,6 +193,8 @@ export function Requests() {
           const groupTotal = group.requests.reduce((s, r) => s + getRequestTotal(r), 0);
           const firstReq = group.requests[0];
           const isOverdue = firstReq.needByDate && new Date(firstReq.needByDate) < new Date() && firstReq.status !== 'received' && firstReq.status !== 'cancelled';
+          const vendorObj = vendors.find(v => v.name === firstReq.vendorName);
+          const vendorColor = vendorObj?.color || undefined;
 
           return (
             <div
@@ -208,8 +210,11 @@ export function Requests() {
                 {firstReq.requestNumber || '—'}
               </span>
 
-              {/* Item names */}
-              <span className="font-medium text-foreground truncate flex-1 min-w-0">
+              {/* Item names - colored by vendor */}
+              <span
+                className="font-medium truncate flex-1 min-w-0"
+                style={vendorColor ? { color: vendorColor } : undefined}
+              >
                 {group.requests.length === 1
                   ? firstReq.itemName
                   : `${firstReq.itemName} +${group.requests.length - 1} more`}
@@ -222,10 +227,34 @@ export function Requests() {
                 </span>
               )}
 
-              {/* Vendor */}
-              <span className="text-xs text-muted-foreground truncate w-28 shrink-0 hidden lg:block">
-                {firstReq.vendorName || '—'}
-              </span>
+              {/* Vendor - inline select */}
+              <div className="shrink-0 hidden lg:block w-32" onClick={(e) => e.stopPropagation()}>
+                <Select
+                  value={firstReq.vendorName || "__none__"}
+                  onValueChange={async (val) => {
+                    const newVendor = val === "__none__" ? null : val;
+                    // Update all requests in this group
+                    for (const r of group.requests) {
+                      await updateRequest(r.id, { vendorName: newVendor });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-7 text-xs border-none bg-transparent shadow-none px-1">
+                    <SelectValue placeholder="No vendor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No vendor</SelectItem>
+                    {vendors.map((v) => (
+                      <SelectItem key={v.id} value={v.name}>
+                        <div className="flex items-center gap-2">
+                          {v.color && <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: v.color }} />}
+                          {v.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* Need by date */}
               {firstReq.needByDate ? (
