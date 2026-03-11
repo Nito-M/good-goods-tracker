@@ -58,6 +58,7 @@ export function TodoList() {
     await updateTodo(editingId, {
       title: editTitle.trim(),
       dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
+      notes: editNotes || null,
     });
     setEditingId(null);
   };
