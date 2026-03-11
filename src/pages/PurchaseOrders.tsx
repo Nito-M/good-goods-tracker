@@ -83,6 +83,12 @@ export function PurchaseOrders() {
     setProcessingId(null);
   };
 
+  const handleRevertPaid = async (orderId: string) => {
+    setProcessingId(orderId);
+    await revertPaid(orderId);
+    setProcessingId(null);
+  };
+
   const handleRevert = async (orderId: string) => {
     setProcessingId(orderId);
     await revertOrder(orderId);
