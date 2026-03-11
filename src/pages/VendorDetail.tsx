@@ -48,7 +48,7 @@ export function VendorDetail() {
     );
   }
 
-  const vendorOrders = orders.filter((o) => o.vendor_id === vendor.id);
+  const vendorOrders = orders.filter((o) => o.vendorId === vendor.id);
   const totalSpent = vendorOrders.reduce((sum, o) => {
     if (o.items && Array.isArray(o.items)) {
       return sum + (o.items as any[]).reduce((s: number, item: any) => s + (Number(item.unitCost || 0) * Number(item.quantity || 0)), 0);
