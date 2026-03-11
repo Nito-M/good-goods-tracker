@@ -62,13 +62,15 @@ export function TodoList() {
       newDueDate || null,
       newNotes || null,
       newRequestId || null,
-      newPurchaseOrderId || null
+      newPurchaseOrderId || null,
+      newKgAmount ? parseFloat(newKgAmount) : 0
     );
     setNewTitle("");
     setNewDueDate("");
     setNewNotes("");
     setNewRequestId("");
     setNewPurchaseOrderId("");
+    setNewKgAmount("");
     setShowAddNotes(false);
   };
 
