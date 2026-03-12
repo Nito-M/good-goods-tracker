@@ -325,16 +325,16 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                         <TableCell className="text-right">{purchase.quantity}</TableCell>
                         <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
                         <TableCell className="text-right">
-                          {purchase.status === 'received' && purchase.reservedQuantity > 0
+                          {isReceived(purchase.status) && purchase.reservedQuantity > 0
                             ? <span className="text-warning font-medium">{purchase.reservedQuantity}</span>
-                            : purchase.status === 'received' ? '0' : '-'}
+                            : isReceived(purchase.status) ? '0' : '-'}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {purchase.status === 'received' ? purchase.remainingQuantity : '-'}
+                          {isReceived(purchase.status) ? purchase.remainingQuantity : '-'}
                         </TableCell>
                         <TableCell className="text-right">{formatCurrency(purchase.unitCost)}</TableCell>
                         <TableCell>
-                          {purchase.status === 'received' ? (
+                          {isReceived(purchase.status) ? (
                             purchase.remainingQuantity === 0 && purchase.reservedQuantity === 0 ? (
                               <Badge className="bg-muted text-muted-foreground hover:bg-muted">
                                 All Sold
@@ -352,6 +352,10 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                                 In Stock
                               </Badge>
                             )
+                          ) : purchase.status === 'partially_received' ? (
+                            <Badge className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">
+                              Partial Recv
+                            </Badge>
                           ) : (
                             <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
                               Ordered
