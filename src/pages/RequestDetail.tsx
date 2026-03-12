@@ -256,8 +256,25 @@ export function RequestDetail() {
 
       {/* Items Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Items ({groupRequests.length})</CardTitle>
+          {canManage && (
+            <AddItemToRequestDialog
+              items={allItems}
+              requestNumber={decodedNumber}
+              requesterName={firstReq?.requesterName || null}
+              onSave={async (input) => {
+                await addRequest({
+                  ...input,
+                  requestNumber: decodedNumber,
+                  requesterName: firstReq?.requesterName || null,
+                  vendorName: firstReq?.vendorName || null,
+                });
+              }}
+              onUploadImage={uploadImage}
+              onUploadPdf={uploadPdf}
+            />
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <Table>
