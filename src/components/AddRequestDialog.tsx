@@ -259,6 +259,12 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
             <Input id="itemName" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Enter item name" required />
           </div>
 
+          {/* Title (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="title">Title <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Custom title for this request" />
+          </div>
+
           {/* SKU */}
           <div className="space-y-2">
             <Label htmlFor="sku">SKU</Label>
