@@ -297,6 +297,12 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
             <p className="text-sm text-muted-foreground">Total Sold</p>
             <p className="text-xl font-bold text-card-foreground">{totalSold}</p>
           </div>
+          {totalConsumed > 0 && (
+            <div className="bg-orange-500/10 rounded-lg p-3 text-center">
+              <p className="text-sm text-muted-foreground">Consumed</p>
+              <p className="text-xl font-bold text-orange-500">{totalConsumed}</p>
+            </div>
+          )}
           {totalReserved > 0 && (
             <div className="bg-warning/10 rounded-lg p-3 text-center">
               <p className="text-sm text-muted-foreground">Reserved</p>
