@@ -208,6 +208,10 @@ export function useJobItems(jobId: string | null) {
     setLoading(false);
   }, [jobId]);
 
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
   // Helper: proportionally deduct quantity from location quantities
   const deductFromLocations = async (inventoryItemId: string, qty: number) => {
     const { data: locations } = await supabase
