@@ -333,11 +333,15 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                         <TableCell className="text-right">{formatCurrency(purchase.unitCost)}</TableCell>
                         <TableCell>
                           {purchase.status === 'received' ? (
-                            purchase.remainingQuantity === 0 ? (
+                            purchase.remainingQuantity === 0 && purchase.reservedQuantity === 0 ? (
                               <Badge className="bg-muted text-muted-foreground hover:bg-muted">
                                 All Sold
                               </Badge>
-                            ) : purchase.soldQuantity > 0 ? (
+                            ) : purchase.remainingQuantity === 0 && purchase.reservedQuantity > 0 ? (
+                              <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
+                                Reserved
+                              </Badge>
+                            ) : purchase.soldQuantity > 0 || purchase.reservedQuantity > 0 ? (
                               <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
                                 Partial
                               </Badge>
