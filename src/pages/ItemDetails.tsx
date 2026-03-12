@@ -330,43 +330,6 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
 
       {/* Main Content */}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Title Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Badge variant="secondary">{item.category}</Badge>
-            <Badge
-              className={
-                isLowStock
-                  ? 'bg-warning/10 text-warning hover:bg-warning/20'
-                  : 'bg-success/10 text-success hover:bg-success/20'
-              }
-            >
-              {isLowStock ? 'Low Stock' : 'In Stock'}
-            </Badge>
-          </div>
-          <h1 className="text-3xl font-bold text-card-foreground">{item.name}</h1>
-          <p className="text-muted-foreground mt-1">SKU: {item.sku}{item.internalPartNumber ? ` • Part #: ${item.internalPartNumber}` : ''}</p>
-          {/* Tags */}
-          {selectedTagIds.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {tagCategories.map((tc) => {
-                const categoryTags = getTagsByCategory(tc.id).filter((t) => selectedTagIds.includes(t.id));
-                if (categoryTags.length === 0) return null;
-                return (
-                  <div key={tc.id} className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-muted-foreground font-medium">{tc.name}:</span>
-                    {categoryTags.map((tag) => (
-                      <Badge key={tag.id} variant="outline" className="text-xs">
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         {/* Two-column: Images left, Details right */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Left: Product Images */}
@@ -386,6 +349,18 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           {/* Right: Item Details */}
           <Card>
             <CardHeader className="pb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="secondary">{item.category}</Badge>
+                <Badge
+                  className={
+                    isLowStock
+                      ? 'bg-warning/10 text-warning hover:bg-warning/20'
+                      : 'bg-success/10 text-success hover:bg-success/20'
+                  }
+                >
+                  {isLowStock ? 'Low Stock' : 'In Stock'}
+                </Badge>
+              </div>
               <CardTitle className="text-xl">{item.name}</CardTitle>
               <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
               {selectedTagIds.length > 0 && (
