@@ -236,7 +236,7 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
     }
 
     fetchHistory();
-  }, [sku]);
+  }, [sku, itemId]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
