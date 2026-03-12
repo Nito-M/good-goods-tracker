@@ -423,39 +423,39 @@ export function Settings() {
               <Monitor className="h-4 w-4 hidden sm:inline" />
               General
             </TabsTrigger>
-            <TabsTrigger value="companies" className="gap-2">
-              <Briefcase className="h-4 w-4" />
+            <TabsTrigger value="companies" className="gap-2 shrink-0">
+              <Briefcase className="h-4 w-4 hidden sm:inline" />
               Companies
             </TabsTrigger>
-            <TabsTrigger value="storefront" className="gap-2">
-              <Store className="h-4 w-4" />
+            <TabsTrigger value="storefront" className="gap-2 shrink-0">
+              <Store className="h-4 w-4 hidden sm:inline" />
               Storefront
             </TabsTrigger>
-            <TabsTrigger value="vendors" className="gap-2">
-              <Building2 className="h-4 w-4" />
+            <TabsTrigger value="vendors" className="gap-2 shrink-0">
+              <Building2 className="h-4 w-4 hidden sm:inline" />
               Vendors
             </TabsTrigger>
-            <TabsTrigger value="customers" className="gap-2">
-              <Contact className="h-4 w-4" />
+            <TabsTrigger value="customers" className="gap-2 shrink-0">
+              <Contact className="h-4 w-4 hidden sm:inline" />
               Customers
             </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2">
-              <Tags className="h-4 w-4" />
+            <TabsTrigger value="categories" className="gap-2 shrink-0">
+              <Tags className="h-4 w-4 hidden sm:inline" />
               Categories
             </TabsTrigger>
-            <TabsTrigger value="tags" className="gap-2">
-              <Tag className="h-4 w-4" />
+            <TabsTrigger value="tags" className="gap-2 shrink-0">
+              <Tag className="h-4 w-4 hidden sm:inline" />
               Tags
             </TabsTrigger>
             {showUsersTab && (
-              <TabsTrigger value="users" className="gap-2">
-                <Users className="h-4 w-4" />
+              <TabsTrigger value="users" className="gap-2 shrink-0">
+                <Users className="h-4 w-4 hidden sm:inline" />
                 Users
               </TabsTrigger>
             )}
             {isAdmin && (
-              <TabsTrigger value="organizations" className="gap-2">
-                <ShieldCheck className="h-4 w-4" />
+              <TabsTrigger value="organizations" className="gap-2 shrink-0">
+                <ShieldCheck className="h-4 w-4 hidden sm:inline" />
                 Orgs
               </TabsTrigger>
             )}
