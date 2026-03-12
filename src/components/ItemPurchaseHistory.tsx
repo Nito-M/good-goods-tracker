@@ -68,8 +68,18 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
         .eq('sku', sku)
         .eq('reserved', true);
 
+      // Fetch total consumed quantity from item_consumptions
+      const { data: consumptionData } = await supabase
+        .from('item_consumptions')
+        .select('quantity')
+        .eq('item_id', itemId);
+
       const totalReserved = reservedData
         ? reservedData.reduce((sum, ji) => sum + ji.quantity, 0)
+        : 0;
+
+      const totalConsumed = consumptionData
+        ? consumptionData.reduce((sum, c) => sum + c.quantity, 0)
         : 0;
 
       // Build allocation map: poId -> total sold quantity
@@ -98,6 +108,7 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                 unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
                 soldQuantity: isReceived(po.status) ? soldQty : 0,
+                consumedQuantity: 0, // will be computed below via FIFO
                 reservedQuantity: 0, // will be computed below via FIFO
                 remainingQuantity: 0, // will be computed below
                 orderedAt: new Date(po.ordered_at),
@@ -108,19 +119,29 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
           }
         }
 
-        // Distribute reserved quantity FIFO across received POs (oldest first)
+        // Distribute consumed quantity FIFO across received POs (oldest first)
+        let consumedLeft = totalConsumed;
+        for (const p of purchaseItems) {
+          if (!isReceived(p.status) || consumedLeft <= 0) continue;
+          const availableAfterSold = Math.max(0, p.quantity - p.soldQuantity);
+          const consumedFromThis = Math.min(availableAfterSold, consumedLeft);
+          p.consumedQuantity = consumedFromThis;
+          consumedLeft -= consumedFromThis;
+        }
+
+        // Distribute reserved quantity FIFO across received POs (oldest first, after sold+consumed)
         let reservedLeft = totalReserved;
         for (const p of purchaseItems) {
           if (!isReceived(p.status) || reservedLeft <= 0) {
             p.remainingQuantity = isReceived(p.status)
-              ? Math.max(0, p.quantity - p.soldQuantity)
+              ? Math.max(0, p.quantity - p.soldQuantity - p.consumedQuantity)
               : p.quantity;
             continue;
           }
-          const availableAfterSold = Math.max(0, p.quantity - p.soldQuantity);
-          const reservedFromThis = Math.min(availableAfterSold, reservedLeft);
+          const availableAfterSoldAndConsumed = Math.max(0, p.quantity - p.soldQuantity - p.consumedQuantity);
+          const reservedFromThis = Math.min(availableAfterSoldAndConsumed, reservedLeft);
           p.reservedQuantity = reservedFromThis;
-          p.remainingQuantity = Math.max(0, availableAfterSold - reservedFromThis);
+          p.remainingQuantity = Math.max(0, availableAfterSoldAndConsumed - reservedFromThis);
           reservedLeft -= reservedFromThis;
         }
         
