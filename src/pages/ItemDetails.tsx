@@ -900,16 +900,26 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
             </div>
             <div className="space-y-2">
               <Label>Location</Label>
-              <Select value={consumeWarehouseId} onValueChange={setConsumeWarehouseId}>
+              <Select value={consumeWarehouseId} onValueChange={(v) => { setConsumeWarehouseId(v); setConsumeQty('1'); }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select location (optional)" />
+                  <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                  {warehouses.map((wh) => (
-                    <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
-                  ))}
+                  {itemLocations
+                    .filter((loc) => loc.quantity > 0)
+                    .map((loc) => {
+                      const wh = warehouses.find((w) => w.id === loc.warehouse_id);
+                      return (
+                        <SelectItem key={loc.warehouse_id} value={loc.warehouse_id}>
+                          {wh?.name || 'Unknown'} ({loc.quantity} available)
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
+              {itemLocations.filter((loc) => loc.quantity > 0).length === 0 && (
+                <p className="text-sm text-muted-foreground">No locations have stock to consume.</p>
+              )}
             </div>
           </div>
           <DialogFooter>
