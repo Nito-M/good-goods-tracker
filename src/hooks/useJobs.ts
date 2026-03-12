@@ -164,6 +164,7 @@ export function useAllJobItems() {
         notes: d.notes,
         category: d.inventory_items?.category ?? null,
         reserved: d.reserved ?? false,
+        consumed: d.consumed ?? false,
         createdAt: d.created_at,
         jobTitle: d.jobs.title,
         jobNumber: d.jobs.job_number,
