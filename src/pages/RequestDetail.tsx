@@ -209,36 +209,60 @@ export function RequestDetail() {
         <div className="flex items-center gap-2">
           {canManage && (
             <>
-              <Button variant="outline" size="sm" disabled={uploadingImage} asChild>
-                <label className="cursor-pointer">
-                  <Upload className="h-4 w-4 mr-1" />
-                  {uploadingImage ? "Uploading..." : "Add Image"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file || !firstReq) return;
-                      setUploadingImage(true);
-                      try {
-                        const url = await uploadImage(file);
-                        if (url) {
-                          // Add image to the first request that doesn't have one, or the first request
-                          const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
-                          await updateRequest(targetReq.id, { imageUrl: url });
-                          toast({ title: "Image uploaded", description: "Image added to request" });
-                        }
-                      } catch {
-                        toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
-                      } finally {
-                        setUploadingImage(false);
-                        e.target.value = "";
+              <label
+                className={`cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 border transition-colors ${
+                  imageDragOver
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                } ${uploadingImage ? "opacity-50 pointer-events-none" : ""}`}
+                onDragOver={(e) => { e.preventDefault(); setImageDragOver(true); }}
+                onDragLeave={() => setImageDragOver(false)}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  setImageDragOver(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (!file?.type.startsWith("image/") || !firstReq) return;
+                  setUploadingImage(true);
+                  try {
+                    const url = await uploadImage(file);
+                    if (url) {
+                      const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
+                      await updateRequest(targetReq.id, { imageUrl: url });
+                      toast({ title: "Image uploaded", description: "Image added to request" });
+                    }
+                  } catch {
+                    toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+                  } finally {
+                    setUploadingImage(false);
+                  }
+                }}
+              >
+                <Upload className="h-4 w-4" />
+                {uploadingImage ? "Uploading..." : imageDragOver ? "Drop here" : "Add Image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !firstReq) return;
+                    setUploadingImage(true);
+                    try {
+                      const url = await uploadImage(file);
+                      if (url) {
+                        const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
+                        await updateRequest(targetReq.id, { imageUrl: url });
+                        toast({ title: "Image uploaded", description: "Image added to request" });
                       }
-                    }}
-                  />
-                </label>
-              </Button>
+                    } catch {
+                      toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+                    } finally {
+                      setUploadingImage(false);
+                      e.target.value = "";
+                    }
+                  }}
+                />
+              </label>
               <Button variant="destructive" size="sm" onClick={handleDeleteAll}>
                 <Trash2 className="h-4 w-4 mr-1" /> Delete All
               </Button>
