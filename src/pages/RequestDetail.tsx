@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRequests } from "@/hooks/useRequests";
 import { useRequestSubItems } from "@/hooks/useRequestSubItems";
+import { useRequestImages } from "@/hooks/useRequestImages";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { useBankCards } from "@/hooks/useBankCards";
 import { useVendors } from "@/hooks/useVendors";
@@ -78,6 +79,7 @@ export function RequestDetail() {
 
   const requestIds = useMemo(() => groupRequests.map((r) => r.id), [groupRequests]);
   const { subItems, addSubItem, updateSubItem, deleteSubItem, toggleSelected } = useRequestSubItems(requestIds);
+  const { images: requestImages, addImage: addRequestImage, deleteImage: deleteRequestImage } = useRequestImages(requestIds);
 
   const getTotal = (r: Request) => {
     const subtotal = r.quantity * r.price;
@@ -220,16 +222,15 @@ export function RequestDetail() {
                 onDrop={async (e) => {
                   e.preventDefault();
                   setImageDragOver(false);
-                  const file = e.dataTransfer.files?.[0];
-                  if (!file?.type.startsWith("image/") || !firstReq) return;
+                  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+                  if (files.length === 0 || !firstReq) return;
                   setUploadingImage(true);
                   try {
-                    const url = await uploadImage(file);
-                    if (url) {
-                      const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
-                      await updateRequest(targetReq.id, { imageUrl: url });
-                      toast({ title: "Image uploaded", description: "Image added to request" });
+                    for (const file of files) {
+                      const url = await uploadImage(file);
+                      if (url) await addRequestImage(firstReq.id, url);
                     }
+                    toast({ title: "Image uploaded", description: `${files.length} image(s) added` });
                   } catch {
                     toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
                   } finally {
@@ -242,18 +243,18 @@ export function RequestDetail() {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file || !firstReq) return;
+                    const files = Array.from(e.target.files || []);
+                    if (files.length === 0 || !firstReq) return;
                     setUploadingImage(true);
                     try {
-                      const url = await uploadImage(file);
-                      if (url) {
-                        const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
-                        await updateRequest(targetReq.id, { imageUrl: url });
-                        toast({ title: "Image uploaded", description: "Image added to request" });
+                      for (const file of files) {
+                        const url = await uploadImage(file);
+                        if (url) await addRequestImage(firstReq.id, url);
                       }
+                      toast({ title: "Image uploaded", description: `${files.length} image(s) added` });
                     } catch {
                       toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
                     } finally {
@@ -435,7 +436,7 @@ export function RequestDetail() {
       </Card>
 
       {/* Request Images */}
-      {groupRequests.some(r => r.imageUrl) && (
+      {(groupRequests.some(r => r.imageUrl) || requestImages.length > 0) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -444,27 +445,52 @@ export function RequestDetail() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
+              {/* Item-level images */}
               {groupRequests.filter(r => r.imageUrl).map((r) => (
                 <div
-                  key={r.id}
+                  key={`item-${r.id}`}
                   className="relative w-32 h-32 rounded-lg overflow-hidden border bg-muted cursor-pointer hover:opacity-90 transition-opacity group"
                   onClick={() => {
                     setViewerImageUrl(r.imageUrl);
                     setImageViewerOpen(true);
                   }}
                 >
-                  <img
-                    src={r.imageUrl!}
-                    alt={r.itemName}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={r.imageUrl!} alt={r.itemName} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
                     <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Click to view</span>
                   </div>
-                  {groupRequests.filter(r => r.imageUrl).length > 1 && (
-                    <div className="absolute bottom-1 left-1 bg-background/80 rounded px-1.5 py-0.5 text-[10px] font-medium truncate max-w-[90%]">
-                      {r.itemName}
-                    </div>
+                  <div className="absolute bottom-1 left-1 bg-background/80 rounded px-1.5 py-0.5 text-[10px] font-medium truncate max-w-[90%]">
+                    {r.itemName}
+                  </div>
+                </div>
+              ))}
+              {/* Uploaded request images */}
+              {requestImages.map((img) => (
+                <div
+                  key={`req-img-${img.id}`}
+                  className="relative w-32 h-32 rounded-lg overflow-hidden border bg-muted cursor-pointer hover:opacity-90 transition-opacity group"
+                  onClick={() => {
+                    setViewerImageUrl(img.imageUrl);
+                    setImageViewerOpen(true);
+                  }}
+                >
+                  <img src={img.imageUrl} alt="Request image" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                    <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-medium">Click to view</span>
+                  </div>
+                  {canManage && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteRequestImage(img.id);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   )}
                 </div>
               ))}
