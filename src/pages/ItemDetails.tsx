@@ -403,15 +403,6 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                   </p>
                 </div>
               </div>
-              {item.description && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Description</p>
-                    <p className="text-sm text-card-foreground">{item.description}</p>
-                  </div>
-                </>
-              )}
               <Separator />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -441,6 +432,18 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Description Card */}
+        {item.description && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Description</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-card-foreground">{item.description}</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* DXF Drawing */}
         <div className="mb-6">
