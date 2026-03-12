@@ -4,6 +4,7 @@ import { InvoiceSettings } from '@/types/sale';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
+import { savePdfBlob } from '@/lib/pdfSave';
 
 export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: InvoiceSettings) {
   const doc = new jsPDF();
@@ -243,7 +244,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
 
   // Save the PDF
   const fileName = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
-  doc.save(`${fileName}.pdf`);
+  await savePdfBlob(doc, `${fileName}.pdf`);
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {

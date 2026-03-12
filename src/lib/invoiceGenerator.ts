@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { Sale, InvoiceSettings } from '@/types/sale';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 import { formatCurrency } from '@/lib/utils';
+import { savePdfBlob } from '@/lib/pdfSave';
 
 export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings) {
   const doc = new jsPDF();
@@ -244,7 +245,7 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   }
 
   // Save the PDF
-  doc.save(`${sale.invoiceNumber}.pdf`);
+  await savePdfBlob(doc, `${sale.invoiceNumber}.pdf`);
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {

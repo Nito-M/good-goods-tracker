@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { formatCurrency } from '@/lib/utils';
+import { savePdfBlob } from '@/lib/pdfSave';
 
 export interface AssemblyPdfData {
   name: string;
@@ -18,7 +19,7 @@ export interface AssemblyPdfData {
   }[];
 }
 
-export function generateAssemblyPDF(assembly: AssemblyPdfData) {
+export async function generateAssemblyPDF(assembly: AssemblyPdfData) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -164,5 +165,5 @@ export function generateAssemblyPDF(assembly: AssemblyPdfData) {
   doc.setTextColor(128, 128, 128);
   doc.text(`Generated ${new Date().toLocaleDateString()}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
 
-  doc.save(`${assembly.name} - Parts List.pdf`);
+  await savePdfBlob(doc, `${assembly.name} - Parts List.pdf`);
 }
