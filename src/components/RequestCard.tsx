@@ -10,6 +10,7 @@ import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User
 import { Request, RequestStatus } from "@/types/request";
 import { BankCard } from "@/hooks/useBankCards";
 import { formatCurrency } from "@/lib/utils";
+import { downloadFileFromUrl, getFileNameFromUrl } from "@/lib/fileDownload";
 
 interface RequestCardProps {
   request: Request;

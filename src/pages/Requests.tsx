@@ -19,6 +19,7 @@ import { Search, ClipboardList, Clock, CheckCircle, ShoppingCart, Package, XCirc
 import { Request, RequestStatus } from "@/types/request";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
+import { downloadFileFromUrl, getFileNameFromUrl } from "@/lib/fileDownload";
 
 const GRADIENT_COLOR_MAP: Record<string, string> = {
   'from-blue-600': '#2563eb', 'from-purple-600': '#9333ea', 'from-green-600': '#16a34a',

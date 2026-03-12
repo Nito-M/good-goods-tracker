@@ -21,6 +21,7 @@ import { ImageViewerDialog } from "@/components/ImageViewerDialog";
 import { AddItemToRequestDialog } from "@/components/AddItemToRequestDialog";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
+import { downloadFileFromUrl, getFileNameFromUrl } from "@/lib/fileDownload";
 
 const statusColors: Record<RequestStatus, string> = {
   pending: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
