@@ -16,7 +16,7 @@ export interface PartsAssemblyPdfData {
   }[];
 }
 
-export function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
+export async function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();

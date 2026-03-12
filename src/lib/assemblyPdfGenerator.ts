@@ -19,7 +19,7 @@ export interface AssemblyPdfData {
   }[];
 }
 
-export function generateAssemblyPDF(assembly: AssemblyPdfData) {
+export async function generateAssemblyPDF(assembly: AssemblyPdfData) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
