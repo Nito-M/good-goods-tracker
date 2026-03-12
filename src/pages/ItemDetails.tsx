@@ -119,9 +119,16 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   }
 
   const handleConsume = async () => {
-    if (!item) return;
+    if (!item || !consumeWarehouseId) return;
     const amount = parseFloat(consumeQty) || 0;
     if (amount <= 0) return;
+    const locationEntry = itemLocations.find(
+      (loc) => loc.warehouse_id === consumeWarehouseId
+    );
+    if (!locationEntry || amount > locationEntry.quantity) {
+      toast({ title: 'Not enough stock at this location', variant: 'destructive' });
+      return;
+    }
     setIsConsuming(true);
     try {
       const newQty = Math.max(0, item.quantity - amount);
@@ -130,37 +137,14 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         itemId: item.id,
         quantity: amount,
         description: consumeDescription.trim() || undefined,
-        warehouseId: consumeWarehouseId || undefined,
+        warehouseId: consumeWarehouseId,
       });
 
-      // Also decrement the location-specific quantity if a warehouse was selected
-      if (consumeWarehouseId) {
-        const locationEntry = itemLocations.find(
-          (loc) => loc.warehouse_id === consumeWarehouseId
-        );
-        if (locationEntry) {
-          const newLocQty = Math.max(0, locationEntry.quantity - amount);
-          await supabase
-            .from('item_location_quantities')
-            .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
-            .eq('id', locationEntry.id);
-        }
-      } else if (itemLocations.length > 0) {
-        // No specific warehouse selected — distribute consumption across locations
-        let remaining = amount;
-        for (const loc of itemLocations) {
-          if (remaining <= 0) break;
-          const deduct = Math.min(loc.quantity, remaining);
-          if (deduct > 0) {
-            const newLocQty = loc.quantity - deduct;
-            await supabase
-              .from('item_location_quantities')
-              .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
-              .eq('id', loc.id);
-            remaining -= deduct;
-          }
-        }
-      }
+      const newLocQty = Math.max(0, locationEntry.quantity - amount);
+      await supabase
+        .from('item_location_quantities')
+        .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
+        .eq('id', locationEntry.id);
 
       toast({ title: `Consumed ${amount} — new quantity: ${newQty}` });
       setConsumeDialogOpen(false);
