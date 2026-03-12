@@ -93,7 +93,7 @@ export function useRequestSubItems(requestIds: string[]) {
     }
   };
 
-  const updateSubItem = async (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null }): Promise<boolean> => {
+  const updateSubItem = async (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null; sku?: string | null; imageUrl?: string | null }): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.vendorName !== undefined) dbUpdates.vendor_name = updates.vendorName;
@@ -101,6 +101,8 @@ export function useRequestSubItems(requestIds: string[]) {
       if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
       if (updates.link !== undefined) dbUpdates.link = updates.link;
       if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+      if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
+      if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
 
       const { error } = await supabase.from("request_sub_items").update(dbUpdates).eq("id", id);
       if (error) throw error;

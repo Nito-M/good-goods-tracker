@@ -36,6 +36,8 @@ export interface RequestSubItem {
   quantity: number;
   link: string | null;
   notes: string | null;
+  sku: string | null;
+  imageUrl: string | null;
   isSelected: boolean;
   createdAt: string;
 }
