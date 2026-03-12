@@ -232,6 +232,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
     .filter(p => p.status === 'received')
     .reduce((sum, p) => sum + p.quantity, 0);
   const totalSold = soldItems.reduce((sum, s) => sum + s.quantity, 0);
+  const totalReserved = purchases.reduce((sum, p) => sum + p.reservedQuantity, 0);
   const totalProfit = soldItems.reduce((sum, s) => sum + s.profit, 0);
 
   if (loading) {
