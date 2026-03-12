@@ -39,6 +39,7 @@ interface RequestLineItem {
   imageFile: File | null;
   imagePreview: string | null;
   pdfFile: File | null;
+  pdfDragOver: boolean;
 }
 
 function createEmptyLine(): RequestLineItem {
