@@ -222,16 +222,15 @@ export function RequestDetail() {
                 onDrop={async (e) => {
                   e.preventDefault();
                   setImageDragOver(false);
-                  const file = e.dataTransfer.files?.[0];
-                  if (!file?.type.startsWith("image/") || !firstReq) return;
+                  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+                  if (files.length === 0 || !firstReq) return;
                   setUploadingImage(true);
                   try {
-                    const url = await uploadImage(file);
-                    if (url) {
-                      const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
-                      await updateRequest(targetReq.id, { imageUrl: url });
-                      toast({ title: "Image uploaded", description: "Image added to request" });
+                    for (const file of files) {
+                      const url = await uploadImage(file);
+                      if (url) await addRequestImage(firstReq.id, url);
                     }
+                    toast({ title: "Image uploaded", description: `${files.length} image(s) added` });
                   } catch {
                     toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
                   } finally {
@@ -244,18 +243,18 @@ export function RequestDetail() {
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file || !firstReq) return;
+                    const files = Array.from(e.target.files || []);
+                    if (files.length === 0 || !firstReq) return;
                     setUploadingImage(true);
                     try {
-                      const url = await uploadImage(file);
-                      if (url) {
-                        const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
-                        await updateRequest(targetReq.id, { imageUrl: url });
-                        toast({ title: "Image uploaded", description: "Image added to request" });
+                      for (const file of files) {
+                        const url = await uploadImage(file);
+                        if (url) await addRequestImage(firstReq.id, url);
                       }
+                      toast({ title: "Image uploaded", description: `${files.length} image(s) added` });
                     } catch {
                       toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
                     } finally {
