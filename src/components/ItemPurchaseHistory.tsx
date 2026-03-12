@@ -57,6 +57,17 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
         .select('purchase_order_id, quantity_allocated, unit_cost')
         .eq('sku', sku);
 
+      // Fetch total reserved quantity from job_items
+      const { data: reservedData } = await supabase
+        .from('job_items')
+        .select('quantity')
+        .eq('sku', sku)
+        .eq('reserved', true);
+
+      const totalReserved = reservedData
+        ? reservedData.reduce((sum, ji) => sum + ji.quantity, 0)
+        : 0;
+
       // Build allocation map: poId -> total sold quantity
       const soldByPO = new Map<string, number>();
       if (allocations) {
@@ -76,9 +87,6 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
             const matchingItem = items.find(item => item.sku === sku);
             if (matchingItem) {
               const soldQty = soldByPO.get(po.id) || 0;
-              const remainingQty = po.status === 'received' 
-                ? Math.max(0, matchingItem.quantity - soldQty)
-                : matchingItem.quantity;
 
               purchaseItems.push({
                 id: po.id,
@@ -86,13 +94,30 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                 unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
                 soldQuantity: po.status === 'received' ? soldQty : 0,
-                remainingQuantity: remainingQty,
+                reservedQuantity: 0, // will be computed below via FIFO
+                remainingQuantity: 0, // will be computed below
                 orderedAt: new Date(po.ordered_at),
                 receivedAt: po.received_at ? new Date(po.received_at) : null,
                 status: po.status as 'ordered' | 'received',
               });
             }
           }
+        }
+
+        // Distribute reserved quantity FIFO across received POs (oldest first)
+        let reservedLeft = totalReserved;
+        for (const p of purchaseItems) {
+          if (p.status !== 'received' || reservedLeft <= 0) {
+            p.remainingQuantity = p.status === 'received'
+              ? Math.max(0, p.quantity - p.soldQuantity)
+              : p.quantity;
+            continue;
+          }
+          const availableAfterSold = Math.max(0, p.quantity - p.soldQuantity);
+          const reservedFromThis = Math.min(availableAfterSold, reservedLeft);
+          p.reservedQuantity = reservedFromThis;
+          p.remainingQuantity = Math.max(0, availableAfterSold - reservedFromThis);
+          reservedLeft -= reservedFromThis;
         }
         
         setPurchases(purchaseItems);
