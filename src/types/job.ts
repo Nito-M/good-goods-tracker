@@ -25,5 +25,6 @@ export interface JobItem {
   notes: string | null;
   category: string | null;
   reserved: boolean;
+  consumed: boolean;
   createdAt: string;
 }

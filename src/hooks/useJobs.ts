@@ -71,7 +71,38 @@ export function useJobs() {
     return data;
   };
 
+  const consumeReservedItems = async (jobId: string) => {
+    // Mark all reserved (non-consumed) items as consumed — stock already deducted
+    await supabase
+      .from('job_items')
+      .update({ consumed: true } as any)
+      .eq('job_id', jobId)
+      .eq('reserved', true)
+      .eq('consumed', false);
+  };
+
+  const unconsumeItems = async (jobId: string) => {
+    // When moving away from finished, mark consumed items back to just reserved
+    await supabase
+      .from('job_items')
+      .update({ consumed: false } as any)
+      .eq('job_id', jobId)
+      .eq('consumed', true);
+  };
+
   const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null; due_date?: string | null }) => {
+    // If status is changing to finished, consume reserved items
+    if (updates.status === 'finished') {
+      await consumeReservedItems(id);
+    }
+    // If moving away from finished, get old status first
+    if (updates.status && updates.status !== 'finished') {
+      const { data: currentJob } = await supabase.from('jobs').select('status').eq('id', id).single();
+      if (currentJob?.status === 'finished') {
+        await unconsumeItems(id);
+      }
+    }
+
     const { error } = await supabase.from('jobs').update(updates).eq('id', id);
     if (error) {
       toast({ title: 'Error updating job', variant: 'destructive' });
@@ -164,6 +195,7 @@ export function useAllJobItems() {
         notes: d.notes,
         category: d.inventory_items?.category ?? null,
         reserved: d.reserved ?? false,
+        consumed: d.consumed ?? false,
         createdAt: d.created_at,
         jobTitle: d.jobs.title,
         jobNumber: d.jobs.job_number,
@@ -202,6 +234,7 @@ export function useJobItems(jobId: string | null) {
         notes: d.notes,
         category: d.inventory_items?.category ?? null,
         reserved: d.reserved ?? false,
+        consumed: d.consumed ?? false,
         createdAt: d.created_at,
       })));
     }
@@ -305,7 +338,7 @@ export function useJobItems(jobId: string | null) {
 
   const unreserveItem = async (jobItemId: string) => {
     const item = items.find(i => i.id === jobItemId);
-    if (!item || !item.inventoryItemId || !item.reserved) return false;
+    if (!item || !item.inventoryItemId || !item.reserved || item.consumed) return false;
     // Get current stock
     const { data: inv, error: invErr } = await supabase
       .from('inventory_items')

@@ -692,6 +692,7 @@ export type Database = {
       }
       job_items: {
         Row: {
+          consumed: boolean
           created_at: string
           id: string
           inventory_item_id: string | null
@@ -704,6 +705,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          consumed?: boolean
           created_at?: string
           id?: string
           inventory_item_id?: string | null
@@ -716,6 +718,7 @@ export type Database = {
           unit_price?: number
         }
         Update: {
+          consumed?: boolean
           created_at?: string
           id?: string
           inventory_item_id?: string | null
