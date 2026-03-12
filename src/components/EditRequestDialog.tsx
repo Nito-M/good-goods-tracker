@@ -63,6 +63,7 @@ export function EditRequestDialog({
   useEffect(() => {
     if (request) {
       setSelectedItemId(request.inventoryItemId || "custom");
+      setTitle(request.title || "");
       setItemName(request.itemName);
       setSku(request.sku || "");
       setQuantity(request.quantity);
