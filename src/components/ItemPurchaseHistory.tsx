@@ -373,13 +373,13 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                           {isReceived(purchase.status) ? (
                             purchase.remainingQuantity === 0 && purchase.reservedQuantity === 0 ? (
                               <Badge className="bg-muted text-muted-foreground hover:bg-muted">
-                                All Sold
+                                {purchase.consumedQuantity > 0 && purchase.soldQuantity === 0 ? 'All Used' : 'All Sold'}
                               </Badge>
                             ) : purchase.remainingQuantity === 0 && purchase.reservedQuantity > 0 ? (
                               <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
                                 Reserved
                               </Badge>
-                            ) : purchase.soldQuantity > 0 || purchase.reservedQuantity > 0 ? (
+                            ) : purchase.soldQuantity > 0 || purchase.reservedQuantity > 0 || purchase.consumedQuantity > 0 ? (
                               <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
                                 Partial
                               </Badge>
