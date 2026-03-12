@@ -38,6 +38,7 @@ import {
   Undo2,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { downloadFileFromUrl, getFileNameFromUrl } from '@/lib/fileDownload';
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
