@@ -35,10 +35,11 @@ interface SoldItem {
 
 interface ItemPurchaseHistoryProps {
   sku: string;
+  itemId: string;
   currentStock: number;
 }
 
-export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryProps) {
+export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseHistoryProps) {
   const [purchases, setPurchases] = useState<PurchaseHistoryItem[]>([]);
   const [soldItems, setSoldItems] = useState<SoldItem[]>([]);
   const [loading, setLoading] = useState(true);

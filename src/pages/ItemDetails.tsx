@@ -779,7 +779,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           )}
 
           {/* Purchase & Sales History */}
-          <ItemPurchaseHistory sku={item.sku} currentStock={item.quantity} />
+          <ItemPurchaseHistory sku={item.sku} itemId={item.id} currentStock={item.quantity} />
 
           {/* Timestamps Card */}
           <Card className="md:col-span-2">
