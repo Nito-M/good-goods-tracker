@@ -95,7 +95,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                 poNumber: po.po_number,
                 unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
-                soldQuantity: po.status === 'received' ? soldQty : 0,
+                soldQuantity: isReceived(po.status) ? soldQty : 0,
                 reservedQuantity: 0, // will be computed below via FIFO
                 remainingQuantity: 0, // will be computed below
                 orderedAt: new Date(po.ordered_at),
