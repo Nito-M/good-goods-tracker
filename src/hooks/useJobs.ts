@@ -203,6 +203,7 @@ export function useJobItems(jobId: string | null) {
         notes: d.notes,
         category: d.inventory_items?.category ?? null,
         reserved: d.reserved ?? false,
+        consumed: d.consumed ?? false,
         createdAt: d.created_at,
       })));
     }
