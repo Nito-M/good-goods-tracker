@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, ArrowLeft } from 'lucide-react';
 import { CartDrawer } from '@/components/CartDrawer';
+import { Button } from '@/components/ui/button';
 
 interface ShopHeaderProps {
   storeName?: string;
