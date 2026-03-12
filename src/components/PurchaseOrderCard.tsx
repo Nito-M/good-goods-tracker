@@ -356,10 +356,21 @@ export function PurchaseOrderCard({
                   {/* Legacy PDF */}
                   {order.pdfUrl && (
                     <div className="flex items-center gap-2">
-                      <a href={order.pdfUrl} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
+                      <a
+                        href={order.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          await downloadFileFromUrl(
+                            order.pdfUrl!,
+                            getFileNameFromUrl(order.pdfUrl!, `${order.poNumber || 'purchase-order'}-original.pdf`)
+                          );
+                        }}
+                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                      >
                         <FileText className="h-4 w-4" />
-                        View PDF (original)
+                        Download PDF (original)
                       </a>
                       {onDeletePdf && (
                         <button onClick={onDeletePdf}
