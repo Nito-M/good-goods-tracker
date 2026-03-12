@@ -106,6 +106,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
 
   const resetForm = () => {
     setSelectedItemId("");
+    setTitle("");
     setItemName("");
     setSku("");
     setQuantity("");
