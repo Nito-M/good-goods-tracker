@@ -352,10 +352,6 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                                 In Stock
                               </Badge>
                             )
-                          ) : purchase.status === 'partially_received' ? (
-                            <Badge className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">
-                              Partial Recv
-                            </Badge>
                           ) : (
                             <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
                               Ordered
