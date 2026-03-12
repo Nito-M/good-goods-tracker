@@ -138,6 +138,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
       if (pdfFile) uploadedPdfUrl = await onUploadPdf(pdfFile);
 
       await onSave({
+        title: title.trim() || null,
         inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
         itemName: itemName.trim(),
         sku: sku.trim() || null,
