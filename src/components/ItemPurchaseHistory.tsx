@@ -17,8 +17,10 @@ interface PurchaseHistoryItem {
   remainingQuantity: number;
   orderedAt: Date;
   receivedAt: Date | null;
-  status: 'ordered' | 'received';
+  status: 'ordered' | 'received' | 'partially_received';
 }
+
+const isReceived = (status: string) => status === 'received' || status === 'partially_received';
 
 interface SoldItem {
   saleId: string;
