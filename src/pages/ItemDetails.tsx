@@ -385,8 +385,22 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
 
           {/* Right: Item Details */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Item Details</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl">{item.name}</CardTitle>
+              <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
+              {selectedTagIds.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {tagCategories.map((tc) => {
+                    const categoryTags = getTagsByCategory(tc.id).filter((t) => selectedTagIds.includes(t.id));
+                    if (categoryTags.length === 0) return null;
+                    return categoryTags.map((tag) => (
+                      <Badge key={tag.id} variant="outline" className="text-xs">
+                        {tag.name}
+                      </Badge>
+                    ));
+                  })}
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
