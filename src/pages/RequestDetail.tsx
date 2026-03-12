@@ -483,9 +483,34 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
     setShowForm(true);
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
     if (!vendorName.trim()) return;
     setSaving(true);
+
+    // Upload image if new file selected
+    let finalImageUrl: string | null = existingImageUrl;
+    if (imageFile) {
+      // Use the same upload mechanism - upload to supabase storage
+      const { supabase } = await import("@/integrations/supabase/client");
+      const ext = imageFile.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { data, error } = await supabase.storage.from("request-images").upload(fileName, imageFile);
+      if (!error && data) {
+        const { data: signedData } = await supabase.storage.from("request-images").createSignedUrl(data.path, 60 * 60 * 24 * 365);
+        finalImageUrl = signedData?.signedUrl || null;
+      }
+    }
+
     let ok: boolean;
     if (editingId) {
       ok = await onUpdateSubItem(editingId, {
@@ -494,6 +519,8 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
         quantity: parseFloat(quantity) || 1,
         link: link.trim() || null,
         notes: notes.trim() || null,
+        sku: sku.trim() || null,
+        imageUrl: finalImageUrl,
       });
     } else {
       ok = await onAddSubItem({
@@ -502,6 +529,8 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
         quantity: parseFloat(quantity) || 1,
         link: link.trim() || null,
         notes: notes.trim() || null,
+        sku: sku.trim() || null,
+        imageUrl: finalImageUrl,
       });
     }
     if (ok) resetForm();
