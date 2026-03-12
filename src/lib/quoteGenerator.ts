@@ -327,7 +327,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
   }
 
   // Save the PDF
-  doc.save(`${quote.quoteNumber}.pdf`);
+  await savePdfBlob(doc, `${quote.quoteNumber}.pdf`);
 };
 
 function loadImage(url: string): Promise<HTMLImageElement> {

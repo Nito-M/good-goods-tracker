@@ -153,5 +153,5 @@ export function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
   doc.setTextColor(128, 128, 128);
   doc.text(`Generated ${new Date().toLocaleDateString()}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
 
-  doc.save(`${assembly.name} - Parts List.pdf`);
+  await savePdfBlob(doc, `${assembly.name} - Parts List.pdf`);
 }

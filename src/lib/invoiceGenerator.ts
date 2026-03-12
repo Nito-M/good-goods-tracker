@@ -245,7 +245,7 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   }
 
   // Save the PDF
-  doc.save(`${sale.invoiceNumber}.pdf`);
+  await savePdfBlob(doc, `${sale.invoiceNumber}.pdf`);
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
