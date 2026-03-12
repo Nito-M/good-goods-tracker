@@ -34,6 +34,7 @@ export function EditRequest() {
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [title, setTitle] = useState("");
   const [itemName, setItemName] = useState("");
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -60,6 +61,7 @@ export function EditRequest() {
   useEffect(() => {
     if (request && !initialized) {
       setSelectedItemId(request.inventoryItemId || "custom");
+      setTitle(request.title || "");
       setItemName(request.itemName);
       setSku(request.sku || "");
       setQuantity(request.quantity);
@@ -145,6 +147,7 @@ export function EditRequest() {
       if (pdfFile) finalPdfUrl = await uploadPdf(pdfFile);
 
       const success = await updateRequest(request.id, {
+        title: title.trim() || null,
         inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
         itemName: itemName.trim(),
         sku: sku.trim() || null,
@@ -242,6 +245,12 @@ export function EditRequest() {
         <div className="space-y-2">
           <Label htmlFor="editItemName">Item Name *</Label>
           <Input id="editItemName" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Enter item name" required />
+        </div>
+
+        {/* Title (Optional) */}
+        <div className="space-y-2">
+          <Label htmlFor="editTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+          <Input id="editTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Custom title for this request" />
         </div>
 
         {/* SKU */}
