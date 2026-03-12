@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { formatCurrency } from '@/lib/utils';
+import { savePdfBlob } from '@/lib/pdfSave';
 
 export interface PartsAssemblyPdfData {
   name: string;
