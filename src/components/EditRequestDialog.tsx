@@ -36,6 +36,7 @@ export function EditRequestDialog({
 }: EditRequestDialogProps) {
   const [loading, setLoading] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [title, setTitle] = useState("");
   const [itemName, setItemName] = useState("");
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState(1);
