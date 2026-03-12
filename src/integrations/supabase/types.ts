@@ -1858,6 +1858,7 @@ export type Database = {
           requester_name: string | null
           sku: string | null
           status: string
+          title: string | null
           updated_at: string
           user_id: string
           vendor_name: string | null
@@ -1883,6 +1884,7 @@ export type Database = {
           requester_name?: string | null
           sku?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
           user_id: string
           vendor_name?: string | null
@@ -1908,6 +1910,7 @@ export type Database = {
           requester_name?: string | null
           sku?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
           vendor_name?: string | null
