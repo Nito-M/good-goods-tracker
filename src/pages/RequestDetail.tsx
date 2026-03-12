@@ -79,6 +79,7 @@ export function RequestDetail() {
 
   const requestIds = useMemo(() => groupRequests.map((r) => r.id), [groupRequests]);
   const { subItems, addSubItem, updateSubItem, deleteSubItem, toggleSelected } = useRequestSubItems(requestIds);
+  const { images: requestImages, addImage: addRequestImage, deleteImage: deleteRequestImage } = useRequestImages(requestIds);
 
   const getTotal = (r: Request) => {
     const subtotal = r.quantity * r.price;
