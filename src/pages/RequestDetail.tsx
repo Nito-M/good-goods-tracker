@@ -42,6 +42,7 @@ export function RequestDetail() {
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const decodedNumber = requestNumber ? decodeURIComponent(requestNumber) : "";
 
