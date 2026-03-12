@@ -141,6 +141,7 @@ export function useRequests() {
 
       const insertPayload: Record<string, any> = {
         user_id: user.id,
+        title: input.title || null,
         inventory_item_id: input.inventoryItemId,
         item_name: input.itemName,
         sku: input.sku || null,
