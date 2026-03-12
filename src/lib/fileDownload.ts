@@ -8,17 +8,22 @@ export function getFileNameFromUrl(url: string, fallback = "document.pdf") {
   }
 }
 
-export async function downloadFileFromUrl(url: string, fileName: string) {
+function buildForcedDownloadUrl(url: string, fileName: string) {
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Download failed: ${response.status}`);
-    }
+    const parsedUrl = new URL(url, window.location.origin);
+    parsedUrl.searchParams.set("download", fileName);
+    return parsedUrl.toString();
+  } catch {
+    return url;
+  }
+}
 
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
+export function downloadFileFromUrl(url: string, fileName: string) {
+  const forcedDownloadUrl = buildForcedDownloadUrl(url, fileName);
+
+  try {
     const link = document.createElement("a");
-    link.href = objectUrl;
+    link.href = forcedDownloadUrl;
     link.download = fileName;
     link.rel = "noopener noreferrer";
     link.style.display = "none";
@@ -27,11 +32,10 @@ export async function downloadFileFromUrl(url: string, fileName: string) {
     link.click();
     document.body.removeChild(link);
 
-    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     return true;
   } catch (error) {
-    console.error("Failed to download file:", error);
-    window.open(url, "_blank", "noopener,noreferrer");
+    console.error("Failed to trigger file download:", error);
+    window.location.assign(forcedDownloadUrl);
     return false;
   }
 }
