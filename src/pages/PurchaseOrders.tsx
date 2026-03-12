@@ -359,9 +359,9 @@ export function PurchaseOrders() {
                           onMarkOrdered={handleMarkOrdered}
                           onMarkReceived={handleMarkReceived}
                           onMarkPaid={handleMarkPaid}
-                          onRevertPaid={handleRevertPaid}
-                          onRevert={handleRevert}
-                          onDelete={deleteOrder}
+                          onRevertPaid={openRevertPaidConfirm}
+                          onRevert={openRevertOrderConfirm}
+                          onDelete={openDeleteConfirm}
                           onEdit={handleEdit}
                           onDownload={handleDownload}
                           onPreview={handlePreview}
