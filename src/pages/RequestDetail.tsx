@@ -616,13 +616,17 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
               {subItems.map((si) => (
                 <div
                   key={si.id}
-                  className={`flex items-center gap-3 text-sm p-2 rounded border ${si.isSelected ? "bg-primary/5 border-primary/30" : "bg-background border-border/50"}`}
+                  className={`flex items-start gap-3 text-sm p-2 rounded border ${si.isSelected ? "bg-primary/5 border-primary/30" : "bg-background border-border/50"}`}
                 >
-                  <button onClick={() => onToggleSelected(si.id)} className="shrink-0">
+                  <button onClick={() => onToggleSelected(si.id)} className="shrink-0 mt-1">
                     <Star className={`h-4 w-4 ${si.isSelected ? "fill-primary text-primary" : "text-muted-foreground"}`} />
                   </button>
+                  {si.imageUrl && (
+                    <img src={si.imageUrl} alt={si.vendorName} className="h-12 w-12 rounded border object-cover shrink-0" />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{si.vendorName}</div>
+                    {si.sku && <div className="text-xs text-muted-foreground font-mono">{si.sku}</div>}
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span>×{si.quantity}</span>
                       <span>@ {formatCurrency(si.unitPrice)}</span>
