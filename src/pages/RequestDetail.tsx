@@ -431,9 +431,9 @@ interface RequestItemRowProps {
   request: Request;
   lineTotal: number;
   canManage: boolean;
-  subItems: { id: string; vendorName: string; unitPrice: number; quantity: number; link: string | null; notes: string | null; isSelected: boolean }[];
-  onAddSubItem: (input: { vendorName: string; unitPrice: number; quantity?: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
-  onUpdateSubItem: (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
+  subItems: { id: string; vendorName: string; unitPrice: number; quantity: number; link: string | null; notes: string | null; sku: string | null; imageUrl: string | null; isSelected: boolean }[];
+  onAddSubItem: (input: { vendorName: string; unitPrice: number; quantity?: number; link?: string | null; notes?: string | null; sku?: string | null; imageUrl?: string | null }) => Promise<boolean>;
+  onUpdateSubItem: (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null; sku?: string | null; imageUrl?: string | null }) => Promise<boolean>;
   onDeleteSubItem: (id: string) => Promise<boolean>;
   onToggleSelected: (id: string) => Promise<boolean>;
   onEdit: () => void;
