@@ -147,6 +147,7 @@ export function EditRequest() {
       if (pdfFile) finalPdfUrl = await uploadPdf(pdfFile);
 
       const success = await updateRequest(request.id, {
+        title: title.trim() || null,
         inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
         itemName: itemName.trim(),
         sku: sku.trim() || null,
