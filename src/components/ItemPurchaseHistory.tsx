@@ -109,8 +109,8 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
         // Distribute reserved quantity FIFO across received POs (oldest first)
         let reservedLeft = totalReserved;
         for (const p of purchaseItems) {
-          if (p.status !== 'received' || reservedLeft <= 0) {
-            p.remainingQuantity = p.status === 'received'
+          if (!isReceived(p.status) || reservedLeft <= 0) {
+            p.remainingQuantity = isReceived(p.status)
               ? Math.max(0, p.quantity - p.soldQuantity)
               : p.quantity;
             continue;
