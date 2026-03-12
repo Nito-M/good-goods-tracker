@@ -1,42 +1,24 @@
 
 
-## Plan: Improve Quote PDF Layout and Alignment
+## Plan: Show reserved quantities in Purchase & Sales History
 
-### Problems Identified (from the PDF)
-1. Excessive vertical gaps between header, title, details, bill-to, and table sections
-2. Table column positions are not well-distributed -- Item column too narrow, SKU cramped
-3. Redundant double separator line after the last item (one from the item loop + one after the loop)
-4. Too much spacing after the items table before totals/notes, pushing content to page 2 unnecessarily
-5. The separator lines between items need consistent full-width rendering
+**Problem**: When items are reserved in jobs, the "Remaining" column in the Purchase & Sales History card doesn't reflect reserved quantities. It only accounts for sold quantities (from `po_item_allocations`), not reserved ones.
+
+**Solution**: Query `job_items` where `reserved = true` for the given SKU, sum up the total reserved quantity, and subtract it from the remaining calculation alongside sold quantities.
 
 ### Changes
 
-#### File: `src/lib/quoteGenerator.ts`
+**`src/components/ItemPurchaseHistory.tsx`**:
 
-1. **Reduce vertical spacing between sections**:
-   - Reduce gap after logo from `+5` to `+2`
-   - Reduce gap after business info from `+5` to `+2`
-   - Reduce title bottom margin from `+15` to `+10`
-   - Reduce gap after quote details from `+3` to `+2`
-   - Reduce gap after bill-to from `+10` to `+5`
+1. Add a new state/variable for total reserved quantity by fetching from `job_items` where `sku = sku` and `reserved = true`.
 
-2. **Better table column distribution** (full page width = 210mm, margins 20mm each side = 170mm usable):
-   - Item: `tableX + 2` (keep) -- allocate ~70mm width for item names
-   - SKU: `tableX + 72` (was 60) -- shift right, allocate ~30mm
-   - Qty: `tableX + 105` (was 95) -- shift right  
-   - Price: `tableX + 130` (was 115) -- shift right (when visible)
-   - Total: `pageWidth - 22` right-aligned (keep)
-   - Update `splitTextToSize` width for item names from 55 to 67, SKU from 32 to 30
+2. Add a "Reserved" summary stat in the stats grid (between "Total Sold" and "In Stock").
 
-3. **Remove duplicate separator line** after the items loop (lines 236-244) -- the per-item separator is sufficient. Just add small spacing before totals.
+3. Update the remaining quantity calculation in the PO table to also subtract reserved quantities (distributed FIFO across POs, oldest received first — matching how `deductFromLocations` works).
 
-4. **Reduce post-table spacing**: Change `y += 5` + separator + `y += 10` to just `y += 6`
+4. Show a "Reserved" column or badge in the PO table so users can see how many units are reserved per PO.
 
-5. **Apply same column positions** in `addPageWithHeader` function for consistency
+**Approach for distributing reserved qty across POs**: After calculating sold quantities per PO, distribute the total reserved quantity across received POs in order (oldest first), deducting from each PO's remaining (after sold) until the reserved total is exhausted. This mirrors the FIFO approach used elsewhere.
 
-#### File: `src/components/QuotePreviewDialog.tsx`
-
-6. **Tighten preview spacing** to match the PDF improvements:
-   - Reduce margins between header, title, details, bill-to sections (`mb-8` → `mb-4`, `my-6` → `my-3`, `mb-6` → `mb-4`)
-   - Adjust table column widths for better distribution
+**No database changes needed** — `job_items` already has `sku` and `reserved` columns.
 
