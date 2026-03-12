@@ -26,6 +26,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [title, setTitle] = useState("");
   const [itemName, setItemName] = useState("");
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState<number | "">("");
@@ -105,6 +106,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
 
   const resetForm = () => {
     setSelectedItemId("");
+    setTitle("");
     setItemName("");
     setSku("");
     setQuantity("");
@@ -136,6 +138,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
       if (pdfFile) uploadedPdfUrl = await onUploadPdf(pdfFile);
 
       await onSave({
+        title: title.trim() || null,
         inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
         itemName: itemName.trim(),
         sku: sku.trim() || null,
@@ -254,6 +257,12 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
           <div className="space-y-2">
             <Label htmlFor="itemName">Item Name *</Label>
             <Input id="itemName" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Enter item name" required />
+          </div>
+
+          {/* Title (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="title">Title <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Custom title for this request" />
           </div>
 
           {/* SKU */}
