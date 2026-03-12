@@ -433,17 +433,6 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           </Card>
         </div>
 
-        {/* Description Card */}
-        {item.description && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-card-foreground">{item.description}</p>
-            </CardContent>
-          </Card>
-        )}
 
         {/* DXF Drawing */}
         <div className="mb-6">
