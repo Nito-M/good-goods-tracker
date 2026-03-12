@@ -5,6 +5,7 @@ import { useRequestSubItems } from "@/hooks/useRequestSubItems";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { useBankCards } from "@/hooks/useBankCards";
 import { useVendors } from "@/hooks/useVendors";
+import { useInventory } from "@/hooks/useInventory";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, ChevronLeft, Plus, Star, X, Store } from "lucide-react";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
+import { AddItemToRequestDialog } from "@/components/AddItemToRequestDialog";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
 
@@ -30,10 +32,11 @@ const statusColors: Record<RequestStatus, string> = {
 export function RequestDetail() {
   const { requestNumber } = useParams<{ requestNumber: string }>();
   const navigate = useNavigate();
-  const { requests, loading, updateStatus, updateCardId, updateRequest, deleteRequest } = useRequests();
+  const { requests, loading, updateStatus, updateCardId, updateRequest, deleteRequest, addRequest, uploadImage, uploadPdf } = useRequests();
   const { linkedName, isAdminUser } = useLinkedRequester();
   const { cards } = useBankCards();
   const { vendors } = useVendors();
+  const { allItems } = useInventory();
   const { toast } = useToast();
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
@@ -253,8 +256,25 @@ export function RequestDetail() {
 
       {/* Items Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Items ({groupRequests.length})</CardTitle>
+          {canManage && (
+            <AddItemToRequestDialog
+              items={allItems}
+              requestNumber={decodedNumber}
+              requesterName={firstReq?.requesterName || null}
+              onSave={async (input) => {
+                await addRequest({
+                  ...input,
+                  requestNumber: decodedNumber,
+                  requesterName: firstReq?.requesterName || null,
+                  vendorName: firstReq?.vendorName || null,
+                });
+              }}
+              onUploadImage={uploadImage}
+              onUploadPdf={uploadPdf}
+            />
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <Table>
