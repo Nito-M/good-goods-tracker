@@ -418,9 +418,9 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-5xl ${isAdmin ? 'grid-cols-9' : showUsersTab ? 'grid-cols-8' : 'grid-cols-7'}`}>
-            <TabsTrigger value="general" className="gap-2">
-              <Monitor className="h-4 w-4" />
+          <TabsList className="flex w-full max-w-5xl overflow-x-auto">
+            <TabsTrigger value="general" className="gap-2 shrink-0">
+              <Monitor className="h-4 w-4 hidden sm:inline" />
               General
             </TabsTrigger>
             <TabsTrigger value="companies" className="gap-2">
