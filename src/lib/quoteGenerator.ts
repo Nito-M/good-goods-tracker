@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { Quote, QuoteSettings } from '@/types/quote';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 import { formatCurrency } from '@/lib/utils';
+import { savePdfBlob } from '@/lib/pdfSave';
 
 const PAGE_MARGIN_BOTTOM = 20; // mm from bottom edge where we trigger a new page
 const LINE_HEIGHT = 7;
