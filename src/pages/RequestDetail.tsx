@@ -40,6 +40,8 @@ export function RequestDetail() {
   const { toast } = useToast();
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
 
   const decodedNumber = requestNumber ? decodeURIComponent(requestNumber) : "";
 
