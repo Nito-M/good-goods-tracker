@@ -449,6 +449,10 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
   const [quantity, setQuantity] = useState("1");
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
+  const [sku, setSku] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
@@ -457,6 +461,10 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
     setQuantity("1");
     setLink("");
     setNotes("");
+    setSku("");
+    setImageFile(null);
+    setImagePreview(null);
+    setExistingImageUrl(null);
     setEditingId(null);
     setShowForm(false);
   };
