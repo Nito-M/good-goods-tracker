@@ -418,6 +418,79 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           </Card>
         </div>
 
+function LocationQuantityRow({ warehouseName, quantity, quantityUnit, locationId, onSave }: {
+  warehouseName: string;
+  quantity: number;
+  quantityUnit?: string;
+  locationId?: string;
+  onSave: (newQty: number) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(String(quantity));
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!locationId) return;
+    const newQty = parseFloat(editValue);
+    if (isNaN(newQty) || newQty < 0) return;
+    setSaving(true);
+    await onSave(newQty);
+    setSaving(false);
+    setEditing(false);
+  };
+
+  const unitLabel = quantityUnit && quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[quantityUnit] : '';
+
+  if (editing) {
+    return (
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-card-foreground">{warehouseName}</span>
+        <div className="flex items-center gap-1">
+          <Input
+            type="number"
+            min="0"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="w-24 h-7 text-sm"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSave();
+              if (e.key === 'Escape') setEditing(false);
+            }}
+          />
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSave} disabled={saving}>
+            <Check className="h-3.5 w-3.5 text-green-600" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditing(false)}>
+            <X className="h-3.5 w-3.5 text-destructive" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between group">
+      <span className="text-sm font-medium text-card-foreground">{warehouseName}</span>
+      <div className="flex items-center gap-1">
+        <Badge variant={quantity > 0 ? 'secondary' : 'outline'}>
+          {quantity} {unitLabel}
+        </Badge>
+        {locationId && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => { setEditValue(String(quantity)); setEditing(true); }}
+          >
+            <Pencil className="h-3 w-3 text-muted-foreground" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
         {/* DXF Drawing */}
         <div className="mb-6">
