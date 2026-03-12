@@ -513,14 +513,14 @@ export function Settings() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="pt-4 border-t space-y-2">
                   <div className="space-y-0.5">
                     <Label>Accent Color</Label>
                     <p className="text-sm text-muted-foreground">
                       Choose your preferred accent color
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {colorThemeOptions.map((option) => (
                       <button
                         key={option.value}
@@ -536,14 +536,14 @@ export function Settings() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="pt-4 border-t space-y-2">
                   <div className="space-y-0.5">
                     <Label>Background</Label>
                     <p className="text-sm text-muted-foreground">
                       Choose your preferred background
                     </p>
                   </div>
-                  <div className="flex gap-2 flex-wrap justify-end">
+                  <div className="flex gap-2 flex-wrap">
                     {backgroundThemeOptions.map((option) => (
                       <button
                         key={option.value}
