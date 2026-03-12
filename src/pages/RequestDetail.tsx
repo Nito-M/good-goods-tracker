@@ -32,10 +32,11 @@ const statusColors: Record<RequestStatus, string> = {
 export function RequestDetail() {
   const { requestNumber } = useParams<{ requestNumber: string }>();
   const navigate = useNavigate();
-  const { requests, loading, updateStatus, updateCardId, updateRequest, deleteRequest } = useRequests();
+  const { requests, loading, updateStatus, updateCardId, updateRequest, deleteRequest, addRequest, uploadImage, uploadPdf } = useRequests();
   const { linkedName, isAdminUser } = useLinkedRequester();
   const { cards } = useBankCards();
   const { vendors } = useVendors();
+  const { allItems } = useInventory();
   const { toast } = useToast();
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
