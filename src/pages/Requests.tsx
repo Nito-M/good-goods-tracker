@@ -113,6 +113,7 @@ export function Requests() {
     return visibleRequests.filter((request) => {
       const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
       const searchableText = [
+        request.title,
         request.itemName,
         request.sku,
         request.notes,
