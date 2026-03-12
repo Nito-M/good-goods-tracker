@@ -41,6 +41,7 @@ export interface RequestSubItem {
 }
 
 export interface CreateRequestInput {
+  title?: string | null;
   inventoryItemId: string | null;
   itemName: string;
   sku: string | null;
