@@ -338,7 +338,7 @@ export function useJobItems(jobId: string | null) {
 
   const unreserveItem = async (jobItemId: string) => {
     const item = items.find(i => i.id === jobItemId);
-    if (!item || !item.inventoryItemId || !item.reserved) return false;
+    if (!item || !item.inventoryItemId || !item.reserved || item.consumed) return false;
     // Get current stock
     const { data: inv, error: invErr } = await supabase
       .from('inventory_items')
