@@ -182,8 +182,8 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
       // Delete the consumption record
       await supabase.from('item_consumptions').delete().eq('id', last.id);
 
+      await refetchLocations();
       toast({ title: `Reverted consumption of ${last.quantity} — new quantity: ${restoredQty}` });
-      // Refetch consumptions
       window.location.reload();
     } catch {
       toast({ title: 'Error reverting consumption', variant: 'destructive' });
