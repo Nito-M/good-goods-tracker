@@ -505,7 +505,7 @@ export function Requests() {
                           e.preventDefault();
                           await downloadFileFromUrl(
                             r.pdfUrl!,
-                            getFileNameFromUrl(r.pdfUrl!, `${group.requestNumber || r.itemName || "request"}.pdf`)
+                            getFileNameFromUrl(r.pdfUrl!, `${group.requests[0]?.requestNumber || r.itemName || "request"}.pdf`)
                           );
                         }}
                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline bg-primary/5 border border-primary/20 rounded px-2 py-1"

@@ -648,7 +648,7 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
                       e.preventDefault();
                       await downloadFileFromUrl(
                         r.pdfUrl!,
-                        getFileNameFromUrl(r.pdfUrl!, `${decodedNumber || "request"}-${r.itemName || "attachment"}.pdf`)
+                        getFileNameFromUrl(r.pdfUrl!, `${r.requestNumber || "request"}-${r.itemName || "attachment"}.pdf`)
                       );
                     }}
                     className="text-xs text-primary flex items-center gap-0.5 hover:underline"
