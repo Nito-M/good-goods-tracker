@@ -1793,11 +1793,13 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string | null
           is_selected: boolean
           link: string | null
           notes: string | null
           quantity: number
           request_id: string
+          sku: string | null
           unit_price: number
           user_id: string
           vendor_name: string
@@ -1805,11 +1807,13 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string | null
           is_selected?: boolean
           link?: string | null
           notes?: string | null
           quantity?: number
           request_id: string
+          sku?: string | null
           unit_price?: number
           user_id: string
           vendor_name: string
@@ -1817,11 +1821,13 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          image_url?: string | null
           is_selected?: boolean
           link?: string | null
           notes?: string | null
           quantity?: number
           request_id?: string
+          sku?: string | null
           unit_price?: number
           user_id?: string
           vendor_name?: string
