@@ -1,3 +1,35 @@
+const IOS_USER_AGENT_REGEX = /iPad|iPhone|iPod/;
+
+function isIOSDevice() {
+  return typeof navigator !== "undefined" && IOS_USER_AGENT_REGEX.test(navigator.userAgent);
+}
+
+async function tryShareFile(blob: Blob, fileName: string) {
+  if (typeof navigator === "undefined" || !("share" in navigator)) {
+    return false;
+  }
+
+  try {
+    const file = new File([blob], fileName, {
+      type: blob.type || "application/pdf",
+      lastModified: Date.now(),
+    });
+
+    const nav = navigator as Navigator & {
+      canShare?: (data: ShareData) => boolean;
+    };
+
+    if (nav.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: fileName });
+      return true;
+    }
+  } catch (error) {
+    console.error("Share failed, falling back to download:", error);
+  }
+
+  return false;
+}
+
 export function getFileNameFromUrl(url: string, fallback = "document.pdf") {
   try {
     const withoutQuery = url.split("?")[0];
@@ -8,28 +40,28 @@ export function getFileNameFromUrl(url: string, fallback = "document.pdf") {
   }
 }
 
-function buildForcedDownloadUrl(url: string, fileName: string) {
-  try {
-    const parsedUrl = new URL(url, window.location.origin);
-    parsedUrl.searchParams.set("download", fileName);
-    return parsedUrl.toString();
-  } catch {
-    return url;
-  }
-}
-
 export async function downloadFileFromUrl(url: string, fileName: string) {
   try {
-    // Fetch as blob to create a same-origin object URL
-    // This is required for mobile Safari where the download attribute
-    // doesn't work on cross-origin URLs
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Download failed: ${response.status}`);
     }
 
     const blob = await response.blob();
+
+    if (await tryShareFile(blob, fileName)) {
+      return true;
+    }
+
     const objectUrl = URL.createObjectURL(blob);
+
+    if (isIOSDevice()) {
+      // iOS Safari/POS webviews often ignore the download attribute.
+      // Navigating directly to the blob lets users Save/Share the file.
+      window.location.assign(objectUrl);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      return true;
+    }
 
     const link = document.createElement("a");
     link.href = objectUrl;
@@ -41,13 +73,13 @@ export async function downloadFileFromUrl(url: string, fileName: string) {
     link.click();
     document.body.removeChild(link);
 
-    // Clean up after a delay
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 5_000);
     return true;
   } catch (error) {
     console.error("Failed to download file:", error);
-    // Final fallback: open in new tab so user can long-press to save
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Always navigate as final fallback (works better than popup on mobile/POS)
+    window.location.assign(url);
     return false;
   }
 }
+
