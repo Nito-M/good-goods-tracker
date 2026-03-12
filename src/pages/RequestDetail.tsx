@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRequests } from "@/hooks/useRequests";
 import { useRequestSubItems } from "@/hooks/useRequestSubItems";
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, ChevronLeft, Plus, Star, X, Store } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, ChevronLeft, Plus, Star, X, Store, Upload } from "lucide-react";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
 import { AddItemToRequestDialog } from "@/components/AddItemToRequestDialog";
 import { Request, RequestStatus } from "@/types/request";
@@ -431,9 +431,9 @@ interface RequestItemRowProps {
   request: Request;
   lineTotal: number;
   canManage: boolean;
-  subItems: { id: string; vendorName: string; unitPrice: number; quantity: number; link: string | null; notes: string | null; isSelected: boolean }[];
-  onAddSubItem: (input: { vendorName: string; unitPrice: number; quantity?: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
-  onUpdateSubItem: (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null }) => Promise<boolean>;
+  subItems: { id: string; vendorName: string; unitPrice: number; quantity: number; link: string | null; notes: string | null; sku: string | null; imageUrl: string | null; isSelected: boolean }[];
+  onAddSubItem: (input: { vendorName: string; unitPrice: number; quantity?: number; link?: string | null; notes?: string | null; sku?: string | null; imageUrl?: string | null }) => Promise<boolean>;
+  onUpdateSubItem: (id: string, updates: { vendorName?: string; unitPrice?: number; quantity?: number; link?: string | null; notes?: string | null; sku?: string | null; imageUrl?: string | null }) => Promise<boolean>;
   onDeleteSubItem: (id: string) => Promise<boolean>;
   onToggleSelected: (id: string) => Promise<boolean>;
   onEdit: () => void;
@@ -449,6 +449,10 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
   const [quantity, setQuantity] = useState("1");
   const [link, setLink] = useState("");
   const [notes, setNotes] = useState("");
+  const [sku, setSku] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
@@ -457,6 +461,10 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
     setQuantity("1");
     setLink("");
     setNotes("");
+    setSku("");
+    setImageFile(null);
+    setImagePreview(null);
+    setExistingImageUrl(null);
     setEditingId(null);
     setShowForm(false);
   };
@@ -468,12 +476,41 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
     setQuantity(String(si.quantity));
     setLink(si.link || "");
     setNotes(si.notes || "");
+    setSku(si.sku || "");
+    setImageFile(null);
+    setImagePreview(si.imageUrl || null);
+    setExistingImageUrl(si.imageUrl || null);
     setShowForm(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSave = async () => {
     if (!vendorName.trim()) return;
     setSaving(true);
+
+    // Upload image if new file selected
+    let finalImageUrl: string | null = existingImageUrl;
+    if (imageFile) {
+      // Use the same upload mechanism - upload to supabase storage
+      const { supabase } = await import("@/integrations/supabase/client");
+      const ext = imageFile.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { data, error } = await supabase.storage.from("request-images").upload(fileName, imageFile);
+      if (!error && data) {
+        const { data: signedData } = await supabase.storage.from("request-images").createSignedUrl(data.path, 60 * 60 * 24 * 365);
+        finalImageUrl = signedData?.signedUrl || null;
+      }
+    }
+
     let ok: boolean;
     if (editingId) {
       ok = await onUpdateSubItem(editingId, {
@@ -482,6 +519,8 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
         quantity: parseFloat(quantity) || 1,
         link: link.trim() || null,
         notes: notes.trim() || null,
+        sku: sku.trim() || null,
+        imageUrl: finalImageUrl,
       });
     } else {
       ok = await onAddSubItem({
@@ -490,6 +529,8 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
         quantity: parseFloat(quantity) || 1,
         link: link.trim() || null,
         notes: notes.trim() || null,
+        sku: sku.trim() || null,
+        imageUrl: finalImageUrl,
       });
     }
     if (ok) resetForm();
@@ -575,13 +616,17 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
               {subItems.map((si) => (
                 <div
                   key={si.id}
-                  className={`flex items-center gap-3 text-sm p-2 rounded border ${si.isSelected ? "bg-primary/5 border-primary/30" : "bg-background border-border/50"}`}
+                  className={`flex items-start gap-3 text-sm p-2 rounded border ${si.isSelected ? "bg-primary/5 border-primary/30" : "bg-background border-border/50"}`}
                 >
-                  <button onClick={() => onToggleSelected(si.id)} className="shrink-0">
+                  <button onClick={() => onToggleSelected(si.id)} className="shrink-0 mt-1">
                     <Star className={`h-4 w-4 ${si.isSelected ? "fill-primary text-primary" : "text-muted-foreground"}`} />
                   </button>
+                  {si.imageUrl && (
+                    <img src={si.imageUrl} alt={si.vendorName} className="h-12 w-12 rounded border object-cover shrink-0" />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{si.vendorName}</div>
+                    {si.sku && <div className="text-xs text-muted-foreground font-mono">{si.sku}</div>}
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span>×{si.quantity}</span>
                       <span>@ {formatCurrency(si.unitPrice)}</span>
@@ -610,10 +655,28 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
               {showForm && (
                 <div className="grid grid-cols-2 gap-2 p-2 bg-background border rounded">
                   <Input placeholder="Vendor name *" value={vendorName} onChange={(e) => setVendorName(e.target.value)} className="col-span-2 h-8 text-sm" />
+                  <Input placeholder="SKU (optional)" value={sku} onChange={(e) => setSku(e.target.value)} className="col-span-2 h-8 text-sm" />
                   <Input placeholder="Quantity" type="number" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Unit price" type="number" step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Link (optional)" value={link} onChange={(e) => setLink(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} className="col-span-2 h-8 text-sm" />
+                  {/* Image upload */}
+                  <div className="col-span-2">
+                    {imagePreview ? (
+                      <div className="relative w-full h-20 rounded border overflow-hidden">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={() => { setImageFile(null); setImagePreview(null); setExistingImageUrl(null); }}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="flex items-center gap-2 w-full h-8 px-3 border border-dashed rounded cursor-pointer hover:bg-muted/50 transition-colors text-xs text-muted-foreground">
+                        <Upload className="h-3.5 w-3.5" />
+                        <span>Upload image (optional)</span>
+                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                      </label>
+                    )}
+                  </div>
                   <div className="col-span-2 flex gap-2">
                     <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={saving || !vendorName.trim()}>
                       {saving ? "Saving..." : editingId ? "Update" : "Add"}
