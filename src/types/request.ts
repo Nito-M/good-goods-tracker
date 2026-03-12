@@ -4,6 +4,7 @@ export interface Request {
   id: string;
   userId: string;
   requestNumber: string | null;
+  title: string | null;
   inventoryItemId: string | null;
   itemName: string;
   sku: string | null;
