@@ -363,6 +363,7 @@ export function AddRequest() {
     : linkedName ? [linkedName] : [];
 
   const [selectedRequester, setSelectedRequester] = useState("");
+  const [requestTitle, setRequestTitle] = useState("");
   const [lines, setLines] = useState<RequestLineItem[]>([createEmptyLine()]);
   const [requestMode, setRequestMode] = useState<"multiple" | "single">("multiple");
   const [openItems, setOpenItems] = useState<Set<string>>(new Set([lines[0]?.id]));
