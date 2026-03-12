@@ -119,9 +119,16 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   }
 
   const handleConsume = async () => {
-    if (!item) return;
+    if (!item || !consumeWarehouseId) return;
     const amount = parseFloat(consumeQty) || 0;
     if (amount <= 0) return;
+    const locationEntry = itemLocations.find(
+      (loc) => loc.warehouse_id === consumeWarehouseId
+    );
+    if (!locationEntry || amount > locationEntry.quantity) {
+      toast({ title: 'Not enough stock at this location', variant: 'destructive' });
+      return;
+    }
     setIsConsuming(true);
     try {
       const newQty = Math.max(0, item.quantity - amount);
@@ -130,37 +137,14 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         itemId: item.id,
         quantity: amount,
         description: consumeDescription.trim() || undefined,
-        warehouseId: consumeWarehouseId || undefined,
+        warehouseId: consumeWarehouseId,
       });
 
-      // Also decrement the location-specific quantity if a warehouse was selected
-      if (consumeWarehouseId) {
-        const locationEntry = itemLocations.find(
-          (loc) => loc.warehouse_id === consumeWarehouseId
-        );
-        if (locationEntry) {
-          const newLocQty = Math.max(0, locationEntry.quantity - amount);
-          await supabase
-            .from('item_location_quantities')
-            .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
-            .eq('id', locationEntry.id);
-        }
-      } else if (itemLocations.length > 0) {
-        // No specific warehouse selected — distribute consumption across locations
-        let remaining = amount;
-        for (const loc of itemLocations) {
-          if (remaining <= 0) break;
-          const deduct = Math.min(loc.quantity, remaining);
-          if (deduct > 0) {
-            const newLocQty = loc.quantity - deduct;
-            await supabase
-              .from('item_location_quantities')
-              .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
-              .eq('id', loc.id);
-            remaining -= deduct;
-          }
-        }
-      }
+      const newLocQty = Math.max(0, locationEntry.quantity - amount);
+      await supabase
+        .from('item_location_quantities')
+        .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
+        .eq('id', locationEntry.id);
 
       toast({ title: `Consumed ${amount} — new quantity: ${newQty}` });
       setConsumeDialogOpen(false);
@@ -880,13 +864,18 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Quantity</Label>
+              <Label>Quantity {consumeWarehouseId && (() => {
+                const loc = itemLocations.find(l => l.warehouse_id === consumeWarehouseId);
+                return loc ? <span className="text-muted-foreground text-xs">(max: {loc.quantity})</span> : null;
+              })()}</Label>
               <Input
                 type="number"
                 min="0.01"
                 step="0.01"
+                max={consumeWarehouseId ? (itemLocations.find(l => l.warehouse_id === consumeWarehouseId)?.quantity || 0) : undefined}
                 value={consumeQty}
                 onChange={(e) => setConsumeQty(e.target.value)}
+                disabled={!consumeWarehouseId}
               />
             </div>
             <div className="space-y-2">
@@ -900,23 +889,33 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
             </div>
             <div className="space-y-2">
               <Label>Location</Label>
-              <Select value={consumeWarehouseId} onValueChange={setConsumeWarehouseId}>
+              <Select value={consumeWarehouseId} onValueChange={(v) => { setConsumeWarehouseId(v); setConsumeQty('1'); }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select location (optional)" />
+                  <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                  {warehouses.map((wh) => (
-                    <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
-                  ))}
+                  {itemLocations
+                    .filter((loc) => loc.quantity > 0)
+                    .map((loc) => {
+                      const wh = warehouses.find((w) => w.id === loc.warehouse_id);
+                      return (
+                        <SelectItem key={loc.warehouse_id} value={loc.warehouse_id}>
+                          {wh?.name || 'Unknown'} ({loc.quantity} available)
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
+              {itemLocations.filter((loc) => loc.quantity > 0).length === 0 && (
+                <p className="text-sm text-muted-foreground">No locations have stock to consume.</p>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConsumeDialogOpen(false)}>Cancel</Button>
             <Button
               variant="destructive"
-              disabled={isConsuming || (parseFloat(consumeQty) || 0) <= 0}
+              disabled={isConsuming || !consumeWarehouseId || (parseFloat(consumeQty) || 0) <= 0 || (parseFloat(consumeQty) || 0) > (itemLocations.find(l => l.warehouse_id === consumeWarehouseId)?.quantity || 0)}
               onClick={handleConsume}
             >
               <Minus className="h-4 w-4 mr-1" />
