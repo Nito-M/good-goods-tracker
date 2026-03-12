@@ -640,7 +640,19 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
                   </a>
                 )}
                 {r.pdfUrl && (
-                  <a href={r.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-0.5 hover:underline">
+                  <a
+                    href={r.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await downloadFileFromUrl(
+                        r.pdfUrl!,
+                        getFileNameFromUrl(r.pdfUrl!, `${decodedNumber || "request"}-${r.itemName || "attachment"}.pdf`)
+                      );
+                    }}
+                    className="text-xs text-primary flex items-center gap-0.5 hover:underline"
+                  >
                     <FileText className="h-3 w-3" /> PDF
                   </a>
                 )}

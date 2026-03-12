@@ -496,8 +496,20 @@ export function Requests() {
                 {group.requests.some(r => r.pdfUrl) && (
                   <div className="flex flex-wrap gap-1">
                     {group.requests.filter(r => r.pdfUrl).map(r => (
-                      <a key={r.id} href={r.pdfUrl!} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline bg-primary/5 border border-primary/20 rounded px-2 py-1">
+                      <a
+                        key={r.id}
+                        href={r.pdfUrl!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          await downloadFileFromUrl(
+                            r.pdfUrl!,
+                            getFileNameFromUrl(r.pdfUrl!, `${group.requestNumber || r.itemName || "request"}.pdf`)
+                          );
+                        }}
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline bg-primary/5 border border-primary/20 rounded px-2 py-1"
+                      >
                         <FileText className="h-3 w-3" />
                         <span className="truncate max-w-[100px]">{r.itemName}</span>
                       </a>
