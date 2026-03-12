@@ -56,7 +56,7 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
                 {request.inventoryItemId ? (
                   <Package className="h-4 w-4 text-primary shrink-0" />
                 ) : null}
-                {request.itemName}
+                {request.title || request.itemName}
               </div>
               {request.sku && (
                 <span className="text-xs text-muted-foreground font-mono">SKU: {request.sku}</span>

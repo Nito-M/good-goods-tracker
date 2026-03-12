@@ -227,6 +227,12 @@ export function EditRequestDialog({
             <Input id="editItemName" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Enter item name" required />
           </div>
 
+          {/* Title (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="editTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+            <Input id="editTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Custom title for this request" />
+          </div>
+
           {/* SKU */}
           <div className="space-y-2">
             <Label htmlFor="editSku">SKU</Label>
