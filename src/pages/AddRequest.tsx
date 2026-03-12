@@ -363,6 +363,7 @@ export function AddRequest() {
     : linkedName ? [linkedName] : [];
 
   const [selectedRequester, setSelectedRequester] = useState("");
+  const [requestTitle, setRequestTitle] = useState("");
   const [lines, setLines] = useState<RequestLineItem[]>([createEmptyLine()]);
   const [requestMode, setRequestMode] = useState<"multiple" | "single">("multiple");
   const [openItems, setOpenItems] = useState<Set<string>>(new Set([lines[0]?.id]));
@@ -424,6 +425,7 @@ export function AddRequest() {
         const extra = typeof line.extraCost === "number" ? line.extraCost : 0;
 
         const result = await addRequest({
+          title: requestTitle.trim() || null,
           inventoryItemId: line.selectedItemId && line.selectedItemId !== "custom" ? line.selectedItemId : null,
           itemName: line.itemName.trim(),
           sku: line.sku.trim() || null,
@@ -496,6 +498,12 @@ export function AddRequest() {
                   </SelectContent>
                 </Select>
               )}
+            </div>
+
+            {/* Request Title (Optional) */}
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="requestTitle">Request Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to item name)</span></Label>
+              <Input id="requestTitle" value={requestTitle} onChange={(e) => setRequestTitle(e.target.value)} placeholder="e.g. Office supplies restock" />
             </div>
           </CardContent>
         </Card>
