@@ -32,7 +32,9 @@ export function ShopHeader({
   headerBgColor,
   headerTextColor,
   headerNavColor,
-  categories = []
+  categories = [],
+  showBackToInventory = false,
+  backToInventoryPath = '/items'
 }: ShopHeaderProps) {
   const resolvedTextColor = headerTextColor || textColor;
 
