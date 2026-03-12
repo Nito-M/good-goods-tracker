@@ -26,6 +26,7 @@ export function AddRequestDialog({ items, requesterNames, onSave, onUploadImage,
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [title, setTitle] = useState("");
   const [itemName, setItemName] = useState("");
   const [sku, setSku] = useState("");
   const [quantity, setQuantity] = useState<number | "">("");
