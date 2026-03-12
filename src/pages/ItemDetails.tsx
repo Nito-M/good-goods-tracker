@@ -926,7 +926,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
             <Button variant="outline" onClick={() => setConsumeDialogOpen(false)}>Cancel</Button>
             <Button
               variant="destructive"
-              disabled={isConsuming || (parseFloat(consumeQty) || 0) <= 0}
+              disabled={isConsuming || !consumeWarehouseId || (parseFloat(consumeQty) || 0) <= 0 || (parseFloat(consumeQty) || 0) > (itemLocations.find(l => l.warehouse_id === consumeWarehouseId)?.quantity || 0)}
               onClick={handleConsume}
             >
               <Minus className="h-4 w-4 mr-1" />
