@@ -100,7 +100,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                 remainingQuantity: 0, // will be computed below
                 orderedAt: new Date(po.ordered_at),
                 receivedAt: po.received_at ? new Date(po.received_at) : null,
-                status: po.status as 'ordered' | 'received',
+                status: po.status as 'ordered' | 'received' | 'partially_received',
               });
             }
           }
