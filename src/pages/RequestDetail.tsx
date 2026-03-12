@@ -207,9 +207,41 @@ export function RequestDetail() {
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
-            <Button variant="destructive" size="sm" onClick={handleDeleteAll}>
-              <Trash2 className="h-4 w-4 mr-1" /> Delete All
-            </Button>
+            <>
+              <Button variant="outline" size="sm" disabled={uploadingImage} asChild>
+                <label className="cursor-pointer">
+                  <Upload className="h-4 w-4 mr-1" />
+                  {uploadingImage ? "Uploading..." : "Add Image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !firstReq) return;
+                      setUploadingImage(true);
+                      try {
+                        const url = await uploadImage(file);
+                        if (url) {
+                          // Add image to the first request that doesn't have one, or the first request
+                          const targetReq = groupRequests.find(r => !r.imageUrl) || firstReq;
+                          await updateRequest(targetReq.id, { imageUrl: url });
+                          toast({ title: "Image uploaded", description: "Image added to request" });
+                        }
+                      } catch {
+                        toast({ title: "Error", description: "Failed to upload image", variant: "destructive" });
+                      } finally {
+                        setUploadingImage(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                </label>
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleDeleteAll}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete All
+              </Button>
+            </>
           )}
         </div>
       </div>
