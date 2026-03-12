@@ -39,6 +39,7 @@ interface RequestLineItem {
   imageFile: File | null;
   imagePreview: string | null;
   pdfFile: File | null;
+  pdfDragOver: boolean;
 }
 
 function createEmptyLine(): RequestLineItem {
@@ -59,6 +60,7 @@ function createEmptyLine(): RequestLineItem {
     imageFile: null,
     imagePreview: null,
     pdfFile: null,
+    pdfDragOver: false,
   };
 }
 
@@ -116,6 +118,7 @@ function RequestItemForm({
 
   const handlePdfDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    onChange(line.id, { pdfDragOver: false });
     const file = e.dataTransfer.files?.[0];
     if (file?.type === "application/pdf") onChange(line.id, { pdfFile: file });
   }, [line.id, onChange]);
@@ -332,12 +335,20 @@ function RequestItemForm({
               </div>
             ) : (
               <label
-                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                onDragOver={(e) => e.preventDefault()}
+                className={cn(
+                  "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors",
+                  line.pdfDragOver
+                    ? "border-primary bg-primary/10"
+                    : "hover:bg-muted/50"
+                )}
+                onDragOver={(e) => { e.preventDefault(); onChange(line.id, { pdfDragOver: true }); }}
+                onDragLeave={() => onChange(line.id, { pdfDragOver: false })}
                 onDrop={handlePdfDrop}
               >
-                <FileText className="h-6 w-6 text-muted-foreground mb-1" />
-                <span className="text-xs text-muted-foreground">Upload PDF</span>
+                <FileText className={cn("h-6 w-6 mb-1", line.pdfDragOver ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("text-xs", line.pdfDragOver ? "text-primary font-medium" : "text-muted-foreground")}>
+                  {line.pdfDragOver ? "Drop PDF here" : "Drag & drop or click to upload PDF"}
+                </span>
                 <input type="file" accept="application/pdf" onChange={handlePdfChange} className="hidden" />
               </label>
             )}
