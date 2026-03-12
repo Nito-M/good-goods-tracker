@@ -194,13 +194,17 @@ export function PurchaseOrderCard({
                     </div>
                     {hasAnyPdf && (
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
                           const url = pdfAttachments[0]?.url || order.pdfUrl;
-                          if (url) window.open(url, '_blank');
+                          if (!url) return;
+                          await downloadFileFromUrl(
+                            url,
+                            getFileNameFromUrl(url, `${order.poNumber || 'purchase-order'}.pdf`)
+                          );
                         }}
                         className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                        title="View PDF"
+                        title="Download PDF"
                       >
                         <FileText className="h-4 w-4" />
                       </button>
