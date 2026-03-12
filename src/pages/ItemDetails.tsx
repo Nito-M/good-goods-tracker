@@ -90,7 +90,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { selectedTagIds } = useItemTags(item?.id);
   const { tagCategories } = useTagCategories();
   const { tags, getTagsByCategory } = useTags();
-  const { locations: itemLocations } = useItemLocationQuantities(item?.id);
+  const { locations: itemLocations, refetch: refetchLocations } = useItemLocationQuantities(item?.id);
   const { consumptions, addConsumption } = useItemConsumptions(item?.id);
   const { warehouses } = useWarehouses();
 
@@ -146,6 +146,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
         .eq('id', locationEntry.id);
 
+      await refetchLocations();
       toast({ title: `Consumed ${amount} — new quantity: ${newQty}` });
       setConsumeDialogOpen(false);
       setConsumeQty('1');
@@ -181,8 +182,8 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
       // Delete the consumption record
       await supabase.from('item_consumptions').delete().eq('id', last.id);
 
+      await refetchLocations();
       toast({ title: `Reverted consumption of ${last.quantity} — new quantity: ${restoredQty}` });
-      // Refetch consumptions
       window.location.reload();
     } catch {
       toast({ title: 'Error reverting consumption', variant: 'destructive' });
