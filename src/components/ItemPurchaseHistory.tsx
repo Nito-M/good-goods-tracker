@@ -309,6 +309,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Qty Ordered</TableHead>
                       <TableHead className="text-right">Qty Sold</TableHead>
+                      <TableHead className="text-right">Reserved</TableHead>
                       <TableHead className="text-right">Remaining</TableHead>
                       <TableHead className="text-right">Unit Cost</TableHead>
                       <TableHead>Status</TableHead>
@@ -321,6 +322,11 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                         <TableCell>{formatDate(purchase.orderedAt)}</TableCell>
                         <TableCell className="text-right">{purchase.quantity}</TableCell>
                         <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
+                        <TableCell className="text-right">
+                          {purchase.status === 'received' && purchase.reservedQuantity > 0
+                            ? <span className="text-warning font-medium">{purchase.reservedQuantity}</span>
+                            : purchase.status === 'received' ? '0' : '-'}
+                        </TableCell>
                         <TableCell className="text-right font-medium">
                           {purchase.status === 'received' ? purchase.remainingQuantity : '-'}
                         </TableCell>
