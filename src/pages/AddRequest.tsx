@@ -425,6 +425,7 @@ export function AddRequest() {
         const extra = typeof line.extraCost === "number" ? line.extraCost : 0;
 
         const result = await addRequest({
+          title: requestTitle.trim() || null,
           inventoryItemId: line.selectedItemId && line.selectedItemId !== "custom" ? line.selectedItemId : null,
           itemName: line.itemName.trim(),
           sku: line.sku.trim() || null,
