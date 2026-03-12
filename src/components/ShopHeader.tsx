@@ -16,6 +16,8 @@ interface ShopHeaderProps {
   headerTextColor?: string;
   headerNavColor?: string;
   categories?: string[];
+  showBackToInventory?: boolean;
+  backToInventoryPath?: string;
 }
 
 export function ShopHeader({ 
