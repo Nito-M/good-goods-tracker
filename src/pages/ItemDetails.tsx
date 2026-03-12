@@ -349,6 +349,18 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           {/* Right: Item Details */}
           <Card>
             <CardHeader className="pb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="secondary">{item.category}</Badge>
+                <Badge
+                  className={
+                    isLowStock
+                      ? 'bg-warning/10 text-warning hover:bg-warning/20'
+                      : 'bg-success/10 text-success hover:bg-success/20'
+                  }
+                >
+                  {isLowStock ? 'Low Stock' : 'In Stock'}
+                </Badge>
+              </div>
               <CardTitle className="text-xl">{item.name}</CardTitle>
               <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
               {selectedTagIds.length > 0 && (
