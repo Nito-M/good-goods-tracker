@@ -71,7 +71,38 @@ export function useJobs() {
     return data;
   };
 
+  const consumeReservedItems = async (jobId: string) => {
+    // Mark all reserved (non-consumed) items as consumed — stock already deducted
+    await supabase
+      .from('job_items')
+      .update({ consumed: true } as any)
+      .eq('job_id', jobId)
+      .eq('reserved', true)
+      .eq('consumed', false);
+  };
+
+  const unconsumeItems = async (jobId: string) => {
+    // When moving away from finished, mark consumed items back to just reserved
+    await supabase
+      .from('job_items')
+      .update({ consumed: false } as any)
+      .eq('job_id', jobId)
+      .eq('consumed', true);
+  };
+
   const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null; due_date?: string | null }) => {
+    // If status is changing to finished, consume reserved items
+    if (updates.status === 'finished') {
+      await consumeReservedItems(id);
+    }
+    // If moving away from finished, get old status first
+    if (updates.status && updates.status !== 'finished') {
+      const { data: currentJob } = await supabase.from('jobs').select('status').eq('id', id).single();
+      if (currentJob?.status === 'finished') {
+        await unconsumeItems(id);
+      }
+    }
+
     const { error } = await supabase.from('jobs').update(updates).eq('id', id);
     if (error) {
       toast({ title: 'Error updating job', variant: 'destructive' });
