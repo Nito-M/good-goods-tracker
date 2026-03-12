@@ -118,6 +118,7 @@ function RequestItemForm({
 
   const handlePdfDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    onChange(line.id, { pdfDragOver: false });
     const file = e.dataTransfer.files?.[0];
     if (file?.type === "application/pdf") onChange(line.id, { pdfFile: file });
   }, [line.id, onChange]);
