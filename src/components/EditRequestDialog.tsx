@@ -148,6 +148,7 @@ export function EditRequestDialog({
       if (pdfFile) finalPdfUrl = await onUploadPdf(pdfFile);
 
       const success = await onSave(request.id, {
+        title: title.trim() || null,
         inventoryItemId: selectedItemId && selectedItemId !== "custom" ? selectedItemId : null,
         itemName: itemName.trim(),
         sku: sku.trim() || null,
