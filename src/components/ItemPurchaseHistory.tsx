@@ -13,6 +13,7 @@ interface PurchaseHistoryItem {
   unitCost: number;
   quantity: number;
   soldQuantity: number;
+  reservedQuantity: number;
   remainingQuantity: number;
   orderedAt: Date;
   receivedAt: Date | null;
@@ -56,6 +57,17 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
         .select('purchase_order_id, quantity_allocated, unit_cost')
         .eq('sku', sku);
 
+      // Fetch total reserved quantity from job_items
+      const { data: reservedData } = await supabase
+        .from('job_items')
+        .select('quantity')
+        .eq('sku', sku)
+        .eq('reserved', true);
+
+      const totalReserved = reservedData
+        ? reservedData.reduce((sum, ji) => sum + ji.quantity, 0)
+        : 0;
+
       // Build allocation map: poId -> total sold quantity
       const soldByPO = new Map<string, number>();
       if (allocations) {
@@ -75,9 +87,6 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
             const matchingItem = items.find(item => item.sku === sku);
             if (matchingItem) {
               const soldQty = soldByPO.get(po.id) || 0;
-              const remainingQty = po.status === 'received' 
-                ? Math.max(0, matchingItem.quantity - soldQty)
-                : matchingItem.quantity;
 
               purchaseItems.push({
                 id: po.id,
@@ -85,13 +94,30 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                 unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
                 soldQuantity: po.status === 'received' ? soldQty : 0,
-                remainingQuantity: remainingQty,
+                reservedQuantity: 0, // will be computed below via FIFO
+                remainingQuantity: 0, // will be computed below
                 orderedAt: new Date(po.ordered_at),
                 receivedAt: po.received_at ? new Date(po.received_at) : null,
                 status: po.status as 'ordered' | 'received',
               });
             }
           }
+        }
+
+        // Distribute reserved quantity FIFO across received POs (oldest first)
+        let reservedLeft = totalReserved;
+        for (const p of purchaseItems) {
+          if (p.status !== 'received' || reservedLeft <= 0) {
+            p.remainingQuantity = p.status === 'received'
+              ? Math.max(0, p.quantity - p.soldQuantity)
+              : p.quantity;
+            continue;
+          }
+          const availableAfterSold = Math.max(0, p.quantity - p.soldQuantity);
+          const reservedFromThis = Math.min(availableAfterSold, reservedLeft);
+          p.reservedQuantity = reservedFromThis;
+          p.remainingQuantity = Math.max(0, availableAfterSold - reservedFromThis);
+          reservedLeft -= reservedFromThis;
         }
         
         setPurchases(purchaseItems);
@@ -206,6 +232,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
     .filter(p => p.status === 'received')
     .reduce((sum, p) => sum + p.quantity, 0);
   const totalSold = soldItems.reduce((sum, s) => sum + s.quantity, 0);
+  const totalReserved = purchases.reduce((sum, p) => sum + p.reservedQuantity, 0);
   const totalProfit = soldItems.reduce((sum, s) => sum + s.profit, 0);
 
   if (loading) {
@@ -235,7 +262,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-sm text-muted-foreground">Total Purchased</p>
             <p className="text-xl font-bold text-card-foreground">{totalPurchased}</p>
@@ -244,6 +271,12 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
             <p className="text-sm text-muted-foreground">Total Sold</p>
             <p className="text-xl font-bold text-card-foreground">{totalSold}</p>
           </div>
+          {totalReserved > 0 && (
+            <div className="bg-warning/10 rounded-lg p-3 text-center">
+              <p className="text-sm text-muted-foreground">Reserved</p>
+              <p className="text-xl font-bold text-warning">{totalReserved}</p>
+            </div>
+          )}
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-sm text-muted-foreground">In Stock</p>
             <p className="text-xl font-bold text-card-foreground">{currentStock}</p>
@@ -276,6 +309,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Qty Ordered</TableHead>
                       <TableHead className="text-right">Qty Sold</TableHead>
+                      <TableHead className="text-right">Reserved</TableHead>
                       <TableHead className="text-right">Remaining</TableHead>
                       <TableHead className="text-right">Unit Cost</TableHead>
                       <TableHead>Status</TableHead>
@@ -288,17 +322,26 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                         <TableCell>{formatDate(purchase.orderedAt)}</TableCell>
                         <TableCell className="text-right">{purchase.quantity}</TableCell>
                         <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
+                        <TableCell className="text-right">
+                          {purchase.status === 'received' && purchase.reservedQuantity > 0
+                            ? <span className="text-warning font-medium">{purchase.reservedQuantity}</span>
+                            : purchase.status === 'received' ? '0' : '-'}
+                        </TableCell>
                         <TableCell className="text-right font-medium">
                           {purchase.status === 'received' ? purchase.remainingQuantity : '-'}
                         </TableCell>
                         <TableCell className="text-right">{formatCurrency(purchase.unitCost)}</TableCell>
                         <TableCell>
                           {purchase.status === 'received' ? (
-                            purchase.remainingQuantity === 0 ? (
+                            purchase.remainingQuantity === 0 && purchase.reservedQuantity === 0 ? (
                               <Badge className="bg-muted text-muted-foreground hover:bg-muted">
                                 All Sold
                               </Badge>
-                            ) : purchase.soldQuantity > 0 ? (
+                            ) : purchase.remainingQuantity === 0 && purchase.reservedQuantity > 0 ? (
+                              <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
+                                Reserved
+                              </Badge>
+                            ) : purchase.soldQuantity > 0 || purchase.reservedQuantity > 0 ? (
                               <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
                                 Partial
                               </Badge>
