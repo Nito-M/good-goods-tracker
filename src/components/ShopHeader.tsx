@@ -54,24 +54,33 @@ export function ShopHeader({
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
-            <Link to={shopBasePath} className="flex items-center gap-3">
-              {logoUrl ? (
-                <img src={logoUrl} alt={storeName} className="h-16 w-auto max-w-[200px] object-contain rounded" />
-              ) : (
-                <ShoppingBag className="h-8 w-8" style={{ color: accentColor || resolvedTextColor || undefined }} />
+            <div className="flex items-center gap-3">
+              {showBackToInventory && (
+                <Link to={backToInventoryPath}>
+                  <Button variant="ghost" size="icon" className="shrink-0">
+                    <ArrowLeft className="h-5 w-5" style={{ color: resolvedTextColor || undefined }} />
+                  </Button>
+                </Link>
               )}
-              <div>
-                <h1
-                  className="text-xl font-bold tracking-tight leading-tight"
-                  style={{ color: resolvedTextColor || undefined }}
-                >
-                  {storeName}
-                </h1>
-                {tagline && (
-                  <p className="text-xs leading-tight" style={{ color: resolvedTextColor ? `${resolvedTextColor}aa` : undefined }}>{tagline}</p>
+              <Link to={shopBasePath} className="flex items-center gap-3">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={storeName} className="h-16 w-auto max-w-[200px] object-contain rounded" />
+                ) : (
+                  <ShoppingBag className="h-8 w-8" style={{ color: accentColor || resolvedTextColor || undefined }} />
                 )}
-              </div>
-            </Link>
+                <div>
+                  <h1
+                    className="text-xl font-bold tracking-tight leading-tight"
+                    style={{ color: resolvedTextColor || undefined }}
+                  >
+                    {storeName}
+                  </h1>
+                  {tagline && (
+                    <p className="text-xs leading-tight" style={{ color: resolvedTextColor ? `${resolvedTextColor}aa` : undefined }}>{tagline}</p>
+                  )}
+                </div>
+              </Link>
+            </div>
             <CartDrawer />
           </div>
           {categories.length > 0 && (
