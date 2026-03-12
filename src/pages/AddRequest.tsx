@@ -499,6 +499,12 @@ export function AddRequest() {
                 </Select>
               )}
             </div>
+
+            {/* Request Title (Optional) */}
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="requestTitle">Request Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to item name)</span></Label>
+              <Input id="requestTitle" value={requestTitle} onChange={(e) => setRequestTitle(e.target.value)} placeholder="e.g. Office supplies restock" />
+            </div>
           </CardContent>
         </Card>
 
