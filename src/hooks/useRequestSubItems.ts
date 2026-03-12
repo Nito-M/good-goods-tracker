@@ -35,6 +35,8 @@ export function useRequestSubItems(requestIds: string[]) {
         quantity: r.quantity || 1,
         link: r.link,
         notes: r.notes,
+        sku: r.sku || null,
+        imageUrl: r.image_url || null,
         isSelected: r.is_selected || false,
         createdAt: r.created_at,
       }));
