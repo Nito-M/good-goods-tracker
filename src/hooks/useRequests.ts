@@ -178,6 +178,7 @@ export function useRequests() {
         id: data.id,
         userId: data.user_id,
         requestNumber: data.request_number,
+        title: (data as any).title ?? null,
         inventoryItemId: data.inventory_item_id,
         itemName: data.item_name,
         sku: data.sku,
