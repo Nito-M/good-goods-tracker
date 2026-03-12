@@ -208,7 +208,46 @@ export function useJobItems(jobId: string | null) {
     setLoading(false);
   }, [jobId]);
 
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  // Helper: proportionally deduct quantity from location quantities
+  const deductFromLocations = async (inventoryItemId: string, qty: number) => {
+    const { data: locations } = await supabase
+      .from('item_location_quantities')
+      .select('id, quantity')
+      .eq('item_id', inventoryItemId)
+      .gt('quantity', 0)
+      .order('quantity', { ascending: false });
+    if (!locations || locations.length === 0) return;
+
+    let remaining = qty;
+    for (const loc of locations) {
+      if (remaining <= 0) break;
+      const deduct = Math.min(loc.quantity, remaining);
+      await supabase
+        .from('item_location_quantities')
+        .update({ quantity: loc.quantity - deduct })
+        .eq('id', loc.id);
+      remaining -= deduct;
+    }
+  };
+
+  // Helper: return quantity to location quantities (adds to first location, or distributes)
+  const returnToLocations = async (inventoryItemId: string, qty: number) => {
+    const { data: locations } = await supabase
+      .from('item_location_quantities')
+      .select('id, quantity')
+      .eq('item_id', inventoryItemId)
+      .order('quantity', { ascending: false });
+    if (!locations || locations.length === 0) return;
+
+    // Return all to the first (largest) location
+    const loc = locations[0];
+    await supabase
+      .from('item_location_quantities')
+      .update({ quantity: loc.quantity + qty })
+      .eq('id', loc.id);
+  };
+
+
 
   const reserveItem = async (jobItemId: string) => {
     const item = items.find(i => i.id === jobItemId);
@@ -240,6 +279,10 @@ export function useJobItems(jobId: string | null) {
       toast({ title: 'Error updating stock', variant: 'destructive' });
       return false;
     }
+
+    // Also deduct from location quantities proportionally
+    await deductFromLocations(item.inventoryItemId, item.quantity);
+
     // Mark reserved
     const { error: resErr } = await supabase
       .from('job_items')
@@ -278,6 +321,10 @@ export function useJobItems(jobId: string | null) {
       toast({ title: 'Error returning stock', variant: 'destructive' });
       return false;
     }
+
+    // Also return to location quantities
+    await returnToLocations(item.inventoryItemId, item.quantity);
+
     // Unmark reserved
     const { error: resErr } = await supabase
       .from('job_items')
