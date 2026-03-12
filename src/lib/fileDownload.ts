@@ -18,12 +18,21 @@ function buildForcedDownloadUrl(url: string, fileName: string) {
   }
 }
 
-export function downloadFileFromUrl(url: string, fileName: string) {
-  const forcedDownloadUrl = buildForcedDownloadUrl(url, fileName);
-
+export async function downloadFileFromUrl(url: string, fileName: string) {
   try {
+    // Fetch as blob to create a same-origin object URL
+    // This is required for mobile Safari where the download attribute
+    // doesn't work on cross-origin URLs
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
     const link = document.createElement("a");
-    link.href = forcedDownloadUrl;
+    link.href = objectUrl;
     link.download = fileName;
     link.rel = "noopener noreferrer";
     link.style.display = "none";
@@ -32,10 +41,13 @@ export function downloadFileFromUrl(url: string, fileName: string) {
     link.click();
     document.body.removeChild(link);
 
+    // Clean up after a delay
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
     return true;
   } catch (error) {
-    console.error("Failed to trigger file download:", error);
-    window.location.assign(forcedDownloadUrl);
+    console.error("Failed to download file:", error);
+    // Final fallback: open in new tab so user can long-press to save
+    window.open(url, "_blank", "noopener,noreferrer");
     return false;
   }
 }
