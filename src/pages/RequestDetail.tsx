@@ -5,6 +5,7 @@ import { useRequestSubItems } from "@/hooks/useRequestSubItems";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
 import { useBankCards } from "@/hooks/useBankCards";
 import { useVendors } from "@/hooks/useVendors";
+import { useInventory } from "@/hooks/useInventory";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ArrowLeft, Pencil, Trash2, ExternalLink, FileText, CreditCard, User, Image, ChevronDown, ChevronRight, ChevronLeft, Plus, Star, X, Store } from "lucide-react";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
+import { AddItemToRequestDialog } from "@/components/AddItemToRequestDialog";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
 
