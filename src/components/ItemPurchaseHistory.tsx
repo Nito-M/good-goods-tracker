@@ -17,8 +17,10 @@ interface PurchaseHistoryItem {
   remainingQuantity: number;
   orderedAt: Date;
   receivedAt: Date | null;
-  status: 'ordered' | 'received';
+  status: 'ordered' | 'received' | 'partially_received';
 }
+
+const isReceived = (status: string) => status === 'received' || status === 'partially_received';
 
 interface SoldItem {
   saleId: string;
@@ -93,12 +95,12 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                 poNumber: po.po_number,
                 unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
-                soldQuantity: po.status === 'received' ? soldQty : 0,
+                soldQuantity: isReceived(po.status) ? soldQty : 0,
                 reservedQuantity: 0, // will be computed below via FIFO
                 remainingQuantity: 0, // will be computed below
                 orderedAt: new Date(po.ordered_at),
                 receivedAt: po.received_at ? new Date(po.received_at) : null,
-                status: po.status as 'ordered' | 'received',
+                status: po.status as 'ordered' | 'received' | 'partially_received',
               });
             }
           }
@@ -107,8 +109,8 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
         // Distribute reserved quantity FIFO across received POs (oldest first)
         let reservedLeft = totalReserved;
         for (const p of purchaseItems) {
-          if (p.status !== 'received' || reservedLeft <= 0) {
-            p.remainingQuantity = p.status === 'received'
+          if (!isReceived(p.status) || reservedLeft <= 0) {
+            p.remainingQuantity = isReceived(p.status)
               ? Math.max(0, p.quantity - p.soldQuantity)
               : p.quantity;
             continue;
@@ -229,7 +231,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
   };
 
   const totalPurchased = purchases
-    .filter(p => p.status === 'received')
+    .filter(p => isReceived(p.status))
     .reduce((sum, p) => sum + p.quantity, 0);
   const totalSold = soldItems.reduce((sum, s) => sum + s.quantity, 0);
   const totalReserved = purchases.reduce((sum, p) => sum + p.reservedQuantity, 0);
@@ -323,16 +325,16 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                         <TableCell className="text-right">{purchase.quantity}</TableCell>
                         <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
                         <TableCell className="text-right">
-                          {purchase.status === 'received' && purchase.reservedQuantity > 0
+                          {isReceived(purchase.status) && purchase.reservedQuantity > 0
                             ? <span className="text-warning font-medium">{purchase.reservedQuantity}</span>
-                            : purchase.status === 'received' ? '0' : '-'}
+                            : isReceived(purchase.status) ? '0' : '-'}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {purchase.status === 'received' ? purchase.remainingQuantity : '-'}
+                          {isReceived(purchase.status) ? purchase.remainingQuantity : '-'}
                         </TableCell>
                         <TableCell className="text-right">{formatCurrency(purchase.unitCost)}</TableCell>
                         <TableCell>
-                          {purchase.status === 'received' ? (
+                          {isReceived(purchase.status) ? (
                             purchase.remainingQuantity === 0 && purchase.reservedQuantity === 0 ? (
                               <Badge className="bg-muted text-muted-foreground hover:bg-muted">
                                 All Sold
