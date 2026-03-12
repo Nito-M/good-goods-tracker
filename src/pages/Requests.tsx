@@ -238,8 +238,8 @@ export function Requests() {
                 style={vendorColor ? { color: vendorColor } : undefined}
               >
                 {group.requests.length === 1
-                  ? firstReq.itemName
-                  : `${firstReq.itemName} +${group.requests.length - 1} more`}
+                  ? (firstReq.title || firstReq.itemName)
+                  : `${firstReq.title || firstReq.itemName} +${group.requests.length - 1} more`}
               </span>
 
               {/* Requester */}
