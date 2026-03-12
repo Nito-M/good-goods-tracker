@@ -367,47 +367,91 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           )}
         </div>
 
-        {/* Storefront Toggle */}
-        <Card className="mb-6">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Globe className="h-5 w-5 text-primary" />
-              <div>
-                <p className="font-medium text-card-foreground">Show in Storefront</p>
-                <p className="text-xs text-muted-foreground">Make this product visible on the public shop page</p>
-              </div>
-            </div>
-            <Switch
-              checked={showInStorefront}
-              onCheckedChange={async (checked) => {
-                setShowInStorefront(checked);
-                const { error } = await supabase
-                  .from('inventory_items')
-                  .update({ show_in_storefront: checked } as any)
-                  .eq('id', item.id);
-                if (error) {
-                  setShowInStorefront(!checked);
-                  toast({ title: 'Failed to update storefront visibility', variant: 'destructive' });
-                } else {
-                  toast({ title: checked ? 'Product now visible in shop' : 'Product hidden from shop' });
-                }
-              }}
-            />
-          </CardContent>
-        </Card>
+        {/* Two-column: Images left, Details right */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Left: Product Images */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Product Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ItemImageGallery 
+                images={itemImages} 
+                itemName={item.name}
+                fallbackImageUrl={item.imageUrl}
+              />
+            </CardContent>
+          </Card>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Product Images</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ItemImageGallery 
-              images={itemImages} 
-              itemName={item.name}
-              fallbackImageUrl={item.imageUrl}
-            />
-          </CardContent>
-        </Card>
+          {/* Right: Item Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Item Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Selling Price</p>
+                  <p className="text-2xl font-bold text-card-foreground">{formatCurrency(item.price)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Cost</p>
+                  <p className="text-2xl font-bold text-card-foreground">{formatCurrency(item.cost)}</p>
+                </div>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Quantity in Stock</p>
+                  <p className="text-xl font-semibold text-card-foreground">
+                    {item.quantity} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Min Stock</p>
+                  <p className="text-xl font-semibold text-card-foreground">
+                    {item.minStock} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+                  </p>
+                </div>
+              </div>
+              {item.description && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Description</p>
+                    <p className="text-sm text-card-foreground">{item.description}</p>
+                  </div>
+                </>
+              )}
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-card-foreground">Show in Storefront</p>
+                    <p className="text-xs text-muted-foreground">Visible on public shop</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={showInStorefront}
+                  onCheckedChange={async (checked) => {
+                    setShowInStorefront(checked);
+                    const { error } = await supabase
+                      .from('inventory_items')
+                      .update({ show_in_storefront: checked } as any)
+                      .eq('id', item.id);
+                    if (error) {
+                      setShowInStorefront(!checked);
+                      toast({ title: 'Failed to update storefront visibility', variant: 'destructive' });
+                    } else {
+                      toast({ title: checked ? 'Product now visible in shop' : 'Product hidden from shop' });
+                    }
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* DXF Drawing */}
         <div className="mb-6">
