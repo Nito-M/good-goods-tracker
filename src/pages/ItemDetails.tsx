@@ -556,14 +556,18 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                   const loc = itemLocations.find(l => l.warehouse_id === warehouse.id);
                   const qty = loc ? loc.quantity : 0;
                   return (
-                    <div key={warehouse.id} className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-card-foreground">
-                        {warehouse.name}
-                      </span>
-                      <Badge variant={qty > 0 ? 'secondary' : 'outline'}>
-                        {qty} {item.quantityUnit && item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
-                      </Badge>
-                    </div>
+                    <LocationQuantityRow
+                      key={warehouse.id}
+                      warehouseName={warehouse.name}
+                      quantity={qty}
+                      quantityUnit={item.quantityUnit}
+                      locationId={loc?.id}
+                      onSave={async (newQty) => {
+                        if (loc) {
+                          await updateSingleLocation(loc.id, newQty);
+                        }
+                      }}
+                    />
                   );
                 })}
                 {(() => {
