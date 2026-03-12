@@ -10,6 +10,7 @@ import { Trash2, ExternalLink, Package, Pencil, CalendarClock, ChevronDown, User
 import { Request, RequestStatus } from "@/types/request";
 import { BankCard } from "@/hooks/useBankCards";
 import { formatCurrency } from "@/lib/utils";
+import { downloadFileFromUrl, getFileNameFromUrl } from "@/lib/fileDownload";
 
 interface RequestCardProps {
   request: Request;
@@ -218,10 +219,17 @@ export function RequestCard({ request, cards = [], onStatusChange, onCardChange,
               href={request.pdfUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={async (e) => {
+                e.preventDefault();
+                await downloadFileFromUrl(
+                  request.pdfUrl!,
+                  getFileNameFromUrl(request.pdfUrl!, `${request.requestNumber || request.itemName || "request"}.pdf`)
+                );
+              }}
               className="inline-flex items-center gap-2 text-sm text-primary hover:underline bg-primary/5 border border-primary/20 rounded-md px-3 py-2 w-full"
             >
               <FileText className="h-4 w-4 shrink-0" />
-              <span className="truncate">View PDF Attachment</span>
+              <span className="truncate">Download PDF Attachment</span>
               <ExternalLink className="h-3 w-3 shrink-0 ml-auto" />
             </a>
           )}

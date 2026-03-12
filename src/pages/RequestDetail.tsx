@@ -21,6 +21,7 @@ import { ImageViewerDialog } from "@/components/ImageViewerDialog";
 import { AddItemToRequestDialog } from "@/components/AddItemToRequestDialog";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
+import { downloadFileFromUrl, getFileNameFromUrl } from "@/lib/fileDownload";
 
 const statusColors: Record<RequestStatus, string> = {
   pending: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
@@ -639,7 +640,19 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
                   </a>
                 )}
                 {r.pdfUrl && (
-                  <a href={r.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary flex items-center gap-0.5 hover:underline">
+                  <a
+                    href={r.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await downloadFileFromUrl(
+                        r.pdfUrl!,
+                        getFileNameFromUrl(r.pdfUrl!, `${r.requestNumber || "request"}-${r.itemName || "attachment"}.pdf`)
+                      );
+                    }}
+                    className="text-xs text-primary flex items-center gap-0.5 hover:underline"
+                  >
                     <FileText className="h-3 w-3" /> PDF
                   </a>
                 )}

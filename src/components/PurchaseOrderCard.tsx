@@ -38,6 +38,7 @@ import {
   Undo2,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { downloadFileFromUrl, getFileNameFromUrl } from '@/lib/fileDownload';
 
 interface PurchaseOrderCardProps {
   order: PurchaseOrder;
@@ -193,13 +194,17 @@ export function PurchaseOrderCard({
                     </div>
                     {hasAnyPdf && (
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
                           const url = pdfAttachments[0]?.url || order.pdfUrl;
-                          if (url) window.open(url, '_blank');
+                          if (!url) return;
+                          await downloadFileFromUrl(
+                            url,
+                            getFileNameFromUrl(url, `${order.poNumber || 'purchase-order'}.pdf`)
+                          );
                         }}
                         className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                        title="View PDF"
+                        title="Download PDF"
                       >
                         <FileText className="h-4 w-4" />
                       </button>
@@ -351,10 +356,21 @@ export function PurchaseOrderCard({
                   {/* Legacy PDF */}
                   {order.pdfUrl && (
                     <div className="flex items-center gap-2">
-                      <a href={order.pdfUrl} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
+                      <a
+                        href={order.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          await downloadFileFromUrl(
+                            order.pdfUrl!,
+                            getFileNameFromUrl(order.pdfUrl!, `${order.poNumber || 'purchase-order'}-original.pdf`)
+                          );
+                        }}
+                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                      >
                         <FileText className="h-4 w-4" />
-                        View PDF (original)
+                        Download PDF (original)
                       </a>
                       {onDeletePdf && (
                         <button onClick={onDeletePdf}
@@ -387,8 +403,19 @@ export function PurchaseOrderCard({
                   {/* New PDF attachments */}
                   {pdfAttachments.map(a => (
                     <div key={a.id} className="flex items-center gap-2">
-                      <a href={a.url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline truncate max-w-[200px]">
+                      <a
+                        href={a.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          await downloadFileFromUrl(
+                            a.url,
+                            getFileNameFromUrl(a.url, a.fileName || `${order.poNumber || 'purchase-order'}-attachment.pdf`)
+                          );
+                        }}
+                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline truncate max-w-[200px]"
+                      >
                         <FileText className="h-4 w-4 shrink-0" />
                         {a.fileName || 'PDF'}
                       </a>
