@@ -476,6 +476,10 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
     setQuantity(String(si.quantity));
     setLink(si.link || "");
     setNotes(si.notes || "");
+    setSku(si.sku || "");
+    setImageFile(null);
+    setImagePreview(si.imageUrl || null);
+    setExistingImageUrl(si.imageUrl || null);
     setShowForm(true);
   };
 
