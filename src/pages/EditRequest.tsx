@@ -61,6 +61,7 @@ export function EditRequest() {
   useEffect(() => {
     if (request && !initialized) {
       setSelectedItemId(request.inventoryItemId || "custom");
+      setTitle(request.title || "");
       setItemName(request.itemName);
       setSku(request.sku || "");
       setQuantity(request.quantity);
