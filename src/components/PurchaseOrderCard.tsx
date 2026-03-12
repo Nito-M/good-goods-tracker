@@ -403,8 +403,19 @@ export function PurchaseOrderCard({
                   {/* New PDF attachments */}
                   {pdfAttachments.map(a => (
                     <div key={a.id} className="flex items-center gap-2">
-                      <a href={a.url} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline truncate max-w-[200px]">
+                      <a
+                        href={a.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          await downloadFileFromUrl(
+                            a.url,
+                            getFileNameFromUrl(a.url, a.fileName || `${order.poNumber || 'purchase-order'}-attachment.pdf`)
+                          );
+                        }}
+                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline truncate max-w-[200px]"
+                      >
                         <FileText className="h-4 w-4 shrink-0" />
                         {a.fileName || 'PDF'}
                       </a>
