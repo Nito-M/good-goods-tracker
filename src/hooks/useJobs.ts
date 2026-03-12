@@ -321,6 +321,10 @@ export function useJobItems(jobId: string | null) {
       toast({ title: 'Error returning stock', variant: 'destructive' });
       return false;
     }
+
+    // Also return to location quantities
+    await returnToLocations(item.inventoryItemId, item.quantity);
+
     // Unmark reserved
     const { error: resErr } = await supabase
       .from('job_items')
