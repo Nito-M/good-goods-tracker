@@ -43,6 +43,7 @@ export function RequestDetail() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageDragOver, setImageDragOver] = useState(false);
 
   const decodedNumber = requestNumber ? decodeURIComponent(requestNumber) : "";
 
