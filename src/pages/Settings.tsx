@@ -418,44 +418,44 @@ export function Settings() {
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full max-w-5xl ${isAdmin ? 'grid-cols-9' : showUsersTab ? 'grid-cols-8' : 'grid-cols-7'}`}>
-            <TabsTrigger value="general" className="gap-2">
-              <Monitor className="h-4 w-4" />
+          <TabsList className="flex w-full max-w-5xl overflow-x-auto">
+            <TabsTrigger value="general" className="gap-2 shrink-0">
+              <Monitor className="h-4 w-4 hidden sm:inline" />
               General
             </TabsTrigger>
-            <TabsTrigger value="companies" className="gap-2">
-              <Briefcase className="h-4 w-4" />
+            <TabsTrigger value="companies" className="gap-2 shrink-0">
+              <Briefcase className="h-4 w-4 hidden sm:inline" />
               Companies
             </TabsTrigger>
-            <TabsTrigger value="storefront" className="gap-2">
-              <Store className="h-4 w-4" />
+            <TabsTrigger value="storefront" className="gap-2 shrink-0">
+              <Store className="h-4 w-4 hidden sm:inline" />
               Storefront
             </TabsTrigger>
-            <TabsTrigger value="vendors" className="gap-2">
-              <Building2 className="h-4 w-4" />
+            <TabsTrigger value="vendors" className="gap-2 shrink-0">
+              <Building2 className="h-4 w-4 hidden sm:inline" />
               Vendors
             </TabsTrigger>
-            <TabsTrigger value="customers" className="gap-2">
-              <Contact className="h-4 w-4" />
+            <TabsTrigger value="customers" className="gap-2 shrink-0">
+              <Contact className="h-4 w-4 hidden sm:inline" />
               Customers
             </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2">
-              <Tags className="h-4 w-4" />
+            <TabsTrigger value="categories" className="gap-2 shrink-0">
+              <Tags className="h-4 w-4 hidden sm:inline" />
               Categories
             </TabsTrigger>
-            <TabsTrigger value="tags" className="gap-2">
-              <Tag className="h-4 w-4" />
+            <TabsTrigger value="tags" className="gap-2 shrink-0">
+              <Tag className="h-4 w-4 hidden sm:inline" />
               Tags
             </TabsTrigger>
             {showUsersTab && (
-              <TabsTrigger value="users" className="gap-2">
-                <Users className="h-4 w-4" />
+              <TabsTrigger value="users" className="gap-2 shrink-0">
+                <Users className="h-4 w-4 hidden sm:inline" />
                 Users
               </TabsTrigger>
             )}
             {isAdmin && (
-              <TabsTrigger value="organizations" className="gap-2">
-                <ShieldCheck className="h-4 w-4" />
+              <TabsTrigger value="organizations" className="gap-2 shrink-0">
+                <ShieldCheck className="h-4 w-4 hidden sm:inline" />
                 Orgs
               </TabsTrigger>
             )}
@@ -513,14 +513,14 @@ export function Settings() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="pt-4 border-t space-y-2">
                   <div className="space-y-0.5">
                     <Label>Accent Color</Label>
                     <p className="text-sm text-muted-foreground">
                       Choose your preferred accent color
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {colorThemeOptions.map((option) => (
                       <button
                         key={option.value}
@@ -536,14 +536,14 @@ export function Settings() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="pt-4 border-t space-y-2">
                   <div className="space-y-0.5">
                     <Label>Background</Label>
                     <p className="text-sm text-muted-foreground">
                       Choose your preferred background
                     </p>
                   </div>
-                  <div className="flex gap-2 flex-wrap justify-end">
+                  <div className="flex gap-2 flex-wrap">
                     {backgroundThemeOptions.map((option) => (
                       <button
                         key={option.value}
