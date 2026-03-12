@@ -19,6 +19,16 @@ import { ReceiveLocationDialog } from '@/components/ReceiveLocationDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { generatePurchaseOrderPDF } from '@/lib/purchaseOrderGenerator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PurchaseOrder } from '@/types/purchaseOrder';
@@ -46,6 +56,13 @@ export function PurchaseOrders() {
   const [receiveDialogOpen, setReceiveDialogOpen] = useState(false);
   const [receivingOrderId, setReceivingOrderId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Confirmation dialog state
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'revert_paid' | 'revert_order' | 'delete' | null>(null);
+  const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
+  const [confirmTitle, setConfirmTitle] = useState('');
+  const [confirmDescription, setConfirmDescription] = useState('');
 
   const handleMarkOrdered = async (orderId: string) => {
     setProcessingId(orderId);
@@ -83,16 +100,47 @@ export function PurchaseOrders() {
     setProcessingId(null);
   };
 
-  const handleRevertPaid = async (orderId: string) => {
-    setProcessingId(orderId);
-    await revertPaid(orderId);
-    setProcessingId(null);
+  const openRevertPaidConfirm = (orderId: string) => {
+    setConfirmAction('revert_paid');
+    setConfirmOrderId(orderId);
+    setConfirmTitle('Revert Paid Status?');
+    setConfirmDescription('This will refund the amount to the linked bank card and create a reversal transaction. Are you sure?');
+    setConfirmDialogOpen(true);
   };
 
-  const handleRevert = async (orderId: string) => {
-    setProcessingId(orderId);
-    await revertOrder(orderId);
+  const openRevertOrderConfirm = (orderId: string) => {
+    setConfirmAction('revert_order');
+    setConfirmOrderId(orderId);
+    setConfirmTitle('Revert Order Status?');
+    setConfirmDescription('This will revert the purchase order to draft status. Any received items will remain in inventory. Are you sure?');
+    setConfirmDialogOpen(true);
+  };
+
+  const openDeleteConfirm = (orderId: string) => {
+    setConfirmAction('delete');
+    setConfirmOrderId(orderId);
+    setConfirmTitle('Delete Purchase Order?');
+    setConfirmDescription('This action cannot be undone. The purchase order will be permanently deleted. Are you sure?');
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmOrderId || !confirmAction) return;
+    
+    setProcessingId(confirmOrderId);
+    setConfirmDialogOpen(false);
+    
+    if (confirmAction === 'revert_paid') {
+      await revertPaid(confirmOrderId);
+    } else if (confirmAction === 'revert_order') {
+      await revertOrder(confirmOrderId);
+    } else if (confirmAction === 'delete') {
+      await deleteOrder(confirmOrderId);
+    }
+    
     setProcessingId(null);
+    setConfirmAction(null);
+    setConfirmOrderId(null);
   };
 
   const handleEdit = (order: PurchaseOrder) => {
@@ -311,9 +359,9 @@ export function PurchaseOrders() {
                           onMarkOrdered={handleMarkOrdered}
                           onMarkReceived={handleMarkReceived}
                           onMarkPaid={handleMarkPaid}
-                          onRevertPaid={handleRevertPaid}
-                          onRevert={handleRevert}
-                          onDelete={deleteOrder}
+                          onRevertPaid={openRevertPaidConfirm}
+                          onRevert={openRevertOrderConfirm}
+                          onDelete={openDeleteConfirm}
                           onEdit={handleEdit}
                           onDownload={handleDownload}
                           onPreview={handlePreview}
@@ -364,6 +412,22 @@ export function PurchaseOrders() {
         warehouses={warehouses}
         poItems={receivingOrderId ? orders.find((o) => o.id === receivingOrderId)?.items ?? [] : []}
         loading={!!processingId} />
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAction} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Yes, I'm sure
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>);
 
