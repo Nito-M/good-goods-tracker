@@ -146,6 +146,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         .update({ quantity: newLocQty, updated_at: new Date().toISOString() })
         .eq('id', locationEntry.id);
 
+      await refetchLocations();
       toast({ title: `Consumed ${amount} — new quantity: ${newQty}` });
       setConsumeDialogOpen(false);
       setConsumeQty('1');
