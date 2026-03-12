@@ -60,6 +60,7 @@ function createEmptyLine(): RequestLineItem {
     imageFile: null,
     imagePreview: null,
     pdfFile: null,
+    pdfDragOver: false,
   };
 }
 
