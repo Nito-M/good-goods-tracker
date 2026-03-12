@@ -13,6 +13,7 @@ interface PurchaseHistoryItem {
   unitCost: number;
   quantity: number;
   soldQuantity: number;
+  consumedQuantity: number;
   reservedQuantity: number;
   remainingQuantity: number;
   orderedAt: Date;
