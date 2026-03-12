@@ -182,6 +182,8 @@ export function PublicProductDetail() {
           headerBgColor={settings?.header_bg_color}
           headerTextColor={settings?.header_text_color}
           headerNavColor={settings?.header_nav_color}
+          showBackToInventory={true}
+          backToInventoryPath="/items"
         />
 
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-4">

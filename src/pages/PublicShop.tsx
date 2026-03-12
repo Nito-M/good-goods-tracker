@@ -245,6 +245,8 @@ export function PublicShop() {
           headerTextColor={settings?.header_text_color}
           headerNavColor={settings?.header_nav_color}
           categories={categoryPages}
+          showBackToInventory={true}
+          backToInventoryPath="/items"
         />
 
         {/* Banner */}
