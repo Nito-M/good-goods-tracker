@@ -556,7 +556,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                     
                                     <TableCell>
                                       <div className="flex items-center gap-1 flex-wrap">
-                                        {item.reserved ? (
+                                        {item.consumed ? (
+                                          <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Consumed</Badge>
+                                        ) : item.reserved ? (
                                           <>
                                             <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Reserved</Badge>
                                             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => unreserveItem(item.id)} title="Return to stock">
