@@ -240,6 +240,10 @@ export function useJobItems(jobId: string | null) {
       toast({ title: 'Error updating stock', variant: 'destructive' });
       return false;
     }
+
+    // Also deduct from location quantities proportionally
+    await deductFromLocations(item.inventoryItemId, item.quantity);
+
     // Mark reserved
     const { error: resErr } = await supabase
       .from('job_items')
