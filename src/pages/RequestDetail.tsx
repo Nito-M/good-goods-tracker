@@ -655,10 +655,28 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
               {showForm && (
                 <div className="grid grid-cols-2 gap-2 p-2 bg-background border rounded">
                   <Input placeholder="Vendor name *" value={vendorName} onChange={(e) => setVendorName(e.target.value)} className="col-span-2 h-8 text-sm" />
+                  <Input placeholder="SKU (optional)" value={sku} onChange={(e) => setSku(e.target.value)} className="col-span-2 h-8 text-sm" />
                   <Input placeholder="Quantity" type="number" step="0.01" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Unit price" type="number" step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Link (optional)" value={link} onChange={(e) => setLink(e.target.value)} className="h-8 text-sm" />
                   <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} className="col-span-2 h-8 text-sm" />
+                  {/* Image upload */}
+                  <div className="col-span-2">
+                    {imagePreview ? (
+                      <div className="relative w-full h-20 rounded border overflow-hidden">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5" onClick={() => { setImageFile(null); setImagePreview(null); setExistingImageUrl(null); }}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label className="flex items-center gap-2 w-full h-8 px-3 border border-dashed rounded cursor-pointer hover:bg-muted/50 transition-colors text-xs text-muted-foreground">
+                        <Upload className="h-3.5 w-3.5" />
+                        <span>Upload image (optional)</span>
+                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                      </label>
+                    )}
+                  </div>
                   <div className="col-span-2 flex gap-2">
                     <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={saving || !vendorName.trim()}>
                       {saving ? "Saving..." : editingId ? "Update" : "Add"}
