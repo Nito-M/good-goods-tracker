@@ -13,6 +13,7 @@ interface PurchaseHistoryItem {
   unitCost: number;
   quantity: number;
   soldQuantity: number;
+  consumedQuantity: number;
   reservedQuantity: number;
   remainingQuantity: number;
   orderedAt: Date;
@@ -35,10 +36,11 @@ interface SoldItem {
 
 interface ItemPurchaseHistoryProps {
   sku: string;
+  itemId: string;
   currentStock: number;
 }
 
-export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryProps) {
+export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseHistoryProps) {
   const [purchases, setPurchases] = useState<PurchaseHistoryItem[]>([]);
   const [soldItems, setSoldItems] = useState<SoldItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,8 +68,18 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
         .eq('sku', sku)
         .eq('reserved', true);
 
+      // Fetch total consumed quantity from item_consumptions
+      const { data: consumptionData } = await supabase
+        .from('item_consumptions')
+        .select('quantity')
+        .eq('item_id', itemId);
+
       const totalReserved = reservedData
         ? reservedData.reduce((sum, ji) => sum + ji.quantity, 0)
+        : 0;
+
+      const totalConsumed = consumptionData
+        ? consumptionData.reduce((sum, c) => sum + c.quantity, 0)
         : 0;
 
       // Build allocation map: poId -> total sold quantity
@@ -96,6 +108,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                 unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
                 soldQuantity: isReceived(po.status) ? soldQty : 0,
+                consumedQuantity: 0, // will be computed below via FIFO
                 reservedQuantity: 0, // will be computed below via FIFO
                 remainingQuantity: 0, // will be computed below
                 orderedAt: new Date(po.ordered_at),
@@ -106,19 +119,29 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
           }
         }
 
-        // Distribute reserved quantity FIFO across received POs (oldest first)
+        // Distribute consumed quantity FIFO across received POs (oldest first)
+        let consumedLeft = totalConsumed;
+        for (const p of purchaseItems) {
+          if (!isReceived(p.status) || consumedLeft <= 0) continue;
+          const availableAfterSold = Math.max(0, p.quantity - p.soldQuantity);
+          const consumedFromThis = Math.min(availableAfterSold, consumedLeft);
+          p.consumedQuantity = consumedFromThis;
+          consumedLeft -= consumedFromThis;
+        }
+
+        // Distribute reserved quantity FIFO across received POs (oldest first, after sold+consumed)
         let reservedLeft = totalReserved;
         for (const p of purchaseItems) {
           if (!isReceived(p.status) || reservedLeft <= 0) {
             p.remainingQuantity = isReceived(p.status)
-              ? Math.max(0, p.quantity - p.soldQuantity)
+              ? Math.max(0, p.quantity - p.soldQuantity - p.consumedQuantity)
               : p.quantity;
             continue;
           }
-          const availableAfterSold = Math.max(0, p.quantity - p.soldQuantity);
-          const reservedFromThis = Math.min(availableAfterSold, reservedLeft);
+          const availableAfterSoldAndConsumed = Math.max(0, p.quantity - p.soldQuantity - p.consumedQuantity);
+          const reservedFromThis = Math.min(availableAfterSoldAndConsumed, reservedLeft);
           p.reservedQuantity = reservedFromThis;
-          p.remainingQuantity = Math.max(0, availableAfterSold - reservedFromThis);
+          p.remainingQuantity = Math.max(0, availableAfterSoldAndConsumed - reservedFromThis);
           reservedLeft -= reservedFromThis;
         }
         
@@ -213,7 +236,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
     }
 
     fetchHistory();
-  }, [sku]);
+  }, [sku, itemId]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -234,6 +257,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
     .filter(p => isReceived(p.status))
     .reduce((sum, p) => sum + p.quantity, 0);
   const totalSold = soldItems.reduce((sum, s) => sum + s.quantity, 0);
+  const totalConsumed = purchases.reduce((sum, p) => sum + p.consumedQuantity, 0);
   const totalReserved = purchases.reduce((sum, p) => sum + p.reservedQuantity, 0);
   const totalProfit = soldItems.reduce((sum, s) => sum + s.profit, 0);
 
@@ -273,6 +297,12 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
             <p className="text-sm text-muted-foreground">Total Sold</p>
             <p className="text-xl font-bold text-card-foreground">{totalSold}</p>
           </div>
+          {totalConsumed > 0 && (
+            <div className="bg-orange-500/10 rounded-lg p-3 text-center">
+              <p className="text-sm text-muted-foreground">Consumed</p>
+              <p className="text-xl font-bold text-orange-500">{totalConsumed}</p>
+            </div>
+          )}
           {totalReserved > 0 && (
             <div className="bg-warning/10 rounded-lg p-3 text-center">
               <p className="text-sm text-muted-foreground">Reserved</p>
@@ -311,6 +341,7 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Qty Ordered</TableHead>
                       <TableHead className="text-right">Qty Sold</TableHead>
+                      <TableHead className="text-right">Consumed</TableHead>
                       <TableHead className="text-right">Reserved</TableHead>
                       <TableHead className="text-right">Remaining</TableHead>
                       <TableHead className="text-right">Unit Cost</TableHead>
@@ -325,6 +356,11 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                         <TableCell className="text-right">{purchase.quantity}</TableCell>
                         <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
                         <TableCell className="text-right">
+                          {isReceived(purchase.status) && purchase.consumedQuantity > 0
+                            ? <span className="text-orange-500 font-medium">{purchase.consumedQuantity}</span>
+                            : isReceived(purchase.status) ? '0' : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
                           {isReceived(purchase.status) && purchase.reservedQuantity > 0
                             ? <span className="text-warning font-medium">{purchase.reservedQuantity}</span>
                             : isReceived(purchase.status) ? '0' : '-'}
@@ -337,13 +373,13 @@ export function ItemPurchaseHistory({ sku, currentStock }: ItemPurchaseHistoryPr
                           {isReceived(purchase.status) ? (
                             purchase.remainingQuantity === 0 && purchase.reservedQuantity === 0 ? (
                               <Badge className="bg-muted text-muted-foreground hover:bg-muted">
-                                All Sold
+                                {purchase.consumedQuantity > 0 && purchase.soldQuantity === 0 ? 'All Used' : 'All Sold'}
                               </Badge>
                             ) : purchase.remainingQuantity === 0 && purchase.reservedQuantity > 0 ? (
                               <Badge className="bg-warning/10 text-warning hover:bg-warning/20">
                                 Reserved
                               </Badge>
-                            ) : purchase.soldQuantity > 0 || purchase.reservedQuantity > 0 ? (
+                            ) : purchase.soldQuantity > 0 || purchase.reservedQuantity > 0 || purchase.consumedQuantity > 0 ? (
                               <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
                                 Partial
                               </Badge>
