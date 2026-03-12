@@ -864,13 +864,18 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Quantity</Label>
+              <Label>Quantity {consumeWarehouseId && (() => {
+                const loc = itemLocations.find(l => l.warehouse_id === consumeWarehouseId);
+                return loc ? <span className="text-muted-foreground text-xs">(max: {loc.quantity})</span> : null;
+              })()}</Label>
               <Input
                 type="number"
                 min="0.01"
                 step="0.01"
+                max={consumeWarehouseId ? (itemLocations.find(l => l.warehouse_id === consumeWarehouseId)?.quantity || 0) : undefined}
                 value={consumeQty}
                 onChange={(e) => setConsumeQty(e.target.value)}
+                disabled={!consumeWarehouseId}
               />
             </div>
             <div className="space-y-2">
