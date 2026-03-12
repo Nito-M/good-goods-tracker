@@ -222,6 +222,7 @@ export function useRequests() {
   const updateRequest = async (id: string, updates: Partial<CreateRequestInput>): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.inventoryItemId !== undefined) dbUpdates.inventory_item_id = updates.inventoryItemId;
       if (updates.itemName !== undefined) dbUpdates.item_name = updates.itemName;
       if (updates.sku !== undefined) dbUpdates.sku = updates.sku;
