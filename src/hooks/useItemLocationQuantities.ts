@@ -81,5 +81,18 @@ export function useItemLocationQuantities(itemId?: string) {
     await fetchLocations();
   }, [user, fetchLocations]);
 
-  return { locations, loading, saveLocations, refetch: fetchLocations };
+  const updateSingleLocation = useCallback(async (locationId: string, newQuantity: number) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('item_location_quantities')
+      .update({ quantity: newQuantity })
+      .eq('id', locationId);
+    if (error) {
+      console.error('Error updating location quantity:', error);
+      throw error;
+    }
+    await fetchLocations();
+  }, [user, fetchLocations]);
+
+  return { locations, loading, saveLocations, updateSingleLocation, refetch: fetchLocations };
 }
