@@ -282,7 +282,12 @@ export function AssetDetail() {
                       <TableRow key={p.id}>
                         <TableCell>
                           {thumb ? (
-                            <img src={thumb} alt="" className="h-8 w-8 rounded object-cover" />
+                            <img 
+                              src={thumb} 
+                              alt="" 
+                              className="h-8 w-8 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity" 
+                              onClick={(e) => { e.stopPropagation(); handleImageClick(thumb); }}
+                            />
                           ) : (
                             <div className="h-8 w-8 rounded bg-muted flex items-center justify-center">
                               <Package className="h-4 w-4 text-muted-foreground" />
