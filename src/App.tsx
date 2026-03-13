@@ -35,6 +35,8 @@ import { JobAddItems } from "./pages/JobAddItems";
 import { Assemblies } from "./pages/Assemblies";
 import { AssemblyTypes } from "./pages/AssemblyTypes";
 
+import { Assets } from "./pages/Assets";
+import { AssetDetail } from "./pages/AssetDetail";
 import { PartsLibrary } from "./pages/PartsLibrary";
 import { PartsLanding } from "./pages/PartsLanding";
 import { PartsAssemblies } from "./pages/PartsAssemblies";
