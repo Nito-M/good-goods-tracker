@@ -66,7 +66,7 @@ export function Sales() {
   const { signOut } = useAuth();
   const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
-  const { vendors } = useVendors();
+  const { vendors, addVendor } = useVendors();
   const { profile } = useProfile();
   const { addSaleRevenue } = useBank();
   const { companies } = useCompanies();
