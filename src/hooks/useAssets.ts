@@ -287,3 +287,47 @@ export function useAssetDocuments(assetId: string | undefined) {
 
   return { documents, loading, uploadDocument, deleteDocument, refetch: fetchDocs };
 }
+
+export function useAssetNotes(assetId: string | undefined) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [notes, setNotes] = useState<AssetNote[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotes = useCallback(async () => {
+    if (!user || !assetId) return;
+    const { data, error } = await supabase
+      .from('asset_notes' as any)
+      .select('*')
+      .eq('asset_id', assetId)
+      .order('created_at', { ascending: false });
+    if (error) console.error(error);
+    else setNotes((data as unknown as AssetNote[]) || []);
+    setLoading(false);
+  }, [user, assetId]);
+
+  useEffect(() => { fetchNotes(); }, [fetchNotes]);
+
+  const addNote = async (content: string) => {
+    if (!user || !assetId) return;
+    const { error } = await supabase.from('asset_notes' as any).insert({
+      asset_id: assetId, user_id: user.id, content,
+    } as any);
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    await fetchNotes();
+  };
+
+  const updateNote = async (id: string, content: string) => {
+    const { error } = await supabase.from('asset_notes' as any).update({ content, updated_at: new Date().toISOString() } as any).eq('id', id);
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    await fetchNotes();
+  };
+
+  const deleteNote = async (id: string) => {
+    const { error } = await supabase.from('asset_notes' as any).delete().eq('id', id);
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    await fetchNotes();
+  };
+
+  return { notes, loading, addNote, updateNote, deleteNote, refetch: fetchNotes };
+}
