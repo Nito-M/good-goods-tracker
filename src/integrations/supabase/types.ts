@@ -104,6 +104,211 @@ export type Database = {
           },
         ]
       }
+      asset_documents: {
+        Row: {
+          asset_id: string
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_documents_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_maintenance: {
+        Row: {
+          asset_id: string
+          cost: number | null
+          created_at: string
+          description: string
+          id: string
+          parts_used: string | null
+          service_date: string
+          technician: string | null
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          cost?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          parts_used?: string | null
+          service_date?: string
+          technician?: string | null
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          cost?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          parts_used?: string | null
+          service_date?: string
+          technician?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_maintenance_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_parts: {
+        Row: {
+          asset_id: string
+          created_at: string
+          id: string
+          install_date: string | null
+          inventory_item_id: string | null
+          item_name: string
+          notes: string | null
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          id?: string
+          install_date?: string | null
+          inventory_item_id?: string | null
+          item_name: string
+          notes?: string | null
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          id?: string
+          install_date?: string | null
+          inventory_item_id?: string | null
+          item_name?: string
+          notes?: string | null
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_parts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_parts_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assets: {
+        Row: {
+          asset_type: string
+          assigned_employee: string | null
+          assigned_shop: string | null
+          brand: string | null
+          created_at: string
+          current_location: string | null
+          engine_hours: number | null
+          external_link: string | null
+          id: string
+          image_url: string | null
+          last_service_date: string | null
+          model: string | null
+          name: string
+          odometer: number | null
+          serial_number: string | null
+          service_interval_days: number | null
+          status: string
+          updated_at: string
+          user_id: string
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          asset_type?: string
+          assigned_employee?: string | null
+          assigned_shop?: string | null
+          brand?: string | null
+          created_at?: string
+          current_location?: string | null
+          engine_hours?: number | null
+          external_link?: string | null
+          id?: string
+          image_url?: string | null
+          last_service_date?: string | null
+          model?: string | null
+          name: string
+          odometer?: number | null
+          serial_number?: string | null
+          service_interval_days?: number | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vin?: string | null
+          year?: number | null
+        }
+        Update: {
+          asset_type?: string
+          assigned_employee?: string | null
+          assigned_shop?: string | null
+          brand?: string | null
+          created_at?: string
+          current_location?: string | null
+          engine_hours?: number | null
+          external_link?: string | null
+          id?: string
+          image_url?: string | null
+          last_service_date?: string | null
+          model?: string | null
+          name?: string
+          odometer?: number | null
+          serial_number?: string | null
+          service_interval_days?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vin?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       bank_cards: {
         Row: {
           balance: number

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle, Store, ExternalLink } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle, Store, ExternalLink, Truck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
@@ -32,6 +32,7 @@ const menuItems = [
 { title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
 { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
 { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
+{ title: "Assets", url: "/assets", icon: Truck, pageKey: "assets" },
 { title: "Parts Library", url: "/parts", icon: Puzzle, pageKey: "parts" },
 { title: "Tax Documents", url: "/tax-documents", icon: FileText, pageKey: "tax-documents" },
 { title: "Storefront", url: "/storefront", icon: ShoppingCart, pageKey: "storefront" }];
