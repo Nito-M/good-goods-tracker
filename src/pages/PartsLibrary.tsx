@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useParts } from '@/hooks/useParts';
@@ -30,7 +32,8 @@ export function PartsLibrary() {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  const [renamingFolder, setRenamingFolder] = useState<{ id: string; name: string } | null>(null);
+  const [newFolderDescription, setNewFolderDescription] = useState('');
+  const [renamingFolder, setRenamingFolder] = useState<{ id: string; name: string; description?: string | null } | null>(null);
   const [movingPartId, setMovingPartId] = useState<string | null>(null);
   const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
@@ -66,19 +69,20 @@ export function PartsLibrary() {
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-    const id = await addFolder(newFolderName.trim(), currentFolderId);
+    const id = await addFolder(newFolderName.trim(), currentFolderId, newFolderDescription.trim() || null);
     if (id) {
       toast({ title: 'Folder created' });
       setNewFolderOpen(false);
       setNewFolderName('');
+      setNewFolderDescription('');
     }
   };
 
   const handleRenameFolder = async () => {
     if (!renamingFolder || !renamingFolder.name.trim()) return;
-    const ok = await renameFolder(renamingFolder.id, renamingFolder.name.trim());
+    const ok = await renameFolder(renamingFolder.id, renamingFolder.name.trim(), renamingFolder.description);
     if (ok) {
-      toast({ title: 'Folder renamed' });
+      toast({ title: 'Folder updated' });
       setRenamingFolder(null);
     }
   };
@@ -244,11 +248,16 @@ export function PartsLibrary() {
                 {filteredFolders.map((folder, i) => (
                   <div
                     key={folder.id}
-                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''}`}
+                    className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''}`}
                     onClick={() => { setCurrentFolderId(folder.id); setSearch(''); }}
                   >
-                    <Folder className="h-5 w-5 text-primary shrink-0" />
-                    <span className="font-medium text-foreground truncate flex-1">{folder.name}</span>
+                    <Folder className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-foreground truncate block">{folder.name}</span>
+                      {folder.description && (
+                        <span className="text-xs text-muted-foreground truncate block mt-0.5">{folder.description}</span>
+                      )}
+                    </div>
                     <span className="text-xs text-muted-foreground shrink-0">
                       {folders.filter(f => f.parentId === folder.id).length} folders · {parts.filter(p => p.folderId === folder.id).length} parts
                     </span>
@@ -259,8 +268,8 @@ export function PartsLibrary() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent onClick={e => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name })}>
-                          <Pencil className="h-4 w-4 mr-2" /> Rename
+                        <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name, description: folder.description })}>
+                          <Pencil className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFolder(folder.id)}>
                           <Trash2 className="h-4 w-4 mr-2" /> Delete
@@ -384,13 +393,29 @@ export function PartsLibrary() {
             <DialogTitle>New Folder</DialogTitle>
             <DialogDescription>Create a new folder to organize your parts.</DialogDescription>
           </DialogHeader>
-          <Input
-            placeholder="Folder name"
-            value={newFolderName}
-            onChange={e => setNewFolderName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCreateFolder()}
-            autoFocus
-          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="folder-name">Name</Label>
+              <Input
+                id="folder-name"
+                placeholder="Folder name"
+                value={newFolderName}
+                onChange={e => setNewFolderName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleCreateFolder()}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="folder-description">Description (optional)</Label>
+              <Textarea
+                id="folder-description"
+                placeholder="Add a description..."
+                value={newFolderDescription}
+                onChange={e => setNewFolderDescription(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewFolderOpen(false)}>Cancel</Button>
             <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>Create</Button>
@@ -398,23 +423,39 @@ export function PartsLibrary() {
         </DialogContent>
       </Dialog>
 
-      {/* Rename Folder Dialog */}
+      {/* Edit Folder Dialog */}
       <Dialog open={!!renamingFolder} onOpenChange={open => !open && setRenamingFolder(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Folder</DialogTitle>
-            <DialogDescription>Enter a new name for this folder.</DialogDescription>
+            <DialogTitle>Edit Folder</DialogTitle>
+            <DialogDescription>Update the folder name and description.</DialogDescription>
           </DialogHeader>
-          <Input
-            placeholder="Folder name"
-            value={renamingFolder?.name || ''}
-            onChange={e => renamingFolder && setRenamingFolder({ ...renamingFolder, name: e.target.value })}
-            onKeyDown={e => e.key === 'Enter' && handleRenameFolder()}
-            autoFocus
-          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-name">Name</Label>
+              <Input
+                id="edit-folder-name"
+                placeholder="Folder name"
+                value={renamingFolder?.name || ''}
+                onChange={e => renamingFolder && setRenamingFolder({ ...renamingFolder, name: e.target.value })}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleRenameFolder()}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-description">Description (optional)</Label>
+              <Textarea
+                id="edit-folder-description"
+                placeholder="Add a description..."
+                value={renamingFolder?.description || ''}
+                onChange={e => renamingFolder && setRenamingFolder({ ...renamingFolder, description: e.target.value })}
+                rows={2}
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenamingFolder(null)}>Cancel</Button>
-            <Button onClick={handleRenameFolder} disabled={!renamingFolder?.name.trim()}>Rename</Button>
+            <Button onClick={handleRenameFolder} disabled={!renamingFolder?.name.trim()}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

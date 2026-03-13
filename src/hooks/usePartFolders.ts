@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface PartFolder {
   id: string;
   name: string;
+  description: string | null;
   parentId: string | null;
   createdAt: Date;
 }
@@ -30,6 +31,7 @@ export function usePartFolders() {
       setFolders((data || []).map(d => ({
         id: d.id,
         name: d.name,
+        description: d.description,
         parentId: d.parent_id,
         createdAt: new Date(d.created_at),
       })));
@@ -39,11 +41,12 @@ export function usePartFolders() {
 
   useEffect(() => { fetchFolders(); }, [fetchFolders]);
 
-  const addFolder = async (name: string, parentId: string | null) => {
+  const addFolder = async (name: string, parentId: string | null, description?: string | null) => {
     if (!user) return null;
     const { data, error } = await supabase.from('part_folders').insert({
       user_id: user.id,
       name,
+      description,
       parent_id: parentId,
     }).select().single();
     if (error) {
@@ -54,10 +57,14 @@ export function usePartFolders() {
     return data?.id || null;
   };
 
-  const renameFolder = async (id: string, name: string) => {
-    const { error } = await supabase.from('part_folders').update({ name }).eq('id', id);
+  const renameFolder = async (id: string, name: string, description?: string | null) => {
+    const updateData: { name?: string; description?: string | null } = { name };
+    if (description !== undefined) {
+      updateData.description = description;
+    }
+    const { error } = await supabase.from('part_folders').update(updateData).eq('id', id);
     if (error) {
-      toast({ title: 'Error renaming folder', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error updating folder', description: error.message, variant: 'destructive' });
       return false;
     }
     await fetchFolders();
