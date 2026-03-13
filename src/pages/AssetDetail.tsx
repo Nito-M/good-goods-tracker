@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Pencil, ExternalLink, Truck, Plus, Upload, X, FileText } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, ExternalLink, Truck, Plus, Upload, X, FileText, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { useAssets, useAssetParts, useAssetMaintenance, useAssetDocuments } from '@/hooks/useAssets';
+import { useAssets, useAssetParts, useAssetMaintenance, useAssetDocuments, useAssetNotes } from '@/hooks/useAssets';
 import { useInventory } from '@/hooks/useInventory';
 import { AddAssetDialog } from '@/components/AddAssetDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -28,12 +29,16 @@ export function AssetDetail() {
   const { parts, addPart, removePart } = useAssetParts(id);
   const { records, addRecord, deleteRecord } = useAssetMaintenance(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
+  const { notes: assetNotes, addNote, updateNote: updateAssetNote, deleteNote } = useAssetNotes(id);
   const { allItems } = useInventory();
 
   const asset = assets.find((a) => a.id === id);
   const [editOpen, setEditOpen] = useState(false);
   const [addPartOpen, setAddPartOpen] = useState(false);
   const [addMaintenanceOpen, setAddMaintenanceOpen] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState('');
 
   // Add part state
   const [partSearch, setPartSearch] = useState('');
@@ -143,6 +148,7 @@ export function AssetDetail() {
             <TabsTrigger value="parts">Parts Installed</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW */}
@@ -281,6 +287,65 @@ export function AssetDetail() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* NOTES */}
+          <TabsContent value="notes">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Textarea
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  placeholder="Add a note..."
+                  rows={3}
+                />
+                <Button
+                  size="sm"
+                  disabled={!newNoteContent.trim()}
+                  onClick={async () => {
+                    await addNote(newNoteContent.trim());
+                    setNewNoteContent('');
+                    toast({ title: 'Note added' });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Note
+                </Button>
+              </div>
+              {assetNotes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No notes yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {assetNotes.map((n) => (
+                    <div key={n.id} className="border border-border rounded-md p-3 bg-card space-y-2">
+                      {editingNoteId === n.id ? (
+                        <div className="space-y-2">
+                          <Textarea value={editingNoteContent} onChange={(e) => setEditingNoteContent(e.target.value)} rows={3} />
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={async () => { await updateAssetNote(n.id, editingNoteContent); setEditingNoteId(null); toast({ title: 'Note updated' }); }}>Save</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingNoteId(null)}>Cancel</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-sm whitespace-pre-wrap">{n.content}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingNoteId(n.id); setEditingNoteContent(n.content); }}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteNote(n.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </main>
