@@ -133,7 +133,8 @@ export function EditPurchaseOrderDialog({
       setCompanyId((order as any).companyId || defaultCompany?.id || '');
       setBankCardId(order.bankCardId || '');
     }
-  }, [order, open, inventoryItems]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order?.id, open]);
 
   const updateLineItem = (id: string, updates: Partial<LineItem>) => {
     setLineItems((prev) =>
