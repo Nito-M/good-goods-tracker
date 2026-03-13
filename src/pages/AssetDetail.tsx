@@ -300,30 +300,41 @@ export function AssetDetail() {
       {/* Add Part Dialog */}
       <Dialog open={addPartOpen} onOpenChange={setAddPartOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Add Part from Inventory</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Add Part</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div>
-              <Label>Search Inventory</Label>
-              <Input value={partSearch} onChange={(e) => { setPartSearch(e.target.value); setSelectedItemId(null); setSelectedItemName(''); }} placeholder="Search by name or SKU..." />
-              {partSearch && !selectedItemId && (
-                <div className="border border-border rounded-md mt-1 max-h-40 overflow-y-auto bg-card">
-                  {filteredItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="px-3 py-2 text-sm hover:bg-accent cursor-pointer"
-                      onClick={() => {
-                        setSelectedItemId(item.id);
-                        setSelectedItemName(item.name);
-                        setPartSearch(item.name);
-                      }}
-                    >
-                      {item.name} <span className="text-muted-foreground">({item.sku})</span>
-                    </div>
-                  ))}
-                  {filteredItems.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">No items found</p>}
-                </div>
-              )}
+            <div className="flex gap-2">
+              <Button variant={partMode === 'inventory' ? 'default' : 'outline'} size="sm" onClick={() => setPartMode('inventory')}>From Inventory</Button>
+              <Button variant={partMode === 'custom' ? 'default' : 'outline'} size="sm" onClick={() => setPartMode('custom')}>Custom Item</Button>
             </div>
+            {partMode === 'inventory' ? (
+              <div>
+                <Label>Search Inventory</Label>
+                <Input value={partSearch} onChange={(e) => { setPartSearch(e.target.value); setSelectedItemId(null); setSelectedItemName(''); }} placeholder="Search by name or SKU..." />
+                {partSearch && !selectedItemId && (
+                  <div className="border border-border rounded-md mt-1 max-h-40 overflow-y-auto bg-card">
+                    {filteredItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="px-3 py-2 text-sm hover:bg-accent cursor-pointer"
+                        onClick={() => {
+                          setSelectedItemId(item.id);
+                          setSelectedItemName(item.name);
+                          setPartSearch(item.name);
+                        }}
+                      >
+                        {item.name} <span className="text-muted-foreground">({item.sku})</span>
+                      </div>
+                    ))}
+                    {filteredItems.length === 0 && <p className="px-3 py-2 text-sm text-muted-foreground">No items found</p>}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <Label>Item Name</Label>
+                <Input value={customItemName} onChange={(e) => setCustomItemName(e.target.value)} placeholder="Enter custom part name..." />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Quantity</Label><Input type="number" value={partQty} onChange={(e) => setPartQty(e.target.value)} min="1" /></div>
               <div><Label>Install Date</Label><Input type="date" value={partInstallDate} onChange={(e) => setPartInstallDate(e.target.value)} /></div>
@@ -332,7 +343,7 @@ export function AssetDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddPartOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddPart} disabled={!selectedItemName}>Add Part</Button>
+            <Button onClick={handleAddPart} disabled={partMode === 'inventory' ? !selectedItemName : !customItemName.trim()}>Add Part</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
