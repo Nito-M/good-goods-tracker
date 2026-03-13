@@ -471,7 +471,6 @@ export function Sales() {
                                       )
                                     }
                                     min={1}
-                                    max={c.inventoryItem.quantity}
                                   />
                                   <Button
                                     size="icon"
@@ -482,9 +481,6 @@ export function Sales() {
                                         c.inventoryItem.id,
                                         c.quantity + 1
                                       )
-                                    }
-                                    disabled={
-                                      c.quantity >= c.inventoryItem.quantity
                                     }
                                   >
                                     <Plus className="h-3 w-3" />
