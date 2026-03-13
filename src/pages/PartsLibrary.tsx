@@ -246,11 +246,16 @@ export function PartsLibrary() {
                 {filteredFolders.map((folder, i) => (
                   <div
                     key={folder.id}
-                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''}`}
+                    className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''}`}
                     onClick={() => { setCurrentFolderId(folder.id); setSearch(''); }}
                   >
-                    <Folder className="h-5 w-5 text-primary shrink-0" />
-                    <span className="font-medium text-foreground truncate flex-1">{folder.name}</span>
+                    <Folder className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-foreground truncate block">{folder.name}</span>
+                      {folder.description && (
+                        <span className="text-xs text-muted-foreground truncate block mt-0.5">{folder.description}</span>
+                      )}
+                    </div>
                     <span className="text-xs text-muted-foreground shrink-0">
                       {folders.filter(f => f.parentId === folder.id).length} folders · {parts.filter(p => p.folderId === folder.id).length} parts
                     </span>
@@ -261,8 +266,8 @@ export function PartsLibrary() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent onClick={e => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name })}>
-                          <Pencil className="h-4 w-4 mr-2" /> Rename
+                        <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name, description: folder.description })}>
+                          <Pencil className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFolder(folder.id)}>
                           <Trash2 className="h-4 w-4 mr-2" /> Delete
