@@ -17,6 +17,7 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useVendors } from '@/hooks/useVendors';
 import { useWarehouses } from '@/hooks/useWarehouses';
 import { AddAssetDialog } from '@/components/AddAssetDialog';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { useToast } from '@/hooks/use-toast';
 
 const STATUS_COLORS: Record<string, string> = {
