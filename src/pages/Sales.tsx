@@ -154,6 +154,13 @@ export function Sales() {
     }
   }, [markupPercent]);
 
+  const handleAddVendor = async () => {
+    if (!newVendorName.trim()) return;
+    await addVendor({ name: newVendorName.trim(), contact_email: null, contact_phone: null, address: null, notes: null, link: null, color: null });
+    setNewVendorName('');
+    setShowAddVendor(false);
+  };
+
   const handleSaveSale = async (saleId: string, data: any) => {
     await updateSale(saleId, data);
   };
