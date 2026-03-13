@@ -177,9 +177,8 @@ export function Sales() {
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(
       (item) =>
-        item.quantity > 0 &&
-        (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.sku.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [inventoryItems, searchQuery]);
 
@@ -187,7 +186,6 @@ export function Sales() {
     setCart((prev) => {
       const existing = prev.find((c) => c.inventoryItem.id === item.id);
       if (existing) {
-        if (existing.quantity >= item.quantity) return prev;
         return prev.map((c) =>
           c.inventoryItem.id === item.id
             ? { ...c, quantity: c.quantity + 1 }
@@ -210,10 +208,7 @@ export function Sales() {
     setCart((prev) =>
       prev.map((c) =>
         c.inventoryItem.id === itemId
-          ? {
-              ...c,
-              quantity: Math.min(quantity, c.inventoryItem.quantity),
-            }
+          ? { ...c, quantity }
           : c
       )
     );
@@ -384,7 +379,7 @@ export function Sales() {
                                 colSpan={5}
                                 className="text-center text-muted-foreground"
                               >
-                                No items with available stock
+                                No items found
                               </TableCell>
                             </TableRow>
                           ) : (
@@ -476,7 +471,6 @@ export function Sales() {
                                       )
                                     }
                                     min={1}
-                                    max={c.inventoryItem.quantity}
                                   />
                                   <Button
                                     size="icon"
@@ -487,9 +481,6 @@ export function Sales() {
                                         c.inventoryItem.id,
                                         c.quantity + 1
                                       )
-                                    }
-                                    disabled={
-                                      c.quantity >= c.inventoryItem.quantity
                                     }
                                   >
                                     <Plus className="h-3 w-3" />
