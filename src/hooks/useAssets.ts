@@ -61,6 +61,15 @@ export interface AssetDocument {
   created_at: string;
 }
 
+export interface AssetNote {
+  id: string;
+  asset_id: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export function useAssets() {
   const { user } = useAuth();
   const { toast } = useToast();
