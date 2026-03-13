@@ -17,6 +17,7 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useVendors } from '@/hooks/useVendors';
 import { useWarehouses } from '@/hooks/useWarehouses';
 import { AddAssetDialog } from '@/components/AddAssetDialog';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { useToast } from '@/hooks/use-toast';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -46,6 +47,9 @@ export function AssetDetail() {
   const [newNoteContent, setNewNoteContent] = useState('');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState('');
+
+  const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   // Add part state
   const [partSearch, setPartSearch] = useState('');
@@ -94,6 +98,11 @@ export function AssetDetail() {
     const q = partSearch.toLowerCase();
     return i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q) || (i.internalPartNumber || '').toLowerCase().includes(q);
   }).slice(0, 10);
+
+  const handleImageClick = (url: string) => {
+    setViewerImage(url);
+    setViewerOpen(true);
+  };
 
   const resetPartForm = () => {
     setPartSearch('');
@@ -189,9 +198,14 @@ export function AssetDetail() {
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardContent className="pt-6">
-                  {asset.image_url ? (
-                    <img src={asset.image_url} alt={asset.name} className="w-full h-48 object-cover rounded-md mb-4" />
-                  ) : (
+              {asset.image_url ? (
+                <img 
+                  src={asset.image_url} 
+                  alt={asset.name} 
+                  className="w-full h-48 object-cover rounded-md mb-4 cursor-pointer hover:opacity-90 transition-opacity" 
+                  onClick={() => handleImageClick(asset.image_url!)}
+                />
+              ) : (
                     <div className="w-full h-48 bg-muted rounded-md flex items-center justify-center mb-4">
                       <Truck className="h-12 w-12 text-muted-foreground" />
                     </div>
@@ -268,7 +282,12 @@ export function AssetDetail() {
                       <TableRow key={p.id}>
                         <TableCell>
                           {thumb ? (
-                            <img src={thumb} alt="" className="h-8 w-8 rounded object-cover" />
+                            <img 
+                              src={thumb} 
+                              alt="" 
+                              className="h-8 w-8 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity" 
+                              onClick={(e) => { e.stopPropagation(); handleImageClick(thumb); }}
+                            />
                           ) : (
                             <div className="h-8 w-8 rounded bg-muted flex items-center justify-center">
                               <Package className="h-4 w-4 text-muted-foreground" />
@@ -560,6 +579,13 @@ export function AssetDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImageViewerDialog
+        imageUrl={viewerImage}
+        alt="Asset Image"
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
     </div>
   );
 }
