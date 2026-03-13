@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface PartFolder {
   id: string;
   name: string;
+  description: string | null;
   parentId: string | null;
   createdAt: Date;
 }
