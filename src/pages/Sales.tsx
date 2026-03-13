@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSales } from '@/hooks/useSales';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useProfile } from '@/hooks/useProfile';
 import { useBank } from '@/hooks/useBank';
 import { Link } from 'react-router-dom';
