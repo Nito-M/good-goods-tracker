@@ -198,9 +198,14 @@ export function AssetDetail() {
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardContent className="pt-6">
-                  {asset.image_url ? (
-                    <img src={asset.image_url} alt={asset.name} className="w-full h-48 object-cover rounded-md mb-4" />
-                  ) : (
+              {asset.image_url ? (
+                <img 
+                  src={asset.image_url} 
+                  alt={asset.name} 
+                  className="w-full h-48 object-cover rounded-md mb-4 cursor-pointer hover:opacity-90 transition-opacity" 
+                  onClick={() => handleImageClick(asset.image_url!)}
+                />
+              ) : (
                     <div className="w-full h-48 bg-muted rounded-md flex items-center justify-center mb-4">
                       <Truck className="h-12 w-12 text-muted-foreground" />
                     </div>
