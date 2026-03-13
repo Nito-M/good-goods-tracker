@@ -129,6 +129,17 @@ export function Sales() {
     }
   }, [defaultCompany]);
 
+  // Auto-select vendor created from customer
+  useEffect(() => {
+    if (pendingCustomerName) {
+      const match = vendors.find(v => v.name === pendingCustomerName);
+      if (match) {
+        setSelectedVendorId(match.id);
+        setPendingCustomerName(null);
+      }
+    }
+  }, [vendors, pendingCustomerName]);
+
   // Calculate markup price with proper precision (avoid floating-point errors)
   const calculateMarkupPrice = (cost: number, markup: number): number => {
     const costInCents = Math.round(cost * 100);
