@@ -393,13 +393,29 @@ export function PartsLibrary() {
             <DialogTitle>New Folder</DialogTitle>
             <DialogDescription>Create a new folder to organize your parts.</DialogDescription>
           </DialogHeader>
-          <Input
-            placeholder="Folder name"
-            value={newFolderName}
-            onChange={e => setNewFolderName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCreateFolder()}
-            autoFocus
-          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="folder-name">Name</Label>
+              <Input
+                id="folder-name"
+                placeholder="Folder name"
+                value={newFolderName}
+                onChange={e => setNewFolderName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleCreateFolder()}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="folder-description">Description (optional)</Label>
+              <Textarea
+                id="folder-description"
+                placeholder="Add a description..."
+                value={newFolderDescription}
+                onChange={e => setNewFolderDescription(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewFolderOpen(false)}>Cancel</Button>
             <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>Create</Button>
