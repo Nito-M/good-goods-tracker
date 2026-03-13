@@ -186,7 +186,6 @@ export function Sales() {
     setCart((prev) => {
       const existing = prev.find((c) => c.inventoryItem.id === item.id);
       if (existing) {
-        if (existing.quantity >= item.quantity) return prev;
         return prev.map((c) =>
           c.inventoryItem.id === item.id
             ? { ...c, quantity: c.quantity + 1 }
