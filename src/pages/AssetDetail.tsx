@@ -296,7 +296,7 @@ export function AssetDetail() {
                         </TableCell>
                         <TableCell>
                           {p.inventory_item_id ? (
-                            <Link to={`/items/${p.inventory_item_id}`} className="text-primary hover:underline font-medium text-sm">
+                            <Link to={`/item/${p.inventory_item_id}`} className="text-primary hover:underline font-medium text-sm">
                               {p.item_name}
                             </Link>
                           ) : (
