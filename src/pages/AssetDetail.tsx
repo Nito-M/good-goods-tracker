@@ -148,6 +148,7 @@ export function AssetDetail() {
             <TabsTrigger value="parts">Parts Installed</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW */}
