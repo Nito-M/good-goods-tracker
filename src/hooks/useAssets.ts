@@ -169,15 +169,18 @@ export function useAssetParts(assetId: string | undefined) {
 
   useEffect(() => { fetchParts(); }, [fetchParts]);
 
-  const addPart = async (part: Partial<AssetPart>) => {
+  const addPart = async (part: Partial<AssetPart>, deductFromInventory?: boolean) => {
     if (!user || !assetId) return;
     const { error } = await supabase.from('asset_parts').insert({
-      ...part, asset_id: assetId, user_id: user.id,
+      ...part,
+      asset_id: assetId,
+      user_id: user.id,
+      deducted_from_inventory: deductFromInventory ?? false,
     } as any);
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
 
-    // Deduct from inventory if linked
-    if (part.inventory_item_id && part.quantity) {
+    // Deduct from inventory if toggle enabled and linked to inventory item
+    if (deductFromInventory && part.inventory_item_id && part.quantity) {
       const { data: item } = await supabase
         .from('inventory_items')
         .select('quantity')
