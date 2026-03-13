@@ -18,6 +18,7 @@ const PAGE_KEY_TO_ROUTES: Record<string, string[]> = {
   settings: ['/settings'],
   jobs: ['/jobs'],
   assemblies: ['/assemblies'],
+  assets: ['/assets'],
   parts: ['/parts'],
   'tax-documents': ['/tax-documents'],
 };

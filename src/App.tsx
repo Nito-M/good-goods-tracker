@@ -472,6 +472,26 @@ function AppContent() {
           }
         />
         <Route
+          path="/assets"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Assets />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assets/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AssetDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/parts"
           element={
             <ProtectedRoute>
