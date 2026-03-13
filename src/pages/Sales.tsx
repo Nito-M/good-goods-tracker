@@ -208,10 +208,7 @@ export function Sales() {
     setCart((prev) =>
       prev.map((c) =>
         c.inventoryItem.id === itemId
-          ? {
-              ...c,
-              quantity: Math.min(quantity, c.inventoryItem.quantity),
-            }
+          ? { ...c, quantity }
           : c
       )
     );
