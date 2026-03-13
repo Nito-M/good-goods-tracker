@@ -177,9 +177,8 @@ export function Sales() {
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(
       (item) =>
-        item.quantity > 0 &&
-        (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.sku.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [inventoryItems, searchQuery]);
 
