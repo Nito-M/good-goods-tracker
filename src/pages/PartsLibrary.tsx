@@ -67,11 +67,12 @@ export function PartsLibrary() {
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-    const id = await addFolder(newFolderName.trim(), currentFolderId);
+    const id = await addFolder(newFolderName.trim(), currentFolderId, newFolderDescription.trim() || null);
     if (id) {
       toast({ title: 'Folder created' });
       setNewFolderOpen(false);
       setNewFolderName('');
+      setNewFolderDescription('');
     }
   };
 
