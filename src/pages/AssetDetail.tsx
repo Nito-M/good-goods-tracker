@@ -67,10 +67,11 @@ export function AssetDetail() {
   }).slice(0, 8);
 
   const handleAddPart = async () => {
-    if (!selectedItemName) return;
+    const name = partMode === 'inventory' ? selectedItemName : customItemName;
+    if (!name) return;
     await addPart({
-      inventory_item_id: selectedItemId,
-      item_name: selectedItemName,
+      inventory_item_id: partMode === 'inventory' ? selectedItemId : null,
+      item_name: name,
       quantity: parseFloat(partQty) || 1,
       install_date: partInstallDate || null,
       notes: partNotes || null,
@@ -79,9 +80,11 @@ export function AssetDetail() {
     setPartSearch('');
     setSelectedItemId(null);
     setSelectedItemName('');
+    setCustomItemName('');
     setPartQty('1');
     setPartInstallDate('');
     setPartNotes('');
+    setPartMode('inventory');
     toast({ title: 'Part added' });
   };
 
