@@ -36,6 +36,9 @@ export function AssetDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [addPartOpen, setAddPartOpen] = useState(false);
   const [addMaintenanceOpen, setAddMaintenanceOpen] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState('');
 
   // Add part state
   const [partSearch, setPartSearch] = useState('');
