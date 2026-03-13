@@ -269,7 +269,7 @@ export function AssetDetail() {
                     <TableHead>SKU</TableHead>
                     <TableHead className="text-right">Qty Installed</TableHead>
                     <TableHead>Install Date</TableHead>
-                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Cost</TableHead>
                     <TableHead className="text-right">Inventory Qty</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
@@ -308,7 +308,7 @@ export function AssetDetail() {
                         <TableCell className="text-sm text-muted-foreground">{inv?.sku || '—'}</TableCell>
                         <TableCell className="text-right text-sm">{p.quantity}</TableCell>
                         <TableCell className="text-sm">{p.install_date || '—'}</TableCell>
-                        <TableCell className="text-right text-sm">{inv ? `$${inv.price.toFixed(2)}` : '—'}</TableCell>
+                        <TableCell className="text-right text-sm">{inv ? `$${inv.cost.toFixed(2)}` : '—'}</TableCell>
                         <TableCell className="text-right text-sm">{inv ? inv.quantity : '—'}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removePart(p.id)}>
