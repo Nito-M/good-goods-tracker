@@ -42,6 +42,8 @@ export function AssetDetail() {
   const [partQty, setPartQty] = useState('1');
   const [partInstallDate, setPartInstallDate] = useState('');
   const [partNotes, setPartNotes] = useState('');
+  const [partMode, setPartMode] = useState<'inventory' | 'custom'>('inventory');
+  const [customItemName, setCustomItemName] = useState('');
 
   // Add maintenance state
   const [mDate, setMDate] = useState(new Date().toISOString().slice(0, 10));
