@@ -29,6 +29,7 @@ export function AssetDetail() {
   const { parts, addPart, removePart } = useAssetParts(id);
   const { records, addRecord, deleteRecord } = useAssetMaintenance(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
+  const { notes: assetNotes, addNote, updateNote: updateAssetNote, deleteNote } = useAssetNotes(id);
   const { allItems } = useInventory();
 
   const asset = assets.find((a) => a.id === id);
