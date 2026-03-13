@@ -579,6 +579,13 @@ export function AssetDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImageViewerDialog
+        imageUrl={viewerImage}
+        alt="Asset Image"
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
     </div>
   );
 }
