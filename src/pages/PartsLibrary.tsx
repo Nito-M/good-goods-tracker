@@ -423,23 +423,39 @@ export function PartsLibrary() {
         </DialogContent>
       </Dialog>
 
-      {/* Rename Folder Dialog */}
+      {/* Edit Folder Dialog */}
       <Dialog open={!!renamingFolder} onOpenChange={open => !open && setRenamingFolder(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Folder</DialogTitle>
-            <DialogDescription>Enter a new name for this folder.</DialogDescription>
+            <DialogTitle>Edit Folder</DialogTitle>
+            <DialogDescription>Update the folder name and description.</DialogDescription>
           </DialogHeader>
-          <Input
-            placeholder="Folder name"
-            value={renamingFolder?.name || ''}
-            onChange={e => renamingFolder && setRenamingFolder({ ...renamingFolder, name: e.target.value })}
-            onKeyDown={e => e.key === 'Enter' && handleRenameFolder()}
-            autoFocus
-          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-name">Name</Label>
+              <Input
+                id="edit-folder-name"
+                placeholder="Folder name"
+                value={renamingFolder?.name || ''}
+                onChange={e => renamingFolder && setRenamingFolder({ ...renamingFolder, name: e.target.value })}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleRenameFolder()}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-description">Description (optional)</Label>
+              <Textarea
+                id="edit-folder-description"
+                placeholder="Add a description..."
+                value={renamingFolder?.description || ''}
+                onChange={e => renamingFolder && setRenamingFolder({ ...renamingFolder, description: e.target.value })}
+                rows={2}
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenamingFolder(null)}>Cancel</Button>
-            <Button onClick={handleRenameFolder} disabled={!renamingFolder?.name.trim()}>Rename</Button>
+            <Button onClick={handleRenameFolder} disabled={!renamingFolder?.name.trim()}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
