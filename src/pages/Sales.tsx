@@ -66,7 +66,7 @@ export function Sales() {
   const { signOut } = useAuth();
   const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
-  const { vendors } = useVendors();
+  const { vendors, addVendor } = useVendors();
   const { profile } = useProfile();
   const { addSaleRevenue } = useBank();
   const { companies } = useCompanies();
@@ -115,6 +115,8 @@ export function Sales() {
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [showAddVendor, setShowAddVendor] = useState(false);
+  const [newVendorName, setNewVendorName] = useState('');
 
   // Default to default company
   const { defaultCompany } = useCompanies();
@@ -151,6 +153,13 @@ export function Sales() {
       });
     }
   }, [markupPercent]);
+
+  const handleAddVendor = async () => {
+    if (!newVendorName.trim()) return;
+    await addVendor({ name: newVendorName.trim(), contact_email: null, contact_phone: null, address: null, notes: null, link: null, color: null });
+    setNewVendorName('');
+    setShowAddVendor(false);
+  };
 
   const handleSaveSale = async (saleId: string, data: any) => {
     await updateSale(saleId, data);
@@ -552,21 +561,60 @@ export function Sales() {
 
                     <div className="space-y-2">
                       <Label>Vendor (Customer)</Label>
-                      <Select
-                        value={selectedVendorId}
-                        onValueChange={setSelectedVendorId}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a vendor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vendors.map((vendor) => (
-                            <SelectItem key={vendor.id} value={vendor.id}>
-                              {vendor.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select
+                          value={selectedVendorId}
+                          onValueChange={setSelectedVendorId}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select a vendor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {vendors.map((vendor) => (
+                              <SelectItem key={vendor.id} value={vendor.id}>
+                                {vendor.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setShowAddVendor(true)}
+                          title="Add new customer"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {showAddVendor && (
+                        <div className="border rounded-md p-3 space-y-3 bg-muted/30">
+                          <div className="space-y-2">
+                            <Label>Customer Name</Label>
+                            <Input
+                              value={newVendorName}
+                              onChange={(e) => setNewVendorName(e.target.value)}
+                              placeholder="Enter customer name"
+                              autoFocus
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={handleAddVendor}
+                              disabled={!newVendorName.trim()}
+                            >
+                              Add
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => { setShowAddVendor(false); setNewVendorName(''); }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <CompanySelector
