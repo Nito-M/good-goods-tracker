@@ -99,6 +99,11 @@ export function AssetDetail() {
     return i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q) || (i.internalPartNumber || '').toLowerCase().includes(q);
   }).slice(0, 10);
 
+  const handleImageClick = (url: string) => {
+    setViewerImage(url);
+    setViewerOpen(true);
+  };
+
   const resetPartForm = () => {
     setPartSearch('');
     setSelectedItemId(null);
