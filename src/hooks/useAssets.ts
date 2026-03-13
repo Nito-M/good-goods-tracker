@@ -34,6 +34,9 @@ export interface AssetPart {
   item_name: string;
   quantity: number;
   install_date: string | null;
+  installed_by: string | null;
+  remove_date: string | null;
+  deducted_from_inventory: boolean;
   notes: string | null;
   user_id: string;
   created_at: string;
