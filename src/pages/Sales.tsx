@@ -562,28 +562,74 @@ export function Sales() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Vendor (Customer)</Label>
+                      <Label>Vendor / Customer</Label>
                       <div className="flex gap-2">
                         <Select
                           value={selectedVendorId}
-                          onValueChange={setSelectedVendorId}
+                          onValueChange={(val) => {
+                            if (val.startsWith('customer:')) {
+                              const customerId = val.replace('customer:', '');
+                              const customer = customers.find(c => c.id === customerId);
+                              if (customer) {
+                                // Check if vendor already exists with same name
+                                const existingVendor = vendors.find(v => v.name === customer.name);
+                                if (existingVendor) {
+                                  setSelectedVendorId(existingVendor.id);
+                                } else {
+                                  // Create vendor from customer
+                                  addVendor({
+                                    name: customer.name,
+                                    contact_email: customer.email,
+                                    contact_phone: customer.phone,
+                                    address: customer.address,
+                                    notes: null,
+                                    link: null,
+                                    color: null,
+                                  });
+                                  // Will be selected after vendors refresh
+                                  setPendingCustomerName(customer.name);
+                                }
+                              }
+                            } else {
+                              setSelectedVendorId(val);
+                            }
+                          }}
                         >
                           <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Select a vendor" />
+                            <SelectValue placeholder="Select vendor or customer" />
                           </SelectTrigger>
                           <SelectContent>
-                            {vendors.map((vendor) => (
-                              <SelectItem key={vendor.id} value={vendor.id}>
-                                {vendor.name}
-                              </SelectItem>
-                            ))}
+                            {vendors.length > 0 && (
+                              <>
+                                <SelectItem value="__vendor_header" disabled className="text-xs font-semibold text-muted-foreground">
+                                  Vendors
+                                </SelectItem>
+                                {vendors.map((vendor) => (
+                                  <SelectItem key={vendor.id} value={vendor.id}>
+                                    {vendor.name}
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                            {customers.length > 0 && (
+                              <>
+                                <SelectItem value="__customer_header" disabled className="text-xs font-semibold text-muted-foreground">
+                                  Customers
+                                </SelectItem>
+                                {customers.map((customer) => (
+                                  <SelectItem key={`customer:${customer.id}`} value={`customer:${customer.id}`}>
+                                    {customer.name}{customer.company ? ` (${customer.company})` : ''}
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => setShowAddVendor(true)}
-                          title="Add new customer"
+                          title="Add new vendor"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -591,11 +637,11 @@ export function Sales() {
                       {showAddVendor && (
                         <div className="border rounded-md p-3 space-y-3 bg-muted/30">
                           <div className="space-y-2">
-                            <Label>Customer Name</Label>
+                            <Label>Name</Label>
                             <Input
                               value={newVendorName}
                               onChange={(e) => setNewVendorName(e.target.value)}
-                              placeholder="Enter customer name"
+                              placeholder="Enter name"
                               autoFocus
                             />
                           </div>
