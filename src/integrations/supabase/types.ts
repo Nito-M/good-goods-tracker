@@ -225,34 +225,43 @@ export type Database = {
         Row: {
           asset_id: string
           created_at: string
+          deducted_from_inventory: boolean
           id: string
           install_date: string | null
+          installed_by: string | null
           inventory_item_id: string | null
           item_name: string
           notes: string | null
           quantity: number
+          remove_date: string | null
           user_id: string
         }
         Insert: {
           asset_id: string
           created_at?: string
+          deducted_from_inventory?: boolean
           id?: string
           install_date?: string | null
+          installed_by?: string | null
           inventory_item_id?: string | null
           item_name: string
           notes?: string | null
           quantity?: number
+          remove_date?: string | null
           user_id: string
         }
         Update: {
           asset_id?: string
           created_at?: string
+          deducted_from_inventory?: boolean
           id?: string
           install_date?: string | null
+          installed_by?: string | null
           inventory_item_id?: string | null
           item_name?: string
           notes?: string | null
           quantity?: number
+          remove_date?: string | null
           user_id?: string
         }
         Relationships: [
