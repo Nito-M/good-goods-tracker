@@ -31,6 +31,7 @@ export function usePartFolders() {
       setFolders((data || []).map(d => ({
         id: d.id,
         name: d.name,
+        description: d.description,
         parentId: d.parent_id,
         createdAt: new Date(d.created_at),
       })));
