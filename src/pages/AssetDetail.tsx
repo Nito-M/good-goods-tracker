@@ -288,6 +288,65 @@ export function AssetDetail() {
               </div>
             )}
           </TabsContent>
+
+          {/* NOTES */}
+          <TabsContent value="notes">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Textarea
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  placeholder="Add a note..."
+                  rows={3}
+                />
+                <Button
+                  size="sm"
+                  disabled={!newNoteContent.trim()}
+                  onClick={async () => {
+                    await addNote(newNoteContent.trim());
+                    setNewNoteContent('');
+                    toast({ title: 'Note added' });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Note
+                </Button>
+              </div>
+              {assetNotes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No notes yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {assetNotes.map((n) => (
+                    <div key={n.id} className="border border-border rounded-md p-3 bg-card space-y-2">
+                      {editingNoteId === n.id ? (
+                        <div className="space-y-2">
+                          <Textarea value={editingNoteContent} onChange={(e) => setEditingNoteContent(e.target.value)} rows={3} />
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={async () => { await updateAssetNote(n.id, editingNoteContent); setEditingNoteId(null); toast({ title: 'Note updated' }); }}>Save</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingNoteId(null)}>Cancel</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-sm whitespace-pre-wrap">{n.content}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingNoteId(n.id); setEditingNoteContent(n.content); }}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteNote(n.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </main>
 
