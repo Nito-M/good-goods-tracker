@@ -379,7 +379,7 @@ export function Sales() {
                                 colSpan={5}
                                 className="text-center text-muted-foreground"
                               >
-                                No items with available stock
+                                No items found
                               </TableCell>
                             </TableRow>
                           ) : (
