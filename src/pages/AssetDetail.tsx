@@ -48,6 +48,9 @@ export function AssetDetail() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState('');
 
+  const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+
   // Add part state
   const [partSearch, setPartSearch] = useState('');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
