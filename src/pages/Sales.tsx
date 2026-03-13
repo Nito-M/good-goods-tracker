@@ -115,6 +115,8 @@ export function Sales() {
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [showAddVendor, setShowAddVendor] = useState(false);
+  const [newVendorName, setNewVendorName] = useState('');
 
   // Default to default company
   const { defaultCompany } = useCompanies();
