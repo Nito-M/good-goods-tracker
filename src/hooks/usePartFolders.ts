@@ -57,10 +57,14 @@ export function usePartFolders() {
     return data?.id || null;
   };
 
-  const renameFolder = async (id: string, name: string) => {
-    const { error } = await supabase.from('part_folders').update({ name }).eq('id', id);
+  const renameFolder = async (id: string, name: string, description?: string | null) => {
+    const updateData: { name?: string; description?: string | null } = { name };
+    if (description !== undefined) {
+      updateData.description = description;
+    }
+    const { error } = await supabase.from('part_folders').update(updateData).eq('id', id);
     if (error) {
-      toast({ title: 'Error renaming folder', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error updating folder', description: error.message, variant: 'destructive' });
       return false;
     }
     await fetchFolders();
