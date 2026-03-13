@@ -78,9 +78,9 @@ export function PartsLibrary() {
 
   const handleRenameFolder = async () => {
     if (!renamingFolder || !renamingFolder.name.trim()) return;
-    const ok = await renameFolder(renamingFolder.id, renamingFolder.name.trim());
+    const ok = await renameFolder(renamingFolder.id, renamingFolder.name.trim(), renamingFolder.description);
     if (ok) {
-      toast({ title: 'Folder renamed' });
+      toast({ title: 'Folder updated' });
       setRenamingFolder(null);
     }
   };
