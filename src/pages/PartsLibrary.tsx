@@ -30,7 +30,8 @@ export function PartsLibrary() {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  const [renamingFolder, setRenamingFolder] = useState<{ id: string; name: string } | null>(null);
+  const [newFolderDescription, setNewFolderDescription] = useState('');
+  const [renamingFolder, setRenamingFolder] = useState<{ id: string; name: string; description?: string | null } | null>(null);
   const [movingPartId, setMovingPartId] = useState<string | null>(null);
   const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
