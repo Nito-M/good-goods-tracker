@@ -41,11 +41,12 @@ export function usePartFolders() {
 
   useEffect(() => { fetchFolders(); }, [fetchFolders]);
 
-  const addFolder = async (name: string, parentId: string | null) => {
+  const addFolder = async (name: string, parentId: string | null, description?: string | null) => {
     if (!user) return null;
     const { data, error } = await supabase.from('part_folders').insert({
       user_id: user.id,
       name,
+      description,
       parent_id: parentId,
     }).select().single();
     if (error) {
