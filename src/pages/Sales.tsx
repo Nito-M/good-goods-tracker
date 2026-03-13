@@ -552,21 +552,60 @@ export function Sales() {
 
                     <div className="space-y-2">
                       <Label>Vendor (Customer)</Label>
-                      <Select
-                        value={selectedVendorId}
-                        onValueChange={setSelectedVendorId}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a vendor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vendors.map((vendor) => (
-                            <SelectItem key={vendor.id} value={vendor.id}>
-                              {vendor.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select
+                          value={selectedVendorId}
+                          onValueChange={setSelectedVendorId}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select a vendor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {vendors.map((vendor) => (
+                              <SelectItem key={vendor.id} value={vendor.id}>
+                                {vendor.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setShowAddVendor(true)}
+                          title="Add new customer"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {showAddVendor && (
+                        <div className="border rounded-md p-3 space-y-3 bg-muted/30">
+                          <div className="space-y-2">
+                            <Label>Customer Name</Label>
+                            <Input
+                              value={newVendorName}
+                              onChange={(e) => setNewVendorName(e.target.value)}
+                              placeholder="Enter customer name"
+                              autoFocus
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={handleAddVendor}
+                              disabled={!newVendorName.trim()}
+                            >
+                              Add
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => { setShowAddVendor(false); setNewVendorName(''); }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <CompanySelector
