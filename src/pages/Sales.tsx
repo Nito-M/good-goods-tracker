@@ -420,6 +420,7 @@ export function Sales() {
                             <TableHead>Price</TableHead>
                             <TableHead>Quantity</TableHead>
                             <TableHead className="text-right">Total</TableHead>
+                            {markupPercent !== '' && <TableHead>Markup</TableHead>}
                             <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
