@@ -869,55 +869,22 @@ export function Quotes() {
         />
       )}
 
-      {/* Assembly Picker Dialog */}
-      <Dialog open={showAssemblyPicker} onOpenChange={setShowAssemblyPicker}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Layers className="h-5 w-5" />
-              Add Assembly to Quote
-            </DialogTitle>
-            <DialogDescription>
-              Select an assembly to add as a line item. The selling price (MSRP) will be used as the unit price.
-            </DialogDescription>
-          </DialogHeader>
-          {assemblies.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8 text-sm">
-              No assemblies found. Create assemblies first from the Assemblies page.
-            </p>
-          ) : (
-            <Command>
-              <CommandInput placeholder="Search assemblies..." />
-              <CommandList className="max-h-80">
-                <CommandEmpty>No assemblies found.</CommandEmpty>
-                <CommandGroup>
-                  {assemblies.map((assembly) => (
-                    <CommandItem
-                      key={assembly.id}
-                      value={`${assembly.name} ${assembly.description || ''}`}
-                      onSelect={() => addAssemblyToCart(assembly)}
-                      className="flex flex-col items-start gap-1 py-3 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="font-medium">{assembly.name}</span>
-                        <span className="text-sm font-semibold text-primary ml-4">
-                          {assembly.selling_price > 0
-                            ? `MSRP: ${formatCurrency(assembly.selling_price)}`
-                            : <span className="text-muted-foreground font-normal text-xs">No MSRP set</span>
-                          }
-                        </span>
-                      </div>
-                      {assembly.description && (
-                        <span className="text-xs text-muted-foreground line-clamp-2">{assembly.description}</span>
-                      )}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Full-Screen Item Picker */}
+      <FullScreenItemPicker
+        open={showItemPicker}
+        onClose={() => setShowItemPicker(false)}
+        inventoryItems={inventoryItems}
+        cart={cart}
+        onAddItem={addToCart}
+        onAddCustomItem={addCustomItem}
+        onAddAssembly={addAssemblyToCart}
+        onUpdateQuantity={updateCartQuantity}
+        onRemoveItem={removeFromCart}
+        onUpdateItem={updateCartItem}
+        assemblies={assemblies}
+        documentType="Quote"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
