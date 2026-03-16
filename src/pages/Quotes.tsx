@@ -143,7 +143,17 @@ export function Quotes() {
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
 
-  // Calculate markup price with proper precision (avoid floating-point errors)
+  // Auto-select vendor created from customer
+  useEffect(() => {
+    if (pendingCustomerName) {
+      const match = vendors.find(v => v.name === pendingCustomerName);
+      if (match) {
+        setSelectedVendorId(match.id);
+        setPendingCustomerName(null);
+      }
+    }
+  }, [vendors, pendingCustomerName]);
+
   const calculateMarkupPrice = (cost: number, markup: number): number => {
     const costInCents = Math.round(cost * 100);
     const markupAmountInCents = Math.round(costInCents * (markup / 100));
