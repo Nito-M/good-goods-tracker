@@ -226,7 +226,8 @@ export function AssetDetail() {
                   <CardContent className="text-sm space-y-1">
                     <InfoRow label="Year" value={asset.year?.toString()} />
                     <InfoRow label="Serial Number" value={asset.serial_number} />
-                    <InfoRow label="VIN" value={asset.vin} />
+                     <InfoRow label="VIN" value={asset.vin} />
+                     <InfoRow label="Motor Type" value={asset.motor_type} />
                   </CardContent>
                 </Card>
                 <Card>
