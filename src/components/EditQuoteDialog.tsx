@@ -61,6 +61,9 @@ interface EditQuoteDialogProps {
 }
 
 export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: EditQuoteDialogProps) {
+  const { customers } = useCustomers();
+  const { addVendor } = useVendors();
+  const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [items, setItems] = useState<EditableQuoteItem[]>([]);
   const [vendorId, setVendorId] = useState<string>('');
   const [quoteNumber, setQuoteNumber] = useState('');
