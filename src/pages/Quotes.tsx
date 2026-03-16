@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useProfile } from '@/hooks/useProfile';
 import { useSales } from '@/hooks/useSales';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
