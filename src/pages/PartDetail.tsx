@@ -362,8 +362,8 @@ export function PartDetail() {
                     <p className="text-foreground">{part.sku || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Price</p>
-                    <p className="text-foreground font-semibold">{part.price > 0 ? formatCurrency(part.price) : '—'}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Price <span className="text-xs">(= Total Part Cost)</span></p>
+                    <p className="text-foreground font-semibold">{totalPartCost > 0 ? formatCurrency(totalPartCost) : '—'}</p>
                   </div>
                   {part.description && (
                     <div>
