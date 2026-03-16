@@ -135,6 +135,16 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const taxAmount = afterDiscount * (effectiveTaxRate / 100);
   const total = afterDiscount + taxAmount;
 
+  // Auto-select vendor created from customer
+  useEffect(() => {
+    if (pendingCustomerName) {
+      const match = vendors.find(v => v.name === pendingCustomerName);
+      if (match) {
+        setVendorId(match.id);
+        setPendingCustomerName(null);
+      }
+    }
+  }, [vendors, pendingCustomerName]);
 
   const handleSave = async () => {
     if (!quote) return;
