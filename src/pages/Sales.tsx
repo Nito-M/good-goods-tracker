@@ -63,6 +63,7 @@ interface CartItem {
   inventoryItem: InventoryItem;
   quantity: number;
   customPrice?: number; // Custom price after markup
+  excludeMarkup?: boolean;
 }
 
 export function Sales() {
@@ -153,17 +154,17 @@ export function Sales() {
   // Apply markup to all cart items when markup changes
   useEffect(() => {
     if (markupPercent === '') {
-      // Clear custom prices when no markup set
+      // Clear custom prices when no markup set (skip excluded items)
       setCart(prev => {
-        const needsUpdate = prev.some(c => c.customPrice !== undefined);
+        const needsUpdate = prev.some(c => c.customPrice !== undefined && !c.excludeMarkup);
         if (!needsUpdate) return prev;
-        return prev.map(c => ({ ...c, customPrice: undefined }));
+        return prev.map(c => c.excludeMarkup ? c : { ...c, customPrice: undefined });
       });
     } else {
-      // Apply markup to cost for each item
+      // Apply markup to cost for each item (skip excluded items)
       setCart(prev => {
         if (prev.length === 0) return prev;
-        return prev.map(c => ({
+        return prev.map(c => c.excludeMarkup ? c : ({
           ...c,
           customPrice: calculateMarkupPrice(c.inventoryItem.cost, markupPercent as number)
         }));
@@ -419,6 +420,7 @@ export function Sales() {
                             <TableHead>Price</TableHead>
                             <TableHead>Quantity</TableHead>
                             <TableHead className="text-right">Total</TableHead>
+                            {markupPercent !== '' && <TableHead>Markup</TableHead>}
                             <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
@@ -478,6 +480,30 @@ export function Sales() {
                                   c.quantity * getItemPrice(c)
                                 )}
                               </TableCell>
+                              {markupPercent !== '' && (
+                                <TableCell>
+                                  <Button
+                                    type="button"
+                                    variant={c.excludeMarkup ? 'default' : 'outline'}
+                                    size="sm"
+                                    className="h-7 text-xs whitespace-nowrap"
+                                    onClick={() => {
+                                      const newExclude = !c.excludeMarkup;
+                                      setCart(prev => prev.map(item =>
+                                        item.inventoryItem.id === c.inventoryItem.id
+                                          ? {
+                                              ...item,
+                                              excludeMarkup: newExclude,
+                                              customPrice: newExclude ? undefined : calculateMarkupPrice(item.inventoryItem.cost, markupPercent as number)
+                                            }
+                                          : item
+                                      ));
+                                    }}
+                                  >
+                                    {c.excludeMarkup ? 'Excluded' : 'Exclude'}
+                                  </Button>
+                                </TableCell>
+                              )}
                               <TableCell>
                                 <Button
                                   size="icon"

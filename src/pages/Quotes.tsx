@@ -62,6 +62,7 @@ interface CartItem {
   unitPrice: number;
   unitCost: number;
   notes: string;
+  excludeMarkup?: boolean;
 }
 
 import { useCompanies } from '@/hooks/useCompanies';
@@ -149,10 +150,10 @@ export function Quotes() {
   // Apply markup to all cart items when markup changes
   useEffect(() => {
     if (markupPercent === '') {
-      // Revert to original prices
+      // Revert to original prices (skip excluded items)
       setCart(prev => {
         return prev.map(c => {
-          if (!c.inventoryItemId) return c;
+          if (!c.inventoryItemId || c.excludeMarkup) return c;
           const item = inventoryItems.find(i => i.id === c.inventoryItemId);
           return item ? { ...c, unitPrice: item.price } : c;
         });
@@ -161,7 +162,7 @@ export function Quotes() {
       setCart(prev => {
         if (prev.length === 0) return prev;
         return prev.map(c => {
-          if (!c.inventoryItemId) return c;
+          if (!c.inventoryItemId || c.excludeMarkup) return c;
           const item = inventoryItems.find(i => i.id === c.inventoryItemId);
           return item ? { ...c, unitPrice: calculateMarkupPrice(item.cost, markupPercent as number) } : c;
         });
@@ -593,6 +594,27 @@ export function Quotes() {
                                     <p className="font-bold h-8 flex items-center">{formatCurrency((c.quantity || 0) * c.unitPrice)}</p>
                                   </div>
                                 </div>
+
+                                {/* Exclude from Markup toggle */}
+                                {c.inventoryItemId && markupPercent !== '' && (
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      type="button"
+                                      variant={c.excludeMarkup ? 'default' : 'outline'}
+                                      size="sm"
+                                      className="h-7 text-xs"
+                                      onClick={() => {
+                                        const newExclude = !c.excludeMarkup;
+                                        const item = inventoryItems.find(i => i.id === c.inventoryItemId);
+                                        if (!item) return;
+                                        const newPrice = newExclude ? item.price : calculateMarkupPrice(item.cost, markupPercent as number);
+                                        updateCartItem(c.id, { excludeMarkup: newExclude, unitPrice: newPrice });
+                                      }}
+                                    >
+                                      {c.excludeMarkup ? 'Markup Excluded' : 'Exclude from Markup'}
+                                    </Button>
+                                  </div>
+                                )}
 
                                 {/* Per-Item Notes */}
                                 <div className="space-y-1">
