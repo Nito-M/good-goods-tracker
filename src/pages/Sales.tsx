@@ -63,6 +63,7 @@ interface CartItem {
   inventoryItem: InventoryItem;
   quantity: number;
   customPrice?: number; // Custom price after markup
+  excludeMarkup?: boolean;
 }
 
 export function Sales() {
