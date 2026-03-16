@@ -124,23 +124,6 @@ export function Sales() {
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [showItemPicker, setShowItemPicker] = useState(false);
 
-  // Bridge cart to PickerCartItem format for the full-screen picker
-  const pickerCart: PickerCartItem[] = useMemo(() => cart.map((c) => ({
-    id: c.inventoryItem.id,
-    inventoryItemId: c.inventoryItem.id,
-    itemName: c.inventoryItem.name,
-    sku: c.inventoryItem.sku,
-    quantity: c.quantity,
-    quantityUnit: c.inventoryItem.quantityUnit,
-    unitPrice: getItemPrice(c),
-    unitCost: c.inventoryItem.cost,
-    notes: '',
-  })), [cart]);
-
-  const pickerUpdateQuantity = useCallback((itemId: string, quantity: number | null) => {
-    updateCartQuantity(itemId, quantity ?? 0);
-  }, []);
-
   // Default to default company
   const { defaultCompany } = useCompanies();
   useEffect(() => {
