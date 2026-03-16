@@ -295,6 +295,7 @@ export type Database = {
           image_url: string | null
           last_service_date: string | null
           model: string | null
+          motor_type: string | null
           name: string
           odometer: number | null
           serial_number: string | null
@@ -318,6 +319,7 @@ export type Database = {
           image_url?: string | null
           last_service_date?: string | null
           model?: string | null
+          motor_type?: string | null
           name: string
           odometer?: number | null
           serial_number?: string | null
@@ -341,6 +343,7 @@ export type Database = {
           image_url?: string | null
           last_service_date?: string | null
           model?: string | null
+          motor_type?: string | null
           name?: string
           odometer?: number | null
           serial_number?: string | null
