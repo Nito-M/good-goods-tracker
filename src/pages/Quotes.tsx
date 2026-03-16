@@ -43,14 +43,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
 import { EditQuoteDialog } from '@/components/EditQuoteDialog';
