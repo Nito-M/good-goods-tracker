@@ -75,7 +75,8 @@ export function Quotes() {
   const { signOut } = useAuth();
   const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
-  const { vendors } = useVendors();
+  const { vendors, addVendor } = useVendors();
+  const { customers } = useCustomers();
   const { profile } = useProfile();
   const { sales } = useSales();
   const { orders: purchaseOrders } = usePurchaseOrders();
