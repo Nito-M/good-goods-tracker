@@ -399,8 +399,12 @@ export function Sales() {
 
                 {/* Cart */}
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Cart ({cart.length} items)</CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => setShowItemPicker(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add More Items
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     {cart.length === 0 ? (
