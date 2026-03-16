@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useProfile } from '@/hooks/useProfile';
 import { useSales } from '@/hooks/useSales';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -74,7 +75,8 @@ export function Quotes() {
   const { signOut } = useAuth();
   const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
-  const { vendors } = useVendors();
+  const { vendors, addVendor } = useVendors();
+  const { customers } = useCustomers();
   const { profile } = useProfile();
   const { sales } = useSales();
   const { orders: purchaseOrders } = usePurchaseOrders();
@@ -134,13 +136,24 @@ export function Quotes() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
+  const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [taxRate, setTaxRate] = useState<number | null>(5);
   const [discountRate, setDiscountRate] = useState<number | null>(null);
   const [markupPercent, setMarkupPercent] = useState<number | ''>('');
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
 
-  // Calculate markup price with proper precision (avoid floating-point errors)
+  // Auto-select vendor created from customer
+  useEffect(() => {
+    if (pendingCustomerName) {
+      const match = vendors.find(v => v.name === pendingCustomerName);
+      if (match) {
+        setSelectedVendorId(match.id);
+        setPendingCustomerName(null);
+      }
+    }
+  }, [vendors, pendingCustomerName]);
+
   const calculateMarkupPrice = (cost: number, markup: number): number => {
     const costInCents = Math.round(cost * 100);
     const markupAmountInCents = Math.round(costInCents * (markup / 100));
@@ -663,20 +676,63 @@ export function Quotes() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Customer</Label>
+                      <Label>Vendor / Customer</Label>
                       <Select
                         value={selectedVendorId}
-                        onValueChange={setSelectedVendorId}
+                        onValueChange={(val) => {
+                          if (val.startsWith('customer:')) {
+                            const customerId = val.replace('customer:', '');
+                            const customer = customers.find(c => c.id === customerId);
+                            if (customer) {
+                              const existingVendor = vendors.find(v => v.name === customer.name);
+                              if (existingVendor) {
+                                setSelectedVendorId(existingVendor.id);
+                              } else {
+                                addVendor({
+                                  name: customer.name,
+                                  contact_email: customer.email,
+                                  contact_phone: customer.phone,
+                                  address: customer.address,
+                                  notes: null,
+                                  link: null,
+                                  color: null,
+                                });
+                                setPendingCustomerName(customer.name);
+                              }
+                            }
+                          } else {
+                            setSelectedVendorId(val);
+                          }
+                        }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select customer" />
+                          <SelectValue placeholder="Select vendor or customer" />
                         </SelectTrigger>
                         <SelectContent>
-                          {vendors.map((vendor) => (
-                            <SelectItem key={vendor.id} value={vendor.id}>
-                              {vendor.name}
-                            </SelectItem>
-                          ))}
+                          {vendors.length > 0 && (
+                            <>
+                              <SelectItem value="__vendor_header" disabled className="text-xs font-semibold text-muted-foreground">
+                                Vendors
+                              </SelectItem>
+                              {vendors.map((vendor) => (
+                                <SelectItem key={vendor.id} value={vendor.id}>
+                                  {vendor.name}
+                                </SelectItem>
+                              ))}
+                            </>
+                          )}
+                          {customers.length > 0 && (
+                            <>
+                              <SelectItem value="__customer_header" disabled className="text-xs font-semibold text-muted-foreground">
+                                Customers
+                              </SelectItem>
+                              {customers.map((customer) => (
+                                <SelectItem key={`customer:${customer.id}`} value={`customer:${customer.id}`}>
+                                  {customer.name}{customer.company ? ` (${customer.company})` : ''}
+                                </SelectItem>
+                              ))}
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

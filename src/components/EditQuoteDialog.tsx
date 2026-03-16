@@ -3,6 +3,8 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useVendors } from '@/hooks/useVendors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,6 +61,9 @@ interface EditQuoteDialogProps {
 }
 
 export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: EditQuoteDialogProps) {
+  const { customers } = useCustomers();
+  const { addVendor } = useVendors();
+  const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [items, setItems] = useState<EditableQuoteItem[]>([]);
   const [vendorId, setVendorId] = useState<string>('');
   const [quoteNumber, setQuoteNumber] = useState('');
@@ -130,6 +135,16 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const taxAmount = afterDiscount * (effectiveTaxRate / 100);
   const total = afterDiscount + taxAmount;
 
+  // Auto-select vendor created from customer
+  useEffect(() => {
+    if (pendingCustomerName) {
+      const match = vendors.find(v => v.name === pendingCustomerName);
+      if (match) {
+        setVendorId(match.id);
+        setPendingCustomerName(null);
+      }
+    }
+  }, [vendors, pendingCustomerName]);
 
   const handleSave = async () => {
     if (!quote) return;
@@ -178,18 +193,63 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
               />
             </div>
             <div className="space-y-2">
-              <Label>Customer</Label>
-            <Select value={vendorId || 'none'} onValueChange={(val) => setVendorId(val === 'none' ? '' : val)}>
+              <Label>Vendor / Customer</Label>
+              <Select value={vendorId || 'none'} onValueChange={(val) => {
+                if (val === 'none') {
+                  setVendorId('');
+                } else if (val.startsWith('customer:')) {
+                  const customerId = val.replace('customer:', '');
+                  const customer = customers.find(c => c.id === customerId);
+                  if (customer) {
+                    const existingVendor = vendors.find(v => v.name === customer.name);
+                    if (existingVendor) {
+                      setVendorId(existingVendor.id);
+                    } else {
+                      addVendor({
+                        name: customer.name,
+                        contact_email: customer.email,
+                        contact_phone: customer.phone,
+                        address: customer.address,
+                        notes: null,
+                        link: null,
+                        color: null,
+                      });
+                      setPendingCustomerName(customer.name);
+                    }
+                  }
+                } else {
+                  setVendorId(val);
+                }
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
+                  <SelectValue placeholder="Select vendor or customer" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No customer</SelectItem>
-                  {vendors.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.name}
-                    </SelectItem>
-                  ))}
+                  {vendors.length > 0 && (
+                    <>
+                      <SelectItem value="__vendor_header" disabled className="text-xs font-semibold text-muted-foreground">
+                        Vendors
+                      </SelectItem>
+                      {vendors.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {customers.length > 0 && (
+                    <>
+                      <SelectItem value="__customer_header" disabled className="text-xs font-semibold text-muted-foreground">
+                        Customers
+                      </SelectItem>
+                      {customers.map((customer) => (
+                        <SelectItem key={`customer:${customer.id}`} value={`customer:${customer.id}`}>
+                          {customer.name}{customer.company ? ` (${customer.company})` : ''}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
