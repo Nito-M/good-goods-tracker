@@ -169,9 +169,10 @@ export function Quotes() {
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
-  const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
+   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [hidePrices, setHidePrices] = useState(false);
   const [activeTab, setActiveTab] = useState('new-quote');
+  const [showItemPicker, setShowItemPicker] = useState(false);
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
