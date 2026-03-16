@@ -193,18 +193,63 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
               />
             </div>
             <div className="space-y-2">
-              <Label>Customer</Label>
-            <Select value={vendorId || 'none'} onValueChange={(val) => setVendorId(val === 'none' ? '' : val)}>
+              <Label>Vendor / Customer</Label>
+              <Select value={vendorId || 'none'} onValueChange={(val) => {
+                if (val === 'none') {
+                  setVendorId('');
+                } else if (val.startsWith('customer:')) {
+                  const customerId = val.replace('customer:', '');
+                  const customer = customers.find(c => c.id === customerId);
+                  if (customer) {
+                    const existingVendor = vendors.find(v => v.name === customer.name);
+                    if (existingVendor) {
+                      setVendorId(existingVendor.id);
+                    } else {
+                      addVendor({
+                        name: customer.name,
+                        contact_email: customer.email,
+                        contact_phone: customer.phone,
+                        address: customer.address,
+                        notes: null,
+                        link: null,
+                        color: null,
+                      });
+                      setPendingCustomerName(customer.name);
+                    }
+                  }
+                } else {
+                  setVendorId(val);
+                }
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
+                  <SelectValue placeholder="Select vendor or customer" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No customer</SelectItem>
-                  {vendors.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.name}
-                    </SelectItem>
-                  ))}
+                  {vendors.length > 0 && (
+                    <>
+                      <SelectItem value="__vendor_header" disabled className="text-xs font-semibold text-muted-foreground">
+                        Vendors
+                      </SelectItem>
+                      {vendors.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {customers.length > 0 && (
+                    <>
+                      <SelectItem value="__customer_header" disabled className="text-xs font-semibold text-muted-foreground">
+                        Customers
+                      </SelectItem>
+                      {customers.map((customer) => (
+                        <SelectItem key={`customer:${customer.id}`} value={`customer:${customer.id}`}>
+                          {customer.name}{customer.company ? ` (${customer.company})` : ''}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
