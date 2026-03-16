@@ -896,6 +896,20 @@ export function Sales() {
           }}
         />
       )}
+
+      {/* Full-Screen Item Picker */}
+      <FullScreenItemPicker
+        open={showItemPicker}
+        onClose={() => setShowItemPicker(false)}
+        inventoryItems={inventoryItems}
+        cart={pickerCart}
+        onAddItem={addToCart}
+        onAddCustomItem={() => {}}
+        onUpdateQuantity={(itemId, qty) => updateCartQuantity(itemId, qty ?? 0)}
+        onRemoveItem={removeFromCart}
+        documentType="Invoice"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
