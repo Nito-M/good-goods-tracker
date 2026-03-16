@@ -3,6 +3,8 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useVendors } from '@/hooks/useVendors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
