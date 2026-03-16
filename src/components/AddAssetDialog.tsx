@@ -25,6 +25,7 @@ export function AddAssetDialog({ open, onOpenChange, onSave, uploadImage, initia
   const [year, setYear] = useState(initial?.year?.toString() || '');
   const [serialNumber, setSerialNumber] = useState(initial?.serial_number || '');
   const [vin, setVin] = useState(initial?.vin || '');
+  const [motorType, setMotorType] = useState(initial?.motor_type || '');
   const [externalLink, setExternalLink] = useState(initial?.external_link || '');
   const [currentLocation, setCurrentLocation] = useState(initial?.current_location || '');
   const [assignedShop, setAssignedShop] = useState(initial?.assigned_shop || '');
