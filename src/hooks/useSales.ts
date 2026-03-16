@@ -237,14 +237,14 @@ export function useSales() {
       const taxAmount = afterDiscount * (input.taxRate / 100);
       const total = afterDiscount + taxAmount;
 
-      // Create sale with pending status by default (to be marked paid later)
+      // Create sale with draft status by default
       const { data: sale, error: saleError } = await supabase
         .from('sales')
         .insert({
           user_id: user.id,
           vendor_id: input.vendorId,
           invoice_number: input.invoiceNumber || null,
-          status: 'pending',
+          status: 'draft',
           subtotal,
           tax_rate: input.taxRate,
           tax_amount: taxAmount,

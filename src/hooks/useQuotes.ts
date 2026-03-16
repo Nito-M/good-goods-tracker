@@ -423,7 +423,7 @@ export function useQuotes() {
           user_id: user.id,
           vendor_id: quote.vendorId,
           invoice_number: null, // Auto-generate
-          status: 'pending',
+          status: 'draft',
           subtotal,
           tax_rate: quote.taxRate,
           tax_amount: taxAmount,
