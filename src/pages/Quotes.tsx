@@ -615,7 +615,6 @@ export function Quotes() {
                                     </Button>
                                   </div>
                                 )}
-                                </div>
 
                                 {/* Per-Item Notes */}
                                 <div className="space-y-1">
