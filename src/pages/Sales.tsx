@@ -387,72 +387,15 @@ export function Sales() {
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Item Selection */}
               <div className="lg:col-span-2 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Select Items</CardTitle>
-                    <CardDescription>
-                      Search and add items from your inventory
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Input
-                      placeholder="Search by name or SKU..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <div className="max-h-64 overflow-y-auto border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Item</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead className="text-right">Stock</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
-                            <TableHead></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredItems.length === 0 ? (
-                            <TableRow>
-                              <TableCell
-                                colSpan={5}
-                                className="text-center text-muted-foreground"
-                              >
-                                No items found
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredItems.map((item) => (
-                              <TableRow key={item.id}>
-                                <TableCell className="font-medium">
-                                  {item.name}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="secondary">{item.sku}</Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {item.quantity}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {formatCurrency(item.price)}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => addToCart(item)}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Open Full-Screen Item Picker */}
+                <Button
+                  size="lg"
+                  className="w-full h-14 text-base gap-2"
+                  onClick={() => setShowItemPicker(true)}
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  Add Items from Inventory
+                </Button>
 
                 {/* Cart */}
                 <Card>
