@@ -75,6 +75,7 @@ interface CartItem {
 import { useCompanies } from '@/hooks/useCompanies';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
+import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
 import {
   Dialog,
   DialogContent,
