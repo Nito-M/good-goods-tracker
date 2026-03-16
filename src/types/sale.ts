@@ -15,7 +15,7 @@ export interface SaleItem {
   createdAt: string;
 }
 
-export type SaleStatus = 'draft' | 'pending' | 'picked_up' | 'paid' | 'overdue' | 'cancelled';
+export type SaleStatus = 'draft' | 'sent' | 'picked_up' | 'paid' | 'overdue' | 'cancelled';
 
 export interface Sale {
   id: string;

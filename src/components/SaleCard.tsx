@@ -43,7 +43,7 @@ interface SaleCardProps {
 
 const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Draft', variant: 'secondary' },
-  pending: { label: 'Pending', variant: 'outline' },
+  sent: { label: 'Sent', variant: 'outline' },
   paid: { label: 'Paid', variant: 'default' },
   overdue: { label: 'Overdue', variant: 'destructive' },
   cancelled: { label: 'Cancelled', variant: 'secondary' },
@@ -76,7 +76,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
     
     // Show payment status badge (excluding picked_up from the dropdown statuses)
     if (sale.status !== 'picked_up') {
-      const config = statusConfig[sale.status as Exclude<SaleStatus, 'picked_up'>] || statusConfig.pending;
+      const config = statusConfig[sale.status as Exclude<SaleStatus, 'picked_up'>] || statusConfig.sent;
       badges.push(
         <Badge key="status" variant={config.variant}>
           {config.label}
@@ -84,7 +84,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
       );
     }
     
-    return badges.length > 0 ? badges : <Badge variant="outline">Pending</Badge>;
+    return badges.length > 0 ? badges : <Badge variant="outline">Sent</Badge>;
   };
 
   return (
@@ -129,7 +129,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
           {/* Status Selector - hide if already paid (can only revert) */}
           {onStatusChange && sale.status !== 'cancelled' && sale.status !== 'paid' && (
             <Select
-              value={sale.status === 'picked_up' ? 'pending' : sale.status}
+              value={sale.status === 'picked_up' ? 'sent' : sale.status}
               onValueChange={(value: SaleStatus) => onStatusChange(sale.id, value)}
             >
               <SelectTrigger className="w-[120px] h-8">
@@ -137,7 +137,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
