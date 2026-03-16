@@ -84,7 +84,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
       );
     }
     
-    return badges.length > 0 ? badges : <Badge variant="outline">Pending</Badge>;
+    return badges.length > 0 ? badges : <Badge variant="outline">Sent</Badge>;
   };
 
   return (
