@@ -355,6 +355,7 @@ export function Quotes() {
       setCustomQuoteNumber('');
       setTaxRate(null);
       setDiscountRate(null);
+      setMarkupPercent('');
       setNotes('');
       setHidePrices(false);
       setSelectedCompanyId(defaultCompany?.id || '');
