@@ -489,7 +489,6 @@ export function Quotes() {
                       <Plus className="h-4 w-4 mr-1" />
                       Add More Items
                     </Button>
-                    </div>
                   </CardHeader>
                   <CardContent>
                     {cart.length === 0 ? (
