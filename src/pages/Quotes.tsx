@@ -62,6 +62,7 @@ interface CartItem {
   unitPrice: number;
   unitCost: number;
   notes: string;
+  excludeMarkup?: boolean;
 }
 
 import { useCompanies } from '@/hooks/useCompanies';
