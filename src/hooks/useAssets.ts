@@ -13,6 +13,7 @@ export interface Asset {
   year: number | null;
   serial_number: string;
   vin: string | null;
+  motor_type: string | null;
   image_url: string | null;
   external_link: string | null;
   current_location: string;

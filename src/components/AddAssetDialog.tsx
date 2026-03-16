@@ -108,6 +108,7 @@ export function AddAssetDialog({ open, onOpenChange, onSave, uploadImage, initia
             <div><Label>Year</Label><Input type="number" value={year} onChange={(e) => setYear(e.target.value)} /></div>
             <div><Label>Serial Number</Label><Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} /></div>
           </div>
+          <div><Label>Motor Type</Label><Input value={motorType} onChange={(e) => setMotorType(e.target.value)} placeholder="e.g. Diesel, Electric, Gas" /></div>
           <div><Label>VIN (optional)</Label><Input value={vin} onChange={(e) => setVin(e.target.value)} /></div>
           <div><Label>External Link</Label><Input value={externalLink} onChange={(e) => setExternalLink(e.target.value)} placeholder="Manual or spec page URL" /></div>
           <div><Label>Photo</Label><Input type="file" accept="image/*" onChange={handleImageUpload} /></div>
