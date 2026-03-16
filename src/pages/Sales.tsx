@@ -247,6 +247,19 @@ export function Sales() {
   // Get price for cart item (custom or default)
   const getItemPrice = (c: CartItem) => c.customPrice ?? c.inventoryItem.price;
 
+  // Bridge cart to PickerCartItem format for the full-screen picker
+  const pickerCart: PickerCartItem[] = useMemo(() => cart.map((c) => ({
+    id: c.inventoryItem.id,
+    inventoryItemId: c.inventoryItem.id,
+    itemName: c.inventoryItem.name,
+    sku: c.inventoryItem.sku,
+    quantity: c.quantity,
+    quantityUnit: c.inventoryItem.quantityUnit,
+    unitPrice: getItemPrice(c),
+    unitCost: c.inventoryItem.cost,
+    notes: '',
+  })), [cart]);
+
   const subtotal = useMemo(
     () =>
       cart.reduce((sum, c) => sum + c.quantity * getItemPrice(c), 0),
