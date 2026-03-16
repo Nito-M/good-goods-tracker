@@ -129,7 +129,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
           {/* Status Selector - hide if already paid (can only revert) */}
           {onStatusChange && sale.status !== 'cancelled' && sale.status !== 'paid' && (
             <Select
-              value={sale.status === 'picked_up' ? 'pending' : sale.status}
+              value={sale.status === 'picked_up' ? 'sent' : sale.status}
               onValueChange={(value: SaleStatus) => onStatusChange(sale.id, value)}
             >
               <SelectTrigger className="w-[120px] h-8">
