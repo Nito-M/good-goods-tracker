@@ -64,6 +64,7 @@ export function AddAssetDialog({ open, onOpenChange, onSave, uploadImage, initia
       odometer: odometer ? parseFloat(odometer) : null,
       engine_hours: engineHours ? parseFloat(engineHours) : null,
       service_interval_days: serviceIntervalDays ? parseInt(serviceIntervalDays) : null,
+      motor_type: motorType || null,
     });
     setSaving(false);
   };
