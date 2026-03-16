@@ -135,8 +135,39 @@ export function Quotes() {
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
   const [taxRate, setTaxRate] = useState<number | null>(5);
   const [discountRate, setDiscountRate] = useState<number | null>(null);
+  const [markupPercent, setMarkupPercent] = useState<number | ''>('');
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
+
+  // Calculate markup price with proper precision (avoid floating-point errors)
+  const calculateMarkupPrice = (cost: number, markup: number): number => {
+    const costInCents = Math.round(cost * 100);
+    const markupAmountInCents = Math.round(costInCents * (markup / 100));
+    return (costInCents + markupAmountInCents) / 100;
+  };
+
+  // Apply markup to all cart items when markup changes
+  useEffect(() => {
+    if (markupPercent === '') {
+      // Revert to original prices
+      setCart(prev => {
+        return prev.map(c => {
+          if (!c.inventoryItemId) return c;
+          const item = inventoryItems.find(i => i.id === c.inventoryItemId);
+          return item ? { ...c, unitPrice: item.price } : c;
+        });
+      });
+    } else {
+      setCart(prev => {
+        if (prev.length === 0) return prev;
+        return prev.map(c => {
+          if (!c.inventoryItemId) return c;
+          const item = inventoryItems.find(i => i.id === c.inventoryItemId);
+          return item ? { ...c, unitPrice: calculateMarkupPrice(item.cost, markupPercent as number) } : c;
+        });
+      });
+    }
+  }, [markupPercent]);
   const [searchQuery, setSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -216,7 +247,7 @@ export function Quotes() {
         sku: item.sku,
         quantity: null,
         quantityUnit: item.quantityUnit,
-        unitPrice: item.price,
+        unitPrice: markupPercent !== '' ? calculateMarkupPrice(item.cost, markupPercent as number) : item.price,
         unitCost: item.cost,
         notes: '',
       }];
@@ -324,6 +355,7 @@ export function Quotes() {
       setCustomQuoteNumber('');
       setTaxRate(null);
       setDiscountRate(null);
+      setMarkupPercent('');
       setNotes('');
       setHidePrices(false);
       setSelectedCompanyId(defaultCompany?.id || '');
@@ -634,6 +666,23 @@ export function Quotes() {
                         value={validUntil}
                         onChange={(e) => setValidUntil(e.target.value)}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Markup %</Label>
+                      <Input
+                        type="number"
+                        value={markupPercent}
+                        onChange={(e) =>
+                          setMarkupPercent(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)
+                        }
+                        placeholder="Leave blank for default pricing"
+                        min={0}
+                        step={0.1}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Applies markup on item cost to calculate unit price
+                      </p>
                     </div>
 
                     <CompanySelector
