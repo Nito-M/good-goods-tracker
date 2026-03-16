@@ -595,6 +595,28 @@ export function Quotes() {
                                   </div>
                                 </div>
 
+                                {/* Exclude from Markup toggle */}
+                                {c.inventoryItemId && markupPercent !== '' && (
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      type="button"
+                                      variant={c.excludeMarkup ? 'default' : 'outline'}
+                                      size="sm"
+                                      className="h-7 text-xs"
+                                      onClick={() => {
+                                        const newExclude = !c.excludeMarkup;
+                                        const item = inventoryItems.find(i => i.id === c.inventoryItemId);
+                                        if (!item) return;
+                                        const newPrice = newExclude ? item.price : calculateMarkupPrice(item.cost, markupPercent as number);
+                                        updateCartItem(c.id, { excludeMarkup: newExclude, unitPrice: newPrice });
+                                      }}
+                                    >
+                                      {c.excludeMarkup ? 'Markup Excluded' : 'Exclude from Markup'}
+                                    </Button>
+                                  </div>
+                                )}
+                                </div>
+
                                 {/* Per-Item Notes */}
                                 <div className="space-y-1">
                                   <Label className="text-xs">Item Notes</Label>

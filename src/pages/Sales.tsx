@@ -479,6 +479,30 @@ export function Sales() {
                                   c.quantity * getItemPrice(c)
                                 )}
                               </TableCell>
+                              {markupPercent !== '' && (
+                                <TableCell>
+                                  <Button
+                                    type="button"
+                                    variant={c.excludeMarkup ? 'default' : 'outline'}
+                                    size="sm"
+                                    className="h-7 text-xs whitespace-nowrap"
+                                    onClick={() => {
+                                      const newExclude = !c.excludeMarkup;
+                                      setCart(prev => prev.map(item =>
+                                        item.inventoryItem.id === c.inventoryItem.id
+                                          ? {
+                                              ...item,
+                                              excludeMarkup: newExclude,
+                                              customPrice: newExclude ? undefined : calculateMarkupPrice(item.inventoryItem.cost, markupPercent as number)
+                                            }
+                                          : item
+                                      ));
+                                    }}
+                                  >
+                                    {c.excludeMarkup ? 'Excluded' : 'Exclude'}
+                                  </Button>
+                                </TableCell>
+                              )}
                               <TableCell>
                                 <Button
                                   size="icon"
