@@ -247,7 +247,7 @@ export function Quotes() {
         sku: item.sku,
         quantity: null,
         quantityUnit: item.quantityUnit,
-        unitPrice: item.price,
+        unitPrice: markupPercent !== '' ? calculateMarkupPrice(item.cost, markupPercent as number) : item.price,
         unitCost: item.cost,
         notes: '',
       }];
