@@ -136,6 +136,7 @@ export function Quotes() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
+  const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [taxRate, setTaxRate] = useState<number | null>(5);
   const [discountRate, setDiscountRate] = useState<number | null>(null);
   const [markupPercent, setMarkupPercent] = useState<number | ''>('');
