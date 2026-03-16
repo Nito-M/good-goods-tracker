@@ -78,6 +78,20 @@ export function PartDetail() {
 
   const part = parts.find(p => p.id === id);
 
+  // Auto-sync total part cost to price
+  const totalPartCost = materialsCost
+    + (part && part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
+    + (part && part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0);
+
+  useEffect(() => {
+    if (!id || !part) return;
+    const rounded = Math.round(totalPartCost * 100) / 100;
+    const currentPrice = Math.round((part.price ?? 0) * 100) / 100;
+    if (rounded !== currentPrice) {
+      updatePart(id, { price: rounded });
+    }
+  }, [totalPartCost, id, part?.price]);
+
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [dxfText1, setDxfText1] = useState<string | null>(null);
   const [dxfText2, setDxfText2] = useState<string | null>(null);
