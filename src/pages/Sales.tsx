@@ -8,6 +8,7 @@ import {
   Minus,
   Receipt,
   Search,
+  ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +57,7 @@ import { InvoiceSettings, Sale } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { useCompanies } from '@/hooks/useCompanies';
 import { CompanySelector } from '@/components/CompanySelector';
+import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
 interface CartItem {
   inventoryItem: InventoryItem;
@@ -120,6 +122,7 @@ export function Sales() {
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [newVendorName, setNewVendorName] = useState('');
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
+  const [showItemPicker, setShowItemPicker] = useState(false);
 
   // Default to default company
   const { defaultCompany } = useCompanies();
@@ -243,6 +246,19 @@ export function Sales() {
 
   // Get price for cart item (custom or default)
   const getItemPrice = (c: CartItem) => c.customPrice ?? c.inventoryItem.price;
+
+  // Bridge cart to PickerCartItem format for the full-screen picker
+  const pickerCart: PickerCartItem[] = useMemo(() => cart.map((c) => ({
+    id: c.inventoryItem.id,
+    inventoryItemId: c.inventoryItem.id,
+    itemName: c.inventoryItem.name,
+    sku: c.inventoryItem.sku,
+    quantity: c.quantity,
+    quantityUnit: c.inventoryItem.quantityUnit,
+    unitPrice: getItemPrice(c),
+    unitCost: c.inventoryItem.cost,
+    notes: '',
+  })), [cart]);
 
   const subtotal = useMemo(
     () =>
@@ -371,77 +387,24 @@ export function Sales() {
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Item Selection */}
               <div className="lg:col-span-2 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Select Items</CardTitle>
-                    <CardDescription>
-                      Search and add items from your inventory
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Input
-                      placeholder="Search by name or SKU..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <div className="max-h-64 overflow-y-auto border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Item</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead className="text-right">Stock</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
-                            <TableHead></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredItems.length === 0 ? (
-                            <TableRow>
-                              <TableCell
-                                colSpan={5}
-                                className="text-center text-muted-foreground"
-                              >
-                                No items found
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredItems.map((item) => (
-                              <TableRow key={item.id}>
-                                <TableCell className="font-medium">
-                                  {item.name}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="secondary">{item.sku}</Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {item.quantity}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {formatCurrency(item.price)}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => addToCart(item)}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Open Full-Screen Item Picker */}
+                <Button
+                  size="lg"
+                  className="w-full h-14 text-base gap-2"
+                  onClick={() => setShowItemPicker(true)}
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  Add Items from Inventory
+                </Button>
 
                 {/* Cart */}
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Cart ({cart.length} items)</CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => setShowItemPicker(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add More Items
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     {cart.length === 0 ? (
@@ -933,6 +896,20 @@ export function Sales() {
           }}
         />
       )}
+
+      {/* Full-Screen Item Picker */}
+      <FullScreenItemPicker
+        open={showItemPicker}
+        onClose={() => setShowItemPicker(false)}
+        inventoryItems={inventoryItems}
+        cart={pickerCart}
+        onAddItem={addToCart}
+        onAddCustomItem={() => {}}
+        onUpdateQuantity={(itemId, qty) => updateCartQuantity(itemId, qty ?? 0)}
+        onRemoveItem={removeFromCart}
+        documentType="Invoice"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   Search,
   Layers,
   EyeOff,
+  ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -42,14 +43,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
 import { EditQuoteDialog } from '@/components/EditQuoteDialog';
@@ -74,21 +67,7 @@ interface CartItem {
 import { useCompanies } from '@/hooks/useCompanies';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
 
 export function Quotes() {
   const { signOut } = useAuth();
@@ -167,9 +146,10 @@ export function Quotes() {
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
-  const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
+   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [hidePrices, setHidePrices] = useState(false);
   const [activeTab, setActiveTab] = useState('new-quote');
+  const [showItemPicker, setShowItemPicker] = useState(false);
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
@@ -465,90 +445,27 @@ export function Quotes() {
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Item Selection */}
               <div className="lg:col-span-2 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Select Items</CardTitle>
-                    <CardDescription>
-                      Search and add items from your inventory
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Input
-                      placeholder="Search by name or SKU..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <div className="max-h-64 overflow-y-auto border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Item</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead className="text-right">Stock</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
-                            <TableHead></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredItems.length === 0 ? (
-                            <TableRow>
-                              <TableCell
-                                colSpan={5}
-                                className="text-center text-muted-foreground"
-                              >
-                                No items found
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            filteredItems.map((item) => (
-                              <TableRow key={item.id}>
-                                <TableCell className="font-medium">
-                                  {item.name}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="secondary">{item.sku}</Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {item.quantity}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {formatCurrency(item.price)}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => addToCart(item)}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Open Full-Screen Item Picker */}
+                <Button
+                  size="lg"
+                  className="w-full h-14 text-base gap-2"
+                  onClick={() => setShowItemPicker(true)}
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  Add Items from Inventory
+                </Button>
 
                 {/* Cart */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                       <CardTitle>Quote Items ({cart.length} items)</CardTitle>
-                      <CardDescription>Add items from inventory, assemblies, or create custom items</CardDescription>
+                      <CardDescription>Items added to this quote</CardDescription>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setShowAssemblyPicker(true)}>
-                        <Layers className="h-4 w-4 mr-1" />
-                        Assembly
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={addCustomItem}>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Custom Item
-                      </Button>
-                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setShowItemPicker(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add More Items
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     {cart.length === 0 ? (
@@ -929,55 +846,22 @@ export function Quotes() {
         />
       )}
 
-      {/* Assembly Picker Dialog */}
-      <Dialog open={showAssemblyPicker} onOpenChange={setShowAssemblyPicker}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Layers className="h-5 w-5" />
-              Add Assembly to Quote
-            </DialogTitle>
-            <DialogDescription>
-              Select an assembly to add as a line item. The selling price (MSRP) will be used as the unit price.
-            </DialogDescription>
-          </DialogHeader>
-          {assemblies.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8 text-sm">
-              No assemblies found. Create assemblies first from the Assemblies page.
-            </p>
-          ) : (
-            <Command>
-              <CommandInput placeholder="Search assemblies..." />
-              <CommandList className="max-h-80">
-                <CommandEmpty>No assemblies found.</CommandEmpty>
-                <CommandGroup>
-                  {assemblies.map((assembly) => (
-                    <CommandItem
-                      key={assembly.id}
-                      value={`${assembly.name} ${assembly.description || ''}`}
-                      onSelect={() => addAssemblyToCart(assembly)}
-                      className="flex flex-col items-start gap-1 py-3 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="font-medium">{assembly.name}</span>
-                        <span className="text-sm font-semibold text-primary ml-4">
-                          {assembly.selling_price > 0
-                            ? `MSRP: ${formatCurrency(assembly.selling_price)}`
-                            : <span className="text-muted-foreground font-normal text-xs">No MSRP set</span>
-                          }
-                        </span>
-                      </div>
-                      {assembly.description && (
-                        <span className="text-xs text-muted-foreground line-clamp-2">{assembly.description}</span>
-                      )}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Full-Screen Item Picker */}
+      <FullScreenItemPicker
+        open={showItemPicker}
+        onClose={() => setShowItemPicker(false)}
+        inventoryItems={inventoryItems}
+        cart={cart}
+        onAddItem={addToCart}
+        onAddCustomItem={addCustomItem}
+        onAddAssembly={addAssemblyToCart}
+        onUpdateQuantity={updateCartQuantity}
+        onRemoveItem={removeFromCart}
+        onUpdateItem={updateCartItem}
+        assemblies={assemblies}
+        documentType="Quote"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
