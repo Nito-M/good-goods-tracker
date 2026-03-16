@@ -43,7 +43,7 @@ interface SaleCardProps {
 
 const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Draft', variant: 'secondary' },
-  pending: { label: 'Pending', variant: 'outline' },
+  sent: { label: 'Sent', variant: 'outline' },
   paid: { label: 'Paid', variant: 'default' },
   overdue: { label: 'Overdue', variant: 'destructive' },
   cancelled: { label: 'Cancelled', variant: 'secondary' },
