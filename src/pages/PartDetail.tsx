@@ -343,8 +343,8 @@ export function PartDetail() {
                     <Input id="edit-sku" value={editSku} onChange={e => setEditSku(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-price">Price ($)</Label>
-                    <Input id="edit-price" type="number" min={0} step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)} />
+                    <Label htmlFor="edit-price">Price (auto-calculated from total cost)</Label>
+                    <p className="h-10 flex items-center font-semibold text-foreground">{formatCurrency(totalPartCost)}</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-desc">Description</Label>
