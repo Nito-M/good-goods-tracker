@@ -76,7 +76,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
     
     // Show payment status badge (excluding picked_up from the dropdown statuses)
     if (sale.status !== 'picked_up') {
-      const config = statusConfig[sale.status as Exclude<SaleStatus, 'picked_up'>] || statusConfig.pending;
+      const config = statusConfig[sale.status as Exclude<SaleStatus, 'picked_up'>] || statusConfig.sent;
       badges.push(
         <Badge key="status" variant={config.variant}>
           {config.label}
