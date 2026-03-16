@@ -76,13 +76,6 @@ import { useCompanies } from '@/hooks/useCompanies';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 
 export function Quotes() {
   const { signOut } = useAuth();
