@@ -150,10 +150,10 @@ export function Quotes() {
   // Apply markup to all cart items when markup changes
   useEffect(() => {
     if (markupPercent === '') {
-      // Revert to original prices
+      // Revert to original prices (skip excluded items)
       setCart(prev => {
         return prev.map(c => {
-          if (!c.inventoryItemId) return c;
+          if (!c.inventoryItemId || c.excludeMarkup) return c;
           const item = inventoryItems.find(i => i.id === c.inventoryItemId);
           return item ? { ...c, unitPrice: item.price } : c;
         });
@@ -162,7 +162,7 @@ export function Quotes() {
       setCart(prev => {
         if (prev.length === 0) return prev;
         return prev.map(c => {
-          if (!c.inventoryItemId) return c;
+          if (!c.inventoryItemId || c.excludeMarkup) return c;
           const item = inventoryItems.find(i => i.id === c.inventoryItemId);
           return item ? { ...c, unitPrice: calculateMarkupPrice(item.cost, markupPercent as number) } : c;
         });
