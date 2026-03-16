@@ -154,17 +154,17 @@ export function Sales() {
   // Apply markup to all cart items when markup changes
   useEffect(() => {
     if (markupPercent === '') {
-      // Clear custom prices when no markup set
+      // Clear custom prices when no markup set (skip excluded items)
       setCart(prev => {
-        const needsUpdate = prev.some(c => c.customPrice !== undefined);
+        const needsUpdate = prev.some(c => c.customPrice !== undefined && !c.excludeMarkup);
         if (!needsUpdate) return prev;
-        return prev.map(c => ({ ...c, customPrice: undefined }));
+        return prev.map(c => c.excludeMarkup ? c : { ...c, customPrice: undefined });
       });
     } else {
-      // Apply markup to cost for each item
+      // Apply markup to cost for each item (skip excluded items)
       setCart(prev => {
         if (prev.length === 0) return prev;
-        return prev.map(c => ({
+        return prev.map(c => c.excludeMarkup ? c : ({
           ...c,
           customPrice: calculateMarkupPrice(c.inventoryItem.cost, markupPercent as number)
         }));
