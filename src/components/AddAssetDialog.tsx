@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Asset } from '@/hooks/useAssets';
 
-const ASSET_TYPES = ['Vehicle', 'Machine', 'Equipment', 'Tool', 'Trailer', 'Motor'];
+const ASSET_TYPES = ['Vehicle', 'Machine', 'Equipment', 'Tool', 'Trailer'];
 const STATUSES = ['active', 'in service', 'down', 'sold'];
 
 interface Props {
