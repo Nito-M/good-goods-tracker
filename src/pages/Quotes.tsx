@@ -483,17 +483,12 @@ export function Quotes() {
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                       <CardTitle>Quote Items ({cart.length} items)</CardTitle>
-                      <CardDescription>Add items from inventory, assemblies, or create custom items</CardDescription>
+                      <CardDescription>Items added to this quote</CardDescription>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setShowAssemblyPicker(true)}>
-                        <Layers className="h-4 w-4 mr-1" />
-                        Assembly
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={addCustomItem}>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Custom Item
-                      </Button>
+                    <Button variant="outline" size="sm" onClick={() => setShowItemPicker(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add More Items
+                    </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
