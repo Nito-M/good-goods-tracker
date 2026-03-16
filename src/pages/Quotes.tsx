@@ -668,6 +668,23 @@ export function Quotes() {
                       />
                     </div>
 
+                    <div className="space-y-2">
+                      <Label>Markup %</Label>
+                      <Input
+                        type="number"
+                        value={markupPercent}
+                        onChange={(e) =>
+                          setMarkupPercent(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)
+                        }
+                        placeholder="Leave blank for default pricing"
+                        min={0}
+                        step={0.1}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Applies markup on item cost to calculate unit price
+                      </p>
+                    </div>
+
                     <CompanySelector
                       companies={companies}
                       value={selectedCompanyId}
