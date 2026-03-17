@@ -61,6 +61,7 @@ export type Database = {
           inventory_item_id: string | null
           item_name: string
           notes: string | null
+          parts_assembly_id: string | null
           quantity: number
           sku: string
           unit_cost: number
@@ -72,6 +73,7 @@ export type Database = {
           inventory_item_id?: string | null
           item_name: string
           notes?: string | null
+          parts_assembly_id?: string | null
           quantity?: number
           sku?: string
           unit_cost?: number
@@ -83,6 +85,7 @@ export type Database = {
           inventory_item_id?: string | null
           item_name?: string
           notes?: string | null
+          parts_assembly_id?: string | null
           quantity?: number
           sku?: string
           unit_cost?: number
@@ -100,6 +103,13 @@ export type Database = {
             columns: ["inventory_item_id"]
             isOneToOne: false
             referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assembly_items_parts_assembly_id_fkey"
+            columns: ["parts_assembly_id"]
+            isOneToOne: false
+            referencedRelation: "parts_assemblies"
             referencedColumns: ["id"]
           },
         ]
