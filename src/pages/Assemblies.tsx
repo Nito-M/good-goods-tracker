@@ -321,16 +321,16 @@ function AssemblyDetail({
     setAddingPartsAssemblyId(partsAssemblyId);
     const pa = partsAssemblies.find(a => a.id === partsAssemblyId);
     if (pa) {
-      // Fetch parts assembly items to calculate total cost
+      // Fetch parts assembly items to calculate total cost (parts + inventory items)
       const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
         .from('parts_assembly_items')
-        .select('quantity, part_id, parts ( price )')
+        .select('quantity, part_id, inventory_item_id, parts ( price ), inventory_items ( cost )')
         .eq('assembly_id', partsAssemblyId);
 
       let totalCost = 0;
       if (paItems) {
         for (const row of paItems as any[]) {
-          const cost = row.parts?.price ?? 0;
+          const cost = row.parts?.price ?? row.inventory_items?.cost ?? 0;
           totalCost += row.quantity * cost;
         }
       }
