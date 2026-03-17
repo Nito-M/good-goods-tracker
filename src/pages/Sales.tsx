@@ -227,11 +227,7 @@ export function Sales() {
     });
   };
 
-  const updateCartQuantity = (itemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setCart((prev) => prev.filter((c) => c.inventoryItem.id !== itemId));
-      return;
-    }
+  const updateCartQuantity = (itemId: string, quantity: number | null) => {
     setCart((prev) =>
       prev.map((c) =>
         c.inventoryItem.id === itemId
