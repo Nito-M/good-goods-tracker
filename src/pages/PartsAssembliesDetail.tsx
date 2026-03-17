@@ -566,13 +566,15 @@ export function PartsAssembliesDetail() {
         {/* Detail panel */}
         <main className="flex-1 overflow-auto">
           {selected ? (
-            <AssemblyDetail
-              assembly={selected}
-              parts={partsList}
-              inventoryItems={invItemsList}
-              onDelete={handleDelete}
-              onUpdate={updateAssembly}
-            />
+             <AssemblyDetail
+               assembly={selected}
+               parts={partsList}
+               inventoryItems={invItemsList}
+               allParts={parts.map(p => ({ id: p.id, price: p.price }))}
+               allInventoryItems={inventoryItemsList.map(i => ({ id: i.id, cost: i.cost }))}
+               onDelete={handleDelete}
+               onUpdate={updateAssembly}
+             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
