@@ -927,7 +927,7 @@ export function Sales() {
         cart={pickerCart}
         onAddItem={addToCart}
         onAddCustomItem={() => {}}
-        onUpdateQuantity={(itemId, qty) => updateCartQuantity(itemId, qty ?? 0)}
+        onUpdateQuantity={(itemId, qty) => updateCartQuantity(itemId, qty)}
         onRemoveItem={removeFromCart}
         documentType="Invoice"
         formatPrice={formatCurrency}

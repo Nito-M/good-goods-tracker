@@ -361,35 +361,17 @@ export function FullScreenItemPicker({
                     </div>
 
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-7 w-7"
-                          onClick={() => onUpdateQuantity(c.id, Math.max(0, (c.quantity || 0) - 1))}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <Input
-                          type="number"
-                          className="w-16 h-7 text-center text-sm"
-                          value={c.quantity ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            onUpdateQuantity(c.id, val === '' ? null : parseFloat(val));
-                          }}
-                          min={0}
-                          step={0.01}
-                        />
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-7 w-7"
-                          onClick={() => onUpdateQuantity(c.id, (c.quantity || 0) + 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      <Input
+                        type="number"
+                        className="w-24 h-7 text-center text-sm"
+                        value={c.quantity ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          onUpdateQuantity(c.id, val === '' ? null : parseFloat(val));
+                        }}
+                        min={0}
+                        step={0.01}
+                      />
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">{formatPrice(c.unitPrice)} ea</p>
                         <p className="text-sm font-semibold">{formatPrice((c.quantity || 0) * c.unitPrice)}</p>
