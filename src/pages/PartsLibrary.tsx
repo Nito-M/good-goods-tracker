@@ -101,6 +101,30 @@ export function PartsLibrary() {
     }
   };
 
+  const lastSelectedIndex = useRef<number | null>(null);
+
+  const handlePartClick = useCallback((id: string, index: number, e: React.MouseEvent) => {
+    if (!selectMode) return;
+    if (e.shiftKey && lastSelectedIndex.current !== null) {
+      const start = Math.min(lastSelectedIndex.current, index);
+      const end = Math.max(lastSelectedIndex.current, index);
+      setSelectedPartIds(prev => {
+        const next = new Set(prev);
+        for (let i = start; i <= end; i++) {
+          next.add(filtered[i].id);
+        }
+        return next;
+      });
+    } else {
+      setSelectedPartIds(prev => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        return next;
+      });
+      lastSelectedIndex.current = index;
+    }
+  }, [selectMode, filtered]);
+
   const toggleSelect = (id: string) => {
     setSelectedPartIds(prev => {
       const next = new Set(prev);
