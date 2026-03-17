@@ -319,7 +319,7 @@ function AssemblyDetail({
           {!showAddForm && <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Part</Button>}
         </div>
         {showAddForm && (
-          <AddPartForm parts={parts} onAdd={addItem} onCancel={() => setShowAddForm(false)} />
+          <AddPartForm parts={parts} inventoryItems={inventoryItems} onAdd={addItem} onCancel={() => setShowAddForm(false)} />
         )}
         {loading ? (
           <div className="text-muted-foreground text-sm text-center py-8">Loading parts...</div>
