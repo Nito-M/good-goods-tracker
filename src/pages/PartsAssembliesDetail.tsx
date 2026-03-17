@@ -390,7 +390,6 @@ function AssemblyDetail({
               </div>
               );
             })}
-            ))}
           </div>
         )}
       </div>
