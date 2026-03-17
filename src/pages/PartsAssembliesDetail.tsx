@@ -153,10 +153,11 @@ function AddPartForm({
 }
 
 function AssemblyDetail({
-  assembly, parts, onDelete, onUpdate,
+  assembly, parts, inventoryItems, onDelete, onUpdate,
 }: {
   assembly: PartsAssembly;
   parts: { id: string; name: string; sku: string }[];
+  inventoryItems: { id: string; name: string; sku: string }[];
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
 }) {
