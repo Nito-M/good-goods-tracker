@@ -363,7 +363,7 @@ function AssemblyDetail({
                       {item.part_name}
                     </button>
                   ) : item.inventory_item_id ? (
-                    <button className="font-medium text-sm text-primary hover:underline cursor-pointer text-left flex items-center gap-1" onClick={() => navigate(`/items/${item.inventory_item_id}`)}>
+                    <button className="font-medium text-sm text-primary hover:underline cursor-pointer text-left flex items-center gap-1" onClick={() => navigate(`/item/${item.inventory_item_id}`)}>
                       <Package className="h-3 w-3" />{item.part_name}
                     </button>
                   ) : (
