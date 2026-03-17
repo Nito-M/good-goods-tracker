@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssemblyItem } from '@/hooks/usePartsAssemblies';
 import { useParts } from '@/hooks/useParts';
+import { useInventory } from '@/hooks/useInventory';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
