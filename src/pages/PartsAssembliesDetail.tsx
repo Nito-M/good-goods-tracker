@@ -266,6 +266,10 @@ function AssemblyDetail({
                     </button>
                   )}
                 </div>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-muted-foreground">Cost:</span>
+                  <span className="font-semibold">{totalCost > 0 ? formatCurrency(totalCost) : '—'}</span>
+                </div>
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
