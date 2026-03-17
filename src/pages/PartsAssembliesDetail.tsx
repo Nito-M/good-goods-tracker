@@ -390,6 +390,7 @@ export function PartsAssembliesDetail() {
   const decodedType = decodeURIComponent(type || 'General');
   const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, refetch } = usePartsAssemblies();
   const { parts } = useParts();
+  const { items: inventoryItemsList } = useInventory();
 
   const filtered = assemblies.filter(a => (a.type || 'General') === decodedType);
 
