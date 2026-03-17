@@ -20,6 +20,7 @@ export interface PartsAssemblyItem {
   id: string;
   assembly_id: string;
   part_id: string | null;
+  inventory_item_id: string | null;
   part_name: string;
   part_sku: string;
   quantity: number;
