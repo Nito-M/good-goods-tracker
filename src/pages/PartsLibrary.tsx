@@ -358,8 +358,8 @@ export function PartsLibrary() {
                     <div
                       key={part.id}
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
-                      onClick={() => {
-                        if (selectMode) { toggleSelect(part.id); }
+                      onClick={(e) => {
+                        if (selectMode) { handlePartClick(part.id, i, e); }
                         else { navigate(`/parts/library/${part.id}`); }
                       }}
                     >
