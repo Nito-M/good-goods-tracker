@@ -1485,6 +1485,7 @@ export type Database = {
           assembly_id: string
           created_at: string
           id: string
+          inventory_item_id: string | null
           notes: string | null
           part_id: string | null
           part_name: string
@@ -1495,6 +1496,7 @@ export type Database = {
           assembly_id: string
           created_at?: string
           id?: string
+          inventory_item_id?: string | null
           notes?: string | null
           part_id?: string | null
           part_name: string
@@ -1505,6 +1507,7 @@ export type Database = {
           assembly_id?: string
           created_at?: string
           id?: string
+          inventory_item_id?: string | null
           notes?: string | null
           part_id?: string | null
           part_name?: string
@@ -1517,6 +1520,13 @@ export type Database = {
             columns: ["assembly_id"]
             isOneToOne: false
             referencedRelation: "parts_assemblies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parts_assembly_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
             referencedColumns: ["id"]
           },
           {
