@@ -26,7 +26,7 @@ import {
 
 export function PartsLibrary() {
   const navigate = useNavigate();
-  const { parts, loading: partsLoading, deletePart, updatePart, getSignedUrl } = useParts();
+  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   const [search, setSearch] = useState('');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
@@ -181,11 +181,8 @@ export function PartsLibrary() {
                         <AlertDialogAction
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           onClick={async () => {
-                            let deleted = 0;
-                            for (const id of selectedPartIds) {
-                              const ok = await deletePart(id);
-                              if (ok) deleted++;
-                            }
+                            const ids = Array.from(selectedPartIds);
+                            const deleted = await deleteParts(ids);
                             toast({ title: `${deleted} part${deleted !== 1 ? 's' : ''} deleted` });
                             setSelectedPartIds(new Set());
                             setSelectMode(false);
