@@ -160,6 +160,42 @@ export function PartsLibrary() {
                   >
                     <FolderInput className="h-4 w-4" /> Move Selected
                   </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={selectedPartIds.size === 0}
+                        className="gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" /> Delete Selected
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {selectedPartIds.size} part{selectedPartIds.size !== 1 ? 's' : ''}?</AlertDialogTitle>
+                        <AlertDialogDescription>This action cannot be undone. All selected parts will be permanently deleted.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={async () => {
+                            let deleted = 0;
+                            for (const id of selectedPartIds) {
+                              const ok = await deletePart(id);
+                              if (ok) deleted++;
+                            }
+                            toast({ title: `${deleted} part${deleted !== 1 ? 's' : ''} deleted` });
+                            setSelectedPartIds(new Set());
+                            setSelectMode(false);
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <Button variant="ghost" size="icon" onClick={() => { setSelectMode(false); setSelectedPartIds(new Set()); }}>
                     <X className="h-4 w-4" />
                   </Button>
