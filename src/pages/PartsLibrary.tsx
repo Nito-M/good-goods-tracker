@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -100,6 +100,30 @@ export function PartsLibrary() {
       setMovingPartId(null);
     }
   };
+
+  const lastSelectedIndex = useRef<number | null>(null);
+
+  const handlePartClick = useCallback((id: string, index: number, e: React.MouseEvent) => {
+    if (!selectMode) return;
+    if (e.shiftKey && lastSelectedIndex.current !== null) {
+      const start = Math.min(lastSelectedIndex.current, index);
+      const end = Math.max(lastSelectedIndex.current, index);
+      setSelectedPartIds(prev => {
+        const next = new Set(prev);
+        for (let i = start; i <= end; i++) {
+          next.add(filtered[i].id);
+        }
+        return next;
+      });
+    } else {
+      setSelectedPartIds(prev => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        return next;
+      });
+      lastSelectedIndex.current = index;
+    }
+  }, [selectMode, filtered]);
 
   const toggleSelect = (id: string) => {
     setSelectedPartIds(prev => {
@@ -334,8 +358,8 @@ export function PartsLibrary() {
                     <div
                       key={part.id}
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
-                      onClick={() => {
-                        if (selectMode) { toggleSelect(part.id); }
+                      onClick={(e) => {
+                        if (selectMode) { handlePartClick(part.id, i, e); }
                         else { navigate(`/parts/library/${part.id}`); }
                       }}
                     >
@@ -370,12 +394,12 @@ export function PartsLibrary() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                  {filtered.map((part) => (
+                  {filtered.map((part, i) => (
                     <Card
                       key={part.id}
                       className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
-                      onClick={() => {
-                        if (selectMode) { toggleSelect(part.id); }
+                      onClick={(e) => {
+                        if (selectMode) { handlePartClick(part.id, i, e); }
                         else { navigate(`/parts/library/${part.id}`); }
                       }}
                     >
