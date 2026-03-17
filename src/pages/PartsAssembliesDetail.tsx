@@ -563,6 +563,7 @@ export function PartsAssembliesDetail() {
             <AssemblyDetail
               assembly={selected}
               parts={partsList}
+              inventoryItems={invItemsList}
               onDelete={handleDelete}
               onUpdate={updateAssembly}
             />
