@@ -20,6 +20,7 @@ export interface PartsAssemblyItem {
   id: string;
   assembly_id: string;
   part_id: string | null;
+  inventory_item_id: string | null;
   part_name: string;
   part_sku: string;
   quantity: number;
@@ -147,6 +148,7 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
 
   const addItem = async (item: {
     part_id?: string | null;
+    inventory_item_id?: string | null;
     part_name: string;
     part_sku: string;
     quantity: number;
@@ -155,22 +157,32 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
     if (!assemblyId) return false;
 
     // Block if this part already exists in the assembly
-    const existing = items.find(i => i.part_id && item.part_id && i.part_id === item.part_id);
-    if (existing) {
-      toast({ title: 'Part already in list', description: `"${item.part_name}" is already in this assembly. Update its quantity instead.`, variant: 'destructive' });
-      return false;
+    if (item.part_id) {
+      const existing = items.find(i => i.part_id && i.part_id === item.part_id);
+      if (existing) {
+        toast({ title: 'Part already in list', description: `"${item.part_name}" is already in this assembly. Update its quantity instead.`, variant: 'destructive' });
+        return false;
+      }
+    }
+    if (item.inventory_item_id) {
+      const existing = items.find(i => i.inventory_item_id && i.inventory_item_id === item.inventory_item_id);
+      if (existing) {
+        toast({ title: 'Item already in list', description: `"${item.part_name}" is already in this assembly. Update its quantity instead.`, variant: 'destructive' });
+        return false;
+      }
     }
 
     const { error } = await (supabase as any).from('parts_assembly_items').insert({
       assembly_id: assemblyId,
       part_id: item.part_id || null,
+      inventory_item_id: item.inventory_item_id || null,
       part_name: item.part_name,
       part_sku: item.part_sku,
       quantity: item.quantity,
       notes: item.notes || null,
     });
     if (error) {
-      toast({ title: 'Error', description: 'Failed to add part.', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Failed to add item.', variant: 'destructive' });
       return false;
     }
     await fetchItems();
