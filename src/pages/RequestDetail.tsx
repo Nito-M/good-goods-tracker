@@ -66,7 +66,7 @@ export function RequestDetail() {
   const allRequestNumbers = useMemo(() => {
     const seen = new Map<string, string>();
     for (const r of requests) {
-      if (r.requestNumber && r.status === navigationStatus && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
+      if (r.requestNumber && (r.status === navigationStatus || r.requestNumber === decodedNumber) && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
         seen.set(r.requestNumber, r.createdAt);
       }
     }
