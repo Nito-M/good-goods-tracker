@@ -160,5 +160,5 @@ export function useParts() {
     return data?.signedUrl || null;
   };
 
-  return { parts, loading, addPart, updatePart, deletePart, uploadPartImage, uploadPartDxf, getSignedUrl, refetch: fetchParts };
+  return { parts, loading, addPart, updatePart, deletePart, deleteParts, uploadPartImage, uploadPartDxf, getSignedUrl, refetch: fetchParts };
 }
