@@ -349,11 +349,14 @@ function AssemblyDetail({
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              <span>Part</span><span className="w-20 text-center">SKU</span><span className="w-16 text-center">Qty</span><span className="w-8" />
+            <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <span>Part</span><span className="w-20 text-center">SKU</span><span className="w-16 text-center">Qty</span><span className="w-20 text-right">Unit Cost</span><span className="w-20 text-right">Total</span><span className="w-8" />
             </div>
-            {items.map((item) => (
-              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
+            {items.map((item) => {
+              const unitCost = getItemCost(item);
+              const lineTotal = unitCost * item.quantity;
+              return (
+              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
                   {item.part_id ? (
                     <button className="font-medium text-sm text-primary hover:underline cursor-pointer text-left" onClick={() => navigate(`/parts/library/${item.part_id}`)}>
@@ -379,10 +382,14 @@ function AssemblyDetail({
                     {item.quantity}
                   </button>
                 )}
+                <span className="w-20 text-right text-sm text-muted-foreground">{unitCost > 0 ? formatCurrency(unitCost) : '—'}</span>
+                <span className="w-20 text-right text-sm font-medium">{lineTotal > 0 ? formatCurrency(lineTotal) : '—'}</span>
                 <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteItemId(item.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
+              );
+            })}
             ))}
           </div>
         )}
