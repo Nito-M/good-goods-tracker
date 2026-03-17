@@ -54,21 +54,26 @@ export function RequestDetail() {
     [requests, decodedNumber]
   );
 
-  // Determine the status of the current request group for filtering navigation
-  const currentGroupStatus = groupRequests.length > 0 ? groupRequests[0].status : null;
+  // Store the original status when first loaded so navigation context doesn't shift on status change
+  const originalStatusRef = useRef<RequestStatus | null>(null);
+  if (originalStatusRef.current === null && groupRequests.length > 0) {
+    originalStatusRef.current = groupRequests[0].status;
+  }
 
-  // Unique request numbers filtered by same status, sorted by most recent first
+  const navigationStatus = originalStatusRef.current;
+
+  // Unique request numbers filtered by the original status, sorted by most recent first
   const allRequestNumbers = useMemo(() => {
     const seen = new Map<string, string>();
     for (const r of requests) {
-      if (r.requestNumber && r.status === currentGroupStatus && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
+      if (r.requestNumber && r.status === navigationStatus && (!seen.has(r.requestNumber) || r.createdAt > seen.get(r.requestNumber)!)) {
         seen.set(r.requestNumber, r.createdAt);
       }
     }
     return Array.from(seen.entries())
       .sort((a, b) => b[1].localeCompare(a[1]))
       .map(([num]) => num);
-  }, [requests, currentGroupStatus]);
+  }, [requests, navigationStatus]);
 
   const currentIndex = allRequestNumbers.indexOf(decodedNumber);
   const prevRequestNumber = currentIndex > 0 ? allRequestNumbers[currentIndex - 1] : null;
