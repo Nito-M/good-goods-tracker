@@ -183,6 +183,19 @@ function AssemblyDetail({
 
   const isFinished = assembly.status === 'finished';
 
+  const getItemCost = (item: PartsAssemblyItem): number => {
+    if (item.part_id) {
+      const p = allParts.find(x => x.id === item.part_id);
+      return p?.price ?? 0;
+    }
+    if (item.inventory_item_id) {
+      const i = allInventoryItems.find(x => x.id === item.inventory_item_id);
+      return i?.cost ?? 0;
+    }
+    return 0;
+  };
+
+  const totalCost = items.reduce((sum, item) => sum + getItemCost(item) * item.quantity, 0);
   const handleSaveMeta = async () => {
     setSavingMeta(true);
     await onUpdate(assembly.id, { name: nameValue.trim() || assembly.name, description: descValue.trim() || null, selling_price: parseFloat(sellingPriceValue) || 0 });
