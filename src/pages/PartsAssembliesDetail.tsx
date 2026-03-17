@@ -25,11 +25,13 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from '@/components/ui/command';
 
-function PartSearchCombobox({
-  parts,
+function ItemSearchCombobox({
+  items,
+  placeholder,
   onSelect,
 }: {
-  parts: { id: string; name: string; sku: string }[];
+  items: { id: string; name: string; sku: string }[];
+  placeholder: string;
   onSelect: (item: { id: string; name: string; sku: string }) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -37,7 +39,7 @@ function PartSearchCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-full justify-between">
-          Search parts library...
+          {placeholder}
           <Search className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -45,13 +47,13 @@ function PartSearchCombobox({
         <Command>
           <CommandInput placeholder="Search by name or SKU..." />
           <CommandList>
-            <CommandEmpty>No parts found.</CommandEmpty>
+            <CommandEmpty>No items found.</CommandEmpty>
             <CommandGroup>
-              {parts.map((part) => (
-                <CommandItem key={part.id} value={`${part.name} ${part.sku}`} onSelect={() => { onSelect(part); setOpen(false); }}>
+              {items.map((item) => (
+                <CommandItem key={item.id} value={`${item.name} ${item.sku}`} onSelect={() => { onSelect(item); setOpen(false); }}>
                   <div className="flex flex-col">
-                    <span>{part.name}</span>
-                    <span className="text-xs text-muted-foreground">{part.sku}</span>
+                    <span>{item.name}</span>
+                    <span className="text-xs text-muted-foreground">{item.sku}</span>
                   </div>
                 </CommandItem>
               ))}
@@ -64,47 +66,68 @@ function PartSearchCombobox({
 }
 
 function AddPartForm({
-  parts, onAdd, onCancel,
+  parts, inventoryItems, onAdd, onCancel,
 }: {
   parts: { id: string; name: string; sku: string }[];
-  onAdd: (item: { part_id: string; part_name: string; part_sku: string; quantity: number; notes?: string }) => Promise<boolean>;
+  inventoryItems: { id: string; name: string; sku: string }[];
+  onAdd: (item: { part_id?: string | null; inventory_item_id?: string | null; part_name: string; part_sku: string; quantity: number; notes?: string }) => Promise<boolean>;
   onCancel: () => void;
 }) {
-  const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
-  const [partName, setPartName] = useState('');
-  const [partSku, setPartSku] = useState('');
+  const [source, setSource] = useState<'parts' | 'inventory'>('parts');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [itemName, setItemName] = useState('');
+  const [itemSku, setItemSku] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSelect = (item: { id: string; name: string; sku: string }) => {
-    setSelectedPartId(item.id); setPartName(item.name); setPartSku(item.sku);
+    setSelectedId(item.id); setItemName(item.name); setItemSku(item.sku);
   };
 
   const handleSubmit = async () => {
-    if (!selectedPartId || !partName.trim()) return;
+    if (!selectedId || !itemName.trim()) return;
     setSaving(true);
-    const ok = await onAdd({ part_id: selectedPartId, part_name: partName.trim(), part_sku: partSku.trim(), quantity, notes: notes.trim() || undefined });
+    const ok = await onAdd({
+      part_id: source === 'parts' ? selectedId : null,
+      inventory_item_id: source === 'inventory' ? selectedId : null,
+      part_name: itemName.trim(),
+      part_sku: itemSku.trim(),
+      quantity,
+      notes: notes.trim() || undefined,
+    });
     setSaving(false);
     if (ok) onCancel();
   };
 
   return (
     <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-      <div className="space-y-1">
-        <Label className="text-xs">Select from Parts Library</Label>
-        <PartSearchCombobox parts={parts} onSelect={handleSelect} />
+      <div className="flex gap-2">
+        <Button size="sm" variant={source === 'parts' ? 'default' : 'outline'} onClick={() => { setSource('parts'); setSelectedId(null); setItemName(''); setItemSku(''); }}>
+          Parts Library
+        </Button>
+        <Button size="sm" variant={source === 'inventory' ? 'default' : 'outline'} onClick={() => { setSource('inventory'); setSelectedId(null); setItemName(''); setItemSku(''); }}>
+          <Package className="h-3 w-3 mr-1" /> Inventory
+        </Button>
       </div>
-      {selectedPartId && (
+      <div className="space-y-1">
+        <Label className="text-xs">Select from {source === 'parts' ? 'Parts Library' : 'Inventory'}</Label>
+        <ItemSearchCombobox
+          items={source === 'parts' ? parts : inventoryItems}
+          placeholder={source === 'parts' ? 'Search parts library...' : 'Search inventory items...'}
+          onSelect={handleSelect}
+        />
+      </div>
+      {selectedId && (
         <>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Part Name</Label>
-              <Input value={partName} disabled className="bg-muted" />
+              <Label className="text-xs">Name</Label>
+              <Input value={itemName} disabled className="bg-muted" />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">SKU</Label>
-              <Input value={partSku} disabled className="bg-muted" />
+              <Input value={itemSku} disabled className="bg-muted" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -121,8 +144,8 @@ function AddPartForm({
       )}
       <div className="flex gap-2 justify-end">
         <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={handleSubmit} disabled={!selectedPartId || saving}>
-          {saving ? 'Adding...' : 'Add Part'}
+        <Button size="sm" onClick={handleSubmit} disabled={!selectedId || saving}>
+          {saving ? 'Adding...' : 'Add Item'}
         </Button>
       </div>
     </div>
