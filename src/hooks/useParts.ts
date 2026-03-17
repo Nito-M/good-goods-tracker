@@ -122,6 +122,17 @@ export function useParts() {
     return true;
   };
 
+  const deleteParts = async (ids: string[]) => {
+    if (ids.length === 0) return 0;
+    const { error, count } = await supabase.from('parts').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'Error deleting parts', description: error.message, variant: 'destructive' });
+      return 0;
+    }
+    await fetchParts();
+    return count ?? ids.length;
+  };
+
   const uploadPartImage = async (file: File) => {
     if (!user) return null;
     const path = `${user.id}/${Date.now()}-${file.name}`;
