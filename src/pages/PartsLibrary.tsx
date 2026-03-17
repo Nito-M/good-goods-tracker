@@ -394,12 +394,12 @@ export function PartsLibrary() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                  {filtered.map((part) => (
+                  {filtered.map((part, i) => (
                     <Card
                       key={part.id}
                       className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
-                      onClick={() => {
-                        if (selectMode) { toggleSelect(part.id); }
+                      onClick={(e) => {
+                        if (selectMode) { handlePartClick(part.id, i, e); }
                         else { navigate(`/parts/library/${part.id}`); }
                       }}
                     >
