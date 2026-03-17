@@ -477,6 +477,7 @@ export function PartsAssembliesDetail() {
   };
 
   const partsList = parts.map(p => ({ id: p.id, name: p.name, sku: p.sku }));
+  const invItemsList = inventoryItemsList.map(i => ({ id: i.id, name: i.name, sku: i.sku }));
 
   return (
     <div className="min-h-full bg-background">
