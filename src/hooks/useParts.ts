@@ -103,7 +103,7 @@ export function useParts() {
     if (updates.dxfLabel2 !== undefined) dbUpdates.dxf_label_2 = updates.dxfLabel2;
     if (updates.folderId !== undefined) dbUpdates.folder_id = updates.folderId;
 
-    const { error, count } = await supabase.from('parts').update(dbUpdates).eq('id', id).select('id', { count: 'exact', head: true });
+    const { error, count } = await supabase.from('parts').update(dbUpdates).eq('id', id).select();
     if (error) {
       toast({ title: 'Error updating part', description: error.message, variant: 'destructive' });
       return false;
