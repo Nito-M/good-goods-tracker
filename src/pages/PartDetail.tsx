@@ -72,10 +72,7 @@ export function PartDetail() {
   const { items: inventoryItems } = useInventory();
   const { items: partItems, addItem: addPartItem, addCustomItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
   const { toast } = useToast();
-  const [addItemOpen, setAddItemOpen] = useState(false);
-  const [addItemSearch, setAddItemSearch] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [customCost, setCustomCost] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const part = parts.find(p => p.id === id);
 
