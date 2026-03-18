@@ -768,14 +768,26 @@ export function PartDetail() {
               )}
             </CardHeader>
             <CardContent>
-              <div className="aspect-square bg-muted rounded-md overflow-hidden">
+              <div
+                className={`aspect-square bg-muted rounded-md overflow-hidden transition-all ${editing && dragOverDxf2 ? 'ring-2 ring-primary bg-primary/10' : ''}`}
+                onDragOver={editing ? (e) => preventAndHighlight(e, setDragOverDxf2) : undefined}
+                onDragLeave={editing ? () => setDragOverDxf2(false) : undefined}
+                onDrop={editing ? (e) => handleDxfDrop(e, 2) : undefined}
+              >
                 {dxfText2 ? (
                   <DxfThreeViewer dxfText={dxfText2} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-muted-foreground text-sm">
-                      {part.dxfUrl2 ? 'Loading DXF...' : 'No DXF file'}
-                    </span>
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                    {editing ? (
+                      <>
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <span className="text-muted-foreground text-sm">{newDxfFile2 ? newDxfFile2.name : 'Drop DXF here'}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        {part.dxfUrl2 ? 'Loading DXF...' : 'No DXF file'}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -786,6 +798,7 @@ export function PartDetail() {
                   <input type="file" accept=".dxf" className="hidden" onChange={e => setNewDxfFile2(e.target.files?.[0] || null)} />
                 </label>
               )}
+            </CardContent>
             </CardContent>
           </Card>
         </div>
