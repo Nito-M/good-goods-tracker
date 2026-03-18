@@ -529,59 +529,9 @@ export function PartDetail() {
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" /> Materials / Inventory Items
             </CardTitle>
-            <Popover open={addItemOpen} onOpenChange={setAddItemOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" /> Add Item
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-0" align="end">
-                <Command>
-                  <CommandInput placeholder="Search inventory..." value={addItemSearch} onValueChange={setAddItemSearch} />
-                  <CommandList className="max-h-[300px]">
-                    <CommandEmpty>No items found.</CommandEmpty>
-                    <CommandGroup heading="Inventory">
-                      {inventoryItems
-                        .map(item => (
-                          <CommandItem
-                            key={item.id}
-                            onSelect={async () => {
-                              await addPartItem(item.id);
-                              setAddItemOpen(false);
-                              setAddItemSearch('');
-                            }}
-                          >
-                            <div className="flex flex-col">
-                              <span>{item.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {item.sku} · Cost: {formatCurrency(item.cost)}
-                              </span>
-                            </div>
-                          </CommandItem>
-                        ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-                <div className="border-t border-border p-3 space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">Or add custom item</p>
-                  <Input placeholder="Item name" value={customName} onChange={e => setCustomName(e.target.value)} className="h-8 text-sm" />
-                  <Input placeholder="Unit cost" type="number" min={0} step="0.01" value={customCost} onChange={e => setCustomCost(e.target.value)} className="h-8 text-sm" />
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    disabled={!customName.trim()}
-                    onClick={async () => {
-                      await addCustomItem(customName.trim(), parseFloat(customCost) || 0);
-                      setCustomName('');
-                      setCustomCost('');
-                      setAddItemOpen(false);
-                    }}
-                  >
-                    Add Custom Item
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setPickerOpen(true)}>
+              <Plus className="h-4 w-4" /> Add Item
+            </Button>
           </CardHeader>
           <CardContent>
             {partItems.length === 0 ? (
