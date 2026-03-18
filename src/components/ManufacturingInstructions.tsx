@@ -57,6 +57,7 @@ export function ManufacturingInstructions({ partId }: Props) {
     setAngle('');
     setHoleDiameter('');
     setQuantity('');
+    setPrice('');
     setPositionOffset('');
     setNotes('');
   };
