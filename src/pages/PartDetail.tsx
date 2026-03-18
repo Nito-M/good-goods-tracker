@@ -102,6 +102,21 @@ export function PartDetail() {
   const [dxfSignedUrl2, setDxfSignedUrl2] = useState<string | null>(null);
   // Edit state
   const [editing, setEditing] = useState(false);
+
+  // Prevent browser default file-drop behavior (navigating away) when in edit mode
+  useEffect(() => {
+    if (!editing) return;
+    const preventNav = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    document.addEventListener('dragover', preventNav);
+    document.addEventListener('drop', preventNav);
+    return () => {
+      document.removeEventListener('dragover', preventNav);
+      document.removeEventListener('drop', preventNav);
+    };
+  }, [editing]);
   const [editName, setEditName] = useState('');
   const [editSku, setEditSku] = useState('');
   const [editPrice, setEditPrice] = useState('');
