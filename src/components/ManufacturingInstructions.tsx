@@ -238,7 +238,8 @@ export function ManufacturingInstructions({ partId }: Props) {
                             key={img.id}
                             src={img.signedUrl || ''}
                             alt="Step"
-                            className="h-10 w-10 object-cover rounded border border-border"
+                            className="h-10 w-10 object-cover rounded border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => setViewerUrl(img.signedUrl)}
                           />
                         ))}
                       </div>
