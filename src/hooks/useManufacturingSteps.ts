@@ -51,6 +51,7 @@ export function useManufacturingSteps(partId: string | undefined) {
         quantity: d.quantity,
         positionOffset: d.position_offset,
         notes: d.notes,
+        price: d.price ?? 0,
       })));
     }
     setLoading(false);
