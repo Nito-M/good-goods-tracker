@@ -513,6 +513,99 @@ export function PartDetail() {
           </Card>
         </div>
 
+        {/* Inventory Items Reference */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" /> Materials / Inventory Items
+            </CardTitle>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setPickerOpen(true)}>
+              <Plus className="h-4 w-4" /> Add Item
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {partItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No inventory items linked yet. Click "Add Item" to reference materials used in this part.</p>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead className="text-right">Cost</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-center">Qty</TableHead>
+                      <TableHead className="text-right">Total Cost</TableHead>
+                      <TableHead className="w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {partItems.map(item => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.itemName}</TableCell>
+                        <TableCell className="text-muted-foreground">{item.itemSku}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.unitCost)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.itemPrice)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => item.quantity > 1 && updatePartItem(item.id, { quantity: item.quantity - 1 })}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <Input
+                              type="number"
+                              min={0}
+                              step="any"
+                              defaultValue={item.quantity}
+                              key={`${item.id}-${item.quantity}`}
+                              onBlur={e => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val > 0) {
+                                  updatePartItem(item.id, { quantity: val });
+                                } else {
+                                  e.target.value = String(item.quantity);
+                                }
+                              }}
+                              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                              className="w-16 h-7 text-center text-sm px-1"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => updatePartItem(item.id, { quantity: item.quantity + 1 })}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(item.unitCost * item.quantity)}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removePartItem(item.id)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="flex justify-end mt-3 pt-3 border-t border-border">
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Total Materials Cost</p>
+                    <p className="text-lg font-semibold text-foreground">{formatCurrency(materialsCost)}</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Hours & Labor */}
         <Card>
           <CardHeader>
@@ -611,132 +704,41 @@ export function PartDetail() {
           </CardContent>
         </Card>
 
-        {/* Inventory Items Reference */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" /> Materials / Inventory Items
-            </CardTitle>
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setPickerOpen(true)}>
-              <Plus className="h-4 w-4" /> Add Item
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {partItems.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No inventory items linked yet. Click "Add Item" to reference materials used in this part.</p>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead className="text-right">Cost</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
-                      <TableHead className="text-center">Qty</TableHead>
-                      <TableHead className="text-right">Total Cost</TableHead>
-                      <TableHead className="w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {partItems.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.itemName}</TableCell>
-                        <TableCell className="text-muted-foreground">{item.itemSku}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.unitCost)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.itemPrice)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => item.quantity > 1 && updatePartItem(item.id, { quantity: item.quantity - 1 })}
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <Input
-                              type="number"
-                              min={0}
-                              step="any"
-                              defaultValue={item.quantity}
-                              key={`${item.id}-${item.quantity}`}
-                              onBlur={e => {
-                                const val = parseFloat(e.target.value);
-                                if (!isNaN(val) && val > 0) {
-                                  updatePartItem(item.id, { quantity: val });
-                                } else {
-                                  e.target.value = String(item.quantity);
-                                }
-                              }}
-                              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                              className="w-16 h-7 text-center text-sm px-1"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => updatePartItem(item.id, { quantity: item.quantity + 1 })}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(item.unitCost * item.quantity)}</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removePartItem(item.id)}>
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="flex justify-end mt-3 pt-3 border-t border-border">
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Total Materials Cost</p>
-                    <p className="text-lg font-semibold text-foreground">{formatCurrency(materialsCost)}</p>
-                  </div>
+        {/* Grand totals */}
+        {(materialsCost > 0 || (part.hours > 0 && part.hourlyRate > 0) || (part.paintingHours > 0 && part.paintingHourlyRate > 0)) && (
+          <Card>
+            <CardContent className="pt-6 space-y-2">
+              {materialsCost > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Materials</span>
+                  <span className="font-medium">{formatCurrency(materialsCost)}</span>
                 </div>
-              </>
-            )}
-
-            {/* Grand totals */}
-            {(materialsCost > 0 || (part.hours > 0 && part.hourlyRate > 0) || (part.paintingHours > 0 && part.paintingHourlyRate > 0)) && (
-              <div className="mt-6 pt-4 border-t-2 border-border space-y-2">
-                {part.hours > 0 && part.hourlyRate > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Fabrication Labor ({decimalToHM(part.hours)} × {formatCurrency(part.hourlyRate)}/h)</span>
-                    <span className="font-medium">{formatCurrency(part.hours * part.hourlyRate)}</span>
-                  </div>
-                )}
-                {part.paintingHours > 0 && part.paintingHourlyRate > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Painting Labor ({decimalToHM(part.paintingHours)} × {formatCurrency(part.paintingHourlyRate)}/h)</span>
-                    <span className="font-medium">{formatCurrency(part.paintingHours * part.paintingHourlyRate)}</span>
-                  </div>
-                )}
-                {materialsCost > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Materials</span>
-                    <span className="font-medium">{formatCurrency(materialsCost)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between pt-2 border-t border-border">
-                  <span className="font-semibold">Total Part Cost</span>
-                  <span className="text-lg font-bold text-foreground">
-                    {formatCurrency(
-                      materialsCost
-                      + (part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
-                      + (part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0)
-                    )}
-                  </span>
+              )}
+              {part.hours > 0 && part.hourlyRate > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Fabrication Labor ({decimalToHM(part.hours)} × {formatCurrency(part.hourlyRate)}/h)</span>
+                  <span className="font-medium">{formatCurrency(part.hours * part.hourlyRate)}</span>
                 </div>
+              )}
+              {part.paintingHours > 0 && part.paintingHourlyRate > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Painting Labor ({decimalToHM(part.paintingHours)} × {formatCurrency(part.paintingHourlyRate)}/h)</span>
+                  <span className="font-medium">{formatCurrency(part.paintingHours * part.paintingHourlyRate)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 border-t border-border">
+                <span className="font-semibold">Total Part Cost</span>
+                <span className="text-lg font-bold text-foreground">
+                  {formatCurrency(
+                    materialsCost
+                    + (part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
+                    + (part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0)
+                  )}
+                </span>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Manufacturing Instructions */}
         {id && <ManufacturingInstructions partId={id} />}
