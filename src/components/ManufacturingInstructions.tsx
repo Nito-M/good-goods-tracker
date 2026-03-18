@@ -25,7 +25,6 @@ function StepSummary(step: ManufacturingStep) {
   else if (step.quantity && step.quantity > 1) parts.push(`× ${step.quantity}`);
   if (step.positionOffset) parts.push(step.positionOffset);
   if (step.price > 0) parts.push(formatCurrencyValue(step.price));
-  if (step.notes) parts.push(step.notes);
   return parts.join(', ') || step.operationType;
 }
 
@@ -208,8 +207,13 @@ export function ManufacturingInstructions({ partId }: Props) {
                   <GripVertical className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                   <span className="text-sm font-semibold text-muted-foreground w-5 shrink-0">{idx + 1}.</span>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium">{step.machine}</span>
-                    <span className="text-sm text-muted-foreground"> – {StepSummary(step)}</span>
+                    <div>
+                      <span className="text-sm font-medium">{step.machine}</span>
+                      <span className="text-sm text-muted-foreground"> – {StepSummary(step)}</span>
+                    </div>
+                    {step.notes && (
+                      <p className="text-xs text-muted-foreground mt-0.5 italic">{step.notes}</p>
+                    )}
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(step.id); loadStep(step); }}>
