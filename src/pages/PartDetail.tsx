@@ -798,7 +798,6 @@ export function PartDetail() {
                 </label>
               )}
             </CardContent>
-            </CardContent>
           </Card>
         </div>
       </main>
