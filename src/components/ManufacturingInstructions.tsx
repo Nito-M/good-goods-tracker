@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Plus, Trash2, GripVertical, Pencil, Check, X, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useManufacturingSteps, ManufacturingStep, MACHINES, OPERATION_TYPES } from '@/hooks/useManufacturingSteps';
+import { useStepImages } from '@/hooks/useStepImages';
+import { StepImageUploader } from '@/components/StepImageUploader';
 
 interface Props {
   partId: string;
@@ -30,6 +32,8 @@ function StepSummary(step: ManufacturingStep) {
 
 export function ManufacturingInstructions({ partId }: Props) {
   const { steps, loading, addStep, updateStep, deleteStep, reorderSteps } = useManufacturingSteps(partId);
+  const stepIds = useMemo(() => steps.map(s => s.id), [steps]);
+  const { images, uploadImage, deleteImage } = useStepImages(stepIds);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -186,6 +190,12 @@ export function ManufacturingInstructions({ partId }: Props) {
                 <div key={step.id} className="border border-border rounded-md p-3 space-y-3 bg-muted/30">
                   <p className="text-sm font-semibold text-muted-foreground">Step {idx + 1}</p>
                   {formFields}
+                  <StepImageUploader
+                    stepId={step.id}
+                    images={images[step.id] || []}
+                    onUpload={uploadImage}
+                    onDelete={deleteImage}
+                  />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleUpdate} disabled={saving}>
                       <Check className="h-4 w-4 mr-1" /> {saving ? 'Saving...' : 'Save'}
@@ -213,6 +223,19 @@ export function ManufacturingInstructions({ partId }: Props) {
                     </div>
                     {step.notes && (
                       <p className="text-xs text-muted-foreground mt-0.5 italic">{step.notes}</p>
+                    )}
+                    {/* Thumbnail images */}
+                    {(images[step.id] || []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {(images[step.id] || []).map(img => (
+                          <img
+                            key={img.id}
+                            src={img.signedUrl || ''}
+                            alt="Step"
+                            className="h-10 w-10 object-cover rounded border border-border"
+                          />
+                        ))}
+                      </div>
                     )}
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">

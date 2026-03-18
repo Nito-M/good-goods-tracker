@@ -1373,6 +1373,41 @@ export type Database = {
           },
         ]
       }
+      part_step_images: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          image_url: string
+          step_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url: string
+          step_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url?: string
+          step_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_step_images_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "part_manufacturing_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parts: {
         Row: {
           created_at: string
