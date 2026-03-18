@@ -62,7 +62,7 @@ export function PartDetail() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerCart, setPickerCart] = useState<PickerCartItem[]>([]);
 
-  // Map partItems to picker cart format when picker opens
+  // Sync partItems to picker cart whenever partItems change while picker is open
   useEffect(() => {
     if (pickerOpen) {
       setPickerCart(partItems.map(pi => ({
@@ -77,7 +77,7 @@ export function PartDetail() {
         notes: pi.notes || '',
       })));
     }
-  }, [pickerOpen]);
+  }, [pickerOpen, partItems]);
 
   const handlePickerAddItem = async (item: any) => {
     const alreadyInCart = pickerCart.some(c => c.inventoryItemId === item.id);
