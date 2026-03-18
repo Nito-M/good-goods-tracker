@@ -96,6 +96,9 @@ export function PartDetail() {
   const [dxfText1, setDxfText1] = useState<string | null>(null);
   const [dxfText2, setDxfText2] = useState<string | null>(null);
   const [dxfSignedUrl1, setDxfSignedUrl1] = useState<string | null>(null);
+  const [dragOverImage, setDragOverImage] = useState(false);
+  const [dragOverDxf1, setDragOverDxf1] = useState(false);
+  const [dragOverDxf2, setDragOverDxf2] = useState(false);
   const [dxfSignedUrl2, setDxfSignedUrl2] = useState<string | null>(null);
   // Edit state
   const [editing, setEditing] = useState(false);
@@ -181,6 +184,30 @@ export function PartDetail() {
       setNewImageFile(file);
       setNewImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverImage(false);
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (file) {
+      setNewImageFile(file);
+      setNewImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleDxfDrop = (e: React.DragEvent, slot: 1 | 2) => {
+    e.preventDefault();
+    slot === 1 ? setDragOverDxf1(false) : setDragOverDxf2(false);
+    const file = Array.from(e.dataTransfer.files).find(f => f.name.toLowerCase().endsWith('.dxf'));
+    if (file) {
+      slot === 1 ? setNewDxfFile1(file) : setNewDxfFile2(file);
+    }
+  };
+
+  const preventAndHighlight = (e: React.DragEvent, setter: (v: boolean) => void) => {
+    e.preventDefault();
+    setter(true);
   };
 
   const handleSave = async () => {
@@ -310,11 +337,21 @@ export function PartDetail() {
           <Card>
             <CardHeader><CardTitle>Image</CardTitle></CardHeader>
             <CardContent>
-              <div className="aspect-square bg-muted rounded-md overflow-hidden flex items-center justify-center">
+              <div
+                className={`aspect-square bg-muted rounded-md overflow-hidden flex items-center justify-center transition-all ${editing && dragOverImage ? 'ring-2 ring-primary bg-primary/10' : ''}`}
+                onDragOver={editing ? (e) => preventAndHighlight(e, setDragOverImage) : undefined}
+                onDragLeave={editing ? () => setDragOverImage(false) : undefined}
+                onDrop={editing ? handleImageDrop : undefined}
+              >
                 {editing && newImagePreview ? (
                   <img src={newImagePreview} alt="New preview" className="w-full h-full object-contain" />
                 ) : imageUrl ? (
                   <img src={imageUrl} alt={part.name} className="w-full h-full object-contain" />
+                ) : editing ? (
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <Upload className="h-8 w-8" />
+                    <span className="text-sm">Drop image here</span>
+                  </div>
                 ) : (
                   <span className="text-muted-foreground">No image</span>
                 )}
@@ -679,14 +716,26 @@ export function PartDetail() {
               )}
             </CardHeader>
             <CardContent>
-              <div className="aspect-square bg-muted rounded-md overflow-hidden">
+              <div
+                className={`aspect-square bg-muted rounded-md overflow-hidden transition-all ${editing && dragOverDxf1 ? 'ring-2 ring-primary bg-primary/10' : ''}`}
+                onDragOver={editing ? (e) => preventAndHighlight(e, setDragOverDxf1) : undefined}
+                onDragLeave={editing ? () => setDragOverDxf1(false) : undefined}
+                onDrop={editing ? (e) => handleDxfDrop(e, 1) : undefined}
+              >
                 {dxfText1 ? (
                   <DxfThreeViewer dxfText={dxfText1} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-muted-foreground text-sm">
-                      {part.dxfUrl1 ? 'Loading DXF...' : 'No DXF file'}
-                    </span>
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                    {editing ? (
+                      <>
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <span className="text-muted-foreground text-sm">{newDxfFile1 ? newDxfFile1.name : 'Drop DXF here'}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        {part.dxfUrl1 ? 'Loading DXF...' : 'No DXF file'}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -718,14 +767,26 @@ export function PartDetail() {
               )}
             </CardHeader>
             <CardContent>
-              <div className="aspect-square bg-muted rounded-md overflow-hidden">
+              <div
+                className={`aspect-square bg-muted rounded-md overflow-hidden transition-all ${editing && dragOverDxf2 ? 'ring-2 ring-primary bg-primary/10' : ''}`}
+                onDragOver={editing ? (e) => preventAndHighlight(e, setDragOverDxf2) : undefined}
+                onDragLeave={editing ? () => setDragOverDxf2(false) : undefined}
+                onDrop={editing ? (e) => handleDxfDrop(e, 2) : undefined}
+              >
                 {dxfText2 ? (
                   <DxfThreeViewer dxfText={dxfText2} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-muted-foreground text-sm">
-                      {part.dxfUrl2 ? 'Loading DXF...' : 'No DXF file'}
-                    </span>
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                    {editing ? (
+                      <>
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <span className="text-muted-foreground text-sm">{newDxfFile2 ? newDxfFile2.name : 'Drop DXF here'}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        {part.dxfUrl2 ? 'Loading DXF...' : 'No DXF file'}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
