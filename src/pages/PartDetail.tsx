@@ -186,6 +186,30 @@ export function PartDetail() {
     }
   };
 
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverImage(false);
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (file) {
+      setNewImageFile(file);
+      setNewImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleDxfDrop = (e: React.DragEvent, slot: 1 | 2) => {
+    e.preventDefault();
+    slot === 1 ? setDragOverDxf1(false) : setDragOverDxf2(false);
+    const file = Array.from(e.dataTransfer.files).find(f => f.name.toLowerCase().endsWith('.dxf'));
+    if (file) {
+      slot === 1 ? setNewDxfFile1(file) : setNewDxfFile2(file);
+    }
+  };
+
+  const preventAndHighlight = (e: React.DragEvent, setter: (v: boolean) => void) => {
+    e.preventDefault();
+    setter(true);
+  };
+
   const handleSave = async () => {
     if (!id || !editName.trim()) {
       toast({ title: 'Name is required', variant: 'destructive' });
