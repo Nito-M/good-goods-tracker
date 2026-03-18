@@ -146,7 +146,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
       const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
       const skuLines = doc.splitTextToSize(item.sku, skuColWidth);
       const rowLineCount = Math.max(nameLines.length, skuLines.length);
-      const rowHeight = rowLineCount * 5;
+      let rowHeight = rowLineCount * 5;
+
+      const notesLines = item.notes ? doc.splitTextToSize(item.notes, nameColWidth + skuColWidth + 30) : [];
+      if (notesLines.length > 0) rowHeight += notesLines.length * 4 + 2;
 
       if (y + rowHeight > 260) {
         doc.addPage();
@@ -161,7 +164,19 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
         doc.text(formatCurrency(unitCost), layout.itemsTable.x + 115, y);
         doc.text(formatCurrency(unitCost * item.quantity), pageWidth - 22, y, { align: 'right' });
       }
-      y += rowHeight + 2;
+      y += rowLineCount * 5;
+
+      if (notesLines.length > 0) {
+        y += 1;
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text(notesLines, layout.itemsTable.x + 4, y);
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        y += notesLines.length * 4 + 1;
+      }
+
+      y += 2;
     });
 
     // Line
