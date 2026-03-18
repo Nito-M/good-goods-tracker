@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import { Plus, Trash2, GripVertical, Pencil, Check, X, Wrench } from 'lucide-react';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
