@@ -80,6 +80,7 @@ export function ManufacturingInstructions({ partId }: Props) {
       machine, operationType, length: length || null, angle: angle || null,
       holeDiameter: holeDiameter || null, quantity: quantity ? parseInt(quantity) : null,
       positionOffset: positionOffset || null, notes: notes || null,
+      price: price ? parseFloat(price) : 0,
     });
     resetForm();
     setAdding(false);
