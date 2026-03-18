@@ -19,52 +19,6 @@ import {
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Popover, PopoverContent, PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
-} from '@/components/ui/command';
-
-function ItemSearchCombobox({
-  items,
-  placeholder,
-  onSelect,
-}: {
-  items: { id: string; name: string; sku: string }[];
-  placeholder: string;
-  onSelect: (item: { id: string; name: string; sku: string }) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-between">
-          {placeholder}
-          <Search className="h-4 w-4 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search by name or SKU..." />
-          <CommandList>
-            <CommandEmpty>No items found.</CommandEmpty>
-            <CommandGroup>
-              {items.map((item) => (
-                <CommandItem key={item.id} value={`${item.name} ${item.sku}`} onSelect={() => { onSelect(item); setOpen(false); }}>
-                  <div className="flex flex-col">
-                    <span>{item.name}</span>
-                    <span className="text-xs text-muted-foreground">{item.sku}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 function AddPartForm({
   parts, inventoryItems, onAdd, onCancel,
