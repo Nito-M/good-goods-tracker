@@ -108,7 +108,7 @@ export function useParts() {
       toast({ title: 'Error updating part', description: error.message, variant: 'destructive' });
       return false;
     }
-    if (count === 0) {
+    if (!error && (!count || count === 0)) {
       toast({ title: 'Update failed', description: 'You may not have permission to edit this part.', variant: 'destructive' });
       return false;
     }
