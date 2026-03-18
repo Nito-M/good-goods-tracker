@@ -5,7 +5,7 @@ import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssembly
 import { useParts } from '@/hooks/useParts';
 import { useInventory } from '@/hooks/useInventory';
 import { supabase } from '@/integrations/supabase/client';
-import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
+import { FullScreenPartsPicker } from '@/components/FullScreenPartsPicker';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { generatePartsAssemblyPDF } from '@/lib/partsAssemblyPdfGenerator';
