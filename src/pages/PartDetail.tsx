@@ -92,6 +92,17 @@ export function PartDetail() {
     }
   }, [totalPartCost, id, part?.price]);
 
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [dxfText1, setDxfText1] = useState<string | null>(null);
+  const [dxfText2, setDxfText2] = useState<string | null>(null);
+  const [dxfSignedUrl1, setDxfSignedUrl1] = useState<string | null>(null);
+  const [dragOverImage, setDragOverImage] = useState(false);
+  const [dragOverDxf1, setDragOverDxf1] = useState(false);
+  const [dragOverDxf2, setDragOverDxf2] = useState(false);
+  const [dxfSignedUrl2, setDxfSignedUrl2] = useState<string | null>(null);
+  // Edit state
+  const [editing, setEditing] = useState(false);
+
   // Prevent browser default file-drop behavior (navigating away) when in edit mode
   useEffect(() => {
     if (!editing) return;
@@ -106,17 +117,6 @@ export function PartDetail() {
       document.removeEventListener('drop', preventNav);
     };
   }, [editing]);
-
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [dxfText1, setDxfText1] = useState<string | null>(null);
-  const [dxfText2, setDxfText2] = useState<string | null>(null);
-  const [dxfSignedUrl1, setDxfSignedUrl1] = useState<string | null>(null);
-  const [dragOverImage, setDragOverImage] = useState(false);
-  const [dragOverDxf1, setDragOverDxf1] = useState(false);
-  const [dragOverDxf2, setDragOverDxf2] = useState(false);
-  const [dxfSignedUrl2, setDxfSignedUrl2] = useState<string | null>(null);
-  // Edit state
-  const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editSku, setEditSku] = useState('');
   const [editPrice, setEditPrice] = useState('');
