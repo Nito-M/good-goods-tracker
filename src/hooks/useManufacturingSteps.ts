@@ -15,6 +15,7 @@ export interface ManufacturingStep {
   quantity: number | null;
   positionOffset: string | null;
   notes: string | null;
+  price: number;
 }
 
 export const MACHINES = ['Saw', 'Drill Press', 'Press Brake', 'Plasma Table', 'Laser', 'Mill', 'Lathe', 'Other'] as const;
