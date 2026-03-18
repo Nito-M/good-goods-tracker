@@ -111,8 +111,8 @@ function AssemblyDetail({
   assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onUpdate,
 }: {
   assembly: PartsAssembly;
-  parts: { id: string; name: string; sku: string }[];
-  inventoryItems: { id: string; name: string; sku: string }[];
+  parts: { id: string; name: string; sku: string; price: number }[];
+  inventoryItems: { id: string; name: string; sku: string; cost: number }[];
   allParts: { id: string; price: number }[];
   allInventoryItems: { id: string; cost: number }[];
   onDelete: (id: string) => void;
