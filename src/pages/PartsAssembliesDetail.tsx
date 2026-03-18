@@ -457,8 +457,8 @@ export function PartsAssembliesDetail() {
     setDeleteTypeOpen(false);
   };
 
-  const partsList = parts.map(p => ({ id: p.id, name: p.name, sku: p.sku }));
-  const invItemsList = inventoryItemsList.map(i => ({ id: i.id, name: i.name, sku: i.sku }));
+  const partsList = parts.map(p => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }));
+  const invItemsList = inventoryItemsList.map(i => ({ id: i.id, name: i.name, sku: i.sku, cost: i.cost }));
 
   return (
     <div className="min-h-full bg-background">
