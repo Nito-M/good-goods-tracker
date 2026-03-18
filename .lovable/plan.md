@@ -1,42 +1,37 @@
 
 
-## Plan: Improve Quote PDF Layout and Alignment
+## Problem: Drag-and-drop image/DXF save silently fails
 
-### Problems Identified (from the PDF)
-1. Excessive vertical gaps between header, title, details, bill-to, and table sections
-2. Table column positions are not well-distributed -- Item column too narrow, SKU cramped
-3. Redundant double separator line after the last item (one from the item loop + one after the loop)
-4. Too much spacing after the items table before totals/notes, pushing content to page 2 unnecessarily
-5. The separator lines between items need consistent full-width rendering
+### Root Cause
 
-### Changes
+The image **is** being uploaded to storage successfully (confirmed by checking storage objects -- multiple uploads exist). The issue is that the **database update to save the image path on the part record is blocked by Row-Level Security (RLS)**.
 
-#### File: `src/lib/quoteGenerator.ts`
+The part `487378f4-...` is owned by user `4d85f345-...`, but the currently logged-in user is `394d8f2a-...`. They are in the same organization (`75dd563f-...`), and the SELECT policy allows viewing via `users_share_org()`, but the **UPDATE policy only allows `auth.uid() = user_id`** -- meaning only the original creator can edit.
 
-1. **Reduce vertical spacing between sections**:
-   - Reduce gap after logo from `+5` to `+2`
-   - Reduce gap after business info from `+5` to `+2`
-   - Reduce title bottom margin from `+15` to `+10`
-   - Reduce gap after quote details from `+3` to `+2`
-   - Reduce gap after bill-to from `+10` to `+5`
+The `updatePart` function in `useParts.ts` does not check the Supabase response for "zero rows updated" -- it only checks for an explicit error. Since RLS silently returns success with 0 rows affected, the code thinks it worked.
 
-2. **Better table column distribution** (full page width = 210mm, margins 20mm each side = 170mm usable):
-   - Item: `tableX + 2` (keep) -- allocate ~70mm width for item names
-   - SKU: `tableX + 72` (was 60) -- shift right, allocate ~30mm
-   - Qty: `tableX + 105` (was 95) -- shift right  
-   - Price: `tableX + 130` (was 115) -- shift right (when visible)
-   - Total: `pageWidth - 22` right-aligned (keep)
-   - Update `splitTextToSize` width for item names from 55 to 67, SKU from 32 to 30
+### Plan
 
-3. **Remove duplicate separator line** after the items loop (lines 236-244) -- the per-item separator is sufficient. Just add small spacing before totals.
+1. **Database migration**: Update the RLS UPDATE policy on the `parts` table to allow org members to update parts (matching the user's preference and consistent with assemblies/quotes which already allow org-wide editing):
 
-4. **Reduce post-table spacing**: Change `y += 5` + separator + `y += 10` to just `y += 6`
+```sql
+DROP POLICY "Users can update their own parts" ON public.parts;
+CREATE POLICY "Org members can update parts" ON public.parts
+  FOR UPDATE TO authenticated
+  USING (users_share_org(auth.uid(), user_id))
+  WITH CHECK (users_share_org(auth.uid(), user_id));
+```
 
-5. **Apply same column positions** in `addPageWithHeader` function for consistency
+Also update the DELETE policy for consistency:
+```sql
+DROP POLICY "Users can delete their own parts" ON public.parts;
+CREATE POLICY "Org members can delete parts" ON public.parts
+  FOR DELETE TO authenticated
+  USING (users_share_org(auth.uid(), user_id));
+```
 
-#### File: `src/components/QuotePreviewDialog.tsx`
+2. **Code fix in `useParts.ts`**: After `updatePart` calls `.update().eq('id', id)`, add a check that the response actually updated a row. If `count === 0` and no error, show a "Permission denied" toast so failures aren't silent.
 
-6. **Tighten preview spacing** to match the PDF improvements:
-   - Reduce margins between header, title, details, bill-to sections (`mb-8` → `mb-4`, `my-6` → `my-3`, `mb-6` → `mb-4`)
-   - Adjust table column widths for better distribution
+### Why the inline "Save" button also fails
+The inline Save button calls the same `handleSave` function, which calls `uploadPartImage` (succeeds) then `updatePart` (silently blocked by RLS). The toast says "Part updated" because `updatePart` returns `true` since there's no explicit error -- but the row wasn't actually modified.
 
