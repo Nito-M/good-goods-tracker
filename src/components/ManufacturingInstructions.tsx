@@ -79,15 +79,20 @@ export function ManufacturingInstructions({ partId }: Props) {
 
   const handleAdd = async () => {
     setSaving(true);
-    await addStep({
+    const newId = await addStep({
       machine, operationType, length: length || null, angle: angle || null,
       holeDiameter: holeDiameter || null, quantity: quantity ? parseInt(quantity) : null,
       positionOffset: positionOffset || null, notes: notes || null,
       price: price ? parseFloat(price) : 0,
     });
-    resetForm();
     setAdding(false);
     setSaving(false);
+    // Transition to edit mode so user can attach images
+    if (newId) {
+      setEditingId(newId);
+    } else {
+      resetForm();
+    }
   };
 
   const handleUpdate = async () => {
