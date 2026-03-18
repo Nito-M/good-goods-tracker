@@ -337,11 +337,21 @@ export function PartDetail() {
           <Card>
             <CardHeader><CardTitle>Image</CardTitle></CardHeader>
             <CardContent>
-              <div className="aspect-square bg-muted rounded-md overflow-hidden flex items-center justify-center">
+              <div
+                className={`aspect-square bg-muted rounded-md overflow-hidden flex items-center justify-center transition-all ${editing && dragOverImage ? 'ring-2 ring-primary bg-primary/10' : ''}`}
+                onDragOver={editing ? (e) => preventAndHighlight(e, setDragOverImage) : undefined}
+                onDragLeave={editing ? () => setDragOverImage(false) : undefined}
+                onDrop={editing ? handleImageDrop : undefined}
+              >
                 {editing && newImagePreview ? (
                   <img src={newImagePreview} alt="New preview" className="w-full h-full object-contain" />
                 ) : imageUrl ? (
                   <img src={imageUrl} alt={part.name} className="w-full h-full object-contain" />
+                ) : editing ? (
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <Upload className="h-8 w-8" />
+                    <span className="text-sm">Drop image here</span>
+                  </div>
                 ) : (
                   <span className="text-muted-foreground">No image</span>
                 )}
