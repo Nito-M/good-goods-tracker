@@ -364,14 +364,17 @@ export function PartsLibrary() {
                 )}
               </div>
             ) : filtered.length > 0 && (
-              viewMode === 'lines' ? (
+              <>
+              {viewMode === 'lines' ? (
                 <div className="border border-border rounded-md overflow-hidden">
-                  {filtered.map((part, i) => (
+                  {pagedParts.map((part, i) => {
+                    const globalIndex = (currentPage - 1) * PAGE_SIZE + i;
+                    return (
                     <div
                       key={part.id}
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
                       onClick={(e) => {
-                        if (selectMode) { handlePartClick(part.id, i, e); }
+                        if (selectMode) { handlePartClick(part.id, globalIndex, e); }
                         else { navigate(`/parts/library/${part.id}`); }
                       }}
                     >
@@ -402,16 +405,19 @@ export function PartsLibrary() {
                       </div>
                       <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                  {filtered.map((part, i) => (
+                  {pagedParts.map((part, i) => {
+                    const globalIndex = (currentPage - 1) * PAGE_SIZE + i;
+                    return (
                     <Card
                       key={part.id}
                       className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
                       onClick={(e) => {
-                        if (selectMode) { handlePartClick(part.id, i, e); }
+                        if (selectMode) { handlePartClick(part.id, globalIndex, e); }
                         else { navigate(`/parts/library/${part.id}`); }
                       }}
                     >
@@ -447,9 +453,55 @@ export function PartsLibrary() {
                         <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
                       </div>
                     </Card>
-                  ))}
+                    );
+                  })}
                 </div>
-              )
+              )}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="border-t border-border px-4 py-3 flex items-center justify-between mt-4 rounded-md border bg-card">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} parts
+                  </p>
+                  <Pagination className="w-auto mx-0">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                        .reduce<(number | 'ellipsis')[]>((acc, page, idx, arr) => {
+                          if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                          acc.push(page);
+                          return acc;
+                        }, [])
+                        .map((page, idx) =>
+                          page === 'ellipsis' ? (
+                            <PaginationItem key={`e-${idx}`}><PaginationEllipsis /></PaginationItem>
+                          ) : (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                isActive={page === currentPage}
+                                onClick={() => setCurrentPage(page as number)}
+                                className="cursor-pointer"
+                              >{page}</PaginationLink>
+                            </PaginationItem>
+                          )
+                        )}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+              </>
             )}
           </>
         )}
