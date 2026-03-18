@@ -860,6 +860,20 @@ export function PartDetail() {
           </Card>
         </div>
       </main>
+
+      <FullScreenItemPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        inventoryItems={inventoryItems}
+        cart={pickerCart}
+        onAddItem={handlePickerAddItem}
+        onAddCustomItem={handlePickerAddCustomItem}
+        onUpdateQuantity={handlePickerUpdateQty}
+        onRemoveItem={handlePickerRemoveItem}
+        onUpdateItem={handlePickerUpdateItem}
+        documentType="Part"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
