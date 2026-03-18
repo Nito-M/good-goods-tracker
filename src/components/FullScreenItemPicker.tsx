@@ -49,7 +49,7 @@ interface FullScreenItemPickerProps {
   onRemoveItem: (itemId: string) => void;
   onUpdateItem?: (itemId: string, updates: Partial<PickerCartItem>) => void;
   assemblies?: Assembly[];
-  documentType: 'Quote' | 'Invoice';
+  documentType: 'Quote' | 'Invoice' | 'Part';
   formatPrice?: (value: number) => string;
 }
 
