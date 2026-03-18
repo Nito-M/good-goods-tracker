@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import { Plus, Trash2, GripVertical, Pencil, Check, X, Wrench } from 'lucide-react';
+import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +38,7 @@ export function ManufacturingInstructions({ partId }: Props) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
 
   // Form state
   const [machine, setMachine] = useState('Saw');
@@ -237,7 +239,8 @@ export function ManufacturingInstructions({ partId }: Props) {
                             key={img.id}
                             src={img.signedUrl || ''}
                             alt="Step"
-                            className="h-10 w-10 object-cover rounded border border-border"
+                            className="h-10 w-10 object-cover rounded border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => setViewerUrl(img.signedUrl)}
                           />
                         ))}
                       </div>
@@ -277,6 +280,8 @@ export function ManufacturingInstructions({ partId }: Props) {
             <Plus className="h-4 w-4" /> Add Machine / Operation
           </Button>
         )}
+
+        <ImageViewerDialog imageUrl={viewerUrl} alt="Step image" open={!!viewerUrl} onOpenChange={open => !open && setViewerUrl(null)} />
       </CardContent>
     </Card>
   );
