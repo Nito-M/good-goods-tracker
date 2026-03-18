@@ -18,7 +18,7 @@ export interface ManufacturingStep {
   price: number;
 }
 
-export const MACHINES = ['Saw', 'Drill Press', 'Press Brake', 'Plasma Table', 'Laser', 'Mill', 'Lathe', 'Other'] as const;
+export const MACHINES = ['Saw', 'Drill Press', 'Press Brake', 'Plasma Table', 'Lathe', 'Welding', 'Other'] as const;
 export const OPERATION_TYPES = ['Cut', 'Drill', 'Bend', 'Slot', 'Notch', 'Mark', 'Custom'] as const;
 
 export function useManufacturingSteps(partId: string | undefined) {
