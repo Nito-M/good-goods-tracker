@@ -33,19 +33,6 @@ import { DxfThreeViewer } from '@/components/DxfThreeViewer';
 import { ManufacturingInstructions } from '@/components/ManufacturingInstructions';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
   Table,
   TableBody,
   TableCell,
