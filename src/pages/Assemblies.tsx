@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye } from 'lucide-react';
+import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { AssemblyPreviewDialog } from '@/components/AssemblyPreviewDialog';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
@@ -48,126 +49,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Assembly } from '@/hooks/useAssemblies';
 
-function ItemSearchCombobox({
-  inventoryItems,
-  partsItems,
-  onSelect,
-}: {
-  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
-  partsItems?: { id: string; name: string; sku: string; price: number }[];
-  onSelect: (item: { id: string | null; name: string; sku: string; quantityUnit?: string; unitCost?: number }) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-between">
-          Search inventory or parts...
-          <Search className="h-4 w-4 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search by name or SKU..." />
-          <CommandList>
-            <CommandEmpty>No items found.</CommandEmpty>
-            <CommandGroup heading="Actions">
-              <CommandItem value="__custom__" onSelect={() => { onSelect({ id: null, name: '', sku: '', quantityUnit: 'pcs' }); setOpen(false); }}>
-                <Plus className="mr-2 h-4 w-4" /> Add custom item...
-              </CommandItem>
-            </CommandGroup>
-            <CommandGroup heading="Inventory">
-              {inventoryItems.map((item) => (
-                <CommandItem key={`inv-${item.id}`} value={`inv ${item.name} ${item.sku}`} onSelect={() => { onSelect({ id: item.id, name: item.name, sku: item.sku, quantityUnit: item.quantityUnit }); setOpen(false); }}>
-                  <div className="flex flex-col">
-                    <span>{item.name}</span>
-                    <span className="text-xs text-muted-foreground">{item.sku}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            {partsItems && partsItems.length > 0 && (
-              <CommandGroup heading="Parts Library">
-                {partsItems.map((part) => (
-                  <CommandItem key={`part-${part.id}`} value={`part ${part.name} ${part.sku}`} onSelect={() => { onSelect({ id: null, name: part.name, sku: part.sku, unitCost: part.price }); setOpen(false); }}>
-                    <div className="flex flex-col">
-                      <span>{part.name}</span>
-                      <span className="text-xs text-muted-foreground">{part.sku}{part.price > 0 ? ` · ${formatCurrency(part.price)}` : ''}</span>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function AddItemForm({
-  inventoryItems, partsItems, onAdd, onCancel,
-}: {
-  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string }[];
-  partsItems?: { id: string; name: string; sku: string; price: number }[];
-  onAdd: (item: { inventory_item_id?: string | null; item_name: string; sku: string; quantity: number; unit_cost?: number; notes?: string }) => Promise<boolean>;
-  onCancel: () => void;
-}) {
-  const [selectedInventoryId, setSelectedInventoryId] = useState<string | null>(null);
-  const [unitCost, setUnitCost] = useState<number>(0);
-  const [itemName, setItemName] = useState('');
-  const [sku, setSku] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleSelect = (item: { id: string | null; name: string; sku: string; unitCost?: number }) => {
-    setSelectedInventoryId(item.id); setItemName(item.name); setSku(item.sku); setUnitCost(item.unitCost ?? 0);
-  };
-
-  const handleSubmit = async () => {
-    if (!itemName.trim()) return;
-    setSaving(true);
-    const ok = await onAdd({ inventory_item_id: selectedInventoryId, item_name: itemName.trim(), sku: sku.trim(), quantity, unit_cost: unitCost, notes: notes.trim() || undefined });
-    setSaving(false);
-    if (ok) onCancel();
-  };
-
-  return (
-    <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-      <div className="space-y-1">
-        <Label className="text-xs">Select from inventory</Label>
-        <ItemSearchCombobox inventoryItems={inventoryItems} partsItems={partsItems} onSelect={handleSelect} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs">Item Name *</Label>
-          <Input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Item name" />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">SKU</Label>
-          <Input value={sku} onChange={(e) => setSku(e.target.value)} placeholder="SKU" />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs">Quantity</Label>
-          <Input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Notes</Label>
-          <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes" />
-        </div>
-      </div>
-      <div className="flex gap-2 justify-end">
-        <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={handleSubmit} disabled={!itemName.trim() || saving}>
-          {saving ? 'Adding...' : 'Add Item'}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 function AssemblyDetail({
   assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies, partsAssemblies,
@@ -186,7 +67,7 @@ function AssemblyDetail({
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [showPartsAssemblyPicker, setShowPartsAssemblyPicker] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
@@ -487,7 +368,6 @@ function AssemblyDetail({
       <div className="flex-1 overflow-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
-          {!showAddForm && (
              <div className="flex gap-2">
               {folders && folders.length > 0 && (
                 <Popover open={showFolderPicker} onOpenChange={setShowFolderPicker}>
@@ -595,27 +475,38 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
-              <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
+              <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
             </div>
-          )}
         </div>
-        {showAddForm && (
-          <AddItemForm inventoryItems={inventoryItems} partsItems={partsItems} onAdd={async (item) => {
-            // If item already exists in the list, update its quantity instead
-            const existing = items.find(i =>
-              (item.inventory_item_id && i.inventory_item_id === item.inventory_item_id) ||
-              (!item.inventory_item_id && i.item_name === item.item_name && i.sku === item.sku)
-            );
-            if (existing) {
-              await updateItem(existing.id, { quantity: existing.quantity + item.quantity });
-              onItemsChanged?.();
-              return true;
+
+        <FullScreenPartsPicker
+          open={showPicker}
+          onClose={async (cartItems) => {
+            setShowPicker(false);
+            for (const c of cartItems) {
+              const existing = items.find(i =>
+                (c.inventory_item_id && i.inventory_item_id === c.inventory_item_id) ||
+                (c.part_id && !c.inventory_item_id && partsItems?.find(p => p.id === c.part_id && p.name === i.item_name && p.sku === i.sku))
+              );
+              if (existing) {
+                await updateItem(existing.id, { quantity: existing.quantity + c.quantity });
+              } else {
+                await addItem({
+                  inventory_item_id: c.inventory_item_id,
+                  item_name: c.part_name,
+                  sku: c.part_sku,
+                  quantity: c.quantity,
+                  unit_cost: c.unitCost,
+                });
+              }
             }
-            const ok = await addItem(item);
-            if (ok) onItemsChanged?.();
-            return ok;
-          }} onCancel={() => setShowAddForm(false)} />
-        )}
+            if (cartItems.length > 0) onItemsChanged?.();
+          }}
+          parts={(partsItems || []).map(p => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }))}
+          inventoryItems={inventoryItems.map(i => ({ id: i.id, name: i.name, sku: i.sku, cost: i.cost ?? 0 }))}
+          existingPartIds={[]}
+          existingInventoryItemIds={items.filter(i => i.inventory_item_id).map(i => i.inventory_item_id!)}
+        />
         {loading ? (
           <div className="text-muted-foreground text-sm text-center py-8">Loading items...</div>
         ) : items.length === 0 ? (
