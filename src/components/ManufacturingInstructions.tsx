@@ -279,6 +279,8 @@ export function ManufacturingInstructions({ partId }: Props) {
             <Plus className="h-4 w-4" /> Add Machine / Operation
           </Button>
         )}
+
+        <ImageViewerDialog imageUrl={viewerUrl} alt="Step image" open={!!viewerUrl} onOpenChange={open => !open && setViewerUrl(null)} />
       </CardContent>
     </Card>
   );
