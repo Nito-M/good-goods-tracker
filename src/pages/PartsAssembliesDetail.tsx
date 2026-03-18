@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package } from 'lucide-react';
+import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssemblyItem } from '@/hooks/usePartsAssemblies';
 import { useParts } from '@/hooks/useParts';
 import { useInventory } from '@/hooks/useInventory';
 import { supabase } from '@/integrations/supabase/client';
+import { FullScreenPartsPicker } from '@/components/FullScreenPartsPicker';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { generatePartsAssemblyPDF } from '@/lib/partsAssemblyPdfGenerator';
@@ -18,146 +19,14 @@ import {
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Popover, PopoverContent, PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
-} from '@/components/ui/command';
 
-function ItemSearchCombobox({
-  items,
-  placeholder,
-  onSelect,
-}: {
-  items: { id: string; name: string; sku: string }[];
-  placeholder: string;
-  onSelect: (item: { id: string; name: string; sku: string }) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-between">
-          {placeholder}
-          <Search className="h-4 w-4 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search by name or SKU..." />
-          <CommandList>
-            <CommandEmpty>No items found.</CommandEmpty>
-            <CommandGroup>
-              {items.map((item) => (
-                <CommandItem key={item.id} value={`${item.name} ${item.sku}`} onSelect={() => { onSelect(item); setOpen(false); }}>
-                  <div className="flex flex-col">
-                    <span>{item.name}</span>
-                    <span className="text-xs text-muted-foreground">{item.sku}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function AddPartForm({
-  parts, inventoryItems, onAdd, onCancel,
-}: {
-  parts: { id: string; name: string; sku: string }[];
-  inventoryItems: { id: string; name: string; sku: string }[];
-  onAdd: (item: { part_id?: string | null; inventory_item_id?: string | null; part_name: string; part_sku: string; quantity: number; notes?: string }) => Promise<boolean>;
-  onCancel: () => void;
-}) {
-  const [source, setSource] = useState<'parts' | 'inventory'>('parts');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [itemName, setItemName] = useState('');
-  const [itemSku, setItemSku] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleSelect = (item: { id: string; name: string; sku: string }) => {
-    setSelectedId(item.id); setItemName(item.name); setItemSku(item.sku);
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedId || !itemName.trim()) return;
-    setSaving(true);
-    const ok = await onAdd({
-      part_id: source === 'parts' ? selectedId : null,
-      inventory_item_id: source === 'inventory' ? selectedId : null,
-      part_name: itemName.trim(),
-      part_sku: itemSku.trim(),
-      quantity,
-      notes: notes.trim() || undefined,
-    });
-    setSaving(false);
-    if (ok) onCancel();
-  };
-
-  return (
-    <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-      <div className="flex gap-2">
-        <Button size="sm" variant={source === 'parts' ? 'default' : 'outline'} onClick={() => { setSource('parts'); setSelectedId(null); setItemName(''); setItemSku(''); }}>
-          Parts Library
-        </Button>
-        <Button size="sm" variant={source === 'inventory' ? 'default' : 'outline'} onClick={() => { setSource('inventory'); setSelectedId(null); setItemName(''); setItemSku(''); }}>
-          <Package className="h-3 w-3 mr-1" /> Inventory
-        </Button>
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Select from {source === 'parts' ? 'Parts Library' : 'Inventory'}</Label>
-        <ItemSearchCombobox
-          items={source === 'parts' ? parts : inventoryItems}
-          placeholder={source === 'parts' ? 'Search parts library...' : 'Search inventory items...'}
-          onSelect={handleSelect}
-        />
-      </div>
-      {selectedId && (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Name</Label>
-              <Input value={itemName} disabled className="bg-muted" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">SKU</Label>
-              <Input value={itemSku} disabled className="bg-muted" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Quantity</Label>
-              <Input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Notes</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes" />
-            </div>
-          </div>
-        </>
-      )}
-      <div className="flex gap-2 justify-end">
-        <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button size="sm" onClick={handleSubmit} disabled={!selectedId || saving}>
-          {saving ? 'Adding...' : 'Add Item'}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 function AssemblyDetail({
   assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onUpdate,
 }: {
   assembly: PartsAssembly;
-  parts: { id: string; name: string; sku: string }[];
-  inventoryItems: { id: string; name: string; sku: string }[];
+  parts: { id: string; name: string; sku: string; price: number }[];
+  inventoryItems: { id: string; name: string; sku: string; cost: number }[];
   allParts: { id: string; price: number }[];
   allInventoryItems: { id: string; cost: number }[];
   onDelete: (id: string) => void;
@@ -165,7 +34,7 @@ function AssemblyDetail({
 }) {
   const navigate = useNavigate();
   const { items, loading, addItem, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -333,13 +202,10 @@ function AssemblyDetail({
 
       {/* Items list */}
       <div className="flex-1 overflow-auto p-6 space-y-4">
-        <div className="flex items-center justify-between">
+         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
-          {!showAddForm && <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Part</Button>}
+          <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Parts</Button>
         </div>
-        {showAddForm && (
-          <AddPartForm parts={parts} inventoryItems={inventoryItems} onAdd={addItem} onCancel={() => setShowAddForm(false)} />
-        )}
         {loading ? (
           <div className="text-muted-foreground text-sm text-center py-8">Loading parts...</div>
         ) : items.length === 0 ? (
@@ -408,6 +274,26 @@ function AssemblyDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FullScreenPartsPicker
+        open={showPicker}
+        onClose={async (cartItems) => {
+          setShowPicker(false);
+          for (const c of cartItems) {
+            await addItem({
+              part_id: c.part_id,
+              inventory_item_id: c.inventory_item_id,
+              part_name: c.part_name,
+              part_sku: c.part_sku,
+              quantity: c.quantity,
+            });
+          }
+        }}
+        parts={parts}
+        inventoryItems={inventoryItems}
+        existingPartIds={items.filter(i => i.part_id).map(i => i.part_id!)}
+        existingInventoryItemIds={items.filter(i => i.inventory_item_id).map(i => i.inventory_item_id!)}
+      />
     </div>
   );
 }
@@ -505,8 +391,8 @@ export function PartsAssembliesDetail() {
     setDeleteTypeOpen(false);
   };
 
-  const partsList = parts.map(p => ({ id: p.id, name: p.name, sku: p.sku }));
-  const invItemsList = inventoryItemsList.map(i => ({ id: i.id, name: i.name, sku: i.sku }));
+  const partsList = parts.map(p => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }));
+  const invItemsList = inventoryItemsList.map(i => ({ id: i.id, name: i.name, sku: i.sku, cost: i.cost }));
 
   return (
     <div className="min-h-full bg-background">
