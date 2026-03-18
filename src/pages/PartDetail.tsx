@@ -92,6 +92,21 @@ export function PartDetail() {
     }
   }, [totalPartCost, id, part?.price]);
 
+  // Prevent browser default file-drop behavior (navigating away) when in edit mode
+  useEffect(() => {
+    if (!editing) return;
+    const preventNav = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    document.addEventListener('dragover', preventNav);
+    document.addEventListener('drop', preventNav);
+    return () => {
+      document.removeEventListener('dragover', preventNav);
+      document.removeEventListener('drop', preventNav);
+    };
+  }, [editing]);
+
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [dxfText1, setDxfText1] = useState<string | null>(null);
   const [dxfText2, setDxfText2] = useState<string | null>(null);
