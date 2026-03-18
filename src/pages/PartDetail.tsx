@@ -60,6 +60,94 @@ export function PartDetail() {
   const { items: partItems, addItem: addPartItem, addCustomItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
   const { toast } = useToast();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerCart, setPickerCart] = useState<PickerCartItem[]>([]);
+
+  // Map partItems to picker cart format when picker opens
+  useEffect(() => {
+    if (pickerOpen) {
+      setPickerCart(partItems.map(pi => ({
+        id: pi.id,
+        inventoryItemId: pi.inventoryItemId,
+        itemName: pi.itemName,
+        sku: pi.itemSku,
+        quantity: pi.quantity,
+        quantityUnit: 'pcs' as const,
+        unitPrice: pi.unitCost,
+        unitCost: pi.unitCost,
+        notes: pi.notes || '',
+      })));
+    }
+  }, [pickerOpen]);
+
+  const handlePickerAddItem = async (item: any) => {
+    const alreadyInCart = pickerCart.some(c => c.inventoryItemId === item.id);
+    if (alreadyInCart) return;
+    const ok = await addPartItem(item.id);
+    if (ok) {
+      // Refetch will update partItems, but we also add to local cart immediately
+      setPickerCart(prev => [...prev, {
+        id: `temp-${Date.now()}`,
+        inventoryItemId: item.id,
+        itemName: item.name,
+        sku: item.sku,
+        quantity: 1,
+        quantityUnit: 'pcs' as const,
+        unitPrice: item.cost,
+        unitCost: item.cost,
+        notes: '',
+      }]);
+    }
+  };
+
+  const handlePickerAddCustomItem = () => {
+    const name = prompt('Custom item name:');
+    if (!name?.trim()) return;
+    const costStr = prompt('Unit cost:', '0');
+    const cost = parseFloat(costStr || '0') || 0;
+    addCustomItem(name.trim(), cost).then(ok => {
+      if (ok) {
+        setPickerCart(prev => [...prev, {
+          id: `temp-${Date.now()}`,
+          inventoryItemId: null,
+          itemName: name.trim(),
+          sku: '',
+          quantity: 1,
+          quantityUnit: 'pcs' as const,
+          unitPrice: cost,
+          unitCost: cost,
+          notes: '',
+        }]);
+      }
+    });
+  };
+
+  const handlePickerUpdateQty = (itemId: string, qty: number | null) => {
+    setPickerCart(prev => prev.map(c => c.id === itemId ? { ...c, quantity: qty } : c));
+    // Find the real DB item
+    const realItem = partItems.find(pi => pi.id === itemId);
+    if (realItem && qty && qty > 0) {
+      updatePartItem(itemId, { quantity: qty });
+    }
+  };
+
+  const handlePickerRemoveItem = (itemId: string) => {
+    setPickerCart(prev => prev.filter(c => c.id !== itemId));
+    const realItem = partItems.find(pi => pi.id === itemId);
+    if (realItem) {
+      removePartItem(itemId);
+    }
+  };
+
+  const handlePickerUpdateItem = (itemId: string, updates: Partial<PickerCartItem>) => {
+    setPickerCart(prev => prev.map(c => c.id === itemId ? { ...c, ...updates } : c));
+    const realItem = partItems.find(pi => pi.id === itemId);
+    if (realItem) {
+      const dbUpdates: Record<string, any> = {};
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+      if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+      if (Object.keys(dbUpdates).length > 0) updatePartItem(itemId, dbUpdates);
+    }
+  };
 
   const part = parts.find(p => p.id === id);
 
