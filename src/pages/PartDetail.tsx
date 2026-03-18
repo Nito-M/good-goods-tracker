@@ -96,6 +96,9 @@ export function PartDetail() {
   const [dxfText1, setDxfText1] = useState<string | null>(null);
   const [dxfText2, setDxfText2] = useState<string | null>(null);
   const [dxfSignedUrl1, setDxfSignedUrl1] = useState<string | null>(null);
+  const [dragOverImage, setDragOverImage] = useState(false);
+  const [dragOverDxf1, setDragOverDxf1] = useState(false);
+  const [dragOverDxf2, setDragOverDxf2] = useState(false);
   const [dxfSignedUrl2, setDxfSignedUrl2] = useState<string | null>(null);
   // Edit state
   const [editing, setEditing] = useState(false);
