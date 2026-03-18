@@ -21,8 +21,6 @@ import {
 } from '@/components/ui/alert-dialog';
 
 
-
-
 function AssemblyDetail({
   assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onUpdate,
 }: {
