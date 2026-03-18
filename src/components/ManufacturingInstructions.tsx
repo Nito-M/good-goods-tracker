@@ -42,6 +42,7 @@ export function ManufacturingInstructions({ partId }: Props) {
   const [angle, setAngle] = useState('');
   const [holeDiameter, setHoleDiameter] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [price, setPrice] = useState('');
   const [positionOffset, setPositionOffset] = useState('');
   const [notes, setNotes] = useState('');
 
