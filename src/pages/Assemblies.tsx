@@ -187,7 +187,7 @@ function AssemblyDetail({
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [showPartsAssemblyPicker, setShowPartsAssemblyPicker] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
