@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus } from 'lucide-react';
+import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
 // Convert decimal hours to "H:MM" string
 const decimalToHM = (decimal: number): string => {
@@ -32,19 +33,6 @@ import { DxfThreeViewer } from '@/components/DxfThreeViewer';
 import { ManufacturingInstructions } from '@/components/ManufacturingInstructions';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
   Table,
   TableBody,
   TableCell,
@@ -71,10 +59,95 @@ export function PartDetail() {
   const { items: inventoryItems } = useInventory();
   const { items: partItems, addItem: addPartItem, addCustomItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
   const { toast } = useToast();
-  const [addItemOpen, setAddItemOpen] = useState(false);
-  const [addItemSearch, setAddItemSearch] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [customCost, setCustomCost] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerCart, setPickerCart] = useState<PickerCartItem[]>([]);
+
+  // Sync partItems to picker cart whenever partItems change while picker is open
+  useEffect(() => {
+    if (pickerOpen) {
+      setPickerCart(partItems.map(pi => ({
+        id: pi.id,
+        inventoryItemId: pi.inventoryItemId,
+        itemName: pi.itemName,
+        sku: pi.itemSku,
+        quantity: pi.quantity,
+        quantityUnit: 'pcs' as const,
+        unitPrice: pi.unitCost,
+        unitCost: pi.unitCost,
+        notes: pi.notes || '',
+      })));
+    }
+  }, [pickerOpen, partItems]);
+
+  const handlePickerAddItem = async (item: any) => {
+    const alreadyInCart = pickerCart.some(c => c.inventoryItemId === item.id);
+    if (alreadyInCart) return;
+    const ok = await addPartItem(item.id);
+    if (ok) {
+      // Refetch will update partItems, but we also add to local cart immediately
+      setPickerCart(prev => [...prev, {
+        id: `temp-${Date.now()}`,
+        inventoryItemId: item.id,
+        itemName: item.name,
+        sku: item.sku,
+        quantity: 1,
+        quantityUnit: 'pcs' as const,
+        unitPrice: item.cost,
+        unitCost: item.cost,
+        notes: '',
+      }]);
+    }
+  };
+
+  const handlePickerAddCustomItem = () => {
+    const name = prompt('Custom item name:');
+    if (!name?.trim()) return;
+    const costStr = prompt('Unit cost:', '0');
+    const cost = parseFloat(costStr || '0') || 0;
+    addCustomItem(name.trim(), cost).then(ok => {
+      if (ok) {
+        setPickerCart(prev => [...prev, {
+          id: `temp-${Date.now()}`,
+          inventoryItemId: null,
+          itemName: name.trim(),
+          sku: '',
+          quantity: 1,
+          quantityUnit: 'pcs' as const,
+          unitPrice: cost,
+          unitCost: cost,
+          notes: '',
+        }]);
+      }
+    });
+  };
+
+  const handlePickerUpdateQty = (itemId: string, qty: number | null) => {
+    setPickerCart(prev => prev.map(c => c.id === itemId ? { ...c, quantity: qty } : c));
+    // Find the real DB item
+    const realItem = partItems.find(pi => pi.id === itemId);
+    if (realItem && qty && qty > 0) {
+      updatePartItem(itemId, { quantity: qty });
+    }
+  };
+
+  const handlePickerRemoveItem = (itemId: string) => {
+    setPickerCart(prev => prev.filter(c => c.id !== itemId));
+    const realItem = partItems.find(pi => pi.id === itemId);
+    if (realItem) {
+      removePartItem(itemId);
+    }
+  };
+
+  const handlePickerUpdateItem = (itemId: string, updates: Partial<PickerCartItem>) => {
+    setPickerCart(prev => prev.map(c => c.id === itemId ? { ...c, ...updates } : c));
+    const realItem = partItems.find(pi => pi.id === itemId);
+    if (realItem) {
+      const dbUpdates: Record<string, any> = {};
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+      if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+      if (Object.keys(dbUpdates).length > 0) updatePartItem(itemId, dbUpdates);
+    }
+  };
 
   const part = parts.find(p => p.id === id);
 
@@ -544,59 +617,9 @@ export function PartDetail() {
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" /> Materials / Inventory Items
             </CardTitle>
-            <Popover open={addItemOpen} onOpenChange={setAddItemOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" /> Add Item
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-0" align="end">
-                <Command>
-                  <CommandInput placeholder="Search inventory..." value={addItemSearch} onValueChange={setAddItemSearch} />
-                  <CommandList className="max-h-[300px]">
-                    <CommandEmpty>No items found.</CommandEmpty>
-                    <CommandGroup heading="Inventory">
-                      {inventoryItems
-                        .map(item => (
-                          <CommandItem
-                            key={item.id}
-                            onSelect={async () => {
-                              await addPartItem(item.id);
-                              setAddItemOpen(false);
-                              setAddItemSearch('');
-                            }}
-                          >
-                            <div className="flex flex-col">
-                              <span>{item.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {item.sku} · Cost: {formatCurrency(item.cost)}
-                              </span>
-                            </div>
-                          </CommandItem>
-                        ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-                <div className="border-t border-border p-3 space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">Or add custom item</p>
-                  <Input placeholder="Item name" value={customName} onChange={e => setCustomName(e.target.value)} className="h-8 text-sm" />
-                  <Input placeholder="Unit cost" type="number" min={0} step="0.01" value={customCost} onChange={e => setCustomCost(e.target.value)} className="h-8 text-sm" />
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    disabled={!customName.trim()}
-                    onClick={async () => {
-                      await addCustomItem(customName.trim(), parseFloat(customCost) || 0);
-                      setCustomName('');
-                      setCustomCost('');
-                      setAddItemOpen(false);
-                    }}
-                  >
-                    Add Custom Item
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setPickerOpen(true)}>
+              <Plus className="h-4 w-4" /> Add Item
+            </Button>
           </CardHeader>
           <CardContent>
             {partItems.length === 0 ? (
@@ -837,6 +860,20 @@ export function PartDetail() {
           </Card>
         </div>
       </main>
+
+      <FullScreenItemPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        inventoryItems={inventoryItems}
+        cart={pickerCart}
+        onAddItem={handlePickerAddItem}
+        onAddCustomItem={handlePickerAddCustomItem}
+        onUpdateQuantity={handlePickerUpdateQty}
+        onRemoveItem={handlePickerRemoveItem}
+        onUpdateItem={handlePickerUpdateItem}
+        documentType="Part"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
