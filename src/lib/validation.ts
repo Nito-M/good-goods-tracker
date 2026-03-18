@@ -91,6 +91,7 @@ export const purchaseOrderItemSchema = z.object({
   itemName: z.string().min(1, 'Item name is required').max(500),
   quantity: z.number().min(1, 'Quantity must be at least 1'),
   unitCost: z.number().min(0, 'Unit cost cannot be negative').optional(),
+  notes: z.string().max(1000).optional(),
 });
 
 export const purchaseOrderSchema = z.object({
