@@ -1323,6 +1323,7 @@ export type Database = {
           operation_type: string
           part_id: string
           position_offset: string | null
+          price: number
           quantity: number | null
           step_order: number
           updated_at: string
@@ -1339,6 +1340,7 @@ export type Database = {
           operation_type?: string
           part_id: string
           position_offset?: string | null
+          price?: number
           quantity?: number | null
           step_order?: number
           updated_at?: string
@@ -1355,6 +1357,7 @@ export type Database = {
           operation_type?: string
           part_id?: string
           position_offset?: string | null
+          price?: number
           quantity?: number | null
           step_order?: number
           updated_at?: string
