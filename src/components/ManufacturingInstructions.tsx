@@ -135,7 +135,7 @@ export function ManufacturingInstructions({ partId }: Props) {
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="space-y-1.5">
           <Label>Length</Label>
           <Input value={length} onChange={e => setLength(e.target.value)} placeholder='e.g. 96"' />
@@ -151,6 +151,10 @@ export function ManufacturingInstructions({ partId }: Props) {
         <div className="space-y-1.5">
           <Label>Quantity</Label>
           <Input type="number" min={1} value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="1" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Price ($)</Label>
+          <Input type="number" min={0} step="0.01" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" />
         </div>
       </div>
       <div className="space-y-1.5">
