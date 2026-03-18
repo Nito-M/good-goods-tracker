@@ -497,6 +497,7 @@ function AssemblyDetail({
                   sku: c.part_sku,
                   quantity: c.quantity,
                   unit_cost: c.unitCost,
+                  notes: c.notes || undefined,
                 });
               }
             }
