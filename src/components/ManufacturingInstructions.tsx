@@ -69,6 +69,7 @@ export function ManufacturingInstructions({ partId }: Props) {
     setAngle(s.angle || '');
     setHoleDiameter(s.holeDiameter || '');
     setQuantity(s.quantity ? String(s.quantity) : '');
+    setPrice(s.price ? String(s.price) : '');
     setPositionOffset(s.positionOffset || '');
     setNotes(s.notes || '');
   };
