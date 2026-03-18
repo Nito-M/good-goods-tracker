@@ -103,9 +103,13 @@ export function useParts() {
     if (updates.dxfLabel2 !== undefined) dbUpdates.dxf_label_2 = updates.dxfLabel2;
     if (updates.folderId !== undefined) dbUpdates.folder_id = updates.folderId;
 
-    const { error } = await supabase.from('parts').update(dbUpdates).eq('id', id);
+    const { error, count } = await supabase.from('parts').update(dbUpdates).eq('id', id).select('id', { count: 'exact', head: true });
     if (error) {
       toast({ title: 'Error updating part', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    if (count === 0) {
+      toast({ title: 'Update failed', description: 'You may not have permission to edit this part.', variant: 'destructive' });
       return false;
     }
     await fetchParts();
