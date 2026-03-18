@@ -47,8 +47,10 @@ export function PartsLibrary() {
   });
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
+  const PAGE_SIZE = 40;
   const loading = partsLoading || foldersLoading;
   const breadcrumb = getBreadcrumb(currentFolderId);
   const childFolders = getFoldersInParent(currentFolderId);
@@ -61,9 +63,11 @@ export function PartsLibrary() {
       )
     : partsInFolder;
 
-  const filteredFolders = search
-    ? folders.filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
-    : childFolders;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pagedParts = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // Reset page when folder or search changes
+  useEffect(() => { setCurrentPage(1); }, [currentFolderId, search]);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
