@@ -372,11 +372,18 @@ export function PartDetail() {
                 )}
               </div>
               {editing && (
-                <label className="mt-3 cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors text-sm">
-                  <Upload className="h-4 w-4" />
-                  {newImageFile ? 'Change Image' : 'Upload New Image'}
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                </label>
+                <div className="mt-3 flex items-center gap-2">
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors text-sm">
+                    <Upload className="h-4 w-4" />
+                    {newImageFile ? 'Change Image' : 'Upload New Image'}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                  </label>
+                  {newImageFile && (
+                    <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
+                      <Check className="h-4 w-4" /> {saving ? 'Saving...' : 'Save'}
+                    </Button>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
