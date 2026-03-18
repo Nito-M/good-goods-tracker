@@ -12,6 +12,10 @@ interface Props {
   partId: string;
 }
 
+function formatCurrencyValue(val: number) {
+  return val.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 5 });
+}
+
 function StepSummary(step: ManufacturingStep) {
   const parts: string[] = [];
   if (step.operationType && step.operationType !== 'Custom') parts.push(step.operationType);
@@ -20,6 +24,7 @@ function StepSummary(step: ManufacturingStep) {
   if (step.holeDiameter) parts.push(`(${step.quantity || 1}) ${step.holeDiameter}" holes`);
   else if (step.quantity && step.quantity > 1) parts.push(`× ${step.quantity}`);
   if (step.positionOffset) parts.push(step.positionOffset);
+  if (step.price > 0) parts.push(formatCurrencyValue(step.price));
   if (step.notes) parts.push(step.notes);
   return parts.join(', ') || step.operationType;
 }
@@ -37,6 +42,7 @@ export function ManufacturingInstructions({ partId }: Props) {
   const [angle, setAngle] = useState('');
   const [holeDiameter, setHoleDiameter] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [price, setPrice] = useState('');
   const [positionOffset, setPositionOffset] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -51,6 +57,7 @@ export function ManufacturingInstructions({ partId }: Props) {
     setAngle('');
     setHoleDiameter('');
     setQuantity('');
+    setPrice('');
     setPositionOffset('');
     setNotes('');
   };
@@ -62,6 +69,7 @@ export function ManufacturingInstructions({ partId }: Props) {
     setAngle(s.angle || '');
     setHoleDiameter(s.holeDiameter || '');
     setQuantity(s.quantity ? String(s.quantity) : '');
+    setPrice(s.price ? String(s.price) : '');
     setPositionOffset(s.positionOffset || '');
     setNotes(s.notes || '');
   };
@@ -72,6 +80,7 @@ export function ManufacturingInstructions({ partId }: Props) {
       machine, operationType, length: length || null, angle: angle || null,
       holeDiameter: holeDiameter || null, quantity: quantity ? parseInt(quantity) : null,
       positionOffset: positionOffset || null, notes: notes || null,
+      price: price ? parseFloat(price) : 0,
     });
     resetForm();
     setAdding(false);
@@ -85,6 +94,7 @@ export function ManufacturingInstructions({ partId }: Props) {
       machine, operationType, length: length || null, angle: angle || null,
       holeDiameter: holeDiameter || null, quantity: quantity ? parseInt(quantity) : null,
       positionOffset: positionOffset || null, notes: notes || null,
+      price: price ? parseFloat(price) : 0,
     });
     resetForm();
     setEditingId(null);
@@ -125,7 +135,7 @@ export function ManufacturingInstructions({ partId }: Props) {
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="space-y-1.5">
           <Label>Length</Label>
           <Input value={length} onChange={e => setLength(e.target.value)} placeholder='e.g. 96"' />
@@ -141,6 +151,10 @@ export function ManufacturingInstructions({ partId }: Props) {
         <div className="space-y-1.5">
           <Label>Quantity</Label>
           <Input type="number" min={1} value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="1" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Price ($)</Label>
+          <Input type="number" min={0} step="0.01" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" />
         </div>
       </div>
       <div className="space-y-1.5">

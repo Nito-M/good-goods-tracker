@@ -15,6 +15,7 @@ export interface ManufacturingStep {
   quantity: number | null;
   positionOffset: string | null;
   notes: string | null;
+  price: number;
 }
 
 export const MACHINES = ['Saw', 'Drill Press', 'Press Brake', 'Plasma Table', 'Laser', 'Mill', 'Lathe', 'Other'] as const;
@@ -50,6 +51,7 @@ export function useManufacturingSteps(partId: string | undefined) {
         quantity: d.quantity,
         positionOffset: d.position_offset,
         notes: d.notes,
+        price: d.price ?? 0,
       })));
     }
     setLoading(false);
@@ -72,6 +74,7 @@ export function useManufacturingSteps(partId: string | undefined) {
       quantity: step.quantity || null,
       position_offset: step.positionOffset || null,
       notes: step.notes || null,
+      price: step.price ?? 0,
     }).select().single();
 
     if (error) {
@@ -93,6 +96,7 @@ export function useManufacturingSteps(partId: string | undefined) {
     if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
     if (updates.positionOffset !== undefined) dbUpdates.position_offset = updates.positionOffset;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.price !== undefined) dbUpdates.price = updates.price;
 
     const { error } = await supabase.from('part_manufacturing_steps').update(dbUpdates).eq('id', id);
     if (error) {
