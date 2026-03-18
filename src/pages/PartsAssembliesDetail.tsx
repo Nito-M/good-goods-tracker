@@ -288,13 +288,10 @@ function AssemblyDetail({
 
       {/* Items list */}
       <div className="flex-1 overflow-auto p-6 space-y-4">
-        <div className="flex items-center justify-between">
+         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
-          {!showAddForm && <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Part</Button>}
+          <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Parts</Button>
         </div>
-        {showAddForm && (
-          <AddPartForm parts={parts} inventoryItems={inventoryItems} onAdd={addItem} onCancel={() => setShowAddForm(false)} />
-        )}
         {loading ? (
           <div className="text-muted-foreground text-sm text-center py-8">Loading parts...</div>
         ) : items.length === 0 ? (
