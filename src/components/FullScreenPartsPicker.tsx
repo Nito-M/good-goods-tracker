@@ -160,6 +160,10 @@ export function FullScreenPartsPicker({
     setCart((prev) => prev.map((c) => c.id === id ? { ...c, quantity: qty ?? 1 } : c));
   };
 
+  const updateCartNotes = (id: string, notes: string) => {
+    setCart((prev) => prev.map((c) => c.id === id ? { ...c, notes } : c));
+  };
+
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((c) => c.id !== id));
   };
@@ -332,6 +336,12 @@ export function FullScreenPartsPicker({
                         <p className="text-sm font-semibold">{formatCurrency(c.quantity * c.unitCost)}</p>
                       </div>
                     </div>
+                    <Input
+                      value={c.notes}
+                      onChange={(e) => updateCartNotes(c.id, e.target.value)}
+                      placeholder="Add note..."
+                      className="h-7 text-xs"
+                    />
                   </div>
                 ))}
               </div>

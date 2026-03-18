@@ -286,6 +286,7 @@ function AssemblyDetail({
               part_name: c.part_name,
               part_sku: c.part_sku,
               quantity: c.quantity,
+              notes: c.notes || undefined,
             });
           }
         }}
