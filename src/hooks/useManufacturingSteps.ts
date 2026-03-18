@@ -74,6 +74,7 @@ export function useManufacturingSteps(partId: string | undefined) {
       quantity: step.quantity || null,
       position_offset: step.positionOffset || null,
       notes: step.notes || null,
+      price: step.price ?? 0,
     }).select().single();
 
     if (error) {
