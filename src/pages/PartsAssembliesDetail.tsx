@@ -276,6 +276,26 @@ function AssemblyDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FullScreenPartsPicker
+        open={showPicker}
+        onClose={async (cartItems) => {
+          setShowPicker(false);
+          for (const c of cartItems) {
+            await addItem({
+              part_id: c.part_id,
+              inventory_item_id: c.inventory_item_id,
+              part_name: c.part_name,
+              part_sku: c.part_sku,
+              quantity: c.quantity,
+            });
+          }
+        }}
+        parts={parts}
+        inventoryItems={inventoryItems}
+        existingPartIds={items.filter(i => i.part_id).map(i => i.part_id!)}
+        existingInventoryItemIds={items.filter(i => i.inventory_item_id).map(i => i.inventory_item_id!)}
+      />
     </div>
   );
 }
