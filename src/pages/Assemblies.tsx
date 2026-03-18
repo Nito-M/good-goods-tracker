@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye } from 'lucide-react';
+import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { AssemblyPreviewDialog } from '@/components/AssemblyPreviewDialog';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
