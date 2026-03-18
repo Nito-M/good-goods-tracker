@@ -96,6 +96,7 @@ export function useManufacturingSteps(partId: string | undefined) {
     if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
     if (updates.positionOffset !== undefined) dbUpdates.position_offset = updates.positionOffset;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.price !== undefined) dbUpdates.price = updates.price;
 
     const { error } = await supabase.from('part_manufacturing_steps').update(dbUpdates).eq('id', id);
     if (error) {
