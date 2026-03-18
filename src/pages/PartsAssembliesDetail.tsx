@@ -120,7 +120,7 @@ function AssemblyDetail({
 }) {
   const navigate = useNavigate();
   const { items, loading, addItem, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
