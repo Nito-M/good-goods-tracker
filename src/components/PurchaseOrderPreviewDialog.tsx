@@ -146,7 +146,10 @@ export function PurchaseOrderPreviewDialog({
                 <tbody>
                   {order.items.map((item, idx) => (
                     <tr key={idx} className="border-b border-gray-200">
-                      <td className="p-2">{item.itemName}</td>
+                      <td className="p-2">
+                        {item.itemName}
+                        {item.notes && <div className="text-[9px] text-gray-400 mt-0.5">{item.notes}</div>}
+                      </td>
                       <td className="p-2 text-gray-600">{item.sku}</td>
                       <td className="p-2 text-center">{item.quantity}</td>
                       {hasAnyCost && (
