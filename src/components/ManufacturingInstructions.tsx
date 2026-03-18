@@ -38,6 +38,7 @@ export function ManufacturingInstructions({ partId }: Props) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
 
   // Form state
   const [machine, setMachine] = useState('Saw');
