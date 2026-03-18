@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus } from 'lucide-react';
+import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
 // Convert decimal hours to "H:MM" string
 const decimalToHM = (decimal: number): string => {
