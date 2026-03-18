@@ -69,6 +69,10 @@ export function PartsLibrary() {
   // Reset page when folder or search changes
   useEffect(() => { setCurrentPage(1); }, [currentFolderId, search]);
 
+  const filteredFolders = search
+    ? folders.filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
+    : childFolders;
+
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const ok = await deletePart(id);
