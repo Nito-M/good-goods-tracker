@@ -12,6 +12,10 @@ interface Props {
   partId: string;
 }
 
+function formatCurrencyValue(val: number) {
+  return val.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 5 });
+}
+
 function StepSummary(step: ManufacturingStep) {
   const parts: string[] = [];
   if (step.operationType && step.operationType !== 'Custom') parts.push(step.operationType);
@@ -20,6 +24,7 @@ function StepSummary(step: ManufacturingStep) {
   if (step.holeDiameter) parts.push(`(${step.quantity || 1}) ${step.holeDiameter}" holes`);
   else if (step.quantity && step.quantity > 1) parts.push(`× ${step.quantity}`);
   if (step.positionOffset) parts.push(step.positionOffset);
+  if (step.price > 0) parts.push(formatCurrencyValue(step.price));
   if (step.notes) parts.push(step.notes);
   return parts.join(', ') || step.operationType;
 }
