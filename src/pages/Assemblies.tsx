@@ -488,7 +488,6 @@ function AssemblyDetail({
       <div className="flex-1 overflow-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
-          {!showAddForm && (
              <div className="flex gap-2">
               {folders && folders.length > 0 && (
                 <Popover open={showFolderPicker} onOpenChange={setShowFolderPicker}>
@@ -596,27 +595,38 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
-              <Button size="sm" onClick={() => setShowAddForm(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
+              <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
             </div>
-          )}
         </div>
-        {showAddForm && (
-          <AddItemForm inventoryItems={inventoryItems} partsItems={partsItems} onAdd={async (item) => {
-            // If item already exists in the list, update its quantity instead
-            const existing = items.find(i =>
-              (item.inventory_item_id && i.inventory_item_id === item.inventory_item_id) ||
-              (!item.inventory_item_id && i.item_name === item.item_name && i.sku === item.sku)
-            );
-            if (existing) {
-              await updateItem(existing.id, { quantity: existing.quantity + item.quantity });
-              onItemsChanged?.();
-              return true;
+
+        <FullScreenPartsPicker
+          open={showPicker}
+          onClose={async (cartItems) => {
+            setShowPicker(false);
+            for (const c of cartItems) {
+              const existing = items.find(i =>
+                (c.inventory_item_id && i.inventory_item_id === c.inventory_item_id) ||
+                (c.part_id && !c.inventory_item_id && partsItems?.find(p => p.id === c.part_id && p.name === i.item_name && p.sku === i.sku))
+              );
+              if (existing) {
+                await updateItem(existing.id, { quantity: existing.quantity + c.quantity });
+              } else {
+                await addItem({
+                  inventory_item_id: c.inventory_item_id,
+                  item_name: c.part_name,
+                  sku: c.part_sku,
+                  quantity: c.quantity,
+                  unit_cost: c.unitCost,
+                });
+              }
             }
-            const ok = await addItem(item);
-            if (ok) onItemsChanged?.();
-            return ok;
-          }} onCancel={() => setShowAddForm(false)} />
-        )}
+            if (cartItems.length > 0) onItemsChanged?.();
+          }}
+          parts={(partsItems || []).map(p => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }))}
+          inventoryItems={inventoryItems.map(i => ({ id: i.id, name: i.name, sku: i.sku, cost: i.cost ?? 0 }))}
+          existingPartIds={[]}
+          existingInventoryItemIds={items.filter(i => i.inventory_item_id).map(i => i.inventory_item_id!)}
+        />
         {loading ? (
           <div className="text-muted-foreground text-sm text-center py-8">Loading items...</div>
         ) : items.length === 0 ? (
