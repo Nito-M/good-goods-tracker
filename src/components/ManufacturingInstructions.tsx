@@ -25,7 +25,6 @@ function StepSummary(step: ManufacturingStep) {
   else if (step.quantity && step.quantity > 1) parts.push(`× ${step.quantity}`);
   if (step.positionOffset) parts.push(step.positionOffset);
   if (step.price > 0) parts.push(formatCurrencyValue(step.price));
-  if (step.notes) parts.push(step.notes);
   return parts.join(', ') || step.operationType;
 }
 
