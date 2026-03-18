@@ -160,6 +160,10 @@ export function FullScreenPartsPicker({
     setCart((prev) => prev.map((c) => c.id === id ? { ...c, quantity: qty ?? 1 } : c));
   };
 
+  const updateCartNotes = (id: string, notes: string) => {
+    setCart((prev) => prev.map((c) => c.id === id ? { ...c, notes } : c));
+  };
+
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((c) => c.id !== id));
   };
