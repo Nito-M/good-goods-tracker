@@ -25,6 +25,7 @@ export interface AssemblyItem {
   quantity: number;
   unit_cost: number;
   notes: string | null;
+  part_id: string | null;
   created_at: string;
 }
 
