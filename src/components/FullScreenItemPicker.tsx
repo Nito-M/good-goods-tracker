@@ -53,6 +53,116 @@ interface FullScreenItemPickerProps {
   formatPrice?: (value: number) => string;
 }
 
+function CartItemRow({
+  item: c,
+  onUpdateQuantity,
+  onRemoveItem,
+  onUpdateItem,
+  formatPrice,
+}: {
+  item: PickerCartItem;
+  onUpdateQuantity: (itemId: string, quantity: number | null) => void;
+  onRemoveItem: (itemId: string) => void;
+  onUpdateItem?: (itemId: string, updates: Partial<PickerCartItem>) => void;
+  formatPrice: (value: number) => string;
+}) {
+  const [localQty, setLocalQty] = useState<string>(c.quantity != null ? String(c.quantity) : '');
+  const committed = c.quantity;
+
+  useEffect(() => {
+    setLocalQty(c.quantity != null ? String(c.quantity) : '');
+  }, [c.quantity]);
+
+  const parsedLocal = localQty === '' ? null : parseFloat(localQty);
+  const isDirty = parsedLocal !== committed;
+
+  const commit = () => {
+    if (isDirty) onUpdateQuantity(c.id, parsedLocal);
+  };
+
+  return (
+    <div className="border border-border rounded-lg p-3 space-y-2 bg-background">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {!c.inventoryItemId && onUpdateItem ? (
+            <Input
+              value={c.itemName}
+              onChange={(e) => onUpdateItem(c.id, { itemName: e.target.value })}
+              placeholder="Item name..."
+              className="h-7 text-sm font-medium"
+            />
+          ) : (
+            <p className="font-medium text-sm truncate">{c.itemName}</p>
+          )}
+          <p className="text-xs text-muted-foreground">{c.sku || 'No SKU'}</p>
+        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7 text-destructive shrink-0"
+          onClick={() => onRemoveItem(c.id)}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1">
+          <Input
+            type="number"
+            className="w-24 h-7 text-center text-sm"
+            value={localQty}
+            onChange={(e) => setLocalQty(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') commit(); }}
+            onBlur={commit}
+            min={0}
+            step={0.01}
+          />
+          {isDirty && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-primary shrink-0"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={commit}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">{formatPrice(c.unitPrice)} ea</p>
+          <p className="text-sm font-semibold">{formatPrice((c.quantity || 0) * c.unitPrice)}</p>
+        </div>
+      </div>
+
+      {!c.inventoryItemId && onUpdateItem && (
+        <div className="flex gap-2">
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs">SKU</Label>
+            <Input
+              value={c.sku}
+              onChange={(e) => onUpdateItem(c.id, { sku: e.target.value })}
+              placeholder="SKU"
+              className="h-7 text-xs"
+            />
+          </div>
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs">Price</Label>
+            <Input
+              type="number"
+              value={c.unitPrice}
+              onChange={(e) => onUpdateItem(c.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+              className="h-7 text-xs"
+              step="0.01"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FullScreenItemPicker({
   open,
   onClose,
