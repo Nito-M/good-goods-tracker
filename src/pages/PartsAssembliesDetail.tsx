@@ -33,7 +33,7 @@ function AssemblyDetail({
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
 }) {
   const navigate = useNavigate();
-  const { items, loading, addItem, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
+  const { items, loading, addItem, addItems, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
   const [showPicker, setShowPicker] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
@@ -279,15 +279,15 @@ function AssemblyDetail({
         open={showPicker}
         onClose={async (cartItems) => {
           setShowPicker(false);
-          for (const c of cartItems) {
-            await addItem({
+          if (cartItems.length > 0) {
+            await addItems(cartItems.map(c => ({
               part_id: c.part_id,
               inventory_item_id: c.inventory_item_id,
               part_name: c.part_name,
               part_sku: c.part_sku,
               quantity: c.quantity,
               notes: c.notes || undefined,
-            });
+            })));
           }
         }}
         parts={parts}
