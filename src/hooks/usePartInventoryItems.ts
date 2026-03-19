@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -21,9 +21,13 @@ export function usePartInventoryItems(partId: string | undefined) {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
 
   const fetchItems = useCallback(async () => {
-    if (!user || !partId) { setItems([]); setLoading(false); return; }
+    if (!partId) { setItems([]); setLoading(false); return; }
+    // Don't clear items when user is temporarily null (e.g. token refresh) - just skip
+    if (!user) { setLoading(false); return; }
     setLoading(true);
     const { data, error } = await supabase
       .from('part_inventory_items' as any)
@@ -32,7 +36,7 @@ export function usePartInventoryItems(partId: string | undefined) {
       .order('created_at', { ascending: true });
 
     if (error) {
-      toast({ title: 'Error loading part items', description: error.message, variant: 'destructive' });
+      toastRef.current({ title: 'Error loading part items', description: error.message, variant: 'destructive' });
     } else {
       setItems((data || []).map((d: any) => {
         const isCustom = !d.inventory_item_id;
@@ -51,7 +55,7 @@ export function usePartInventoryItems(partId: string | undefined) {
       }));
     }
     setLoading(false);
-  }, [user, partId, toast]);
+  }, [user, partId]);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
@@ -64,7 +68,7 @@ export function usePartInventoryItems(partId: string | undefined) {
       user_id: user.id,
     } as any);
     if (error) {
-      toast({ title: 'Error adding item', description: error.message, variant: 'destructive' });
+      toastRef.current({ title: 'Error adding item', description: error.message, variant: 'destructive' });
       return false;
     }
     await fetchItems();
@@ -82,7 +86,7 @@ export function usePartInventoryItems(partId: string | undefined) {
       user_id: user.id,
     } as any);
     if (error) {
-      toast({ title: 'Error adding item', description: error.message, variant: 'destructive' });
+      toastRef.current({ title: 'Error adding item', description: error.message, variant: 'destructive' });
       return false;
     }
     await fetchItems();
@@ -92,7 +96,7 @@ export function usePartInventoryItems(partId: string | undefined) {
   const updateItem = async (id: string, updates: { quantity?: number; notes?: string; item_name?: string; unit_cost?: number }) => {
     const { error } = await supabase.from('part_inventory_items' as any).update(updates as any).eq('id', id);
     if (error) {
-      toast({ title: 'Error updating item', description: error.message, variant: 'destructive' });
+      toastRef.current({ title: 'Error updating item', description: error.message, variant: 'destructive' });
       return false;
     }
     await fetchItems();
@@ -102,7 +106,7 @@ export function usePartInventoryItems(partId: string | undefined) {
   const removeItem = async (id: string) => {
     const { error } = await supabase.from('part_inventory_items' as any).delete().eq('id', id);
     if (error) {
-      toast({ title: 'Error removing item', description: error.message, variant: 'destructive' });
+      toastRef.current({ title: 'Error removing item', description: error.message, variant: 'destructive' });
       return false;
     }
     await fetchItems();
