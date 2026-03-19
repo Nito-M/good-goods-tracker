@@ -527,7 +527,7 @@ function AssemblyDetail({
               <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
                   {(() => {
-                    const partMatch = (item as any).part_id ? partsRaw?.find(p => p.id === (item as any).part_id) : (!item.inventory_item_id && partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku));
+                    const partMatch = item.part_id ? partsRaw?.find(p => p.id === item.part_id) : (!item.inventory_item_id && partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku));
                     const assemblyMatch = !item.inventory_item_id && !partMatch && allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name);
                     const partsAssemblyMatch = !item.inventory_item_id && !partMatch && !assemblyMatch && partsAssemblies?.find(pa => pa.name === item.item_name);
                     const linkTo = item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : partsAssemblyMatch ? `/parts/assemblies/${encodeURIComponent(partsAssemblyMatch.type)}?id=${partsAssemblyMatch.id}` : null;
