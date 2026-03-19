@@ -207,5 +207,34 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
     }
   };
 
-  return { items, loading, addItem, updateItem, removeItem };
+  const addItems = async (newItems: {
+    part_id?: string | null;
+    inventory_item_id?: string | null;
+    part_name: string;
+    part_sku: string;
+    quantity: number;
+    notes?: string;
+  }[]): Promise<number> => {
+    if (!assemblyId || newItems.length === 0) return 0;
+
+    const rows = newItems.map((item) => ({
+      assembly_id: assemblyId,
+      part_id: item.part_id || null,
+      inventory_item_id: item.inventory_item_id || null,
+      part_name: item.part_name,
+      part_sku: item.part_sku,
+      quantity: item.quantity,
+      notes: item.notes || null,
+    }));
+
+    const { error } = await (supabase as any).from('parts_assembly_items').insert(rows);
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to add items.', variant: 'destructive' });
+      return 0;
+    }
+    await fetchItems();
+    return rows.length;
+  };
+
+  return { items, loading, addItem, addItems, updateItem, removeItem };
 }
