@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Plus, X, Search, Trash2, Minus, Layers, PackagePlus } from 'lucide-react';
+import { Plus, X, Search, Trash2, Minus, Layers, PackagePlus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
