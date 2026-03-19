@@ -498,6 +498,7 @@ function AssemblyDetail({
                   quantity: c.quantity,
                   unit_cost: c.unitCost,
                   notes: c.notes || undefined,
+                  part_id: c.part_id || undefined,
                 });
               }
             }
