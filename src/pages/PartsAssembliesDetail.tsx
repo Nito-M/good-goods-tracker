@@ -33,7 +33,7 @@ function AssemblyDetail({
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
 }) {
   const navigate = useNavigate();
-  const { items, loading, addItem, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
+  const { items, loading, addItem, addItems, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
   const [showPicker, setShowPicker] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
