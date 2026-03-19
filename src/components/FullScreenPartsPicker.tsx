@@ -64,7 +64,6 @@ export function FullScreenPartsPicker({
 
   useEffect(() => {
     if (open) {
-      setSearchQuery('');
       setSelectedIndex(0);
       setCart([]);
       setSource('parts');

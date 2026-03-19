@@ -187,7 +187,6 @@ export function FullScreenItemPicker({
   // Focus search on open
   useEffect(() => {
     if (open) {
-      setSearchQuery('');
       setSelectedIndex(0);
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
