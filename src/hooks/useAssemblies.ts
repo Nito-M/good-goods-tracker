@@ -25,6 +25,7 @@ export interface AssemblyItem {
   quantity: number;
   unit_cost: number;
   notes: string | null;
+  part_id: string | null;
   created_at: string;
 }
 
@@ -130,6 +131,7 @@ export function useAssemblyItems(assemblyId: string | null) {
     unit_cost?: number;
     notes?: string;
     parts_assembly_id?: string | null;
+    part_id?: string | null;
   }): Promise<boolean> => {
     if (!assemblyId) return false;
     const { error } = await supabase.from('assembly_items').insert({
@@ -141,6 +143,7 @@ export function useAssemblyItems(assemblyId: string | null) {
       unit_cost: item.unit_cost ?? 0,
       notes: item.notes || null,
       parts_assembly_id: item.parts_assembly_id || null,
+      part_id: item.part_id || null,
     } as any);
     if (error) {
       toast({ title: 'Error', description: 'Failed to add item.', variant: 'destructive' });
