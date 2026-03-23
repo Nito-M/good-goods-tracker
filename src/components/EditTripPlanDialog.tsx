@@ -83,6 +83,7 @@ export function EditTripPlanDialog({
       setSelectedPoIds(tripPlan.pos.map((p) => p.purchaseOrderId));
       setLocName("");
       setLocAddress("");
+      setLocNotes("");
       setPoSearchQuery("");
     }
   }, [tripPlan, open]);
