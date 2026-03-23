@@ -90,6 +90,7 @@ export function useTripPlans() {
               tripPlanId: l.trip_plan_id,
               name: l.name,
               address: l.address,
+              notes: l.notes ?? null,
               displayOrder: l.display_order,
             })),
           pos: posData
