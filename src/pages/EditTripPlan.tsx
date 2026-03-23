@@ -203,6 +203,21 @@ export function EditTripPlan() {
     setLocationPoMap(newMap);
   };
 
+  const startEditLocation = (idx: number) => {
+    setEditingLocIdx(idx);
+    setEditLocName(locations[idx].name);
+    setEditLocAddress(locations[idx].address);
+    setEditLocNotes(locations[idx].notes);
+  };
+
+  const saveEditLocation = () => {
+    if (editingLocIdx === null || !editLocName.trim()) return;
+    const updated = [...locations];
+    updated[editingLocIdx] = { name: editLocName.trim(), address: editLocAddress.trim(), notes: editLocNotes.trim() };
+    setLocations(updated);
+    setEditingLocIdx(null);
+  };
+
   const toggleTripPo = (poId: string) => {
     setSelectedPoIds((prev) =>
       prev.includes(poId) ? prev.filter((id) => id !== poId) : [...prev, poId]
