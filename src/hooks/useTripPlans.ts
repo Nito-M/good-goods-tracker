@@ -199,6 +199,7 @@ export function useTripPlans() {
             trip_plan_id: id,
             name: loc.name,
             address: loc.address || null,
+            notes: loc.notes || null,
             display_order: i,
           }))
         );
