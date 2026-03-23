@@ -164,9 +164,10 @@ export function EditTripPlan() {
 
   const handleAddLocation = () => {
     if (!locName.trim()) return;
-    setLocations([...locations, { name: locName.trim(), address: locAddress.trim() }]);
+    setLocations([...locations, { name: locName.trim(), address: locAddress.trim(), notes: locNotes.trim() }]);
     setLocName("");
     setLocAddress("");
+    setLocNotes("");
   };
 
   const handleRemoveLocation = (idx: number) => {
