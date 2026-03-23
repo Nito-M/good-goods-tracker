@@ -77,10 +77,15 @@ function PoBadgeLink({
 export function TripPlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tripPlans, loading, deleteTripPlan } = useTripPlans();
+  const { tripPlans, loading, deleteTripPlan, addLocationToTripPlan } = useTripPlans();
   const { orders: purchaseOrders } = usePurchaseOrders();
   const { cards: bankCards } = useBankCards();
   const { toast } = useToast();
+
+  const [newLocName, setNewLocName] = useState("");
+  const [newLocAddress, setNewLocAddress] = useState("");
+  const [newLocNotes, setNewLocNotes] = useState("");
+  const [addingLoc, setAddingLoc] = useState(false);
 
   const trip = tripPlans.find((t) => t.id === id);
 
