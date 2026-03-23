@@ -124,6 +124,7 @@ export function EditTripPlanDialog({
 
   const filteredPos = purchaseOrders.filter(
     (po) =>
+      po.status !== "received" &&
       poSearchQuery.trim().length > 0 &&
       ((po.poNumber || "").toLowerCase().includes(poSearchQuery.toLowerCase()) ||
         (po.vendorName || "").toLowerCase().includes(poSearchQuery.toLowerCase()))
