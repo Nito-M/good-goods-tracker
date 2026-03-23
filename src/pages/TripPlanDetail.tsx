@@ -12,6 +12,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { PurchaseOrder } from "@/types/purchaseOrder";
 import {
   ChevronLeft,
+  MapPin,
   MapPinned,
   Pencil,
   Trash2,
