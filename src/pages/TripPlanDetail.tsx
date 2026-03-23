@@ -312,6 +312,55 @@ export function TripPlanDetail() {
               })}
             </div>
           )}
+
+          {/* Add Location inline form */}
+          <div className="space-y-2 pt-2 border-t mt-3">
+            <div className="flex gap-2">
+              <Input
+                value={newLocName}
+                onChange={(e) => setNewLocName(e.target.value)}
+                placeholder="Location name"
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddLocation();
+                  }
+                }}
+              />
+              <Input
+                value={newLocAddress}
+                onChange={(e) => setNewLocAddress(e.target.value)}
+                placeholder="Address (optional)"
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddLocation();
+                  }
+                }}
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={handleAddLocation}
+                disabled={!newLocName.trim() || addingLoc}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <Input
+              value={newLocNotes}
+              onChange={(e) => setNewLocNotes(e.target.value)}
+              placeholder="Notes for this stop (optional)"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddLocation();
+                }
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 
