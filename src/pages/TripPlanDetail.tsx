@@ -18,6 +18,7 @@ import {
   Trash2,
   Copy,
   ExternalLink,
+  Plus,
   CalendarDays,
   StickyNote,
   CreditCard,
