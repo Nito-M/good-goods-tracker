@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
 import { useTripPlans } from "@/hooks/useTripPlans";
 import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
 import { useBankCards } from "@/hooks/useBankCards";
@@ -11,11 +12,13 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { PurchaseOrder } from "@/types/purchaseOrder";
 import {
   ChevronLeft,
+  MapPin,
   MapPinned,
   Pencil,
   Trash2,
   Copy,
   ExternalLink,
+  Plus,
   CalendarDays,
   StickyNote,
   CreditCard,
@@ -74,10 +77,15 @@ function PoBadgeLink({
 export function TripPlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tripPlans, loading, deleteTripPlan } = useTripPlans();
+  const { tripPlans, loading, deleteTripPlan, addLocationToTripPlan } = useTripPlans();
   const { orders: purchaseOrders } = usePurchaseOrders();
   const { cards: bankCards } = useBankCards();
   const { toast } = useToast();
+
+  const [newLocName, setNewLocName] = useState("");
+  const [newLocAddress, setNewLocAddress] = useState("");
+  const [newLocNotes, setNewLocNotes] = useState("");
+  const [addingLoc, setAddingLoc] = useState(false);
 
   const trip = tripPlans.find((t) => t.id === id);
 
@@ -144,6 +152,20 @@ export function TripPlanDetail() {
   const getGoogleMapsUrl = (loc: { name: string; address: string | null }) => {
     const query = loc.address || loc.name;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  };
+
+  const handleAddLocation = async () => {
+    if (!newLocName.trim() || !trip) return;
+    setAddingLoc(true);
+    await addLocationToTripPlan(trip.id, {
+      name: newLocName.trim(),
+      address: newLocAddress.trim() || undefined,
+      notes: newLocNotes.trim() || undefined,
+    });
+    setNewLocName("");
+    setNewLocAddress("");
+    setNewLocNotes("");
+    setAddingLoc(false);
   };
 
   const handleDelete = async () => {
@@ -304,6 +326,55 @@ export function TripPlanDetail() {
               })}
             </div>
           )}
+
+          {/* Add Location inline form */}
+          <div className="space-y-2 pt-2 border-t mt-3">
+            <div className="flex gap-2">
+              <Input
+                value={newLocName}
+                onChange={(e) => setNewLocName(e.target.value)}
+                placeholder="Location name"
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddLocation();
+                  }
+                }}
+              />
+              <Input
+                value={newLocAddress}
+                onChange={(e) => setNewLocAddress(e.target.value)}
+                placeholder="Address (optional)"
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddLocation();
+                  }
+                }}
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={handleAddLocation}
+                disabled={!newLocName.trim() || addingLoc}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <Input
+              value={newLocNotes}
+              onChange={(e) => setNewLocNotes(e.target.value)}
+              placeholder="Notes for this stop (optional)"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddLocation();
+                }
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 

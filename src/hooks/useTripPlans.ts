@@ -220,6 +220,32 @@ export function useTripPlans() {
     }
   };
 
+  const addLocationToTripPlan = async (tripPlanId: string, location: { name: string; address?: string; notes?: string }) => {
+    try {
+      // Get the current max display_order for this trip
+      const { data: existing } = await supabase
+        .from("trip_plan_locations")
+        .select("display_order")
+        .eq("trip_plan_id", tripPlanId)
+        .order("display_order", { ascending: false })
+        .limit(1);
+      const nextOrder = (existing && existing.length > 0 ? (existing[0] as any).display_order : -1) + 1;
+
+      const { error } = await supabase.from("trip_plan_locations").insert({
+        trip_plan_id: tripPlanId,
+        name: location.name,
+        address: location.address || null,
+        notes: location.notes || null,
+        display_order: nextOrder,
+      });
+      if (error) throw error;
+      toast({ title: "Location added" });
+      fetchTripPlans();
+    } catch {
+      toast({ title: "Error adding location", variant: "destructive" });
+    }
+  };
+
   const deleteTripPlan = async (id: string) => {
     try {
       const { error } = await supabase.from("trip_plans").delete().eq("id", id);
@@ -231,5 +257,5 @@ export function useTripPlans() {
     }
   };
 
-  return { tripPlans, loading, createTripPlan, updateTripPlan, deleteTripPlan, refetch: fetchTripPlans };
+  return { tripPlans, loading, createTripPlan, updateTripPlan, addLocationToTripPlan, deleteTripPlan, refetch: fetchTripPlans };
 }
