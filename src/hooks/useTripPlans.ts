@@ -8,6 +8,7 @@ export interface TripPlanLocation {
   tripPlanId: string;
   name: string;
   address: string | null;
+  notes: string | null;
   displayOrder: number;
 }
 
@@ -39,7 +40,7 @@ export interface CreateTripPlanInput {
   endDate?: string;
   notes?: string;
   color: string;
-  locations: { name: string; address?: string }[];
+  locations: { name: string; address?: string; notes?: string }[];
   poIds: string[];
   locationPoMap?: Record<number, string[]>; // locationIndex -> poIds
 }
@@ -89,6 +90,7 @@ export function useTripPlans() {
               tripPlanId: l.trip_plan_id,
               name: l.name,
               address: l.address,
+              notes: l.notes ?? null,
               displayOrder: l.display_order,
             })),
           pos: posData
@@ -155,6 +157,7 @@ export function useTripPlans() {
             trip_plan_id: plan.id,
             name: loc.name,
             address: loc.address || null,
+            notes: loc.notes || null,
             display_order: i,
           }))
         );
@@ -196,6 +199,7 @@ export function useTripPlans() {
             trip_plan_id: id,
             name: loc.name,
             address: loc.address || null,
+            notes: loc.notes || null,
             display_order: i,
           }))
         );

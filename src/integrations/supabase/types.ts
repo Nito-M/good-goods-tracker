@@ -2881,6 +2881,7 @@ export type Database = {
           display_order: number
           id: string
           name: string
+          notes: string | null
           trip_plan_id: string
         }
         Insert: {
@@ -2889,6 +2890,7 @@ export type Database = {
           display_order?: number
           id?: string
           name: string
+          notes?: string | null
           trip_plan_id: string
         }
         Update: {
@@ -2897,6 +2899,7 @@ export type Database = {
           display_order?: number
           id?: string
           name?: string
+          notes?: string | null
           trip_plan_id?: string
         }
         Relationships: [

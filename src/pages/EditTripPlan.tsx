@@ -53,6 +53,7 @@ function PoSearchPicker({
 
   const filtered = purchaseOrders.filter(
     (po) =>
+      po.status !== "received" &&
       query.trim().length > 0 &&
       ((po.poNumber || "").toLowerCase().includes(query.toLowerCase()) ||
         (po.vendorName || "").toLowerCase().includes(query.toLowerCase()))
@@ -111,9 +112,10 @@ export function EditTripPlan() {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState("");
   const [color, setColor] = useState("bg-teal-500");
-  const [locations, setLocations] = useState<{ name: string; address: string }[]>([]);
+  const [locations, setLocations] = useState<{ name: string; address: string; notes: string }[]>([]);
   const [locName, setLocName] = useState("");
   const [locAddress, setLocAddress] = useState("");
+  const [locNotes, setLocNotes] = useState("");
   const [selectedPoIds, setSelectedPoIds] = useState<string[]>([]); // trip-level POs
   const [locationPoMap, setLocationPoMap] = useState<Record<number, string[]>>({}); // idx -> poIds
   const [saving, setSaving] = useState(false);
@@ -126,7 +128,7 @@ export function EditTripPlan() {
       setEndDate(trip.endDate ? parseISO(trip.endDate) : undefined);
       setNotes(trip.notes || "");
       setColor(trip.color);
-      setLocations(trip.locations.map((l) => ({ name: l.name, address: l.address || "" })));
+      setLocations(trip.locations.map((l) => ({ name: l.name, address: l.address || "", notes: l.notes || "" })));
       // Trip-level POs
       setSelectedPoIds(trip.pos.filter((p) => p.locationIndex === null).map((p) => p.purchaseOrderId));
       // Location-level POs
@@ -162,9 +164,10 @@ export function EditTripPlan() {
 
   const handleAddLocation = () => {
     if (!locName.trim()) return;
-    setLocations([...locations, { name: locName.trim(), address: locAddress.trim() }]);
+    setLocations([...locations, { name: locName.trim(), address: locAddress.trim(), notes: locNotes.trim() }]);
     setLocName("");
     setLocAddress("");
+    setLocNotes("");
   };
 
   const handleRemoveLocation = (idx: number) => {
@@ -421,6 +424,11 @@ export function EditTripPlan() {
                           </div>
                         </div>
 
+                        {/* Location notes */}
+                        {loc.notes && (
+                          <p className="text-xs text-muted-foreground pl-5">{loc.notes}</p>
+                        )}
+
                         {/* POs for this location */}
                         {locPoIds.length > 0 && (
                           <div className="flex flex-wrap gap-1 pl-5">
@@ -451,24 +459,32 @@ export function EditTripPlan() {
                   })}
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    value={locName}
+                    onChange={(e) => setLocName(e.target.value)}
+                    placeholder="Location name"
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
+                  />
+                  <Input
+                    value={locAddress}
+                    onChange={(e) => setLocAddress(e.target.value)}
+                    placeholder="Address (optional)"
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
+                  />
+                  <Button type="button" size="icon" variant="outline" onClick={handleAddLocation} disabled={!locName.trim()}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
                 <Input
-                  value={locName}
-                  onChange={(e) => setLocName(e.target.value)}
-                  placeholder="Location name"
-                  className="flex-1"
+                  value={locNotes}
+                  onChange={(e) => setLocNotes(e.target.value)}
+                  placeholder="Notes for this stop (optional)"
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
                 />
-                <Input
-                  value={locAddress}
-                  onChange={(e) => setLocAddress(e.target.value)}
-                  placeholder="Address (optional)"
-                  className="flex-1"
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
-                />
-                <Button type="button" size="icon" variant="outline" onClick={handleAddLocation} disabled={!locName.trim()}>
-                  <Plus className="h-4 w-4" />
-                </Button>
               </div>
             </CardContent>
           </Card>

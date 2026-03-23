@@ -61,9 +61,10 @@ export function AddTripPlanDialog({
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState("");
   const [color, setColor] = useState("bg-teal-500");
-  const [locations, setLocations] = useState<{ name: string; address: string }[]>([]);
+  const [locations, setLocations] = useState<{ name: string; address: string; notes: string }[]>([]);
   const [locName, setLocName] = useState("");
   const [locAddress, setLocAddress] = useState("");
+  const [locNotes, setLocNotes] = useState("");
   const [selectedPoIds, setSelectedPoIds] = useState<string[]>([]);
   const [poSearchQuery, setPoSearchQuery] = useState("");
   const [poPickerOpen, setPoPickerOpen] = useState(false);
@@ -78,15 +79,17 @@ export function AddTripPlanDialog({
     setLocations([]);
     setLocName("");
     setLocAddress("");
+    setLocNotes("");
     setSelectedPoIds([]);
     setPoSearchQuery("");
   };
 
   const handleAddLocation = () => {
     if (!locName.trim()) return;
-    setLocations([...locations, { name: locName.trim(), address: locAddress.trim() }]);
+    setLocations([...locations, { name: locName.trim(), address: locAddress.trim(), notes: locNotes.trim() }]);
     setLocName("");
     setLocAddress("");
+    setLocNotes("");
   };
 
   const handleRemoveLocation = (idx: number) => {
@@ -118,6 +121,7 @@ export function AddTripPlanDialog({
 
   const filteredPos = purchaseOrders.filter(
     (po) =>
+      po.status !== "received" &&
       poSearchQuery.trim().length > 0 &&
       ((po.poNumber || "").toLowerCase().includes(poSearchQuery.toLowerCase()) ||
         (po.vendorName || "").toLowerCase().includes(poSearchQuery.toLowerCase()))
@@ -203,18 +207,23 @@ export function AddTripPlanDialog({
             {locations.length > 0 && (
               <div className="space-y-1 mt-1 mb-2">
                 {locations.map((loc, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm border rounded-md px-2 py-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="font-medium">{loc.name}</span>
-                    {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-5 w-5 ml-auto shrink-0"
-                      onClick={() => handleRemoveLocation(idx)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
+                  <div key={idx} className="border rounded-md px-2 py-1.5 space-y-1">
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-medium">{loc.name}</span>
+                      {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-5 w-5 ml-auto shrink-0"
+                        onClick={() => handleRemoveLocation(idx)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {loc.notes && (
+                      <p className="text-xs text-muted-foreground pl-5">{loc.notes}</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -237,6 +246,15 @@ export function AddTripPlanDialog({
               <Button type="button" size="icon" variant="outline" onClick={handleAddLocation} disabled={!locName.trim()}>
                 <Plus className="h-4 w-4" />
               </Button>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={locNotes}
+                onChange={(e) => setLocNotes(e.target.value)}
+                placeholder="Notes for this stop (optional)"
+                className="flex-1"
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
+              />
             </div>
           </div>
 
