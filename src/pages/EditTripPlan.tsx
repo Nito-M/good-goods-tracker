@@ -115,6 +115,7 @@ export function EditTripPlan() {
   const [locations, setLocations] = useState<{ name: string; address: string; notes: string }[]>([]);
   const [locName, setLocName] = useState("");
   const [locAddress, setLocAddress] = useState("");
+  const [locNotes, setLocNotes] = useState("");
   const [selectedPoIds, setSelectedPoIds] = useState<string[]>([]); // trip-level POs
   const [locationPoMap, setLocationPoMap] = useState<Record<number, string[]>>({}); // idx -> poIds
   const [saving, setSaving] = useState(false);
