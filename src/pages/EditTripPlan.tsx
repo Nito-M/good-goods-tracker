@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, parseISO } from "date-fns";
-import { Plus, X, MapPin, ChevronLeft, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, X, MapPin, ChevronLeft, ArrowUp, ArrowDown, Pencil, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -120,6 +120,10 @@ export function EditTripPlan() {
   const [locationPoMap, setLocationPoMap] = useState<Record<number, string[]>>({}); // idx -> poIds
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [editingLocIdx, setEditingLocIdx] = useState<number | null>(null);
+  const [editLocName, setEditLocName] = useState("");
+  const [editLocAddress, setEditLocAddress] = useState("");
+  const [editLocNotes, setEditLocNotes] = useState("");
 
   useEffect(() => {
     if (trip && !initialized) {
@@ -197,6 +201,21 @@ export function EditTripPlan() {
     if (aPos?.length) newMap[targetIdx] = aPos;
     if (bPos?.length) newMap[idx] = bPos;
     setLocationPoMap(newMap);
+  };
+
+  const startEditLocation = (idx: number) => {
+    setEditingLocIdx(idx);
+    setEditLocName(locations[idx].name);
+    setEditLocAddress(locations[idx].address);
+    setEditLocNotes(locations[idx].notes);
+  };
+
+  const saveEditLocation = () => {
+    if (editingLocIdx === null || !editLocName.trim()) return;
+    const updated = [...locations];
+    updated[editingLocIdx] = { name: editLocName.trim(), address: editLocAddress.trim(), notes: editLocNotes.trim() };
+    setLocations(updated);
+    setEditingLocIdx(null);
   };
 
   const toggleTripPo = (poId: string) => {
@@ -390,43 +409,86 @@ export function EditTripPlan() {
                     const locPoIds = locationPoMap[idx] || [];
                     return (
                       <div key={idx} className="border rounded-lg p-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="font-medium">{loc.name}</span>
-                          {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={() => handleMoveLocation(idx, "up")}
-                              disabled={idx === 0}
-                            >
-                              <ArrowUp className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={() => handleMoveLocation(idx, "down")}
-                              disabled={idx === locations.length - 1}
-                            >
-                              <ArrowDown className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              onClick={() => handleRemoveLocation(idx)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
+                        {editingLocIdx === idx ? (
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                value={editLocName}
+                                onChange={(e) => setEditLocName(e.target.value)}
+                                placeholder="Location name"
+                                className="flex-1"
+                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), saveEditLocation())}
+                              />
+                              <Input
+                                value={editLocAddress}
+                                onChange={(e) => setEditLocAddress(e.target.value)}
+                                placeholder="Address (optional)"
+                                className="flex-1"
+                                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), saveEditLocation())}
+                              />
+                              <Button size="icon" variant="outline" onClick={saveEditLocation} disabled={!editLocName.trim()}>
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => setEditingLocIdx(null)}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                            <Input
+                              value={editLocNotes}
+                              onChange={(e) => setEditLocNotes(e.target.value)}
+                              placeholder="Notes (optional)"
+                              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), saveEditLocation())}
+                            />
                           </div>
-                        </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-2 text-sm">
+                              <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="font-medium">{loc.name}</span>
+                              {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6"
+                                  onClick={() => startEditLocation(idx)}
+                                  title="Edit location"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6"
+                                  onClick={() => handleMoveLocation(idx, "up")}
+                                  disabled={idx === 0}
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6"
+                                  onClick={() => handleMoveLocation(idx, "down")}
+                                  disabled={idx === locations.length - 1}
+                                >
+                                  <ArrowDown className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6"
+                                  onClick={() => handleRemoveLocation(idx)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
 
-                        {/* Location notes */}
-                        {loc.notes && (
-                          <p className="text-xs text-muted-foreground pl-5">{loc.notes}</p>
+                            {loc.notes && (
+                              <p className="text-xs text-muted-foreground pl-5">{loc.notes}</p>
+                            )}
+                          </>
                         )}
 
                         {/* POs for this location */}
