@@ -247,6 +247,15 @@ export function AddTripPlanDialog({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
+            <div className="flex gap-2">
+              <Input
+                value={locNotes}
+                onChange={(e) => setLocNotes(e.target.value)}
+                placeholder="Notes for this stop (optional)"
+                className="flex-1"
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
+              />
+            </div>
           </div>
 
           {/* Link POs */}

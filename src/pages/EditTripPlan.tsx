@@ -459,24 +459,32 @@ export function EditTripPlan() {
                   })}
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    value={locName}
+                    onChange={(e) => setLocName(e.target.value)}
+                    placeholder="Location name"
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
+                  />
+                  <Input
+                    value={locAddress}
+                    onChange={(e) => setLocAddress(e.target.value)}
+                    placeholder="Address (optional)"
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
+                  />
+                  <Button type="button" size="icon" variant="outline" onClick={handleAddLocation} disabled={!locName.trim()}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
                 <Input
-                  value={locName}
-                  onChange={(e) => setLocName(e.target.value)}
-                  placeholder="Location name"
-                  className="flex-1"
+                  value={locNotes}
+                  onChange={(e) => setLocNotes(e.target.value)}
+                  placeholder="Notes for this stop (optional)"
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
                 />
-                <Input
-                  value={locAddress}
-                  onChange={(e) => setLocAddress(e.target.value)}
-                  placeholder="Address (optional)"
-                  className="flex-1"
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddLocation())}
-                />
-                <Button type="button" size="icon" variant="outline" onClick={handleAddLocation} disabled={!locName.trim()}>
-                  <Plus className="h-4 w-4" />
-                </Button>
               </div>
             </CardContent>
           </Card>

@@ -251,6 +251,9 @@ export function TripPlanDetail() {
                         {loc.address && (
                           <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>
                         )}
+                        {loc.notes && (
+                          <p className="text-xs text-muted-foreground mt-0.5 italic">{loc.notes}</p>
+                        )}
                         {locPos.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
                             {locPos.map((tp) => {
