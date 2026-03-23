@@ -8,6 +8,7 @@ export interface TripPlanLocation {
   tripPlanId: string;
   name: string;
   address: string | null;
+  notes: string | null;
   displayOrder: number;
 }
 
