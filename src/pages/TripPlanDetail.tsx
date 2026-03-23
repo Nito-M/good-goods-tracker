@@ -154,6 +154,20 @@ export function TripPlanDetail() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   };
 
+  const handleAddLocation = async () => {
+    if (!newLocName.trim() || !trip) return;
+    setAddingLoc(true);
+    await addLocationToTripPlan(trip.id, {
+      name: newLocName.trim(),
+      address: newLocAddress.trim() || undefined,
+      notes: newLocNotes.trim() || undefined,
+    });
+    setNewLocName("");
+    setNewLocAddress("");
+    setNewLocNotes("");
+    setAddingLoc(false);
+  };
+
   const handleDelete = async () => {
     await deleteTripPlan(trip.id);
     navigate("/calendar");
