@@ -424,6 +424,11 @@ export function EditTripPlan() {
                           </div>
                         </div>
 
+                        {/* Location notes */}
+                        {loc.notes && (
+                          <p className="text-xs text-muted-foreground pl-5">{loc.notes}</p>
+                        )}
+
                         {/* POs for this location */}
                         {locPoIds.length > 0 && (
                           <div className="flex flex-wrap gap-1 pl-5">
