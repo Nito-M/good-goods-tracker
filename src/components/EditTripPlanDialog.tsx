@@ -78,7 +78,7 @@ export function EditTripPlanDialog({
       setNotes(tripPlan.notes || "");
       setColor(tripPlan.color);
       setLocations(
-        tripPlan.locations.map((l) => ({ name: l.name, address: l.address || "" }))
+        tripPlan.locations.map((l) => ({ name: l.name, address: l.address || "", notes: (l as any).notes || "" }))
       );
       setSelectedPoIds(tripPlan.pos.map((p) => p.purchaseOrderId));
       setLocName("");
