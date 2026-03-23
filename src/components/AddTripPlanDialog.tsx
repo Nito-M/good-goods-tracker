@@ -207,18 +207,23 @@ export function AddTripPlanDialog({
             {locations.length > 0 && (
               <div className="space-y-1 mt-1 mb-2">
                 {locations.map((loc, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm border rounded-md px-2 py-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="font-medium">{loc.name}</span>
-                    {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-5 w-5 ml-auto shrink-0"
-                      onClick={() => handleRemoveLocation(idx)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
+                  <div key={idx} className="border rounded-md px-2 py-1.5 space-y-1">
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-medium">{loc.name}</span>
+                      {loc.address && <span className="text-muted-foreground truncate">— {loc.address}</span>}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-5 w-5 ml-auto shrink-0"
+                        onClick={() => handleRemoveLocation(idx)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {loc.notes && (
+                      <p className="text-xs text-muted-foreground pl-5">{loc.notes}</p>
+                    )}
                   </div>
                 ))}
               </div>
