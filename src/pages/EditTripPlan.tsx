@@ -128,7 +128,7 @@ export function EditTripPlan() {
       setEndDate(trip.endDate ? parseISO(trip.endDate) : undefined);
       setNotes(trip.notes || "");
       setColor(trip.color);
-      setLocations(trip.locations.map((l) => ({ name: l.name, address: l.address || "" })));
+      setLocations(trip.locations.map((l) => ({ name: l.name, address: l.address || "", notes: l.notes || "" })));
       // Trip-level POs
       setSelectedPoIds(trip.pos.filter((p) => p.locationIndex === null).map((p) => p.purchaseOrderId));
       // Location-level POs
