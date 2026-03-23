@@ -40,7 +40,7 @@ export interface CreateTripPlanInput {
   endDate?: string;
   notes?: string;
   color: string;
-  locations: { name: string; address?: string }[];
+  locations: { name: string; address?: string; notes?: string }[];
   poIds: string[];
   locationPoMap?: Record<number, string[]>; // locationIndex -> poIds
 }
