@@ -120,6 +120,10 @@ export function EditTripPlan() {
   const [locationPoMap, setLocationPoMap] = useState<Record<number, string[]>>({}); // idx -> poIds
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [editingLocIdx, setEditingLocIdx] = useState<number | null>(null);
+  const [editLocName, setEditLocName] = useState("");
+  const [editLocAddress, setEditLocAddress] = useState("");
+  const [editLocNotes, setEditLocNotes] = useState("");
 
   useEffect(() => {
     if (trip && !initialized) {
