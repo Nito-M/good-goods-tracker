@@ -53,6 +53,7 @@ function PoSearchPicker({
 
   const filtered = purchaseOrders.filter(
     (po) =>
+      po.status !== "received" &&
       query.trim().length > 0 &&
       ((po.poNumber || "").toLowerCase().includes(query.toLowerCase()) ||
         (po.vendorName || "").toLowerCase().includes(query.toLowerCase()))
