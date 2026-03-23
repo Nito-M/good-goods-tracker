@@ -112,7 +112,7 @@ export function EditTripPlan() {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState("");
   const [color, setColor] = useState("bg-teal-500");
-  const [locations, setLocations] = useState<{ name: string; address: string }[]>([]);
+  const [locations, setLocations] = useState<{ name: string; address: string; notes: string }[]>([]);
   const [locName, setLocName] = useState("");
   const [locAddress, setLocAddress] = useState("");
   const [selectedPoIds, setSelectedPoIds] = useState<string[]>([]); // trip-level POs
