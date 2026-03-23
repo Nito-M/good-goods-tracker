@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, parseISO } from "date-fns";
-import { Plus, X, MapPin, ChevronLeft, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, X, MapPin, ChevronLeft, ArrowUp, ArrowDown, Pencil, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
