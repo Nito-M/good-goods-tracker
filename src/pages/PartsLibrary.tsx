@@ -80,7 +80,7 @@ export function PartsLibrary() {
   useEffect(() => { setCurrentPage(1); }, [currentFolderId, search]);
 
   const filteredFolders = search
-    ? folders.filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
+    ? childFolders.filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
     : childFolders;
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
