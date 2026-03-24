@@ -67,7 +67,7 @@ export function PartsLibrary() {
   const partsInFolder = parts.filter(p => p.folderId === currentFolderId);
 
   const filtered = search
-    ? parts.filter(p =>
+    ? partsInFolder.filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.sku.toLowerCase().includes(search.toLowerCase())
       )
