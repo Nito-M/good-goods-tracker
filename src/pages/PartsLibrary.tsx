@@ -273,7 +273,7 @@ export function PartsLibrary() {
                     <FolderPlus className="h-4 w-4" />
                     New Folder
                   </Button>
-                  <Button onClick={() => navigate('/parts/library/new')} className="gap-2">
+                  <Button onClick={() => navigate(`/parts/library/new${currentFolderId ? `?folder=${currentFolderId}` : ''}`)} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add Part
                   </Button>
