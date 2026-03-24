@@ -31,7 +31,7 @@ import {
 export function PartsLibrary() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, getSignedUrl } = useParts();
+  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
