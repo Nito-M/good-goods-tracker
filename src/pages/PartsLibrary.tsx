@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid } from 'lucide-react';
 import {
   Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
@@ -30,10 +30,20 @@ import {
 
 export function PartsLibrary() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
-  const [search, setSearch] = useState('');
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  
+  const [search, setSearch] = useState(() => searchParams.get('q') || '');
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(() => searchParams.get('folder') || null);
+
+  // Sync state to URL search params
+  useEffect(() => {
+    const params: Record<string, string> = {};
+    if (currentFolderId) params.folder = currentFolderId;
+    if (search) params.q = search;
+    setSearchParams(params, { replace: true });
+  }, [currentFolderId, search, setSearchParams]);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderDescription, setNewFolderDescription] = useState('');
