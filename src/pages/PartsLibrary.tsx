@@ -460,7 +460,7 @@ export function PartsLibrary() {
                         </div>
                       </CardContent>
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
+                        <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDuplicate={() => duplicatePart(part.id)} onDelete={handleDelete} />
                       </div>
                     </Card>
                     );
