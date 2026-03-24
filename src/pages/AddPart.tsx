@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 
 export function AddPart() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const folderId = searchParams.get('folder') || null;
   const { addPart, uploadPartImage, uploadPartDxf } = useParts();
   const { toast } = useToast();
 
@@ -55,12 +57,12 @@ export function AddPart() {
       if (path) dxfUrl2 = path;
     }
 
-    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), imageUrl, dxfUrl1, dxfUrl2 });
+    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), imageUrl, dxfUrl1, dxfUrl2, folderId });
     setSaving(false);
 
     if (id) {
       toast({ title: 'Part created' });
-      navigate('/parts/library');
+      navigate(`/parts/library${folderId ? `?folder=${folderId}` : ''}`);
     }
   };
 
@@ -69,7 +71,7 @@ export function AddPart() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/parts/library')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/parts/library${folderId ? `?folder=${folderId}` : ''}`)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Add Part</h1>
