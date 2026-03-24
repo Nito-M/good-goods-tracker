@@ -62,7 +62,7 @@ export function AddPart() {
 
     if (id) {
       toast({ title: 'Part created' });
-      navigate('/parts/library');
+      navigate(`/parts/library${folderId ? `?folder=${folderId}` : ''}`);
     }
   };
 
