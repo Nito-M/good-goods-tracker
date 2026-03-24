@@ -665,7 +665,7 @@ export function PartsLibrary() {
   );
 }
 
-function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onMove: () => void; onDelete: (id: string, e: React.MouseEvent) => void }) {
+function PartActionsDropdown({ partId, onMove, onDuplicate, onDelete }: { partId: string; onMove: () => void; onDuplicate: () => void; onDelete: (id: string, e: React.MouseEvent) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -674,6 +674,9 @@ function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onM
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent onClick={e => e.stopPropagation()}>
+        <DropdownMenuItem onClick={onDuplicate}>
+          <Copy className="h-4 w-4 mr-2" /> Duplicate
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={onMove}>
           <FolderInput className="h-4 w-4 mr-2" /> Move to folder
         </DropdownMenuItem>
