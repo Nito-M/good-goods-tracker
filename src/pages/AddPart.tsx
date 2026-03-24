@@ -57,7 +57,7 @@ export function AddPart() {
       if (path) dxfUrl2 = path;
     }
 
-    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), imageUrl, dxfUrl1, dxfUrl2 });
+    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), imageUrl, dxfUrl1, dxfUrl2, folderId });
     setSaving(false);
 
     if (id) {
