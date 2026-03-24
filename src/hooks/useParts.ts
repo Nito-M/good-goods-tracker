@@ -137,6 +137,103 @@ export function useParts() {
     return count ?? ids.length;
   };
 
+  const duplicatePart = async (id: string) => {
+    if (!user) return null;
+    const source = parts.find(p => p.id === id);
+    if (!source) return null;
+
+    // Insert duplicated part
+    const { data: newPart, error } = await supabase.from('parts').insert({
+      user_id: user.id,
+      name: `${source.name} (Copy)`,
+      sku: `${source.sku}-copy`,
+      description: source.description || null,
+      image_url: source.imageUrl || null,
+      dxf_url_1: source.dxfUrl1 || null,
+      dxf_url_2: source.dxfUrl2 || null,
+      dxf_label_1: source.dxfLabel1,
+      dxf_label_2: source.dxfLabel2,
+      folder_id: source.folderId || null,
+      price: source.price,
+      hours: source.hours,
+      hourly_rate: source.hourlyRate,
+      painting_hours: source.paintingHours,
+      painting_hourly_rate: source.paintingHourlyRate,
+    }).select().single();
+
+    if (error || !newPart) {
+      toast({ title: 'Error duplicating part', description: error?.message, variant: 'destructive' });
+      return null;
+    }
+
+    // Duplicate materials/inventory items
+    const { data: materials } = await supabase
+      .from('part_inventory_items')
+      .select('*')
+      .eq('part_id', id);
+
+    if (materials && materials.length > 0) {
+      const newMaterials = materials.map(m => ({
+        part_id: newPart.id,
+        user_id: user.id,
+        inventory_item_id: m.inventory_item_id,
+        quantity: m.quantity,
+        unit_cost: m.unit_cost,
+        notes: m.notes,
+        item_name: m.item_name,
+      }));
+      await supabase.from('part_inventory_items').insert(newMaterials);
+    }
+
+    // Duplicate manufacturing steps
+    const { data: steps } = await supabase
+      .from('part_manufacturing_steps')
+      .select('*')
+      .eq('part_id', id)
+      .order('step_order', { ascending: true });
+
+    if (steps && steps.length > 0) {
+      for (const step of steps) {
+        const { data: newStep } = await supabase.from('part_manufacturing_steps').insert({
+          part_id: newPart.id,
+          user_id: user.id,
+          step_order: step.step_order,
+          operation_type: step.operation_type,
+          machine: step.machine,
+          notes: step.notes,
+          price: step.price,
+          length: step.length,
+          angle: step.angle,
+          hole_diameter: step.hole_diameter,
+          position_offset: step.position_offset,
+          quantity: step.quantity,
+        }).select().single();
+
+        // Duplicate step images
+        if (newStep) {
+          const { data: stepImages } = await supabase
+            .from('part_step_images')
+            .select('*')
+            .eq('step_id', step.id);
+          if (stepImages && stepImages.length > 0) {
+            await supabase.from('part_step_images').insert(
+              stepImages.map(si => ({
+                step_id: newStep.id,
+                user_id: user.id,
+                image_url: si.image_url,
+                display_order: si.display_order,
+              }))
+            );
+          }
+        }
+      }
+    }
+
+    await fetchParts();
+    toast({ title: 'Part duplicated' });
+    return newPart.id;
+  };
+
   const uploadPartImage = async (file: File) => {
     if (!user) return null;
     const path = `${user.id}/${Date.now()}-${file.name}`;
@@ -164,5 +261,5 @@ export function useParts() {
     return data?.signedUrl || null;
   };
 
-  return { parts, loading, addPart, updatePart, deletePart, deleteParts, uploadPartImage, uploadPartDxf, getSignedUrl, refetch: fetchParts };
+  return { parts, loading, addPart, updatePart, deletePart, deleteParts, duplicatePart, uploadPartImage, uploadPartDxf, getSignedUrl, refetch: fetchParts };
 }

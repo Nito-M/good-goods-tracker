@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid } from 'lucide-react';
+import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid, Copy } from 'lucide-react';
 import {
   Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
   PaginationLink, PaginationNext, PaginationPrevious,
@@ -31,7 +31,7 @@ import {
 export function PartsLibrary() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, getSignedUrl } = useParts();
+  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
@@ -413,7 +413,7 @@ export function PartsLibrary() {
                         {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
                         {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
                       </div>
-                      <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
+                      <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDuplicate={() => duplicatePart(part.id)} onDelete={handleDelete} />
                     </div>
                     );
                   })}
@@ -460,7 +460,7 @@ export function PartsLibrary() {
                         </div>
                       </CardContent>
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
+                        <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDuplicate={() => duplicatePart(part.id)} onDelete={handleDelete} />
                       </div>
                     </Card>
                     );
@@ -665,7 +665,7 @@ export function PartsLibrary() {
   );
 }
 
-function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onMove: () => void; onDelete: (id: string, e: React.MouseEvent) => void }) {
+function PartActionsDropdown({ partId, onMove, onDuplicate, onDelete }: { partId: string; onMove: () => void; onDuplicate: () => void; onDelete: (id: string, e: React.MouseEvent) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -674,6 +674,9 @@ function PartActionsDropdown({ partId, onMove, onDelete }: { partId: string; onM
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent onClick={e => e.stopPropagation()}>
+        <DropdownMenuItem onClick={onDuplicate}>
+          <Copy className="h-4 w-4 mr-2" /> Duplicate
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={onMove}>
           <FolderInput className="h-4 w-4 mr-2" /> Move to folder
         </DropdownMenuItem>
