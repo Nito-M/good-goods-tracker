@@ -636,7 +636,7 @@ function RequestItemRow({ request: r, lineTotal, canManage, subItems, onAddSubIt
               {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
             </button>
             <div>
-              <div className="font-medium">{r.title || r.itemName}</div>
+              <div className="font-medium">{r.itemName}</div>
               {r.sku && <div className="text-xs text-muted-foreground font-mono">{r.sku}</div>}
               <div className="flex flex-wrap gap-2 mt-1">
                 {r.imageUrl && (
