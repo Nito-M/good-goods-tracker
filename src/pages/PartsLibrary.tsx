@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid } from 'lucide-react';
+import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid, Copy } from 'lucide-react';
 import {
   Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
   PaginationLink, PaginationNext, PaginationPrevious,
