@@ -413,7 +413,7 @@ export function PartsLibrary() {
                         {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
                         {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
                       </div>
-                      <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDelete={handleDelete} />
+                      <PartActionsDropdown partId={part.id} onMove={() => setMovingPartId(part.id)} onDuplicate={() => duplicatePart(part.id)} onDelete={handleDelete} />
                     </div>
                     );
                   })}
