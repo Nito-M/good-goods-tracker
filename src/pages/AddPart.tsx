@@ -71,7 +71,7 @@ export function AddPart() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/parts/library')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/parts/library${folderId ? `?folder=${folderId}` : ''}`)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Add Part</h1>
