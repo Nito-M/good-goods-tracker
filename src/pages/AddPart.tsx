@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 
 export function AddPart() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const folderId = searchParams.get('folder') || null;
   const { addPart, uploadPartImage, uploadPartDxf } = useParts();
   const { toast } = useToast();
 
