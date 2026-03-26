@@ -117,5 +117,5 @@ export function usePartFolders() {
     return trail;
   };
 
-  return { folders, loading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb, refetch: fetchFolders };
+  return { folders, loading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb, refetch: fetchFolders };
 }
