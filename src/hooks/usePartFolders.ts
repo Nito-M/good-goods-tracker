@@ -81,6 +81,27 @@ export function usePartFolders() {
     return true;
   };
 
+  const moveFolder = async (id: string, newParentId: string | null) => {
+    if (id === newParentId) return false;
+    // Prevent moving a folder into its own descendant
+    let check = newParentId;
+    while (check) {
+      if (check === id) {
+        toast({ title: 'Cannot move folder', description: 'A folder cannot be moved into its own subfolder.', variant: 'destructive' });
+        return false;
+      }
+      const parent = folders.find(f => f.id === check);
+      check = parent?.parentId ?? null;
+    }
+    const { error } = await supabase.from('part_folders').update({ parent_id: newParentId }).eq('id', id);
+    if (error) {
+      toast({ title: 'Error moving folder', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    await fetchFolders();
+    return true;
+  };
+
   const getFoldersInParent = (parentId: string | null) =>
     folders.filter(f => f.parentId === parentId);
 
@@ -96,5 +117,5 @@ export function usePartFolders() {
     return trail;
   };
 
-  return { folders, loading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb, refetch: fetchFolders };
+  return { folders, loading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb, refetch: fetchFolders };
 }

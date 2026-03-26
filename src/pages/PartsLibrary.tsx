@@ -32,7 +32,7 @@ export function PartsLibrary() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, getSignedUrl } = useParts();
-  const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
+  const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(() => searchParams.get('folder') || null);
@@ -49,6 +49,7 @@ export function PartsLibrary() {
   const [newFolderDescription, setNewFolderDescription] = useState('');
   const [renamingFolder, setRenamingFolder] = useState<{ id: string; name: string; description?: string | null } | null>(null);
   const [movingPartId, setMovingPartId] = useState<string | null>(null);
+  const [movingFolderId, setMovingFolderId] = useState<string | null>(null);
   const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
@@ -350,6 +351,9 @@ export function PartsLibrary() {
                         <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name, description: folder.description })}>
                           <Pencil className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setMovingFolderId(folder.id)}>
+                          <FolderInput className="h-4 w-4 mr-2" /> Move to folder
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFolder(folder.id)}>
                           <Trash2 className="h-4 w-4 mr-2" /> Delete
                         </DropdownMenuItem>
@@ -650,6 +654,50 @@ export function PartsLibrary() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkMoveOpen(false)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move Folder Dialog */}
+      <Dialog open={!!movingFolderId} onOpenChange={open => !open && setMovingFolderId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move folder</DialogTitle>
+            <DialogDescription>Select a destination folder.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            <button
+              onClick={async () => {
+                if (movingFolderId) {
+                  const ok = await moveFolder(movingFolderId, null);
+                  if (ok) { toast({ title: 'Folder moved' }); setMovingFolderId(null); }
+                }
+              }}
+              className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+            >
+              <Folder className="h-4 w-4 text-muted-foreground" />
+              Root (top level)
+            </button>
+            {folders
+              .filter(f => f.id !== movingFolderId)
+              .map(folder => (
+                <button
+                  key={folder.id}
+                  onClick={async () => {
+                    if (movingFolderId) {
+                      const ok = await moveFolder(movingFolderId, folder.id);
+                      if (ok) { toast({ title: 'Folder moved' }); setMovingFolderId(null); }
+                    }
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+                >
+                  <Folder className="h-4 w-4 text-primary" />
+                  {getBreadcrumb(folder.id).map(f => f.name).join(' / ')}
+                </button>
+              ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMovingFolderId(null)}>Cancel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
