@@ -203,12 +203,12 @@ export function AssetDetail() {
                   {/* Image Gallery */}
                   {assetImages.length > 0 || asset.image_url ? (
                     <div className="space-y-2 mb-4">
-                      {/* Main image */}
+                      {/* Main image - show primary */}
                       <img 
-                        src={assetImages.length > 0 ? assetImages[0].image_url : asset.image_url!} 
+                        src={primaryAssetImage ? primaryAssetImage.image_url : asset.image_url!} 
                         alt={asset.name} 
                         className="w-full h-48 object-cover rounded-md cursor-pointer hover:opacity-90 transition-opacity" 
-                        onClick={() => handleImageClick(assetImages.length > 0 ? assetImages[0].image_url : asset.image_url!)}
+                        onClick={() => handleImageClick(primaryAssetImage ? primaryAssetImage.image_url : asset.image_url!)}
                       />
                       {/* Thumbnail strip */}
                       {(assetImages.length > 1 || (assetImages.length > 0 && asset.image_url)) && (
@@ -218,20 +218,39 @@ export function AssetDetail() {
                               <img
                                 src={img.image_url}
                                 alt=""
-                                className="h-14 w-14 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity border border-border"
+                                className={`h-14 w-14 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity border-2 ${img.is_primary ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
                                 onClick={() => handleImageClick(img.image_url)}
                               />
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteAssetImage(img.id);
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
+                              {img.is_primary && (
+                                <Star className="absolute top-0.5 left-0.5 h-3 w-3 text-primary fill-primary" />
+                              )}
+                              <div className="absolute -top-1.5 -right-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {!img.is_primary && (
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-5 w-5 rounded-full"
+                                    title="Set as main photo"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setPrimaryAssetImage(img.id);
+                                    }}
+                                  >
+                                    <Star className="h-3 w-3" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  className="h-5 w-5 rounded-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteAssetImage(img.id);
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
