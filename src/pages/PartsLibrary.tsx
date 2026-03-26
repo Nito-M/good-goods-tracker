@@ -37,13 +37,6 @@ export function PartsLibrary() {
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(() => searchParams.get('folder') || null);
 
-  // Sync state to URL search params
-  useEffect(() => {
-    const params: Record<string, string> = {};
-    if (currentFolderId) params.folder = currentFolderId;
-    if (search) params.q = search;
-    setSearchParams(params, { replace: true });
-  }, [currentFolderId, search, setSearchParams]);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderDescription, setNewFolderDescription] = useState('');
@@ -60,6 +53,30 @@ export function PartsLibrary() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+
+  const buildLibraryQueryString = useCallback((folderId: string | null, query: string) => {
+    const params = new URLSearchParams();
+    if (folderId) params.set('folder', folderId);
+    if (query) params.set('q', query);
+    const nextQuery = params.toString();
+    return nextQuery ? `?${nextQuery}` : '';
+  }, []);
+
+  const syncLibraryUrl = useCallback((folderId: string | null, query: string, replace = false) => {
+    const params = new URLSearchParams();
+    if (folderId) params.set('folder', folderId);
+    if (query) params.set('q', query);
+
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace });
+    }
+  }, [searchParams, setSearchParams]);
+
+  const updateLibraryState = useCallback((folderId: string | null, query: string, replace = false) => {
+    setCurrentFolderId(folderId);
+    setSearch(query);
+    syncLibraryUrl(folderId, query, replace);
+  }, [syncLibraryUrl]);
 
   const PAGE_SIZE = 40;
   const loading = partsLoading || foldersLoading;
@@ -80,9 +97,19 @@ export function PartsLibrary() {
   // Reset page when folder or search changes
   useEffect(() => { setCurrentPage(1); }, [currentFolderId, search]);
 
+  useEffect(() => {
+    const folderFromUrl = searchParams.get('folder') || null;
+    const searchFromUrl = searchParams.get('q') || '';
+
+    setCurrentFolderId(prev => prev === folderFromUrl ? prev : folderFromUrl);
+    setSearch(prev => prev === searchFromUrl ? prev : searchFromUrl);
+  }, [searchParams]);
+
   const filteredFolders = search
     ? childFolders.filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
     : childFolders;
+
+  const libraryLocationSuffix = buildLibraryQueryString(currentFolderId, search);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -185,7 +212,7 @@ export function PartsLibrary() {
               {currentFolderId ? (
                 <Button variant="ghost" size="icon" onClick={() => {
                   const parent = folders.find(f => f.id === currentFolderId);
-                  setCurrentFolderId(parent?.parentId ?? null);
+                  updateLibraryState(parent?.parentId ?? null, '');
                 }}>
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -276,7 +303,7 @@ export function PartsLibrary() {
                     <FolderPlus className="h-4 w-4" />
                     New Folder
                   </Button>
-                  <Button onClick={() => navigate(`/parts/library/new${currentFolderId ? `?folder=${currentFolderId}` : ''}`)} className="gap-2">
+                  <Button onClick={() => navigate(`/parts/library/new${libraryLocationSuffix}`)} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Add Part
                   </Button>
@@ -291,14 +318,14 @@ export function PartsLibrary() {
         {/* Breadcrumb */}
         {breadcrumb.length > 0 && (
           <div className="flex items-center gap-1 mb-4 text-sm text-muted-foreground flex-wrap">
-            <button onClick={() => setCurrentFolderId(null)} className="hover:text-foreground transition-colors">
+            <button onClick={() => updateLibraryState(null, search)} className="hover:text-foreground transition-colors">
               Root
             </button>
             {breadcrumb.map(folder => (
               <span key={folder.id} className="flex items-center gap-1">
                 <ChevronRight className="h-3 w-3" />
                 <button
-                  onClick={() => setCurrentFolderId(folder.id)}
+                  onClick={() => updateLibraryState(folder.id, search)}
                   className="hover:text-foreground transition-colors"
                 >
                   {folder.name}
@@ -313,7 +340,7 @@ export function PartsLibrary() {
           <Input
             placeholder="Search by name or SKU..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => updateLibraryState(currentFolderId, e.target.value, true)}
             className="pl-10 max-w-md"
           />
         </div>
@@ -331,7 +358,7 @@ export function PartsLibrary() {
                   <div
                     key={folder.id}
                     className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''}`}
-                    onClick={() => { setCurrentFolderId(folder.id); setSearch(''); }}
+                    onClick={() => updateLibraryState(folder.id, '')}
                   >
                     <Folder className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
@@ -375,7 +402,7 @@ export function PartsLibrary() {
                 {!search && (
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setNewFolderOpen(true)}>Create a folder</Button>
-                    <Button onClick={() => navigate('/parts/library/new')}>Add a part</Button>
+                    <Button onClick={() => navigate(`/parts/library/new${libraryLocationSuffix}`)}>Add a part</Button>
                   </div>
                 )}
               </div>
@@ -391,7 +418,7 @@ export function PartsLibrary() {
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
                       onClick={(e) => {
                         if (selectMode) { handlePartClick(part.id, globalIndex, e); }
-                        else { navigate(`/parts/library/${part.id}`); }
+                        else { navigate(`/parts/library/${part.id}${libraryLocationSuffix}`); }
                       }}
                     >
                       {selectMode && (
@@ -434,7 +461,7 @@ export function PartsLibrary() {
                       className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
                       onClick={(e) => {
                         if (selectMode) { handlePartClick(part.id, globalIndex, e); }
-                        else { navigate(`/parts/library/${part.id}`); }
+                        else { navigate(`/parts/library/${part.id}${libraryLocationSuffix}`); }
                       }}
                     >
                       {selectMode && (

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus } from 'lucide-react';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
@@ -55,6 +55,7 @@ import {
 export function PartDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { parts, loading, deletePart, updatePart, uploadPartImage, uploadPartDxf, getSignedUrl } = useParts();
   const { items: inventoryItems } = useInventory();
   const { items: partItems, addItem: addPartItem, addCustomItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
@@ -205,6 +206,7 @@ export function PartDetail() {
   const [editHourlyRate, setEditHourlyRate] = useState('');
   const [editPaintingHours, setEditPaintingHours] = useState('');
   const [editPaintingHourlyRate, setEditPaintingHourlyRate] = useState('');
+  const backToLibraryPath = `/parts/library${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
 
   useEffect(() => {
     if (!part) return;
@@ -345,7 +347,7 @@ export function PartDetail() {
     const ok = await deletePart(id);
     if (ok) {
       toast({ title: 'Part deleted' });
-      navigate('/parts/library');
+      navigate(backToLibraryPath);
     }
   };
 
@@ -361,7 +363,7 @@ export function PartDetail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-muted-foreground">Part not found</p>
-        <Button onClick={() => navigate('/parts/library')}>Back to Parts</Button>
+        <Button onClick={() => navigate(backToLibraryPath)}>Back to Parts</Button>
       </div>
     );
   }
@@ -372,7 +374,7 @@ export function PartDetail() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/parts/library')}>
+              <Button variant="ghost" size="icon" onClick={() => navigate(backToLibraryPath)}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
