@@ -35,6 +35,7 @@ export function AssetDetail() {
   const { assets, loading, updateAsset, deleteAsset, uploadAssetImage } = useAssets();
   const { parts, addPart, removePart } = useAssetParts(id);
   const { records, addRecord, deleteRecord } = useAssetMaintenance(id);
+  const { images: assetImages, addImage: addAssetImage, deleteImage: deleteAssetImage } = useAssetImages(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
   const { notes: assetNotes, addNote, updateNote: updateAssetNote, deleteNote } = useAssetNotes(id);
   const { allItems } = useInventory();
