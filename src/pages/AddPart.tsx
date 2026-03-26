@@ -15,6 +15,7 @@ export function AddPart() {
   const folderId = searchParams.get('folder') || null;
   const { addPart, uploadPartImage, uploadPartDxf } = useParts();
   const { toast } = useToast();
+  const backToLibraryPath = `/parts/library${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
 
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
@@ -62,7 +63,7 @@ export function AddPart() {
 
     if (id) {
       toast({ title: 'Part created' });
-      navigate(`/parts/library${folderId ? `?folder=${folderId}` : ''}`);
+      navigate(backToLibraryPath);
     }
   };
 
@@ -71,7 +72,7 @@ export function AddPart() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/parts/library${folderId ? `?folder=${folderId}` : ''}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(backToLibraryPath)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Add Part</h1>
@@ -143,7 +144,7 @@ export function AddPart() {
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => navigate('/parts/library')}>Cancel</Button>
+          <Button variant="outline" onClick={() => navigate(backToLibraryPath)}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? 'Saving...' : 'Save Part'}
           </Button>
