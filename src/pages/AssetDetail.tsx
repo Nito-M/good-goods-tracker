@@ -200,18 +200,93 @@ export function AssetDetail() {
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardContent className="pt-6">
-              {asset.image_url ? (
-                <img 
-                  src={asset.image_url} 
-                  alt={asset.name} 
-                  className="w-full h-48 object-cover rounded-md mb-4 cursor-pointer hover:opacity-90 transition-opacity" 
-                  onClick={() => handleImageClick(asset.image_url!)}
-                />
-              ) : (
+                  {/* Image Gallery */}
+                  {assetImages.length > 0 || asset.image_url ? (
+                    <div className="space-y-2 mb-4">
+                      {/* Main image */}
+                      <img 
+                        src={assetImages.length > 0 ? assetImages[0].image_url : asset.image_url!} 
+                        alt={asset.name} 
+                        className="w-full h-48 object-cover rounded-md cursor-pointer hover:opacity-90 transition-opacity" 
+                        onClick={() => handleImageClick(assetImages.length > 0 ? assetImages[0].image_url : asset.image_url!)}
+                      />
+                      {/* Thumbnail strip */}
+                      {(assetImages.length > 1 || (assetImages.length > 0 && asset.image_url)) && (
+                        <div className="flex gap-2 flex-wrap">
+                          {assetImages.map((img) => (
+                            <div key={img.id} className="relative group">
+                              <img
+                                src={img.image_url}
+                                alt=""
+                                className="h-14 w-14 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity border border-border"
+                                onClick={() => handleImageClick(img.image_url)}
+                              />
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteAssetImage(img.id);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {/* Single image delete when only legacy image_url */}
+                      {assetImages.length === 0 && asset.image_url && (
+                        <div className="flex gap-2 flex-wrap">
+                          <div className="relative group">
+                            <img
+                              src={asset.image_url}
+                              alt=""
+                              className="h-14 w-14 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity border border-border"
+                              onClick={() => handleImageClick(asset.image_url!)}
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await updateAsset(asset.id, { image_url: null });
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div className="w-full h-48 bg-muted rounded-md flex items-center justify-center mb-4">
                       <Truck className="h-12 w-12 text-muted-foreground" />
                     </div>
                   )}
+                  {/* Add photo button */}
+                  <label className="mb-4 block">
+                    <Button size="sm" variant="outline" asChild className="cursor-pointer">
+                      <span><Camera className="h-4 w-4 mr-1" /> Add Photo</span>
+                    </Button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={async (e) => {
+                        const files = e.target.files;
+                        if (!files) return;
+                        for (const file of Array.from(files)) {
+                          await addAssetImage(file);
+                        }
+                        e.target.value = '';
+                        toast({ title: 'Photo(s) added' });
+                      }}
+                    />
+                  </label>
                   <h3 className="font-semibold text-lg">{asset.name}</h3>
                   <p className="text-sm text-muted-foreground">{asset.asset_type} · {asset.brand} {asset.model}</p>
                   {asset.external_link && (
