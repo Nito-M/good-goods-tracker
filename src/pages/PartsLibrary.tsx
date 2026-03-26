@@ -658,6 +658,50 @@ export function PartsLibrary() {
         </DialogContent>
       </Dialog>
 
+      {/* Move Folder Dialog */}
+      <Dialog open={!!movingFolderId} onOpenChange={open => !open && setMovingFolderId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move folder</DialogTitle>
+            <DialogDescription>Select a destination folder.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            <button
+              onClick={async () => {
+                if (movingFolderId) {
+                  const ok = await moveFolder(movingFolderId, null);
+                  if (ok) { toast({ title: 'Folder moved' }); setMovingFolderId(null); }
+                }
+              }}
+              className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+            >
+              <Folder className="h-4 w-4 text-muted-foreground" />
+              Root (top level)
+            </button>
+            {folders
+              .filter(f => f.id !== movingFolderId)
+              .map(folder => (
+                <button
+                  key={folder.id}
+                  onClick={async () => {
+                    if (movingFolderId) {
+                      const ok = await moveFolder(movingFolderId, folder.id);
+                      if (ok) { toast({ title: 'Folder moved' }); setMovingFolderId(null); }
+                    }
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors text-sm flex items-center gap-2"
+                >
+                  <Folder className="h-4 w-4 text-primary" />
+                  {getBreadcrumb(folder.id).map(f => f.name).join(' / ')}
+                </button>
+              ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMovingFolderId(null)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Image Viewer Dialog */}
       <ImageViewerDialog
         imageUrl={viewerImageUrl}
