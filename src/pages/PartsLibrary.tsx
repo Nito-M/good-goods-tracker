@@ -351,6 +351,9 @@ export function PartsLibrary() {
                         <DropdownMenuItem onClick={() => setRenamingFolder({ id: folder.id, name: folder.name, description: folder.description })}>
                           <Pencil className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setMovingFolderId(folder.id)}>
+                          <FolderInput className="h-4 w-4 mr-2" /> Move to folder
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteFolder(folder.id)}>
                           <Trash2 className="h-4 w-4 mr-2" /> Delete
                         </DropdownMenuItem>
