@@ -182,16 +182,18 @@ export function PartsLibrary() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => {
-                if (currentFolderId) {
+              {currentFolderId ? (
+                <Button variant="ghost" size="icon" onClick={() => {
                   const parent = folders.find(f => f.id === currentFolderId);
                   setCurrentFolderId(parent?.parentId ?? null);
-                } else {
-                  navigate('/parts');
-                }
-              }}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
+                }}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button variant="ghost" size="icon" onClick={() => navigate('/parts')}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              )}
               <h1 className="text-2xl font-bold tracking-tight text-card-foreground">Parts Library</h1>
             </div>
             <div className="flex items-center gap-2">
