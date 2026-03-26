@@ -162,6 +162,44 @@ export type Database = {
           },
         ]
       }
+      asset_images: {
+        Row: {
+          asset_id: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          is_primary: boolean | null
+          user_id: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+          user_id: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_images_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_maintenance: {
         Row: {
           asset_id: string
