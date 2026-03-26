@@ -35,7 +35,7 @@ export function useParts() {
     const { data, error } = await supabase
       .from('parts')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('name', { ascending: true });
 
     if (error) {
       toast({ title: 'Error loading parts', description: error.message, variant: 'destructive' });
