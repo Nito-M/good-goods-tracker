@@ -71,5 +71,21 @@ export function useAssetImages(assetId: string | undefined) {
     return true;
   };
 
-  return { images, loading, addImage, deleteImage, refetch: fetchImages };
+  const setPrimaryImage = async (imageId: string) => {
+    if (!user || !assetId) return;
+    // Unset all
+    await supabase.from('asset_images' as any).update({ is_primary: false } as any).eq('asset_id', assetId);
+    // Set selected
+    const { error } = await supabase.from('asset_images' as any).update({ is_primary: true } as any).eq('id', imageId);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await fetchImages();
+    toast({ title: 'Primary photo updated' });
+  };
+
+  const primaryImage = images.find(img => img.is_primary) || images[0];
+
+  return { images, loading, primaryImage, addImage, deleteImage, setPrimaryImage, refetch: fetchImages };
 }
