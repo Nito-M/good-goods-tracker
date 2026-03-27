@@ -117,6 +117,9 @@ export function HowToDoPage() {
   // Image viewer
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
+  // PDF preview
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+
   const filteredInstructions = instructions.filter(
     (inst) =>
       inst.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -515,6 +518,16 @@ export function HowToDoPage() {
                               <Eye className="h-6 w-6 text-white" />
                             </div>
                           </div>
+                         ) : file.fileType === "application/pdf" && file.signedUrl ? (
+                          <div
+                            className="h-40 bg-muted flex items-center justify-center cursor-pointer relative group"
+                            onClick={() => setPreviewPdfUrl(file.signedUrl!)}
+                          >
+                            <FileText className="h-12 w-12 text-muted-foreground" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Eye className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
                         ) : (
                           <div className="h-40 bg-muted flex items-center justify-center">
                             <File className="h-12 w-12 text-muted-foreground" />
@@ -624,6 +637,27 @@ export function HowToDoPage() {
         open={!!viewerImage}
         onOpenChange={(open) => !open && setViewerImage(null)}
       />
+
+      {/* PDF Preview Dialog */}
+      <Dialog open={!!previewPdfUrl} onOpenChange={(open) => !open && setPreviewPdfUrl(null)}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              PDF Preview
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 p-4 pt-0">
+            {previewPdfUrl && (
+              <iframe
+                src={previewPdfUrl}
+                className="w-full h-full rounded border"
+                title="PDF Preview"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
