@@ -241,10 +241,7 @@ export function HowToDoPage() {
         </DropdownMenu>
       </CardHeader>
       <CardContent className="pt-0">
-        {inst.notes && (
-          <p className="text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap">{inst.notes}</p>
-        )}
-        <div className="flex items-center gap-3 mt-3">
+        <div className="flex items-center gap-3 mt-1">
           {inst.files.length > 0 && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <FileText className="h-3 w-3" />
