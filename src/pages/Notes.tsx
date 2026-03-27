@@ -362,7 +362,10 @@ export function Notes() {
           <TodoList />
         </TabsContent>
 
-        <TabsContent value="notes" className="mt-4">
+        <TabsContent value="howto" className="mt-4">
+          <HowToDoPage />
+        </TabsContent>
+
 
       {/* Search */}
       <div className="relative max-w-md">
