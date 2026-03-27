@@ -74,6 +74,26 @@ export function HowToDoPage() {
   const [viewingInstruction, setViewingInstruction] = useState<HowToInstruction | null>(null);
   const [editingInstruction, setEditingInstruction] = useState<HowToInstruction | null>(null);
 
+  // Intercept browser back button when a dialog is open
+  const hasOpenDialog = !!(viewingInstruction || editingInstruction || isCreating);
+
+  useEffect(() => {
+    if (!hasOpenDialog) return;
+
+    window.history.pushState({ howToDialog: true }, "");
+
+    const handlePopState = () => {
+      setViewingInstruction(null);
+      setEditingInstruction(null);
+      setIsCreating(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [hasOpenDialog]);
+
   // Create form state
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState("General");
