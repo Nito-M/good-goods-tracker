@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useHowToInstructions, HowToInstruction } from "@/hooks/useHowToInstructions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,26 @@ export function HowToDoPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [viewingInstruction, setViewingInstruction] = useState<HowToInstruction | null>(null);
   const [editingInstruction, setEditingInstruction] = useState<HowToInstruction | null>(null);
+
+  // Intercept browser back button when a dialog is open
+  const hasOpenDialog = !!(viewingInstruction || editingInstruction || isCreating);
+
+  useEffect(() => {
+    if (!hasOpenDialog) return;
+
+    window.history.pushState({ howToDialog: true }, "");
+
+    const handlePopState = () => {
+      setViewingInstruction(null);
+      setEditingInstruction(null);
+      setIsCreating(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [hasOpenDialog]);
 
   // Create form state
   const [newTitle, setNewTitle] = useState("");
