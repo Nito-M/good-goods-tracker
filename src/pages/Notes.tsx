@@ -47,6 +47,7 @@ import {
   Minus,
   Palette,
   ListTodo,
+  BookOpen,
 } from "lucide-react";
 import { format } from "date-fns";
 
