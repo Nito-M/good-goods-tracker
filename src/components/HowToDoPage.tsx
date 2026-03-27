@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useHowToInstructions, HowToInstruction } from "@/hooks/useHowToInstructions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
