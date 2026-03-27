@@ -518,6 +518,16 @@ export function HowToDoPage() {
                               <Eye className="h-6 w-6 text-white" />
                             </div>
                           </div>
+                         ) : file.fileType === "application/pdf" && file.signedUrl ? (
+                          <div
+                            className="h-40 bg-muted flex items-center justify-center cursor-pointer relative group"
+                            onClick={() => setPreviewPdfUrl(file.signedUrl!)}
+                          >
+                            <FileText className="h-12 w-12 text-muted-foreground" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Eye className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
                         ) : (
                           <div className="h-40 bg-muted flex items-center justify-center">
                             <File className="h-12 w-12 text-muted-foreground" />
