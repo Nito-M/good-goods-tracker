@@ -347,6 +347,10 @@ export function Notes() {
               <ListTodo className="h-4 w-4" />
               To-Do
             </TabsTrigger>
+            <TabsTrigger value="howto" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              How To Do
+            </TabsTrigger>
           </TabsList>
           <Button onClick={() => setIsCreating(true)} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
