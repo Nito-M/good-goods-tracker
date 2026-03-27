@@ -637,6 +637,27 @@ export function HowToDoPage() {
         open={!!viewerImage}
         onOpenChange={(open) => !open && setViewerImage(null)}
       />
+
+      {/* PDF Preview Dialog */}
+      <Dialog open={!!previewPdfUrl} onOpenChange={(open) => !open && setPreviewPdfUrl(null)}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col">
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              PDF Preview
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 p-4 pt-0">
+            {previewPdfUrl && (
+              <iframe
+                src={previewPdfUrl}
+                className="w-full h-full rounded border"
+                title="PDF Preview"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
