@@ -700,11 +700,25 @@ export function HowToDoPage() {
                 <p className="text-muted-foreground">Loading PDF...</p>
               </div>
             ) : pdfBlobUrl ? (
-              <embed
-                src={pdfBlobUrl}
+              <object
+                data={pdfBlobUrl}
                 type="application/pdf"
                 className="w-full h-full rounded border"
-              />
+              >
+                <div className="w-full h-full flex items-center justify-center text-center px-6">
+                  <p className="text-sm text-muted-foreground">
+                    Preview unavailable. {" "}
+                    <a
+                      href={previewPdfUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      Open PDF
+                    </a>
+                  </p>
+                </div>
+              </object>
             ) : previewPdfUrl ? (
               <div className="w-full h-full flex items-center justify-center">
                 <p className="text-destructive">Failed to load PDF</p>
