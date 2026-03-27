@@ -75,6 +75,7 @@ export function Notes() {
   const [newContent, setNewContent] = useState("");
   const [newColor, setNewColor] = useState<NoteColor>("default");
   const editContentRef = useRef<HTMLTextAreaElement>(null);
+  const [activeTab, setActiveTab] = useState("notes");
 
   // Filter notes by search
   const filteredNotes = notes.filter(
@@ -336,7 +337,7 @@ export function Notes() {
         </div>
       </div>
 
-      <Tabs defaultValue="notes" className="w-full">
+      <Tabs defaultValue="notes" className="w-full" onValueChange={(v) => setActiveTab(v)}>
         <div className="flex items-center justify-between gap-4">
           <TabsList>
             <TabsTrigger value="notes" className="gap-2">
@@ -352,10 +353,12 @@ export function Notes() {
               How To Do
             </TabsTrigger>
           </TabsList>
-          <Button onClick={() => setIsCreating(true)} className="shrink-0">
-            <Plus className="h-4 w-4 mr-2" />
-            New Note
-          </Button>
+          {activeTab === "notes" && (
+            <Button onClick={() => setIsCreating(true)} className="shrink-0">
+              <Plus className="h-4 w-4 mr-2" />
+              New Note
+            </Button>
+          )}
         </div>
 
         <TabsContent value="todos" className="mt-4">
