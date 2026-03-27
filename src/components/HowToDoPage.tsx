@@ -135,28 +135,34 @@ export function HowToDoPage() {
   const handlePreviewPdf = async (signedUrl: string) => {
     setPdfLoading(true);
     setPreviewPdfUrl(signedUrl);
+
+    if (pdfBlobUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(pdfBlobUrl);
+    }
+    setPdfBlobUrl(null);
+
     try {
       const response = await fetch(signedUrl);
+      if (!response.ok) throw new Error(`Failed to fetch PDF: ${response.status}`);
+
       const blob = await response.blob();
-      // Convert to data URL to avoid sandbox/cross-origin iframe restrictions
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPdfBlobUrl(reader.result as string);
-        setPdfLoading(false);
-      };
-      reader.onerror = () => {
-        setPdfBlobUrl(null);
-        setPdfLoading(false);
-      };
-      reader.readAsDataURL(blob);
+      const objectUrl = URL.createObjectURL(
+        new Blob([blob], { type: "application/pdf" })
+      );
+
+      setPdfBlobUrl(objectUrl);
     } catch (err) {
       console.error("Failed to load PDF:", err);
       setPdfBlobUrl(null);
+    } finally {
       setPdfLoading(false);
     }
   };
 
   const closePreviewPdf = () => {
+    if (pdfBlobUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(pdfBlobUrl);
+    }
     setPdfBlobUrl(null);
     setPreviewPdfUrl(null);
   };
