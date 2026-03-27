@@ -135,28 +135,34 @@ export function HowToDoPage() {
   const handlePreviewPdf = async (signedUrl: string) => {
     setPdfLoading(true);
     setPreviewPdfUrl(signedUrl);
+
+    if (pdfBlobUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(pdfBlobUrl);
+    }
+    setPdfBlobUrl(null);
+
     try {
       const response = await fetch(signedUrl);
+      if (!response.ok) throw new Error(`Failed to fetch PDF: ${response.status}`);
+
       const blob = await response.blob();
-      // Convert to data URL to avoid sandbox/cross-origin iframe restrictions
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPdfBlobUrl(reader.result as string);
-        setPdfLoading(false);
-      };
-      reader.onerror = () => {
-        setPdfBlobUrl(null);
-        setPdfLoading(false);
-      };
-      reader.readAsDataURL(blob);
+      const objectUrl = URL.createObjectURL(
+        new Blob([blob], { type: "application/pdf" })
+      );
+
+      setPdfBlobUrl(objectUrl);
     } catch (err) {
       console.error("Failed to load PDF:", err);
       setPdfBlobUrl(null);
+    } finally {
       setPdfLoading(false);
     }
   };
 
   const closePreviewPdf = () => {
+    if (pdfBlobUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(pdfBlobUrl);
+    }
     setPdfBlobUrl(null);
     setPreviewPdfUrl(null);
   };
@@ -694,11 +700,25 @@ export function HowToDoPage() {
                 <p className="text-muted-foreground">Loading PDF...</p>
               </div>
             ) : pdfBlobUrl ? (
-              <embed
-                src={pdfBlobUrl}
+              <object
+                data={pdfBlobUrl}
                 type="application/pdf"
                 className="w-full h-full rounded border"
-              />
+              >
+                <div className="w-full h-full flex items-center justify-center text-center px-6">
+                  <p className="text-sm text-muted-foreground">
+                    Preview unavailable. {" "}
+                    <a
+                      href={previewPdfUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      Open PDF
+                    </a>
+                  </p>
+                </div>
+              </object>
             ) : previewPdfUrl ? (
               <div className="w-full h-full flex items-center justify-center">
                 <p className="text-destructive">Failed to load PDF</p>
