@@ -545,7 +545,7 @@ export function HowToDoPage() {
                          ) : file.fileType === "application/pdf" && file.signedUrl ? (
                           <div
                             className="h-40 bg-muted flex items-center justify-center cursor-pointer relative group"
-                            onClick={() => setPreviewPdfUrl(file.signedUrl!)}
+                            onClick={() => handlePreviewPdf(file.signedUrl!)}
                           >
                             <FileText className="h-12 w-12 text-muted-foreground" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
