@@ -101,7 +101,12 @@ export function HowToDoPage() {
   const [newType, setNewType] = useState("General");
   const [newLink, setNewLink] = useState("");
   const [newAuthor, setNewAuthor] = useState("");
-  const [newNotes, setNewNotes] = useState("");
+
+  // Notes editor state (inside instruction view)
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
 
   // File upload
   const [uploading, setUploading] = useState(false);
