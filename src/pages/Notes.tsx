@@ -75,6 +75,7 @@ export function Notes() {
   const [newContent, setNewContent] = useState("");
   const [newColor, setNewColor] = useState<NoteColor>("default");
   const editContentRef = useRef<HTMLTextAreaElement>(null);
+  const [activeTab, setActiveTab] = useState("notes");
 
   // Filter notes by search
   const filteredNotes = notes.filter(
