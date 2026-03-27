@@ -31,6 +31,10 @@ export function VendorDetail() {
 
   const vendor = vendors.find((v) => v.id === id);
 
+  useEffect(() => {
+    if (vendor) setNotesValue(vendor.notes || '');
+  }, [vendor?.notes]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
