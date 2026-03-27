@@ -176,6 +176,9 @@ export function VendorDetail() {
           </Card>
         </div>
 
+        {/* Contacts */}
+        <VendorContactsManager vendorId={vendor.id} />
+
         {/* Notes */}
         {vendor.notes && (
           <Card>
