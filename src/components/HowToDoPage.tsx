@@ -264,37 +264,14 @@ export function HowToDoPage() {
         </Button>
       </div>
 
-      {/* Grid */}
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-40" />
-          ))}
-        </div>
-      ) : filteredInstructions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold">No instructions yet</h3>
-          <p className="text-muted-foreground">
-            {searchQuery ? "Try a different search" : "Create your first instruction to get started"}
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredInstructions.map((inst) => (
-            <InstructionCard key={inst.id} inst={inst} />
-          ))}
-        </div>
-      )}
-
-      {/* Create Dialog */}
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>New Instruction</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
+      {isCreating ? (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">New Instruction</h2>
+            <Button variant="outline" onClick={() => setIsCreating(false)}>Cancel</Button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+            <div className="sm:col-span-2">
               <label className="text-sm font-medium">Title *</label>
               <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="How to..." />
             </div>
@@ -313,21 +290,48 @@ export function HowToDoPage() {
               <label className="text-sm font-medium">Added By</label>
               <Input value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)} placeholder="Name" />
             </div>
-            <div>
+            <div className="sm:col-span-2">
               <label className="text-sm font-medium">Link</label>
               <Input value={newLink} onChange={(e) => setNewLink(e.target.value)} placeholder="https://..." />
             </div>
-            <div>
+            <div className="sm:col-span-2">
               <label className="text-sm font-medium">Notes</label>
-              <Textarea value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder="Additional details..." rows={3} />
+              <Textarea value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder="Additional details..." rows={5} />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreating(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={!newTitle.trim()}>Create</Button>
+            <div className="sm:col-span-2 flex justify-end">
+              <Button onClick={handleCreate} disabled={!newTitle.trim()} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Instruction
+              </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      ) : (
+        <>
+          {/* Grid */}
+          {loading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-40" />
+              ))}
+            </div>
+          ) : filteredInstructions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold">No instructions yet</h3>
+              <p className="text-muted-foreground">
+                {searchQuery ? "Try a different search" : "Create your first instruction to get started"}
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredInstructions.map((inst) => (
+                <InstructionCard key={inst.id} inst={inst} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       {/* View/Detail Dialog - Full screen */}
       <Dialog open={!!viewingInstruction} onOpenChange={(open) => !open && setViewingInstruction(null)}>
