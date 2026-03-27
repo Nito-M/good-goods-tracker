@@ -4,6 +4,7 @@ import { Note, NoteColor } from "@/types/note";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TodoList } from "@/components/TodoList";
+import { HowToDoPage } from "@/components/HowToDoPage";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
