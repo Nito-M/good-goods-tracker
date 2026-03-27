@@ -42,6 +42,8 @@ import {
   ExternalLink,
   File,
   Eye,
+  Pencil,
+  Save,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
