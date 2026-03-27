@@ -117,6 +117,9 @@ export function HowToDoPage() {
   // Image viewer
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
+  // PDF preview
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+
   const filteredInstructions = instructions.filter(
     (inst) =>
       inst.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
