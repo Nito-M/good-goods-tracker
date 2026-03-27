@@ -530,6 +530,7 @@ export function HowToDoPage() {
       {/* Image Viewer */}
       <ImageViewerDialog
         imageUrl={viewerImage || ""}
+        alt="Instruction file"
         open={!!viewerImage}
         onOpenChange={(open) => !open && setViewerImage(null)}
       />
