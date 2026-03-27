@@ -311,10 +311,6 @@ export function HowToDoPage() {
               <label className="text-sm font-medium">Link</label>
               <Input value={newLink} onChange={(e) => setNewLink(e.target.value)} placeholder="https://..." />
             </div>
-            <div className="sm:col-span-2">
-              <label className="text-sm font-medium">Notes</label>
-              <Textarea value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder="Additional details..." rows={5} />
-            </div>
             <div className="sm:col-span-2 flex justify-end">
               <Button onClick={handleCreate} disabled={!newTitle.trim()} className="gap-2">
                 <Plus className="h-4 w-4" />
