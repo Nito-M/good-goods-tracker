@@ -128,18 +128,25 @@ export function HowToDoPage() {
     try {
       const response = await fetch(signedUrl);
       const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      setPdfBlobUrl(blobUrl);
+      // Convert to data URL to avoid sandbox/cross-origin iframe restrictions
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPdfBlobUrl(reader.result as string);
+        setPdfLoading(false);
+      };
+      reader.onerror = () => {
+        setPdfBlobUrl(null);
+        setPdfLoading(false);
+      };
+      reader.readAsDataURL(blob);
     } catch (err) {
       console.error("Failed to load PDF:", err);
       setPdfBlobUrl(null);
-    } finally {
       setPdfLoading(false);
     }
   };
 
   const closePreviewPdf = () => {
-    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
     setPdfBlobUrl(null);
     setPreviewPdfUrl(null);
   };
@@ -677,10 +684,10 @@ export function HowToDoPage() {
                 <p className="text-muted-foreground">Loading PDF...</p>
               </div>
             ) : pdfBlobUrl ? (
-              <iframe
+              <embed
                 src={pdfBlobUrl}
+                type="application/pdf"
                 className="w-full h-full rounded border"
-                title="PDF Preview"
               />
             ) : previewPdfUrl ? (
               <div className="w-full h-full flex items-center justify-center">
