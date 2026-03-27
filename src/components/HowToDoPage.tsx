@@ -663,8 +663,8 @@ export function HowToDoPage() {
       />
 
       {/* PDF Preview Dialog */}
-      <Dialog open={!!previewPdfUrl} onOpenChange={(open) => !open && setPreviewPdfUrl(null)}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col">
+      <Dialog open={!!previewPdfUrl} onOpenChange={(open) => !open && closePreviewPdf()}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col" aria-describedby={undefined}>
           <DialogHeader className="p-4 pb-2">
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -672,13 +672,21 @@ export function HowToDoPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 min-h-0 p-4 pt-0">
-            {previewPdfUrl && (
+            {pdfLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-muted-foreground">Loading PDF...</p>
+              </div>
+            ) : pdfBlobUrl ? (
               <iframe
-                src={previewPdfUrl}
+                src={pdfBlobUrl}
                 className="w-full h-full rounded border"
                 title="PDF Preview"
               />
-            )}
+            ) : previewPdfUrl ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-destructive">Failed to load PDF</p>
+              </div>
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
