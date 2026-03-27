@@ -119,6 +119,30 @@ export function HowToDoPage() {
 
   // PDF preview
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const handlePreviewPdf = async (signedUrl: string) => {
+    setPdfLoading(true);
+    setPreviewPdfUrl(signedUrl);
+    try {
+      const response = await fetch(signedUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfBlobUrl(blobUrl);
+    } catch (err) {
+      console.error("Failed to load PDF:", err);
+      setPdfBlobUrl(null);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const closePreviewPdf = () => {
+    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    setPdfBlobUrl(null);
+    setPreviewPdfUrl(null);
+  };
 
   const filteredInstructions = instructions.filter(
     (inst) =>
@@ -521,7 +545,7 @@ export function HowToDoPage() {
                          ) : file.fileType === "application/pdf" && file.signedUrl ? (
                           <div
                             className="h-40 bg-muted flex items-center justify-center cursor-pointer relative group"
-                            onClick={() => setPreviewPdfUrl(file.signedUrl!)}
+                            onClick={() => handlePreviewPdf(file.signedUrl!)}
                           >
                             <FileText className="h-12 w-12 text-muted-foreground" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -639,8 +663,8 @@ export function HowToDoPage() {
       />
 
       {/* PDF Preview Dialog */}
-      <Dialog open={!!previewPdfUrl} onOpenChange={(open) => !open && setPreviewPdfUrl(null)}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col">
+      <Dialog open={!!previewPdfUrl} onOpenChange={(open) => !open && closePreviewPdf()}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col" aria-describedby={undefined}>
           <DialogHeader className="p-4 pb-2">
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -648,13 +672,21 @@ export function HowToDoPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 min-h-0 p-4 pt-0">
-            {previewPdfUrl && (
+            {pdfLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-muted-foreground">Loading PDF...</p>
+              </div>
+            ) : pdfBlobUrl ? (
               <iframe
-                src={previewPdfUrl}
+                src={pdfBlobUrl}
                 className="w-full h-full rounded border"
                 title="PDF Preview"
               />
-            )}
+            ) : previewPdfUrl ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-destructive">Failed to load PDF</p>
+              </div>
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>
