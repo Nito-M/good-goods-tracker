@@ -23,9 +23,11 @@ import { VendorContactsManager } from '@/components/VendorContactsManager';
 export function VendorDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { vendors, loading, deleteVendor } = useVendors();
+  const { vendors, loading, deleteVendor, updateVendor } = useVendors();
   const { orders } = usePurchaseOrders();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState('');
 
   const vendor = vendors.find((v) => v.id === id);
 
