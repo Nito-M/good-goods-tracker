@@ -18,6 +18,7 @@ import {
 import { useVendors } from '@/hooks/useVendors';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
+import { VendorContactsManager } from '@/components/VendorContactsManager';
 
 export function VendorDetail() {
   const { id } = useParams<{ id: string }>();
