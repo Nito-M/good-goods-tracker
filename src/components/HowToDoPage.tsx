@@ -42,6 +42,8 @@ import {
   ExternalLink,
   File,
   Eye,
+  Pencil,
+  Save,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
@@ -99,7 +101,12 @@ export function HowToDoPage() {
   const [newType, setNewType] = useState("General");
   const [newLink, setNewLink] = useState("");
   const [newAuthor, setNewAuthor] = useState("");
-  const [newNotes, setNewNotes] = useState("");
+
+  // Notes editor state (inside instruction view)
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
 
   // File upload
   const [uploading, setUploading] = useState(false);
@@ -125,16 +132,29 @@ export function HowToDoPage() {
       type: newType,
       link: newLink.trim() || undefined,
       authorName: newAuthor.trim(),
-      notes: newNotes.trim() || undefined,
     });
     if (id) {
       setNewTitle("");
       setNewType("General");
       setNewLink("");
       setNewAuthor("");
-      setNewNotes("");
       setIsCreating(false);
     }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!viewingInstruction) return;
+    setSavingNotes(true);
+    await updateInstruction(viewingInstruction.id, { notes: notesValue });
+    setViewingInstruction({ ...viewingInstruction, notes: notesValue });
+    setIsEditingNotes(false);
+    setSavingNotes(false);
+  };
+
+  const handleStartEditingNotes = () => {
+    setNotesValue(viewingInstruction?.notes || "");
+    setIsEditingNotes(true);
+    setTimeout(() => notesRef.current?.focus(), 50);
   };
 
   const handleDelete = async (id: string) => {
@@ -221,10 +241,7 @@ export function HowToDoPage() {
         </DropdownMenu>
       </CardHeader>
       <CardContent className="pt-0">
-        {inst.notes && (
-          <p className="text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap">{inst.notes}</p>
-        )}
-        <div className="flex items-center gap-3 mt-3">
+        <div className="flex items-center gap-3 mt-1">
           {inst.files.length > 0 && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <FileText className="h-3 w-3" />
@@ -293,10 +310,6 @@ export function HowToDoPage() {
             <div className="sm:col-span-2">
               <label className="text-sm font-medium">Link</label>
               <Input value={newLink} onChange={(e) => setNewLink(e.target.value)} placeholder="https://..." />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="text-sm font-medium">Notes</label>
-              <Textarea value={newNotes} onChange={(e) => setNewNotes(e.target.value)} placeholder="Additional details..." rows={5} />
             </div>
             <div className="sm:col-span-2 flex justify-end">
               <Button onClick={handleCreate} disabled={!newTitle.trim()} className="gap-2">
@@ -382,12 +395,67 @@ export function HowToDoPage() {
                   </a>
                 )}
 
-                {viewingInstruction.notes && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-1">Notes</h3>
-                    <p className="whitespace-pre-wrap text-sm">{viewingInstruction.notes}</p>
+                {/* Notes - Google Docs style */}
+                <div className="border rounded-lg bg-card shadow-sm">
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
+                    <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
+                    {isEditingNotes ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsEditingNotes(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveNotes}
+                          disabled={savingNotes}
+                          className="gap-1"
+                        >
+                          <Save className="h-3 w-3" />
+                          {savingNotes ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleStartEditingNotes}
+                        className="gap-1"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        {viewingInstruction.notes ? "Edit" : "Add Notes"}
+                      </Button>
+                    )}
                   </div>
-                )}
+                  <div className="p-4 min-h-[200px]">
+                    {isEditingNotes ? (
+                      <textarea
+                        ref={notesRef}
+                        value={notesValue}
+                        onChange={(e) => setNotesValue(e.target.value)}
+                        className="w-full min-h-[200px] resize-none bg-transparent text-sm leading-relaxed focus:outline-none placeholder:text-muted-foreground/50"
+                        placeholder="Start typing your notes here..."
+                      />
+                    ) : viewingInstruction.notes ? (
+                      <p
+                        className="whitespace-pre-wrap text-sm leading-relaxed cursor-pointer hover:bg-muted/30 rounded p-1 -m-1 transition-colors"
+                        onClick={handleStartEditingNotes}
+                      >
+                        {viewingInstruction.notes}
+                      </p>
+                    ) : (
+                      <p
+                        className="text-sm text-muted-foreground/50 italic cursor-pointer hover:bg-muted/30 rounded p-1 -m-1 transition-colors"
+                        onClick={handleStartEditingNotes}
+                      >
+                        Click "Add Notes" or click here to start writing...
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 {/* File Upload Area */}
                 <div>
@@ -526,14 +594,6 @@ export function HowToDoPage() {
                   <Input
                     value={editingInstruction.link || ""}
                     onChange={(e) => setEditingInstruction({ ...editingInstruction, link: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Notes</label>
-                  <Textarea
-                    value={editingInstruction.notes || ""}
-                    onChange={(e) => setEditingInstruction({ ...editingInstruction, notes: e.target.value })}
-                    rows={3}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
