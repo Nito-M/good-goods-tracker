@@ -4,6 +4,7 @@ import { Note, NoteColor } from "@/types/note";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TodoList } from "@/components/TodoList";
+import { HowToDoPage } from "@/components/HowToDoPage";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -46,6 +47,7 @@ import {
   Minus,
   Palette,
   ListTodo,
+  BookOpen,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -345,6 +347,10 @@ export function Notes() {
               <ListTodo className="h-4 w-4" />
               To-Do
             </TabsTrigger>
+            <TabsTrigger value="howto" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              How To Do
+            </TabsTrigger>
           </TabsList>
           <Button onClick={() => setIsCreating(true)} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
@@ -354,6 +360,10 @@ export function Notes() {
 
         <TabsContent value="todos" className="mt-4">
           <TodoList />
+        </TabsContent>
+
+        <TabsContent value="howto" className="mt-4">
+          <HowToDoPage />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-4">

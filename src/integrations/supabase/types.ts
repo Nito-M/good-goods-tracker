@@ -666,6 +666,83 @@ export type Database = {
         }
         Relationships: []
       }
+      how_to_instructions: {
+        Row: {
+          author_name: string
+          created_at: string
+          id: string
+          link: string | null
+          notes: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          notes?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          notes?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      instruction_files: {
+        Row: {
+          created_at: string
+          display_order: number
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          instruction_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          file_name: string
+          file_type?: string
+          file_url: string
+          id?: string
+          instruction_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          instruction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_files_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "how_to_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           box_amount: number
