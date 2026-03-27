@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Pencil, Trash2, ExternalLink, Mail, Phone, MapPin, FileText, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,11 +23,17 @@ import { VendorContactsManager } from '@/components/VendorContactsManager';
 export function VendorDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { vendors, loading, deleteVendor } = useVendors();
+  const { vendors, loading, deleteVendor, updateVendor } = useVendors();
   const { orders } = usePurchaseOrders();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState('');
 
   const vendor = vendors.find((v) => v.id === id);
+
+  useEffect(() => {
+    if (vendor) setNotesValue(vendor.notes || '');
+  }, [vendor?.notes]);
 
   if (loading) {
     return (
@@ -180,19 +186,37 @@ export function VendorDetail() {
         <VendorContactsManager vendorId={vendor.id} />
 
         {/* Notes */}
-        {vendor.notes && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-foreground whitespace-pre-wrap">{vendor.notes}</p>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Notes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {editingNotes ? (
+              <div className="space-y-2">
+                <textarea
+                  className="flex min-h-[120px] w-full rounded-md border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={notesValue}
+                  onChange={(e) => setNotesValue(e.target.value)}
+                  placeholder="Add notes about this vendor..."
+                />
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => { setEditingNotes(false); setNotesValue(vendor.notes || ''); }}>Cancel</Button>
+                  <Button size="sm" onClick={async () => { await updateVendor(vendor.id, { notes: notesValue || null }); setEditingNotes(false); }}>Save</Button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="text-sm text-foreground whitespace-pre-wrap min-h-[40px] cursor-pointer rounded p-2 -m-2 hover:bg-muted/50 transition-colors"
+                onClick={() => setEditingNotes(true)}
+              >
+                {vendor.notes || <span className="text-muted-foreground italic">Click to add notes...</span>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Recent Purchase Orders */}
         {vendorOrders.length > 0 && (
