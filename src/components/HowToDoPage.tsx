@@ -596,14 +596,6 @@ export function HowToDoPage() {
                     onChange={(e) => setEditingInstruction({ ...editingInstruction, link: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Notes</label>
-                  <Textarea
-                    value={editingInstruction.notes || ""}
-                    onChange={(e) => setEditingInstruction({ ...editingInstruction, notes: e.target.value })}
-                    rows={3}
-                  />
-                </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setEditingInstruction(null)}>Cancel</Button>
                   <Button onClick={async () => {
