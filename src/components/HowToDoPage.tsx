@@ -132,16 +132,29 @@ export function HowToDoPage() {
       type: newType,
       link: newLink.trim() || undefined,
       authorName: newAuthor.trim(),
-      notes: newNotes.trim() || undefined,
     });
     if (id) {
       setNewTitle("");
       setNewType("General");
       setNewLink("");
       setNewAuthor("");
-      setNewNotes("");
       setIsCreating(false);
     }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!viewingInstruction) return;
+    setSavingNotes(true);
+    await updateInstruction(viewingInstruction.id, { notes: notesValue });
+    setViewingInstruction({ ...viewingInstruction, notes: notesValue });
+    setIsEditingNotes(false);
+    setSavingNotes(false);
+  };
+
+  const handleStartEditingNotes = () => {
+    setNotesValue(viewingInstruction?.notes || "");
+    setIsEditingNotes(true);
+    setTimeout(() => notesRef.current?.focus(), 50);
   };
 
   const handleDelete = async (id: string) => {
