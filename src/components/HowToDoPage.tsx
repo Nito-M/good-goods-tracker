@@ -147,7 +147,6 @@ export function HowToDoPage() {
   };
 
   const closePreviewPdf = () => {
-    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
     setPdfBlobUrl(null);
     setPreviewPdfUrl(null);
   };
