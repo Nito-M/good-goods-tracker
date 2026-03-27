@@ -119,6 +119,30 @@ export function HowToDoPage() {
 
   // PDF preview
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const handlePreviewPdf = async (signedUrl: string) => {
+    setPdfLoading(true);
+    setPreviewPdfUrl(signedUrl);
+    try {
+      const response = await fetch(signedUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      setPdfBlobUrl(blobUrl);
+    } catch (err) {
+      console.error("Failed to load PDF:", err);
+      setPdfBlobUrl(null);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const closePreviewPdf = () => {
+    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    setPdfBlobUrl(null);
+    setPreviewPdfUrl(null);
+  };
 
   const filteredInstructions = instructions.filter(
     (inst) =>
