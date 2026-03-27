@@ -684,10 +684,10 @@ export function HowToDoPage() {
                 <p className="text-muted-foreground">Loading PDF...</p>
               </div>
             ) : pdfBlobUrl ? (
-              <iframe
+              <embed
                 src={pdfBlobUrl}
+                type="application/pdf"
                 className="w-full h-full rounded border"
-                title="PDF Preview"
               />
             ) : previewPdfUrl ? (
               <div className="w-full h-full flex items-center justify-center">
