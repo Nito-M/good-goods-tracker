@@ -96,6 +96,16 @@ export function HowToDoPage() {
     };
   }, [hasOpenDialog]);
 
+  // Sync viewingInstruction with latest data from instructions array
+  useEffect(() => {
+    if (viewingInstruction) {
+      const updated = instructions.find((i) => i.id === viewingInstruction.id);
+      if (updated) {
+        setViewingInstruction(updated);
+      }
+    }
+  }, [instructions]);
+
   // Create form state
   const [newTitle, setNewTitle] = useState("");
   const [newType, setNewType] = useState("General");
