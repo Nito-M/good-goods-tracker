@@ -33,7 +33,7 @@ export function AssetDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { assets, loading, updateAsset, deleteAsset, uploadAssetImage } = useAssets();
-  const { parts, addPart, removePart } = useAssetParts(id);
+  const { parts, addPart, removePart, updatePart } = useAssetParts(id);
   const { records, addRecord, deleteRecord } = useAssetMaintenance(id);
   const { images: assetImages, primaryImage: primaryAssetImage, addImage: addAssetImage, deleteImage: deleteAssetImage, setPrimaryImage: setPrimaryAssetImage } = useAssetImages(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
