@@ -147,6 +147,32 @@ export function AssetDetail() {
     toast({ title: 'Part added' });
   };
 
+  const openEditPart = (p: typeof parts[0]) => {
+    setEditingPart(p);
+    setEditPartName(p.item_name);
+    setEditPartQty(p.quantity.toString());
+    setEditPartInstallDate(p.install_date || '');
+    setEditPartInstalledBy(p.installed_by || '');
+    setEditPartRemoveDate(p.remove_date || '');
+    setEditPartNotes(p.notes || '');
+    setEditPartOpen(true);
+  };
+
+  const handleUpdatePart = async () => {
+    if (!editingPart) return;
+    await updatePart(editingPart.id, {
+      item_name: editPartName,
+      quantity: parseFloat(editPartQty) || 1,
+      install_date: editPartInstallDate || null,
+      installed_by: editPartInstalledBy || null,
+      remove_date: editPartRemoveDate || null,
+      notes: editPartNotes || null,
+    });
+    setEditPartOpen(false);
+    setEditingPart(null);
+    toast({ title: 'Part updated' });
+  };
+
   const handleAddMaintenance = async () => {
     if (!mDesc.trim()) return;
     await addRecord({
