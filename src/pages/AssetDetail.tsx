@@ -718,7 +718,31 @@ export function AssetDetail() {
         </DialogContent>
       </Dialog>
 
-      <ImageViewerDialog
+      {/* Edit Part Dialog */}
+      <Dialog open={editPartOpen} onOpenChange={setEditPartOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Part</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            {!editingPart?.inventory_item_id && (
+              <div><Label>Part Name</Label><Input value={editPartName} onChange={(e) => setEditPartName(e.target.value)} /></div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Quantity</Label><Input type="number" value={editPartQty} onChange={(e) => setEditPartQty(e.target.value)} /></div>
+              <div><Label>Install Date</Label><Input type="date" value={editPartInstallDate} onChange={(e) => setEditPartInstallDate(e.target.value)} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Installed By</Label><Input value={editPartInstalledBy} onChange={(e) => setEditPartInstalledBy(e.target.value)} /></div>
+              <div><Label>Remove Date</Label><Input type="date" value={editPartRemoveDate} onChange={(e) => setEditPartRemoveDate(e.target.value)} /></div>
+            </div>
+            <div><Label>Notes</Label><Textarea value={editPartNotes} onChange={(e) => setEditPartNotes(e.target.value)} placeholder="Add notes about this part..." /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPartOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdatePart}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
         imageUrl={viewerImage}
         alt="Asset Image"
         open={viewerOpen}
