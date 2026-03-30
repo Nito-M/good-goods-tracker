@@ -202,7 +202,20 @@ export function useAssetParts(assetId: string | undefined) {
     await fetchParts();
   };
 
-  return { parts, loading, addPart, removePart, refetch: fetchParts };
+  const updatePart = async (partId: string, updates: Partial<AssetPart>) => {
+    const dbUpdates: Record<string, any> = {};
+    if (updates.item_name !== undefined) dbUpdates.item_name = updates.item_name;
+    if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+    if (updates.install_date !== undefined) dbUpdates.install_date = updates.install_date;
+    if (updates.installed_by !== undefined) dbUpdates.installed_by = updates.installed_by;
+    if (updates.remove_date !== undefined) dbUpdates.remove_date = updates.remove_date;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    const { error } = await supabase.from('asset_parts').update(dbUpdates).eq('id', partId);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    await fetchParts();
+  };
+
+  return { parts, loading, addPart, removePart, updatePart, refetch: fetchParts };
 }
 
 export function useAssetMaintenance(assetId: string | undefined) {

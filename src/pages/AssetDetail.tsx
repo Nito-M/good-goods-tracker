@@ -66,6 +66,16 @@ export function AssetDetail() {
   const [customItemName, setCustomItemName] = useState('');
   const [deductFromInventory, setDeductFromInventory] = useState(true);
 
+  // Edit part state
+  const [editPartOpen, setEditPartOpen] = useState(false);
+  const [editingPart, setEditingPart] = useState<typeof parts[0] | null>(null);
+  const [editPartName, setEditPartName] = useState('');
+  const [editPartQty, setEditPartQty] = useState('1');
+  const [editPartInstallDate, setEditPartInstallDate] = useState('');
+  const [editPartInstalledBy, setEditPartInstalledBy] = useState('');
+  const [editPartRemoveDate, setEditPartRemoveDate] = useState('');
+  const [editPartNotes, setEditPartNotes] = useState('');
+
   // Maintenance state
   const [mDate, setMDate] = useState(new Date().toISOString().slice(0, 10));
   const [mDesc, setMDesc] = useState('');
