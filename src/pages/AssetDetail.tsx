@@ -33,7 +33,7 @@ export function AssetDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { assets, loading, updateAsset, deleteAsset, uploadAssetImage } = useAssets();
-  const { parts, addPart, removePart } = useAssetParts(id);
+  const { parts, addPart, removePart, updatePart } = useAssetParts(id);
   const { records, addRecord, deleteRecord } = useAssetMaintenance(id);
   const { images: assetImages, primaryImage: primaryAssetImage, addImage: addAssetImage, deleteImage: deleteAssetImage, setPrimaryImage: setPrimaryAssetImage } = useAssetImages(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
@@ -65,6 +65,16 @@ export function AssetDetail() {
   const [partMode, setPartMode] = useState<'inventory' | 'custom'>('inventory');
   const [customItemName, setCustomItemName] = useState('');
   const [deductFromInventory, setDeductFromInventory] = useState(true);
+
+  // Edit part state
+  const [editPartOpen, setEditPartOpen] = useState(false);
+  const [editingPart, setEditingPart] = useState<typeof parts[0] | null>(null);
+  const [editPartName, setEditPartName] = useState('');
+  const [editPartQty, setEditPartQty] = useState('1');
+  const [editPartInstallDate, setEditPartInstallDate] = useState('');
+  const [editPartInstalledBy, setEditPartInstalledBy] = useState('');
+  const [editPartRemoveDate, setEditPartRemoveDate] = useState('');
+  const [editPartNotes, setEditPartNotes] = useState('');
 
   // Maintenance state
   const [mDate, setMDate] = useState(new Date().toISOString().slice(0, 10));
@@ -135,6 +145,32 @@ export function AssetDetail() {
     setAddPartOpen(false);
     resetPartForm();
     toast({ title: 'Part added' });
+  };
+
+  const openEditPart = (p: typeof parts[0]) => {
+    setEditingPart(p);
+    setEditPartName(p.item_name);
+    setEditPartQty(p.quantity.toString());
+    setEditPartInstallDate(p.install_date || '');
+    setEditPartInstalledBy(p.installed_by || '');
+    setEditPartRemoveDate(p.remove_date || '');
+    setEditPartNotes(p.notes || '');
+    setEditPartOpen(true);
+  };
+
+  const handleUpdatePart = async () => {
+    if (!editingPart) return;
+    await updatePart(editingPart.id, {
+      item_name: editPartName,
+      quantity: parseFloat(editPartQty) || 1,
+      install_date: editPartInstallDate || null,
+      installed_by: editPartInstalledBy || null,
+      remove_date: editPartRemoveDate || null,
+      notes: editPartNotes || null,
+    });
+    setEditPartOpen(false);
+    setEditingPart(null);
+    toast({ title: 'Part updated' });
   };
 
   const handleAddMaintenance = async () => {
@@ -408,9 +444,14 @@ export function AssetDetail() {
                         <TableCell className="text-right text-sm">{inv ? `$${inv.cost.toFixed(2)}` : '—'}</TableCell>
                         <TableCell className="text-right text-sm">{inv ? inv.quantity : '—'}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removePart(p.id)}>
-                            <X className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditPart(p)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removePart(p.id)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -673,6 +714,31 @@ export function AssetDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddMaintenanceOpen(false)}>Cancel</Button>
             <Button onClick={handleAddMaintenance} disabled={!mDesc.trim()}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Part Dialog */}
+      <Dialog open={editPartOpen} onOpenChange={setEditPartOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Part</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            {!editingPart?.inventory_item_id && (
+              <div><Label>Part Name</Label><Input value={editPartName} onChange={(e) => setEditPartName(e.target.value)} /></div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Quantity</Label><Input type="number" value={editPartQty} onChange={(e) => setEditPartQty(e.target.value)} /></div>
+              <div><Label>Install Date</Label><Input type="date" value={editPartInstallDate} onChange={(e) => setEditPartInstallDate(e.target.value)} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Installed By</Label><Input value={editPartInstalledBy} onChange={(e) => setEditPartInstalledBy(e.target.value)} /></div>
+              <div><Label>Remove Date</Label><Input type="date" value={editPartRemoveDate} onChange={(e) => setEditPartRemoveDate(e.target.value)} /></div>
+            </div>
+            <div><Label>Notes</Label><Textarea value={editPartNotes} onChange={(e) => setEditPartNotes(e.target.value)} placeholder="Add notes about this part..." /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPartOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdatePart}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
