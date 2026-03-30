@@ -743,6 +743,7 @@ export function AssetDetail() {
         </DialogContent>
       </Dialog>
 
+      <ImageViewerDialog
         imageUrl={viewerImage}
         alt="Asset Image"
         open={viewerOpen}
