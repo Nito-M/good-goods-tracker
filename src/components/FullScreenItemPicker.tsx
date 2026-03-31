@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Plus, X, Search, Trash2, Minus, Layers, PackagePlus, Check, ArrowLeft } from 'lucide-react';
+import { Plus, X, Search, Trash2, Minus, Layers, PackagePlus, Check, ArrowLeft, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +52,8 @@ interface FullScreenItemPickerProps {
   assemblies?: Assembly[];
   documentType: 'Quote' | 'Invoice' | 'Part' | 'Purchase Order';
   formatPrice?: (value: number) => string;
+  vendorItemIds?: string[] | null;
+  vendorName?: string;
 }
 
 function CartItemRow({
@@ -178,10 +180,13 @@ export function FullScreenItemPicker({
   assemblies = [],
   documentType,
   formatPrice = formatCurrency,
+  vendorItemIds,
+  vendorName,
 }: FullScreenItemPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAssemblies, setShowAssemblies] = useState(false);
   const [selectedAssemblyType, setSelectedAssemblyType] = useState<string | null>(null);
+  const [vendorOnly, setVendorOnly] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
@@ -204,13 +209,18 @@ export function FullScreenItemPicker({
   }, [open]);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return inventoryItems;
+    let items = inventoryItems;
+    if (vendorOnly && vendorItemIds) {
+      const idSet = new Set(vendorItemIds);
+      items = items.filter((item) => idSet.has(item.id));
+    }
+    if (!searchQuery.trim()) return items;
     const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    return inventoryItems.filter((item) => {
+    return items.filter((item) => {
       const haystack = `${item.name} ${item.sku} ${item.internalPartNumber || ''}`.toLowerCase();
       return tokens.every((token) => haystack.includes(token));
     });
-  }, [inventoryItems, searchQuery]);
+  }, [inventoryItems, searchQuery, vendorOnly, vendorItemIds]);
 
   const filteredAssemblies = useMemo(() => {
     let list = assemblies;
@@ -306,7 +316,7 @@ export function FullScreenItemPicker({
         {/* Left: Search + Results */}
         <div className="flex-1 flex flex-col border-r border-border min-w-0">
           {/* Search Bar */}
-          <div className="p-4 border-b border-border shrink-0">
+          <div className="p-4 border-b border-border shrink-0 space-y-2">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -329,6 +339,17 @@ export function FullScreenItemPicker({
                 </Button>
               )}
             </div>
+            {vendorItemIds && vendorItemIds.length > 0 && !showAssemblies && (
+              <Button
+                variant={vendorOnly ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setVendorOnly(!vendorOnly)}
+                className="gap-1.5"
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {vendorOnly ? `Showing ${vendorName || 'Vendor'} items only` : `Filter by ${vendorName || 'Vendor'}`}
+              </Button>
+            )}
           </div>
 
           {/* Results Table */}

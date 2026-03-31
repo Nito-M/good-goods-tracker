@@ -776,6 +776,8 @@ export function AddPurchaseOrder() {
         onUpdateItem={handleUpdateItem}
         documentType="Purchase Order"
         formatPrice={formatCurrency}
+        vendorItemIds={vendorId && vendorId !== 'none' ? vendorPrices.map(vp => vp.itemId) : null}
+        vendorName={vendors.find(v => v.id === vendorId)?.name}
       />
     </div>
   );
