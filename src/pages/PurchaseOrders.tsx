@@ -381,17 +381,6 @@ export function PurchaseOrders() {
         }
       </main>
 
-      {editingOrder &&
-      <EditPurchaseOrderDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        order={editingOrder}
-        onSave={updateOrder}
-        inventoryItems={inventoryItems}
-        vendors={vendors}
-        jobs={jobs} />
-
-      }
 
       {previewOrder &&
       <PurchaseOrderPreviewDialog
