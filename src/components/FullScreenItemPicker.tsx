@@ -350,7 +350,6 @@ export function FullScreenItemPicker({
                 {vendorOnly ? `Showing ${vendorName || 'Vendor'} items only` : `Filter by ${vendorName || 'Vendor'}`}
               </Button>
             )}
-            </div>
           </div>
 
           {/* Results Table */}
