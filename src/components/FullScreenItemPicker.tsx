@@ -209,13 +209,18 @@ export function FullScreenItemPicker({
   }, [open]);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return inventoryItems;
+    let items = inventoryItems;
+    if (vendorOnly && vendorItemIds) {
+      const idSet = new Set(vendorItemIds);
+      items = items.filter((item) => idSet.has(item.id));
+    }
+    if (!searchQuery.trim()) return items;
     const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    return inventoryItems.filter((item) => {
+    return items.filter((item) => {
       const haystack = `${item.name} ${item.sku} ${item.internalPartNumber || ''}`.toLowerCase();
       return tokens.every((token) => haystack.includes(token));
     });
-  }, [inventoryItems, searchQuery]);
+  }, [inventoryItems, searchQuery, vendorOnly, vendorItemIds]);
 
   const filteredAssemblies = useMemo(() => {
     let list = assemblies;
