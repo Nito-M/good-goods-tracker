@@ -923,6 +923,16 @@ export function Quotes() {
                     >
                       {isProcessing ? (editingQuoteId ? 'Saving...' : 'Creating...') : (editingQuoteId ? 'Save Changes' : 'Create Quote')}
                     </Button>
+                    {editingQuoteId && (
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        size="lg"
+                        onClick={resetForm}
+                      >
+                        Cancel Edit
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
