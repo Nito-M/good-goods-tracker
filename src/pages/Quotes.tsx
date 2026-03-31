@@ -386,10 +386,8 @@ export function Quotes() {
 
     setIsProcessing(true);
 
-    const quoteData = {
-      vendorId: selectedVendorId || null,
-      quoteNumber: customQuoteNumber.trim() || null,
-      items: cart.map((c) => ({
+    const itemsData = cart.map((c) => ({
+        id: c.id,
         inventoryItemId: c.inventoryItemId,
         itemName: c.itemName,
         sku: c.sku || 'CUSTOM',
@@ -398,7 +396,12 @@ export function Quotes() {
         unitPrice: c.unitPrice,
         unitCost: c.unitCost,
         notes: c.notes || null,
-      })),
+      }));
+
+    const quoteData = {
+      vendorId: selectedVendorId || null,
+      quoteNumber: customQuoteNumber.trim() || null,
+      items: itemsData,
       taxRate: effectiveTaxRate,
       discountRate: effectiveDiscountRate,
       notes: notes || null,
