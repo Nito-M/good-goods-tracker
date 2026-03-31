@@ -667,7 +667,7 @@ export function HowToDoPage() {
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && newCardName.trim()) {
-                            addCard(newCardName.trim());
+                            addCard(newCardName.trim(), profile?.displayName || "");
                             setNewCardName("");
                             setAddingCard(false);
                           }
