@@ -98,6 +98,7 @@ export function Calendar() {
   const { jobs } = useJobs();
   const { tripPlans, createTripPlan, deleteTripPlan } = useTripPlans();
   const { orders: purchaseOrders } = usePurchaseOrders();
+  const { todos } = useTodos();
   const { allItems } = useInventory();
   const { profile } = useProfile();
   const [currentMonth, setCurrentMonth] = useState(new Date());
