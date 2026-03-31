@@ -51,7 +51,7 @@ import { Assembly } from '@/hooks/useAssemblies';
 
 
 function AssemblyDetail({
-  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies, partsAssemblies,
+  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onDuplicate, onItemsChanged, allAssemblies, partsAssemblies,
 }: {
   assembly: Assembly;
   partsItems?: { id: string; name: string; sku: string; price: number }[];
