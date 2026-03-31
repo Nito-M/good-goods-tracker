@@ -105,7 +105,7 @@ export function useInstructionCards(instructionId: string | null) {
 
   useEffect(() => { fetchCards(); }, [fetchCards]);
 
-  const addCard = async (name: string) => {
+  const addCard = async (name: string, createdBy: string) => {
     if (!user || !instructionId) return null;
     try {
       const { data, error } = await (supabase as any)
@@ -114,6 +114,7 @@ export function useInstructionCards(instructionId: string | null) {
           instruction_id: instructionId,
           user_id: user.id,
           name,
+          created_by: createdBy,
           display_order: cards.length,
         })
         .select()
