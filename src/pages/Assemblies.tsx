@@ -317,6 +317,9 @@ function AssemblyDetail({
                 <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                   <Pencil className="h-3 w-3 mr-1" /> Edit
                 </Button>
+                <Button variant="outline" size="sm" onClick={() => onDuplicate(assembly.id)}>
+                  <Copy className="h-3 w-3 mr-1" /> Duplicate
+                </Button>
                 <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => onDelete(assembly.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
