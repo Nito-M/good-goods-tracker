@@ -337,34 +337,52 @@ export function Sales() {
 
     setIsProcessing(true);
 
-    const sale = await createSale({
-      vendorId: selectedVendorId || null,
-      invoiceNumber: customInvoiceNumber.trim() || null,
-      items: cart.map((c) => ({
-        inventoryItemId: c.inventoryItem.id,
-        itemName: c.inventoryItem.name,
-        sku: c.inventoryItem.sku,
-        quantity: c.quantity,
-        unitPrice: getItemPrice(c),
-        unitCost: c.inventoryItem.cost,
-      })),
-      taxRate,
-      discountRate,
-      notes: notes || null,
-      paymentTerms,
-      dueDate: null,
-      companyId: selectedCompanyId || null,
-    });
+    if (editingSaleId) {
+      // Update existing sale
+      await updateSale(editingSaleId, {
+        vendorId: selectedVendorId || null,
+        invoiceNumber: customInvoiceNumber.trim() || '',
+        items: cart.map((c) => ({
+          id: `updated-${c.inventoryItem.id}-${Date.now()}`,
+          inventoryItemId: c.inventoryItem.id,
+          itemName: c.inventoryItem.name,
+          sku: c.inventoryItem.sku,
+          quantity: c.quantity,
+          unitPrice: getItemPrice(c),
+          unitCost: c.inventoryItem.cost,
+        })),
+        taxRate,
+        discountRate,
+        notes: notes || null,
+        paymentTerms,
+        dueDate: null,
+        companyId: selectedCompanyId || null,
+      });
+      resetForm();
+    } else {
+      // Create new sale
+      const sale = await createSale({
+        vendorId: selectedVendorId || null,
+        invoiceNumber: customInvoiceNumber.trim() || null,
+        items: cart.map((c) => ({
+          inventoryItemId: c.inventoryItem.id,
+          itemName: c.inventoryItem.name,
+          sku: c.inventoryItem.sku,
+          quantity: c.quantity,
+          unitPrice: getItemPrice(c),
+          unitCost: c.inventoryItem.cost,
+        })),
+        taxRate,
+        discountRate,
+        notes: notes || null,
+        paymentTerms,
+        dueDate: null,
+        companyId: selectedCompanyId || null,
+      });
 
-    if (sale) {
-      setCart([]);
-      setSelectedVendorId('');
-      setCustomInvoiceNumber('');
-      setTaxRate(0);
-      setDiscountRate(0);
-      setMarkupPercent('');
-      setNotes('');
-      setSelectedCompanyId(defaultCompany?.id || '');
+      if (sale) {
+        resetForm();
+      }
     }
 
     setIsProcessing(false);
