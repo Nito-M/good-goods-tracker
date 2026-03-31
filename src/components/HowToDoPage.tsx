@@ -837,6 +837,66 @@ export function HowToDoPage() {
                   </a>
                 )}
 
+                {/* Card Notes - Google Docs style */}
+                <div className="border rounded-lg bg-card shadow-sm">
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
+                    <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
+                    {isEditingCardNotes ? (
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditingCardNotes(false)}>Cancel</Button>
+                        <Button size="sm" disabled={savingCardNotes} className="gap-1" onClick={async () => {
+                          if (!viewingCard) return;
+                          setSavingCardNotes(true);
+                          await updateCard(viewingCard.id, { notes: cardNotesValue });
+                          setIsEditingCardNotes(false);
+                          setSavingCardNotes(false);
+                        }}>
+                          <Save className="h-3 w-3" />
+                          {savingCardNotes ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="gap-1" onClick={() => {
+                        setCardNotesValue(viewingCard?.notes || "");
+                        setIsEditingCardNotes(true);
+                        setTimeout(() => cardNotesRef.current?.focus(), 50);
+                      }}>
+                        <Pencil className="h-3 w-3" />
+                        {viewingCard?.notes ? "Edit" : "Add Notes"}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="p-4 min-h-[120px]">
+                    {isEditingCardNotes ? (
+                      <textarea
+                        ref={cardNotesRef}
+                        value={cardNotesValue}
+                        onChange={(e) => setCardNotesValue(e.target.value)}
+                        className="w-full min-h-[120px] resize-none bg-transparent text-sm leading-relaxed focus:outline-none placeholder:text-muted-foreground/50"
+                        placeholder="Start typing notes..."
+                      />
+                    ) : viewingCard?.notes ? (
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed cursor-pointer hover:bg-muted/30 rounded p-1 -m-1 transition-colors"
+                        onClick={() => {
+                          setCardNotesValue(viewingCard?.notes || "");
+                          setIsEditingCardNotes(true);
+                          setTimeout(() => cardNotesRef.current?.focus(), 50);
+                        }}>
+                        {viewingCard.notes}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground/50 italic cursor-pointer hover:bg-muted/30 rounded p-1 -m-1 transition-colors"
+                        onClick={() => {
+                          setCardNotesValue("");
+                          setIsEditingCardNotes(true);
+                          setTimeout(() => cardNotesRef.current?.focus(), 50);
+                        }}>
+                        Click to add notes...
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 {/* Upload area */}
                 <div className="border-2 border-dashed rounded-lg p-4 text-center">
                   <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
