@@ -63,6 +63,7 @@ const INSTRUCTION_TYPES = [
 ];
 
 export function HowToDoPage() {
+  const { profile } = useProfile();
   const {
     instructions,
     loading,
