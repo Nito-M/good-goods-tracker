@@ -77,6 +77,38 @@ export function HowToDoPage() {
   const [viewingInstruction, setViewingInstruction] = useState<HowToInstruction | null>(null);
   const [editingInstruction, setEditingInstruction] = useState<HowToInstruction | null>(null);
 
+  // Cards hook
+  const {
+    cards,
+    addCard,
+    updateCard,
+    deleteCard,
+    uploadCardFile,
+    deleteCardFile,
+  } = useInstructionCards(viewingInstruction?.id || null);
+
+  // Card UI state
+  const [addingCard, setAddingCard] = useState(false);
+  const [newCardName, setNewCardName] = useState("");
+  const [editingCard, setEditingCard] = useState<InstructionCard | null>(null);
+  const [editCardName, setEditCardName] = useState("");
+  const [editCardDesc, setEditCardDesc] = useState("");
+  const [editCardLink, setEditCardLink] = useState("");
+  const [viewingCard, setViewingCard] = useState<InstructionCard | null>(null);
+  const [cardUploading, setCardUploading] = useState(false);
+  const cardFileRef = useRef<HTMLInputElement>(null);
+  const [cardPdfUrl, setCardPdfUrl] = useState<string | null>(null);
+  const [cardPdfBlob, setCardPdfBlob] = useState<string | null>(null);
+  const [cardPdfLoading, setCardPdfLoading] = useState(false);
+
+  // Sync viewingCard with latest cards data
+  useEffect(() => {
+    if (viewingCard) {
+      const updated = cards.find((c) => c.id === viewingCard.id);
+      if (updated) setViewingCard(updated);
+    }
+  }, [cards]);
+
   // Intercept browser back button when a dialog is open
   const hasOpenDialog = !!(viewingInstruction || editingInstruction || isCreating);
 
