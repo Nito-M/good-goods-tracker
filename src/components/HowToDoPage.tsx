@@ -547,106 +547,6 @@ export function HowToDoPage() {
                   </div>
                 </div>
 
-                {/* File Upload Area */}
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Files & Images</h3>
-                  <div
-                    ref={dropRef}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, viewingInstruction.id)}
-                    className={cn(
-                      "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-                      dragOver ? "border-primary bg-primary/5" : "border-border"
-                    )}
-                  >
-                    <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Drag & drop files here, or{" "}
-                      <button
-                        className="text-primary underline"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        browse
-                      </button>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">PDFs, images, and documents</p>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files) handleFileDrop(e.target.files, viewingInstruction.id);
-                        e.target.value = "";
-                      }}
-                    />
-                  </div>
-                  {uploading && <p className="text-sm text-muted-foreground mt-2">Uploading...</p>}
-                </div>
-
-                {/* Files Grid */}
-                {viewingInstruction.files.length > 0 && (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {viewingInstruction.files.map((file) => (
-                      <Card key={file.id} className="overflow-hidden">
-                        {isImage(file.fileType) && file.signedUrl ? (
-                          <div
-                            className="h-40 bg-muted cursor-pointer relative group"
-                            onClick={() => setViewerImage(file.signedUrl!)}
-                          >
-                            <img
-                              src={file.signedUrl}
-                              alt={file.fileName}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Eye className="h-6 w-6 text-white" />
-                            </div>
-                          </div>
-                         ) : file.fileType === "application/pdf" && file.signedUrl ? (
-                          <div
-                            className="h-40 bg-muted flex items-center justify-center cursor-pointer relative group"
-                            onClick={() => handlePreviewPdf(file.signedUrl!)}
-                          >
-                            <FileText className="h-12 w-12 text-muted-foreground" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Eye className="h-6 w-6 text-white" />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="h-40 bg-muted flex items-center justify-center">
-                            <File className="h-12 w-12 text-muted-foreground" />
-                          </div>
-                        )}
-                        <CardContent className="p-3 flex items-center justify-between">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{file.fileName}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            {file.signedUrl && (
-                              <a href={file.signedUrl} target="_blank" rel="noopener noreferrer">
-                                <Button variant="ghost" size="icon" className="h-7 w-7">
-                                  <ExternalLink className="h-3 w-3" />
-                                </Button>
-                              </a>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-destructive"
-                              onClick={() => deleteFile(file.id, file.fileUrl)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-
                 {/* Cards Section */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -658,7 +558,7 @@ export function HowToDoPage() {
                       className="gap-1"
                     >
                       <Plus className="h-3 w-3" />
-                      Add Card
+                      Add Instruction
                     </Button>
                   </div>
 
