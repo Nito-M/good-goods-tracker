@@ -736,7 +736,7 @@ export function HowToDoPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                   <div className="flex gap-2 mr-8">
                     <Button variant="outline" size="sm" onClick={() => {
                       setEditingCard(viewingCard);
                       setEditCardName(viewingCard.name);
@@ -744,6 +744,10 @@ export function HowToDoPage() {
                       setEditCardLink(viewingCard.link || "");
                     }}>
                       <Pencil className="h-3 w-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="outline" size="sm"
+                      onClick={() => { setAddingCardNote(true); setNewCardNoteValue(""); }}>
+                      <MessageSquarePlus className="h-3 w-3 mr-1" /> Add Note
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => {
                       if (confirm("Delete this card?")) {
