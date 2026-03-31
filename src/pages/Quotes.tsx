@@ -193,7 +193,7 @@ export function Quotes() {
   const [customQuoteNumber, setCustomQuoteNumber] = useState('');
   const [validUntil, setValidUntil] = useState<string>('');
   const [validUntilInitialized, setValidUntilInitialized] = useState(false);
-  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
    const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
