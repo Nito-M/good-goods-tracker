@@ -121,13 +121,14 @@ export function Sales() {
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
-  const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [newVendorName, setNewVendorName] = useState('');
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [showItemPicker, setShowItemPicker] = useState(false);
+  const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('new-sale');
 
   // Default to default company
   const { defaultCompany } = useCompanies();
