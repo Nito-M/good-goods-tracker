@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useHowToInstructions, HowToInstruction } from "@/hooks/useHowToInstructions";
 import { useInstructionCards, InstructionCard } from "@/hooks/useInstructionCards";
+import { useCardNotes, CardNote } from "@/hooks/useCardNotes";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
