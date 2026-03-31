@@ -514,7 +514,8 @@ export function Quotes() {
           <TabsList>
             <TabsTrigger value="new-quote" className="gap-2">
               <FileText className="h-4 w-4" />
-              New Quote
+              {editingQuoteId ? 'Edit Quote' : 'New Quote'}
+            </TabsTrigger>
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <Receipt className="h-4 w-4" />
