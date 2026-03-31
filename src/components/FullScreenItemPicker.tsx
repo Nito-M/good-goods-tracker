@@ -35,6 +35,7 @@ interface Assembly {
   name: string;
   description: string | null;
   selling_price: number;
+  type?: string;
 }
 
 interface FullScreenItemPickerProps {
