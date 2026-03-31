@@ -736,7 +736,7 @@ export function HowToDoPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                   <div className="flex gap-2 mr-8">
                     <Button variant="outline" size="sm" onClick={() => {
                       setEditingCard(viewingCard);
                       setEditCardName(viewingCard.name);
@@ -744,6 +744,10 @@ export function HowToDoPage() {
                       setEditCardLink(viewingCard.link || "");
                     }}>
                       <Pencil className="h-3 w-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="outline" size="sm"
+                      onClick={() => { setAddingCardNote(true); setNewCardNoteValue(""); }}>
+                      <MessageSquarePlus className="h-3 w-3 mr-1" /> Add Note
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => {
                       if (confirm("Delete this card?")) {
@@ -772,10 +776,6 @@ export function HowToDoPage() {
                     <h4 className="text-sm font-semibold flex items-center gap-2">
                       <StickyNote className="h-4 w-4" /> Notes ({cardNotesList.length})
                     </h4>
-                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
-                      onClick={() => { setAddingCardNote(true); setNewCardNoteValue(""); }}>
-                      <MessageSquarePlus className="h-3 w-3" /> Add Note
-                    </Button>
                   </div>
                   <div className="p-3 space-y-2 max-h-60 overflow-y-auto">
                     {addingCardNote && (
