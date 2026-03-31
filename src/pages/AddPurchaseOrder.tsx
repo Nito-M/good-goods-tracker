@@ -394,9 +394,9 @@ export function AddPurchaseOrder() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold tracking-tight text-card-foreground">
-              Create Purchase Order
-            </h1>
+             <h1 className="text-xl font-bold tracking-tight text-card-foreground">
+               {editingOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}
+             </h1>
           </div>
         </div>
       </header>
