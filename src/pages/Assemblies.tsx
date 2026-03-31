@@ -61,6 +61,7 @@ function AssemblyDetail({
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => Promise<void>;
+  onDuplicate: (id: string) => void;
   onItemsChanged?: () => void;
   allAssemblies: Assembly[];
   partsAssemblies?: PartsAssembly[];
