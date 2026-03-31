@@ -49,7 +49,6 @@ export function PurchaseOrders() {
   const { cards: bankCards } = useBankCards();
   const { warehouses } = useWarehouses();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [previewOrder, setPreviewOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
