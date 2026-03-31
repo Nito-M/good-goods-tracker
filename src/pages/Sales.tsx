@@ -184,9 +184,6 @@ export function Sales() {
     setShowAddVendor(false);
   };
 
-  const handleSaveSale = async (saleId: string, data: any) => {
-    await updateSale(saleId, data);
-  };
 
   const resetForm = () => {
     setCart([]);
