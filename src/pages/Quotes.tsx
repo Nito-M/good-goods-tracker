@@ -999,13 +999,6 @@ export function Quotes() {
         </Tabs>
       </main>
 
-      <EditQuoteDialog
-        quote={editingQuote}
-        open={!!editingQuote}
-        onOpenChange={(open) => !open && setEditingQuote(null)}
-        onSave={handleSaveQuote}
-        vendors={vendors}
-      />
 
       {previewQuote && (
         <QuotePreviewDialog
