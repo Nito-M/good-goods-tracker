@@ -963,7 +963,7 @@ export function Sales() {
                                   onRevert={revertSale}
                                   onDownloadInvoice={() => generateInvoicePDF(sale, getSettingsForSale(sale))}
                                   onPreviewInvoice={() => setPreviewSale(sale)}
-                                  onEdit={setEditingSale}
+                                onEdit={handleEditSale}
                                   onStatusChange={(id, status) => updateStatus(id, status, addSaleRevenue)}
                                   onTogglePickedUp={togglePickedUp}
                                 />
@@ -979,14 +979,6 @@ export function Sales() {
           </TabsContent>
         </Tabs>
       </main>
-
-      <EditSaleDialog
-        sale={editingSale}
-        open={!!editingSale}
-        onOpenChange={(open) => !open && setEditingSale(null)}
-        onSave={handleSaveSale}
-        vendors={vendors}
-      />
 
       {previewSale && (
         <InvoicePreviewDialog
