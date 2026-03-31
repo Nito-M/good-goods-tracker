@@ -51,7 +51,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
-import { EditQuoteDialog } from '@/components/EditQuoteDialog';
+
 import { QuotePreviewDialog } from '@/components/QuotePreviewDialog';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 
@@ -193,7 +193,7 @@ export function Quotes() {
   const [customQuoteNumber, setCustomQuoteNumber] = useState('');
   const [validUntil, setValidUntil] = useState<string>('');
   const [validUntilInitialized, setValidUntilInitialized] = useState(false);
-  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [previewQuote, setPreviewQuote] = useState<Quote | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
    const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
@@ -208,8 +208,51 @@ export function Quotes() {
     }
   }, [defaultCompany]);
 
-  const handleSaveQuote = async (quoteId: string, data: any) => {
-    await updateQuote(quoteId, data);
+  const handleEditQuote = (quote: Quote) => {
+    setCart(quote.items.map(item => ({
+      id: item.id,
+      inventoryItemId: item.inventoryItemId,
+      itemName: item.itemName,
+      sku: item.sku,
+      quantity: item.quantity || null,
+      quantityUnit: (item.quantityUnit as QuantityUnit) || 'pcs',
+      unitPrice: item.unitPrice,
+      unitCost: item.unitCost,
+      notes: item.notes || '',
+    })));
+    setSelectedVendorId(quote.vendorId || '');
+    setCustomQuoteNumber(quote.quoteNumber);
+    setTaxRate(quote.taxRate || null);
+    setDiscountRate(quote.discountRate || null);
+    setMarkupPercent('');
+    setNotes(quote.notes || '');
+    setPaymentTerms(quote.paymentTerms || 'Due on receipt');
+    setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
+    setSelectedCompanyId((quote as any).companyId || defaultCompany?.id || '');
+    setHidePrices(quote.hidePrices || false);
+    setEditingQuoteId(quote.id);
+    setActiveTab('new-quote');
+  };
+
+  const resetForm = () => {
+    setCart([]);
+    setSelectedVendorId('');
+    setCustomQuoteNumber('');
+    setTaxRate(null);
+    setDiscountRate(null);
+    setMarkupPercent('');
+    setNotes('');
+    setHidePrices(false);
+    setSelectedCompanyId(defaultCompany?.id || '');
+    setEditingQuoteId(null);
+    setValidUntilInitialized(false);
+    if (quoteSettings.validityDays) {
+      const defaultDate = addDays(new Date(), quoteSettings.validityDays);
+      setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
+      setValidUntilInitialized(true);
+    } else {
+      setValidUntil('');
+    }
   };
 
   // Calculate the next quote number
@@ -335,21 +378,16 @@ export function Quotes() {
   const taxAmount = afterDiscount * (effectiveTaxRate / 100);
   const total = afterDiscount + taxAmount;
 
-  const handleCreateQuote = async () => {
+  const handleSubmitQuote = async () => {
     if (cart.length === 0) return;
 
-    // Validate custom items have names
     const invalidItems = cart.filter((c) => !c.itemName.trim());
-    if (invalidItems.length > 0) {
-      return;
-    }
+    if (invalidItems.length > 0) return;
 
     setIsProcessing(true);
 
-    const quote = await createQuote({
-      vendorId: selectedVendorId || null,
-      quoteNumber: customQuoteNumber.trim() || null,
-      items: cart.map((c) => ({
+    const itemsData = cart.map((c) => ({
+        id: c.id,
         inventoryItemId: c.inventoryItemId,
         itemName: c.itemName,
         sku: c.sku || 'CUSTOM',
@@ -358,7 +396,12 @@ export function Quotes() {
         unitPrice: c.unitPrice,
         unitCost: c.unitCost,
         notes: c.notes || null,
-      })),
+      }));
+
+    const quoteData = {
+      vendorId: selectedVendorId || null,
+      quoteNumber: customQuoteNumber.trim() || null,
+      items: itemsData,
       taxRate: effectiveTaxRate,
       discountRate: effectiveDiscountRate,
       notes: notes || null,
@@ -366,27 +409,19 @@ export function Quotes() {
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: selectedCompanyId || null,
       hidePrices,
-    });
+    };
 
-    if (quote) {
-      setCart([]);
-      setSelectedVendorId('');
-      setCustomQuoteNumber('');
-      setTaxRate(null);
-      setDiscountRate(null);
-      setMarkupPercent('');
-      setNotes('');
-      setHidePrices(false);
-      setSelectedCompanyId(defaultCompany?.id || '');
-      setValidUntilInitialized(false);
-      if (quoteSettings.validityDays) {
-        const defaultDate = addDays(new Date(), quoteSettings.validityDays);
-        setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
-        setValidUntilInitialized(true);
-      } else {
-        setValidUntil('');
-      }
-      // Switch to history tab after creation
+    let success = false;
+    if (editingQuoteId) {
+      await updateQuote(editingQuoteId, quoteData);
+      success = true;
+    } else {
+      const quote = await createQuote(quoteData);
+      success = !!quote;
+    }
+
+    if (success) {
+      resetForm();
       setActiveTab('history');
     }
 
@@ -479,7 +514,7 @@ export function Quotes() {
           <TabsList>
             <TabsTrigger value="new-quote" className="gap-2">
               <FileText className="h-4 w-4" />
-              New Quote
+              {editingQuoteId ? 'Edit Quote' : 'New Quote'}
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <Receipt className="h-4 w-4" />
@@ -884,10 +919,20 @@ export function Quotes() {
                       className="w-full mt-4"
                       size="lg"
                       disabled={cart.length === 0 || isProcessing}
-                      onClick={handleCreateQuote}
+                      onClick={handleSubmitQuote}
                     >
-                      {isProcessing ? 'Creating...' : 'Create Quote'}
+                      {isProcessing ? (editingQuoteId ? 'Saving...' : 'Creating...') : (editingQuoteId ? 'Save Changes' : 'Create Quote')}
                     </Button>
+                    {editingQuoteId && (
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        size="lg"
+                        onClick={resetForm}
+                      >
+                        Cancel Edit
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -943,7 +988,7 @@ export function Quotes() {
                                 onUpdateStatus={updateQuoteStatus}
                                 onUploadAttachment={uploadAttachment}
                                 onRemoveAttachment={removeAttachment}
-                                onEdit={setEditingQuote}
+                                onEdit={handleEditQuote}
                                 onConvertToInvoice={convertToInvoice}
                                 onConvertToPurchaseOrder={convertToPurchaseOrder}
                                 onPreview={setPreviewQuote}
@@ -963,13 +1008,6 @@ export function Quotes() {
         </Tabs>
       </main>
 
-      <EditQuoteDialog
-        quote={editingQuote}
-        open={!!editingQuote}
-        onOpenChange={(open) => !open && setEditingQuote(null)}
-        onSave={handleSaveQuote}
-        vendors={vendors}
-      />
 
       {previewQuote && (
         <QuotePreviewDialog
