@@ -5,6 +5,7 @@ import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useJobs } from "@/hooks/useJobs";
 import { useTripPlans } from "@/hooks/useTripPlans";
 import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
+import { useTodos, Todo } from "@/hooks/useTodos";
 import { EditRequestDialog } from "@/components/EditRequestDialog";
 import { AddCalendarEventDialog } from "@/components/AddCalendarEventDialog";
 import { EditCalendarEventDialog } from "@/components/EditCalendarEventDialog";
@@ -31,7 +32,8 @@ import {
   Trash2,
   Repeat,
   Briefcase,
-  MapPinned } from
+  MapPinned,
+  ListChecks } from
 "lucide-react";
 import {
   format,
@@ -96,6 +98,7 @@ export function Calendar() {
   const { jobs } = useJobs();
   const { tripPlans, createTripPlan, deleteTripPlan } = useTripPlans();
   const { orders: purchaseOrders } = usePurchaseOrders();
+  const { todos } = useTodos();
   const { allItems } = useInventory();
   const { profile } = useProfile();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -140,6 +143,18 @@ export function Calendar() {
     return map;
   }, [jobs]);
 
+  const todosByDate = useMemo(() => {
+    const map = new Map<string, Todo[]>();
+    todos.forEach((todo) => {
+      if (todo.dueDate) {
+        const dateKey = format(parseLocalDate(todo.dueDate), "yyyy-MM-dd");
+        const existing = map.get(dateKey) || [];
+        map.set(dateKey, [...existing, todo]);
+      }
+    });
+    return map;
+  }, [todos]);
+
   // Get events for a specific day (including recurring)
   const getEventsForDay = (day: Date): CalendarEvent[] => {
     return events.filter((e) => eventOccursOnDay(e, day));
@@ -170,6 +185,11 @@ export function Calendar() {
       return tp.startDate === dateKey;
     });
   }, [selectedDate, tripPlans]);
+
+  const selectedDateTodos = useMemo(() => {
+    if (!selectedDate) return [];
+    return todosByDate.get(format(selectedDate, "yyyy-MM-dd")) || [];
+  }, [selectedDate, todosByDate]);
 
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -231,7 +251,8 @@ export function Calendar() {
                 const dayEvents = getEventsForDay(day);
                 const dayJobs = jobsByDate.get(dateKey) || [];
                 const dayTrips = tripPlans.filter((tp) => tp.endDate ? dateKey >= tp.startDate && dateKey <= tp.endDate : tp.startDate === dateKey);
-                const totalItems = dayRequests.length + dayEvents.length + dayJobs.length + dayTrips.length;
+                const dayTodos = todosByDate.get(dateKey) || [];
+                const totalItems = dayRequests.length + dayEvents.length + dayJobs.length + dayTrips.length + dayTodos.length;
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
                 const isDayToday = isToday(day);
@@ -300,6 +321,14 @@ export function Calendar() {
                         className={cn("text-xs px-1.5 py-0.5 rounded truncate text-white", trip.color)}
                         title={trip.title}>
                           📍 {trip.title}
+                        </div>
+                      )}
+                      {dayTodos.slice(0, Math.max(0, 3 - dayEvents.length - dayJobs.length - dayRequests.length - dayTrips.length)).map((todo) =>
+                      <div
+                        key={`todo-${todo.id}`}
+                        className={cn("text-xs px-1.5 py-0.5 rounded truncate text-white", todo.isDone ? "bg-emerald-500" : "bg-rose-500")}
+                        title={todo.title}>
+                          ✓ {todo.title}
                         </div>
                       )}
                       {totalItems > 3 &&
@@ -497,7 +526,33 @@ export function Calendar() {
                   </div>
               }
 
-                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 && selectedDateJobs.length === 0 && selectedDateTrips.length === 0 &&
+                {/* To-Dos */}
+                {selectedDateTodos.length > 0 &&
+              <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">To-Dos</p>
+                    {selectedDateTodos.map((todo) =>
+                <div
+                  key={todo.id}
+                  className="p-3 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                  onClick={() => navigate("/notes")}>
+                        <div className="flex items-start gap-2">
+                          <div className={cn("p-1 rounded text-white mt-0.5", todo.isDone ? "bg-emerald-500" : "bg-rose-500")}>
+                            <ListChecks className="h-3 w-3" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={cn("font-medium text-sm truncate", todo.isDone && "line-through text-muted-foreground")}>{todo.title}</p>
+                            {todo.notes && <p className="text-xs text-muted-foreground mt-0.5 truncate">{todo.notes}</p>}
+                            <Badge variant="outline" className="text-xs capitalize mt-1">
+                              {todo.isDone ? "Done" : "Pending"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                )}
+                  </div>
+              }
+
+                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 && selectedDateJobs.length === 0 && selectedDateTrips.length === 0 && selectedDateTodos.length === 0 &&
               <p className="text-sm text-muted-foreground">Nothing on this date</p>
               }
               </>
@@ -524,6 +579,10 @@ export function Calendar() {
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded bg-teal-500" />
               <span className="text-sm text-muted-foreground">Trip Plan</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-rose-500" />
+              <span className="text-sm text-muted-foreground">To-Do</span>
             </div>
           </div>
         </CardContent>
