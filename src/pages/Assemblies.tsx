@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy } from 'lucide-react';
 import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { AssemblyPreviewDialog } from '@/components/AssemblyPreviewDialog';
@@ -51,7 +51,7 @@ import { Assembly } from '@/hooks/useAssemblies';
 
 
 function AssemblyDetail({
-  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onItemsChanged, allAssemblies, partsAssemblies,
+  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onDuplicate, onItemsChanged, allAssemblies, partsAssemblies,
 }: {
   assembly: Assembly;
   partsItems?: { id: string; name: string; sku: string; price: number }[];
@@ -61,6 +61,7 @@ function AssemblyDetail({
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => Promise<void>;
+  onDuplicate: (id: string) => void;
   onItemsChanged?: () => void;
   allAssemblies: Assembly[];
   partsAssemblies?: PartsAssembly[];
@@ -315,6 +316,9 @@ function AssemblyDetail({
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                   <Pencil className="h-3 w-3 mr-1" /> Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => onDuplicate(assembly.id)}>
+                  <Copy className="h-3 w-3 mr-1" /> Duplicate
                 </Button>
                 <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => onDelete(assembly.id)}>
                   <Trash2 className="h-3 w-3" />
@@ -622,7 +626,7 @@ export function Assemblies() {
   const navigate = useNavigate();
   const activeType = typeParam ? decodeURIComponent(typeParam) : 'General';
 
-  const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly } = useAssemblies();
+  const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, duplicateAssembly } = useAssemblies();
   const { allItems: inventoryItems } = useInventory();
   const { parts } = useParts();
   const { folders } = usePartFolders();
@@ -741,7 +745,7 @@ export function Assemblies() {
         {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
