@@ -22,6 +22,8 @@ export interface InstructionCard {
   name: string;
   description: string;
   link: string | null;
+  notes: string;
+  createdBy: string;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -85,6 +87,8 @@ export function useInstructionCards(instructionId: string | null) {
         name: d.name,
         description: d.description || "",
         link: d.link,
+        notes: d.notes || "",
+        createdBy: d.created_by || "",
         displayOrder: d.display_order,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
@@ -101,7 +105,7 @@ export function useInstructionCards(instructionId: string | null) {
 
   useEffect(() => { fetchCards(); }, [fetchCards]);
 
-  const addCard = async (name: string) => {
+  const addCard = async (name: string, createdBy: string) => {
     if (!user || !instructionId) return null;
     try {
       const { data, error } = await (supabase as any)
@@ -110,6 +114,7 @@ export function useInstructionCards(instructionId: string | null) {
           instruction_id: instructionId,
           user_id: user.id,
           name,
+          created_by: createdBy,
           display_order: cards.length,
         })
         .select()
@@ -123,12 +128,13 @@ export function useInstructionCards(instructionId: string | null) {
     }
   };
 
-  const updateCard = async (cardId: string, updates: { name?: string; description?: string; link?: string | null }) => {
+  const updateCard = async (cardId: string, updates: { name?: string; description?: string; link?: string | null; notes?: string }) => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.link !== undefined) dbUpdates.link = updates.link;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
       const { error } = await (supabase as any)
         .from("instruction_cards")

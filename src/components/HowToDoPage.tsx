@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useHowToInstructions, HowToInstruction } from "@/hooks/useHowToInstructions";
 import { useInstructionCards, InstructionCard } from "@/hooks/useInstructionCards";
+import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,6 +63,7 @@ const INSTRUCTION_TYPES = [
 ];
 
 export function HowToDoPage() {
+  const { profile } = useProfile();
   const {
     instructions,
     loading,
@@ -100,6 +102,10 @@ export function HowToDoPage() {
   const [cardPdfUrl, setCardPdfUrl] = useState<string | null>(null);
   const [cardPdfBlob, setCardPdfBlob] = useState<string | null>(null);
   const [cardPdfLoading, setCardPdfLoading] = useState(false);
+  const [isEditingCardNotes, setIsEditingCardNotes] = useState(false);
+  const [cardNotesValue, setCardNotesValue] = useState("");
+  const [savingCardNotes, setSavingCardNotes] = useState(false);
+  const cardNotesRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync viewingCard with latest cards data
   useEffect(() => {
@@ -665,7 +671,7 @@ export function HowToDoPage() {
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && newCardName.trim()) {
-                            addCard(newCardName.trim());
+                            addCard(newCardName.trim(), profile?.displayName || "");
                             setNewCardName("");
                             setAddingCard(false);
                           }
@@ -675,7 +681,7 @@ export function HowToDoPage() {
                         size="sm"
                         disabled={!newCardName.trim()}
                         onClick={() => {
-                          addCard(newCardName.trim());
+                          addCard(newCardName.trim(), profile?.displayName || "");
                           setNewCardName("");
                           setAddingCard(false);
                         }}
@@ -753,7 +759,13 @@ export function HowToDoPage() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {card.createdBy && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  {card.createdBy}
+                                </span>
+                              )}
                               {card.files.length > 0 && (
                                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                                   <FileText className="h-3 w-3" />
@@ -791,6 +803,11 @@ export function HowToDoPage() {
                     {viewingCard.description && (
                       <p className="text-sm text-muted-foreground mt-1">{viewingCard.description}</p>
                     )}
+                    {viewingCard.createdBy && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                        <User className="h-3 w-3" /> Created by {viewingCard.createdBy}
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => {
@@ -819,6 +836,66 @@ export function HowToDoPage() {
                     <ExternalLink className="h-4 w-4" /> {viewingCard.link}
                   </a>
                 )}
+
+                {/* Card Notes - Google Docs style */}
+                <div className="border rounded-lg bg-card shadow-sm">
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
+                    <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
+                    {isEditingCardNotes ? (
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditingCardNotes(false)}>Cancel</Button>
+                        <Button size="sm" disabled={savingCardNotes} className="gap-1" onClick={async () => {
+                          if (!viewingCard) return;
+                          setSavingCardNotes(true);
+                          await updateCard(viewingCard.id, { notes: cardNotesValue });
+                          setIsEditingCardNotes(false);
+                          setSavingCardNotes(false);
+                        }}>
+                          <Save className="h-3 w-3" />
+                          {savingCardNotes ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="gap-1" onClick={() => {
+                        setCardNotesValue(viewingCard?.notes || "");
+                        setIsEditingCardNotes(true);
+                        setTimeout(() => cardNotesRef.current?.focus(), 50);
+                      }}>
+                        <Pencil className="h-3 w-3" />
+                        {viewingCard?.notes ? "Edit" : "Add Notes"}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="p-4 min-h-[120px]">
+                    {isEditingCardNotes ? (
+                      <textarea
+                        ref={cardNotesRef}
+                        value={cardNotesValue}
+                        onChange={(e) => setCardNotesValue(e.target.value)}
+                        className="w-full min-h-[120px] resize-none bg-transparent text-sm leading-relaxed focus:outline-none placeholder:text-muted-foreground/50"
+                        placeholder="Start typing notes..."
+                      />
+                    ) : viewingCard?.notes ? (
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed cursor-pointer hover:bg-muted/30 rounded p-1 -m-1 transition-colors"
+                        onClick={() => {
+                          setCardNotesValue(viewingCard?.notes || "");
+                          setIsEditingCardNotes(true);
+                          setTimeout(() => cardNotesRef.current?.focus(), 50);
+                        }}>
+                        {viewingCard.notes}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground/50 italic cursor-pointer hover:bg-muted/30 rounded p-1 -m-1 transition-colors"
+                        onClick={() => {
+                          setCardNotesValue("");
+                          setIsEditingCardNotes(true);
+                          setTimeout(() => cardNotesRef.current?.focus(), 50);
+                        }}>
+                        Click to add notes...
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 {/* Upload area */}
                 <div className="border-2 border-dashed rounded-lg p-4 text-center">
