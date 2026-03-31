@@ -869,10 +869,53 @@ export function HowToDoPage() {
                         )}
                         <CardContent className="p-3 flex items-center justify-between">
                           <p className="text-sm font-medium truncate flex-1 min-w-0">{file.fileName}</p>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
-                            onClick={() => deleteCardFile(file.id, file.fileUrl)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {file.signedUrl && (
+                              <>
+                                <Button variant="ghost" size="icon" className="h-7 w-7"
+                                  title="Download"
+                                  onClick={() => downloadFileFromUrl(file.signedUrl!, file.fileName)}>
+                                  <Download className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7"
+                                  title="Print"
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch(file.signedUrl!);
+                                      const blob = await res.blob();
+                                      const blobUrl = URL.createObjectURL(blob);
+                                      const printWindow = window.open(blobUrl, '_blank');
+                                      if (printWindow) {
+                                        printWindow.addEventListener('load', () => {
+                                          printWindow.print();
+                                        });
+                                      } else {
+                                        // Fallback for mobile: use iframe
+                                        const iframe = document.createElement('iframe');
+                                        iframe.style.display = 'none';
+                                        iframe.src = blobUrl;
+                                        document.body.appendChild(iframe);
+                                        iframe.addEventListener('load', () => {
+                                          iframe.contentWindow?.print();
+                                          setTimeout(() => {
+                                            document.body.removeChild(iframe);
+                                            URL.revokeObjectURL(blobUrl);
+                                          }, 10000);
+                                        });
+                                      }
+                                    } catch (err) {
+                                      console.error('Print failed:', err);
+                                    }
+                                  }}>
+                                  <Printer className="h-3 w-3" />
+                                </Button>
+                              </>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                              onClick={() => deleteCardFile(file.id, file.fileUrl)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
