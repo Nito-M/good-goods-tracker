@@ -632,7 +632,8 @@ export function Quotes() {
                                 {/* Per-Item Notes */}
                                 <div className="space-y-1">
                                   <Label className="text-xs">Item Notes</Label>
-                                  <Input
+                                  <textarea
+                                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[60px] resize-y"
                                     placeholder="Add notes for this item..."
                                     value={c.notes}
                                     onChange={(e) => updateCartItem(c.id, { notes: e.target.value })}
