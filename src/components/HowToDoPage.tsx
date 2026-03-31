@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useHowToInstructions, HowToInstruction } from "@/hooks/useHowToInstructions";
+import { useInstructionCards, InstructionCard } from "@/hooks/useInstructionCards";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,8 +77,40 @@ export function HowToDoPage() {
   const [viewingInstruction, setViewingInstruction] = useState<HowToInstruction | null>(null);
   const [editingInstruction, setEditingInstruction] = useState<HowToInstruction | null>(null);
 
+  // Cards hook
+  const {
+    cards,
+    addCard,
+    updateCard,
+    deleteCard,
+    uploadCardFile,
+    deleteCardFile,
+  } = useInstructionCards(viewingInstruction?.id || null);
+
+  // Card UI state
+  const [addingCard, setAddingCard] = useState(false);
+  const [newCardName, setNewCardName] = useState("");
+  const [editingCard, setEditingCard] = useState<InstructionCard | null>(null);
+  const [editCardName, setEditCardName] = useState("");
+  const [editCardDesc, setEditCardDesc] = useState("");
+  const [editCardLink, setEditCardLink] = useState("");
+  const [viewingCard, setViewingCard] = useState<InstructionCard | null>(null);
+  const [cardUploading, setCardUploading] = useState(false);
+  const cardFileRef = useRef<HTMLInputElement>(null);
+  const [cardPdfUrl, setCardPdfUrl] = useState<string | null>(null);
+  const [cardPdfBlob, setCardPdfBlob] = useState<string | null>(null);
+  const [cardPdfLoading, setCardPdfLoading] = useState(false);
+
+  // Sync viewingCard with latest cards data
+  useEffect(() => {
+    if (viewingCard) {
+      const updated = cards.find((c) => c.id === viewingCard.id);
+      if (updated) setViewingCard(updated);
+    }
+  }, [cards]);
+
   // Intercept browser back button when a dialog is open
-  const hasOpenDialog = !!(viewingInstruction || editingInstruction || isCreating);
+  const hasOpenDialog = !!(viewingInstruction || editingInstruction || isCreating || viewingCard || editingCard);
 
   useEffect(() => {
     if (!hasOpenDialog) return;
@@ -606,13 +639,337 @@ export function HowToDoPage() {
                     ))}
                   </div>
                 )}
+
+                {/* Cards Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-muted-foreground">Cards</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setAddingCard(true); setNewCardName(""); }}
+                      className="gap-1"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Card
+                    </Button>
+                  </div>
+
+                  {addingCard && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <Input
+                        placeholder="Card name..."
+                        value={newCardName}
+                        onChange={(e) => setNewCardName(e.target.value)}
+                        className="flex-1"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newCardName.trim()) {
+                            addCard(newCardName.trim());
+                            setNewCardName("");
+                            setAddingCard(false);
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        disabled={!newCardName.trim()}
+                        onClick={() => {
+                          addCard(newCardName.trim());
+                          setNewCardName("");
+                          setAddingCard(false);
+                        }}
+                      >
+                        Create
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setAddingCard(false)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {cards.length > 0 && (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {cards.map((card) => (
+                        <Card
+                          key={card.id}
+                          className="cursor-pointer hover:shadow-md transition-shadow group"
+                          onClick={() => setViewingCard(card)}
+                        >
+                          {/* Show first image/pdf thumbnail */}
+                          {card.files.length > 0 && (() => {
+                            const firstImg = card.files.find((f) => f.fileType.startsWith("image/"));
+                            const firstPdf = card.files.find((f) => f.fileType === "application/pdf");
+                            if (firstImg?.signedUrl) {
+                              return (
+                                <div className="h-32 bg-muted overflow-hidden">
+                                  <img src={firstImg.signedUrl} alt={card.name} className="w-full h-full object-cover" />
+                                </div>
+                              );
+                            }
+                            if (firstPdf) {
+                              return (
+                                <div className="h-32 bg-muted flex items-center justify-center">
+                                  <FileText className="h-10 w-10 text-muted-foreground" />
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                          <CardContent className="p-3">
+                            <div className="flex items-start justify-between">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-sm truncate">{card.name || "Untitled Card"}</p>
+                                {card.description && (
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                                )}
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+                                    <MoreVertical className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingCard(card);
+                                    setEditCardName(card.name);
+                                    setEditCardDesc(card.description);
+                                    setEditCardLink(card.link || "");
+                                  }}>
+                                    <Pencil className="h-3 w-3 mr-2" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (confirm("Delete this card?")) deleteCard(card.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-2" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              {card.files.length > 0 && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <FileText className="h-3 w-3" />
+                                  {card.files.length}
+                                </span>
+                              )}
+                              {card.link && (
+                                <span className="text-xs text-primary flex items-center gap-1">
+                                  <LinkIcon className="h-3 w-3" />
+                                  Link
+                                </span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
+      {/* View Card Dialog */}
+      <Dialog open={!!viewingCard} onOpenChange={(open) => !open && setViewingCard(null)}>
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] flex flex-col">
+          {viewingCard && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DialogTitle>{viewingCard.name || "Untitled Card"}</DialogTitle>
+                    {viewingCard.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{viewingCard.description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setEditingCard(viewingCard);
+                      setEditCardName(viewingCard.name);
+                      setEditCardDesc(viewingCard.description);
+                      setEditCardLink(viewingCard.link || "");
+                    }}>
+                      <Pencil className="h-3 w-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => {
+                      if (confirm("Delete this card?")) {
+                        deleteCard(viewingCard.id);
+                        setViewingCard(null);
+                      }
+                    }}>
+                      <Trash2 className="h-3 w-3 mr-1" /> Delete
+                    </Button>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto space-y-4 mt-2">
+                {viewingCard.link && (
+                  <a href={viewingCard.link} target="_blank" rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1 text-sm">
+                    <ExternalLink className="h-4 w-4" /> {viewingCard.link}
+                  </a>
+                )}
+
+                {/* Upload area */}
+                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                  <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
+                  <p className="text-sm text-muted-foreground">
+                    <button className="text-primary underline" onClick={() => cardFileRef.current?.click()}>
+                      Upload files
+                    </button>{" "}(images, PDFs)
+                  </p>
+                  <input
+                    ref={cardFileRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf"
+                    className="hidden"
+                    onChange={async (e) => {
+                      if (!e.target.files) return;
+                      setCardUploading(true);
+                      for (const file of Array.from(e.target.files)) {
+                        await uploadCardFile(viewingCard.id, file);
+                      }
+                      setCardUploading(false);
+                      e.target.value = "";
+                    }}
+                  />
+                  {cardUploading && <p className="text-xs text-muted-foreground mt-1">Uploading...</p>}
+                </div>
+
+                {/* Card files */}
+                {viewingCard.files.length > 0 && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {viewingCard.files.map((file) => (
+                      <Card key={file.id} className="overflow-hidden">
+                        {file.fileType.startsWith("image/") && file.signedUrl ? (
+                          <div className="h-40 bg-muted cursor-pointer relative group" onClick={() => setViewerImage(file.signedUrl!)}>
+                            <img src={file.signedUrl} alt={file.fileName} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Eye className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        ) : file.fileType === "application/pdf" && file.signedUrl ? (
+                          <div className="h-40 bg-muted flex items-center justify-center cursor-pointer relative group"
+                            onClick={async () => {
+                              setCardPdfLoading(true);
+                              setCardPdfUrl(file.signedUrl!);
+                              try {
+                                const res = await fetch(file.signedUrl!);
+                                const blob = await res.blob();
+                                setCardPdfBlob(URL.createObjectURL(new Blob([blob], { type: "application/pdf" })));
+                              } catch { setCardPdfBlob(null); }
+                              setCardPdfLoading(false);
+                            }}>
+                            <FileText className="h-12 w-12 text-muted-foreground" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Eye className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-40 bg-muted flex items-center justify-center">
+                            <File className="h-12 w-12 text-muted-foreground" />
+                          </div>
+                        )}
+                        <CardContent className="p-3 flex items-center justify-between">
+                          <p className="text-sm font-medium truncate flex-1 min-w-0">{file.fileName}</p>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                            onClick={() => deleteCardFile(file.id, file.fileUrl)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Card Dialog */}
+      <Dialog open={!!editingCard} onOpenChange={(open) => !open && setEditingCard(null)}>
+        <DialogContent className="max-w-lg">
+          {editingCard && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Edit Card</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <Input value={editCardName} onChange={(e) => setEditCardName(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea value={editCardDesc} onChange={(e) => setEditCardDesc(e.target.value)} rows={3} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Link</label>
+                  <Input value={editCardLink} onChange={(e) => setEditCardLink(e.target.value)} placeholder="https://..." />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setEditingCard(null)}>Cancel</Button>
+                  <Button onClick={async () => {
+                    await updateCard(editingCard.id, {
+                      name: editCardName,
+                      description: editCardDesc,
+                      link: editCardLink || null,
+                    });
+                    setEditingCard(null);
+                  }}>Save</Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Card PDF Preview */}
+      <Dialog open={!!cardPdfUrl} onOpenChange={(open) => {
+        if (!open) {
+          if (cardPdfBlob?.startsWith("blob:")) URL.revokeObjectURL(cardPdfBlob);
+          setCardPdfUrl(null);
+          setCardPdfBlob(null);
+        }
+      }}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 flex flex-col" aria-describedby={undefined}>
+          <DialogHeader className="p-4 pb-2">
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" /> PDF Preview
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 p-4 pt-0">
+            {cardPdfLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-muted-foreground">Loading PDF...</p>
+              </div>
+            ) : cardPdfBlob ? (
+              <object data={cardPdfBlob} type="application/pdf" className="w-full h-full rounded border">
+                <p className="text-sm text-muted-foreground text-center p-4">
+                  Preview unavailable.{" "}
+                  <a href={cardPdfUrl || "#"} target="_blank" rel="noopener noreferrer" className="text-primary underline">Open PDF</a>
+                </p>
+              </object>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-destructive">Failed to load PDF</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={!!editingInstruction} onOpenChange={(open) => !open && setEditingInstruction(null)}>
         <DialogContent className="max-w-lg">
           {editingInstruction && (
