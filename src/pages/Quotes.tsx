@@ -378,18 +378,15 @@ export function Quotes() {
   const taxAmount = afterDiscount * (effectiveTaxRate / 100);
   const total = afterDiscount + taxAmount;
 
-  const handleCreateQuote = async () => {
+  const handleSubmitQuote = async () => {
     if (cart.length === 0) return;
 
-    // Validate custom items have names
     const invalidItems = cart.filter((c) => !c.itemName.trim());
-    if (invalidItems.length > 0) {
-      return;
-    }
+    if (invalidItems.length > 0) return;
 
     setIsProcessing(true);
 
-    const quote = await createQuote({
+    const quoteData = {
       vendorId: selectedVendorId || null,
       quoteNumber: customQuoteNumber.trim() || null,
       items: cart.map((c) => ({
@@ -409,27 +406,19 @@ export function Quotes() {
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: selectedCompanyId || null,
       hidePrices,
-    });
+    };
 
-    if (quote) {
-      setCart([]);
-      setSelectedVendorId('');
-      setCustomQuoteNumber('');
-      setTaxRate(null);
-      setDiscountRate(null);
-      setMarkupPercent('');
-      setNotes('');
-      setHidePrices(false);
-      setSelectedCompanyId(defaultCompany?.id || '');
-      setValidUntilInitialized(false);
-      if (quoteSettings.validityDays) {
-        const defaultDate = addDays(new Date(), quoteSettings.validityDays);
-        setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
-        setValidUntilInitialized(true);
-      } else {
-        setValidUntil('');
-      }
-      // Switch to history tab after creation
+    let success = false;
+    if (editingQuoteId) {
+      await updateQuote(editingQuoteId, quoteData);
+      success = true;
+    } else {
+      const quote = await createQuote(quoteData);
+      success = !!quote;
+    }
+
+    if (success) {
+      resetForm();
       setActiveTab('history');
     }
 
