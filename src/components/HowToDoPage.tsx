@@ -48,6 +48,8 @@ import {
   Eye,
   Pencil,
   Save,
+  StickyNote,
+  MessageSquarePlus,
   Download,
   Printer,
 } from "lucide-react";
