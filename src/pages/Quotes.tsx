@@ -683,64 +683,68 @@ export function Quotes() {
 
                     <div className="space-y-2">
                       <Label>Vendor / Customer</Label>
-                      <Select
-                        value={selectedVendorId}
-                        onValueChange={(val) => {
-                          if (val.startsWith('customer:')) {
-                            const customerId = val.replace('customer:', '');
-                            const customer = customers.find(c => c.id === customerId);
-                            if (customer) {
-                              const existingVendor = vendors.find(v => v.name === customer.name);
-                              if (existingVendor) {
-                                setSelectedVendorId(existingVendor.id);
-                              } else {
-                                addVendor({
-                                  name: customer.name,
-                                  contact_email: customer.email,
-                                  contact_phone: customer.phone,
-                                  address: customer.address,
-                                  notes: null,
-                                  link: null,
-                                  color: null,
-                                });
-                                setPendingCustomerName(customer.name);
-                              }
-                            }
-                          } else {
-                            setSelectedVendorId(val);
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select vendor or customer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vendors.length > 0 && (
-                            <>
-                              <SelectItem value="__vendor_header" disabled className="text-xs font-semibold text-muted-foreground">
-                                Vendors
-                              </SelectItem>
-                              {vendors.map((vendor) => (
-                                <SelectItem key={vendor.id} value={vendor.id}>
-                                  {vendor.name}
-                                </SelectItem>
-                              ))}
-                            </>
-                          )}
-                          {customers.length > 0 && (
-                            <>
-                              <SelectItem value="__customer_header" disabled className="text-xs font-semibold text-muted-foreground">
-                                Customers
-                              </SelectItem>
-                              {customers.map((customer) => (
-                                <SelectItem key={`customer:${customer.id}`} value={`customer:${customer.id}`}>
-                                  {customer.name}{customer.company ? ` (${customer.company})` : ''}
-                                </SelectItem>
-                              ))}
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
+                            {selectedVendorId
+                              ? vendors.find(v => v.id === selectedVendorId)?.name || 'Select...'
+                              : 'Search vendor or customer...'}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search..." />
+                            <CommandList>
+                              <CommandEmpty>No results found.</CommandEmpty>
+                              {vendors.length > 0 && (
+                                <CommandGroup heading="Vendors">
+                                  {vendors.map((vendor) => (
+                                    <CommandItem
+                                      key={vendor.id}
+                                      value={vendor.name}
+                                      onSelect={() => setSelectedVendorId(vendor.id)}
+                                    >
+                                      <Check className={cn("mr-2 h-4 w-4", selectedVendorId === vendor.id ? "opacity-100" : "opacity-0")} />
+                                      {vendor.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              )}
+                              {customers.length > 0 && (
+                                <CommandGroup heading="Customers">
+                                  {customers.map((customer) => (
+                                    <CommandItem
+                                      key={`customer:${customer.id}`}
+                                      value={`${customer.name} ${customer.company || ''}`}
+                                      onSelect={() => {
+                                        const existingVendor = vendors.find(v => v.name === customer.name);
+                                        if (existingVendor) {
+                                          setSelectedVendorId(existingVendor.id);
+                                        } else {
+                                          addVendor({
+                                            name: customer.name,
+                                            contact_email: customer.email,
+                                            contact_phone: customer.phone,
+                                            address: customer.address,
+                                            notes: null,
+                                            link: null,
+                                            color: null,
+                                          });
+                                          setPendingCustomerName(customer.name);
+                                        }
+                                      }}
+                                    >
+                                      <Check className={cn("mr-2 h-4 w-4", "opacity-0")} />
+                                      {customer.name}{customer.company ? ` (${customer.company})` : ''}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              )}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="space-y-2">
