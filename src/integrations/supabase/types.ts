@@ -702,6 +702,91 @@ export type Database = {
         }
         Relationships: []
       }
+      instruction_card_files: {
+        Row: {
+          card_id: string
+          created_at: string
+          display_order: number
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          display_order?: number
+          file_name: string
+          file_type?: string
+          file_url: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          display_order?: number
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_card_files_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "instruction_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instruction_cards: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          instruction_id: string
+          link: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          instruction_id: string
+          link?: string | null
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          instruction_id?: string
+          link?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instruction_cards_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "how_to_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instruction_files: {
         Row: {
           created_at: string
