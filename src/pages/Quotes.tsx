@@ -208,8 +208,51 @@ export function Quotes() {
     }
   }, [defaultCompany]);
 
-  const handleSaveQuote = async (quoteId: string, data: any) => {
-    await updateQuote(quoteId, data);
+  const handleEditQuote = (quote: Quote) => {
+    setCart(quote.items.map(item => ({
+      id: item.id,
+      inventoryItemId: item.inventoryItemId,
+      itemName: item.itemName,
+      sku: item.sku,
+      quantity: item.quantity || null,
+      quantityUnit: (item.quantityUnit as QuantityUnit) || 'pcs',
+      unitPrice: item.unitPrice,
+      unitCost: item.unitCost,
+      notes: item.notes || '',
+    })));
+    setSelectedVendorId(quote.vendorId || '');
+    setCustomQuoteNumber(quote.quoteNumber);
+    setTaxRate(quote.taxRate || null);
+    setDiscountRate(quote.discountRate || null);
+    setMarkupPercent('');
+    setNotes(quote.notes || '');
+    setPaymentTerms(quote.paymentTerms || 'Due on receipt');
+    setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
+    setSelectedCompanyId((quote as any).companyId || defaultCompany?.id || '');
+    setHidePrices(quote.hidePrices || false);
+    setEditingQuoteId(quote.id);
+    setActiveTab('new-quote');
+  };
+
+  const resetForm = () => {
+    setCart([]);
+    setSelectedVendorId('');
+    setCustomQuoteNumber('');
+    setTaxRate(null);
+    setDiscountRate(null);
+    setMarkupPercent('');
+    setNotes('');
+    setHidePrices(false);
+    setSelectedCompanyId(defaultCompany?.id || '');
+    setEditingQuoteId(null);
+    setValidUntilInitialized(false);
+    if (quoteSettings.validityDays) {
+      const defaultDate = addDays(new Date(), quoteSettings.validityDays);
+      setValidUntil(format(defaultDate, 'yyyy-MM-dd'));
+      setValidUntilInitialized(true);
+    } else {
+      setValidUntil('');
+    }
   };
 
   // Calculate the next quote number
