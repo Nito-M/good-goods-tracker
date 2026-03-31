@@ -4,15 +4,12 @@ import { MonthlyPOGroup, groupOrdersByMonth } from '@/components/MonthlyPOGroup'
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
-import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
 import { useProfile } from '@/hooks/useProfile';
-import { useJobs } from '@/hooks/useJobs';
 import { useBank } from '@/hooks/useBank';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useBankCards } from '@/hooks/useBankCards';
 import { useWarehouses } from '@/hooks/useWarehouses';
-import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderCard } from '@/components/PurchaseOrderCard';
 import { PurchaseOrderPreviewDialog } from '@/components/PurchaseOrderPreviewDialog';
 import { ReceiveLocationDialog } from '@/components/ReceiveLocationDialog';
@@ -40,16 +37,12 @@ export function PurchaseOrders() {
   const { signOut } = useAuth();
   const { orders, loading, updateOrder, markAsOrdered, markAsReceived, markAsPartiallyReceived, markAsPaid, revertPaid, revertOrder, deleteOrder, deleteImageForOrder, deletePdfForOrder, addAttachment, deleteAttachment } =
   usePurchaseOrders();
-  const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { profile } = useProfile();
   const { addWithdrawal } = useBank();
-  const { jobs } = useJobs();
   const { companies } = useCompanies();
   const { cards: bankCards } = useBankCards();
   const { warehouses } = useWarehouses();
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [previewOrder, setPreviewOrder] = useState<PurchaseOrder | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,8 +137,7 @@ export function PurchaseOrders() {
   };
 
   const handleEdit = (order: PurchaseOrder) => {
-    setEditingOrder(order);
-    setEditDialogOpen(true);
+    navigate('/purchase-orders/new', { state: { editingOrder: order } });
   };
 
   const getSettingsForOrder = (order: PurchaseOrder) => {
@@ -383,17 +375,6 @@ export function PurchaseOrders() {
         }
       </main>
 
-      {editingOrder &&
-      <EditPurchaseOrderDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        order={editingOrder}
-        onSave={updateOrder}
-        inventoryItems={inventoryItems}
-        vendors={vendors}
-        jobs={jobs} />
-
-      }
 
       {previewOrder &&
       <PurchaseOrderPreviewDialog

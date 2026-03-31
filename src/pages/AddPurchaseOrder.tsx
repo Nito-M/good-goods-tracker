@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ import { useVendors } from '@/hooks/useVendors';
 import { useRequests } from '@/hooks/useRequests';
 import { useJobs } from '@/hooks/useJobs';
 import { useBankCards } from '@/hooks/useBankCards';
-import { PurchaseOrderItem } from '@/types/purchaseOrder';
+import { PurchaseOrderItem, PurchaseOrder } from '@/types/purchaseOrder';
 import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, ChevronsUpDown, Check, CreditCard } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
@@ -123,35 +123,57 @@ function ItemSearchCombobox({
 
 export function AddPurchaseOrder() {
   const navigate = useNavigate();
-  const { createOrder } = usePurchaseOrders();
+  const location = useLocation();
+  const editingOrder = (location.state as { editingOrder?: PurchaseOrder })?.editingOrder ?? null;
+  const { createOrder, updateOrder } = usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { requests } = useRequests();
   const { jobs } = useJobs();
   const { cards: bankCards } = useBankCards();
 
-  const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
-  const [poNumber, setPoNumber] = useState('');
+  // Initialize from editing order if present
+  const initLineItems = (): LineItem[] => {
+    if (editingOrder) {
+      return editingOrder.items.map((item) => {
+        const matchingItem = inventoryItems.find(i => i.sku === item.sku);
+        return {
+          id: crypto.randomUUID(),
+          selectedItemId: matchingItem?.id || 'custom',
+          customSku: matchingItem ? '' : item.sku,
+          customName: matchingItem ? '' : item.itemName,
+          quantity: item.quantity,
+          unitCost: item.unitCost !== undefined ? item.unitCost.toString() : '',
+        };
+      });
+    }
+    return [createEmptyLineItem()];
+  };
+
+  const [lineItems, setLineItems] = useState<LineItem[]>(initLineItems);
+  const [poNumber, setPoNumber] = useState(editingOrder?.poNumber || '');
   const [orderedAt, setOrderedAt] = useState(
-    new Date().toISOString().split('T')[0]
+    editingOrder
+      ? new Date(editingOrder.orderedAt).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
   );
-  const [notes, setNotes] = useState('');
-  const [vendorId, setVendorId] = useState<string>('');
-  const [requestId, setRequestId] = useState<string>('');
-  const [jobIds, setJobIds] = useState<string[]>([]);
-  const [bankCardId, setBankCardId] = useState<string>('');
+  const [notes, setNotes] = useState(editingOrder?.notes || '');
+  const [vendorId, setVendorId] = useState<string>(editingOrder?.vendorId || '');
+  const [requestId, setRequestId] = useState<string>(editingOrder?.requestId || '');
+  const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
+  const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
-  const [discountValue, setDiscountValue] = useState<string>('');
-  const [companyId, setCompanyId] = useState<string>('');
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>(editingOrder?.discountType || 'percentage');
+  const [discountValue, setDiscountValue] = useState<string>(editingOrder?.discountValue ? String(editingOrder.discountValue) : '');
+  const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
   const { companies, defaultCompany } = useCompanies();
 
-  // Set default company on load
+  // Set default company on load (only for new orders)
   useEffect(() => {
-    if (defaultCompany && !companyId) {
+    if (!editingOrder && defaultCompany && !companyId) {
       setCompanyId(defaultCompany.id);
     }
   }, [defaultCompany]);
@@ -303,25 +325,46 @@ export function AddPurchaseOrder() {
     const [year, month, day] = orderedAt.split('-').map(Number);
     const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
 
-    await createOrder(
-      {
-        items,
-        orderedAt: localOrderedAt,
-        notes: notes || undefined,
-        vendorId: vendorId || null,
-        poNumber: poNumber || undefined,
-        requestId: requestId && requestId !== 'none' ? requestId : null,
-        jobIds: jobIds,
-        status,
-        discountType,
-        discountValue: parseFloat(discountValue) || 0,
-        discountAmount,
-        companyId: companyId || null,
-        bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
-      },
-      pdfFile,
-      imageFile
-    );
+    if (editingOrder) {
+      await updateOrder(
+        editingOrder.id,
+        {
+          items,
+          orderedAt: localOrderedAt,
+          notes: notes || undefined,
+          vendorId: vendorId || null,
+          jobIds,
+          poNumber: poNumber || undefined,
+          discountType,
+          discountValue: parseFloat(discountValue) || 0,
+          discountAmount,
+          companyId: companyId || null,
+          bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+        },
+        pdfFile,
+        imageFile
+      );
+    } else {
+      await createOrder(
+        {
+          items,
+          orderedAt: localOrderedAt,
+          notes: notes || undefined,
+          vendorId: vendorId || null,
+          poNumber: poNumber || undefined,
+          requestId: requestId && requestId !== 'none' ? requestId : null,
+          jobIds,
+          status,
+          discountType,
+          discountValue: parseFloat(discountValue) || 0,
+          discountAmount,
+          companyId: companyId || null,
+          bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+        },
+        pdfFile,
+        imageFile
+      );
+    }
     setSaving(false);
     navigate('/purchase-orders');
   };
@@ -351,9 +394,9 @@ export function AddPurchaseOrder() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold tracking-tight text-card-foreground">
-              Create Purchase Order
-            </h1>
+             <h1 className="text-xl font-bold tracking-tight text-card-foreground">
+               {editingOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}
+             </h1>
           </div>
         </div>
       </header>
@@ -886,12 +929,20 @@ export function AddPurchaseOrder() {
             <Link to="/purchase-orders">
               <Button variant="outline">Cancel</Button>
             </Link>
-            <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving || !isDraftValid()}>
-              {saving ? 'Saving...' : 'Save as Draft'}
-            </Button>
-            <Button onClick={() => handleSave('ordered')} disabled={saving || !isFormValid()}>
-              {saving ? 'Creating...' : 'Create Order'}
-            </Button>
+            {editingOrder ? (
+              <Button onClick={() => handleSave(editingOrder.status === 'draft' ? 'draft' : 'ordered')} disabled={saving || !isDraftValid()}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            ) : (
+              <>
+                <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving || !isDraftValid()}>
+                  {saving ? 'Saving...' : 'Save as Draft'}
+                </Button>
+                <Button onClick={() => handleSave('ordered')} disabled={saving || !isFormValid()}>
+                  {saving ? 'Creating...' : 'Create Order'}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </main>
