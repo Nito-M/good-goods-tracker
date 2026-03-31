@@ -325,25 +325,46 @@ export function AddPurchaseOrder() {
     const [year, month, day] = orderedAt.split('-').map(Number);
     const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
 
-    await createOrder(
-      {
-        items,
-        orderedAt: localOrderedAt,
-        notes: notes || undefined,
-        vendorId: vendorId || null,
-        poNumber: poNumber || undefined,
-        requestId: requestId && requestId !== 'none' ? requestId : null,
-        jobIds: jobIds,
-        status,
-        discountType,
-        discountValue: parseFloat(discountValue) || 0,
-        discountAmount,
-        companyId: companyId || null,
-        bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
-      },
-      pdfFile,
-      imageFile
-    );
+    if (editingOrder) {
+      await updateOrder(
+        editingOrder.id,
+        {
+          items,
+          orderedAt: localOrderedAt,
+          notes: notes || undefined,
+          vendorId: vendorId || null,
+          jobIds,
+          poNumber: poNumber || undefined,
+          discountType,
+          discountValue: parseFloat(discountValue) || 0,
+          discountAmount,
+          companyId: companyId || null,
+          bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+        },
+        pdfFile,
+        imageFile
+      );
+    } else {
+      await createOrder(
+        {
+          items,
+          orderedAt: localOrderedAt,
+          notes: notes || undefined,
+          vendorId: vendorId || null,
+          poNumber: poNumber || undefined,
+          requestId: requestId && requestId !== 'none' ? requestId : null,
+          jobIds,
+          status,
+          discountType,
+          discountValue: parseFloat(discountValue) || 0,
+          discountAmount,
+          companyId: companyId || null,
+          bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+        },
+        pdfFile,
+        imageFile
+      );
+    }
     setSaving(false);
     navigate('/purchase-orders');
   };
