@@ -123,35 +123,57 @@ function ItemSearchCombobox({
 
 export function AddPurchaseOrder() {
   const navigate = useNavigate();
-  const { createOrder } = usePurchaseOrders();
+  const location = useLocation();
+  const editingOrder = (location.state as { editingOrder?: PurchaseOrder })?.editingOrder ?? null;
+  const { createOrder, updateOrder } = usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { vendors } = useVendors();
   const { requests } = useRequests();
   const { jobs } = useJobs();
   const { cards: bankCards } = useBankCards();
 
-  const [lineItems, setLineItems] = useState<LineItem[]>([createEmptyLineItem()]);
-  const [poNumber, setPoNumber] = useState('');
+  // Initialize from editing order if present
+  const initLineItems = (): LineItem[] => {
+    if (editingOrder) {
+      return editingOrder.items.map((item) => {
+        const matchingItem = inventoryItems.find(i => i.sku === item.sku);
+        return {
+          id: crypto.randomUUID(),
+          selectedItemId: matchingItem?.id || 'custom',
+          customSku: matchingItem ? '' : item.sku,
+          customName: matchingItem ? '' : item.itemName,
+          quantity: item.quantity,
+          unitCost: item.unitCost !== undefined ? item.unitCost.toString() : '',
+        };
+      });
+    }
+    return [createEmptyLineItem()];
+  };
+
+  const [lineItems, setLineItems] = useState<LineItem[]>(initLineItems);
+  const [poNumber, setPoNumber] = useState(editingOrder?.poNumber || '');
   const [orderedAt, setOrderedAt] = useState(
-    new Date().toISOString().split('T')[0]
+    editingOrder
+      ? new Date(editingOrder.orderedAt).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
   );
-  const [notes, setNotes] = useState('');
-  const [vendorId, setVendorId] = useState<string>('');
-  const [requestId, setRequestId] = useState<string>('');
-  const [jobIds, setJobIds] = useState<string[]>([]);
-  const [bankCardId, setBankCardId] = useState<string>('');
+  const [notes, setNotes] = useState(editingOrder?.notes || '');
+  const [vendorId, setVendorId] = useState<string>(editingOrder?.vendorId || '');
+  const [requestId, setRequestId] = useState<string>(editingOrder?.requestId || '');
+  const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
+  const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
-  const [discountValue, setDiscountValue] = useState<string>('');
-  const [companyId, setCompanyId] = useState<string>('');
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>(editingOrder?.discountType || 'percentage');
+  const [discountValue, setDiscountValue] = useState<string>(editingOrder?.discountValue ? String(editingOrder.discountValue) : '');
+  const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
   const { companies, defaultCompany } = useCompanies();
 
-  // Set default company on load
+  // Set default company on load (only for new orders)
   useEffect(() => {
-    if (defaultCompany && !companyId) {
+    if (!editingOrder && defaultCompany && !companyId) {
       setCompanyId(defaultCompany.id);
     }
   }, [defaultCompany]);
