@@ -316,7 +316,7 @@ export function FullScreenItemPicker({
         {/* Left: Search + Results */}
         <div className="flex-1 flex flex-col border-r border-border min-w-0">
           {/* Search Bar */}
-          <div className="p-4 border-b border-border shrink-0">
+          <div className="p-4 border-b border-border shrink-0 space-y-2">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -338,6 +338,18 @@ export function FullScreenItemPicker({
                   <X className="h-4 w-4" />
                 </Button>
               )}
+            </div>
+            {vendorItemIds && vendorItemIds.length > 0 && !showAssemblies && (
+              <Button
+                variant={vendorOnly ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setVendorOnly(!vendorOnly)}
+                className="gap-1.5"
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {vendorOnly ? `Showing ${vendorName || 'Vendor'} items only` : `Filter by ${vendorName || 'Vendor'}`}
+              </Button>
+            )}
             </div>
           </div>
 
