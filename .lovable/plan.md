@@ -1,27 +1,36 @@
 
 
-## Plan: Replace Edit Quote Dialog with Full Creation Screen
+## Plan: Switch PO Item Entry to Full-Screen Picker Style (Like Quotes/Sales)
 
-### Problem
-Currently, editing a quote opens a basic `EditQuoteDialog` modal with simple text inputs — no searchable inventory picker, no assembly type selection, no full-screen item picker. The creation flow has all these features but they're lost when editing.
-
-### Approach
-Instead of the dialog, clicking "Edit" on a quote will populate the existing "New Quote" tab with the quote's data (items, vendor, rates, notes, etc.) and switch to that tab — essentially turning it into an edit mode. A save will call `updateQuote` instead of `createQuote`.
+### Summary
+Replace the current inline combobox line-item entry in the PO creation page with the same `FullScreenItemPicker` + cart card pattern used in Quotes and Sales. Keep all other PO-specific sections (vendor, order details, attachments, order summary, actions) unchanged.
 
 ### Changes
 
-**File: `src/pages/Quotes.tsx`**
+**File: `src/components/FullScreenItemPicker.tsx`**
+1. Add `'Purchase Order'` to the `documentType` union type so the picker can be used for POs.
 
-1. **Add edit mode state**: `editingQuoteId` (string | null) to track if we're editing vs creating.
-2. **When `onEdit` is triggered** (from QuoteCard): populate all creation state (`cart`, `selectedVendorId`, `taxRate`, `discountRate`, `markupPercent`, `notes`, `paymentTerms`, `validUntil`, `customQuoteNumber`, `selectedCompanyId`, `hidePrices`) from the quote's data, set `editingQuoteId`, and switch `activeTab` to `'new-quote'`.
-3. **Update the submit handler**: if `editingQuoteId` is set, call `updateQuote` with the existing quote ID instead of creating a new one. After save, clear `editingQuoteId` and reset form.
-4. **Update tab label**: show "Edit Quote" instead of "New Quote" when in edit mode.
-5. **Remove `EditQuoteDialog`** component usage and import (the file can remain but won't be used).
+**File: `src/pages/AddPurchaseOrder.tsx`**
+1. **Replace LineItem model with CartItem model**: Switch from the current `LineItem` (with `selectedItemId`, `customSku`, `customName`) to a `CartItem` interface matching the picker pattern (`id`, `inventoryItemId`, `itemName`, `sku`, `quantity`, `unitCost`, `notes`).
+2. **Add FullScreenItemPicker**: Import and render `FullScreenItemPicker` with `open`/`onClose` state. Add the "Add Items from Inventory" button (same style as Quotes) above the cart card.
+3. **Replace the inline line-item card** with a cart display card showing added items (item name, SKU, quantity, unit cost, total, notes, delete button) -- same layout as Quotes/Sales cart items.
+4. **Wire up picker callbacks**: `onAddItem` maps an inventory item to a cart entry (auto-filling vendor price if available), `onAddCustomItem` creates a blank custom entry, `onUpdateQuantity`/`onRemoveItem`/`onUpdateItem` manage the cart.
+5. **Preserve vendor price logic**: When vendor changes, update unit costs on existing cart items that match vendor-priced inventory items. When an item is added from the picker, auto-fill its vendor price.
+6. **Update `handleSave`**: Map `CartItem[]` to `PurchaseOrderItem[]` for the existing `createOrder`/`updateOrder` calls.
+7. **Update edit initialization**: Map `editingOrder.items` to `CartItem[]` instead of `LineItem[]`.
+8. **Remove**: `ItemSearchCombobox` component, `LineItem` interface, `createEmptyLineItem` function, and all inline line-item grid rendering code.
 
-**File: `src/components/EditQuoteDialog.tsx`** — No changes needed (just unused).
+### What stays the same
+- Vendor selection card (top)
+- Order Details card (PO number, date, request link, jobs, bank card, notes)
+- Attachments card (PDF + image upload)
+- Order Summary card (subtotal, discount, tax, total)
+- Action buttons (Cancel, Save as Draft, Create Order / Save Changes)
+- All vendor price auto-fill business logic (just rewired to cart items)
 
 ### Technical Details
-- Quote items map to cart items: `quoteItem → { id, inventoryItemId, itemName, sku, quantity, quantityUnit, unitPrice, unitCost, notes, excludeMarkup }`
-- The existing `FullScreenItemPicker` and all search/assembly features remain available since they operate on the shared `cart` state
-- The "New Quote" tab heading and submit button text change contextually based on `editingQuoteId`
+- The `FullScreenItemPicker` already supports custom items and item search -- no changes needed for that
+- Cart items will include `unitCost` for PO-specific pricing (vendor prices), mapped from the picker's `unitPrice` field
+- The picker's `documentType` will be `'Purchase Order'` to label UI appropriately
+- Assemblies won't be included in PO picker (no `onAddAssembly` prop) since POs are for purchasing inventory
 
