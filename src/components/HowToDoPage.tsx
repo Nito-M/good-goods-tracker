@@ -558,7 +558,7 @@ export function HowToDoPage() {
                       className="gap-1"
                     >
                       <Plus className="h-3 w-3" />
-                      Add Card
+                      Add Instruction
                     </Button>
                   </div>
 
