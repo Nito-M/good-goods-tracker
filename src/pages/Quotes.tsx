@@ -51,7 +51,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
-import { EditQuoteDialog } from '@/components/EditQuoteDialog';
+
 import { QuotePreviewDialog } from '@/components/QuotePreviewDialog';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 
