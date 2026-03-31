@@ -526,7 +526,33 @@ export function Calendar() {
                   </div>
               }
 
-                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 && selectedDateJobs.length === 0 && selectedDateTrips.length === 0 &&
+                {/* To-Dos */}
+                {selectedDateTodos.length > 0 &&
+              <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">To-Dos</p>
+                    {selectedDateTodos.map((todo) =>
+                <div
+                  key={todo.id}
+                  className="p-3 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                  onClick={() => navigate("/notes")}>
+                        <div className="flex items-start gap-2">
+                          <div className={cn("p-1 rounded text-white mt-0.5", todo.isDone ? "bg-emerald-500" : "bg-rose-500")}>
+                            <ListChecks className="h-3 w-3" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={cn("font-medium text-sm truncate", todo.isDone && "line-through text-muted-foreground")}>{todo.title}</p>
+                            {todo.notes && <p className="text-xs text-muted-foreground mt-0.5 truncate">{todo.notes}</p>}
+                            <Badge variant="outline" className="text-xs capitalize mt-1">
+                              {todo.isDone ? "Done" : "Pending"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                )}
+                  </div>
+              }
+
+                {selectedDateEvents.length === 0 && selectedDateRequests.length === 0 && selectedDateJobs.length === 0 && selectedDateTrips.length === 0 && selectedDateTodos.length === 0 &&
               <p className="text-sm text-muted-foreground">Nothing on this date</p>
               }
               </>
