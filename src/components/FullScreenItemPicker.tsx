@@ -281,7 +281,7 @@ export function FullScreenItemPicker({
             <Button
               variant={showAssemblies ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setShowAssemblies(!showAssemblies)}
+              onClick={() => { setShowAssemblies(!showAssemblies); setSelectedAssemblyType(null); }}
             >
               <Layers className="h-4 w-4 mr-1" />
               Assemblies
