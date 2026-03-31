@@ -102,6 +102,10 @@ export function HowToDoPage() {
   const [cardPdfUrl, setCardPdfUrl] = useState<string | null>(null);
   const [cardPdfBlob, setCardPdfBlob] = useState<string | null>(null);
   const [cardPdfLoading, setCardPdfLoading] = useState(false);
+  const [isEditingCardNotes, setIsEditingCardNotes] = useState(false);
+  const [cardNotesValue, setCardNotesValue] = useState("");
+  const [savingCardNotes, setSavingCardNotes] = useState(false);
+  const cardNotesRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync viewingCard with latest cards data
   useEffect(() => {
