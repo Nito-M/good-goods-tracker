@@ -54,7 +54,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SaleCard } from '@/components/SaleCard';
-import { EditSaleDialog } from '@/components/EditSaleDialog';
 import { InvoicePreviewDialog } from '@/components/InvoicePreviewDialog';
 
 import { InventoryItem } from '@/types/inventory';
@@ -122,13 +121,14 @@ export function Sales() {
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
-  const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [newVendorName, setNewVendorName] = useState('');
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [showItemPicker, setShowItemPicker] = useState(false);
+  const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('new-sale');
 
   // Default to default company
   const { defaultCompany } = useCompanies();
@@ -184,8 +184,62 @@ export function Sales() {
     setShowAddVendor(false);
   };
 
-  const handleSaveSale = async (saleId: string, data: any) => {
-    await updateSale(saleId, data);
+
+  const resetForm = () => {
+    setCart([]);
+    setSelectedVendorId('');
+    setCustomInvoiceNumber('');
+    setTaxRate(0);
+    setDiscountRate(0);
+    setMarkupPercent('');
+    setNotes('');
+    setSelectedCompanyId(defaultCompany?.id || '');
+    setEditingSaleId(null);
+  };
+
+  const handleEditSale = (sale: Sale) => {
+    // Build cart from sale items by finding matching inventory items
+    const newCart: CartItem[] = sale.items.map((item) => {
+      const invItem = inventoryItems.find(i => i.id === item.inventoryItemId);
+      const fallbackItem: InventoryItem = {
+        id: item.inventoryItemId || `custom-${item.id}`,
+        name: item.itemName,
+        sku: item.sku,
+        price: item.unitPrice,
+        cost: item.unitCost,
+        quantity: 0,
+        quantityUnit: 'pcs',
+        category: '',
+        minStock: 0,
+        weight: 0,
+        weightUnit: 'kg',
+        dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
+        colors: [],
+        description: '',
+        boxAmount: 0,
+        bundleAmount: 0,
+        palletAmount: 0,
+        pieceLength: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      return {
+        inventoryItem: invItem || fallbackItem,
+        quantity: item.quantity,
+        customPrice: item.unitPrice,
+      };
+    });
+
+    setCart(newCart);
+    setSelectedVendorId(sale.vendorId || '');
+    setCustomInvoiceNumber(sale.invoiceNumber);
+    setTaxRate(sale.taxRate);
+    setDiscountRate(sale.discountRate);
+    setNotes(sale.notes || '');
+    setPaymentTerms(sale.paymentTerms || 'Due on receipt');
+    setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
+    setEditingSaleId(sale.id);
+    setActiveTab('new-sale');
   };
 
   // Get the invoice prefix from profile
@@ -278,34 +332,52 @@ export function Sales() {
 
     setIsProcessing(true);
 
-    const sale = await createSale({
-      vendorId: selectedVendorId || null,
-      invoiceNumber: customInvoiceNumber.trim() || null,
-      items: cart.map((c) => ({
-        inventoryItemId: c.inventoryItem.id,
-        itemName: c.inventoryItem.name,
-        sku: c.inventoryItem.sku,
-        quantity: c.quantity,
-        unitPrice: getItemPrice(c),
-        unitCost: c.inventoryItem.cost,
-      })),
-      taxRate,
-      discountRate,
-      notes: notes || null,
-      paymentTerms,
-      dueDate: null,
-      companyId: selectedCompanyId || null,
-    });
+    if (editingSaleId) {
+      // Update existing sale
+      await updateSale(editingSaleId, {
+        vendorId: selectedVendorId || null,
+        invoiceNumber: customInvoiceNumber.trim() || '',
+        items: cart.map((c) => ({
+          id: `updated-${c.inventoryItem.id}-${Date.now()}`,
+          inventoryItemId: c.inventoryItem.id,
+          itemName: c.inventoryItem.name,
+          sku: c.inventoryItem.sku,
+          quantity: c.quantity,
+          unitPrice: getItemPrice(c),
+          unitCost: c.inventoryItem.cost,
+        })),
+        taxRate,
+        discountRate,
+        notes: notes || null,
+        paymentTerms,
+        dueDate: null,
+        companyId: selectedCompanyId || null,
+      });
+      resetForm();
+    } else {
+      // Create new sale
+      const sale = await createSale({
+        vendorId: selectedVendorId || null,
+        invoiceNumber: customInvoiceNumber.trim() || null,
+        items: cart.map((c) => ({
+          inventoryItemId: c.inventoryItem.id,
+          itemName: c.inventoryItem.name,
+          sku: c.inventoryItem.sku,
+          quantity: c.quantity,
+          unitPrice: getItemPrice(c),
+          unitCost: c.inventoryItem.cost,
+        })),
+        taxRate,
+        discountRate,
+        notes: notes || null,
+        paymentTerms,
+        dueDate: null,
+        companyId: selectedCompanyId || null,
+      });
 
-    if (sale) {
-      setCart([]);
-      setSelectedVendorId('');
-      setCustomInvoiceNumber('');
-      setTaxRate(0);
-      setDiscountRate(0);
-      setMarkupPercent('');
-      setNotes('');
-      setSelectedCompanyId(defaultCompany?.id || '');
+      if (sale) {
+        resetForm();
+      }
     }
 
     setIsProcessing(false);
@@ -368,11 +440,11 @@ export function Sales() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="new-sale" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="new-sale" className="gap-2">
               <ShoppingCart className="h-4 w-4" />
-              New Sale
+              {editingSaleId ? 'Edit Sale' : 'New Sale'}
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <Receipt className="h-4 w-4" />
@@ -781,8 +853,17 @@ export function Sales() {
                       disabled={cart.length === 0 || isProcessing}
                       onClick={handleCompleteSale}
                     >
-                      {isProcessing ? 'Processing...' : 'Complete Sale'}
+                      {isProcessing ? 'Processing...' : editingSaleId ? 'Save Changes' : 'Complete Sale'}
                     </Button>
+                    {editingSaleId && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={resetForm}
+                      >
+                        Cancel Edit
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -887,7 +968,7 @@ export function Sales() {
                                   onRevert={revertSale}
                                   onDownloadInvoice={() => generateInvoicePDF(sale, getSettingsForSale(sale))}
                                   onPreviewInvoice={() => setPreviewSale(sale)}
-                                  onEdit={setEditingSale}
+                                onEdit={handleEditSale}
                                   onStatusChange={(id, status) => updateStatus(id, status, addSaleRevenue)}
                                   onTogglePickedUp={togglePickedUp}
                                 />
@@ -903,14 +984,6 @@ export function Sales() {
           </TabsContent>
         </Tabs>
       </main>
-
-      <EditSaleDialog
-        sale={editingSale}
-        open={!!editingSale}
-        onOpenChange={(open) => !open && setEditingSale(null)}
-        onSave={handleSaveSale}
-        vendors={vendors}
-      />
 
       {previewSale && (
         <InvoicePreviewDialog
