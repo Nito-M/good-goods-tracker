@@ -110,7 +110,7 @@ export function HowToDoPage() {
   }, [cards]);
 
   // Intercept browser back button when a dialog is open
-  const hasOpenDialog = !!(viewingInstruction || editingInstruction || isCreating);
+  const hasOpenDialog = !!(viewingInstruction || editingInstruction || isCreating || viewingCard || editingCard);
 
   useEffect(() => {
     if (!hasOpenDialog) return;
