@@ -745,7 +745,7 @@ export function Assemblies() {
         {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
