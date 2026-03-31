@@ -213,13 +213,17 @@ export function FullScreenItemPicker({
   }, [inventoryItems, searchQuery]);
 
   const filteredAssemblies = useMemo(() => {
-    if (!searchQuery.trim()) return assemblies;
+    let list = assemblies;
+    if (selectedAssemblyType) {
+      list = list.filter(a => (a.type || 'General') === selectedAssemblyType);
+    }
+    if (!searchQuery.trim()) return list;
     const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    return assemblies.filter((a) => {
+    return list.filter((a) => {
       const haystack = `${a.name} ${a.description || ''}`.toLowerCase();
       return tokens.every((t) => haystack.includes(t));
     });
-  }, [assemblies, searchQuery]);
+  }, [assemblies, searchQuery, selectedAssemblyType]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
