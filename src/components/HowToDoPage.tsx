@@ -677,7 +677,7 @@ export function HowToDoPage() {
                         size="sm"
                         disabled={!newCardName.trim()}
                         onClick={() => {
-                          addCard(newCardName.trim());
+                          addCard(newCardName.trim(), profile?.displayName || "");
                           setNewCardName("");
                           setAddingCard(false);
                         }}
