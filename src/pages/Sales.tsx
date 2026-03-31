@@ -445,11 +445,11 @@ export function Sales() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="new-sale" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="new-sale" className="gap-2">
               <ShoppingCart className="h-4 w-4" />
-              New Sale
+              {editingSaleId ? 'Edit Sale' : 'New Sale'}
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2">
               <Receipt className="h-4 w-4" />
