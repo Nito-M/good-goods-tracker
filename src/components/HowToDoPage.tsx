@@ -458,7 +458,7 @@ export function HowToDoPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mr-8">
                     <Button variant="outline" size="sm" onClick={() => {
                       setEditingInstruction(viewingInstruction);
                       setViewingInstruction(null);
