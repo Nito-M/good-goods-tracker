@@ -47,7 +47,10 @@ import {
   Eye,
   Pencil,
   Save,
+  Download,
+  Printer,
 } from "lucide-react";
+import { downloadFileFromUrl } from "@/lib/fileDownload";
 import { format } from "date-fns";
 import { ImageViewerDialog } from "@/components/ImageViewerDialog";
 
