@@ -186,6 +186,11 @@ export function Calendar() {
     });
   }, [selectedDate, tripPlans]);
 
+  const selectedDateTodos = useMemo(() => {
+    if (!selectedDate) return [];
+    return todosByDate.get(format(selectedDate, "yyyy-MM-dd")) || [];
+  }, [selectedDate, todosByDate]);
+
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const goToToday = () => {
