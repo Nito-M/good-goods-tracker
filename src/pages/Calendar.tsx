@@ -323,6 +323,14 @@ export function Calendar() {
                           📍 {trip.title}
                         </div>
                       )}
+                      {dayTodos.slice(0, Math.max(0, 3 - dayEvents.length - dayJobs.length - dayRequests.length - dayTrips.length)).map((todo) =>
+                      <div
+                        key={`todo-${todo.id}`}
+                        className={cn("text-xs px-1.5 py-0.5 rounded truncate text-white", todo.isDone ? "bg-emerald-500" : "bg-rose-500")}
+                        title={todo.title}>
+                          ✓ {todo.title}
+                        </div>
+                      )}
                       {totalItems > 3 &&
                       <div className="text-xs text-muted-foreground pl-1">
                           +{totalItems - 3} more
