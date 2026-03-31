@@ -96,6 +96,20 @@ export function HowToDoPage() {
     deleteCardFile,
   } = useInstructionCards(viewingInstruction?.id || null);
 
+  // Card notes hook
+  const {
+    notes: cardNotesList,
+    addNote: addCardNote,
+    updateNote: updateCardNote,
+    deleteNote: deleteCardNote,
+  } = useCardNotes(viewingCard?.id || null);
+
+  // Card notes UI state
+  const [addingCardNote, setAddingCardNote] = useState(false);
+  const [newCardNoteValue, setNewCardNoteValue] = useState("");
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteValue, setEditingNoteValue] = useState("");
+
   // Card UI state
   const [addingCard, setAddingCard] = useState(false);
   const [newCardName, setNewCardName] = useState("");
