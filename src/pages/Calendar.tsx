@@ -32,7 +32,8 @@ import {
   Trash2,
   Repeat,
   Briefcase,
-  MapPinned } from
+  MapPinned,
+  ListChecks } from
 "lucide-react";
 import {
   format,
