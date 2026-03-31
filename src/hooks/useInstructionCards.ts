@@ -128,12 +128,13 @@ export function useInstructionCards(instructionId: string | null) {
     }
   };
 
-  const updateCard = async (cardId: string, updates: { name?: string; description?: string; link?: string | null }) => {
+  const updateCard = async (cardId: string, updates: { name?: string; description?: string; link?: string | null; notes?: string }) => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.link !== undefined) dbUpdates.link = updates.link;
+      if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
       const { error } = await (supabase as any)
         .from("instruction_cards")
