@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -12,8 +13,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandItem, CommandGroup } from '@/components/ui/command';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
@@ -21,105 +20,21 @@ import { useRequests } from '@/hooks/useRequests';
 import { useJobs } from '@/hooks/useJobs';
 import { useBankCards } from '@/hooks/useBankCards';
 import { PurchaseOrderItem, PurchaseOrder } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, ChevronsUpDown, Check, CreditCard } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, CreditCard, ShoppingCart } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
+import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
 interface VendorPrice {
   itemId: string;
   price: number;
 }
 
-interface LineItem {
-  id: string;
-  selectedItemId: string;
-  customSku: string;
-  customName: string;
-  quantity: number;
-  unitCost: string;
-}
-
-function createEmptyLineItem(): LineItem {
-  return {
-    id: crypto.randomUUID(),
-    selectedItemId: '',
-    customSku: '',
-    customName: '',
-    quantity: '' as unknown as number,
-    unitCost: '',
-  };
-}
-
-function ItemSearchCombobox({
-  items,
-  selectedItemId,
-  onSelect,
-  inventoryItems,
-}: {
-  items: { id: string; name: string; sku: string }[];
-  selectedItemId: string;
-  onSelect: (value: string) => void;
-  inventoryItems: { id: string; name: string; sku: string }[];
-}) {
-  const [open, setOpen] = useState(false);
-  const selectedItem = inventoryItems.find((i) => i.id === selectedItemId);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="h-9 w-full justify-between font-normal"
-        >
-          <span className="truncate">
-            {selectedItem
-              ? `${selectedItem.name} (${selectedItem.sku})`
-              : 'Select item...'}
-          </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search items..." />
-          <CommandList>
-            <CommandEmpty>No items found.</CommandEmpty>
-            <CommandGroup>
-              <CommandItem
-                value="custom-item"
-                onSelect={() => {
-                  onSelect('custom');
-                  setOpen(false);
-                }}
-              >
-                <Check className={cn('mr-2 h-4 w-4', selectedItemId === 'custom' ? 'opacity-100' : 'opacity-0')} />
-                -- Custom Item --
-              </CommandItem>
-              {items.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={`${item.name} ${item.sku}`}
-                  onSelect={() => {
-                    onSelect(item.id);
-                    setOpen(false);
-                  }}
-                >
-                  <Check className={cn('mr-2 h-4 w-4', selectedItemId === item.id ? 'opacity-100' : 'opacity-0')} />
-                  {item.name} ({item.sku})
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
+// PO cart item extends PickerCartItem
+type POCartItem = PickerCartItem;
 
 export function AddPurchaseOrder() {
   const navigate = useNavigate();
@@ -132,25 +47,29 @@ export function AddPurchaseOrder() {
   const { jobs } = useJobs();
   const { cards: bankCards } = useBankCards();
 
-  // Initialize from editing order if present
-  const initLineItems = (): LineItem[] => {
+  // Initialize cart from editing order
+  const initCart = (): POCartItem[] => {
     if (editingOrder) {
       return editingOrder.items.map((item) => {
         const matchingItem = inventoryItems.find(i => i.sku === item.sku);
         return {
           id: crypto.randomUUID(),
-          selectedItemId: matchingItem?.id || 'custom',
-          customSku: matchingItem ? '' : item.sku,
-          customName: matchingItem ? '' : item.itemName,
+          inventoryItemId: matchingItem?.id || null,
+          itemName: item.itemName,
+          sku: item.sku,
           quantity: item.quantity,
-          unitCost: item.unitCost !== undefined ? item.unitCost.toString() : '',
+          quantityUnit: 'pcs' as const,
+          unitPrice: item.unitCost ?? 0,
+          unitCost: item.unitCost ?? 0,
+          notes: item.notes || '',
         };
       });
     }
-    return [createEmptyLineItem()];
+    return [];
   };
 
-  const [lineItems, setLineItems] = useState<LineItem[]>(initLineItems);
+  const [cart, setCart] = useState<POCartItem[]>(initCart);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [poNumber, setPoNumber] = useState(editingOrder?.poNumber || '');
   const [orderedAt, setOrderedAt] = useState(
     editingOrder
@@ -178,21 +97,20 @@ export function AddPurchaseOrder() {
     }
   }, [defaultCompany]);
 
-  // Calculate subtotal in cents for precision
-  const subtotalCents = lineItems.reduce((sum, item) => {
-    const qty = typeof item.quantity === 'number' ? item.quantity : 0;
-    const cost = parseFloat(item.unitCost) || 0;
+  // Calculate subtotal
+  const subtotalCents = cart.reduce((sum, item) => {
+    const qty = item.quantity || 0;
+    const cost = item.unitPrice || 0;
     return sum + Math.round(qty * cost * 100);
   }, 0);
   const subtotal = subtotalCents / 100;
 
-  // Calculate discount amount
   const discountAmount = discountType === 'percentage'
     ? Math.round(subtotalCents * (parseFloat(discountValue) || 0) / 100) / 100
     : parseFloat(discountValue) || 0;
   
   const afterDiscount = Math.max(0, subtotal - discountAmount);
-  const taxAmount = Math.round(afterDiscount * 5) / 100; // 5% tax
+  const taxAmount = Math.round(afterDiscount * 5) / 100;
   const grandTotal = afterDiscount + taxAmount;
 
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -205,122 +123,106 @@ export function AddPurchaseOrder() {
         setVendorPrices([]);
         return;
       }
-
       const { data } = await supabase
         .from('item_vendor_prices')
         .select('item_id, price')
         .eq('vendor_id', vendorId);
-
       if (data) {
         setVendorPrices(data.map(d => ({ itemId: d.item_id, price: Number(d.price) })));
       }
     };
-
     fetchVendorPrices();
   }, [vendorId]);
 
-  const applyVendorPrices = (selectedVendorId: string) => {
-    if (!selectedVendorId || selectedVendorId === 'none') return;
-
-    supabase
-      .from('item_vendor_prices')
-      .select('item_id, price')
-      .eq('vendor_id', selectedVendorId)
-      .then(({ data }) => {
-        if (data) {
-          const priceMap = new Map(data.map(d => [d.item_id, Number(d.price)]));
-          setLineItems(prev => prev.map(lineItem => {
-            if (lineItem.selectedItemId && lineItem.selectedItemId !== 'custom') {
-              const vendorPrice = priceMap.get(lineItem.selectedItemId);
-              if (vendorPrice !== undefined) {
-                return { ...lineItem, unitCost: String(vendorPrice) };
-              }
-            }
-            return lineItem;
-          }));
-        }
-      });
-  };
-
+  // When vendor changes, update unit costs on existing cart items
   const handleVendorChange = (newVendorId: string) => {
     setVendorId(newVendorId);
-    setLineItems(prev => prev.map(item => {
-      if (item.selectedItemId === 'custom') {
-        return item;
-      }
-      return createEmptyLineItem();
-    }));
-    applyVendorPrices(newVendorId);
-  };
-
-  const filteredInventoryItems = vendorId && vendorId !== 'none'
-    ? [...inventoryItems]
-        .filter(item => vendorPrices.some(vp => vp.itemId === item.id))
-        .sort((a, b) => a.name.localeCompare(b.name))
-    : [];
-
-  const updateLineItem = (id: string, updates: Partial<LineItem>) => {
-    setLineItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const updated = { ...item, ...updates };
-        
-        if (updates.selectedItemId && updates.selectedItemId !== 'custom' && vendorId && vendorId !== 'none') {
-          const vendorPrice = vendorPrices.find(vp => vp.itemId === updates.selectedItemId);
-          if (vendorPrice) {
-            updated.unitCost = String(vendorPrice.price);
+    if (newVendorId && newVendorId !== 'none') {
+      supabase
+        .from('item_vendor_prices')
+        .select('item_id, price')
+        .eq('vendor_id', newVendorId)
+        .then(({ data }) => {
+          if (data) {
+            const priceMap = new Map(data.map(d => [d.item_id, Number(d.price)]));
+            setCart(prev => prev.map(c => {
+              if (c.inventoryItemId) {
+                const vp = priceMap.get(c.inventoryItemId);
+                if (vp !== undefined) {
+                  return { ...c, unitPrice: vp, unitCost: vp };
+                }
+              }
+              return c;
+            }));
           }
-        }
-        
-        return updated;
-      })
-    );
-  };
-
-  const addLineItem = () => {
-    setLineItems((prev) => [...prev, createEmptyLineItem()]);
-  };
-
-  const removeLineItem = (id: string) => {
-    if (lineItems.length > 1) {
-      setLineItems((prev) => prev.filter((item) => item.id !== id));
+        });
     }
   };
 
-  const getItemDetails = (lineItem: LineItem) => {
-    const inventoryItem = inventoryItems.find((i) => i.id === lineItem.selectedItemId);
-    if (inventoryItem) {
-      return { sku: inventoryItem.sku, itemName: inventoryItem.name };
-    }
-    // For custom items, generate SKU from item name if not provided
-    const generatedSku = lineItem.customName ? lineItem.customName.toUpperCase().replace(/\s+/g, '-').slice(0, 20) : '';
-    return { sku: lineItem.customSku || generatedSku, itemName: lineItem.customName };
+  // Picker callbacks
+  const handleAddItem = (item: any) => {
+    const vendorPrice = vendorPrices.find(vp => vp.itemId === item.id);
+    const cost = vendorPrice?.price ?? item.cost ?? 0;
+    const newItem: POCartItem = {
+      id: crypto.randomUUID(),
+      inventoryItemId: item.id,
+      itemName: item.name,
+      sku: item.sku,
+      quantity: 1,
+      quantityUnit: item.quantityUnit || 'pcs',
+      unitPrice: cost,
+      unitCost: cost,
+      notes: '',
+    };
+    setCart(prev => [...prev, newItem]);
   };
 
-  const isLineItemValid = (lineItem: LineItem) => {
-    const { itemName } = getItemDetails(lineItem);
-    const qty = typeof lineItem.quantity === 'number' ? lineItem.quantity : 0;
-    return itemName && qty >= 1;
+  const handleAddCustomItem = () => {
+    const newItem: POCartItem = {
+      id: crypto.randomUUID(),
+      inventoryItemId: null,
+      itemName: '',
+      sku: '',
+      quantity: 1,
+      quantityUnit: 'pcs',
+      unitPrice: 0,
+      unitCost: 0,
+      notes: '',
+    };
+    setCart(prev => [...prev, newItem]);
+  };
+
+  const handleUpdateQuantity = (itemId: string, quantity: number | null) => {
+    setCart(prev => prev.map(c => c.id === itemId ? { ...c, quantity } : c));
+  };
+
+  const handleRemoveItem = (itemId: string) => {
+    setCart(prev => prev.filter(c => c.id !== itemId));
+  };
+
+  const handleUpdateItem = (itemId: string, updates: Partial<PickerCartItem>) => {
+    setCart(prev => prev.map(c => c.id === itemId ? { ...c, ...updates } : c));
   };
 
   const isFormValid = () => {
-    return vendorId && vendorId !== 'none' && lineItems.every(isLineItemValid);
+    return vendorId && vendorId !== 'none' && cart.length > 0 && cart.every(c => c.itemName && (c.quantity || 0) >= 1);
   };
 
   const isDraftValid = () => {
-    return lineItems.some(isLineItemValid);
+    return cart.length > 0 && cart.some(c => c.itemName && (c.quantity || 0) >= 1);
   };
 
   const handleSave = async (status: 'draft' | 'ordered' = 'ordered') => {
     if (status === 'draft' ? !isDraftValid() : !isFormValid()) return;
-
     setSaving(true);
 
-    const items: PurchaseOrderItem[] = lineItems.map((lineItem) => {
-      const { sku, itemName } = getItemDetails(lineItem);
-      const unitCost = lineItem.unitCost ? parseFloat(lineItem.unitCost) : undefined;
-      return { sku, itemName, quantity: lineItem.quantity, unitCost };
-    });
+    const items: PurchaseOrderItem[] = cart.map((c) => ({
+      sku: c.sku || c.itemName.toUpperCase().replace(/\s+/g, '-').slice(0, 20),
+      itemName: c.itemName,
+      quantity: c.quantity || 0,
+      unitCost: c.unitPrice || undefined,
+      notes: c.notes || undefined,
+    }));
 
     const [year, month, day] = orderedAt.split('-').map(Number);
     const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
@@ -438,204 +340,118 @@ export function AddPurchaseOrder() {
             </CardContent>
           </Card>
 
-          {/* Line Items Card */}
+          {/* Items Card - Full Screen Picker Style */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Items</CardTitle>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="default"
                   size="sm"
-                  onClick={addLineItem}
+                  onClick={() => setPickerOpen(true)}
                   className="gap-2"
-                  disabled={!vendorId || vendorId === 'none'}
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Item
+                  <ShoppingCart className="h-4 w-4" />
+                  Add Items from Inventory
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {(!vendorId || vendorId === 'none') && (
-                <p className="text-sm text-muted-foreground text-center py-8 border rounded-lg bg-muted/30">
-                  Please select a vendor first to add items
-                </p>
-              )}
-
-              {vendorId && vendorId !== 'none' && lineItems.map((lineItem, index) => (
-                <div
-                  key={lineItem.id}
-                  className="p-3 rounded-lg border bg-muted/30 overflow-hidden"
-                >
-                  {/* Custom item fields - only when explicitly custom */}
-                  {lineItem.selectedItemId === 'custom' && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">Custom Item</p>
+            <CardContent>
+              {cart.length === 0 ? (
+                <div className="text-center py-12 border rounded-lg bg-muted/30">
+                  <ShoppingCart className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No items added yet.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Click "Add Items from Inventory" to get started.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cart.map((c) => (
+                    <div key={c.id} className="border border-border rounded-lg p-3 space-y-2 bg-muted/30">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          {!c.inventoryItemId ? (
+                            <Input
+                              value={c.itemName}
+                              onChange={(e) => handleUpdateItem(c.id, { itemName: e.target.value })}
+                              placeholder="Item name..."
+                              className="h-7 text-sm font-medium"
+                            />
+                          ) : (
+                            <p className="font-medium text-sm">{c.itemName}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground">{c.sku || 'No SKU'}</p>
+                        </div>
                         <Button
-                          type="button"
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-xs"
-                          onClick={() => updateLineItem(lineItem.id, { selectedItemId: '', customSku: '', customName: '' })}
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive shrink-0"
+                          onClick={() => handleRemoveItem(c.id)}
                         >
-                          Switch to inventory
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                      <div className="grid grid-cols-[minmax(0,1fr)_100px_120px_100px_40px] gap-3 items-end">
+
+                      <div className="grid grid-cols-3 gap-2 items-end">
                         <div className="space-y-1">
-                          <Label className="text-xs">Item Name *</Label>
+                          <Label className="text-xs">Qty</Label>
                           <Input
-                            value={lineItem.customName}
-                            onChange={(e) =>
-                              updateLineItem(lineItem.id, { customName: e.target.value })
-                            }
-                            placeholder="Item name"
-                            className="h-9"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Qty *</Label>
-                        <Input
                             type="number"
-                            min={0.01}
-                            step="0.01"
-                            value={lineItem.quantity === ('' as unknown as number) ? '' : lineItem.quantity}
-                            onChange={(e) =>
-                              updateLineItem(lineItem.id, {
-                                quantity: e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value) || 0,
-                              })
-                            }
-                            placeholder=""
-                            className="h-9"
+                            className="h-7 text-sm"
+                            value={c.quantity ?? ''}
+                            onChange={(e) => handleUpdateQuantity(c.id, e.target.value === '' ? null : parseFloat(e.target.value) || 0)}
+                            min={0}
+                            step={0.01}
                           />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">Unit Cost</Label>
                           <Input
                             type="number"
+                            className="h-7 text-sm"
+                            value={c.unitPrice || ''}
+                            onChange={(e) => handleUpdateItem(c.id, { unitPrice: parseFloat(e.target.value) || 0, unitCost: parseFloat(e.target.value) || 0 })}
                             min={0}
-                            step="0.00001"
-                            value={lineItem.unitCost}
-                            onChange={(e) =>
-                              updateLineItem(lineItem.id, {
-                                unitCost: e.target.value,
-                              })
-                            }
+                            step={0.00001}
                             placeholder="0.00"
-                            className="h-9"
                           />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">Total</Label>
-                          <div className="h-9 flex items-center px-2 rounded-md border bg-muted text-sm font-medium">
-                            ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
+                          <div className="h-7 flex items-center px-2 rounded-md border bg-muted text-sm font-medium">
+                            ${((c.quantity || 0) * (c.unitPrice || 0)).toFixed(2)}
                           </div>
                         </div>
-                        <div>
-                          {lineItems.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-destructive hover:text-destructive"
-                            onClick={() => removeLineItem(lineItem.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                      </div>
+
+                      {!c.inventoryItemId && (
+                        <div className="space-y-1">
+                          <Label className="text-xs">SKU</Label>
+                          <Input
+                            value={c.sku}
+                            onChange={(e) => handleUpdateItem(c.id, { sku: e.target.value })}
+                            placeholder="SKU"
+                            className="h-7 text-xs"
+                          />
                         </div>
+                      )}
+
+                      <div className="space-y-1">
+                        <Label className="text-xs">Notes</Label>
+                        <Input
+                          value={c.notes}
+                          onChange={(e) => handleUpdateItem(c.id, { notes: e.target.value })}
+                          placeholder="Item notes..."
+                          className="h-7 text-xs"
+                        />
                       </div>
                     </div>
-                  )}
+                  ))}
 
-                  {/* Inventory item selection */}
-                  {lineItem.selectedItemId !== 'custom' && (
-                    <div className="grid grid-cols-[minmax(0,1fr)_100px_120px_100px_40px] gap-3 items-end">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Item</Label>
-                        <ItemSearchCombobox
-                          items={filteredInventoryItems
-                            .filter((item) => !lineItems.some(
-                              (li) => li.id !== lineItem.id && li.selectedItemId === item.id
-                            ))
-                            .sort((a, b) => a.name.localeCompare(b.name))}
-                          selectedItemId={lineItem.selectedItemId}
-                          onSelect={(value) =>
-                            updateLineItem(lineItem.id, {
-                              selectedItemId: value,
-                              customSku: '',
-                              customName: '',
-                            })
-                          }
-                          inventoryItems={inventoryItems}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Qty *</Label>
-                        <Input
-                          type="number"
-                          min={0.01}
-                          step="0.01"
-                          value={lineItem.quantity === ('' as unknown as number) ? '' : lineItem.quantity}
-                          onChange={(e) =>
-                            updateLineItem(lineItem.id, {
-                              quantity: e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value) || 0,
-                            })
-                          }
-                          placeholder=""
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Unit Cost</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          step="0.00001"
-                          value={lineItem.unitCost}
-                          onChange={(e) =>
-                            updateLineItem(lineItem.id, {
-                              unitCost: e.target.value,
-                            })
-                          }
-                          placeholder="0.00"
-                          className="h-9"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Total</Label>
-                        <div className="h-9 flex items-center px-2 rounded-md border bg-muted text-sm font-medium">
-                          ${(lineItem.quantity * (parseFloat(lineItem.unitCost) || 0)).toFixed(2)}
-                        </div>
-                      </div>
-                      <div>
-                        {lineItems.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-destructive hover:text-destructive"
-                            onClick={() => removeLineItem(lineItem.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {/* Items Subtotal */}
-              {vendorId && vendorId !== 'none' && lineItems.length > 0 && (
-                <div className="flex justify-end pt-2 border-t">
-                  <div className="text-right space-y-1">
+                  {/* Items Subtotal */}
+                  <div className="flex justify-end pt-2 border-t">
                     <div className="text-sm text-muted-foreground">
-                      Items Subtotal: <span className="font-semibold text-foreground">
-                        ${lineItems.reduce((sum, item) => sum + (item.quantity * (parseFloat(item.unitCost) || 0)), 0).toFixed(2)}
-                      </span>
+                      Items Subtotal: <span className="font-semibold text-foreground">${subtotal.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -857,7 +673,7 @@ export function AddPurchaseOrder() {
           </Card>
 
           {/* Order Summary Card */}
-          {vendorId && vendorId !== 'none' && lineItems.some(li => parseFloat(li.unitCost) > 0) && (
+          {cart.some(c => (c.unitPrice || 0) > 0) && (
             <Card className="bg-muted/50">
               <CardHeader>
                 <CardTitle className="text-lg">Order Summary</CardTitle>
@@ -865,7 +681,7 @@ export function AddPurchaseOrder() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal ({lineItems.length} item{lineItems.length !== 1 ? 's' : ''})</span>
+                    <span className="text-muted-foreground">Subtotal ({cart.length} item{cart.length !== 1 ? 's' : ''})</span>
                     <span className="font-medium">${subtotal.toFixed(2)}</span>
                   </div>
                   
@@ -946,6 +762,21 @@ export function AddPurchaseOrder() {
           </div>
         </div>
       </main>
+
+      {/* Full Screen Item Picker */}
+      <FullScreenItemPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        inventoryItems={inventoryItems}
+        cart={cart}
+        onAddItem={handleAddItem}
+        onAddCustomItem={handleAddCustomItem}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onUpdateItem={handleUpdateItem}
+        documentType="Purchase Order"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
