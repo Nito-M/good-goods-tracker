@@ -225,8 +225,8 @@ export function Sales() {
         palletAmount: 0,
         pieceLength: 0,
         showInStorefront: false,
-        createdAt: '',
-        updatedAt: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       return {
         inventoryItem: invItem || fallbackItem,
