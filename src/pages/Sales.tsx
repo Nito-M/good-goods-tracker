@@ -856,8 +856,17 @@ export function Sales() {
                       disabled={cart.length === 0 || isProcessing}
                       onClick={handleCompleteSale}
                     >
-                      {isProcessing ? 'Processing...' : 'Complete Sale'}
+                      {isProcessing ? 'Processing...' : editingSaleId ? 'Save Changes' : 'Complete Sale'}
                     </Button>
+                    {editingSaleId && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={resetForm}
+                      >
+                        Cancel Edit
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
