@@ -52,6 +52,8 @@ interface FullScreenItemPickerProps {
   assemblies?: Assembly[];
   documentType: 'Quote' | 'Invoice' | 'Part' | 'Purchase Order';
   formatPrice?: (value: number) => string;
+  vendorItemIds?: string[] | null;
+  vendorName?: string;
 }
 
 function CartItemRow({
