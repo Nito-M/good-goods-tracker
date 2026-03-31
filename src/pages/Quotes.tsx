@@ -920,9 +920,9 @@ export function Quotes() {
                       className="w-full mt-4"
                       size="lg"
                       disabled={cart.length === 0 || isProcessing}
-                      onClick={handleCreateQuote}
+                      onClick={handleSubmitQuote}
                     >
-                      {isProcessing ? 'Creating...' : 'Create Quote'}
+                      {isProcessing ? (editingQuoteId ? 'Saving...' : 'Creating...') : (editingQuoteId ? 'Save Changes' : 'Create Quote')}
                     </Button>
                   </CardContent>
                 </Card>
