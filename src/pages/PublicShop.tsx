@@ -249,9 +249,9 @@ export function PublicShop() {
           backToInventoryPath="/items"
         />
 
-        {/* Banner */}
+        {/* Banner – 1920×600 design ratio */}
         {settings?.banner_signed && (
-          <div className="w-full h-48 sm:h-64 overflow-hidden">
+          <div className="w-full overflow-hidden" style={{ maxWidth: 1920, aspectRatio: '1920/600', margin: '0 auto' }}>
             <img
               src={settings.banner_signed}
               alt="Store banner"
