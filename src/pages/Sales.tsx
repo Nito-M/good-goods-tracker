@@ -54,7 +54,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SaleCard } from '@/components/SaleCard';
-import { EditSaleDialog } from '@/components/EditSaleDialog';
 import { InvoicePreviewDialog } from '@/components/InvoicePreviewDialog';
 
 import { InventoryItem } from '@/types/inventory';
