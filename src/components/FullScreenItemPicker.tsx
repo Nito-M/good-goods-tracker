@@ -180,10 +180,13 @@ export function FullScreenItemPicker({
   assemblies = [],
   documentType,
   formatPrice = formatCurrency,
+  vendorItemIds,
+  vendorName,
 }: FullScreenItemPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAssemblies, setShowAssemblies] = useState(false);
   const [selectedAssemblyType, setSelectedAssemblyType] = useState<string | null>(null);
+  const [vendorOnly, setVendorOnly] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
