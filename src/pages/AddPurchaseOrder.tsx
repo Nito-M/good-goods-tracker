@@ -929,12 +929,20 @@ export function AddPurchaseOrder() {
             <Link to="/purchase-orders">
               <Button variant="outline">Cancel</Button>
             </Link>
-            <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving || !isDraftValid()}>
-              {saving ? 'Saving...' : 'Save as Draft'}
-            </Button>
-            <Button onClick={() => handleSave('ordered')} disabled={saving || !isFormValid()}>
-              {saving ? 'Creating...' : 'Create Order'}
-            </Button>
+            {editingOrder ? (
+              <Button onClick={() => handleSave(editingOrder.status === 'draft' ? 'draft' : 'ordered')} disabled={saving || !isDraftValid()}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            ) : (
+              <>
+                <Button variant="secondary" onClick={() => handleSave('draft')} disabled={saving || !isDraftValid()}>
+                  {saving ? 'Saving...' : 'Save as Draft'}
+                </Button>
+                <Button onClick={() => handleSave('ordered')} disabled={saving || !isFormValid()}>
+                  {saving ? 'Creating...' : 'Create Order'}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </main>
