@@ -22,6 +22,8 @@ export interface InstructionCard {
   name: string;
   description: string;
   link: string | null;
+  notes: string;
+  createdBy: string;
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
