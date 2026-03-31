@@ -290,20 +290,22 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
               <FileText className="h-3 w-3" />
               Items ({quote.items.length})
             </p>
-            <div className="text-sm text-muted-foreground pl-4">
-              {quote.items.slice(0, 3).map((item) => (
-                <div key={item.id} className="flex justify-between">
-                  <span>
-                    {item.itemName} × {item.quantity} {item.quantityUnit}
-                  </span>
-                  <span>{formatCurrency(item.totalPrice)}</span>
+            <div className="text-sm text-muted-foreground pl-4 space-y-1">
+              {quote.items.map((item) => (
+                <div key={item.id}>
+                  <div className="flex justify-between">
+                    <span>
+                      {item.itemName} × {item.quantity} {item.quantityUnit}
+                    </span>
+                    <span>{formatCurrency(item.totalPrice)}</span>
+                  </div>
+                  {item.notes && (
+                    <p className="text-xs text-muted-foreground/70 pl-2 italic whitespace-pre-wrap">
+                      {item.notes}
+                    </p>
+                  )}
                 </div>
               ))}
-              {quote.items.length > 3 && (
-                <p className="text-xs italic">
-                  +{quote.items.length - 3} more items
-                </p>
-              )}
             </div>
           </div>
 
