@@ -979,7 +979,7 @@ export function Quotes() {
                                 onUpdateStatus={updateQuoteStatus}
                                 onUploadAttachment={uploadAttachment}
                                 onRemoveAttachment={removeAttachment}
-                                onEdit={setEditingQuote}
+                                onEdit={handleEditQuote}
                                 onConvertToInvoice={convertToInvoice}
                                 onConvertToPurchaseOrder={convertToPurchaseOrder}
                                 onPreview={setPreviewQuote}
