@@ -223,7 +223,6 @@ export function Sales() {
         bundleAmount: 0,
         palletAmount: 0,
         pieceLength: 0,
-        pieceLength: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
