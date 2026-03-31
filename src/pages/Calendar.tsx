@@ -251,7 +251,8 @@ export function Calendar() {
                 const dayEvents = getEventsForDay(day);
                 const dayJobs = jobsByDate.get(dateKey) || [];
                 const dayTrips = tripPlans.filter((tp) => tp.endDate ? dateKey >= tp.startDate && dateKey <= tp.endDate : tp.startDate === dateKey);
-                const totalItems = dayRequests.length + dayEvents.length + dayJobs.length + dayTrips.length;
+                const dayTodos = todosByDate.get(dateKey) || [];
+                const totalItems = dayRequests.length + dayEvents.length + dayJobs.length + dayTrips.length + dayTodos.length;
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
                 const isDayToday = isToday(day);
