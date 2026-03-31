@@ -776,10 +776,6 @@ export function HowToDoPage() {
                     <h4 className="text-sm font-semibold flex items-center gap-2">
                       <StickyNote className="h-4 w-4" /> Notes ({cardNotesList.length})
                     </h4>
-                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
-                      onClick={() => { setAddingCardNote(true); setNewCardNoteValue(""); }}>
-                      <MessageSquarePlus className="h-3 w-3" /> Add Note
-                    </Button>
                   </div>
                   <div className="p-3 space-y-2 max-h-60 overflow-y-auto">
                     {addingCardNote && (
