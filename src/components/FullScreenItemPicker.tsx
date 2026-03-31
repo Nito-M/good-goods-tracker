@@ -181,9 +181,19 @@ export function FullScreenItemPicker({
 }: FullScreenItemPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAssemblies, setShowAssemblies] = useState(false);
+  const [selectedAssemblyType, setSelectedAssemblyType] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
+
+  const assemblyTypes = useMemo(() => {
+    const typeMap = new Map<string, number>();
+    assemblies.forEach(a => {
+      const t = a.type || 'General';
+      typeMap.set(t, (typeMap.get(t) || 0) + 1);
+    });
+    return Array.from(typeMap.entries()).map(([name, count]) => ({ name, count }));
+  }, [assemblies]);
 
   // Focus search on open
   useEffect(() => {
