@@ -799,6 +799,11 @@ export function HowToDoPage() {
                     {viewingCard.description && (
                       <p className="text-sm text-muted-foreground mt-1">{viewingCard.description}</p>
                     )}
+                    {viewingCard.createdBy && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                        <User className="h-3 w-3" /> Created by {viewingCard.createdBy}
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => {
