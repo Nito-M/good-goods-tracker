@@ -626,7 +626,7 @@ export function Assemblies() {
   const navigate = useNavigate();
   const activeType = typeParam ? decodeURIComponent(typeParam) : 'General';
 
-  const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly } = useAssemblies();
+  const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, duplicateAssembly } = useAssemblies();
   const { allItems: inventoryItems } = useInventory();
   const { parts } = useParts();
   const { folders } = usePartFolders();
