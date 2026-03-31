@@ -159,45 +159,6 @@ export function RequestDetail() {
           </Button>
           <div className="min-w-0">
             <h1 className="text-2xl font-bold font-mono">{decodedNumber}</h1>
-            {/* Editable Title */}
-            {editingTitle ? (
-              <form
-                className="flex items-center gap-1 mt-1"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const newTitle = titleDraft.trim() || null;
-                  for (const r of groupRequests) {
-                    await updateRequest(r.id, { title: newTitle });
-                  }
-                  setEditingTitle(false);
-                }}
-              >
-                <Input
-                  autoFocus
-                  value={titleDraft}
-                  onChange={(e) => setTitleDraft(e.target.value)}
-                  placeholder="Enter request title..."
-                  className="h-7 text-sm w-56"
-                  onKeyDown={(e) => { if (e.key === "Escape") setEditingTitle(false); }}
-                />
-                <Button type="submit" size="sm" variant="ghost" className="h-7 px-2 text-xs">Save</Button>
-                <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setEditingTitle(false)}>
-                  <X className="h-3 w-3" />
-                </Button>
-              </form>
-            ) : (
-              <button
-                className="flex items-center gap-1 mt-1 text-sm text-muted-foreground hover:text-foreground transition-colors group"
-                onClick={() => { setTitleDraft(firstReq?.title || ""); setEditingTitle(true); }}
-              >
-                {firstReq?.title ? (
-                  <span className="font-medium text-foreground">{firstReq.title}</span>
-                ) : (
-                  <span className="italic">Add title...</span>
-                )}
-                <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            )}
             {firstReq?.requesterName && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <User className="h-3 w-3" /> {firstReq.requesterName}
@@ -213,6 +174,45 @@ export function RequestDetail() {
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
+          {/* Inline Editable Title */}
+          {editingTitle ? (
+            <form
+              className="flex items-center gap-1"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const newTitle = titleDraft.trim() || null;
+                for (const r of groupRequests) {
+                  await updateRequest(r.id, { title: newTitle });
+                }
+                setEditingTitle(false);
+              }}
+            >
+              <Input
+                autoFocus
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                placeholder="Enter request title..."
+                className="h-8 text-sm font-bold w-56"
+                onKeyDown={(e) => { if (e.key === "Escape") setEditingTitle(false); }}
+              />
+              <Button type="submit" size="sm" variant="ghost" className="h-8 px-2 text-xs">Save</Button>
+              <Button type="button" size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => setEditingTitle(false)}>
+                <X className="h-3 w-3" />
+              </Button>
+            </form>
+          ) : (
+            <button
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+              onClick={() => { setTitleDraft(firstReq?.title || ""); setEditingTitle(true); }}
+            >
+              {firstReq?.title ? (
+                <span className="font-bold text-foreground text-base">{firstReq.title}</span>
+              ) : (
+                <span className="italic">Add title...</span>
+              )}
+              <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
