@@ -87,6 +87,8 @@ export function useInstructionCards(instructionId: string | null) {
         name: d.name,
         description: d.description || "",
         link: d.link,
+        notes: d.notes || "",
+        createdBy: d.created_by || "",
         displayOrder: d.display_order,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
