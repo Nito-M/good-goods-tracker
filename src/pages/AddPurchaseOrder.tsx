@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ import { useVendors } from '@/hooks/useVendors';
 import { useRequests } from '@/hooks/useRequests';
 import { useJobs } from '@/hooks/useJobs';
 import { useBankCards } from '@/hooks/useBankCards';
-import { PurchaseOrderItem } from '@/types/purchaseOrder';
+import { PurchaseOrderItem, PurchaseOrder } from '@/types/purchaseOrder';
 import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, ChevronsUpDown, Check, CreditCard } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
