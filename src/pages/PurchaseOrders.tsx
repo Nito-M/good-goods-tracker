@@ -143,8 +143,7 @@ export function PurchaseOrders() {
   };
 
   const handleEdit = (order: PurchaseOrder) => {
-    setEditingOrder(order);
-    setEditDialogOpen(true);
+    navigate('/purchase-orders/new', { state: { editingOrder: order } });
   };
 
   const getSettingsForOrder = (order: PurchaseOrder) => {
