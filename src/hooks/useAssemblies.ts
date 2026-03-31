@@ -97,7 +97,54 @@ export function useAssemblies() {
     }
   };
 
-  return { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, refetch: fetchAssemblies };
+  const duplicateAssembly = async (id: string): Promise<Assembly | null> => {
+    if (!user) return null;
+    // Fetch source assembly
+    const source = assemblies.find(a => a.id === id);
+    if (!source) return null;
+    // Create copy
+    const { data: newAssembly, error } = await supabase
+      .from('assemblies')
+      .insert({
+        user_id: user.id,
+        name: `${source.name} (Copy)`,
+        description: source.description,
+        selling_price: source.selling_price,
+        status: source.status,
+        status_notes: source.status_notes,
+        type: source.type,
+      })
+      .select()
+      .single();
+    if (error || !newAssembly) {
+      toast({ title: 'Error', description: 'Failed to duplicate assembly.', variant: 'destructive' });
+      return null;
+    }
+    // Copy items
+    const { data: sourceItems } = await supabase
+      .from('assembly_items')
+      .select('*')
+      .eq('assembly_id', id);
+    if (sourceItems && sourceItems.length > 0) {
+      const itemsToInsert = sourceItems.map((item: any) => ({
+        assembly_id: newAssembly.id,
+        inventory_item_id: item.inventory_item_id,
+        item_name: item.item_name,
+        sku: item.sku,
+        quantity: item.quantity,
+        unit_cost: item.unit_cost,
+        notes: item.notes,
+        part_id: item.part_id,
+        parts_assembly_id: item.parts_assembly_id,
+      }));
+      await supabase.from('assembly_items').insert(itemsToInsert);
+    }
+    await fetchAssemblies();
+    toast({ title: 'Duplicated', description: `"${newAssembly.name}" created.` });
+    return newAssembly as Assembly;
+  };
+
+  return { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, duplicateAssembly, refetch: fetchAssemblies };
 }
 
 export function useAssemblyItems(assemblyId: string | null) {
