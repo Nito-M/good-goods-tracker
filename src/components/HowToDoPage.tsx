@@ -824,7 +824,89 @@ export function HowToDoPage() {
                   </div>
                 </div>
 
-                {/* Upload area */}
+                {/* Separate Notes */}
+                <div className="border rounded-lg">
+                  <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <StickyNote className="h-4 w-4" /> Notes ({cardNotesList.length})
+                    </h4>
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
+                      onClick={() => { setAddingCardNote(true); setNewCardNoteValue(""); }}>
+                      <MessageSquarePlus className="h-3 w-3" /> Add Note
+                    </Button>
+                  </div>
+                  <div className="p-3 space-y-2 max-h-60 overflow-y-auto">
+                    {addingCardNote && (
+                      <div className="border rounded-md p-2 space-y-2 bg-muted/20">
+                        <Textarea
+                          value={newCardNoteValue}
+                          onChange={(e) => setNewCardNoteValue(e.target.value)}
+                          placeholder="Write a note..."
+                          rows={2}
+                          autoFocus
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="ghost" size="sm" className="h-7 text-xs"
+                            onClick={() => setAddingCardNote(false)}>Cancel</Button>
+                          <Button size="sm" className="h-7 text-xs"
+                            disabled={!newCardNoteValue.trim()}
+                            onClick={async () => {
+                              await addCardNote(newCardNoteValue.trim());
+                              setAddingCardNote(false);
+                              setNewCardNoteValue("");
+                            }}>Save</Button>
+                        </div>
+                      </div>
+                    )}
+                    {cardNotesList.map((note) => (
+                      <div key={note.id} className="border rounded-md p-2 group">
+                        {editingNoteId === note.id ? (
+                          <div className="space-y-2">
+                            <Textarea
+                              value={editingNoteValue}
+                              onChange={(e) => setEditingNoteValue(e.target.value)}
+                              rows={2}
+                              autoFocus
+                            />
+                            <div className="flex gap-2 justify-end">
+                              <Button variant="ghost" size="sm" className="h-7 text-xs"
+                                onClick={() => setEditingNoteId(null)}>Cancel</Button>
+                              <Button size="sm" className="h-7 text-xs"
+                                disabled={!editingNoteValue.trim()}
+                                onClick={async () => {
+                                  await updateCardNote(note.id, editingNoteValue.trim());
+                                  setEditingNoteId(null);
+                                }}>Save</Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(note.createdAt), "MMM d, yyyy h:mm a")}
+                              </span>
+                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" className="h-6 w-6"
+                                  onClick={() => { setEditingNoteId(note.id); setEditingNoteValue(note.content); }}>
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive"
+                                  onClick={() => deleteCardNote(note.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    {cardNotesList.length === 0 && !addingCardNote && (
+                      <p className="text-sm text-muted-foreground/50 italic text-center py-2">No notes yet</p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="border-2 border-dashed rounded-lg p-4 text-center">
                   <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
                   <p className="text-sm text-muted-foreground">
