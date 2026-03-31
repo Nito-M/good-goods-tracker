@@ -334,46 +334,73 @@ export function FullScreenItemPicker({
           {/* Results Table */}
           <ScrollArea className="flex-1">
             {showAssemblies ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Assembly</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">MSRP</TableHead>
-                    <TableHead className="w-16"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAssemblies.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
-                        No assemblies found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredAssemblies.map((assembly, index) => (
-                      <TableRow
-                        key={assembly.id}
-                        className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
-                        onClick={() => onAddAssembly?.(assembly)}
-                      >
-                        <TableCell className="font-medium">{assembly.name}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm max-w-xs truncate">
-                          {assembly.description || '—'}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {assembly.selling_price > 0 ? formatPrice(assembly.selling_price) : '—'}
-                        </TableCell>
-                        <TableCell>
-                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAddAssembly?.(assembly); }}>
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
+              !selectedAssemblyType ? (
+                <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {assemblyTypes.map(({ name, count }) => (
+                    <button
+                      key={name}
+                      onClick={() => setSelectedAssemblyType(name)}
+                      className="border border-border rounded-lg p-6 text-left hover:bg-accent transition-colors cursor-pointer"
+                    >
+                      <p className="font-semibold text-lg">{name}</p>
+                      <p className="text-sm text-muted-foreground">{count} {count === 1 ? 'assembly' : 'assemblies'}</p>
+                    </button>
+                  ))}
+                  {assemblyTypes.length === 0 && (
+                    <p className="col-span-full text-center text-muted-foreground py-12">No assemblies available</p>
                   )}
-                </TableBody>
-              </Table>
+                </div>
+              ) : (
+                <div>
+                  <div className="px-4 py-2 border-b border-border flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedAssemblyType(null)}>
+                      <ArrowLeft className="h-4 w-4 mr-1" />
+                      Back
+                    </Button>
+                    <span className="font-medium">{selectedAssemblyType}</span>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Assembly</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-right">MSRP</TableHead>
+                        <TableHead className="w-16"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAssemblies.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                            No assemblies found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredAssemblies.map((assembly, index) => (
+                          <TableRow
+                            key={assembly.id}
+                            className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
+                            onClick={() => onAddAssembly?.(assembly)}
+                          >
+                            <TableCell className="font-medium">{assembly.name}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm max-w-xs truncate">
+                              {assembly.description || '—'}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {assembly.selling_price > 0 ? formatPrice(assembly.selling_price) : '—'}
+                            </TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAddAssembly?.(assembly); }}>
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )
             ) : (
               <Table>
                 <TableHeader>
