@@ -580,6 +580,10 @@ export function Calendar() {
               <div className="w-3 h-3 rounded bg-teal-500" />
               <span className="text-sm text-muted-foreground">Trip Plan</span>
             </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-rose-500" />
+              <span className="text-sm text-muted-foreground">To-Do</span>
+            </div>
           </div>
         </CardContent>
       </Card>
