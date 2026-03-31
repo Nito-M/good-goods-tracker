@@ -1,23 +1,27 @@
 
 
-## Plan: Add Assembly Type Filter in Quotes Picker
+## Plan: Replace Edit Quote Dialog with Full Creation Screen
 
-### Summary
-When clicking "Assemblies" in the quote item picker, instead of showing all assemblies in a flat list, add a type selector so users must first choose an assembly type, then see only assemblies of that type.
+### Problem
+Currently, editing a quote opens a basic `EditQuoteDialog` modal with simple text inputs — no searchable inventory picker, no assembly type selection, no full-screen item picker. The creation flow has all these features but they're lost when editing.
+
+### Approach
+Instead of the dialog, clicking "Edit" on a quote will populate the existing "New Quote" tab with the quote's data (items, vendor, rates, notes, etc.) and switch to that tab — essentially turning it into an edit mode. A save will call `updateQuote` instead of `createQuote`.
 
 ### Changes
 
-**File: `src/components/FullScreenItemPicker.tsx`**
+**File: `src/pages/Quotes.tsx`**
 
-1. Add a `selectedAssemblyType` state (default: `null`).
-2. Derive unique assembly types from the `assemblies` prop.
-3. When `showAssemblies` is true and no type is selected, show a grid/list of assembly type cards (similar to AssemblyTypes page) instead of the assembly table.
-4. When a type is selected, filter assemblies by that type and show the existing table with a back button to return to type selection.
-5. Reset `selectedAssemblyType` to `null` when toggling assemblies off or closing the picker.
+1. **Add edit mode state**: `editingQuoteId` (string | null) to track if we're editing vs creating.
+2. **When `onEdit` is triggered** (from QuoteCard): populate all creation state (`cart`, `selectedVendorId`, `taxRate`, `discountRate`, `markupPercent`, `notes`, `paymentTerms`, `validUntil`, `customQuoteNumber`, `selectedCompanyId`, `hidePrices`) from the quote's data, set `editingQuoteId`, and switch `activeTab` to `'new-quote'`.
+3. **Update the submit handler**: if `editingQuoteId` is set, call `updateQuote` with the existing quote ID instead of creating a new one. After save, clear `editingQuoteId` and reset form.
+4. **Update tab label**: show "Edit Quote" instead of "New Quote" when in edit mode.
+5. **Remove `EditQuoteDialog`** component usage and import (the file can remain but won't be used).
+
+**File: `src/components/EditQuoteDialog.tsx`** — No changes needed (just unused).
 
 ### Technical Details
-- Extract unique types: `[...new Set(assemblies.map(a => a.type || 'General'))]`
-- The Assembly interface in FullScreenItemPicker needs a `type` field added (it's already on the data from `useAssemblies`)
-- Type selection view: simple clickable cards showing type name and assembly count
-- Back navigation: a button/breadcrumb above the filtered assembly table to go back to type list
+- Quote items map to cart items: `quoteItem → { id, inventoryItemId, itemName, sku, quantity, quantityUnit, unitPrice, unitCost, notes, excludeMarkup }`
+- The existing `FullScreenItemPicker` and all search/assembly features remain available since they operate on the shared `cart` state
+- The "New Quote" tab heading and submit button text change contextually based on `editingQuoteId`
 
