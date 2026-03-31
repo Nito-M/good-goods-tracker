@@ -143,6 +143,18 @@ export function Calendar() {
     return map;
   }, [jobs]);
 
+  const todosByDate = useMemo(() => {
+    const map = new Map<string, Todo[]>();
+    todos.forEach((todo) => {
+      if (todo.dueDate) {
+        const dateKey = format(parseLocalDate(todo.dueDate), "yyyy-MM-dd");
+        const existing = map.get(dateKey) || [];
+        map.set(dateKey, [...existing, todo]);
+      }
+    });
+    return map;
+  }, [todos]);
+
   // Get events for a specific day (including recurring)
   const getEventsForDay = (day: Date): CalendarEvent[] => {
     return events.filter((e) => eventOccursOnDay(e, day));
