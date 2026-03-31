@@ -755,7 +755,13 @@ export function HowToDoPage() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {card.createdBy && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  {card.createdBy}
+                                </span>
+                              )}
                               {card.files.length > 0 && (
                                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                                   <FileText className="h-3 w-3" />
