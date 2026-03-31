@@ -188,6 +188,65 @@ export function Sales() {
     await updateSale(saleId, data);
   };
 
+  const resetForm = () => {
+    setCart([]);
+    setSelectedVendorId('');
+    setCustomInvoiceNumber('');
+    setTaxRate(0);
+    setDiscountRate(0);
+    setMarkupPercent('');
+    setNotes('');
+    setSelectedCompanyId(defaultCompany?.id || '');
+    setEditingSaleId(null);
+  };
+
+  const handleEditSale = (sale: Sale) => {
+    // Build cart from sale items by finding matching inventory items
+    const newCart: CartItem[] = sale.items.map((item) => {
+      const invItem = inventoryItems.find(i => i.id === item.inventoryItemId);
+      const fallbackItem: InventoryItem = {
+        id: item.inventoryItemId || `custom-${item.id}`,
+        name: item.itemName,
+        sku: item.sku,
+        price: item.unitPrice,
+        cost: item.unitCost,
+        quantity: 0,
+        quantityUnit: 'pcs',
+        category: '',
+        minStock: 0,
+        weight: 0,
+        weightUnit: 'kg',
+        dimensionsLength: 0,
+        dimensionsWidth: 0,
+        dimensionsHeight: 0,
+        dimensionsUnit: 'in',
+        boxAmount: 0,
+        bundleAmount: 0,
+        palletAmount: 0,
+        pieceLength: 0,
+        showInStorefront: false,
+        createdAt: '',
+        updatedAt: '',
+      };
+      return {
+        inventoryItem: invItem || fallbackItem,
+        quantity: item.quantity,
+        customPrice: item.unitPrice,
+      };
+    });
+
+    setCart(newCart);
+    setSelectedVendorId(sale.vendorId || '');
+    setCustomInvoiceNumber(sale.invoiceNumber);
+    setTaxRate(sale.taxRate);
+    setDiscountRate(sale.discountRate);
+    setNotes(sale.notes || '');
+    setPaymentTerms(sale.paymentTerms || 'Due on receipt');
+    setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
+    setEditingSaleId(sale.id);
+    setActiveTab('new-sale');
+  };
+
   // Get the invoice prefix from profile
   const invoicePrefix = profile?.invoicePrefix || 'INV';
 
