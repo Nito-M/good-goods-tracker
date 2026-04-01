@@ -166,7 +166,8 @@ export function PartDetail() {
   // Auto-sync total part cost to price
   const totalPartCost = materialsCost
     + (part && part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
-    + (part && part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0);
+    + (part && part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0)
+    + manufacturingStepsCost;
 
   useEffect(() => {
     if (!id || !part) return;
