@@ -13,12 +13,20 @@ const decimalToHM = (decimal: number): string => {
 
 // Convert "H:MM" string to decimal hours
 const hmToDecimal = (hm: string): number | null => {
-  const match = hm.trim().match(/^(\d+):(\d{1,2})$/);
-  if (!match) return null;
-  const h = parseInt(match[1], 10);
-  const m = parseInt(match[2], 10);
-  if (m < 0 || m > 59) return null;
-  return h + m / 60;
+  const trimmed = hm.trim();
+  if (!trimmed) return null;
+  // Support H:MM format
+  const match = trimmed.match(/^(\d+):(\d{1,2})$/);
+  if (match) {
+    const h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    if (m < 0 || m > 59) return null;
+    return h + m / 60;
+  }
+  // Support plain decimal number (e.g. "2" = 2 hours, "1.5" = 1.5 hours)
+  const num = parseFloat(trimmed);
+  if (!isNaN(num) && num >= 0) return num;
+  return null;
 };
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
