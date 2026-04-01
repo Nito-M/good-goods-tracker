@@ -37,6 +37,7 @@ import { formatCurrency } from '@/lib/utils';
 import { useParts } from '@/hooks/useParts';
 import { usePartInventoryItems } from '@/hooks/usePartInventoryItems';
 import { useInventory } from '@/hooks/useInventory';
+import { useManufacturingSteps } from '@/hooks/useManufacturingSteps';
 import { DxfThreeViewer } from '@/components/DxfThreeViewer';
 import { ManufacturingInstructions } from '@/components/ManufacturingInstructions';
 import { useToast } from '@/hooks/use-toast';
@@ -67,6 +68,8 @@ export function PartDetail() {
   const { parts, loading, deletePart, updatePart, uploadPartImage, uploadPartDxf, getSignedUrl } = useParts();
   const { items: inventoryItems } = useInventory();
   const { items: partItems, addItem: addPartItem, addCustomItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
+  const { steps: manufacturingSteps } = useManufacturingSteps(id);
+  const manufacturingStepsCost = manufacturingSteps.reduce((sum, s) => sum + (s.price ?? 0), 0);
   const { toast } = useToast();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerCart, setPickerCart] = useState<PickerCartItem[]>([]);
@@ -163,7 +166,8 @@ export function PartDetail() {
   // Auto-sync total part cost to price
   const totalPartCost = materialsCost
     + (part && part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
-    + (part && part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0);
+    + (part && part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0)
+    + manufacturingStepsCost;
 
   useEffect(() => {
     if (!id || !part) return;
@@ -715,7 +719,7 @@ export function PartDetail() {
         </Card>
 
         {/* Grand totals */}
-        {(materialsCost > 0 || (part.hours > 0 && part.hourlyRate > 0) || (part.paintingHours > 0 && part.paintingHourlyRate > 0)) && (
+        {(materialsCost > 0 || (part.hours > 0 && part.hourlyRate > 0) || (part.paintingHours > 0 && part.paintingHourlyRate > 0) || manufacturingStepsCost > 0) && (
           <Card>
             <CardContent className="pt-6 space-y-2">
               {materialsCost > 0 && (
@@ -736,14 +740,16 @@ export function PartDetail() {
                   <span className="font-medium">{formatCurrency(part.paintingHours * part.paintingHourlyRate)}</span>
                 </div>
               )}
+              {manufacturingStepsCost > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Manufacturing Steps ({manufacturingSteps.length} step{manufacturingSteps.length !== 1 ? 's' : ''})</span>
+                  <span className="font-medium">{formatCurrency(manufacturingStepsCost)}</span>
+                </div>
+              )}
               <div className="flex justify-between pt-2 border-t border-border">
                 <span className="font-semibold">Total Part Cost</span>
                 <span className="text-lg font-bold text-foreground">
-                  {formatCurrency(
-                    materialsCost
-                    + (part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
-                    + (part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0)
-                  )}
+                  {formatCurrency(totalPartCost)}
                 </span>
               </div>
             </CardContent>
