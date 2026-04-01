@@ -37,6 +37,7 @@ import { formatCurrency } from '@/lib/utils';
 import { useParts } from '@/hooks/useParts';
 import { usePartInventoryItems } from '@/hooks/usePartInventoryItems';
 import { useInventory } from '@/hooks/useInventory';
+import { useManufacturingSteps } from '@/hooks/useManufacturingSteps';
 import { DxfThreeViewer } from '@/components/DxfThreeViewer';
 import { ManufacturingInstructions } from '@/components/ManufacturingInstructions';
 import { useToast } from '@/hooks/use-toast';
