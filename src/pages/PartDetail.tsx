@@ -68,6 +68,8 @@ export function PartDetail() {
   const { parts, loading, deletePart, updatePart, uploadPartImage, uploadPartDxf, getSignedUrl } = useParts();
   const { items: inventoryItems } = useInventory();
   const { items: partItems, addItem: addPartItem, addCustomItem, updateItem: updatePartItem, removeItem: removePartItem, totalCost: materialsCost } = usePartInventoryItems(id);
+  const { steps: manufacturingSteps } = useManufacturingSteps(id);
+  const manufacturingStepsCost = manufacturingSteps.reduce((sum, s) => sum + (s.price ?? 0), 0);
   const { toast } = useToast();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerCart, setPickerCart] = useState<PickerCartItem[]>([]);
