@@ -64,6 +64,7 @@ export function Settings() {
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const { customers, loading: customersLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const { categories, allCategories, loading: categoriesLoading, addCategory, updateCategory, deleteCategory, moveCategoryToSubcategory } = useCategories();
+  const { categories: assemblyCategories, addCategory: addAssemblyCategory, updateCategory: updateAssemblyCategory, deleteCategory: deleteAssemblyCategory } = useAssemblyCategories();
   const { subcategories, getSubcategoriesForCategory, addSubcategory, updateSubcategory, deleteSubcategory } = useSubcategories();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
 
