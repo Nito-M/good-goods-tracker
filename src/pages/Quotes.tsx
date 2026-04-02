@@ -992,6 +992,17 @@ export function Quotes() {
                       </Label>
                     </div>
 
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="showSku"
+                        checked={showSku}
+                        onCheckedChange={(checked) => setShowSku(checked === true)}
+                      />
+                      <Label htmlFor="showSku" className="text-sm font-normal cursor-pointer">
+                        Show SKU on quote
+                      </Label>
+                    </div>
+
                     <div className="space-y-2">
                       <Label>Notes</Label>
                       <Textarea
