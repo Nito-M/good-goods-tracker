@@ -314,6 +314,7 @@ export function Quotes() {
   const [markupPercent, setMarkupPercent] = useState<number | ''>('');
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
+  const [showPaymentTerms, setShowPaymentTerms] = useState(true);
 
   // Auto-select vendor created from customer
   useEffect(() => {
