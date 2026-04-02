@@ -546,7 +546,7 @@ export function FullScreenItemPicker({
               <span>Subtotal</span>
               <span>{formatPrice(cartSubtotal)}</span>
             </div>
-            <Button onClick={onClose} className="w-full" size="lg">
+            <Button onClick={handleDone} className="w-full" size="lg">
               Done — Return to {documentType}
             </Button>
           </div>

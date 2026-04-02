@@ -372,7 +372,7 @@ export function FullScreenPartsPicker({
               <span>Total Cost</span>
               <span>{formatCurrency(cartTotal)}</span>
             </div>
-            <Button onClick={() => onClose(cart)} className="w-full" size="lg">
+            <Button onClick={handleDone} className="w-full" size="lg">
               Done — Return to Assembly
             </Button>
           </div>
