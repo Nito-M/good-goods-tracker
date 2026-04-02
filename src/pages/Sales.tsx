@@ -587,6 +587,7 @@ export function Sales() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-8"></TableHead>
                             <TableHead>Item</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Quantity</TableHead>
