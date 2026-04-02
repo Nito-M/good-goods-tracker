@@ -17,6 +17,12 @@ export interface QuoteItem {
 
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'converted';
 
+export interface QuoteInvoiceLink {
+  saleId: string;
+  percentage: number;
+  invoiceNumber?: string;
+}
+
 export interface Quote {
   id: string;
   userId: string;
@@ -43,6 +49,8 @@ export interface Quote {
   hidePrices: boolean;
   showPaymentTerms: boolean;
   showSku: boolean;
+  invoicedPercentage: number;
+  linkedInvoices: QuoteInvoiceLink[];
   createdAt: string;
   updatedAt: string;
 }
