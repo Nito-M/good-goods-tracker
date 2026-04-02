@@ -1,29 +1,30 @@
 
 
-## Plan: Drag-and-Drop Reordering for Quote and Invoice Cart Items
+## Plan: Preserve Item Order on Quotes and Invoices
 
-### Summary
-Add drag-and-drop reordering to the cart item lists in both the Quotes and Sales (Invoice) creation forms using `@dnd-kit/core` and `@dnd-kit/sortable`.
+### Problem
+Items on quotes are fetched sorted alphabetically by name, and sale items have no guaranteed order. The drag-and-drop arrangement from creation/editing is lost.
 
-### Dependencies
-- Install `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities`
+### Database Changes
+Add a `sort_order` integer column (default 0) to both tables:
+- `quote_items` — add `sort_order INTEGER NOT NULL DEFAULT 0`
+- `sale_items` — add `sort_order INTEGER NOT NULL DEFAULT 0`
 
-### Changes
+### Code Changes
 
-**`src/pages/Quotes.tsx`**
-- Wrap the cart items list with `DndContext` and `SortableContext` (vertical list strategy)
-- Extract each cart item card into a `SortableQuoteItem` wrapper that uses `useSortable` for drag handle, transform, and transition
-- Add a grip/drag handle icon (GripVertical from lucide) to each item card
-- On `onDragEnd`, reorder the `cart` array by moving the dragged item to its new position
+**`src/hooks/useQuotes.ts`**
+- Change `.order('item_name', { ascending: true })` to `.order('sort_order', { ascending: true })`
+- In `createQuote` and `updateQuote`, pass `sort_order: index` when inserting each item (using the array index from the loop)
 
-**`src/pages/Sales.tsx`**
-- Same pattern: wrap the cart table body with `DndContext` + `SortableContext`
-- Make each `TableRow` sortable with a drag handle column
-- On `onDragEnd`, reorder the `cart` array
+**`src/hooks/useSales.ts`**
+- When fetching sale items, add `.order('sort_order', { ascending: true })`
+- In `createSale` and `updateSale`, pass `sort_order: index` when inserting each item
+
+**`src/components/EditSaleDialog.tsx`**
+- No changes needed (items are already in array order)
 
 ### Technical Details
-- Uses `arrayMove` from `@dnd-kit/sortable` for clean reorder logic
-- `closestCenter` collision detection strategy
-- Drag handle approach (not whole-card dragging) so inputs remain clickable
-- No database changes needed -- order is determined by array position at save time
+- Items inserted with `sort_order` matching their array position (0, 1, 2, ...)
+- All inserts use `as any` cast already, so the new column works immediately before types regenerate
+- Existing items get `sort_order = 0` by default; they'll maintain their current DB insertion order as a tiebreaker via `created_at`
 
