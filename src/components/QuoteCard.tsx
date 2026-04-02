@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
