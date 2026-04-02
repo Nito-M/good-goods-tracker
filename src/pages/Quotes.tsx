@@ -77,7 +77,7 @@ interface CartItem {
 
 import { useCompanies } from '@/hooks/useCompanies';
 
-function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCartQuantity, removeFromCart, inventoryItems, markupPercent, calculateMarkupPrice }: {
+function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCartQuantity, removeFromCart, inventoryItems, markupPercent, calculateMarkupPrice, discountRate }: {
   item: CartItem;
   formatCurrency: (v: number) => string;
   updateCartItem: (id: string, updates: Partial<CartItem>) => void;
@@ -86,9 +86,14 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
   inventoryItems: InventoryItem[];
   markupPercent: number | '';
   calculateMarkupPrice: (cost: number, markup: number) => number;
+  discountRate: number;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: c.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+
+  const lineTotal = (c.quantity || 0) * c.unitPrice;
+  const itemDiscount = lineTotal * (discountRate / 100);
+  const afterDiscount = lineTotal - itemDiscount;
 
   return (
     <div ref={setNodeRef} style={style} className="border rounded-lg p-4 space-y-3">
@@ -176,10 +181,24 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
               )}
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Total</Label>
-              <p className="font-bold h-8 flex items-center">{formatCurrency((c.quantity || 0) * c.unitPrice)}</p>
+              <Label className="text-xs">Subtotal</Label>
+              <p className="font-medium h-8 flex items-center">{formatCurrency(lineTotal)}</p>
             </div>
           </div>
+
+          {/* Per-item discount and total after discount */}
+          {discountRate > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Discount ({discountRate}%)</Label>
+                <p className="text-sm h-8 flex items-center text-destructive">-{formatCurrency(itemDiscount)}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Total after Discount</Label>
+                <p className="font-bold h-8 flex items-center">{formatCurrency(afterDiscount)}</p>
+              </div>
+            </div>
+          )}
 
           {/* Exclude from Markup toggle */}
           {c.inventoryItemId && markupPercent !== '' && (
