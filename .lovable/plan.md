@@ -1,36 +1,40 @@
 
 
-## Plan: Switch PO Item Entry to Full-Screen Picker Style (Like Quotes/Sales)
+## Plan: Add Assembly Categories to Settings Categories Tab
 
 ### Summary
-Replace the current inline combobox line-item entry in the PO creation page with the same `FullScreenItemPicker` + cart card pattern used in Quotes and Sales. Keep all other PO-specific sections (vendor, order details, attachments, order summary, actions) unchanged.
+Add a new "Assembly Categories" card below the existing item categories card on the Settings > Categories tab. Rename the existing card from "Categories" to "Item Categories". Assembly categories will be stored in a new `assembly_categories` database table and managed with the same add/rename/delete pattern as item categories.
 
-### Changes
+### Database Changes
 
-**File: `src/components/FullScreenItemPicker.tsx`**
-1. Add `'Purchase Order'` to the `documentType` union type so the picker can be used for POs.
+**New table: `assembly_categories`**
+- `id` (uuid, PK, default gen_random_uuid())
+- `name` (text, not null)
+- `user_id` (uuid, references auth.users, not null)
+- `created_at` (timestamptz, default now())
+- RLS policies: users can CRUD their own rows; org members can read shared categories
 
-**File: `src/pages/AddPurchaseOrder.tsx`**
-1. **Replace LineItem model with CartItem model**: Switch from the current `LineItem` (with `selectedItemId`, `customSku`, `customName`) to a `CartItem` interface matching the picker pattern (`id`, `inventoryItemId`, `itemName`, `sku`, `quantity`, `unitCost`, `notes`).
-2. **Add FullScreenItemPicker**: Import and render `FullScreenItemPicker` with `open`/`onClose` state. Add the "Add Items from Inventory" button (same style as Quotes) above the cart card.
-3. **Replace the inline line-item card** with a cart display card showing added items (item name, SKU, quantity, unit cost, total, notes, delete button) -- same layout as Quotes/Sales cart items.
-4. **Wire up picker callbacks**: `onAddItem` maps an inventory item to a cart entry (auto-filling vendor price if available), `onAddCustomItem` creates a blank custom entry, `onUpdateQuantity`/`onRemoveItem`/`onUpdateItem` manage the cart.
-5. **Preserve vendor price logic**: When vendor changes, update unit costs on existing cart items that match vendor-priced inventory items. When an item is added from the picker, auto-fill its vendor price.
-6. **Update `handleSave`**: Map `CartItem[]` to `PurchaseOrderItem[]` for the existing `createOrder`/`updateOrder` calls.
-7. **Update edit initialization**: Map `editingOrder.items` to `CartItem[]` instead of `LineItem[]`.
-8. **Remove**: `ItemSearchCombobox` component, `LineItem` interface, `createEmptyLineItem` function, and all inline line-item grid rendering code.
+### File Changes
 
-### What stays the same
-- Vendor selection card (top)
-- Order Details card (PO number, date, request link, jobs, bank card, notes)
-- Attachments card (PDF + image upload)
-- Order Summary card (subtotal, discount, tax, total)
-- Action buttons (Cancel, Save as Draft, Create Order / Save Changes)
-- All vendor price auto-fill business logic (just rewired to cart items)
+**New file: `src/hooks/useAssemblyCategories.ts`**
+- Hook to fetch, add, rename, and delete assembly categories from the new table
+- Renaming a category updates all assemblies with that type name
+- Deleting a category moves assemblies to "General"
+
+**`src/pages/Settings.tsx`**
+- Rename the existing card title from "Categories" to "Item Categories" and update its description
+- Import and use the new `useAssemblyCategories` hook
+- Add a second Card below the item categories card with:
+  - Title "Assembly Categories"
+  - Add form, search, list with rename/delete (simpler than item categories -- no subcategories needed)
+- Add state variables for assembly category management (new name input, editing state, delete confirmation)
+
+**`src/pages/AssemblyTypes.tsx`**
+- When creating a new type, also check against the `assembly_categories` table
+- Show categories from the table as empty type cards even if no assemblies exist yet, so users can create categories first and populate them later
 
 ### Technical Details
-- The `FullScreenItemPicker` already supports custom items and item search -- no changes needed for that
-- Cart items will include `unitCost` for PO-specific pricing (vendor prices), mapped from the picker's `unitPrice` field
-- The picker's `documentType` will be `'Purchase Order'` to label UI appropriately
-- Assemblies won't be included in PO picker (no `onAddAssembly` prop) since POs are for purchasing inventory
+- Assembly categories map to the `type` field on the `assemblies` table (string match by name, same pattern as item categories)
+- No subcategories needed for assembly categories
+- The "New Type" button on the Assemblies page will continue to work, creating a category on-the-fly
 
