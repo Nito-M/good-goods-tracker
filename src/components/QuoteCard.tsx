@@ -214,6 +214,9 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
               <DropdownMenuItem onClick={() => onUpdateStatus(quote.id, 'accepted')}>
                 Accepted
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdateStatus(quote.id, 'sales_order')}>
+                Convert to Sales Order
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onUpdateStatus(quote.id, 'rejected')}>
                 Rejected
               </DropdownMenuItem>
