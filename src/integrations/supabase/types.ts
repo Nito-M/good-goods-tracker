@@ -2206,6 +2206,45 @@ export type Database = {
           },
         ]
       }
+      quote_invoice_links: {
+        Row: {
+          created_at: string
+          id: string
+          percentage: number
+          quote_id: string
+          sale_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          percentage: number
+          quote_id: string
+          sale_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          percentage?: number
+          quote_id?: string
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_invoice_links_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_invoice_links_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           created_at: string
@@ -2281,6 +2320,7 @@ export type Database = {
           discount_rate: number
           hide_prices: boolean
           id: string
+          invoiced_percentage: number
           notes: string | null
           payment_terms: string | null
           quote_number: string
@@ -2307,6 +2347,7 @@ export type Database = {
           discount_rate?: number
           hide_prices?: boolean
           id?: string
+          invoiced_percentage?: number
           notes?: string | null
           payment_terms?: string | null
           quote_number: string
@@ -2333,6 +2374,7 @@ export type Database = {
           discount_rate?: number
           hide_prices?: boolean
           id?: string
+          invoiced_percentage?: number
           notes?: string | null
           payment_terms?: string | null
           quote_number?: string
