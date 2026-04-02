@@ -200,13 +200,33 @@ export function FullScreenItemPicker({
     return Array.from(typeMap.entries()).map(([name, count]) => ({ name, count }));
   }, [assemblies]);
 
-  // Focus search on open
+  const closedByBackRef = useRef(false);
+
+  // Focus search on open + push history state
   useEffect(() => {
     if (open) {
       setSelectedIndex(0);
+      closedByBackRef.current = false;
+      window.history.pushState({ picker: 'items' }, '');
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePopState = () => {
+      closedByBackRef.current = true;
+      onClose();
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [open, onClose]);
+
+  const handleDone = () => {
+    if (!closedByBackRef.current) {
+      window.history.back();
+    }
+  };
 
   const filteredItems = useMemo(() => {
     let items = inventoryItems;

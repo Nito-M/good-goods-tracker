@@ -62,14 +62,34 @@ export function FullScreenPartsPicker({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [cart, setCart] = useState<PartsPickerCartItem[]>([]);
 
+  const closedByBackRef = useRef(false);
+
   useEffect(() => {
     if (open) {
       setSelectedIndex(0);
       setCart([]);
       setSource('parts');
+      closedByBackRef.current = false;
+      window.history.pushState({ picker: 'parts' }, '');
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePopState = () => {
+      closedByBackRef.current = true;
+      onClose(cart);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [open, cart, onClose]);
+
+  const handleDone = () => {
+    if (!closedByBackRef.current) {
+      window.history.back();
+    }
+  };
 
   const filteredParts = useMemo(() => {
     if (!searchQuery.trim()) return parts;
