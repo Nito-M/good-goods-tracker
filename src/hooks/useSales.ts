@@ -30,7 +30,8 @@ export function useSales() {
           const { data: items } = await supabase
             .from('sale_items')
             .select('*')
-            .eq('sale_id', sale.id);
+            .eq('sale_id', sale.id)
+            .order('sort_order', { ascending: true });
 
           const mappedItems = (items || []).map((item) => {
             const unitCost = Number(item.unit_cost) || 0;
@@ -262,7 +263,8 @@ export function useSales() {
       if (saleError) throw saleError;
 
       // Create sale items with FIFO costs (but don't allocate or reduce inventory yet)
-      for (const { item, allocations, weightedAvgCost } of itemsWithFIFOCosts) {
+      for (let i = 0; i < itemsWithFIFOCosts.length; i++) {
+        const { item, allocations, weightedAvgCost } = itemsWithFIFOCosts[i];
         const { error: itemError } = await supabase
           .from('sale_items')
           .insert({
@@ -274,7 +276,8 @@ export function useSales() {
             unit_price: item.unitPrice,
             unit_cost: weightedAvgCost,
             total_price: item.quantity * item.unitPrice,
-          });
+            sort_order: i,
+          } as any);
 
         if (itemError) throw itemError;
         
@@ -538,7 +541,8 @@ export function useSales() {
       await supabase.from('sale_items').delete().eq('sale_id', saleId);
 
       // Create new sale items
-      for (const item of input.items) {
+      for (let i = 0; i < input.items.length; i++) {
+        const item = input.items[i];
         const { error: itemError } = await supabase
           .from('sale_items')
           .insert({
@@ -550,7 +554,8 @@ export function useSales() {
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
             total_price: item.quantity * item.unitPrice,
-          });
+            sort_order: i,
+          } as any);
 
         if (itemError) throw itemError;
       }

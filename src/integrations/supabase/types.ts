@@ -2217,6 +2217,7 @@ export type Database = {
           quantity_unit: string
           quote_id: string
           sku: string
+          sort_order: number
           total_price: number
           unit_cost: number
           unit_price: number
@@ -2231,6 +2232,7 @@ export type Database = {
           quantity_unit?: string
           quote_id: string
           sku: string
+          sort_order?: number
           total_price?: number
           unit_cost?: number
           unit_price?: number
@@ -2245,6 +2247,7 @@ export type Database = {
           quantity_unit?: string
           quote_id?: string
           sku?: string
+          sort_order?: number
           total_price?: number
           unit_cost?: number
           unit_price?: number
@@ -2567,6 +2570,7 @@ export type Database = {
           quantity: number
           sale_id: string
           sku: string
+          sort_order: number
           total_price: number
           unit_cost: number
           unit_price: number
@@ -2579,6 +2583,7 @@ export type Database = {
           quantity?: number
           sale_id: string
           sku: string
+          sort_order?: number
           total_price?: number
           unit_cost?: number
           unit_price?: number
@@ -2591,6 +2596,7 @@ export type Database = {
           quantity?: number
           sale_id?: string
           sku?: string
+          sort_order?: number
           total_price?: number
           unit_cost?: number
           unit_price?: number
