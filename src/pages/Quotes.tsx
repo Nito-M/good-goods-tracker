@@ -314,6 +314,7 @@ export function Quotes() {
   const [markupPercent, setMarkupPercent] = useState<number | ''>('');
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
+  const [showPaymentTerms, setShowPaymentTerms] = useState(true);
 
   // Auto-select vendor created from customer
   useEffect(() => {
@@ -394,6 +395,7 @@ export function Quotes() {
     setMarkupPercent('');
     setNotes(quote.notes || '');
     setPaymentTerms(quote.paymentTerms || 'Due on receipt');
+    setShowPaymentTerms(quote.showPaymentTerms !== false);
     setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
     setSelectedCompanyId((quote as any).companyId || defaultCompany?.id || '');
     setHidePrices(quote.hidePrices || false);
@@ -576,6 +578,7 @@ export function Quotes() {
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: selectedCompanyId || null,
       hidePrices,
+      showPaymentTerms,
     };
 
     let success = false;
@@ -909,12 +912,25 @@ export function Quotes() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Payment Terms</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Payment Terms</Label>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="showPaymentTerms"
+                            checked={showPaymentTerms}
+                            onCheckedChange={(checked) => setShowPaymentTerms(checked === true)}
+                          />
+                          <Label htmlFor="showPaymentTerms" className="text-sm font-normal cursor-pointer">
+                            Show on quote
+                          </Label>
+                        </div>
+                      </div>
                       <Select
                         value={paymentTerms}
                         onValueChange={setPaymentTerms}
+                        disabled={!showPaymentTerms}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className={!showPaymentTerms ? 'opacity-50' : ''}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

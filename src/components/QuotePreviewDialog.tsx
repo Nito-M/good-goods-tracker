@@ -110,7 +110,9 @@ export function QuotePreviewDialog({
                   )}
                 </div>
                 <div className="text-right">
-                  <p><span className="font-medium">Terms:</span> {quote.paymentTerms}</p>
+                  {quote.showPaymentTerms !== false && (
+                    <p><span className="font-medium">Terms:</span> {quote.paymentTerms}</p>
+                  )}
                 </div>
               </div>
             )}

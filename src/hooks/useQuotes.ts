@@ -71,6 +71,7 @@ export function useQuotes() {
             companyId: (quote as any).company_id || null,
             items: mappedItems,
             hidePrices: (quote as any).hide_prices || false,
+            showPaymentTerms: (quote as any).show_payment_terms !== false,
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
           };
@@ -127,6 +128,7 @@ export function useQuotes() {
           valid_until: input.validUntil,
           company_id: input.companyId || null,
           hide_prices: input.hidePrices || false,
+          show_payment_terms: input.showPaymentTerms !== false,
         })
         .select()
         .single();
@@ -326,6 +328,7 @@ export function useQuotes() {
       validUntil: string | null;
       companyId?: string | null;
       hidePrices?: boolean;
+      showPaymentTerms?: boolean;
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -358,6 +361,7 @@ export function useQuotes() {
           valid_until: input.validUntil,
           company_id: input.companyId || null,
           hide_prices: input.hidePrices || false,
+          show_payment_terms: input.showPaymentTerms !== false,
         } as any)
         .eq('id', quoteId);
 

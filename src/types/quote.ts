@@ -41,6 +41,7 @@ export interface Quote {
   companyId?: string | null;
   items: QuoteItem[];
   hidePrices: boolean;
+  showPaymentTerms: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,6 +66,7 @@ export interface CreateQuoteInput {
   validUntil: string | null;
   companyId?: string | null;
   hidePrices?: boolean;
+  showPaymentTerms?: boolean;
 }
 
 export interface QuoteSettings {
