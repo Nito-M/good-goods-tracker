@@ -133,31 +133,16 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {quote.status !== 'converted' && onConvertToInvoice && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-success">
-                  <Receipt className="h-4 w-4 mr-2" />
-                  To Invoice
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Convert to Invoice?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will create a new invoice from {quote.quoteNumber} and mark the quote as converted.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onConvertToInvoice(quote)}>
-                    Convert
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+          {quote.invoicedPercentage < 100 && onConvertToInvoice && (
+            <Button variant="outline" size="sm" className="text-success" onClick={() => {
+              setInvoicePercentage(remainingPercentage);
+              setShowInvoiceDialog(true);
+            }}>
+              <Receipt className="h-4 w-4 mr-2" />
+              To Invoice {quote.invoicedPercentage > 0 ? `(${remainingPercentage}% left)` : ''}
+            </Button>
           )}
-          {quote.status !== 'converted' && onConvertToPurchaseOrder && (
+          {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm" className="text-primary">
