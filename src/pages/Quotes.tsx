@@ -582,6 +582,7 @@ export function Quotes() {
       companyId: selectedCompanyId || null,
       hidePrices,
       showPaymentTerms,
+      createdAt: quoteDate ? quoteDate.toISOString() : null,
     };
 
     let success = false;
