@@ -325,7 +325,7 @@ export function FullScreenItemPicker({
             <PackagePlus className="h-4 w-4 mr-1" />
             Create New Item
           </Button>
-          <Button onClick={onClose} size="lg" className="ml-2">
+          <Button onClick={handleDone} size="lg" className="ml-2">
             Done — Return to {documentType}
           </Button>
         </div>
