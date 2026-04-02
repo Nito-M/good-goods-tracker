@@ -179,7 +179,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Item', tableX + 2, y);
-    doc.text('SKU', tableX + 72, y);
+    if (quote.showSku !== false) {
+      doc.text('SKU', tableX + 72, y);
+    }
     doc.text('Qty', tableX + 105, y, { align: 'center' });
     if (!hidePrices) {
       doc.text('Price', tableX + 145, y, { align: 'right' });
