@@ -191,7 +191,8 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     quote.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, 67);
       const skuLines = doc.splitTextToSize(item.sku, 30);
-      const rowHeight = Math.max(nameLines.length, skuLines.length, 1) * LINE_HEIGHT;
+      const baseRows = Math.max(nameLines.length, skuLines.length, 1);
+      const rowHeight = baseRows * LINE_HEIGHT + (quote.discountRate > 0 && !hidePrices ? 5 : 0);
 
       // Calculate total height this item needs (name/sku rows + optional note rows)
       let itemTotalHeight = rowHeight;
@@ -218,7 +219,25 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.text(qtyDisplay, tableX + 105, y, { align: 'center' });
       if (!hidePrices) {
         doc.text(formatCurrency(item.unitPrice), tableX + 145, y, { align: 'right' });
-        doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
+        if (quote.discountRate > 0) {
+          const discountedTotal = item.totalPrice * (1 - quote.discountRate / 100);
+          doc.text(formatCurrency(discountedTotal), pageWidth - 22, y, { align: 'right' });
+          // Strike-through original price below
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          const origText = formatCurrency(item.totalPrice);
+          doc.text(origText, pageWidth - 22, y + 4, { align: 'right' });
+          // Draw strike-through line
+          const origWidth = doc.getTextWidth(origText);
+          const origX = pageWidth - 22 - origWidth;
+          doc.setDrawColor(150, 150, 150);
+          doc.line(origX, y + 3, pageWidth - 22, y + 3);
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          doc.setDrawColor(200, 200, 200);
+        } else {
+          doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
+        }
       }
       y += rowHeight;
 

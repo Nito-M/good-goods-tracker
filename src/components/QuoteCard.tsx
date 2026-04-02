@@ -297,7 +297,14 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                     <span>
                       {item.itemName} × {item.quantity} {item.quantityUnit}
                     </span>
-                    <span>{formatCurrency(item.totalPrice)}</span>
+                    {quote.discountRate > 0 ? (
+                      <span className="flex items-center gap-1">
+                        <span>{formatCurrency(item.totalPrice * (1 - quote.discountRate / 100))}</span>
+                        <span className="text-xs text-muted-foreground/60 line-through">{formatCurrency(item.totalPrice)}</span>
+                      </span>
+                    ) : (
+                      <span>{formatCurrency(item.totalPrice)}</span>
+                    )}
                   </div>
                   {item.notes && (
                     <p className="text-xs text-muted-foreground/70 pl-2 italic whitespace-pre-wrap">

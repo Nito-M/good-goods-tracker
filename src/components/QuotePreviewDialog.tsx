@@ -161,7 +161,16 @@ export function QuotePreviewDialog({
                         {!quote.hidePrices && (
                           <>
                             <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
-                            <td className="p-2 text-right">{formatCurrency(item.totalPrice)}</td>
+                            <td className="p-2 text-right">
+                              {quote.discountRate > 0 ? (
+                                <div>
+                                  <span>{formatCurrency(item.totalPrice * (1 - quote.discountRate / 100))}</span>
+                                  <span className="ml-2 text-gray-400 line-through text-xs">{formatCurrency(item.totalPrice)}</span>
+                                </div>
+                              ) : (
+                                formatCurrency(item.totalPrice)
+                              )}
+                            </td>
                           </>
                         )}
                       </tr>
