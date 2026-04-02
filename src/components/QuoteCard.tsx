@@ -249,21 +249,29 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
       {!collapsed && (
         <CardContent>
           <div className="space-y-3">
-            {/* Converted notice */}
-            {quote.status === 'converted' && (linkedInvoiceNumber || linkedPoNumber) && (
+            {/* Linked invoices */}
+            {quote.linkedInvoices.length > 0 && (
+              <div className="space-y-1 p-2 bg-success/10 border border-success/20 rounded text-sm">
+                <p className="font-medium flex items-center gap-1">
+                  <Receipt className="h-3 w-3" />
+                  Invoiced: {quote.invoicedPercentage}%
+                </p>
+                {quote.linkedInvoices.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-2 pl-4 text-muted-foreground">
+                    <span>{link.invoiceNumber || 'Invoice'}</span>
+                    <Badge variant="secondary" className="text-xs">{link.percentage}%</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Converted to PO notice */}
+            {quote.convertedToPoId && linkedPoNumber && (
               <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/20 rounded text-sm">
-                {linkedInvoiceNumber && (
-                  <span className="flex items-center gap-1 text-success">
-                    <Receipt className="h-3 w-3" />
-                    Converted to Invoice: <strong>{linkedInvoiceNumber}</strong>
-                  </span>
-                )}
-                {linkedPoNumber && (
-                  <span className="flex items-center gap-1 text-primary">
-                    <ShoppingCart className="h-3 w-3" />
-                    Converted to PO: <strong>{linkedPoNumber}</strong>
-                  </span>
-                )}
+                <span className="flex items-center gap-1 text-primary">
+                  <ShoppingCart className="h-3 w-3" />
+                  Converted to PO: <strong>{linkedPoNumber}</strong>
+                </span>
               </div>
             )}
 
