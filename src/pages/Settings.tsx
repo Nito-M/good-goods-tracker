@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCustomers, Customer } from '@/hooks/useCustomers';
 import { useCategories } from '@/hooks/useCategories';
+import { useAssemblyCategories } from '@/hooks/useAssemblyCategories';
 import { useSubcategories } from '@/hooks/useSubcategories';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
