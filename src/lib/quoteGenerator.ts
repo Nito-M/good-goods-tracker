@@ -191,7 +191,8 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     quote.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, 67);
       const skuLines = doc.splitTextToSize(item.sku, 30);
-      const rowHeight = Math.max(nameLines.length, skuLines.length, 1) * LINE_HEIGHT;
+      const baseRows = Math.max(nameLines.length, skuLines.length, 1);
+      const rowHeight = baseRows * LINE_HEIGHT + (quote.discountRate > 0 && !hidePrices ? 5 : 0);
 
       // Calculate total height this item needs (name/sku rows + optional note rows)
       let itemTotalHeight = rowHeight;
