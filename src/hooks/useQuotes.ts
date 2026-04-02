@@ -367,7 +367,8 @@ export function useQuotes() {
       await supabase.from('quote_items').delete().eq('quote_id', quoteId);
 
       // Create new quote items
-      for (const item of input.items) {
+      for (let i = 0; i < input.items.length; i++) {
+        const item = input.items[i];
         const { error: itemError } = await supabase
           .from('quote_items')
           .insert({
@@ -381,6 +382,7 @@ export function useQuotes() {
             unit_cost: item.unitCost,
             total_price: (item.quantity || 0) * item.unitPrice,
             notes: item.notes || null,
+            sort_order: i,
           } as any);
 
         if (itemError) throw itemError;

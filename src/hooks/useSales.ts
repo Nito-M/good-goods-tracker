@@ -541,7 +541,8 @@ export function useSales() {
       await supabase.from('sale_items').delete().eq('sale_id', saleId);
 
       // Create new sale items
-      for (const item of input.items) {
+      for (let i = 0; i < input.items.length; i++) {
+        const item = input.items[i];
         const { error: itemError } = await supabase
           .from('sale_items')
           .insert({
@@ -553,7 +554,8 @@ export function useSales() {
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
             total_price: item.quantity * item.unitPrice,
-          });
+            sort_order: i,
+          } as any);
 
         if (itemError) throw itemError;
       }
