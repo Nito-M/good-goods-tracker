@@ -949,6 +949,33 @@ export function Quotes() {
                       </Select>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label>Quote Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !quoteDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {quoteDate ? format(quoteDate, 'PPP') : <span>Today (default)</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={quoteDate}
+                            onSelect={setQuoteDate}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="hidePrices"
