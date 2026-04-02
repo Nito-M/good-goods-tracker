@@ -241,6 +241,18 @@ export function Settings() {
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
 
+  // Assembly category state
+  const [newAssemblyCategory, setNewAssemblyCategory] = useState('');
+  const [assemblyCategorySearchQuery, setAssemblyCategorySearchQuery] = useState('');
+  const [editingAssemblyCategoryId, setEditingAssemblyCategoryId] = useState<string | null>(null);
+  const [editingAssemblyCategoryName, setEditingAssemblyCategoryName] = useState('');
+  const [deleteAssemblyCategoryId, setDeleteAssemblyCategoryId] = useState<string | null>(null);
+
+  const filteredAssemblyCategories = assemblyCategories.filter(c => {
+    if (!assemblyCategorySearchQuery) return true;
+    return c.name.toLowerCase().includes(assemblyCategorySearchQuery.toLowerCase());
+  });
+
   // Customer dialog state
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
