@@ -48,7 +48,7 @@ interface QuoteCardProps {
 
 export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [collapsed, setCollapsed] = useState(true);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
