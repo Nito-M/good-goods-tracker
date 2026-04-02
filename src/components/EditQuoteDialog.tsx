@@ -101,6 +101,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
       setCompanyId((quote as any).companyId || defaultCompany?.id || '');
       setHidePrices(quote.hidePrices || false);
+      setShowSku(quote.showSku !== false);
     }
   }, [quote, defaultCompany]);
 
