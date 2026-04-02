@@ -24,7 +24,7 @@ export function SalesOrders() {
   const loading = quotesLoading || vendorsLoading;
 
   const acceptedQuotes = useMemo(() => {
-    const accepted = quotes.filter((q) => q.status === 'accepted');
+    const accepted = quotes.filter((q) => q.status === 'sales_order');
 
     if (!searchQuery.trim()) return accepted;
 

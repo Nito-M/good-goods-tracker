@@ -15,7 +15,7 @@ export interface QuoteItem {
   createdAt: string;
 }
 
-export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'converted';
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'converted' | 'sales_order';
 
 export interface QuoteInvoiceLink {
   saleId: string;
