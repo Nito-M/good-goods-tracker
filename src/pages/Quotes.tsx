@@ -369,6 +369,7 @@ export function Quotes() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
    const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [hidePrices, setHidePrices] = useState(false);
+  const [showSku, setShowSku] = useState(true);
   const [activeTab, setActiveTab] = useState('new-quote');
   const [showItemPicker, setShowItemPicker] = useState(false);
 
@@ -403,6 +404,7 @@ export function Quotes() {
     setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
     setSelectedCompanyId((quote as any).companyId || defaultCompany?.id || '');
     setHidePrices(quote.hidePrices || false);
+    setShowSku(quote.showSku !== false);
     setEditingQuoteId(quote.id);
     setActiveTab('new-quote');
   };
@@ -416,6 +418,7 @@ export function Quotes() {
     setMarkupPercent('');
     setNotes('');
     setHidePrices(false);
+    setShowSku(true);
     setQuoteDate(undefined);
     setSelectedCompanyId(defaultCompany?.id || '');
     setEditingQuoteId(null);
@@ -584,6 +587,7 @@ export function Quotes() {
       companyId: selectedCompanyId || null,
       hidePrices,
       showPaymentTerms,
+      showSku,
       createdAt: quoteDate ? quoteDate.toISOString() : null,
     };
 
@@ -985,6 +989,17 @@ export function Quotes() {
                       />
                       <Label htmlFor="hidePrices" className="text-sm font-normal cursor-pointer">
                         Hide prices on quote
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="showSku"
+                        checked={showSku}
+                        onCheckedChange={(checked) => setShowSku(checked === true)}
+                      />
+                      <Label htmlFor="showSku" className="text-sm font-normal cursor-pointer">
+                        Show SKU on quote
                       </Label>
                     </div>
 

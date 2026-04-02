@@ -39,7 +39,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.text('Item', tableX + 2, y);
-      doc.text('SKU', tableX + 72, y);
+      if (quote.showSku !== false) {
+        doc.text('SKU', tableX + 72, y);
+      }
       doc.text('Qty', tableX + 105, y, { align: 'center' });
       if (!quote.hidePrices) {
         doc.text('Price', tableX + 145, y, { align: 'right' });
@@ -177,7 +179,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Item', tableX + 2, y);
-    doc.text('SKU', tableX + 72, y);
+    if (quote.showSku !== false) {
+      doc.text('SKU', tableX + 72, y);
+    }
     doc.text('Qty', tableX + 105, y, { align: 'center' });
     if (!hidePrices) {
       doc.text('Price', tableX + 145, y, { align: 'right' });
@@ -214,9 +218,11 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       isFirstItem = false;
 
       doc.text(nameLines, tableX + 2, y);
-      doc.setTextColor(100, 100, 100);
-      doc.text(skuLines, tableX + 72, y);
-      doc.setTextColor(0, 0, 0);
+      if (quote.showSku !== false) {
+        doc.setTextColor(100, 100, 100);
+        doc.text(skuLines, tableX + 72, y);
+        doc.setTextColor(0, 0, 0);
+      }
       const qtyDisplay = item.quantity > 0 ? `${item.quantity} ${item.quantityUnit}` : '-';
       doc.text(qtyDisplay, tableX + 105, y, { align: 'center' });
       if (!hidePrices) {

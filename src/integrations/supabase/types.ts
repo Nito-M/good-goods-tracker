@@ -2285,6 +2285,7 @@ export type Database = {
           payment_terms: string | null
           quote_number: string
           show_payment_terms: boolean
+          show_sku: boolean
           status: string
           subtotal: number
           tax_amount: number
@@ -2310,6 +2311,7 @@ export type Database = {
           payment_terms?: string | null
           quote_number: string
           show_payment_terms?: boolean
+          show_sku?: boolean
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -2335,6 +2337,7 @@ export type Database = {
           payment_terms?: string | null
           quote_number?: string
           show_payment_terms?: boolean
+          show_sku?: boolean
           status?: string
           subtotal?: number
           tax_amount?: number

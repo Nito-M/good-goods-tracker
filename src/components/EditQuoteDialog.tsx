@@ -56,6 +56,7 @@ interface EditQuoteDialogProps {
     validUntil: string | null;
     companyId: string | null;
     hidePrices: boolean;
+    showSku: boolean;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
@@ -75,6 +76,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const [isSaving, setIsSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>('');
   const [hidePrices, setHidePrices] = useState(false);
+  const [showSku, setShowSku] = useState(true);
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
@@ -99,6 +101,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
       setCompanyId((quote as any).companyId || defaultCompany?.id || '');
       setHidePrices(quote.hidePrices || false);
+      setShowSku(quote.showSku !== false);
     }
   }, [quote, defaultCompany]);
 
@@ -164,6 +167,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: companyId || null,
       hidePrices,
+      showSku,
     });
     setIsSaving(false);
     onOpenChange(false);
@@ -418,6 +422,17 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
             />
             <Label htmlFor="editHidePrices" className="text-sm font-normal cursor-pointer">
               Hide prices on quote
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="editShowSku"
+              checked={showSku}
+              onCheckedChange={(checked) => setShowSku(checked === true)}
+            />
+            <Label htmlFor="editShowSku" className="text-sm font-normal cursor-pointer">
+              Show SKU on quote
             </Label>
           </div>
 

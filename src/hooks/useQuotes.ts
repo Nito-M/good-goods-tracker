@@ -72,6 +72,7 @@ export function useQuotes() {
             items: mappedItems,
             hidePrices: (quote as any).hide_prices || false,
             showPaymentTerms: (quote as any).show_payment_terms !== false,
+            showSku: (quote as any).show_sku !== false,
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
           };
@@ -129,6 +130,7 @@ export function useQuotes() {
           company_id: input.companyId || null,
           hide_prices: input.hidePrices || false,
           show_payment_terms: input.showPaymentTerms !== false,
+          show_sku: input.showSku !== false,
           ...(input.createdAt ? { created_at: input.createdAt } : {}),
         })
         .select()
@@ -330,6 +332,7 @@ export function useQuotes() {
       companyId?: string | null;
       hidePrices?: boolean;
       showPaymentTerms?: boolean;
+      showSku?: boolean;
       createdAt?: string | null;
     }
   ): Promise<boolean> => {
@@ -364,6 +367,7 @@ export function useQuotes() {
           company_id: input.companyId || null,
           hide_prices: input.hidePrices || false,
           show_payment_terms: input.showPaymentTerms !== false,
+          show_sku: input.showSku !== false,
           ...(input.createdAt ? { created_at: input.createdAt } : {}),
         } as any)
         .eq('id', quoteId);

@@ -137,7 +137,9 @@ export function QuotePreviewDialog({
                   <thead>
                     <tr className="bg-gray-100">
                       <th className="text-left p-2 font-medium">Item</th>
-                      <th className="text-left p-2 font-medium">SKU</th>
+                      {quote.showSku !== false && (
+                        <th className="text-left p-2 font-medium">SKU</th>
+                      )}
                       <th className="text-center p-2 font-medium">Qty</th>
                       {!quote.hidePrices && (
                         <>
@@ -156,7 +158,9 @@ export function QuotePreviewDialog({
                             <p className="text-xs text-gray-500 mt-1">Note: {item.notes}</p>
                           )}
                         </td>
-                        <td className="p-2 text-gray-600">{item.sku}</td>
+                        {quote.showSku !== false && (
+                          <td className="p-2 text-gray-600">{item.sku}</td>
+                        )}
                         <td className="p-2 text-center">
                           {item.quantity} {item.quantityUnit}
                         </td>
