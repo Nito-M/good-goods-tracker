@@ -328,6 +328,7 @@ export function useQuotes() {
       validUntil: string | null;
       companyId?: string | null;
       hidePrices?: boolean;
+      showPaymentTerms?: boolean;
     }
   ): Promise<boolean> => {
     if (!user) return false;
