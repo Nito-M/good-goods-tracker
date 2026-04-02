@@ -76,6 +76,155 @@ interface CartItem {
 }
 
 import { useCompanies } from '@/hooks/useCompanies';
+
+function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCartQuantity, removeFromCart, inventoryItems, markupPercent, calculateMarkupPrice }: {
+  item: CartItem;
+  formatCurrency: (v: number) => string;
+  updateCartItem: (id: string, updates: Partial<CartItem>) => void;
+  updateCartQuantity: (id: string, qty: number | null) => void;
+  removeFromCart: (id: string) => void;
+  inventoryItems: InventoryItem[];
+  markupPercent: number | '';
+  calculateMarkupPrice: (cost: number, markup: number) => number;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: c.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <div ref={setNodeRef} style={style} className="border rounded-lg p-4 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <button type="button" className="mt-1 cursor-grab touch-none text-muted-foreground hover:text-foreground" {...attributes} {...listeners}>
+          <GripVertical className="h-5 w-5" />
+        </button>
+        <div className="flex-1 space-y-3">
+          {/* Item Name and SKU */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Item Name</Label>
+              {c.inventoryItemId ? (
+                <p className="font-medium">{c.itemName}</p>
+              ) : (
+                <Input
+                  placeholder="Enter item name"
+                  value={c.itemName}
+                  onChange={(e) => updateCartItem(c.id, { itemName: e.target.value })}
+                />
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">SKU</Label>
+              {c.inventoryItemId ? (
+                <Badge variant="secondary">{c.sku}</Badge>
+              ) : (
+                <Input
+                  placeholder="SKU"
+                  value={c.sku}
+                  onChange={(e) => updateCartItem(c.id, { sku: e.target.value })}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Quantity, Unit, and Price */}
+          <div className="grid grid-cols-4 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Quantity</Label>
+              <Input
+                type="number"
+                className="h-8"
+                placeholder="Qty"
+                value={c.quantity ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateCartQuantity(c.id, val === '' ? null : parseFloat(val));
+                }}
+                min={0}
+                step={0.01}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Unit</Label>
+              <Select
+                value={c.quantityUnit}
+                onValueChange={(v) => updateCartItem(c.id, { quantityUnit: v as QuantityUnit })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(QUANTITY_UNIT_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Unit Price</Label>
+              {c.inventoryItemId ? (
+                <p className="font-medium h-8 flex items-center">{formatCurrency(c.unitPrice)}</p>
+              ) : (
+                <Input
+                  type="number"
+                  className="h-8"
+                  value={c.unitPrice}
+                  onChange={(e) => updateCartItem(c.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+                  min={0}
+                  step={0.01}
+                />
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Total</Label>
+              <p className="font-bold h-8 flex items-center">{formatCurrency((c.quantity || 0) * c.unitPrice)}</p>
+            </div>
+          </div>
+
+          {/* Exclude from Markup toggle */}
+          {c.inventoryItemId && markupPercent !== '' && (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant={c.excludeMarkup ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => {
+                  const newExclude = !c.excludeMarkup;
+                  const item = inventoryItems.find(i => i.id === c.inventoryItemId);
+                  if (!item) return;
+                  const newPrice = newExclude ? item.price : calculateMarkupPrice(item.cost, markupPercent as number);
+                  updateCartItem(c.id, { excludeMarkup: newExclude, unitPrice: newPrice });
+                }}
+              >
+                {c.excludeMarkup ? 'Markup Excluded' : 'Exclude from Markup'}
+              </Button>
+            </div>
+          )}
+
+          {/* Per-Item Notes */}
+          <div className="space-y-1">
+            <Label className="text-xs">Item Notes</Label>
+            <textarea
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[60px] resize-y"
+              placeholder="Add notes for this item..."
+              value={c.notes}
+              onChange={(e) => updateCartItem(c.id, { notes: e.target.value })}
+            />
+          </div>
+        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-destructive shrink-0"
+          onClick={() => removeFromCart(c.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
