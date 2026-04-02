@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
@@ -22,6 +24,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -38,7 +48,7 @@ interface QuoteCardProps {
   onUploadAttachment: (quoteId: string, file: File) => Promise<string | null>;
   onRemoveAttachment: (quoteId: string) => void;
   onEdit: (quote: Quote) => void;
-  onConvertToInvoice?: (quote: Quote) => void;
+  onConvertToInvoice?: (quote: Quote, percentage: number) => void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
   onPreview?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
