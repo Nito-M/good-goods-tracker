@@ -404,6 +404,7 @@ export function Quotes() {
     setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
     setSelectedCompanyId((quote as any).companyId || defaultCompany?.id || '');
     setHidePrices(quote.hidePrices || false);
+    setShowSku(quote.showSku !== false);
     setEditingQuoteId(quote.id);
     setActiveTab('new-quote');
   };
