@@ -74,6 +74,100 @@ interface CartItem {
   excludeMarkup?: boolean;
 }
 
+function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFromCart, markupPercent, calculateMarkupPrice, setCart, getItemPrice }: {
+  item: CartItem;
+  formatCurrency: (v: number) => string;
+  updateCartQuantity: (id: string, qty: number | null) => void;
+  removeFromCart: (id: string) => void;
+  markupPercent: number | '';
+  calculateMarkupPrice: (cost: number, markup: number) => number;
+  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  getItemPrice: (c: CartItem) => number;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: c.inventoryItem.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell className="w-8">
+        <button type="button" className="cursor-grab touch-none text-muted-foreground hover:text-foreground" {...attributes} {...listeners}>
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </TableCell>
+      <TableCell className="font-medium">
+        {c.inventoryItem.name}
+      </TableCell>
+      <TableCell>
+        {formatCurrency(getItemPrice(c))}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8"
+            onClick={() => updateCartQuantity(c.inventoryItem.id, c.quantity - 1)}
+          >
+            <Minus className="h-3 w-3" />
+          </Button>
+          <Input
+            type="number"
+            className="w-16 text-center"
+            value={c.quantity}
+            onChange={(e) => updateCartQuantity(c.inventoryItem.id, parseInt(e.target.value) || 0)}
+            min={1}
+          />
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8"
+            onClick={() => updateCartQuantity(c.inventoryItem.id, c.quantity + 1)}
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        {formatCurrency(c.quantity * getItemPrice(c))}
+      </TableCell>
+      {markupPercent !== '' && (
+        <TableCell>
+          <Button
+            type="button"
+            variant={c.excludeMarkup ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs whitespace-nowrap"
+            onClick={() => {
+              const newExclude = !c.excludeMarkup;
+              setCart(prev => prev.map(item =>
+                item.inventoryItem.id === c.inventoryItem.id
+                  ? {
+                      ...item,
+                      excludeMarkup: newExclude,
+                      customPrice: newExclude ? undefined : calculateMarkupPrice(item.inventoryItem.cost, markupPercent as number)
+                    }
+                  : item
+              ));
+            }}
+          >
+            {c.excludeMarkup ? 'Excluded' : 'Exclude'}
+          </Button>
+        </TableCell>
+      )}
+      <TableCell>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-destructive"
+          onClick={() => removeFromCart(c.inventoryItem.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export function Sales() {
   const { signOut } = useAuth();
   const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
