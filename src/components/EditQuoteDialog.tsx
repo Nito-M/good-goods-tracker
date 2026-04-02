@@ -167,6 +167,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: companyId || null,
       hidePrices,
+      showSku,
     });
     setIsSaving(false);
     onOpenChange(false);
