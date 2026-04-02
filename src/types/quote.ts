@@ -42,6 +42,7 @@ export interface Quote {
   items: QuoteItem[];
   hidePrices: boolean;
   showPaymentTerms: boolean;
+  showSku: boolean;
   createdAt: string;
   updatedAt: string;
 }
