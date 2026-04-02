@@ -1,17 +1,29 @@
 
 
-## Plan: Pass Company Details from Quote to Invoice on Conversion
+## Plan: Separate "Accepted" and "Convert to Sales Order" Statuses
 
-### Problem
-When converting a quote to an invoice, the `company_id` is not carried over. This means the invoice loses the logo, business name, address, and other company branding that was set on the quote.
+### Summary
+Add a new `sales_order` status to quotes. The status dropdown will have two distinct options:
+- **Accepted** — marks the quote as accepted (does not appear on Sales Orders page)
+- **Convert to Sales Order** — sets status to `sales_order` and makes it appear on the Sales Orders page
 
-### Changes
+### Database Changes
+- Add `'sales_order'` to the `quote_status` enum (or update the check constraint on the `quotes.status` column)
 
-**`src/hooks/useQuotes.ts`** — `convertToInvoice` function (~line 484):
-- Add `company_id: quote.companyId || null` to the sales insert object
+### Code Changes
 
-This single change ensures the invoice inherits the same company profile (logo, name, address, phone, email, business number, thank-you note) as the quote, since the invoice preview and PDF generator already read company details from the `company_id` on the sale.
+**`src/types/quote.ts`**
+- Add `'sales_order'` to the `QuoteStatus` type union
 
-### No other changes needed
-The existing invoice preview (`InvoicePreviewDialog`) and PDF generator (`invoiceGenerator`) already resolve company settings from the sale's `company_id`. The company data (logo, address, etc.) will automatically appear once the ID is passed through.
+**`src/components/QuoteCard.tsx`**
+- In the Status dropdown, rename the current "Accepted" item to "Convert to Sales Order" and have it set status to `'sales_order'`
+- Add a new "Accepted" dropdown item that sets status to `'accepted'`
+- Add a badge style for `sales_order` status
+
+**`src/pages/SalesOrders.tsx`**
+- Change the filter from `q.status === 'accepted'` to `q.status === 'sales_order'` so only explicitly converted quotes appear there
+
+### Technical Details
+- Migration: `ALTER TYPE quote_status ADD VALUE 'sales_order';` (or equivalent depending on how the column is constrained)
+- Existing quotes with `accepted` status will remain as `accepted` and won't appear in Sales Orders unless manually changed
 
