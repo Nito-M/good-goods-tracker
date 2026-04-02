@@ -11,7 +11,11 @@ import {
   ShoppingBag,
   ChevronsUpDown,
   Check,
+  GripVertical,
 } from 'lucide-react';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,6 +72,100 @@ interface CartItem {
   quantity: number;
   customPrice?: number; // Custom price after markup
   excludeMarkup?: boolean;
+}
+
+function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFromCart, markupPercent, calculateMarkupPrice, setCart, getItemPrice }: {
+  item: CartItem;
+  formatCurrency: (v: number) => string;
+  updateCartQuantity: (id: string, qty: number | null) => void;
+  removeFromCart: (id: string) => void;
+  markupPercent: number | '';
+  calculateMarkupPrice: (cost: number, markup: number) => number;
+  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  getItemPrice: (c: CartItem) => number;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: c.inventoryItem.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell className="w-8">
+        <button type="button" className="cursor-grab touch-none text-muted-foreground hover:text-foreground" {...attributes} {...listeners}>
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </TableCell>
+      <TableCell className="font-medium">
+        {c.inventoryItem.name}
+      </TableCell>
+      <TableCell>
+        {formatCurrency(getItemPrice(c))}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8"
+            onClick={() => updateCartQuantity(c.inventoryItem.id, c.quantity - 1)}
+          >
+            <Minus className="h-3 w-3" />
+          </Button>
+          <Input
+            type="number"
+            className="w-16 text-center"
+            value={c.quantity}
+            onChange={(e) => updateCartQuantity(c.inventoryItem.id, parseInt(e.target.value) || 0)}
+            min={1}
+          />
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8"
+            onClick={() => updateCartQuantity(c.inventoryItem.id, c.quantity + 1)}
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        {formatCurrency(c.quantity * getItemPrice(c))}
+      </TableCell>
+      {markupPercent !== '' && (
+        <TableCell>
+          <Button
+            type="button"
+            variant={c.excludeMarkup ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs whitespace-nowrap"
+            onClick={() => {
+              const newExclude = !c.excludeMarkup;
+              setCart(prev => prev.map(item =>
+                item.inventoryItem.id === c.inventoryItem.id
+                  ? {
+                      ...item,
+                      excludeMarkup: newExclude,
+                      customPrice: newExclude ? undefined : calculateMarkupPrice(item.inventoryItem.cost, markupPercent as number)
+                    }
+                  : item
+              ));
+            }}
+          >
+            {c.excludeMarkup ? 'Excluded' : 'Exclude'}
+          </Button>
+        </TableCell>
+      )}
+      <TableCell>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-destructive"
+          onClick={() => removeFromCart(c.inventoryItem.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
 }
 
 export function Sales() {
@@ -489,6 +587,7 @@ export function Sales() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-8"></TableHead>
                             <TableHead>Item</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Quantity</TableHead>
@@ -497,101 +596,34 @@ export function Sales() {
                             <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
-                        <TableBody>
-                          {cart.map((c) => (
-                            <TableRow key={c.inventoryItem.id}>
-                              <TableCell className="font-medium">
-                                {c.inventoryItem.name}
-                              </TableCell>
-                              <TableCell>
-                                {formatCurrency(getItemPrice(c))}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="h-8 w-8"
-                                    onClick={() =>
-                                      updateCartQuantity(
-                                        c.inventoryItem.id,
-                                        c.quantity - 1
-                                      )
-                                    }
-                                  >
-                                    <Minus className="h-3 w-3" />
-                                  </Button>
-                                  <Input
-                                    type="number"
-                                    className="w-16 text-center"
-                                    value={c.quantity}
-                                    onChange={(e) =>
-                                      updateCartQuantity(
-                                        c.inventoryItem.id,
-                                        parseInt(e.target.value) || 0
-                                      )
-                                    }
-                                    min={1}
-                                  />
-                                  <Button
-                                    size="icon"
-                                    variant="outline"
-                                    className="h-8 w-8"
-                                    onClick={() =>
-                                      updateCartQuantity(
-                                        c.inventoryItem.id,
-                                        c.quantity + 1
-                                      )
-                                    }
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {formatCurrency(
-                                  c.quantity * getItemPrice(c)
-                                )}
-                              </TableCell>
-                              {markupPercent !== '' && (
-                                <TableCell>
-                                  <Button
-                                    type="button"
-                                    variant={c.excludeMarkup ? 'default' : 'outline'}
-                                    size="sm"
-                                    className="h-7 text-xs whitespace-nowrap"
-                                    onClick={() => {
-                                      const newExclude = !c.excludeMarkup;
-                                      setCart(prev => prev.map(item =>
-                                        item.inventoryItem.id === c.inventoryItem.id
-                                          ? {
-                                              ...item,
-                                              excludeMarkup: newExclude,
-                                              customPrice: newExclude ? undefined : calculateMarkupPrice(item.inventoryItem.cost, markupPercent as number)
-                                            }
-                                          : item
-                                      ));
-                                    }}
-                                  >
-                                    {c.excludeMarkup ? 'Excluded' : 'Exclude'}
-                                  </Button>
-                                </TableCell>
-                              )}
-                              <TableCell>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="text-destructive"
-                                  onClick={() =>
-                                    removeFromCart(c.inventoryItem.id)
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
+                        <DndContext collisionDetection={closestCenter} onDragEnd={(event: DragEndEvent) => {
+                          const { active, over } = event;
+                          if (over && active.id !== over.id) {
+                            setCart((items) => {
+                              const oldIndex = items.findIndex((i) => i.inventoryItem.id === active.id);
+                              const newIndex = items.findIndex((i) => i.inventoryItem.id === over.id);
+                              return arrayMove(items, oldIndex, newIndex);
+                            });
+                          }
+                        }}>
+                          <SortableContext items={cart.map(c => c.inventoryItem.id)} strategy={verticalListSortingStrategy}>
+                            <TableBody>
+                              {cart.map((c) => (
+                                <SortableSaleRow
+                                  key={c.inventoryItem.id}
+                                  item={c}
+                                  formatCurrency={formatCurrency}
+                                  updateCartQuantity={updateCartQuantity}
+                                  removeFromCart={removeFromCart}
+                                  markupPercent={markupPercent}
+                                  calculateMarkupPrice={calculateMarkupPrice}
+                                  setCart={setCart}
+                                  getItemPrice={getItemPrice}
+                                />
+                              ))}
+                            </TableBody>
+                          </SortableContext>
+                        </DndContext>
                       </Table>
                     )}
                   </CardContent>
