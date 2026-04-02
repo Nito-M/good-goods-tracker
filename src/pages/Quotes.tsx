@@ -316,6 +316,7 @@ export function Quotes() {
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [showPaymentTerms, setShowPaymentTerms] = useState(true);
+  const [quoteDate, setQuoteDate] = useState<Date | undefined>(undefined);
 
   // Auto-select vendor created from customer
   useEffect(() => {
