@@ -332,6 +332,7 @@ export function useQuotes() {
       companyId?: string | null;
       hidePrices?: boolean;
       showPaymentTerms?: boolean;
+      showSku?: boolean;
       createdAt?: string | null;
     }
   ): Promise<boolean> => {
