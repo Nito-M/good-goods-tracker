@@ -41,6 +41,7 @@ export interface Quote {
   companyId?: string | null;
   items: QuoteItem[];
   hidePrices: boolean;
+  showPaymentTerms: boolean;
   createdAt: string;
   updatedAt: string;
 }
