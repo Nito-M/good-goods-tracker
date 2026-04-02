@@ -30,7 +30,8 @@ export function useSales() {
           const { data: items } = await supabase
             .from('sale_items')
             .select('*')
-            .eq('sale_id', sale.id);
+            .eq('sale_id', sale.id)
+            .order('sort_order', { ascending: true });
 
           const mappedItems = (items || []).map((item) => {
             const unitCost = Number(item.unit_cost) || 0;
