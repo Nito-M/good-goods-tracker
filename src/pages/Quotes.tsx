@@ -369,6 +369,7 @@ export function Quotes() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
    const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [hidePrices, setHidePrices] = useState(false);
+  const [showSku, setShowSku] = useState(true);
   const [activeTab, setActiveTab] = useState('new-quote');
   const [showItemPicker, setShowItemPicker] = useState(false);
 
