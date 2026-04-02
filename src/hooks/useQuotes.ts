@@ -72,6 +72,7 @@ export function useQuotes() {
             items: mappedItems,
             hidePrices: (quote as any).hide_prices || false,
             showPaymentTerms: (quote as any).show_payment_terms !== false,
+            showSku: (quote as any).show_sku !== false,
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
           };
