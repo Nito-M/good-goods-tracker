@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, QuoteItem, CreateQuoteInput, QuoteStatus } from '@/types/quote';
+import { Quote, QuoteItem, QuoteInvoiceLink, CreateQuoteInput, QuoteStatus } from '@/types/quote';
 
 export function useQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
