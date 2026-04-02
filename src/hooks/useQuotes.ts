@@ -129,6 +129,7 @@ export function useQuotes() {
           company_id: input.companyId || null,
           hide_prices: input.hidePrices || false,
           show_payment_terms: input.showPaymentTerms !== false,
+          ...(input.createdAt ? { created_at: input.createdAt } : {}),
         })
         .select()
         .single();
@@ -329,6 +330,7 @@ export function useQuotes() {
       companyId?: string | null;
       hidePrices?: boolean;
       showPaymentTerms?: boolean;
+      createdAt?: string | null;
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -362,6 +364,7 @@ export function useQuotes() {
           company_id: input.companyId || null,
           hide_prices: input.hidePrices || false,
           show_payment_terms: input.showPaymentTerms !== false,
+          ...(input.createdAt ? { created_at: input.createdAt } : {}),
         } as any)
         .eq('id', quoteId);
 

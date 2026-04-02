@@ -14,6 +14,7 @@ import {
   ChevronsUpDown,
   Check,
   GripVertical,
+  CalendarIcon,
 } from 'lucide-react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -53,6 +54,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { QuoteCard } from '@/components/QuoteCard';
 
@@ -315,6 +317,7 @@ export function Quotes() {
   const [notes, setNotes] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
   const [showPaymentTerms, setShowPaymentTerms] = useState(true);
+  const [quoteDate, setQuoteDate] = useState<Date | undefined>(undefined);
 
   // Auto-select vendor created from customer
   useEffect(() => {
@@ -396,6 +399,7 @@ export function Quotes() {
     setNotes(quote.notes || '');
     setPaymentTerms(quote.paymentTerms || 'Due on receipt');
     setShowPaymentTerms(quote.showPaymentTerms !== false);
+    setQuoteDate(new Date(quote.createdAt));
     setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
     setSelectedCompanyId((quote as any).companyId || defaultCompany?.id || '');
     setHidePrices(quote.hidePrices || false);
@@ -412,6 +416,7 @@ export function Quotes() {
     setMarkupPercent('');
     setNotes('');
     setHidePrices(false);
+    setQuoteDate(undefined);
     setSelectedCompanyId(defaultCompany?.id || '');
     setEditingQuoteId(null);
     setValidUntilInitialized(false);
@@ -579,6 +584,7 @@ export function Quotes() {
       companyId: selectedCompanyId || null,
       hidePrices,
       showPaymentTerms,
+      createdAt: quoteDate ? quoteDate.toISOString() : null,
     };
 
     let success = false;
@@ -942,6 +948,33 @@ export function Quotes() {
                           <SelectItem value="Net 60">Net 60</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Quote Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !quoteDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {quoteDate ? format(quoteDate, 'PPP') : <span>Today (default)</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={quoteDate}
+                            onSelect={setQuoteDate}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="flex items-center space-x-2">
