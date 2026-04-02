@@ -36,6 +36,7 @@ export function AssemblyTypes() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { assemblies, loading, refetch } = useAssemblies();
+  const { categories: assemblyCategories, addCategory: addAssemblyCategory } = useAssemblyCategories();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
