@@ -89,8 +89,8 @@ export function AssemblyTypes() {
       return;
     }
     setCreating(true);
-    // Create a placeholder assembly with this type so the type "exists"
-    // Actually we just navigate to the page and let them create assemblies there
+    // Also create it in the assembly_categories table
+    await addAssemblyCategory(name);
     setCreating(false);
     setCreateOpen(false);
     setNewTypeName('');
