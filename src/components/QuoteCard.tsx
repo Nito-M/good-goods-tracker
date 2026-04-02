@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
@@ -22,6 +24,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -38,7 +48,7 @@ interface QuoteCardProps {
   onUploadAttachment: (quoteId: string, file: File) => Promise<string | null>;
   onRemoveAttachment: (quoteId: string) => void;
   onEdit: (quote: Quote) => void;
-  onConvertToInvoice?: (quote: Quote) => void;
+  onConvertToInvoice?: (quote: Quote, percentage: number) => void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
   onPreview?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
@@ -49,6 +59,10 @@ interface QuoteCardProps {
 export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [invoicePercentage, setInvoicePercentage] = useState(100);
+
+  const remainingPercentage = 100 - quote.invoicedPercentage;
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -92,6 +106,7 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="space-y-1 cursor-pointer flex items-start gap-2" onClick={() => setCollapsed(!collapsed)}>
@@ -119,31 +134,16 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {quote.status !== 'converted' && onConvertToInvoice && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-success">
-                  <Receipt className="h-4 w-4 mr-2" />
-                  To Invoice
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Convert to Invoice?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will create a new invoice from {quote.quoteNumber} and mark the quote as converted.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onConvertToInvoice(quote)}>
-                    Convert
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+          {quote.invoicedPercentage < 100 && onConvertToInvoice && (
+            <Button variant="outline" size="sm" className="text-success" onClick={() => {
+              setInvoicePercentage(remainingPercentage);
+              setShowInvoiceDialog(true);
+            }}>
+              <Receipt className="h-4 w-4 mr-2" />
+              To Invoice {quote.invoicedPercentage > 0 ? `(${remainingPercentage}% left)` : ''}
+            </Button>
           )}
-          {quote.status !== 'converted' && onConvertToPurchaseOrder && (
+          {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm" className="text-primary">
@@ -250,21 +250,29 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
       {!collapsed && (
         <CardContent>
           <div className="space-y-3">
-            {/* Converted notice */}
-            {quote.status === 'converted' && (linkedInvoiceNumber || linkedPoNumber) && (
+            {/* Linked invoices */}
+            {quote.linkedInvoices.length > 0 && (
+              <div className="space-y-1 p-2 bg-success/10 border border-success/20 rounded text-sm">
+                <p className="font-medium flex items-center gap-1">
+                  <Receipt className="h-3 w-3" />
+                  Invoiced: {quote.invoicedPercentage}%
+                </p>
+                {quote.linkedInvoices.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-2 pl-4 text-muted-foreground">
+                    <span>{link.invoiceNumber || 'Invoice'}</span>
+                    <Badge variant="secondary" className="text-xs">{link.percentage}%</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Converted to PO notice */}
+            {quote.convertedToPoId && linkedPoNumber && (
               <div className="flex items-center gap-2 p-2 bg-success/10 border border-success/20 rounded text-sm">
-                {linkedInvoiceNumber && (
-                  <span className="flex items-center gap-1 text-success">
-                    <Receipt className="h-3 w-3" />
-                    Converted to Invoice: <strong>{linkedInvoiceNumber}</strong>
-                  </span>
-                )}
-                {linkedPoNumber && (
-                  <span className="flex items-center gap-1 text-primary">
-                    <ShoppingCart className="h-3 w-3" />
-                    Converted to PO: <strong>{linkedPoNumber}</strong>
-                  </span>
-                )}
+                <span className="flex items-center gap-1 text-primary">
+                  <ShoppingCart className="h-3 w-3" />
+                  Converted to PO: <strong>{linkedPoNumber}</strong>
+                </span>
               </div>
             )}
 
@@ -368,5 +376,55 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
         </CardContent>
       )}
     </Card>
+
+      {/* Percentage Invoice Dialog */}
+      <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convert to Invoice</DialogTitle>
+            <DialogDescription>
+              Choose what percentage of {quote.quoteNumber} to invoice.
+              {quote.invoicedPercentage > 0 && (
+                <span className="block mt-1">
+                  Already invoiced: {quote.invoicedPercentage}% — {remainingPercentage}% remaining
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Percentage to invoice</Label>
+              <Input
+                type="number"
+                min={1}
+                max={remainingPercentage}
+                value={invoicePercentage}
+                onChange={(e) => setInvoicePercentage(Number(e.target.value))}
+              />
+              {invoicePercentage > remainingPercentage && (
+                <p className="text-sm text-destructive">
+                  Cannot exceed {remainingPercentage}%
+                </p>
+              )}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Invoice total: {formatCurrency(quote.total * (invoicePercentage / 100))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInvoiceDialog(false)}>Cancel</Button>
+            <Button
+              disabled={invoicePercentage < 1 || invoicePercentage > remainingPercentage}
+              onClick={() => {
+                onConvertToInvoice?.(quote, invoicePercentage);
+                setShowInvoiceDialog(false);
+              }}
+            >
+              Create Invoice ({invoicePercentage}%)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

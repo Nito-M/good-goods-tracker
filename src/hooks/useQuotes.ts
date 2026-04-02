@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Quote, QuoteItem, CreateQuoteInput, QuoteStatus } from '@/types/quote';
+import { Quote, QuoteItem, QuoteInvoiceLink, CreateQuoteInput, QuoteStatus } from '@/types/quote';
 
 export function useQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -23,6 +23,36 @@ export function useQuotes() {
         .order('created_at', { ascending: false });
 
       if (quotesError) throw quotesError;
+
+      // Fetch all quote invoice links with sale invoice numbers
+      const { data: allLinks } = await supabase
+        .from('quote_invoice_links')
+        .select('quote_id, sale_id, percentage');
+
+      // Build a map of sale_id -> invoice_number
+      const saleIds = [...new Set((allLinks || []).map(l => (l as any).sale_id))];
+      let invoiceMap = new Map<string, string>();
+      if (saleIds.length > 0) {
+        const { data: salesData } = await supabase
+          .from('sales')
+          .select('id, invoice_number')
+          .in('id', saleIds);
+        for (const s of salesData || []) {
+          invoiceMap.set(s.id, s.invoice_number || '');
+        }
+      }
+
+      // Group links by quote_id
+      const linksByQuote = new Map<string, QuoteInvoiceLink[]>();
+      for (const link of allLinks || []) {
+        const qId = (link as any).quote_id;
+        if (!linksByQuote.has(qId)) linksByQuote.set(qId, []);
+        linksByQuote.get(qId)!.push({
+          saleId: (link as any).sale_id,
+          percentage: Number((link as any).percentage),
+          invoiceNumber: invoiceMap.get((link as any).sale_id) || undefined,
+        });
+      }
 
       const quotesWithItems: Quote[] = await Promise.all(
         (quotesData || []).map(async (quote) => {
@@ -73,6 +103,8 @@ export function useQuotes() {
             hidePrices: (quote as any).hide_prices || false,
             showPaymentTerms: (quote as any).show_payment_terms !== false,
             showSku: (quote as any).show_sku !== false,
+            invoicedPercentage: Number((quote as any).invoiced_percentage || 0),
+            linkedInvoices: linksByQuote.get(quote.id) || [],
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
           };
@@ -417,12 +449,21 @@ export function useQuotes() {
     }
   };
 
-  const convertToInvoice = async (quote: Quote): Promise<string | null> => {
+  const convertToInvoice = async (quote: Quote, percentage: number = 100): Promise<string | null> => {
     if (!user) return null;
 
     try {
-      // Calculate totals for the invoice
-      const subtotal = quote.items.reduce(
+      const fraction = percentage / 100;
+
+      // Scale items by percentage
+      const scaledItems = quote.items.map(item => ({
+        ...item,
+        quantity: item.quantity * fraction,
+        totalPrice: item.totalPrice * fraction,
+      }));
+
+      // Calculate totals for the scaled invoice
+      const subtotal = scaledItems.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice,
         0
       );
@@ -431,13 +472,19 @@ export function useQuotes() {
       const taxAmount = afterDiscount * (quote.taxRate / 100);
       const total = afterDiscount + taxAmount;
 
+      // Build notes
+      const invoiceNotes = [
+        `${percentage}% of Quote ${quote.quoteNumber}`,
+        quote.notes,
+      ].filter(Boolean).join('\n');
+
       // Create the sale/invoice
       const { data: sale, error: saleError } = await supabase
         .from('sales')
         .insert({
           user_id: user.id,
           vendor_id: quote.vendorId,
-          invoice_number: null, // Auto-generate
+          invoice_number: null,
           status: 'draft',
           subtotal,
           tax_rate: quote.taxRate,
@@ -445,7 +492,7 @@ export function useQuotes() {
           discount_rate: quote.discountRate,
           discount_amount: discountAmount,
           total,
-          notes: quote.notes,
+          notes: invoiceNotes,
           payment_terms: quote.paymentTerms,
           due_date: null,
         })
@@ -454,8 +501,9 @@ export function useQuotes() {
 
       if (saleError) throw saleError;
 
-      // Create sale items from quote items
-      for (const item of quote.items) {
+      // Create sale items from scaled quote items
+      for (let i = 0; i < scaledItems.length; i++) {
+        const item = scaledItems[i];
         const { error: itemError } = await supabase
           .from('sale_items')
           .insert({
@@ -467,45 +515,37 @@ export function useQuotes() {
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
             total_price: item.quantity * item.unitPrice,
-          });
+            sort_order: i,
+          } as any);
 
         if (itemError) throw itemError;
-
-        // Update inventory quantity if linked to inventory item
-        if (item.inventoryItemId) {
-          const { data: currentItem } = await supabase
-            .from('inventory_items')
-            .select('quantity')
-            .eq('id', item.inventoryItemId)
-            .single();
-
-          if (currentItem) {
-            await supabase
-              .from('inventory_items')
-              .update({ quantity: Math.max(0, currentItem.quantity - item.quantity) })
-              .eq('id', item.inventoryItemId);
-          }
-        }
       }
 
-      // Update quote status to converted and link to invoice
+      // Insert link record
+      await supabase.from('quote_invoice_links').insert({
+        quote_id: quote.id,
+        sale_id: sale.id,
+        percentage,
+      } as any);
+
+      // Update invoiced_percentage on quote
+      const newInvoicedPercentage = quote.invoicedPercentage + percentage;
+      const newStatus = newInvoicedPercentage >= 100 ? 'converted' : quote.status;
+
       await supabase
         .from('quotes')
-        .update({ status: 'converted', converted_to_invoice_id: sale.id })
+        .update({
+          invoiced_percentage: newInvoicedPercentage,
+          status: newStatus,
+        } as any)
         .eq('id', quote.id);
 
-      // Update local state
-      setQuotes((prev) =>
-        prev.map((q) =>
-          q.id === quote.id ? { ...q, status: 'converted' as QuoteStatus, convertedToInvoiceId: sale.id } : q
-        )
-      );
-
       toast({
-        title: 'Quote converted',
-        description: `Invoice ${sale.invoice_number} created from ${quote.quoteNumber}`,
+        title: 'Invoice created',
+        description: `Invoice ${sale.invoice_number} created (${percentage}% of ${quote.quoteNumber})`,
       });
 
+      await fetchQuotes();
       return sale.id;
     } catch (error: unknown) {
       console.error('Error converting quote to invoice:', error);

@@ -1116,7 +1116,7 @@ export function Quotes() {
                                 onUploadAttachment={uploadAttachment}
                                 onRemoveAttachment={removeAttachment}
                                 onEdit={handleEditQuote}
-                                onConvertToInvoice={convertToInvoice}
+                                onConvertToInvoice={(quote, percentage) => convertToInvoice(quote, percentage)}
                                 onConvertToPurchaseOrder={convertToPurchaseOrder}
                                 onPreview={setPreviewQuote}
                                 quoteSettings={getQuoteSettingsForQuote(quote)}
