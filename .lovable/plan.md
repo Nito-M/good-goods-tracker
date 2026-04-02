@@ -1,23 +1,29 @@
 
 
-## Plan: Handle Browser Back Button in Full-Screen Pickers
+## Plan: Drag-and-Drop Reordering for Quote and Invoice Cart Items
 
-### Problem
-When the full-screen parts/item picker is open inside an assembly detail view, pressing the browser back button navigates away from the assembly entirely (back to the assembly list). The user expects it to just close the picker and stay on the assembly.
+### Summary
+Add drag-and-drop reordering to the cart item lists in both the Quotes and Sales (Invoice) creation forms using `@dnd-kit/core` and `@dnd-kit/sortable`.
 
-### Approach
-Push a temporary history entry when the full-screen picker opens, and listen for the `popstate` event to close the picker instead of navigating away. When the picker closes normally (via the Done button), remove the history entry. This applies to all three full-screen pickers used in the Assemblies page (`FullScreenPartsPicker`, `FullScreenItemPicker`, and any assembly picker).
+### Dependencies
+- Install `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities`
 
 ### Changes
 
-**`src/components/FullScreenPartsPicker.tsx`**
-- When `open` becomes `true`, push a history state entry (`window.history.pushState`)
-- Add a `popstate` event listener that calls `onClose(cart)` when back is pressed
-- On normal close (Done button), call `window.history.back()` instead of directly calling `onClose`, so the pushed state is consumed
-- Clean up the listener when the component unmounts or closes
+**`src/pages/Quotes.tsx`**
+- Wrap the cart items list with `DndContext` and `SortableContext` (vertical list strategy)
+- Extract each cart item card into a `SortableQuoteItem` wrapper that uses `useSortable` for drag handle, transform, and transition
+- Add a grip/drag handle icon (GripVertical from lucide) to each item card
+- On `onDragEnd`, reorder the `cart` array by moving the dragged item to its new position
 
-**`src/components/FullScreenItemPicker.tsx`** (if used in Assemblies)
-- Same pattern: push history state on open, listen for popstate, clean up on close
+**`src/pages/Sales.tsx`**
+- Same pattern: wrap the cart table body with `DndContext` + `SortableContext`
+- Make each `TableRow` sortable with a drag handle column
+- On `onDragEnd`, reorder the `cart` array
 
-This is a contained change to the picker components — no routing or page-level changes needed.
+### Technical Details
+- Uses `arrayMove` from `@dnd-kit/sortable` for clean reorder logic
+- `closestCenter` collision detection strategy
+- Drag handle approach (not whole-card dragging) so inputs remain clickable
+- No database changes needed -- order is determined by array position at save time
 
