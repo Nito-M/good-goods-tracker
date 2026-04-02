@@ -94,23 +94,29 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">{quote.quoteNumber}</CardTitle>
-            {getStatusBadge()}
+        <div className="space-y-1 cursor-pointer flex items-start gap-2" onClick={() => setCollapsed(!collapsed)}>
+          <div className="mt-1">
+            {collapsed ? <ChevronRight className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
           </div>
-          <CardDescription className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {formatDate(quote.createdAt)}
-            </span>
-            {quote.vendorName && (
+          <div>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">{quote.quoteNumber}</CardTitle>
+              {getStatusBadge()}
+              <span className="text-sm font-normal text-muted-foreground">{formatCurrency(quote.total)}</span>
+            </div>
+            <CardDescription className="flex items-center gap-4">
               <span className="flex items-center gap-1">
-                <Building2 className="h-3 w-3" />
-                {quote.vendorName}
+                <Calendar className="h-3 w-3" />
+                {formatDate(quote.createdAt)}
               </span>
-            )}
-          </CardDescription>
+              {quote.vendorName && (
+                <span className="flex items-center gap-1">
+                  <Building2 className="h-3 w-3" />
+                  {quote.vendorName}
+                </span>
+              )}
+            </CardDescription>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {quote.status !== 'converted' && onConvertToInvoice && (
