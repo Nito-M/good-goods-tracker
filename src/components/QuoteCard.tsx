@@ -375,5 +375,55 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
         </CardContent>
       )}
     </Card>
+
+      {/* Percentage Invoice Dialog */}
+      <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convert to Invoice</DialogTitle>
+            <DialogDescription>
+              Choose what percentage of {quote.quoteNumber} to invoice.
+              {quote.invoicedPercentage > 0 && (
+                <span className="block mt-1">
+                  Already invoiced: {quote.invoicedPercentage}% — {remainingPercentage}% remaining
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Percentage to invoice</Label>
+              <Input
+                type="number"
+                min={1}
+                max={remainingPercentage}
+                value={invoicePercentage}
+                onChange={(e) => setInvoicePercentage(Number(e.target.value))}
+              />
+              {invoicePercentage > remainingPercentage && (
+                <p className="text-sm text-destructive">
+                  Cannot exceed {remainingPercentage}%
+                </p>
+              )}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Invoice total: {formatCurrency(quote.total * (invoicePercentage / 100))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInvoiceDialog(false)}>Cancel</Button>
+            <Button
+              disabled={invoicePercentage < 1 || invoicePercentage > remainingPercentage}
+              onClick={() => {
+                onConvertToInvoice?.(quote, invoicePercentage);
+                setShowInvoiceDialog(false);
+              }}
+            >
+              Create Invoice ({invoicePercentage}%)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
