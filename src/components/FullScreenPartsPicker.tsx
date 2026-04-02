@@ -62,14 +62,34 @@ export function FullScreenPartsPicker({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [cart, setCart] = useState<PartsPickerCartItem[]>([]);
 
+  const closedByBackRef = useRef(false);
+
   useEffect(() => {
     if (open) {
       setSelectedIndex(0);
       setCart([]);
       setSource('parts');
+      closedByBackRef.current = false;
+      window.history.pushState({ picker: 'parts' }, '');
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePopState = () => {
+      closedByBackRef.current = true;
+      onClose(cart);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [open, cart, onClose]);
+
+  const handleDone = () => {
+    if (!closedByBackRef.current) {
+      window.history.back();
+    }
+  };
 
   const filteredParts = useMemo(() => {
     if (!searchQuery.trim()) return parts;
@@ -147,7 +167,7 @@ export function FullScreenPartsPicker({
       e.preventDefault();
       handleAddFromList(selectedIndex);
     } else if (e.key === 'Escape') {
-      onClose(cart);
+      handleDone();
     }
   }, [currentList, selectedIndex, cart]);
 
@@ -201,7 +221,7 @@ export function FullScreenPartsPicker({
             <Package className="h-4 w-4 mr-1" />
             Inventory
           </Button>
-          <Button onClick={() => onClose(cart)} size="lg" className="ml-2">
+          <Button onClick={handleDone} size="lg" className="ml-2">
             Done — Return to Assembly
           </Button>
         </div>
@@ -352,7 +372,7 @@ export function FullScreenPartsPicker({
               <span>Total Cost</span>
               <span>{formatCurrency(cartTotal)}</span>
             </div>
-            <Button onClick={() => onClose(cart)} className="w-full" size="lg">
+            <Button onClick={handleDone} className="w-full" size="lg">
               Done — Return to Assembly
             </Button>
           </div>
