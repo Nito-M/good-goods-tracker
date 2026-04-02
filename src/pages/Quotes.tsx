@@ -418,6 +418,7 @@ export function Quotes() {
     setMarkupPercent('');
     setNotes('');
     setHidePrices(false);
+    setShowSku(true);
     setQuoteDate(undefined);
     setSelectedCompanyId(defaultCompany?.id || '');
     setEditingQuoteId(null);
