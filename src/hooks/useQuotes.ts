@@ -24,6 +24,36 @@ export function useQuotes() {
 
       if (quotesError) throw quotesError;
 
+      // Fetch all quote invoice links with sale invoice numbers
+      const { data: allLinks } = await supabase
+        .from('quote_invoice_links')
+        .select('quote_id, sale_id, percentage');
+
+      // Build a map of sale_id -> invoice_number
+      const saleIds = [...new Set((allLinks || []).map(l => (l as any).sale_id))];
+      let invoiceMap = new Map<string, string>();
+      if (saleIds.length > 0) {
+        const { data: salesData } = await supabase
+          .from('sales')
+          .select('id, invoice_number')
+          .in('id', saleIds);
+        for (const s of salesData || []) {
+          invoiceMap.set(s.id, s.invoice_number || '');
+        }
+      }
+
+      // Group links by quote_id
+      const linksByQuote = new Map<string, QuoteInvoiceLink[]>();
+      for (const link of allLinks || []) {
+        const qId = (link as any).quote_id;
+        if (!linksByQuote.has(qId)) linksByQuote.set(qId, []);
+        linksByQuote.get(qId)!.push({
+          saleId: (link as any).sale_id,
+          percentage: Number((link as any).percentage),
+          invoiceNumber: invoiceMap.get((link as any).sale_id) || undefined,
+        });
+      }
+
       const quotesWithItems: Quote[] = await Promise.all(
         (quotesData || []).map(async (quote) => {
           const { data: items } = await supabase
@@ -73,6 +103,8 @@ export function useQuotes() {
             hidePrices: (quote as any).hide_prices || false,
             showPaymentTerms: (quote as any).show_payment_terms !== false,
             showSku: (quote as any).show_sku !== false,
+            invoicedPercentage: Number((quote as any).invoiced_percentage || 0),
+            linkedInvoices: linksByQuote.get(quote.id) || [],
             createdAt: quote.created_at,
             updatedAt: quote.updated_at,
           };
