@@ -578,6 +578,7 @@ export function Quotes() {
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: selectedCompanyId || null,
       hidePrices,
+      showPaymentTerms,
     };
 
     let success = false;
