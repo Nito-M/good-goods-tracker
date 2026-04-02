@@ -221,7 +221,7 @@ export function FullScreenPartsPicker({
             <Package className="h-4 w-4 mr-1" />
             Inventory
           </Button>
-          <Button onClick={() => onClose(cart)} size="lg" className="ml-2">
+          <Button onClick={handleDone} size="lg" className="ml-2">
             Done — Return to Assembly
           </Button>
         </div>
