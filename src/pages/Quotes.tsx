@@ -754,6 +754,7 @@ export function Quotes() {
                                 inventoryItems={inventoryItems}
                                 markupPercent={markupPercent}
                                 calculateMarkupPrice={calculateMarkupPrice}
+                                discountRate={effectiveDiscountRate}
                               />
                             ))}
                           </div>
