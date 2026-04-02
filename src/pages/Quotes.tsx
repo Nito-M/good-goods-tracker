@@ -14,6 +14,7 @@ import {
   ChevronsUpDown,
   Check,
   GripVertical,
+  CalendarIcon,
 } from 'lucide-react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
