@@ -181,24 +181,19 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
               )}
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Subtotal</Label>
-              <p className="font-medium h-8 flex items-center">{formatCurrency(lineTotal)}</p>
+              <Label className="text-xs">Total</Label>
+              <div className="h-8 flex items-center gap-2">
+                {discountRate > 0 ? (
+                  <>
+                    <p className="font-bold">{formatCurrency(afterDiscount)}</p>
+                    <p className="text-sm text-muted-foreground line-through">{formatCurrency(lineTotal)}</p>
+                  </>
+                ) : (
+                  <p className="font-bold">{formatCurrency(lineTotal)}</p>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* Per-item discount and total after discount */}
-          {discountRate > 0 && (
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Discount ({discountRate}%)</Label>
-                <p className="text-sm h-8 flex items-center text-destructive">-{formatCurrency(itemDiscount)}</p>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Total after Discount</Label>
-                <p className="font-bold h-8 flex items-center">{formatCurrency(afterDiscount)}</p>
-              </div>
-            </div>
-          )}
 
           {/* Exclude from Markup toggle */}
           {c.inventoryItemId && markupPercent !== '' && (
