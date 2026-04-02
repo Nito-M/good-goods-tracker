@@ -56,6 +56,7 @@ interface EditQuoteDialogProps {
     validUntil: string | null;
     companyId: string | null;
     hidePrices: boolean;
+    showSku: boolean;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
