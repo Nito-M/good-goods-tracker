@@ -106,6 +106,7 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="space-y-1 cursor-pointer flex items-start gap-2" onClick={() => setCollapsed(!collapsed)}>
