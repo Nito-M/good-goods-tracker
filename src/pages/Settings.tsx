@@ -1152,6 +1152,130 @@ export function Settings() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Assembly Categories Card */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Assembly Categories</CardTitle>
+                <CardDescription>Organize your assemblies into categories</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <form onSubmit={async (e) => { e.preventDefault(); await addAssemblyCategory(newAssemblyCategory); setNewAssemblyCategory(''); }} className="flex gap-2">
+                  <Input
+                    placeholder="New assembly category name"
+                    value={newAssemblyCategory}
+                    onChange={(e) => setNewAssemblyCategory(e.target.value)}
+                    className="max-w-xs"
+                  />
+                  <Button type="submit" className="gap-2" disabled={!newAssemblyCategory.trim()}>
+                    <Plus className="h-4 w-4" />
+                    Add
+                  </Button>
+                </form>
+
+                {assemblyCategories.length > 0 && (
+                  <div className="relative max-w-xs">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Search assembly categories..."
+                      value={assemblyCategorySearchQuery}
+                      onChange={(e) => setAssemblyCategorySearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                )}
+
+                {assemblyCategories.length === 0 ? (
+                  <div className="text-muted-foreground py-4 text-center">
+                    No assembly categories yet. Add your first category to get started.
+                  </div>
+                ) : filteredAssemblyCategories.length === 0 ? (
+                  <div className="text-muted-foreground py-4 text-center">
+                    No categories match your search.
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {filteredAssemblyCategories.map((cat) => (
+                      <div key={cat.id} className="flex items-center justify-between px-3 py-2 border border-border rounded-lg">
+                        {editingAssemblyCategoryId === cat.id ? (
+                          <form
+                            className="flex items-center gap-2 flex-1"
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              await updateAssemblyCategory(cat.id, editingAssemblyCategoryName);
+                              setEditingAssemblyCategoryId(null);
+                            }}
+                          >
+                            <Input
+                              value={editingAssemblyCategoryName}
+                              onChange={(e) => setEditingAssemblyCategoryName(e.target.value)}
+                              className="h-7 text-sm"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') setEditingAssemblyCategoryId(null);
+                              }}
+                            />
+                            <Button type="submit" size="sm" variant="ghost" className="h-7 w-7 p-0">
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingAssemblyCategoryId(null)}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </form>
+                        ) : (
+                          <span className="text-sm font-medium">{cat.name}</span>
+                        )}
+                        {editingAssemblyCategoryId !== cat.id && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setEditingAssemblyCategoryId(cat.id);
+                                setEditingAssemblyCategoryName(cat.name);
+                              }}
+                              className="text-muted-foreground hover:text-primary p-1"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteAssemblyCategoryId(cat.id)}
+                              className="text-muted-foreground hover:text-destructive p-1"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Delete Assembly Category Confirmation */}
+            <AlertDialog open={!!deleteAssemblyCategoryId} onOpenChange={() => setDeleteAssemblyCategoryId(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete assembly category?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    All assemblies in this category will be moved to "General". This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (deleteAssemblyCategoryId) {
+                        deleteAssemblyCategory(deleteAssemblyCategoryId);
+                        setDeleteAssemblyCategoryId(null);
+                      }
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
 
           {/* Tags Tab */}
