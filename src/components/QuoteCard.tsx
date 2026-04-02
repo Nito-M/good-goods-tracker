@@ -59,6 +59,10 @@ interface QuoteCardProps {
 export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [invoicePercentage, setInvoicePercentage] = useState(100);
+
+  const remainingPercentage = 100 - quote.invoicedPercentage;
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
