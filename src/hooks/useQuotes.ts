@@ -495,6 +495,7 @@ export function useQuotes() {
           notes: invoiceNotes,
           payment_terms: quote.paymentTerms,
           due_date: null,
+          company_id: quote.companyId || null,
         })
         .select()
         .single();
