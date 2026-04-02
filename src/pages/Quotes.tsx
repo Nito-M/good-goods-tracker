@@ -395,6 +395,7 @@ export function Quotes() {
     setMarkupPercent('');
     setNotes(quote.notes || '');
     setPaymentTerms(quote.paymentTerms || 'Due on receipt');
+    setShowPaymentTerms(quote.showPaymentTerms !== false);
     setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
     setSelectedCompanyId((quote as any).companyId || defaultCompany?.id || '');
     setHidePrices(quote.hidePrices || false);
