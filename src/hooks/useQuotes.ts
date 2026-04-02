@@ -360,6 +360,7 @@ export function useQuotes() {
           valid_until: input.validUntil,
           company_id: input.companyId || null,
           hide_prices: input.hidePrices || false,
+          show_payment_terms: input.showPaymentTerms !== false,
         } as any)
         .eq('id', quoteId);
 

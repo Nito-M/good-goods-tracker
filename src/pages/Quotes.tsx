@@ -912,12 +912,25 @@ export function Quotes() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Payment Terms</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Payment Terms</Label>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="showPaymentTerms"
+                            checked={showPaymentTerms}
+                            onCheckedChange={(checked) => setShowPaymentTerms(checked === true)}
+                          />
+                          <Label htmlFor="showPaymentTerms" className="text-sm font-normal cursor-pointer">
+                            Show on quote
+                          </Label>
+                        </div>
+                      </div>
                       <Select
                         value={paymentTerms}
                         onValueChange={setPaymentTerms}
+                        disabled={!showPaymentTerms}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className={!showPaymentTerms ? 'opacity-50' : ''}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

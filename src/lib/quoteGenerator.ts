@@ -137,8 +137,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
       leftY += 7;
     }
 
-    // RIGHT: Terms
-    doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailsY, { align: 'right' });
+    // RIGHT: Terms (only if showPaymentTerms is enabled)
+    if (quote.showPaymentTerms !== false) {
+      doc.text(`Terms: ${quote.paymentTerms}`, pageWidth - 20, detailsY, { align: 'right' });
+    }
 
     flowY = Math.max(flowY, leftY + 2);
   }
