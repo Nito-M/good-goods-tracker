@@ -931,7 +931,7 @@ export function Settings() {
           <TabsContent value="categories" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Categories</CardTitle>
+                <CardTitle>Item Categories</CardTitle>
                 <CardDescription>Add custom categories and subcategories for your inventory items</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
