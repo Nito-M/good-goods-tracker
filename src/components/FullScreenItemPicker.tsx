@@ -274,7 +274,7 @@ export function FullScreenItemPicker({
         if (item) onAddItem(item);
       }
     } else if (e.key === 'Escape') {
-      onClose();
+      handleDone();
     }
   }, [showAssemblies, filteredAssemblies, filteredItems, selectedIndex, onAddItem, onAddAssembly, onClose]);
 

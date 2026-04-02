@@ -167,7 +167,7 @@ export function FullScreenPartsPicker({
       e.preventDefault();
       handleAddFromList(selectedIndex);
     } else if (e.key === 'Escape') {
-      onClose(cart);
+      handleDone();
     }
   }, [currentList, selectedIndex, cart]);
 
