@@ -824,6 +824,11 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                               </a>
                             )}
                           </div>
+                          {vp.vendor_sku && (
+                            <p className="text-sm text-muted-foreground">
+                              SKU: <span className="font-mono text-foreground">{vp.vendor_sku}</span>
+                            </p>
+                          )}
                           <p className="text-xs text-muted-foreground">
                             Last updated: {new Date(vp.updated_at).toLocaleDateString('en-US', {
                               month: 'short',
