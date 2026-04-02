@@ -80,6 +80,8 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
         return <Badge variant="default">sent</Badge>;
       case 'accepted':
         return <Badge variant="default">accepted</Badge>;
+      case 'sales_order':
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Sales Order</Badge>;
       case 'rejected':
         return <Badge variant="destructive">rejected</Badge>;
       case 'expired':
