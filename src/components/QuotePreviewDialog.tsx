@@ -158,7 +158,9 @@ export function QuotePreviewDialog({
                             <p className="text-xs text-gray-500 mt-1">Note: {item.notes}</p>
                           )}
                         </td>
-                        <td className="p-2 text-gray-600">{item.sku}</td>
+                        {quote.showSku !== false && (
+                          <td className="p-2 text-gray-600">{item.sku}</td>
+                        )}
                         <td className="p-2 text-center">
                           {item.quantity} {item.quantityUnit}
                         </td>
