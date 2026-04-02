@@ -62,6 +62,14 @@ export function AssemblyTypes() {
       : assemblies;
 
     const map = new Map<string, { count: number; finished: number; totalCost: number }>();
+    
+    // Add all categories from the assembly_categories table first (so empty ones show)
+    for (const cat of assemblyCategories) {
+      if (!q || cat.name.toLowerCase().includes(q)) {
+        map.set(cat.name, { count: 0, finished: 0, totalCost: 0 });
+      }
+    }
+    
     for (const a of filtered) {
       const t = a.type || 'General';
       const existing = map.get(t) || { count: 0, finished: 0, totalCost: 0 };
@@ -70,7 +78,7 @@ export function AssemblyTypes() {
       map.set(t, existing);
     }
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [assemblies, searchQuery]);
+  }, [assemblies, searchQuery, assemblyCategories]);
 
   const handleCreateType = async () => {
     const name = newTypeName.trim();
