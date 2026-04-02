@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layers, Plus, ChevronRight, CheckCircle2, Clock, Pencil, Check, X, Trash2, Search } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { useAssemblies } from '@/hooks/useAssemblies';
+import { useAssemblyCategories } from '@/hooks/useAssemblyCategories';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
