@@ -587,6 +587,7 @@ export function Quotes() {
       companyId: selectedCompanyId || null,
       hidePrices,
       showPaymentTerms,
+      showSku,
       createdAt: quoteDate ? quoteDate.toISOString() : null,
     };
 
