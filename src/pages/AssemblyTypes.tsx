@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layers, Plus, ChevronRight, CheckCircle2, Clock, Pencil, Check, X, Trash2, Search } from 'lucide-react';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
 import { useAssemblies } from '@/hooks/useAssemblies';
+import { useAssemblyCategories } from '@/hooks/useAssemblyCategories';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,7 @@ export function AssemblyTypes() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { assemblies, loading, refetch } = useAssemblies();
+  const { categories: assemblyCategories, addCategory: addAssemblyCategory } = useAssemblyCategories();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
@@ -60,6 +62,14 @@ export function AssemblyTypes() {
       : assemblies;
 
     const map = new Map<string, { count: number; finished: number; totalCost: number }>();
+    
+    // Add all categories from the assembly_categories table first (so empty ones show)
+    for (const cat of assemblyCategories) {
+      if (!q || cat.name.toLowerCase().includes(q)) {
+        map.set(cat.name, { count: 0, finished: 0, totalCost: 0 });
+      }
+    }
+    
     for (const a of filtered) {
       const t = a.type || 'General';
       const existing = map.get(t) || { count: 0, finished: 0, totalCost: 0 };
@@ -68,7 +78,7 @@ export function AssemblyTypes() {
       map.set(t, existing);
     }
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [assemblies, searchQuery]);
+  }, [assemblies, searchQuery, assemblyCategories]);
 
   const handleCreateType = async () => {
     const name = newTypeName.trim();
@@ -79,8 +89,8 @@ export function AssemblyTypes() {
       return;
     }
     setCreating(true);
-    // Create a placeholder assembly with this type so the type "exists"
-    // Actually we just navigate to the page and let them create assemblies there
+    // Also create it in the assembly_categories table
+    await addAssemblyCategory(name);
     setCreating(false);
     setCreateOpen(false);
     setNewTypeName('');
