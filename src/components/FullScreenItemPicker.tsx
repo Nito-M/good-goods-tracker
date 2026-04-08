@@ -202,40 +202,57 @@ export function FullScreenItemPicker({
 
   const closedByBackRef = useRef(false);
   const historyPushedRef = useRef(false);
+  const closingFromActionRef = useRef(false);
 
   // Focus search on open + push history state
   useEffect(() => {
     if (open) {
       setSelectedIndex(0);
       closedByBackRef.current = false;
-      historyPushedRef.current = true;
-      window.history.pushState({ picker: 'items' }, '');
+
+      if (!historyPushedRef.current) {
+        historyPushedRef.current = true;
+        window.history.pushState({ picker: 'items' }, '');
+      }
+
       setTimeout(() => searchInputRef.current?.focus(), 100);
     } else {
       historyPushedRef.current = false;
+      closingFromActionRef.current = false;
     }
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    const handlePopState = (e: PopStateEvent) => {
-      // Only handle if we pushed the state and it's being popped
+
+    const handlePopState = () => {
+      if (closingFromActionRef.current) {
+        closingFromActionRef.current = false;
+        return;
+      }
+
       if (historyPushedRef.current) {
         historyPushedRef.current = false;
         closedByBackRef.current = true;
         onClose();
       }
     };
+
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [open, onClose]);
 
   const handleDone = () => {
-    if (!closedByBackRef.current && historyPushedRef.current) {
-      // Remove the pushed history entry, which will trigger popstate -> onClose
-      window.history.back();
-    } else {
+    if (closedByBackRef.current) {
       onClose();
+      return;
+    }
+
+    closingFromActionRef.current = true;
+    onClose();
+
+    if (historyPushedRef.current) {
+      window.history.back();
     }
   };
 
