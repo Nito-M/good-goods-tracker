@@ -500,6 +500,7 @@ export function useSales() {
       paymentTerms: string;
       dueDate: string | null;
       companyId?: string | null;
+      contactPersonName?: string | null;
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -530,6 +531,9 @@ export function useSales() {
       };
       if (input.companyId !== undefined) {
         updateData.company_id = input.companyId;
+      }
+      if (input.contactPersonName !== undefined) {
+        updateData.contact_person_name = input.contactPersonName;
       }
 
       const { error: saleError } = await supabase
