@@ -201,32 +201,44 @@ export function FullScreenItemPicker({
   }, [assemblies]);
 
   const closedByBackRef = useRef(false);
+  const historyPushedRef = useRef(false);
 
   // Focus search on open + push history state
   useEffect(() => {
     if (open) {
       setSelectedIndex(0);
       closedByBackRef.current = false;
+      historyPushedRef.current = true;
       window.history.pushState({ picker: 'items' }, '');
       setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      historyPushedRef.current = false;
     }
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    const handlePopState = () => {
-      closedByBackRef.current = true;
-      onClose();
+    const handlePopState = (e: PopStateEvent) => {
+      // Only handle if we pushed the state and it's being popped
+      if (historyPushedRef.current) {
+        historyPushedRef.current = false;
+        closedByBackRef.current = true;
+        onClose();
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [open, onClose]);
 
   const handleDone = () => {
-    if (!closedByBackRef.current) {
+    if (!closedByBackRef.current && historyPushedRef.current) {
+      // Remove the pushed history entry, which will trigger popstate -> onClose
       window.history.back();
+    } else {
+      onClose();
     }
   };
+
 
   const filteredItems = useMemo(() => {
     let items = inventoryItems;
