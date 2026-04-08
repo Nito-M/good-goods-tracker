@@ -224,8 +224,10 @@ export function FullScreenItemPicker({
 
   const handleDone = () => {
     if (!closedByBackRef.current) {
+      closedByBackRef.current = true;
       window.history.back();
     }
+    onClose();
   };
 
   const filteredItems = useMemo(() => {
