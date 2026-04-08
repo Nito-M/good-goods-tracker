@@ -127,6 +127,10 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     doc.text(sale.vendorName, layout.billTo.x, billToY + 6);
     
     let vendorY = billToY + 12;
+    if ((sale as any).contactPersonName) {
+      doc.text(`Attn: ${(sale as any).contactPersonName}`, layout.billTo.x, vendorY);
+      vendorY += 6;
+    }
     if (sale.vendorAddress) {
       const addressLines = sale.vendorAddress.split('\n');
       addressLines.forEach((line) => {

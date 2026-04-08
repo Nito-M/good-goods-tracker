@@ -156,6 +156,10 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.text(quote.vendorName, layout.billTo.x, billToY + 6);
 
     let vendorY = billToY + 12;
+    if ((quote as any).contactPersonName) {
+      doc.text(`Attn: ${(quote as any).contactPersonName}`, layout.billTo.x, vendorY);
+      vendorY += 6;
+    }
     if (quote.vendorAddress) {
       const addressLines = quote.vendorAddress.split('\n');
       addressLines.forEach((line) => {
