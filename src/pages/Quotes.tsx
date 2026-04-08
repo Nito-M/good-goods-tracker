@@ -310,6 +310,7 @@ export function Quotes() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
+  const [contactPersonName, setContactPersonName] = useState<string>('');
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [taxRate, setTaxRate] = useState<number | null>(5);
   const [discountRate, setDiscountRate] = useState<number | null>(null);
@@ -393,6 +394,7 @@ export function Quotes() {
       notes: item.notes || '',
     })));
     setSelectedVendorId(quote.vendorId || '');
+    setContactPersonName(quote.contactPersonName || '');
     setCustomQuoteNumber(quote.quoteNumber);
     setTaxRate(quote.taxRate || null);
     setDiscountRate(quote.discountRate || null);
@@ -412,6 +414,7 @@ export function Quotes() {
   const resetForm = () => {
     setCart([]);
     setSelectedVendorId('');
+    setContactPersonName('');
     setCustomQuoteNumber('');
     setTaxRate(null);
     setDiscountRate(null);
@@ -577,6 +580,7 @@ export function Quotes() {
 
     const quoteData = {
       vendorId: selectedVendorId || null,
+      contactPersonName: contactPersonName.trim() || null,
       quoteNumber: customQuoteNumber.trim() || null,
       items: itemsData,
       taxRate: effectiveTaxRate,
@@ -856,6 +860,15 @@ export function Quotes() {
                           </Command>
                         </PopoverContent>
                       </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Contact Person <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                      <Input
+                        value={contactPersonName}
+                        onChange={(e) => setContactPersonName(e.target.value)}
+                        placeholder="Person name..."
+                      />
                     </div>
 
                     <div className="space-y-2">

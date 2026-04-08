@@ -210,6 +210,7 @@ export function Sales() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
+  const [contactPersonName, setContactPersonName] = useState<string>('');
   const [taxRate, setTaxRate] = useState(5);
   const [discountRate, setDiscountRate] = useState(0);
   const [markupPercent, setMarkupPercent] = useState<number | ''>('');
@@ -292,6 +293,7 @@ export function Sales() {
     setMarkupPercent('');
     setNotes('');
     setSelectedCompanyId(defaultCompany?.id || '');
+    setContactPersonName('');
     setEditingSaleId(null);
   };
 
@@ -336,6 +338,7 @@ export function Sales() {
     setNotes(sale.notes || '');
     setPaymentTerms(sale.paymentTerms || 'Due on receipt');
     setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
+    setContactPersonName(sale.contactPersonName || '');
     setEditingSaleId(sale.id);
     setActiveTab('new-sale');
   };
@@ -450,6 +453,7 @@ export function Sales() {
         paymentTerms,
         dueDate: null,
         companyId: selectedCompanyId || null,
+        contactPersonName: contactPersonName.trim() || null,
       });
       resetForm();
     } else {
@@ -471,6 +475,7 @@ export function Sales() {
         paymentTerms,
         dueDate: null,
         companyId: selectedCompanyId || null,
+        contactPersonName: contactPersonName.trim() || null,
       });
 
       if (sale) {
@@ -770,6 +775,15 @@ export function Sales() {
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Contact Person <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                      <Input
+                        value={contactPersonName}
+                        onChange={(e) => setContactPersonName(e.target.value)}
+                        placeholder="Person name..."
+                      />
                     </div>
 
                     <CompanySelector

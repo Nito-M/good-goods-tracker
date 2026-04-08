@@ -49,6 +49,7 @@ interface EditSaleDialogProps {
     paymentTerms: string;
     dueDate: string | null;
     companyId: string | null;
+    contactPersonName: string | null;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
@@ -64,6 +65,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
   const [dueDate, setDueDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>('');
+  const [contactPersonName, setContactPersonName] = useState<string>('');
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
@@ -85,6 +87,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       setPaymentTerms(sale.paymentTerms || 'Due on receipt');
       setDueDate(sale.dueDate ? format(new Date(sale.dueDate), 'yyyy-MM-dd') : '');
       setCompanyId((sale as any).companyId || defaultCompany?.id || '');
+      setContactPersonName((sale as any).contactPersonName || '');
     }
   }, [sale, defaultCompany]);
 
@@ -135,6 +138,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       paymentTerms,
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       companyId: companyId || null,
+      contactPersonName: contactPersonName.trim() || null,
     });
     setIsSaving(false);
     onOpenChange(false);
@@ -197,6 +201,14 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Person <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input
+                value={contactPersonName}
+                onChange={(e) => setContactPersonName(e.target.value)}
+                placeholder="Person name..."
+              />
             </div>
             <div className="space-y-2">
               <Label>Due Date</Label>

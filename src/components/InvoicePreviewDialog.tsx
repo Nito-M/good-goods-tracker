@@ -127,6 +127,9 @@ export function InvoicePreviewDialog({
               <div className="mb-6">
                 <p className="font-bold text-sm">Bill To:</p>
                 <p className="text-sm">{sale.vendorName}</p>
+                {sale.contactPersonName && (
+                  <p className="text-sm text-muted-foreground">Attn: {sale.contactPersonName}</p>
+                )}
                 {sale.vendorAddress && (
                   <p className="text-sm text-gray-600 whitespace-pre-line">
                     {sale.vendorAddress}

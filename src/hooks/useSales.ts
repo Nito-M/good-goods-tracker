@@ -62,6 +62,7 @@ export function useSales() {
             vendorId: sale.vendor_id,
             vendorName: sale.vendors?.name,
             vendorAddress: sale.vendors?.address,
+            contactPersonName: (sale as any).contact_person_name || null,
             invoiceNumber: sale.invoice_number,
             status: sale.status as Sale['status'],
             pickedUpAt: sale.picked_up_at,
@@ -256,6 +257,7 @@ export function useSales() {
           payment_terms: input.paymentTerms,
           due_date: input.dueDate,
           company_id: input.companyId || null,
+          contact_person_name: input.contactPersonName || null,
         })
         .select()
         .single();
@@ -498,6 +500,7 @@ export function useSales() {
       paymentTerms: string;
       dueDate: string | null;
       companyId?: string | null;
+      contactPersonName?: string | null;
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -528,6 +531,9 @@ export function useSales() {
       };
       if (input.companyId !== undefined) {
         updateData.company_id = input.companyId;
+      }
+      if (input.contactPersonName !== undefined) {
+        updateData.contact_person_name = input.contactPersonName;
       }
 
       const { error: saleError } = await supabase

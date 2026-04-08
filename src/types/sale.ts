@@ -23,6 +23,7 @@ export interface Sale {
   vendorId: string | null;
   vendorName?: string;
   vendorAddress?: string;
+  contactPersonName?: string | null;
   invoiceNumber: string;
   status: SaleStatus;
   pickedUpAt: string | null;
@@ -44,6 +45,7 @@ export interface Sale {
 
 export interface CreateSaleInput {
   vendorId: string | null;
+  contactPersonName?: string | null;
   invoiceNumber?: string | null;
   items: {
     inventoryItemId: string;

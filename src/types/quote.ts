@@ -29,6 +29,7 @@ export interface Quote {
   vendorId: string | null;
   vendorName?: string;
   vendorAddress?: string;
+  contactPersonName?: string | null;
   quoteNumber: string;
   status: QuoteStatus;
   subtotal: number;
@@ -57,6 +58,7 @@ export interface Quote {
 
 export interface CreateQuoteInput {
   vendorId: string | null;
+  contactPersonName?: string | null;
   quoteNumber?: string | null;
   items: {
     inventoryItemId: string | null;

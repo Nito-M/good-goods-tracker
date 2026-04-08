@@ -2312,6 +2312,7 @@ export type Database = {
         Row: {
           attachment_url: string | null
           company_id: string | null
+          contact_person_name: string | null
           converted_to_invoice_id: string | null
           converted_to_job_id: string | null
           converted_to_po_id: string | null
@@ -2339,6 +2340,7 @@ export type Database = {
         Insert: {
           attachment_url?: string | null
           company_id?: string | null
+          contact_person_name?: string | null
           converted_to_invoice_id?: string | null
           converted_to_job_id?: string | null
           converted_to_po_id?: string | null
@@ -2366,6 +2368,7 @@ export type Database = {
         Update: {
           attachment_url?: string | null
           company_id?: string | null
+          contact_person_name?: string | null
           converted_to_invoice_id?: string | null
           converted_to_job_id?: string | null
           converted_to_po_id?: string | null
@@ -2669,6 +2672,7 @@ export type Database = {
       sales: {
         Row: {
           company_id: string | null
+          contact_person_name: string | null
           created_at: string
           discount_amount: number
           discount_rate: number
@@ -2689,6 +2693,7 @@ export type Database = {
         }
         Insert: {
           company_id?: string | null
+          contact_person_name?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number
@@ -2709,6 +2714,7 @@ export type Database = {
         }
         Update: {
           company_id?: string | null
+          contact_person_name?: string | null
           created_at?: string
           discount_amount?: number
           discount_rate?: number

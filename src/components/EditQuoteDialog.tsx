@@ -55,6 +55,7 @@ interface EditQuoteDialogProps {
     paymentTerms: string;
     validUntil: string | null;
     companyId: string | null;
+    contactPersonName: string | null;
     hidePrices: boolean;
     showSku: boolean;
   }) => Promise<void>;
@@ -75,6 +76,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const [validUntil, setValidUntil] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>('');
+  const [contactPersonName, setContactPersonName] = useState<string>('');
   const [hidePrices, setHidePrices] = useState(false);
   const [showSku, setShowSku] = useState(true);
   const { companies, defaultCompany } = useCompanies();
@@ -101,6 +103,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       setValidUntil(quote.validUntil ? format(new Date(quote.validUntil), 'yyyy-MM-dd') : '');
       setCompanyId((quote as any).companyId || defaultCompany?.id || '');
       setHidePrices(quote.hidePrices || false);
+      setContactPersonName(quote.contactPersonName || '');
       setShowSku(quote.showSku !== false);
     }
   }, [quote, defaultCompany]);
@@ -166,6 +169,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       paymentTerms,
       validUntil: validUntil ? new Date(validUntil).toISOString() : null,
       companyId: companyId || null,
+      contactPersonName: contactPersonName.trim() || null,
       hidePrices,
       showSku,
     });
@@ -256,6 +260,14 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
                   )}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Person <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input
+                value={contactPersonName}
+                onChange={(e) => setContactPersonName(e.target.value)}
+                placeholder="Person name..."
+              />
             </div>
             <div className="space-y-2">
               <Label>Valid Until</Label>
