@@ -122,6 +122,9 @@ export function QuotePreviewDialog({
               <div className="mb-4">
                 <p className="font-bold text-sm">Quote For:</p>
                 <p className="text-sm">{quote.vendorName}</p>
+                {quote.contactPersonName && (
+                  <p className="text-sm text-muted-foreground">Attn: {quote.contactPersonName}</p>
+                )}
                 {quote.vendorAddress && (
                   <p className="text-sm text-gray-600 whitespace-pre-line">
                     {quote.vendorAddress}
