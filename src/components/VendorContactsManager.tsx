@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Pencil, User, Briefcase, Mail, Phone, Star, X, Check } from 'lucide-react';
+import { Plus, Trash2, Pencil, User, Briefcase, Mail, Phone, Star, X, Check, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -131,6 +131,16 @@ export function VendorContactsManager({ vendorId, readOnly = false }: VendorCont
                 />
               </div>
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Notes</Label>
+              <textarea
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="Notes about this contact..."
+                rows={2}
+                className="flex w-full rounded-md border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
@@ -196,6 +206,12 @@ export function VendorContactsManager({ vendorId, readOnly = false }: VendorCont
                   </a>
                 )}
               </div>
+              {contact.notes && (
+                <div className="flex items-start gap-1 text-xs text-muted-foreground mt-1">
+                  <StickyNote className="h-3 w-3 mt-0.5 shrink-0" />
+                  <span className="whitespace-pre-line">{contact.notes}</span>
+                </div>
+              )}
             </div>
             {!readOnly && (
               <div className="flex gap-1 shrink-0">
