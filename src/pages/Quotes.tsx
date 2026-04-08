@@ -860,6 +860,15 @@ export function Quotes() {
                     </div>
 
                     <div className="space-y-2">
+                      <Label>Contact Person <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                      <Input
+                        value={contactPersonName}
+                        onChange={(e) => setContactPersonName(e.target.value)}
+                        placeholder="Person name..."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
                       <Label>Valid Until</Label>
                       <Input
                         type="date"
