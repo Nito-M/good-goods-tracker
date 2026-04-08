@@ -210,6 +210,7 @@ export function Sales() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
+  const [contactPersonName, setContactPersonName] = useState<string>('');
   const [taxRate, setTaxRate] = useState(5);
   const [discountRate, setDiscountRate] = useState(0);
   const [markupPercent, setMarkupPercent] = useState<number | ''>('');
