@@ -394,6 +394,7 @@ export function Quotes() {
       notes: item.notes || '',
     })));
     setSelectedVendorId(quote.vendorId || '');
+    setContactPersonName(quote.contactPersonName || '');
     setCustomQuoteNumber(quote.quoteNumber);
     setTaxRate(quote.taxRate || null);
     setDiscountRate(quote.discountRate || null);
@@ -413,6 +414,7 @@ export function Quotes() {
   const resetForm = () => {
     setCart([]);
     setSelectedVendorId('');
+    setContactPersonName('');
     setCustomQuoteNumber('');
     setTaxRate(null);
     setDiscountRate(null);
@@ -578,6 +580,7 @@ export function Quotes() {
 
     const quoteData = {
       vendorId: selectedVendorId || null,
+      contactPersonName: contactPersonName.trim() || null,
       quoteNumber: customQuoteNumber.trim() || null,
       items: itemsData,
       taxRate: effectiveTaxRate,
