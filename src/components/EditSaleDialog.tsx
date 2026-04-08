@@ -49,6 +49,7 @@ interface EditSaleDialogProps {
     paymentTerms: string;
     dueDate: string | null;
     companyId: string | null;
+    contactPersonName: string | null;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
@@ -64,6 +65,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
   const [dueDate, setDueDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>('');
+  const [contactPersonName, setContactPersonName] = useState<string>('');
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
@@ -85,6 +87,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       setPaymentTerms(sale.paymentTerms || 'Due on receipt');
       setDueDate(sale.dueDate ? format(new Date(sale.dueDate), 'yyyy-MM-dd') : '');
       setCompanyId((sale as any).companyId || defaultCompany?.id || '');
+      setContactPersonName((sale as any).contactPersonName || '');
     }
   }, [sale, defaultCompany]);
 
@@ -135,6 +138,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       paymentTerms,
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       companyId: companyId || null,
+      contactPersonName: contactPersonName.trim() || null,
     });
     setIsSaving(false);
     onOpenChange(false);
