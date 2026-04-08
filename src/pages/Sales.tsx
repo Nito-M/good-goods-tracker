@@ -293,6 +293,7 @@ export function Sales() {
     setMarkupPercent('');
     setNotes('');
     setSelectedCompanyId(defaultCompany?.id || '');
+    setContactPersonName('');
     setEditingSaleId(null);
   };
 
@@ -337,6 +338,7 @@ export function Sales() {
     setNotes(sale.notes || '');
     setPaymentTerms(sale.paymentTerms || 'Due on receipt');
     setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
+    setContactPersonName(sale.contactPersonName || '');
     setEditingSaleId(sale.id);
     setActiveTab('new-sale');
   };
@@ -451,7 +453,7 @@ export function Sales() {
         paymentTerms,
         dueDate: null,
         companyId: selectedCompanyId || null,
-      });
+        contactPersonName: contactPersonName.trim() || null,
       resetForm();
     } else {
       // Create new sale
@@ -472,7 +474,7 @@ export function Sales() {
         paymentTerms,
         dueDate: null,
         companyId: selectedCompanyId || null,
-      });
+        contactPersonName: contactPersonName.trim() || null,
 
       if (sale) {
         resetForm();
