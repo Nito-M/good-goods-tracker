@@ -454,6 +454,7 @@ export function Sales() {
         dueDate: null,
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
+      });
       resetForm();
     } else {
       // Create new sale
@@ -475,6 +476,7 @@ export function Sales() {
         dueDate: null,
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
+      });
 
       if (sale) {
         resetForm();
