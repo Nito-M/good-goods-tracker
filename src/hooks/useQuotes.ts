@@ -364,6 +364,7 @@ export function useQuotes() {
       paymentTerms: string;
       validUntil: string | null;
       companyId?: string | null;
+      contactPersonName?: string | null;
       hidePrices?: boolean;
       showPaymentTerms?: boolean;
       showSku?: boolean;
@@ -399,6 +400,7 @@ export function useQuotes() {
           payment_terms: input.paymentTerms,
           valid_until: input.validUntil,
           company_id: input.companyId || null,
+          contact_person_name: input.contactPersonName || null,
           hide_prices: input.hidePrices || false,
           show_payment_terms: input.showPaymentTerms !== false,
           show_sku: input.showSku !== false,
@@ -498,6 +500,7 @@ export function useQuotes() {
           payment_terms: quote.paymentTerms,
           due_date: null,
           company_id: quote.companyId || null,
+          contact_person_name: (quote as any).contactPersonName || null,
         })
         .select()
         .single();
