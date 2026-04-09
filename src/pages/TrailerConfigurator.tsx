@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@/hooks/useTrailerConfig';
-import { ArrowLeft, ArrowRight, Check, Package } from 'lucide-react';
+import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
+import { ArrowLeft, ArrowRight, Check, Package, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SelectionCardProps {
@@ -58,7 +58,7 @@ const STEPS = [
 export function TrailerConfigurator() {
   const { types, loading: typesLoading } = useTrailerTypes();
   const { components, loading: compsLoading, getByCategory } = useAssemblyComponents();
-  const { save } = usePrebuiltAssemblies();
+  const { save, lookup } = usePrebuiltAssemblies();
 
   const [step, setStep] = useState(0);
   const [trailerTypeId, setTrailerTypeId] = useState<string | null>(null);
@@ -66,6 +66,9 @@ export function TrailerConfigurator() {
   const [backEndId, setBackEndId] = useState<string | null>(null);
   const [deckTypeId, setDeckTypeId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupDone, setLookupDone] = useState(false);
 
   const frontEnds = useMemo(() => getByCategory('front_end', trailerTypeId || undefined), [components, trailerTypeId]);
   const backEnds = useMemo(() => getByCategory('back_end', trailerTypeId || undefined), [components, trailerTypeId]);
@@ -77,6 +80,24 @@ export function TrailerConfigurator() {
   const selectedDeck = components.find(c => c.id === deckTypeId);
 
   const totalPrice = (selectedFront?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0);
+
+  // Lookup prebuilt assembly when entering step 5
+  useEffect(() => {
+    if (step === 4 && trailerTypeId) {
+      setLookupLoading(true);
+      setLookupDone(false);
+      lookup({
+        trailer_type_id: trailerTypeId,
+        front_end_id: frontEndId,
+        back_end_id: backEndId,
+        deck_type_id: deckTypeId,
+      }).then((result) => {
+        setMatchedAssembly(result);
+        setLookupLoading(false);
+        setLookupDone(true);
+      });
+    }
+  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId]);
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
@@ -94,7 +115,7 @@ export function TrailerConfigurator() {
       front_end_id: frontEndId,
       back_end_id: backEndId,
       deck_type_id: deckTypeId,
-      total_price: totalPrice,
+      total_price: matchedAssembly?.total_price ?? totalPrice,
     });
     setSaving(false);
   };
@@ -221,23 +242,39 @@ export function TrailerConfigurator() {
           {/* Step 5: Summary */}
           {step === 4 && (
             <div className="space-y-6">
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
-                    <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
-                    <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
-                    <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
-                  </div>
-                  <div className="border-t pt-4 flex justify-between items-center">
-                    <span className="text-lg font-semibold">Total Price</span>
-                    <span className="text-2xl font-bold text-primary">${totalPrice.toFixed(2)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
-                {saving ? 'Saving...' : 'Save Configuration'}
-              </Button>
+              {lookupLoading ? (
+                <p className="text-muted-foreground text-center py-12">Looking up configuration...</p>
+              ) : lookupDone && !matchedAssembly ? (
+                <Card>
+                  <CardContent className="p-6 flex flex-col items-center gap-3 py-12">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-lg font-medium text-muted-foreground">No matching assembly found</p>
+                    <p className="text-sm text-muted-foreground">This combination is not available as a prebuilt assembly.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <Card>
+                    <CardContent className="p-6 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
+                        <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
+                        <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
+                        <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
+                      </div>
+                      <div className="border-t pt-4 flex justify-between items-center">
+                        <span className="text-lg font-semibold">Total Price</span>
+                        <span className="text-2xl font-bold text-primary">
+                          ${(matchedAssembly?.total_price ?? totalPrice).toFixed(2)}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
+                    {saving ? 'Saving...' : 'Save Configuration'}
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </>
