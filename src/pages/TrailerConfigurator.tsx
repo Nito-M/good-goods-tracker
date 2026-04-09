@@ -242,22 +242,39 @@ export function TrailerConfigurator() {
           {/* Step 5: Summary */}
           {step === 4 && (
             <div className="space-y-6">
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
-                    <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
-                    <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
-                    <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
-                  </div>
-                  <div className="border-t pt-4 flex justify-between items-center">
-                    <span className="text-lg font-semibold">Total Price</span>
-                    <span className="text-2xl font-bold text-primary">${totalPrice.toFixed(2)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
-                {saving ? 'Saving...' : 'Save Configuration'}
+              {lookupLoading ? (
+                <p className="text-muted-foreground text-center py-12">Looking up configuration...</p>
+              ) : lookupDone && !matchedAssembly ? (
+                <Card>
+                  <CardContent className="p-6 flex flex-col items-center gap-3 py-12">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-lg font-medium text-muted-foreground">No matching assembly found</p>
+                    <p className="text-sm text-muted-foreground">This combination is not available as a prebuilt assembly.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <Card>
+                    <CardContent className="p-6 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
+                        <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
+                        <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
+                        <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
+                      </div>
+                      <div className="border-t pt-4 flex justify-between items-center">
+                        <span className="text-lg font-semibold">Total Price</span>
+                        <span className="text-2xl font-bold text-primary">
+                          ${(matchedAssembly?.total_price ?? totalPrice).toFixed(2)}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
+                    {saving ? 'Saving...' : 'Save Configuration'}
+                  </Button>
+                </>
+              )}
               </Button>
             </div>
           )}
