@@ -140,6 +140,7 @@ export function AddPurchaseOrder() {
   // When vendor changes, update unit costs on existing cart items
   const handleVendorChange = (newVendorId: string) => {
     setVendorId(newVendorId);
+    setContactPersonName('');
     if (newVendorId && newVendorId !== 'none') {
       supabase
         .from('item_vendor_prices')
