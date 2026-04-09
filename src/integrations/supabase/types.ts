@@ -2103,6 +2103,7 @@ export type Database = {
         Row: {
           bank_card_id: string | null
           company_id: string | null
+          contact_person_name: string | null
           created_at: string
           discount_amount: number
           discount_type: string
@@ -2128,6 +2129,7 @@ export type Database = {
         Insert: {
           bank_card_id?: string | null
           company_id?: string | null
+          contact_person_name?: string | null
           created_at?: string
           discount_amount?: number
           discount_type?: string
@@ -2153,6 +2155,7 @@ export type Database = {
         Update: {
           bank_card_id?: string | null
           company_id?: string | null
+          contact_person_name?: string | null
           created_at?: string
           discount_amount?: number
           discount_type?: string
