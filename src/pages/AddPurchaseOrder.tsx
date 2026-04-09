@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useVendorContacts } from '@/hooks/useVendorContacts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,7 +89,9 @@ export function AddPurchaseOrder() {
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>(editingOrder?.discountType || 'percentage');
   const [discountValue, setDiscountValue] = useState<string>(editingOrder?.discountValue ? String(editingOrder.discountValue) : '');
   const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
+  const [contactPersonName, setContactPersonName] = useState<string>(editingOrder?.contactPersonName || '');
   const { companies, defaultCompany } = useCompanies();
+  const { contacts: vendorContacts } = useVendorContacts(vendorId && vendorId !== 'none' ? vendorId : undefined);
 
   // Set default company on load (only for new orders)
   useEffect(() => {
