@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@/hooks/useTrailerConfig';
-import { ArrowLeft, ArrowRight, Check, Package } from 'lucide-react';
+import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
+import { ArrowLeft, ArrowRight, Check, Package, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SelectionCardProps {
@@ -66,6 +66,9 @@ export function TrailerConfigurator() {
   const [backEndId, setBackEndId] = useState<string | null>(null);
   const [deckTypeId, setDeckTypeId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupDone, setLookupDone] = useState(false);
 
   const frontEnds = useMemo(() => getByCategory('front_end', trailerTypeId || undefined), [components, trailerTypeId]);
   const backEnds = useMemo(() => getByCategory('back_end', trailerTypeId || undefined), [components, trailerTypeId]);

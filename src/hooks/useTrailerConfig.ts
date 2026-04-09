@@ -154,5 +154,30 @@ export function usePrebuiltAssemblies() {
     return data as PrebuiltAssembly;
   };
 
-  return { save };
+  const lookup = async (config: {
+    trailer_type_id: string;
+    front_end_id: string | null;
+    back_end_id: string | null;
+    deck_type_id: string | null;
+  }): Promise<PrebuiltAssembly | null> => {
+    if (!user) return null;
+    let query = supabase
+      .from('prebuilt_assemblies')
+      .select('*')
+      .eq('trailer_type_id', config.trailer_type_id);
+
+    if (config.front_end_id) query = query.eq('front_end_id', config.front_end_id);
+    else query = query.is('front_end_id', null);
+
+    if (config.back_end_id) query = query.eq('back_end_id', config.back_end_id);
+    else query = query.is('back_end_id', null);
+
+    if (config.deck_type_id) query = query.eq('deck_type_id', config.deck_type_id);
+    else query = query.is('deck_type_id', null);
+
+    const { data } = await query.limit(1).maybeSingle();
+    return (data as PrebuiltAssembly) || null;
+  };
+
+  return { save, lookup };
 }
