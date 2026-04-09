@@ -275,7 +275,6 @@ export function TrailerConfigurator() {
                   </Button>
                 </>
               )}
-              </Button>
             </div>
           )}
         </>
