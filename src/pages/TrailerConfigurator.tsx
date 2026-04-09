@@ -81,6 +81,24 @@ export function TrailerConfigurator() {
 
   const totalPrice = (selectedFront?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0);
 
+  // Lookup prebuilt assembly when entering step 5
+  useEffect(() => {
+    if (step === 4 && trailerTypeId) {
+      setLookupLoading(true);
+      setLookupDone(false);
+      lookup({
+        trailer_type_id: trailerTypeId,
+        front_end_id: frontEndId,
+        back_end_id: backEndId,
+        deck_type_id: deckTypeId,
+      }).then((result) => {
+        setMatchedAssembly(result);
+        setLookupLoading(false);
+        setLookupDone(true);
+      });
+    }
+  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId]);
+
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
     if (step === 1) return !!frontEndId;
@@ -97,7 +115,7 @@ export function TrailerConfigurator() {
       front_end_id: frontEndId,
       back_end_id: backEndId,
       deck_type_id: deckTypeId,
-      total_price: totalPrice,
+      total_price: matchedAssembly?.total_price ?? totalPrice,
     });
     setSaving(false);
   };
