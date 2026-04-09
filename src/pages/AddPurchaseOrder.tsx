@@ -340,6 +340,25 @@ export function AddPurchaseOrder() {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Contact Person */}
+              {vendorId && vendorId !== 'none' && (
+                <div className="space-y-2 mt-4">
+                  <Label>Contact Person</Label>
+                  <Select value={contactPersonName || 'none'} onValueChange={(val) => setContactPersonName(val === 'none' ? '' : val)}>
+                    <SelectTrigger className="max-w-md">
+                      <SelectValue placeholder="Select contact (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-- No Contact --</SelectItem>
+                      {vendorContacts.map((c) => (
+                        <SelectItem key={c.id} value={c.name}>
+                          {c.name}{c.job_position ? ` (${c.job_position})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardContent>
           </Card>
 
