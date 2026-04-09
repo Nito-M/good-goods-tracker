@@ -245,6 +245,7 @@ export function AddPurchaseOrder() {
           discountAmount,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+          contactPersonName: contactPersonName || null,
         },
         pdfFile,
         imageFile
@@ -265,6 +266,7 @@ export function AddPurchaseOrder() {
           discountAmount,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+          contactPersonName: contactPersonName || null,
         },
         pdfFile,
         imageFile

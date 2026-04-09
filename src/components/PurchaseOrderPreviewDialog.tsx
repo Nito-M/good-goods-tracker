@@ -124,6 +124,9 @@ export function PurchaseOrderPreviewDialog({
               <div className="mb-6">
                 <p className="font-bold text-sm">Vendor:</p>
                 <p className="text-sm">{order.vendorName}</p>
+                {order.contactPersonName && (
+                  <p className="text-sm text-gray-600">Attn: {order.contactPersonName}</p>
+                )}
               </div>
             )}
 
