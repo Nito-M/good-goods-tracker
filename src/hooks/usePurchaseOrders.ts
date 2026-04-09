@@ -269,6 +269,7 @@ export function usePurchaseOrders() {
       discountAmount?: number;
       companyId?: string | null;
       bankCardId?: string | null;
+      contactPersonName?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -345,6 +346,7 @@ export function usePurchaseOrders() {
       discount_amount: order.discountAmount || 0,
       company_id: order.companyId || null,
       bank_card_id: order.bankCardId || null,
+      contact_person_name: order.contactPersonName || null,
     }]).select('id').single();
 
     if (error) {
@@ -562,6 +564,7 @@ export function usePurchaseOrders() {
       discountAmount?: number;
       companyId?: string | null;
       bankCardId?: string | null;
+      contactPersonName?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -632,6 +635,7 @@ export function usePurchaseOrders() {
       discount_amount: updates.discountAmount || 0,
       company_id: updates.companyId !== undefined ? (updates.companyId || null) : undefined,
       bank_card_id: updates.bankCardId !== undefined ? (updates.bankCardId || null) : undefined,
+      contact_person_name: updates.contactPersonName !== undefined ? (updates.contactPersonName || null) : undefined,
     };
 
     if (pdfUrl) updateData.pdf_url = pdfUrl;
