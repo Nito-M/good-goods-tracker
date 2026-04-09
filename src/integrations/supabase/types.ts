@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      assembly_components: {
+        Row: {
+          category: string
+          compatible_trailer_type_ids: string[] | null
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          compatible_trailer_type_ids?: string[] | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          compatible_trailer_type_ids?: string[] | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       assembly_items: {
         Row: {
           assembly_id: string
@@ -1997,6 +2033,71 @@ export type Database = {
           },
         ]
       }
+      prebuilt_assemblies: {
+        Row: {
+          back_end_id: string | null
+          created_at: string
+          deck_type_id: string | null
+          front_end_id: string | null
+          id: string
+          total_price: number
+          trailer_type_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          back_end_id?: string | null
+          created_at?: string
+          deck_type_id?: string | null
+          front_end_id?: string | null
+          id?: string
+          total_price?: number
+          trailer_type_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          back_end_id?: string | null
+          created_at?: string
+          deck_type_id?: string | null
+          front_end_id?: string | null
+          id?: string
+          total_price?: number
+          trailer_type_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prebuilt_assemblies_back_end_id_fkey"
+            columns: ["back_end_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_deck_type_id_fkey"
+            columns: ["deck_type_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_front_end_id_fkey"
+            columns: ["front_end_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_trailer_type_id_fkey"
+            columns: ["trailer_type_id"]
+            isOneToOne: false
+            referencedRelation: "trailer_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -3198,6 +3299,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trailer_types: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       trip_plan_locations: {
         Row: {
