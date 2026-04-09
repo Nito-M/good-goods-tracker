@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useVendorContacts } from '@/hooks/useVendorContacts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,7 +89,9 @@ export function AddPurchaseOrder() {
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>(editingOrder?.discountType || 'percentage');
   const [discountValue, setDiscountValue] = useState<string>(editingOrder?.discountValue ? String(editingOrder.discountValue) : '');
   const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
+  const [contactPersonName, setContactPersonName] = useState<string>(editingOrder?.contactPersonName || '');
   const { companies, defaultCompany } = useCompanies();
+  const { contacts: vendorContacts } = useVendorContacts(vendorId && vendorId !== 'none' ? vendorId : undefined);
 
   // Set default company on load (only for new orders)
   useEffect(() => {
@@ -137,6 +140,7 @@ export function AddPurchaseOrder() {
   // When vendor changes, update unit costs on existing cart items
   const handleVendorChange = (newVendorId: string) => {
     setVendorId(newVendorId);
+    setContactPersonName('');
     if (newVendorId && newVendorId !== 'none') {
       supabase
         .from('item_vendor_prices')
@@ -242,6 +246,7 @@ export function AddPurchaseOrder() {
           discountAmount,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+          contactPersonName: contactPersonName || null,
         },
         pdfFile,
         imageFile
@@ -262,6 +267,7 @@ export function AddPurchaseOrder() {
           discountAmount,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
+          contactPersonName: contactPersonName || null,
         },
         pdfFile,
         imageFile
@@ -337,6 +343,25 @@ export function AddPurchaseOrder() {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Contact Person */}
+              {vendorId && vendorId !== 'none' && (
+                <div className="space-y-2 mt-4">
+                  <Label>Contact Person</Label>
+                  <Select value={contactPersonName || 'none'} onValueChange={(val) => setContactPersonName(val === 'none' ? '' : val)}>
+                    <SelectTrigger className="max-w-md">
+                      <SelectValue placeholder="Select contact (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-- No Contact --</SelectItem>
+                      {vendorContacts.map((c) => (
+                        <SelectItem key={c.id} value={c.name}>
+                          {c.name}{c.job_position ? ` (${c.job_position})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardContent>
           </Card>
 

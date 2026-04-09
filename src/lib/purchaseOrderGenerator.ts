@@ -117,7 +117,12 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     doc.text('Vendor:', layout.billTo.x, billToY);
     doc.setFont('helvetica', 'normal');
     doc.text(order.vendorName, layout.billTo.x, billToY + 6);
-    flowY = Math.max(flowY, billToY + 16);
+    let vendorEndY = billToY + 6;
+    if (order.contactPersonName) {
+      vendorEndY += 6;
+      doc.text(`Attn: ${order.contactPersonName}`, layout.billTo.x, vendorEndY);
+    }
+    flowY = Math.max(flowY, vendorEndY + 10);
   }
 
   // Items Table
