@@ -2,8 +2,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
-import { ArrowLeft, ArrowRight, Check, Package, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface SelectionCardProps {
   id: string;
