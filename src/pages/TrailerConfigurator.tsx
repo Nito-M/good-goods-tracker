@@ -58,7 +58,7 @@ const STEPS = [
 export function TrailerConfigurator() {
   const { types, loading: typesLoading } = useTrailerTypes();
   const { components, loading: compsLoading, getByCategory } = useAssemblyComponents();
-  const { save } = usePrebuiltAssemblies();
+  const { save, lookup } = usePrebuiltAssemblies();
 
   const [step, setStep] = useState(0);
   const [trailerTypeId, setTrailerTypeId] = useState<string | null>(null);
