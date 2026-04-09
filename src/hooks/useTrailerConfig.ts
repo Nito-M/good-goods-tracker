@@ -42,7 +42,7 @@ export function useTrailerTypes() {
   const [types, setTypes] = useState<TrailerType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetch = async () => {
+  const fetchTypes = async () => {
     if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
@@ -54,7 +54,7 @@ export function useTrailerTypes() {
     setLoading(false);
   };
 
-  useEffect(() => { fetch(); }, [user]);
+  useEffect(() => { fetchTypes(); }, [user]);
 
   const create = async (name: string, image_url?: string) => {
     if (!user) return null;
@@ -64,17 +64,23 @@ export function useTrailerTypes() {
       .select()
       .single();
     if (error) { toast({ title: 'Error', description: 'Failed to create trailer type.', variant: 'destructive' }); return null; }
-    await fetch();
+    await fetchTypes();
     return data as TrailerType;
+  };
+
+  const update = async (id: string, updates: { name?: string; image_url?: string | null }) => {
+    const { error } = await supabase.from('trailer_types').update(updates).eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
+    else await fetchTypes();
   };
 
   const remove = async (id: string) => {
     const { error } = await supabase.from('trailer_types').delete().eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
-    else await fetch();
+    else await fetchTypes();
   };
 
-  return { types, loading, create, remove, refetch: fetch };
+  return { types, loading, create, update, remove, refetch: fetchTypes };
 }
 
 export function useAssemblyComponents() {
@@ -83,7 +89,7 @@ export function useAssemblyComponents() {
   const [components, setComponents] = useState<AssemblyComponent[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetch = async () => {
+  const fetchComponents = async () => {
     if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
@@ -95,7 +101,7 @@ export function useAssemblyComponents() {
     setLoading(false);
   };
 
-  useEffect(() => { fetch(); }, [user]);
+  useEffect(() => { fetchComponents(); }, [user]);
 
   const create = async (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[] }) => {
     if (!user) return null;
@@ -112,14 +118,20 @@ export function useAssemblyComponents() {
       .select()
       .single();
     if (error) { toast({ title: 'Error', description: 'Failed to create component.', variant: 'destructive' }); return null; }
-    await fetch();
+    await fetchComponents();
     return data as AssemblyComponent;
+  };
+
+  const update = async (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[] }) => {
+    const { error } = await supabase.from('assembly_components').update(updates).eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
+    else await fetchComponents();
   };
 
   const remove = async (id: string) => {
     const { error } = await supabase.from('assembly_components').delete().eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
-    else await fetch();
+    else await fetchComponents();
   };
 
   const getByCategory = (category: string, trailerTypeId?: string) => {
@@ -132,26 +144,52 @@ export function useAssemblyComponents() {
     });
   };
 
-  return { components, loading, create, remove, getByCategory, refetch: fetch };
+  return { components, loading, create, update, remove, getByCategory, refetch: fetchComponents };
 }
 
 export function usePrebuiltAssemblies() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [assemblies, setAssemblies] = useState<PrebuiltAssembly[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAssemblies = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('prebuilt_assemblies')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) console.error(error);
+    else setAssemblies((data as any[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchAssemblies(); }, [user]);
 
   const save = async (config: { trailer_type_id: string; front_end_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; total_price: number }) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('prebuilt_assemblies')
-      .insert({
-        user_id: user.id,
-        ...config,
-      } as any)
+      .insert({ user_id: user.id, ...config } as any)
       .select()
       .single();
     if (error) { toast({ title: 'Error', description: 'Failed to save configuration.', variant: 'destructive' }); return null; }
     toast({ title: 'Saved', description: 'Trailer configuration saved.' });
+    await fetchAssemblies();
     return data as PrebuiltAssembly;
+  };
+
+  const update = async (id: string, updates: { total_price?: number; front_end_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null }) => {
+    const { error } = await supabase.from('prebuilt_assemblies').update(updates).eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
+    else await fetchAssemblies();
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from('prebuilt_assemblies').delete().eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
+    else await fetchAssemblies();
   };
 
   const lookup = async (config: {
@@ -179,5 +217,5 @@ export function usePrebuiltAssemblies() {
     return (data as PrebuiltAssembly) || null;
   };
 
-  return { save, lookup };
+  return { assemblies, loading, save, update, remove, lookup, refetch: fetchAssemblies };
 }
