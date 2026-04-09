@@ -125,6 +125,11 @@ export function TrailerConfigurator() {
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4">
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/trailer-configurator/admin"><Settings className="h-4 w-4 mr-1" /> Admin</Link>
+        </Button>
+      </div>
       {/* Progress */}
       <div className="flex items-center gap-2 mb-8">
         {STEPS.map((s, i) => (
