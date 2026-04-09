@@ -325,9 +325,9 @@ function PrebuiltTab({
     if (!trailerTypeId) { toast({ title: 'Required', description: 'Select a trailer type.', variant: 'destructive' }); return; }
     await onSave({
       trailer_type_id: trailerTypeId,
-      front_end_id: frontEndId || null,
-      back_end_id: backEndId || null,
-      deck_type_id: deckTypeId || null,
+      front_end_id: frontEndId && frontEndId !== 'none' ? frontEndId : null,
+      back_end_id: backEndId && backEndId !== 'none' ? backEndId : null,
+      deck_type_id: deckTypeId && deckTypeId !== 'none' ? deckTypeId : null,
       total_price: parseFloat(totalPrice) || 0,
     });
     setTrailerTypeId('');
