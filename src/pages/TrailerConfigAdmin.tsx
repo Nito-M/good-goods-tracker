@@ -352,10 +352,77 @@ function ComponentsTab({
     setEditCompatibleIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
+  const filteredInventory = useMemo(() => {
+    if (!inventorySearch.trim()) return inventoryItems.slice(0, 20);
+    const q = inventorySearch.toLowerCase();
+    return inventoryItems.filter(i => i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)).slice(0, 20);
+  }, [inventoryItems, inventorySearch]);
+
+  const importFromInventory = (item: typeof inventoryItems[0]) => {
+    setName(item.name);
+    setPrice(String(item.price));
+    if (item.imageUrl) setImageUrl(item.imageUrl);
+    setShowInventoryPicker(false);
+    setInventorySearch('');
+  };
+
   return (
     <Card>
       <CardHeader><CardTitle className="text-lg">Assembly Components</CardTitle></CardHeader>
       <CardContent className="space-y-4">
+        {/* Import from Inventory */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={showInventoryPicker ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setShowInventoryPicker(!showInventoryPicker)}
+            >
+              <Search className="h-4 w-4 mr-1" /> Import from Inventory
+            </Button>
+            {showInventoryPicker && (
+              <span className="text-xs text-muted-foreground">Select an item to auto-fill name, image & price</span>
+            )}
+          </div>
+          {showInventoryPicker && (
+            <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
+              <Input
+                value={inventorySearch}
+                onChange={e => setInventorySearch(e.target.value)}
+                placeholder="Search by name or SKU..."
+                autoFocus
+              />
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {filteredInventory.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No items found</p>
+                ) : (
+                  filteredInventory.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+                      onClick={() => importFromInventory(item)}
+                    >
+                      <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <Package className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">{item.sku}</p>
+                      </div>
+                      <span className="text-sm font-medium">${item.price.toFixed(2)}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label>Name</Label>
