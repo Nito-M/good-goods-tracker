@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@/hooks/useTrailerConfig';
-import { Plus, Trash2, Package } from 'lucide-react';
+import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
+import { Plus, Trash2, Package, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -17,6 +18,47 @@ const CATEGORY_LABELS: Record<string, string> = {
   back_end: 'Back End',
   deck_type: 'Deck Type',
 };
+
+function ImageUploadField({ imageUrl, onImageChange, uploading }: { imageUrl: string; onImageChange: (url: string) => void; uploading: boolean }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { upload } = useTrailerImageUpload();
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await upload(file);
+    if (url) onImageChange(url);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  return (
+    <div className="space-y-1">
+      <Label>Image</Label>
+      <div className="flex items-center gap-2">
+        {imageUrl ? (
+          <div className="h-12 w-12 rounded bg-muted overflow-hidden shrink-0">
+            <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          <div className="h-12 w-12 rounded bg-muted flex items-center justify-center shrink-0">
+            <Package className="h-5 w-5 text-muted-foreground" />
+          </div>
+        )}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+          {imageUrl ? 'Change' : 'Upload'}
+        </Button>
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      </div>
+    </div>
+  );
+}
 
 export function TrailerConfigAdmin() {
   const { types, loading: typesLoading, create: createType, remove: removeType } = useTrailerTypes();
@@ -35,33 +77,15 @@ export function TrailerConfigAdmin() {
         </TabsList>
 
         <TabsContent value="trailer_types" className="mt-4">
-          <TrailerTypesTab
-            types={types}
-            loading={typesLoading}
-            onCreate={createType}
-            onRemove={removeType}
-          />
+          <TrailerTypesTab types={types} loading={typesLoading} onCreate={createType} onRemove={removeType} />
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
-          <ComponentsTab
-            components={components}
-            types={types}
-            loading={compsLoading}
-            onCreate={createComp}
-            onRemove={removeComp}
-          />
+          <ComponentsTab components={components} types={types} loading={compsLoading} onCreate={createComp} onRemove={removeComp} />
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
-          <PrebuiltTab
-            assemblies={assemblies}
-            types={types}
-            components={components}
-            loading={assembliesLoading}
-            onSave={saveAssembly}
-            onRemove={removeAssembly}
-          />
+          <PrebuiltTab assemblies={assemblies} types={types} components={components} loading={assembliesLoading} onSave={saveAssembly} onRemove={removeAssembly} />
         </TabsContent>
       </Tabs>
     </div>
@@ -70,10 +94,7 @@ export function TrailerConfigAdmin() {
 
 // --- Trailer Types Tab ---
 function TrailerTypesTab({
-  types,
-  loading,
-  onCreate,
-  onRemove,
+  types, loading, onCreate, onRemove,
 }: {
   types: ReturnType<typeof useTrailerTypes>['types'];
   loading: boolean;
@@ -82,29 +103,25 @@ function TrailerTypesTab({
 }) {
   const [name, setName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const { uploading } = useTrailerImageUpload();
 
   const handleAdd = async () => {
     if (!name.trim()) return;
-    await onCreate(name.trim(), imageUrl.trim() || undefined);
+    await onCreate(name.trim(), imageUrl || undefined);
     setName('');
     setImageUrl('');
   };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Trailer Types</CardTitle>
-      </CardHeader>
+      <CardHeader><CardTitle className="text-lg">Trailer Types</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-3 items-end">
-          <div className="flex-1 space-y-1">
+        <div className="flex gap-3 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px] space-y-1">
             <Label>Name</Label>
             <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Flatbed, Enclosed" />
           </div>
-          <div className="flex-1 space-y-1">
-            <Label>Image URL (optional)</Label>
-            <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." />
-          </div>
+          <ImageUploadField imageUrl={imageUrl} onImageChange={setImageUrl} uploading={uploading} />
           <Button onClick={handleAdd} disabled={!name.trim()}>
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
@@ -149,11 +166,7 @@ function TrailerTypesTab({
 
 // --- Components Tab ---
 function ComponentsTab({
-  components,
-  types,
-  loading,
-  onCreate,
-  onRemove,
+  components, types, loading, onCreate, onRemove,
 }: {
   components: ReturnType<typeof useAssemblyComponents>['components'];
   types: ReturnType<typeof useTrailerTypes>['types'];
@@ -166,13 +179,14 @@ function ComponentsTab({
   const [imageUrl, setImageUrl] = useState('');
   const [price, setPrice] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
+  const { uploading } = useTrailerImageUpload();
 
   const handleAdd = async () => {
     if (!name.trim()) return;
     await onCreate({
       name: name.trim(),
       category,
-      image_url: imageUrl.trim() || undefined,
+      image_url: imageUrl || undefined,
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
     });
@@ -188,9 +202,7 @@ function ComponentsTab({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Assembly Components</CardTitle>
-      </CardHeader>
+      <CardHeader><CardTitle className="text-lg">Assembly Components</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
@@ -212,10 +224,7 @@ function ComponentsTab({
             <Label>Price</Label>
             <Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" />
           </div>
-          <div className="space-y-1">
-            <Label>Image URL (optional)</Label>
-            <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." />
-          </div>
+          <ImageUploadField imageUrl={imageUrl} onImageChange={setImageUrl} uploading={uploading} />
         </div>
 
         {types.length > 0 && (
@@ -224,10 +233,7 @@ function ComponentsTab({
             <div className="flex flex-wrap gap-3">
               {types.map(t => (
                 <label key={t.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <Checkbox
-                    checked={compatibleIds.includes(t.id)}
-                    onCheckedChange={() => toggleCompatible(t.id)}
-                  />
+                  <Checkbox checked={compatibleIds.includes(t.id)} onCheckedChange={() => toggleCompatible(t.id)} />
                   {t.name}
                 </label>
               ))}
@@ -296,12 +302,7 @@ function ComponentsTab({
 
 // --- Prebuilt Assemblies Tab ---
 function PrebuiltTab({
-  assemblies,
-  types,
-  components,
-  loading,
-  onSave,
-  onRemove,
+  assemblies, types, components, loading, onSave, onRemove,
 }: {
   assemblies: ReturnType<typeof usePrebuiltAssemblies>['assemblies'];
   types: ReturnType<typeof useTrailerTypes>['types'];
@@ -344,9 +345,7 @@ function PrebuiltTab({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Prebuilt Assemblies</CardTitle>
-      </CardHeader>
+      <CardHeader><CardTitle className="text-lg">Prebuilt Assemblies</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <div className="space-y-1">
