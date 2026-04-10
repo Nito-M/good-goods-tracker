@@ -461,8 +461,26 @@ function ComponentsTab({
                         })}
                       </div>
                     )}
-                  </TableCell>
-                  <TableCell>
+                   </TableCell>
+                   <TableCell>
+                     {editingId === c.id ? (
+                       <Select value={editAssemblyId} onValueChange={setEditAssemblyId}>
+                         <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="none">None</SelectItem>
+                           {assemblies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                         </SelectContent>
+                       </Select>
+                     ) : (c as any).assembly_id ? (
+                       <div className="flex items-center gap-1">
+                         <Link className="h-3 w-3 text-muted-foreground" />
+                         <span className="text-sm">{assemblies.find(a => a.id === (c as any).assembly_id)?.name || 'Unknown'}</span>
+                       </div>
+                     ) : (
+                       <span className="text-xs text-muted-foreground">—</span>
+                     )}
+                   </TableCell>
+                   <TableCell>
                     <div className="flex gap-1">
                       {editingId === c.id ? (
                         <>
