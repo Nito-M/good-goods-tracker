@@ -145,7 +145,8 @@ export function TrailerConfigAdmin() {
   const navigate = useNavigate();
   const { types, loading: typesLoading, create: createType, update: updateType, remove: removeType } = useTrailerTypes();
   const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
-  const { assemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
+  const { assemblies: prebuiltAssemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
+  const { assemblies: allAssemblies } = useAssemblies();
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
