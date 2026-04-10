@@ -333,11 +333,12 @@ function ComponentsTab({
     setEditName(c.name);
     setEditPrice(String(c.price));
     setEditCompatibleIds([...c.compatible_trailer_type_ids]);
+    setEditAssemblyId((c as any).assembly_id || 'none');
   };
 
   const saveEdit = async (id: string) => {
     if (!editName.trim()) return;
-    await onUpdate(id, { name: editName.trim(), price: parseFloat(editPrice) || 0, compatible_trailer_type_ids: editCompatibleIds });
+    await onUpdate(id, { name: editName.trim(), price: parseFloat(editPrice) || 0, compatible_trailer_type_ids: editCompatibleIds, assembly_id: editAssemblyId && editAssemblyId !== 'none' ? editAssemblyId : null });
     setEditingId(null);
   };
 
