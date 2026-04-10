@@ -20,6 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   front_end: 'Front End',
   back_end: 'Back End',
   deck_type: 'Deck Type',
+  under_carriage: 'Under Carriage',
 };
 
 function ImageUploadField({ imageUrl, onImageChange, uploading }: { imageUrl: string; onImageChange: (url: string) => void; uploading: boolean }) {
@@ -363,6 +364,7 @@ function ComponentsTab({
                 <SelectItem value="front_end">Front End</SelectItem>
                 <SelectItem value="back_end">Back End</SelectItem>
                 <SelectItem value="deck_type">Deck Type</SelectItem>
+                <SelectItem value="under_carriage">Under Carriage</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -522,17 +524,20 @@ function PrebuiltTab({
   const [frontEndId, setFrontEndId] = useState('');
   const [backEndId, setBackEndId] = useState('');
   const [deckTypeId, setDeckTypeId] = useState('');
+  const [underCarriageId, setUnderCarriageId] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFrontEndId, setEditFrontEndId] = useState('');
   const [editBackEndId, setEditBackEndId] = useState('');
   const [editDeckTypeId, setEditDeckTypeId] = useState('');
+  const [editUnderCarriageId, setEditUnderCarriageId] = useState('');
   const [editTotalPrice, setEditTotalPrice] = useState('');
 
   const frontEnds = components.filter(c => c.category === 'front_end');
   const backEnds = components.filter(c => c.category === 'back_end');
   const deckTypes = components.filter(c => c.category === 'deck_type');
+  const underCarriages = components.filter(c => c.category === 'under_carriage');
 
   const handleAdd = async () => {
     if (!trailerTypeId) { toast({ title: 'Required', description: 'Select a trailer type.', variant: 'destructive' }); return; }
@@ -541,12 +546,14 @@ function PrebuiltTab({
       front_end_id: frontEndId && frontEndId !== 'none' ? frontEndId : null,
       back_end_id: backEndId && backEndId !== 'none' ? backEndId : null,
       deck_type_id: deckTypeId && deckTypeId !== 'none' ? deckTypeId : null,
+      under_carriage_id: underCarriageId && underCarriageId !== 'none' ? underCarriageId : null,
       total_price: parseFloat(totalPrice) || 0,
     });
     setTrailerTypeId('');
     setFrontEndId('');
     setBackEndId('');
     setDeckTypeId('');
+    setUnderCarriageId('');
     setTotalPrice('');
   };
 
@@ -555,6 +562,7 @@ function PrebuiltTab({
     setEditFrontEndId(a.front_end_id || 'none');
     setEditBackEndId(a.back_end_id || 'none');
     setEditDeckTypeId(a.deck_type_id || 'none');
+    setEditUnderCarriageId((a as any).under_carriage_id || 'none');
     setEditTotalPrice(String(a.total_price));
   };
 
@@ -563,6 +571,7 @@ function PrebuiltTab({
       front_end_id: editFrontEndId && editFrontEndId !== 'none' ? editFrontEndId : null,
       back_end_id: editBackEndId && editBackEndId !== 'none' ? editBackEndId : null,
       deck_type_id: editDeckTypeId && editDeckTypeId !== 'none' ? editDeckTypeId : null,
+      under_carriage_id: editUnderCarriageId && editUnderCarriageId !== 'none' ? editUnderCarriageId : null,
       total_price: parseFloat(editTotalPrice) || 0,
     });
     setEditingId(null);
@@ -618,6 +627,16 @@ function PrebuiltTab({
             </Select>
           </div>
           <div className="space-y-1">
+            <Label>Under Carriage</Label>
+            <Select value={underCarriageId} onValueChange={setUnderCarriageId}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {underCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
             <Label>Total Price</Label>
             <Input type="number" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} placeholder="0.00" />
           </div>
@@ -638,6 +657,7 @@ function PrebuiltTab({
                 <TableHead>Front End</TableHead>
                 <TableHead>Back End</TableHead>
                 <TableHead>Deck Type</TableHead>
+                <TableHead>Under Carriage</TableHead>
                 <TableHead>Total Price</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
@@ -678,6 +698,17 @@ function PrebuiltTab({
                         </SelectContent>
                       </Select>
                     ) : getName(a.deck_type_id, components)}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === a.id ? (
+                      <Select value={editUnderCarriageId} onValueChange={setEditUnderCarriageId}>
+                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {underCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : getName((a as any).under_carriage_id, components)}
                   </TableCell>
                   <TableCell>
                     {editingId === a.id ? (
