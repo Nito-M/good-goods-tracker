@@ -1,0 +1,1 @@
+ALTER TABLE public.assembly_components ADD COLUMN assembly_id UUID REFERENCES public.assemblies(id) ON DELETE SET NULL DEFAULT NULL;

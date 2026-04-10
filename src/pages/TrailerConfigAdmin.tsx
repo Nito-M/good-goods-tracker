@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@/hooks/useTrailerConfig';
 import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
-import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X, ArrowLeft } from 'lucide-react';
+import { useAssemblies } from '@/hooks/useAssemblies';
+import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X, ArrowLeft, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -144,7 +145,8 @@ export function TrailerConfigAdmin() {
   const navigate = useNavigate();
   const { types, loading: typesLoading, create: createType, update: updateType, remove: removeType } = useTrailerTypes();
   const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
-  const { assemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
+  const { assemblies: prebuiltAssemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
+  const { assemblies: allAssemblies } = useAssemblies();
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
@@ -167,11 +169,11 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
-          <ComponentsTab components={components} types={types} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
+          <ComponentsTab components={components} types={types} assemblies={allAssemblies} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
-          <PrebuiltTab assemblies={assemblies} types={types} components={components} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
+          <PrebuiltTab assemblies={prebuiltAssemblies} types={types} components={components} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
         </TabsContent>
       </Tabs>
     </div>
@@ -281,13 +283,14 @@ function TrailerTypesTab({
 
 // --- Components Tab ---
 function ComponentsTab({
-  components, types, loading, onCreate, onUpdate, onRemove,
+  components, types, assemblies, loading, onCreate, onUpdate, onRemove,
 }: {
   components: ReturnType<typeof useAssemblyComponents>['components'];
   types: ReturnType<typeof useTrailerTypes>['types'];
+  assemblies: { id: string; name: string }[];
   loading: boolean;
-  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[] }) => Promise<any>;
-  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[] }) => Promise<void>;
+  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => Promise<any>;
+  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [name, setName] = useState('');
@@ -295,12 +298,14 @@ function ComponentsTab({
   const [imageUrl, setImageUrl] = useState('');
   const [price, setPrice] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
+  const [assemblyId, setAssemblyId] = useState('');
   const { uploading } = useTrailerImageUpload();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
+  const [editAssemblyId, setEditAssemblyId] = useState('');
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -310,11 +315,13 @@ function ComponentsTab({
       image_url: imageUrl || undefined,
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
+      assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
     });
     setName('');
     setImageUrl('');
     setPrice('');
     setCompatibleIds([]);
+    setAssemblyId('');
   };
 
   const toggleCompatible = (id: string) => {
@@ -326,11 +333,12 @@ function ComponentsTab({
     setEditName(c.name);
     setEditPrice(String(c.price));
     setEditCompatibleIds([...c.compatible_trailer_type_ids]);
+    setEditAssemblyId((c as any).assembly_id || 'none');
   };
 
   const saveEdit = async (id: string) => {
     if (!editName.trim()) return;
-    await onUpdate(id, { name: editName.trim(), price: parseFloat(editPrice) || 0, compatible_trailer_type_ids: editCompatibleIds });
+    await onUpdate(id, { name: editName.trim(), price: parseFloat(editPrice) || 0, compatible_trailer_type_ids: editCompatibleIds, assembly_id: editAssemblyId && editAssemblyId !== 'none' ? editAssemblyId : null });
     setEditingId(null);
   };
 
@@ -363,6 +371,16 @@ function ComponentsTab({
             <Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" />
           </div>
           <ImageUploadField imageUrl={imageUrl} onImageChange={setImageUrl} uploading={uploading} />
+          <div className="space-y-1">
+            <Label>Linked Assembly</Label>
+            <Select value={assemblyId} onValueChange={setAssemblyId}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {assemblies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {types.length > 0 && (
@@ -396,8 +414,9 @@ function ComponentsTab({
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Compatible With</TableHead>
-                <TableHead className="w-24" />
+                 <TableHead>Compatible With</TableHead>
+                 <TableHead>Assembly</TableHead>
+                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -442,8 +461,26 @@ function ComponentsTab({
                         })}
                       </div>
                     )}
-                  </TableCell>
-                  <TableCell>
+                   </TableCell>
+                   <TableCell>
+                     {editingId === c.id ? (
+                       <Select value={editAssemblyId} onValueChange={setEditAssemblyId}>
+                         <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="none">None</SelectItem>
+                           {assemblies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                         </SelectContent>
+                       </Select>
+                     ) : (c as any).assembly_id ? (
+                       <div className="flex items-center gap-1">
+                         <Link className="h-3 w-3 text-muted-foreground" />
+                         <span className="text-sm">{assemblies.find(a => a.id === (c as any).assembly_id)?.name || 'Unknown'}</span>
+                       </div>
+                     ) : (
+                       <span className="text-xs text-muted-foreground">—</span>
+                     )}
+                   </TableCell>
+                   <TableCell>
                     <div className="flex gap-1">
                       {editingId === c.id ? (
                         <>

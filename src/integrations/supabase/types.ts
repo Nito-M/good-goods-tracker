@@ -76,6 +76,7 @@ export type Database = {
       }
       assembly_components: {
         Row: {
+          assembly_id: string | null
           category: string
           compatible_trailer_type_ids: string[] | null
           created_at: string
@@ -87,6 +88,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assembly_id?: string | null
           category: string
           compatible_trailer_type_ids?: string[] | null
           created_at?: string
@@ -98,6 +100,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assembly_id?: string | null
           category?: string
           compatible_trailer_type_ids?: string[] | null
           created_at?: string
@@ -108,7 +111,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "assembly_components_assembly_id_fkey"
+            columns: ["assembly_id"]
+            isOneToOne: false
+            referencedRelation: "assemblies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       assembly_items: {
         Row: {
