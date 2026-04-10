@@ -67,7 +67,7 @@ export function TrailerConfigurator() {
   const [frontEndId, setFrontEndId] = useState<string | null>(null);
   const [backEndId, setBackEndId] = useState<string | null>(null);
   const [deckTypeId, setDeckTypeId] = useState<string | null>(null);
-  const [underCarriageId, setUnderCarriageId] = useState<string | null>(null);
+  const [underCarriageIds, setUnderCarriageIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -82,9 +82,10 @@ export function TrailerConfigurator() {
   const selectedFront = components.find(c => c.id === frontEndId);
   const selectedBack = components.find(c => c.id === backEndId);
   const selectedDeck = components.find(c => c.id === deckTypeId);
-  const selectedUnderCarriage = components.find(c => c.id === underCarriageId);
+  const selectedUnderCarriages = components.filter(c => underCarriageIds.includes(c.id));
 
-  const totalPrice = (selectedFront?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + (selectedUnderCarriage?.price || 0);
+  const underCarriageTotal = selectedUnderCarriages.reduce((sum, c) => sum + (c.price || 0), 0);
+  const totalPrice = (selectedFront?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
 
   // Lookup prebuilt assembly when entering step 5
   useEffect(() => {
