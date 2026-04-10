@@ -149,6 +149,7 @@ export function TrailerConfigAdmin() {
   const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
   const { assemblies: prebuiltAssemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
   const { assemblies: allAssemblies } = useAssemblies();
+  const { items: inventoryItems } = useInventory();
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
@@ -171,7 +172,7 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
-          <ComponentsTab components={components} types={types} assemblies={allAssemblies} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
+          <ComponentsTab components={components} types={types} assemblies={allAssemblies} inventoryItems={inventoryItems} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
@@ -285,11 +286,12 @@ function TrailerTypesTab({
 
 // --- Components Tab ---
 function ComponentsTab({
-  components, types, assemblies, loading, onCreate, onUpdate, onRemove,
+  components, types, assemblies, inventoryItems, loading, onCreate, onUpdate, onRemove,
 }: {
   components: ReturnType<typeof useAssemblyComponents>['components'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   assemblies: { id: string; name: string }[];
+  inventoryItems: { id: string; name: string; imageUrl: string | null; price: number; sku: string }[];
   loading: boolean;
   onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => Promise<any>;
   onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => Promise<void>;
@@ -301,6 +303,8 @@ function ComponentsTab({
   const [price, setPrice] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
   const [assemblyId, setAssemblyId] = useState('');
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [showInventoryPicker, setShowInventoryPicker] = useState(false);
   const { uploading } = useTrailerImageUpload();
 
   const [editingId, setEditingId] = useState<string | null>(null);
