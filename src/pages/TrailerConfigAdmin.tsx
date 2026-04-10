@@ -381,6 +381,7 @@ function ComponentsTab({
               </SelectContent>
             </Select>
           </div>
+        </div>
 
         {types.length > 0 && (
           <div className="space-y-2">
