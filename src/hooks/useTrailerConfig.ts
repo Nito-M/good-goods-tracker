@@ -16,7 +16,7 @@ export interface AssemblyComponent {
   id: string;
   user_id: string;
   name: string;
-  category: 'front_end' | 'back_end' | 'deck_type';
+  category: 'front_end' | 'back_end' | 'deck_type' | 'under_carriage';
   image_url: string | null;
   price: number;
   compatible_trailer_type_ids: string[];
@@ -32,6 +32,7 @@ export interface PrebuiltAssembly {
   front_end_id: string | null;
   back_end_id: string | null;
   deck_type_id: string | null;
+  under_carriage_id: string | null;
   total_price: number;
   created_at: string;
   updated_at: string;
@@ -169,7 +170,7 @@ export function usePrebuiltAssemblies() {
 
   useEffect(() => { fetchAssemblies(); }, [user]);
 
-  const save = async (config: { trailer_type_id: string; front_end_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; total_price: number }) => {
+  const save = async (config: { trailer_type_id: string; front_end_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; total_price: number }) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('prebuilt_assemblies')
@@ -182,7 +183,7 @@ export function usePrebuiltAssemblies() {
     return data as PrebuiltAssembly;
   };
 
-  const update = async (id: string, updates: { total_price?: number; front_end_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null }) => {
+  const update = async (id: string, updates: { total_price?: number; front_end_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null }) => {
     const { error } = await supabase.from('prebuilt_assemblies').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchAssemblies();
@@ -199,6 +200,7 @@ export function usePrebuiltAssemblies() {
     front_end_id: string | null;
     back_end_id: string | null;
     deck_type_id: string | null;
+    under_carriage_id: string | null;
   }): Promise<PrebuiltAssembly | null> => {
     if (!user) return null;
     let query = supabase
@@ -214,6 +216,9 @@ export function usePrebuiltAssemblies() {
 
     if (config.deck_type_id) query = query.eq('deck_type_id', config.deck_type_id);
     else query = query.is('deck_type_id', null);
+
+    if (config.under_carriage_id) query = query.eq('under_carriage_id', config.under_carriage_id);
+    else query = query.is('under_carriage_id', null);
 
     const { data } = await query.limit(1).maybeSingle();
     return (data as PrebuiltAssembly) || null;
