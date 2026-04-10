@@ -14,14 +14,6 @@ import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X, ArrowLeft } f
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@/hooks/useTrailerConfig';
-import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
-import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   front_end: 'Front End',
