@@ -12,6 +12,7 @@ import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@
 import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
 import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   front_end: 'Front End',
