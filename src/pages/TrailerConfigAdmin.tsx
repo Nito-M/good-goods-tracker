@@ -371,7 +371,16 @@ function ComponentsTab({
             <Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" />
           </div>
           <ImageUploadField imageUrl={imageUrl} onImageChange={setImageUrl} uploading={uploading} />
-        </div>
+          <div className="space-y-1">
+            <Label>Linked Assembly</Label>
+            <Select value={assemblyId} onValueChange={setAssemblyId}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {assemblies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
         {types.length > 0 && (
           <div className="space-y-2">
