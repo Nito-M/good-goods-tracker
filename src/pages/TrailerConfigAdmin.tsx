@@ -359,10 +359,13 @@ function ComponentsTab({
     return inventoryItems.filter(i => i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)).slice(0, 20);
   }, [inventoryItems, inventorySearch]);
 
-  const importFromInventory = (item: typeof inventoryItems[0]) => {
+  const importFromInventory = async (item: typeof inventoryItems[0]) => {
     setName(item.name);
     setPrice(String(item.price));
-    if (item.imageUrl) setImageUrl(item.imageUrl);
+    if (item.imageUrl) {
+      const resolvedUrl = await getItemImageUrl(item.imageUrl);
+      if (resolvedUrl) setImageUrl(resolvedUrl);
+    }
     setShowInventoryPicker(false);
     setInventorySearch('');
   };
