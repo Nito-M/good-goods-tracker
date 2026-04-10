@@ -22,19 +22,39 @@ const CATEGORY_LABELS: Record<string, string> = {
 function ImageUploadField({ imageUrl, onImageChange, uploading }: { imageUrl: string; onImageChange: (url: string) => void; uploading: boolean }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload } = useTrailerImageUpload();
+  const [dragOver, setDragOver] = useState(false);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFile = async (file: File) => {
     const url = await upload(file);
     if (url) onImageChange(url);
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await handleFile(file);
     if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) handleFile(file);
   };
 
   return (
     <div className="space-y-1">
       <Label>Image</Label>
-      <div className="flex items-center gap-2">
+      <div
+        className={cn(
+          'flex items-center gap-2 p-2 rounded-md border-2 border-dashed transition-colors',
+          dragOver ? 'border-primary bg-primary/5' : 'border-transparent'
+        )}
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+      >
         {imageUrl ? (
           <div className="h-12 w-12 rounded bg-muted overflow-hidden shrink-0">
             <img src={imageUrl} alt="" className="h-full w-full object-cover" />
@@ -54,7 +74,10 @@ function ImageUploadField({ imageUrl, onImageChange, uploading }: { imageUrl: st
           {uploading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
           {imageUrl ? 'Change' : 'Upload'}
         </Button>
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+        {!imageUrl && !uploading && (
+          <span className="text-xs text-muted-foreground">or drag & drop</span>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
       </div>
     </div>
   );
@@ -63,18 +86,38 @@ function ImageUploadField({ imageUrl, onImageChange, uploading }: { imageUrl: st
 function InlineImageUpload({ imageUrl, onImageChange }: { imageUrl: string | null; onImageChange: (url: string) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const { upload, uploading } = useTrailerImageUpload();
+  const [dragOver, setDragOver] = useState(false);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFile = async (file: File) => {
     const url = await upload(file);
     if (url) onImageChange(url);
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await handleFile(file);
     if (fileRef.current) fileRef.current.value = '';
   };
 
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) handleFile(file);
+  };
+
   return (
-    <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden cursor-pointer relative group"
-      onClick={() => fileRef.current?.click()}>
+    <div
+      className={cn(
+        'h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden cursor-pointer relative group transition-all',
+        dragOver && 'ring-2 ring-primary ring-offset-1'
+      )}
+      onClick={() => fileRef.current?.click()}
+      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={onDrop}
+    >
       {uploading ? (
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       ) : imageUrl ? (
@@ -90,7 +133,7 @@ function InlineImageUpload({ imageUrl, onImageChange }: { imageUrl: string | nul
       {!uploading && !imageUrl && (
         <Upload className="h-4 w-4 text-muted-foreground hidden group-hover:block" />
       )}
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
     </div>
   );
 }
