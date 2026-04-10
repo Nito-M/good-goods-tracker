@@ -286,12 +286,13 @@ function TrailerTypesTab({
 
 // --- Components Tab ---
 function ComponentsTab({
-  components, types, assemblies, inventoryItems, loading, onCreate, onUpdate, onRemove,
+  components, types, assemblies, inventoryItems, getItemImageUrl, loading, onCreate, onUpdate, onRemove,
 }: {
   components: ReturnType<typeof useAssemblyComponents>['components'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   assemblies: { id: string; name: string }[];
   inventoryItems: { id: string; name: string; imageUrl?: string | null; price: number; sku: string }[];
+  getItemImageUrl: (imagePath: string | null | undefined) => Promise<string | null>;
   loading: boolean;
   onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => Promise<any>;
   onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => Promise<void>;
