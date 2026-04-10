@@ -149,7 +149,7 @@ export function TrailerConfigAdmin() {
   const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
   const { assemblies: prebuiltAssemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
   const { assemblies: allAssemblies } = useAssemblies();
-  const { items: inventoryItems } = useInventory();
+  const { items: inventoryItems, getItemImageUrl } = useInventory();
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
@@ -172,7 +172,7 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
-          <ComponentsTab components={components} types={types} assemblies={allAssemblies} inventoryItems={inventoryItems} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
+          <ComponentsTab components={components} types={types} assemblies={allAssemblies} inventoryItems={inventoryItems} getItemImageUrl={getItemImageUrl} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
@@ -286,12 +286,13 @@ function TrailerTypesTab({
 
 // --- Components Tab ---
 function ComponentsTab({
-  components, types, assemblies, inventoryItems, loading, onCreate, onUpdate, onRemove,
+  components, types, assemblies, inventoryItems, getItemImageUrl, loading, onCreate, onUpdate, onRemove,
 }: {
   components: ReturnType<typeof useAssemblyComponents>['components'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   assemblies: { id: string; name: string }[];
   inventoryItems: { id: string; name: string; imageUrl?: string | null; price: number; sku: string }[];
+  getItemImageUrl: (imagePath: string | null | undefined) => Promise<string | null>;
   loading: boolean;
   onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => Promise<any>;
   onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => Promise<void>;
@@ -358,10 +359,13 @@ function ComponentsTab({
     return inventoryItems.filter(i => i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)).slice(0, 20);
   }, [inventoryItems, inventorySearch]);
 
-  const importFromInventory = (item: typeof inventoryItems[0]) => {
+  const importFromInventory = async (item: typeof inventoryItems[0]) => {
     setName(item.name);
     setPrice(String(item.price));
-    if (item.imageUrl) setImageUrl(item.imageUrl);
+    if (item.imageUrl) {
+      const resolvedUrl = await getItemImageUrl(item.imageUrl);
+      if (resolvedUrl) setImageUrl(resolvedUrl);
+    }
     setShowInventoryPicker(false);
     setInventorySearch('');
   };
