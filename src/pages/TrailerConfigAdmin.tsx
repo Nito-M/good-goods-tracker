@@ -149,7 +149,7 @@ export function TrailerConfigAdmin() {
   const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
   const { assemblies: prebuiltAssemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
   const { assemblies: allAssemblies } = useAssemblies();
-  const { items: inventoryItems } = useInventory();
+  const { items: inventoryItems, getItemImageUrl } = useInventory();
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
@@ -172,7 +172,7 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
-          <ComponentsTab components={components} types={types} assemblies={allAssemblies} inventoryItems={inventoryItems} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
+          <ComponentsTab components={components} types={types} assemblies={allAssemblies} inventoryItems={inventoryItems} getItemImageUrl={getItemImageUrl} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
