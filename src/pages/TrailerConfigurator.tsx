@@ -97,14 +97,14 @@ export function TrailerConfigurator() {
         front_end_id: frontEndId,
         back_end_id: backEndId,
         deck_type_id: deckTypeId,
-        under_carriage_id: underCarriageId,
+        under_carriage_id: underCarriageIds[0] || null,
       }).then((result) => {
         setMatchedAssembly(result);
         setLookupLoading(false);
         setLookupDone(true);
       });
     }
-  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId, underCarriageId]);
+  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId, underCarriageIds]);
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
@@ -123,7 +123,7 @@ export function TrailerConfigurator() {
       front_end_id: frontEndId,
       back_end_id: backEndId,
       deck_type_id: deckTypeId,
-      under_carriage_id: underCarriageId,
+      under_carriage_id: underCarriageIds[0] || null,
       total_price: matchedAssembly?.total_price ?? totalPrice,
     });
     setSaving(false);
@@ -180,7 +180,7 @@ export function TrailerConfigurator() {
                       setFrontEndId(null);
                       setBackEndId(null);
                       setDeckTypeId(null);
-                      setUnderCarriageId(null);
+                      setUnderCarriageIds([]);
                     }}
                   />
                 </div>
@@ -263,8 +263,8 @@ export function TrailerConfigurator() {
                     id={c.id}
                     name={c.name}
                     imageUrl={c.image_url}
-                    selected={underCarriageId === c.id}
-                    onSelect={(id) => setUnderCarriageId(underCarriageId === id ? null : id)}
+                    selected={underCarriageIds.includes(c.id)}
+                    onSelect={(id) => setUnderCarriageIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
                     price={c.price}
                   />
                 </div>
@@ -297,7 +297,11 @@ export function TrailerConfigurator() {
                         <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
                         <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
                         <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
-                        <SummaryRow label="Under Carriage" value={selectedUnderCarriage?.name || 'None'} imageUrl={selectedUnderCarriage?.image_url} price={selectedUnderCarriage?.price} />
+                        {selectedUnderCarriages.length > 0 ? selectedUnderCarriages.map(uc => (
+                          <SummaryRow key={uc.id} label="Under Carriage" value={uc.name} imageUrl={uc.image_url} price={uc.price} />
+                        )) : (
+                          <SummaryRow label="Under Carriage" value="None" />
+                        )}
                       </div>
                       <div className="border-t pt-4 flex justify-between items-center">
                         <span className="text-lg font-semibold">Total Price</span>
