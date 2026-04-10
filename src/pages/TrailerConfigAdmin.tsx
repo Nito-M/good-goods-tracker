@@ -141,13 +141,19 @@ function InlineImageUpload({ imageUrl, onImageChange }: { imageUrl: string | nul
 }
 
 export function TrailerConfigAdmin() {
+  const navigate = useNavigate();
   const { types, loading: typesLoading, create: createType, update: updateType, remove: removeType } = useTrailerTypes();
   const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
   const { assemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
-      <h1 className="text-2xl font-bold">Trailer Configuration Admin</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Trailer Configuration Admin</h1>
+        <Button variant="outline" onClick={() => navigate('/trailer-configurator')}>
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Configurator
+        </Button>
+      </div>
 
       <Tabs defaultValue="trailer_types">
         <TabsList className="grid w-full grid-cols-3">
