@@ -283,13 +283,14 @@ function TrailerTypesTab({
 
 // --- Components Tab ---
 function ComponentsTab({
-  components, types, loading, onCreate, onUpdate, onRemove,
+  components, types, assemblies, loading, onCreate, onUpdate, onRemove,
 }: {
   components: ReturnType<typeof useAssemblyComponents>['components'];
   types: ReturnType<typeof useTrailerTypes>['types'];
+  assemblies: { id: string; name: string }[];
   loading: boolean;
-  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[] }) => Promise<any>;
-  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[] }) => Promise<void>;
+  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => Promise<any>;
+  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [name, setName] = useState('');
@@ -297,12 +298,14 @@ function ComponentsTab({
   const [imageUrl, setImageUrl] = useState('');
   const [price, setPrice] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
+  const [assemblyId, setAssemblyId] = useState('');
   const { uploading } = useTrailerImageUpload();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
+  const [editAssemblyId, setEditAssemblyId] = useState('');
 
   const handleAdd = async () => {
     if (!name.trim()) return;
