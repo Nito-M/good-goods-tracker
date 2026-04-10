@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@/hooks/useTrailerConfig';
 import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
 import { useAssemblies } from '@/hooks/useAssemblies';
-import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X, ArrowLeft, Link } from 'lucide-react';
+import { useInventory } from '@/hooks/useInventory';
+import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X, ArrowLeft, Link, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
