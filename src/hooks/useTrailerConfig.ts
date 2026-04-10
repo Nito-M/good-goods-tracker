@@ -20,6 +20,7 @@ export interface AssemblyComponent {
   image_url: string | null;
   price: number;
   compatible_trailer_type_ids: string[];
+  assembly_id: string | null;
   created_at: string;
   updated_at: string;
 }
