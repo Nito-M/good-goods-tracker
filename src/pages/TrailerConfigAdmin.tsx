@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies } from '@/hooks/useTrailerConfig';
 import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
-import { Plus, Trash2, Package, Upload, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -60,10 +60,45 @@ function ImageUploadField({ imageUrl, onImageChange, uploading }: { imageUrl: st
   );
 }
 
+function InlineImageUpload({ imageUrl, onImageChange }: { imageUrl: string | null; onImageChange: (url: string) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { upload, uploading } = useTrailerImageUpload();
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await upload(file);
+    if (url) onImageChange(url);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  return (
+    <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden cursor-pointer relative group"
+      onClick={() => fileRef.current?.click()}>
+      {uploading ? (
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      ) : imageUrl ? (
+        <>
+          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <Upload className="h-3 w-3 text-white" />
+          </div>
+        </>
+      ) : (
+        <Package className="h-4 w-4 text-muted-foreground group-hover:hidden" />
+      )}
+      {!uploading && !imageUrl && (
+        <Upload className="h-4 w-4 text-muted-foreground hidden group-hover:block" />
+      )}
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  );
+}
+
 export function TrailerConfigAdmin() {
-  const { types, loading: typesLoading, create: createType, remove: removeType } = useTrailerTypes();
-  const { components, loading: compsLoading, create: createComp, remove: removeComp } = useAssemblyComponents();
-  const { assemblies, loading: assembliesLoading, save: saveAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
+  const { types, loading: typesLoading, create: createType, update: updateType, remove: removeType } = useTrailerTypes();
+  const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
+  const { assemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
@@ -77,15 +112,15 @@ export function TrailerConfigAdmin() {
         </TabsList>
 
         <TabsContent value="trailer_types" className="mt-4">
-          <TrailerTypesTab types={types} loading={typesLoading} onCreate={createType} onRemove={removeType} />
+          <TrailerTypesTab types={types} loading={typesLoading} onCreate={createType} onUpdate={updateType} onRemove={removeType} />
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
-          <ComponentsTab components={components} types={types} loading={compsLoading} onCreate={createComp} onRemove={removeComp} />
+          <ComponentsTab components={components} types={types} loading={compsLoading} onCreate={createComp} onUpdate={updateComp} onRemove={removeComp} />
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
-          <PrebuiltTab assemblies={assemblies} types={types} components={components} loading={assembliesLoading} onSave={saveAssembly} onRemove={removeAssembly} />
+          <PrebuiltTab assemblies={assemblies} types={types} components={components} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
         </TabsContent>
       </Tabs>
     </div>
@@ -94,22 +129,36 @@ export function TrailerConfigAdmin() {
 
 // --- Trailer Types Tab ---
 function TrailerTypesTab({
-  types, loading, onCreate, onRemove,
+  types, loading, onCreate, onUpdate, onRemove,
 }: {
   types: ReturnType<typeof useTrailerTypes>['types'];
   loading: boolean;
   onCreate: (name: string, image_url?: string) => Promise<any>;
+  onUpdate: (id: string, updates: { name?: string; image_url?: string | null }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [name, setName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const { uploading } = useTrailerImageUpload();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
 
   const handleAdd = async () => {
     if (!name.trim()) return;
     await onCreate(name.trim(), imageUrl || undefined);
     setName('');
     setImageUrl('');
+  };
+
+  const startEdit = (t: typeof types[0]) => {
+    setEditingId(t.id);
+    setEditName(t.name);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editName.trim()) return;
+    await onUpdate(id, { name: editName.trim() });
+    setEditingId(null);
   };
 
   return (
@@ -137,22 +186,37 @@ function TrailerTypesTab({
               <TableRow>
                 <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead className="w-16" />
+                <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {types.map(t => (
                 <TableRow key={t.id}>
                   <TableCell>
-                    <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden">
-                      {t.image_url ? <img src={t.image_url} alt={t.name} className="h-full w-full object-cover" /> : <Package className="h-4 w-4 text-muted-foreground" />}
-                    </div>
+                    <InlineImageUpload imageUrl={t.image_url} onImageChange={(url) => onUpdate(t.id, { image_url: url })} />
                   </TableCell>
-                  <TableCell className="font-medium">{t.name}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => onRemove(t.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {editingId === t.id ? (
+                      <Input value={editName} onChange={e => setEditName(e.target.value)} className="h-8"
+                        onKeyDown={e => { if (e.key === 'Enter') saveEdit(t.id); if (e.key === 'Escape') setEditingId(null); }} autoFocus />
+                    ) : (
+                      <span className="font-medium">{t.name}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {editingId === t.id ? (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => saveEdit(t.id)}><Check className="h-4 w-4 text-green-600" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(t)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => onRemove(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -166,12 +230,13 @@ function TrailerTypesTab({
 
 // --- Components Tab ---
 function ComponentsTab({
-  components, types, loading, onCreate, onRemove,
+  components, types, loading, onCreate, onUpdate, onRemove,
 }: {
   components: ReturnType<typeof useAssemblyComponents>['components'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   loading: boolean;
   onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[] }) => Promise<any>;
+  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[] }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [name, setName] = useState('');
@@ -180,6 +245,11 @@ function ComponentsTab({
   const [price, setPrice] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
   const { uploading } = useTrailerImageUpload();
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -198,6 +268,23 @@ function ComponentsTab({
 
   const toggleCompatible = (id: string) => {
     setCompatibleIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const startEdit = (c: typeof components[0]) => {
+    setEditingId(c.id);
+    setEditName(c.name);
+    setEditPrice(String(c.price));
+    setEditCompatibleIds([...c.compatible_trailer_type_ids]);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editName.trim()) return;
+    await onUpdate(id, { name: editName.trim(), price: parseFloat(editPrice) || 0, compatible_trailer_type_ids: editCompatibleIds });
+    setEditingId(null);
+  };
+
+  const toggleEditCompatible = (id: string) => {
+    setEditCompatibleIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   return (
@@ -259,22 +346,42 @@ function ComponentsTab({
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Compatible With</TableHead>
-                <TableHead className="w-16" />
+                <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {components.map(c => (
                 <TableRow key={c.id}>
                   <TableCell>
-                    <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden">
-                      {c.image_url ? <img src={c.image_url} alt={c.name} className="h-full w-full object-cover" /> : <Package className="h-4 w-4 text-muted-foreground" />}
-                    </div>
+                    <InlineImageUpload imageUrl={c.image_url} onImageChange={(url) => onUpdate(c.id, { image_url: url })} />
                   </TableCell>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell><Badge variant="secondary">{CATEGORY_LABELS[c.category] || c.category}</Badge></TableCell>
-                  <TableCell>${Number(c.price).toFixed(2)}</TableCell>
                   <TableCell>
-                    {c.compatible_trailer_type_ids.length === 0 ? (
+                    {editingId === c.id ? (
+                      <Input value={editName} onChange={e => setEditName(e.target.value)} className="h-8" autoFocus
+                        onKeyDown={e => { if (e.key === 'Enter') saveEdit(c.id); if (e.key === 'Escape') setEditingId(null); }} />
+                    ) : (
+                      <span className="font-medium">{c.name}</span>
+                    )}
+                  </TableCell>
+                  <TableCell><Badge variant="secondary">{CATEGORY_LABELS[c.category] || c.category}</Badge></TableCell>
+                  <TableCell>
+                    {editingId === c.id ? (
+                      <Input type="number" value={editPrice} onChange={e => setEditPrice(e.target.value)} className="h-8 w-24" />
+                    ) : (
+                      <span>${Number(c.price).toFixed(2)}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === c.id ? (
+                      <div className="flex flex-wrap gap-2">
+                        {types.map(t => (
+                          <label key={t.id} className="flex items-center gap-1 text-xs cursor-pointer">
+                            <Checkbox checked={editCompatibleIds.includes(t.id)} onCheckedChange={() => toggleEditCompatible(t.id)} />
+                            {t.name}
+                          </label>
+                        ))}
+                      </div>
+                    ) : c.compatible_trailer_type_ids.length === 0 ? (
                       <span className="text-xs text-muted-foreground">All</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
@@ -286,9 +393,19 @@ function ComponentsTab({
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => onRemove(c.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1">
+                      {editingId === c.id ? (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => saveEdit(c.id)}><Check className="h-4 w-4 text-green-600" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => onRemove(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -302,13 +419,14 @@ function ComponentsTab({
 
 // --- Prebuilt Assemblies Tab ---
 function PrebuiltTab({
-  assemblies, types, components, loading, onSave, onRemove,
+  assemblies, types, components, loading, onSave, onUpdate, onRemove,
 }: {
   assemblies: ReturnType<typeof usePrebuiltAssemblies>['assemblies'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   components: ReturnType<typeof useAssemblyComponents>['components'];
   loading: boolean;
   onSave: (config: any) => Promise<any>;
+  onUpdate: (id: string, updates: any) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const { toast } = useToast();
@@ -317,6 +435,12 @@ function PrebuiltTab({
   const [backEndId, setBackEndId] = useState('');
   const [deckTypeId, setDeckTypeId] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editFrontEndId, setEditFrontEndId] = useState('');
+  const [editBackEndId, setEditBackEndId] = useState('');
+  const [editDeckTypeId, setEditDeckTypeId] = useState('');
+  const [editTotalPrice, setEditTotalPrice] = useState('');
 
   const frontEnds = components.filter(c => c.category === 'front_end');
   const backEnds = components.filter(c => c.category === 'back_end');
@@ -336,6 +460,24 @@ function PrebuiltTab({
     setBackEndId('');
     setDeckTypeId('');
     setTotalPrice('');
+  };
+
+  const startEdit = (a: typeof assemblies[0]) => {
+    setEditingId(a.id);
+    setEditFrontEndId(a.front_end_id || 'none');
+    setEditBackEndId(a.back_end_id || 'none');
+    setEditDeckTypeId(a.deck_type_id || 'none');
+    setEditTotalPrice(String(a.total_price));
+  };
+
+  const saveEdit = async (id: string) => {
+    await onUpdate(id, {
+      front_end_id: editFrontEndId && editFrontEndId !== 'none' ? editFrontEndId : null,
+      back_end_id: editBackEndId && editBackEndId !== 'none' ? editBackEndId : null,
+      deck_type_id: editDeckTypeId && editDeckTypeId !== 'none' ? editDeckTypeId : null,
+      total_price: parseFloat(editTotalPrice) || 0,
+    });
+    setEditingId(null);
   };
 
   const getName = (id: string | null, list: { id: string; name: string }[]) => {
@@ -409,21 +551,67 @@ function PrebuiltTab({
                 <TableHead>Back End</TableHead>
                 <TableHead>Deck Type</TableHead>
                 <TableHead>Total Price</TableHead>
-                <TableHead className="w-16" />
+                <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {assemblies.map(a => (
                 <TableRow key={a.id}>
                   <TableCell className="font-medium">{getName(a.trailer_type_id, types)}</TableCell>
-                  <TableCell>{getName(a.front_end_id, components)}</TableCell>
-                  <TableCell>{getName(a.back_end_id, components)}</TableCell>
-                  <TableCell>{getName(a.deck_type_id, components)}</TableCell>
-                  <TableCell>${Number(a.total_price).toFixed(2)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => onRemove(a.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {editingId === a.id ? (
+                      <Select value={editFrontEndId} onValueChange={setEditFrontEndId}>
+                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {frontEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : getName(a.front_end_id, components)}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === a.id ? (
+                      <Select value={editBackEndId} onValueChange={setEditBackEndId}>
+                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {backEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : getName(a.back_end_id, components)}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === a.id ? (
+                      <Select value={editDeckTypeId} onValueChange={setEditDeckTypeId}>
+                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {deckTypes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : getName(a.deck_type_id, components)}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === a.id ? (
+                      <Input type="number" value={editTotalPrice} onChange={e => setEditTotalPrice(e.target.value)} className="h-8 w-24" />
+                    ) : (
+                      <span>${Number(a.total_price).toFixed(2)}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {editingId === a.id ? (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => saveEdit(a.id)}><Check className="h-4 w-4 text-green-600" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(a)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => onRemove(a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
