@@ -53,6 +53,7 @@ const STEPS = [
   { key: 'front_end', label: 'Select Front End' },
   { key: 'back_end', label: 'Select Back End' },
   { key: 'deck_type', label: 'Select Deck Type (Optional)' },
+  { key: 'under_carriage', label: 'Select Under Carriage (Optional)' },
   { key: 'summary', label: 'Configuration Summary' },
 ];
 
@@ -66,6 +67,7 @@ export function TrailerConfigurator() {
   const [frontEndId, setFrontEndId] = useState<string | null>(null);
   const [backEndId, setBackEndId] = useState<string | null>(null);
   const [deckTypeId, setDeckTypeId] = useState<string | null>(null);
+  const [underCarriageId, setUnderCarriageId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -74,17 +76,19 @@ export function TrailerConfigurator() {
   const frontEnds = useMemo(() => getByCategory('front_end', trailerTypeId || undefined), [components, trailerTypeId]);
   const backEnds = useMemo(() => getByCategory('back_end', trailerTypeId || undefined), [components, trailerTypeId]);
   const deckTypes = useMemo(() => getByCategory('deck_type', trailerTypeId || undefined), [components, trailerTypeId]);
+  const underCarriages = useMemo(() => getByCategory('under_carriage', trailerTypeId || undefined), [components, trailerTypeId]);
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
   const selectedFront = components.find(c => c.id === frontEndId);
   const selectedBack = components.find(c => c.id === backEndId);
   const selectedDeck = components.find(c => c.id === deckTypeId);
+  const selectedUnderCarriage = components.find(c => c.id === underCarriageId);
 
-  const totalPrice = (selectedFront?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0);
+  const totalPrice = (selectedFront?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + (selectedUnderCarriage?.price || 0);
 
   // Lookup prebuilt assembly when entering step 5
   useEffect(() => {
-    if (step === 4 && trailerTypeId) {
+    if (step === 5 && trailerTypeId) {
       setLookupLoading(true);
       setLookupDone(false);
       lookup({
@@ -92,19 +96,21 @@ export function TrailerConfigurator() {
         front_end_id: frontEndId,
         back_end_id: backEndId,
         deck_type_id: deckTypeId,
+        under_carriage_id: underCarriageId,
       }).then((result) => {
         setMatchedAssembly(result);
         setLookupLoading(false);
         setLookupDone(true);
       });
     }
-  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId]);
+  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId, underCarriageId]);
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
     if (step === 1) return !!frontEndId;
     if (step === 2) return !!backEndId;
     if (step === 3) return true; // deck is optional
+    if (step === 4) return true; // under carriage is optional
     return false;
   };
 
@@ -116,6 +122,7 @@ export function TrailerConfigurator() {
       front_end_id: frontEndId,
       back_end_id: backEndId,
       deck_type_id: deckTypeId,
+      under_carriage_id: underCarriageId,
       total_price: matchedAssembly?.total_price ?? totalPrice,
     });
     setSaving(false);
@@ -172,6 +179,7 @@ export function TrailerConfigurator() {
                       setFrontEndId(null);
                       setBackEndId(null);
                       setDeckTypeId(null);
+                      setUnderCarriageId(null);
                     }}
                   />
                 </div>
@@ -245,8 +253,29 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 5: Summary */}
+          {/* Step 5: Under Carriage */}
           {step === 4 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {underCarriages.map(c => (
+                <div key={c.id} className="relative">
+                  <SelectionCard
+                    id={c.id}
+                    name={c.name}
+                    imageUrl={c.image_url}
+                    selected={underCarriageId === c.id}
+                    onSelect={(id) => setUnderCarriageId(underCarriageId === id ? null : id)}
+                    price={c.price}
+                  />
+                </div>
+              ))}
+              {underCarriages.length === 0 && (
+                <p className="col-span-full text-muted-foreground text-center py-12">No under carriage components available.</p>
+              )}
+            </div>
+          )}
+
+          {/* Step 6: Summary */}
+          {step === 5 && (
             <div className="space-y-6">
               {lookupLoading ? (
                 <p className="text-muted-foreground text-center py-12">Looking up configuration...</p>
@@ -267,6 +296,7 @@ export function TrailerConfigurator() {
                         <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
                         <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
                         <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
+                        <SummaryRow label="Under Carriage" value={selectedUnderCarriage?.name || 'None'} imageUrl={selectedUnderCarriage?.image_url} price={selectedUnderCarriage?.price} />
                       </div>
                       <div className="border-t pt-4 flex justify-between items-center">
                         <span className="text-lg font-semibold">Total Price</span>
@@ -295,7 +325,7 @@ export function TrailerConfigurator() {
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
         </Button>
-        {step < 4 && (
+        {step < 5 && (
           <Button
             onClick={() => setStep(s => s + 1)}
             disabled={!canNext()}

@@ -1,0 +1,1 @@
+ALTER TABLE public.prebuilt_assemblies ADD COLUMN under_carriage_id UUID REFERENCES public.assembly_components(id) ON DELETE SET NULL DEFAULT NULL;

@@ -2053,6 +2053,7 @@ export type Database = {
           id: string
           total_price: number
           trailer_type_id: string
+          under_carriage_id: string | null
           updated_at: string
           user_id: string
         }
@@ -2064,6 +2065,7 @@ export type Database = {
           id?: string
           total_price?: number
           trailer_type_id: string
+          under_carriage_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2075,6 +2077,7 @@ export type Database = {
           id?: string
           total_price?: number
           trailer_type_id?: string
+          under_carriage_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2105,6 +2108,13 @@ export type Database = {
             columns: ["trailer_type_id"]
             isOneToOne: false
             referencedRelation: "trailer_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_under_carriage_id_fkey"
+            columns: ["under_carriage_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
             referencedColumns: ["id"]
           },
         ]
