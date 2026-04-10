@@ -414,8 +414,9 @@ function ComponentsTab({
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Compatible With</TableHead>
-                <TableHead className="w-24" />
+                 <TableHead>Compatible With</TableHead>
+                 <TableHead>Assembly</TableHead>
+                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
