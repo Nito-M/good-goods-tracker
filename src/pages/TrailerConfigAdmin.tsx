@@ -315,11 +315,13 @@ function ComponentsTab({
       image_url: imageUrl || undefined,
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
+      assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
     });
     setName('');
     setImageUrl('');
     setPrice('');
     setCompatibleIds([]);
+    setAssemblyId('');
   };
 
   const toggleCompatible = (id: string) => {
