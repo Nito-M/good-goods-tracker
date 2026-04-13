@@ -317,9 +317,31 @@ function ComponentsTab({
   const [editAssemblyId, setEditAssemblyId] = useState('');
   const [editParentComponentId, setEditParentComponentId] = useState('');
   const [editStep, setEditStep] = useState('1');
-  // Root under carriage components (for parent selection)
-  const rootUnderCarriages = components.filter(c => c.category === 'under_carriage' && !c.parent_component_id);
-  const rootFrontEnds = components.filter(c => c.category === 'front_end' && !c.parent_component_id);
+  // Helper: get components of a category at a specific tier
+  const getComponentsByStep = (cat: string, stepNum: number) => {
+    if (stepNum === 1) return components.filter(c => c.category === cat && !c.parent_component_id);
+    if (stepNum === 2) {
+      const roots = components.filter(c => c.category === cat && !c.parent_component_id);
+      return components.filter(c => c.category === cat && c.parent_component_id && roots.some(r => r.id === c.parent_component_id));
+    }
+    return [];
+  };
+
+  // Possible parents based on selected step
+  const possibleParents = useMemo(() => {
+    if (selectedStep === '2') return getComponentsByStep(category, 1);
+    if (selectedStep === '3') return getComponentsByStep(category, 2);
+    return [];
+  }, [components, category, selectedStep]);
+
+  const editPossibleParents = useMemo(() => {
+    if (!editingId) return [];
+    const editComp = components.find(c => c.id === editingId);
+    if (!editComp) return [];
+    if (editStep === '2') return getComponentsByStep(editComp.category, 1);
+    if (editStep === '3') return getComponentsByStep(editComp.category, 2);
+    return [];
+  }, [components, editingId, editStep]);
 
   const handleAdd = async () => {
     if (!name.trim()) return;
