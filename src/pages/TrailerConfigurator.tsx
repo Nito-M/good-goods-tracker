@@ -110,7 +110,7 @@ export function TrailerConfigurator() {
         setLookupDone(true);
       });
     }
-  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId, underCarriageIds]);
+  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId, underCarriageId]);
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
@@ -148,8 +148,11 @@ export function TrailerConfigurator() {
     const rows: { label: string; value: string; price?: number }[] = [
       { label: 'Trailer Type', value: selectedTrailer?.name || '—' },
     ];
-    if (selectedUnderCarriages.length > 0) {
-      selectedUnderCarriages.forEach(uc => rows.push({ label: 'Under Carriage', value: uc.name, price: uc.price }));
+    if (selectedUnderCarriage) {
+      rows.push({ label: 'Under Carriage', value: selectedUnderCarriage.name, price: selectedUnderCarriage.price });
+      if (selectedUnderCarriageSub) {
+        rows.push({ label: 'Under Carriage Option', value: selectedUnderCarriageSub.name, price: selectedUnderCarriageSub.price });
+      }
     } else {
       rows.push({ label: 'Under Carriage', value: 'None' });
     }
@@ -242,7 +245,8 @@ export function TrailerConfigurator() {
                       setFrontEndId(null);
                       setBackEndId(null);
                       setDeckTypeId(null);
-                      setUnderCarriageIds([]);
+                      setUnderCarriageId(null);
+                      setUnderCarriageSubId(null);
                     }}
                   />
                 </div>
@@ -255,21 +259,49 @@ export function TrailerConfigurator() {
 
           {/* Step 2: Under Carriage */}
           {step === 1 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {underCarriages.map(c => (
-                <div key={c.id} className="relative">
-                  <SelectionCard
-                    id={c.id}
-                    name={c.name}
-                    imageUrl={c.image_url}
-                    selected={underCarriageIds.includes(c.id)}
-                    onSelect={(id) => setUnderCarriageIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                    price={c.price}
-                  />
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 1: Select Under Carriage Type</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {underCarriages.map(c => (
+                    <div key={c.id} className="relative">
+                      <SelectionCard
+                        id={c.id}
+                        name={c.name}
+                        imageUrl={c.image_url}
+                        selected={underCarriageId === c.id}
+                        onSelect={(id) => {
+                          setUnderCarriageId(underCarriageId === id ? null : id);
+                          setUnderCarriageSubId(null);
+                        }}
+                        price={c.price}
+                      />
+                    </div>
+                  ))}
+                  {underCarriages.length === 0 && (
+                    <p className="col-span-full text-muted-foreground text-center py-12">No under carriage components available.</p>
+                  )}
                 </div>
-              ))}
-              {underCarriages.length === 0 && (
-                <p className="col-span-full text-muted-foreground text-center py-12">No under carriage components available.</p>
+              </div>
+
+              {underCarriageId && underCarriageSubs.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 2: Select Option for {selectedUnderCarriage?.name}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {underCarriageSubs.map(c => (
+                      <div key={c.id} className="relative">
+                        <SelectionCard
+                          id={c.id}
+                          name={c.name}
+                          imageUrl={c.image_url}
+                          selected={underCarriageSubId === c.id}
+                          onSelect={(id) => setUnderCarriageSubId(underCarriageSubId === id ? null : id)}
+                          price={c.price}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -359,9 +391,14 @@ export function TrailerConfigurator() {
                         <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
                         <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
                         <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
-                        {selectedUnderCarriages.length > 0 ? selectedUnderCarriages.map(uc => (
-                          <SummaryRow key={uc.id} label="Under Carriage" value={uc.name} imageUrl={uc.image_url} price={uc.price} />
-                        )) : (
+                        {selectedUnderCarriage ? (
+                          <>
+                            <SummaryRow label="Under Carriage" value={selectedUnderCarriage.name} imageUrl={selectedUnderCarriage.image_url} price={selectedUnderCarriage.price} />
+                            {selectedUnderCarriageSub && (
+                              <SummaryRow label="Under Carriage Option" value={selectedUnderCarriageSub.name} imageUrl={selectedUnderCarriageSub.image_url} price={selectedUnderCarriageSub.price} />
+                            )}
+                          </>
+                        ) : (
                           <SummaryRow label="Under Carriage" value="None" />
                         )}
                       </div>
