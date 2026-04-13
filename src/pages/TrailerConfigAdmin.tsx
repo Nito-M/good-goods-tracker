@@ -318,6 +318,7 @@ function ComponentsTab({
 
   // Root under carriage components (for parent selection)
   const rootUnderCarriages = components.filter(c => c.category === 'under_carriage' && !c.parent_component_id);
+  const rootFrontEnds = components.filter(c => c.category === 'front_end' && !c.parent_component_id);
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -328,7 +329,7 @@ function ComponentsTab({
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
       assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
-      parent_component_id: category === 'under_carriage' && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
+      parent_component_id: (category === 'under_carriage' || category === 'front_end') && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
     });
     setName('');
     setImageUrl('');
