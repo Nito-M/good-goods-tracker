@@ -352,7 +352,7 @@ function ComponentsTab({
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
       assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
-      parent_component_id: (category === 'under_carriage' || category === 'front_end') && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
+      parent_component_id: selectedStep !== '1' && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
     });
     setName('');
     setImageUrl('');
@@ -360,6 +360,7 @@ function ComponentsTab({
     setCompatibleIds([]);
     setAssemblyId('');
     setParentComponentId('');
+    setSelectedStep('1');
   };
 
   const toggleCompatible = (id: string) => {
@@ -373,6 +374,17 @@ function ComponentsTab({
     setEditCompatibleIds([...c.compatible_trailer_type_ids]);
     setEditAssemblyId((c as any).assembly_id || 'none');
     setEditParentComponentId(c.parent_component_id || 'none');
+    // Determine step from parent chain
+    if (!c.parent_component_id) {
+      setEditStep('1');
+    } else {
+      const parent = components.find(p => p.id === c.parent_component_id);
+      if (parent && !parent.parent_component_id) {
+        setEditStep('2');
+      } else {
+        setEditStep('3');
+      }
+    }
   };
 
   const saveEdit = async (id: string) => {
