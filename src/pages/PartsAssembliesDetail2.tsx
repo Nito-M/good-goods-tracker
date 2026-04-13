@@ -137,6 +137,9 @@ function AssemblyDetail2({
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setPdfSettingsOpen(true)}>
+                <Settings className="h-3 w-3 mr-1" /> PDF Settings
+              </Button>
               <Button variant="outline" size="sm" onClick={() => {
                 generatePartsAssemblyPDF({
                   name: assembly.name,
@@ -144,6 +147,7 @@ function AssemblyDetail2({
                   sellingPrice: assembly.selling_price,
                   status: assembly.status,
                   statusNotes: assembly.status_notes,
+                  visibility: getAssemblyPdfVisibility(),
                   items: items.map(i => ({ partName: i.part_name, partSku: i.part_sku, quantity: i.quantity, notes: i.notes })),
                 });
               }}>
