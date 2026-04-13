@@ -31,9 +31,13 @@ export interface PrebuiltAssembly {
   user_id: string;
   trailer_type_id: string;
   front_end_id: string | null;
+  front_end_tier2_id: string | null;
   back_end_id: string | null;
   deck_type_id: string | null;
   under_carriage_id: string | null;
+  under_carriage_tier2_id: string | null;
+  under_carriage_tier3_id: string | null;
+  under_carriage_axle_count: number | null;
   total_price: number;
   created_at: string;
   updated_at: string;
