@@ -1,29 +1,31 @@
 
 
-## Plan: Separate "Accepted" and "Convert to Sales Order" Statuses
+# Reorder Trailer Configurator: Make Step 2 "Under Carriage"
 
-### Summary
-Add a new `sales_order` status to quotes. The status dropdown will have two distinct options:
-- **Accepted** — marks the quote as accepted (does not appear on Sales Orders page)
-- **Convert to Sales Order** — sets status to `sales_order` and makes it appear on the Sales Orders page
+## Current Step Order
+1. Select Trailer Type
+2. Select Front End
+3. Select Back End
+4. Select Deck Type (Optional)
+5. Select Under Carriage (Optional)
+6. Summary
 
-### Database Changes
-- Add `'sales_order'` to the `quote_status` enum (or update the check constraint on the `quotes.status` column)
+## New Step Order
+1. Select Trailer Type
+2. **Select Under Carriage** (moved up, multi-select)
+3. Select Front End
+4. Select Back End
+5. Select Deck Type (Optional)
+6. Summary
 
-### Code Changes
+## Changes
 
-**`src/types/quote.ts`**
-- Add `'sales_order'` to the `QuoteStatus` type union
+**File: `src/pages/TrailerConfigurator.tsx`**
+- Reorder the `STEPS` array so "Under Carriage" is index 1 (after Trailer Type)
+- Move the Under Carriage selection UI block from step 4 to step 1
+- Move Front End to step 2, Back End to step 3, Deck Type to step 4
+- Update `canNext()` logic to match new step indices (under carriage is optional at step 1, front end required at step 2, back end required at step 3, deck optional at step 4)
+- Update the summary lookup trigger from `step === 5` to remain at the last step (still index 5)
 
-**`src/components/QuoteCard.tsx`**
-- In the Status dropdown, rename the current "Accepted" item to "Convert to Sales Order" and have it set status to `'sales_order'`
-- Add a new "Accepted" dropdown item that sets status to `'accepted'`
-- Add a badge style for `sales_order` status
-
-**`src/pages/SalesOrders.tsx`**
-- Change the filter from `q.status === 'accepted'` to `q.status === 'sales_order'` so only explicitly converted quotes appear there
-
-### Technical Details
-- Migration: `ALTER TYPE quote_status ADD VALUE 'sales_order';` (or equivalent depending on how the column is constrained)
-- Existing quotes with `accepted` status will remain as `accepted` and won't appear in Sales Orders unless manually changed
+No database or hook changes needed — purely a UI reorder.
 
