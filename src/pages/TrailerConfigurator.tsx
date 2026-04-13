@@ -476,6 +476,9 @@ export function TrailerConfigurator() {
                             {selectedUnderCarriageSub && (
                               <SummaryRow label="Under Carriage Option" value={selectedUnderCarriageSub.name} imageUrl={selectedUnderCarriageSub.image_url} price={selectedUnderCarriageSub.price} />
                             )}
+                            {selectedUnderCarriageTier3 && (
+                              <SummaryRow label="Under Carriage Detail" value={selectedUnderCarriageTier3.name} imageUrl={selectedUnderCarriageTier3.image_url} price={selectedUnderCarriageTier3.price} />
+                            )}
                           </>
                         ) : (
                           <SummaryRow label="Under Carriage" value="None" />
