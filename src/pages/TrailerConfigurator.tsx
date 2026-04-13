@@ -511,6 +511,7 @@ export function TrailerConfigurator() {
                         {selectedUnderCarriage ? (
                           <>
                             <SummaryRow label="Under Carriage" value={selectedUnderCarriage.name} imageUrl={selectedUnderCarriage.image_url} price={selectedUnderCarriage.price} />
+                            {axleCount && <SummaryRow label="Axles" value={`${axleCount} Axle${axleCount > 1 ? 's' : ''}`} />}
                             {selectedUnderCarriageSub && (
                               <SummaryRow label="Under Carriage Option" value={selectedUnderCarriageSub.name} imageUrl={selectedUnderCarriageSub.image_url} price={selectedUnderCarriageSub.price} />
                             )}
