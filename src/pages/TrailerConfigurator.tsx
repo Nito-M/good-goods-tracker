@@ -73,6 +73,7 @@ export function TrailerConfigurator() {
   const [underCarriageId, setUnderCarriageId] = useState<string | null>(null);
   const [underCarriageSubId, setUnderCarriageSubId] = useState<string | null>(null);
   const [underCarriageTier3Id, setUnderCarriageTier3Id] = useState<string | null>(null);
+  const [axleCount, setAxleCount] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -265,6 +266,7 @@ export function TrailerConfigurator() {
                       setUnderCarriageId(null);
                       setUnderCarriageSubId(null);
                       setUnderCarriageTier3Id(null);
+                      setAxleCount(null);
                     }}
                   />
                 </div>
@@ -292,6 +294,7 @@ export function TrailerConfigurator() {
                           setUnderCarriageId(underCarriageId === id ? null : id);
                           setUnderCarriageSubId(null);
                           setUnderCarriageTier3Id(null);
+                          setAxleCount(null);
                         }}
                         price={c.price}
                       />
@@ -303,9 +306,41 @@ export function TrailerConfigurator() {
                 </div>
               </div>
 
-              {underCarriageId && underCarriageSubs.length > 0 && (
+              {underCarriageId && (
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 2: Select Option for {selectedUnderCarriage?.name}</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 2: How many Axles?</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {[2, 3].map(num => (
+                      <Card
+                        key={num}
+                        className={cn(
+                          'cursor-pointer transition-all hover:shadow-md',
+                          axleCount === num && 'ring-2 ring-primary bg-primary/5'
+                        )}
+                        onClick={() => {
+                          setAxleCount(axleCount === num ? null : num);
+                          setUnderCarriageSubId(null);
+                          setUnderCarriageTier3Id(null);
+                        }}
+                      >
+                        <CardContent className="p-6 flex flex-col items-center gap-2">
+                          <span className="text-3xl font-bold">{num}</span>
+                          <span className="text-sm text-muted-foreground">{num} Axle{num > 1 ? 's' : ''}</span>
+                          {axleCount === num && (
+                            <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="h-4 w-4 text-primary-foreground" />
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {underCarriageId && axleCount && underCarriageSubs.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 3: Select Option for {selectedUnderCarriage?.name}</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {underCarriageSubs.map(c => (
                       <div key={c.id} className="relative">
