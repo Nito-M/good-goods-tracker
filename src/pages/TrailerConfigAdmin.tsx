@@ -305,6 +305,7 @@ function ComponentsTab({
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
   const [assemblyId, setAssemblyId] = useState('');
   const [parentComponentId, setParentComponentId] = useState('');
+  const [selectedStep, setSelectedStep] = useState('1');
   const [inventorySearch, setInventorySearch] = useState('');
   const [showInventoryPicker, setShowInventoryPicker] = useState(false);
   const { uploading } = useTrailerImageUpload();
@@ -315,7 +316,7 @@ function ComponentsTab({
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
   const [editAssemblyId, setEditAssemblyId] = useState('');
   const [editParentComponentId, setEditParentComponentId] = useState('');
-
+  const [editStep, setEditStep] = useState('1');
   // Root under carriage components (for parent selection)
   const rootUnderCarriages = components.filter(c => c.category === 'under_carriage' && !c.parent_component_id);
   const rootFrontEnds = components.filter(c => c.category === 'front_end' && !c.parent_component_id);
