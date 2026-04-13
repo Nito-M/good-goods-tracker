@@ -2,12 +2,39 @@ import jsPDF from 'jspdf';
 import { formatCurrency } from '@/lib/utils';
 import { savePdfBlob } from '@/lib/pdfSave';
 
+export interface AssemblyPdfVisibility {
+  description: boolean;
+  sellingPrice: boolean;
+  sku: boolean;
+  quantity: boolean;
+  notes: boolean;
+}
+
+export const DEFAULT_ASSEMBLY_PDF_VISIBILITY: AssemblyPdfVisibility = {
+  description: true,
+  sellingPrice: true,
+  sku: true,
+  quantity: true,
+  notes: true,
+};
+
+export const ASSEMBLY_PDF_SETTINGS_KEY = 'assembly_pdf_visibility_2';
+
+export function getAssemblyPdfVisibility(): AssemblyPdfVisibility {
+  try {
+    const stored = localStorage.getItem(ASSEMBLY_PDF_SETTINGS_KEY);
+    if (stored) return { ...DEFAULT_ASSEMBLY_PDF_VISIBILITY, ...JSON.parse(stored) };
+  } catch {}
+  return { ...DEFAULT_ASSEMBLY_PDF_VISIBILITY };
+}
+
 export interface PartsAssemblyPdfData {
   name: string;
   description: string | null;
   sellingPrice: number;
   status: string;
   statusNotes: string | null;
+  visibility?: AssemblyPdfVisibility;
   items: {
     partName: string;
     partSku: string;
