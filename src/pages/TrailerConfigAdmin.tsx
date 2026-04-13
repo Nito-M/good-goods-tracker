@@ -509,30 +509,27 @@ function ComponentsTab({
               </SelectContent>
             </Select>
           </div>
-          {category === 'under_carriage' && rootUnderCarriages.length > 0 && (
+          <div className="space-y-1">
+            <Label>Step / Tier</Label>
+            <Select value={selectedStep} onValueChange={(v) => { setSelectedStep(v); setParentComponentId(''); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Step 1 (Root)</SelectItem>
+                <SelectItem value="2">Step 2 (Sub-option)</SelectItem>
+                <SelectItem value="3">Step 3 (Detail)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {selectedStep !== '1' && possibleParents.length > 0 && (
             <div className="space-y-1">
-              <Label>Parent Under Carriage (Step 2)</Label>
+              <Label>Parent Component ({selectedStep === '2' ? 'Step 1' : 'Step 2'})</Label>
               <Select value={parentComponentId} onValueChange={setParentComponentId}>
-                <SelectTrigger><SelectValue placeholder="None (root level)" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select parent..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None (root level)</SelectItem>
-                  {rootUnderCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  <SelectItem value="none">None</SelectItem>
+                  {possibleParents.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected under carriage</p>
-            </div>
-          )}
-          {category === 'front_end' && rootFrontEnds.length > 0 && (
-            <div className="space-y-1">
-              <Label>Parent Front End (Step 2)</Label>
-              <Select value={parentComponentId} onValueChange={setParentComponentId}>
-                <SelectTrigger><SelectValue placeholder="None (root level)" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None (root level)</SelectItem>
-                  {rootFrontEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected front end</p>
             </div>
           )}
         </div>
