@@ -270,6 +270,8 @@ function AssemblyDetail2({
         </AlertDialogContent>
       </AlertDialog>
 
+      <AssemblyPdfSettingsDialog open={pdfSettingsOpen} onOpenChange={setPdfSettingsOpen} />
+
       <FullScreenPartsPicker2
         open={showPicker}
         onClose={async (cartItems) => {
