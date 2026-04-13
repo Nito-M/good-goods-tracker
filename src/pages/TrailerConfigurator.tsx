@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
-import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import jsPDF from 'jspdf';
 
 interface SelectionCardProps {
   id: string;
@@ -72,6 +74,7 @@ export function TrailerConfigurator() {
   const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupDone, setLookupDone] = useState(false);
+  const [configNotes, setConfigNotes] = useState('');
 
   const frontEnds = useMemo(() => getByCategory('front_end', trailerTypeId || undefined), [components, trailerTypeId]);
   const backEnds = useMemo(() => getByCategory('back_end', trailerTypeId || undefined), [components, trailerTypeId]);
@@ -127,6 +130,62 @@ export function TrailerConfigurator() {
       total_price: matchedAssembly?.total_price ?? totalPrice,
     });
     setSaving(false);
+  };
+
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+    const pw = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    doc.setFontSize(18);
+    doc.text('Trailer Configuration', pw / 2, y, { align: 'center' });
+    y += 12;
+
+    doc.setFontSize(11);
+    const rows: { label: string; value: string; price?: number }[] = [
+      { label: 'Trailer Type', value: selectedTrailer?.name || '—' },
+    ];
+    if (selectedUnderCarriages.length > 0) {
+      selectedUnderCarriages.forEach(uc => rows.push({ label: 'Under Carriage', value: uc.name, price: uc.price }));
+    } else {
+      rows.push({ label: 'Under Carriage', value: 'None' });
+    }
+    rows.push({ label: 'Front End', value: selectedFront?.name || '—', price: selectedFront?.price });
+    rows.push({ label: 'Back End', value: selectedBack?.name || '—', price: selectedBack?.price });
+    rows.push({ label: 'Deck Type', value: selectedDeck?.name || 'None', price: selectedDeck?.price });
+
+    rows.forEach(r => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(r.label + ':', 20, y);
+      doc.setFont('helvetica', 'normal');
+      const priceStr = r.price !== undefined && r.price > 0 ? `  ($${r.price.toFixed(2)})` : '';
+      doc.text(r.value + priceStr, 70, y);
+      y += 8;
+    });
+
+    y += 4;
+    doc.setDrawColor(200);
+    doc.line(20, y, pw - 20, y);
+    y += 8;
+
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    const finalPrice = matchedAssembly?.total_price ?? totalPrice;
+    doc.text(`Total Price: $${finalPrice.toFixed(2)}`, 20, y);
+    y += 12;
+
+    if (configNotes.trim()) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Notes:', 20, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      const lines = doc.splitTextToSize(configNotes, pw - 40);
+      doc.text(lines, 20, y);
+    }
+
+    const trailerName = selectedTrailer?.name?.replace(/\s+/g, '_') || 'config';
+    doc.save(`Trailer_Config_${trailerName}.pdf`);
   };
 
   const loading = typesLoading || compsLoading;
@@ -311,9 +370,31 @@ export function TrailerConfigurator() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
-                    {saving ? 'Saving...' : 'Save Configuration'}
-                  </Button>
+
+                  {/* Notes */}
+                  <Card>
+                    <CardContent className="p-6 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <StickyNote className="h-5 w-5 text-muted-foreground" />
+                        <span className="font-medium">Configuration Notes</span>
+                      </div>
+                      <Textarea
+                        placeholder="Add any notes about this configuration..."
+                        value={configNotes}
+                        onChange={(e) => setConfigNotes(e.target.value)}
+                        rows={3}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex gap-3">
+                    <Button onClick={handleSave} disabled={saving} className="flex-1" size="lg">
+                      {saving ? 'Saving...' : 'Save Configuration'}
+                    </Button>
+                    <Button variant="outline" size="lg" onClick={handleDownloadPdf}>
+                      <Download className="h-4 w-4 mr-2" /> Download PDF
+                    </Button>
+                  </div>
                 </>
               )}
             </div>
