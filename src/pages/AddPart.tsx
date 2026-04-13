@@ -19,6 +19,7 @@ export function AddPart() {
 
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
+  const [partPrice, setPartPrice] = useState('');
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
