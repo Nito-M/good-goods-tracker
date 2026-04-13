@@ -473,6 +473,19 @@ function ComponentsTab({
               </SelectContent>
             </Select>
           </div>
+          {category === 'under_carriage' && rootUnderCarriages.length > 0 && (
+            <div className="space-y-1">
+              <Label>Parent Under Carriage (Step 2)</Label>
+              <Select value={parentComponentId} onValueChange={setParentComponentId}>
+                <SelectTrigger><SelectValue placeholder="None (root level)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (root level)</SelectItem>
+                  {rootUnderCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected under carriage</p>
+            </div>
+          )}
         </div>
 
         {types.length > 0 && (
