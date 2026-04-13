@@ -50,10 +50,10 @@ function SelectionCard({ id, name, imageUrl, selected, onSelect, price }: Select
 
 const STEPS = [
   { key: 'trailer_type', label: 'Select Trailer Type' },
+  { key: 'under_carriage', label: 'Select Under Carriage (Optional)' },
   { key: 'front_end', label: 'Select Front End' },
   { key: 'back_end', label: 'Select Back End' },
   { key: 'deck_type', label: 'Select Deck Type (Optional)' },
-  { key: 'under_carriage', label: 'Select Under Carriage (Optional)' },
   { key: 'summary', label: 'Configuration Summary' },
 ];
 
@@ -108,10 +108,10 @@ export function TrailerConfigurator() {
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
-    if (step === 1) return !!frontEndId;
-    if (step === 2) return !!backEndId;
-    if (step === 3) return true; // deck is optional
-    if (step === 4) return true; // under carriage is optional
+    if (step === 1) return true; // under carriage is optional
+    if (step === 2) return !!frontEndId;
+    if (step === 3) return !!backEndId;
+    if (step === 4) return true; // deck is optional
     return false;
   };
 
@@ -191,8 +191,29 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 2: Front End */}
+          {/* Step 2: Under Carriage */}
           {step === 1 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {underCarriages.map(c => (
+                <div key={c.id} className="relative">
+                  <SelectionCard
+                    id={c.id}
+                    name={c.name}
+                    imageUrl={c.image_url}
+                    selected={underCarriageIds.includes(c.id)}
+                    onSelect={(id) => setUnderCarriageIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                    price={c.price}
+                  />
+                </div>
+              ))}
+              {underCarriages.length === 0 && (
+                <p className="col-span-full text-muted-foreground text-center py-12">No under carriage components available.</p>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Front End */}
+          {step === 2 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {frontEnds.map(c => (
                 <div key={c.id} className="relative">
@@ -212,8 +233,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 3: Back End */}
-          {step === 2 && (
+          {/* Step 4: Back End */}
+          {step === 3 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {backEnds.map(c => (
                 <div key={c.id} className="relative">
@@ -233,8 +254,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 4: Deck Type */}
-          {step === 3 && (
+          {/* Step 5: Deck Type */}
+          {step === 4 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {deckTypes.map(c => (
                 <div key={c.id} className="relative">
@@ -250,27 +271,6 @@ export function TrailerConfigurator() {
               ))}
               {deckTypes.length === 0 && (
                 <p className="col-span-full text-muted-foreground text-center py-12">No deck type components available.</p>
-              )}
-            </div>
-          )}
-
-          {/* Step 5: Under Carriage */}
-          {step === 4 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {underCarriages.map(c => (
-                <div key={c.id} className="relative">
-                  <SelectionCard
-                    id={c.id}
-                    name={c.name}
-                    imageUrl={c.image_url}
-                    selected={underCarriageIds.includes(c.id)}
-                    onSelect={(id) => setUnderCarriageIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
-                    price={c.price}
-                  />
-                </div>
-              ))}
-              {underCarriages.length === 0 && (
-                <p className="col-span-full text-muted-foreground text-center py-12">No under carriage components available.</p>
               )}
             </div>
           )}
