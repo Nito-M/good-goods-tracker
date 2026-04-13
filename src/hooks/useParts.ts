@@ -65,13 +65,14 @@ export function useParts() {
 
   useEffect(() => { fetchParts(); }, [fetchParts]);
 
-  const addPart = async (part: { name: string; sku: string; description?: string; imageUrl?: string; dxfUrl1?: string; dxfUrl2?: string; folderId?: string | null }) => {
+  const addPart = async (part: { name: string; sku: string; description?: string; price?: number; imageUrl?: string; dxfUrl1?: string; dxfUrl2?: string; folderId?: string | null }) => {
     if (!user) return null;
     const { data, error } = await supabase.from('parts').insert({
       user_id: user.id,
       name: part.name,
       sku: part.sku,
       description: part.description || null,
+      price: part.price ?? 0,
       image_url: part.imageUrl || null,
       dxf_url_1: part.dxfUrl1 || null,
       dxf_url_2: part.dxfUrl2 || null,

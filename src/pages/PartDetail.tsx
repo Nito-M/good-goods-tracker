@@ -163,20 +163,11 @@ export function PartDetail() {
 
   const part = parts.find(p => p.id === id);
 
-  // Auto-sync total part cost to price
+  // Calculated total cost (for reference, no longer auto-synced to price)
   const totalPartCost = materialsCost
     + (part && part.hours > 0 && part.hourlyRate > 0 ? part.hours * part.hourlyRate : 0)
     + (part && part.paintingHours > 0 && part.paintingHourlyRate > 0 ? part.paintingHours * part.paintingHourlyRate : 0)
     + manufacturingStepsCost;
-
-  useEffect(() => {
-    if (!id || !part) return;
-    const rounded = Math.round(totalPartCost * 100) / 100;
-    const currentPrice = Math.round((part.price ?? 0) * 100) / 100;
-    if (rounded !== currentPrice) {
-      updatePart(id, { price: rounded });
-    }
-  }, [totalPartCost, id, part?.price]);
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [dxfText1, setDxfText1] = useState<string | null>(null);
@@ -489,8 +480,8 @@ export function PartDetail() {
                     <Input id="edit-sku" value={editSku} onChange={e => setEditSku(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-price">Price (auto-calculated from total cost)</Label>
-                    <p className="h-10 flex items-center font-semibold text-foreground">{formatCurrency(totalPartCost)}</p>
+                    <Label htmlFor="edit-price">Price</Label>
+                    <Input id="edit-price" type="number" step="0.01" min="0" value={editPrice} onChange={e => setEditPrice(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-desc">Description</Label>
@@ -508,8 +499,8 @@ export function PartDetail() {
                     <p className="text-foreground">{part.sku || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Price <span className="text-xs">(= Total Part Cost)</span></p>
-                    <p className="text-foreground font-semibold">{totalPartCost > 0 ? formatCurrency(totalPartCost) : '—'}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Price</p>
+                    <p className="text-foreground font-semibold">{(part.price ?? 0) > 0 ? formatCurrency(part.price) : '—'}</p>
                   </div>
                   {part.description && (
                     <div>
