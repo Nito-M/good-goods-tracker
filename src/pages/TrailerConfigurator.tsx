@@ -159,6 +159,9 @@ export function TrailerConfigurator() {
       if (selectedUnderCarriageSub) {
         rows.push({ label: 'Under Carriage Option', value: selectedUnderCarriageSub.name, price: selectedUnderCarriageSub.price });
       }
+      if (selectedUnderCarriageTier3) {
+        rows.push({ label: 'Under Carriage Detail', value: selectedUnderCarriageTier3.name, price: selectedUnderCarriageTier3.price });
+      }
     } else {
       rows.push({ label: 'Under Carriage', value: 'None' });
     }
