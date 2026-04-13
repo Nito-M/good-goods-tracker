@@ -52,7 +52,7 @@ function SelectionCard({ id, name, imageUrl, selected, onSelect, price }: Select
 
 const STEPS = [
   { key: 'trailer_type', label: 'Select Trailer Type' },
-  { key: 'under_carriage', label: 'Select Under Carriage (Optional)' },
+  { key: 'under_carriage', label: 'Select Under Carriage' },
   { key: 'front_end', label: 'Select Front End' },
   { key: 'back_end', label: 'Select Back End' },
   { key: 'deck_type', label: 'Select Deck Type (Optional)' },
@@ -72,6 +72,7 @@ export function TrailerConfigurator() {
   const [deckTypeId, setDeckTypeId] = useState<string | null>(null);
   const [underCarriageId, setUnderCarriageId] = useState<string | null>(null);
   const [underCarriageSubId, setUnderCarriageSubId] = useState<string | null>(null);
+  const [underCarriageTier3Id, setUnderCarriageTier3Id] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -84,6 +85,7 @@ export function TrailerConfigurator() {
   const deckTypes = useMemo(() => getByCategory('deck_type', trailerTypeId || undefined), [components, trailerTypeId]);
   const underCarriages = useMemo(() => getByCategory('under_carriage', trailerTypeId || undefined, null), [components, trailerTypeId]);
   const underCarriageSubs = useMemo(() => underCarriageId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageId) : [], [components, trailerTypeId, underCarriageId]);
+  const underCarriageTier3s = useMemo(() => underCarriageSubId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageSubId) : [], [components, trailerTypeId, underCarriageSubId]);
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
   const selectedFront = components.find(c => c.id === frontEndId);
@@ -92,8 +94,9 @@ export function TrailerConfigurator() {
   const selectedDeck = components.find(c => c.id === deckTypeId);
   const selectedUnderCarriage = components.find(c => c.id === underCarriageId);
   const selectedUnderCarriageSub = components.find(c => c.id === underCarriageSubId);
+  const selectedUnderCarriageTier3 = components.find(c => c.id === underCarriageTier3Id);
 
-  const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0);
+  const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0) + (selectedUnderCarriageTier3?.price || 0);
   const totalPrice = (selectedFront?.price || 0) + (selectedFrontSub?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
 
   // Lookup prebuilt assembly when entering step 5
@@ -117,7 +120,7 @@ export function TrailerConfigurator() {
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
-    if (step === 1) return true; // under carriage is optional
+    if (step === 1) return !!underCarriageId; // under carriage is required
     if (step === 2) return !!frontEndId;
     if (step === 3) return !!backEndId;
     if (step === 4) return true; // deck is optional
