@@ -19,6 +19,7 @@ export function AddPart() {
 
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
+  const [partPrice, setPartPrice] = useState('');
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -58,7 +59,7 @@ export function AddPart() {
       if (path) dxfUrl2 = path;
     }
 
-    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), imageUrl, dxfUrl1, dxfUrl2, folderId });
+    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), price: parseFloat(partPrice) || 0, imageUrl, dxfUrl1, dxfUrl2, folderId });
     setSaving(false);
 
     if (id) {
@@ -93,6 +94,10 @@ export function AddPart() {
                 <Label htmlFor="sku">SKU</Label>
                 <Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU number" />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Price</Label>
+              <Input id="price" type="number" step="0.01" min="0" value={partPrice} onChange={e => setPartPrice(e.target.value)} placeholder="0.00" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
