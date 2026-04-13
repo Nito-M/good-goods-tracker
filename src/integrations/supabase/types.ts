@@ -83,6 +83,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          parent_component_id: string | null
           price: number
           updated_at: string
           user_id: string
@@ -95,6 +96,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          parent_component_id?: string | null
           price?: number
           updated_at?: string
           user_id: string
@@ -107,6 +109,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          parent_component_id?: string | null
           price?: number
           updated_at?: string
           user_id?: string
@@ -117,6 +120,13 @@ export type Database = {
             columns: ["assembly_id"]
             isOneToOne: false
             referencedRelation: "assemblies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assembly_components_parent_component_id_fkey"
+            columns: ["parent_component_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
             referencedColumns: ["id"]
           },
         ]

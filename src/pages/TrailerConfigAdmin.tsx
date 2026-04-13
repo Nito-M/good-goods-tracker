@@ -294,8 +294,8 @@ function ComponentsTab({
   inventoryItems: { id: string; name: string; imageUrl?: string | null; price: number; sku: string }[];
   getItemImageUrl: (imagePath: string | null | undefined) => Promise<string | null>;
   loading: boolean;
-  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => Promise<any>;
-  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => Promise<void>;
+  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string; parent_component_id?: string }) => Promise<any>;
+  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null; parent_component_id?: string | null }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [name, setName] = useState('');
@@ -304,6 +304,7 @@ function ComponentsTab({
   const [price, setPrice] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
   const [assemblyId, setAssemblyId] = useState('');
+  const [parentComponentId, setParentComponentId] = useState('');
   const [inventorySearch, setInventorySearch] = useState('');
   const [showInventoryPicker, setShowInventoryPicker] = useState(false);
   const { uploading } = useTrailerImageUpload();
@@ -313,6 +314,10 @@ function ComponentsTab({
   const [editPrice, setEditPrice] = useState('');
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
   const [editAssemblyId, setEditAssemblyId] = useState('');
+  const [editParentComponentId, setEditParentComponentId] = useState('');
+
+  // Root under carriage components (for parent selection)
+  const rootUnderCarriages = components.filter(c => c.category === 'under_carriage' && !c.parent_component_id);
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -323,12 +328,14 @@ function ComponentsTab({
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
       assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
+      parent_component_id: category === 'under_carriage' && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
     });
     setName('');
     setImageUrl('');
     setPrice('');
     setCompatibleIds([]);
     setAssemblyId('');
+    setParentComponentId('');
   };
 
   const toggleCompatible = (id: string) => {
@@ -341,11 +348,18 @@ function ComponentsTab({
     setEditPrice(String(c.price));
     setEditCompatibleIds([...c.compatible_trailer_type_ids]);
     setEditAssemblyId((c as any).assembly_id || 'none');
+    setEditParentComponentId(c.parent_component_id || 'none');
   };
 
   const saveEdit = async (id: string) => {
     if (!editName.trim()) return;
-    await onUpdate(id, { name: editName.trim(), price: parseFloat(editPrice) || 0, compatible_trailer_type_ids: editCompatibleIds, assembly_id: editAssemblyId && editAssemblyId !== 'none' ? editAssemblyId : null });
+    await onUpdate(id, {
+      name: editName.trim(),
+      price: parseFloat(editPrice) || 0,
+      compatible_trailer_type_ids: editCompatibleIds,
+      assembly_id: editAssemblyId && editAssemblyId !== 'none' ? editAssemblyId : null,
+      parent_component_id: editParentComponentId && editParentComponentId !== 'none' ? editParentComponentId : null,
+    });
     setEditingId(null);
   };
 
@@ -459,6 +473,19 @@ function ComponentsTab({
               </SelectContent>
             </Select>
           </div>
+          {category === 'under_carriage' && rootUnderCarriages.length > 0 && (
+            <div className="space-y-1">
+              <Label>Parent Under Carriage (Step 2)</Label>
+              <Select value={parentComponentId} onValueChange={setParentComponentId}>
+                <SelectTrigger><SelectValue placeholder="None (root level)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (root level)</SelectItem>
+                  {rootUnderCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected under carriage</p>
+            </div>
+          )}
         </div>
 
         {types.length > 0 && (
@@ -494,6 +521,7 @@ function ComponentsTab({
                 <TableHead>Price</TableHead>
                  <TableHead>Compatible With</TableHead>
                  <TableHead>Assembly</TableHead>
+                 <TableHead>Parent</TableHead>
                  <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -554,6 +582,25 @@ function ComponentsTab({
                          <Link className="h-3 w-3 text-muted-foreground" />
                          <span className="text-sm">{assemblies.find(a => a.id === (c as any).assembly_id)?.name || 'Unknown'}</span>
                        </div>
+                     ) : (
+                       <span className="text-xs text-muted-foreground">—</span>
+                     )}
+                   </TableCell>
+                   <TableCell>
+                     {c.category === 'under_carriage' ? (
+                       editingId === c.id ? (
+                         <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
+                           <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="none">None (root)</SelectItem>
+                             {rootUnderCarriages.filter(uc => uc.id !== c.id).map(uc => <SelectItem key={uc.id} value={uc.id}>{uc.name}</SelectItem>)}
+                           </SelectContent>
+                         </Select>
+                       ) : c.parent_component_id ? (
+                         <Badge variant="outline" className="text-xs">{components.find(x => x.id === c.parent_component_id)?.name || 'Unknown'}</Badge>
+                       ) : (
+                         <span className="text-xs text-muted-foreground">Root</span>
+                       )
                      ) : (
                        <span className="text-xs text-muted-foreground">—</span>
                      )}

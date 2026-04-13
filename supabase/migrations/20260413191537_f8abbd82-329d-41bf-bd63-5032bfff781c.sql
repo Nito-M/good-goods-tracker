@@ -1,0 +1,1 @@
+ALTER TABLE public.assembly_components ADD COLUMN parent_component_id uuid REFERENCES public.assembly_components(id) ON DELETE SET NULL DEFAULT NULL;
