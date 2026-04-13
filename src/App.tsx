@@ -537,6 +537,36 @@ function AppContent() {
           }
         />
         <Route
+          path="/parts/library2"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PartsLibrary2 />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/library2/new"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AddPart2 />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/library2/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PartDetail2 />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/parts/assemblies"
           element={
             <ProtectedRoute>
