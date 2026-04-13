@@ -31,6 +31,13 @@ export function PartsLanding() {
       url: '/parts/assemblies',
       stat: null,
     },
+    {
+      title: 'Parts Assemblies 2',
+      description: 'Create reusable assemblies from Parts Library 2',
+      icon: Layers,
+      url: '/parts/assemblies2',
+      stat: null,
+    },
   ];
 
   return (

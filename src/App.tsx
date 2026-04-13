@@ -42,6 +42,8 @@ import { PartsLibrary2 } from "./pages/PartsLibrary2";
 import { PartsLanding } from "./pages/PartsLanding";
 import { PartsAssemblies } from "./pages/PartsAssemblies";
 import { PartsAssembliesDetail } from "./pages/PartsAssembliesDetail";
+import { PartsAssemblies2 } from "./pages/PartsAssemblies2";
+import { PartsAssembliesDetail2 } from "./pages/PartsAssembliesDetail2";
 import { AddPart } from "./pages/AddPart";
 import { AddPart2 } from "./pages/AddPart2";
 import { PartDetail } from "./pages/PartDetail";
@@ -582,6 +584,26 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <PartsAssembliesDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/assemblies2"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PartsAssemblies2 />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parts/assemblies2/:type"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PartsAssembliesDetail2 />
               </AppLayout>
             </ProtectedRoute>
           }

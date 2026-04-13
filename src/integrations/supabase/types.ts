@@ -2104,6 +2104,45 @@ export type Database = {
         }
         Relationships: []
       }
+      parts_assemblies_2: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          selling_price: number
+          status: string
+          status_notes: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          selling_price?: number
+          status?: string
+          status_notes?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          selling_price?: number
+          status?: string
+          status_notes?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       parts_assembly_items: {
         Row: {
           assembly_id: string
@@ -2158,6 +2197,64 @@ export type Database = {
             columns: ["part_id"]
             isOneToOne: false
             referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parts_assembly_items_2: {
+        Row: {
+          assembly_id: string
+          created_at: string
+          id: string
+          inventory_item_id: string | null
+          notes: string | null
+          part_id: string | null
+          part_name: string
+          part_sku: string
+          quantity: number
+        }
+        Insert: {
+          assembly_id: string
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          notes?: string | null
+          part_id?: string | null
+          part_name: string
+          part_sku?: string
+          quantity?: number
+        }
+        Update: {
+          assembly_id?: string
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          notes?: string | null
+          part_id?: string | null
+          part_name?: string
+          part_sku?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parts_assembly_items_2_assembly_id_fkey"
+            columns: ["assembly_id"]
+            isOneToOne: false
+            referencedRelation: "parts_assemblies_2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parts_assembly_items_2_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parts_assembly_items_2_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts_2"
             referencedColumns: ["id"]
           },
         ]
