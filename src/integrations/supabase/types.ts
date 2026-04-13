@@ -1589,6 +1589,44 @@ export type Database = {
           },
         ]
       }
+      part_folders_2: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_folders_2_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "part_folders_2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       part_inventory_items: {
         Row: {
           created_at: string
@@ -1636,6 +1674,57 @@ export type Database = {
             columns: ["part_id"]
             isOneToOne: false
             referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      part_inventory_items_2: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string | null
+          item_name: string | null
+          notes: string | null
+          part_id: string
+          quantity: number
+          unit_cost: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name?: string | null
+          notes?: string | null
+          part_id: string
+          quantity?: number
+          unit_cost?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          item_name?: string | null
+          notes?: string | null
+          part_id?: string
+          quantity?: number
+          unit_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_inventory_items_2_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "part_inventory_items_2_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts_2"
             referencedColumns: ["id"]
           },
         ]
@@ -1702,6 +1791,68 @@ export type Database = {
           },
         ]
       }
+      part_manufacturing_steps_2: {
+        Row: {
+          angle: string | null
+          created_at: string
+          hole_diameter: string | null
+          id: string
+          length: string | null
+          machine: string
+          notes: string | null
+          operation_type: string
+          part_id: string
+          position_offset: string | null
+          price: number
+          quantity: number | null
+          step_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          angle?: string | null
+          created_at?: string
+          hole_diameter?: string | null
+          id?: string
+          length?: string | null
+          machine?: string
+          notes?: string | null
+          operation_type?: string
+          part_id: string
+          position_offset?: string | null
+          price?: number
+          quantity?: number | null
+          step_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          angle?: string | null
+          created_at?: string
+          hole_diameter?: string | null
+          id?: string
+          length?: string | null
+          machine?: string
+          notes?: string | null
+          operation_type?: string
+          part_id?: string
+          position_offset?: string | null
+          price?: number
+          quantity?: number | null
+          step_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_manufacturing_steps_2_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts_2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       part_step_images: {
         Row: {
           created_at: string
@@ -1733,6 +1884,41 @@ export type Database = {
             columns: ["step_id"]
             isOneToOne: false
             referencedRelation: "part_manufacturing_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      part_step_images_2: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          image_url: string
+          step_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url: string
+          step_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          image_url?: string
+          step_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_step_images_2_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "part_manufacturing_steps_2"
             referencedColumns: ["id"]
           },
         ]
@@ -1804,6 +1990,77 @@ export type Database = {
             columns: ["folder_id"]
             isOneToOne: false
             referencedRelation: "part_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parts_2: {
+        Row: {
+          created_at: string
+          description: string | null
+          dxf_label_1: string
+          dxf_label_2: string
+          dxf_url_1: string | null
+          dxf_url_2: string | null
+          folder_id: string | null
+          hourly_rate: number
+          hours: number
+          id: string
+          image_url: string | null
+          name: string
+          painting_hourly_rate: number
+          painting_hours: number
+          price: number
+          sku: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dxf_label_1?: string
+          dxf_label_2?: string
+          dxf_url_1?: string | null
+          dxf_url_2?: string | null
+          folder_id?: string | null
+          hourly_rate?: number
+          hours?: number
+          id?: string
+          image_url?: string | null
+          name: string
+          painting_hourly_rate?: number
+          painting_hours?: number
+          price?: number
+          sku?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dxf_label_1?: string
+          dxf_label_2?: string
+          dxf_url_1?: string | null
+          dxf_url_2?: string | null
+          folder_id?: string | null
+          hourly_rate?: number
+          hours?: number
+          id?: string
+          image_url?: string | null
+          name?: string
+          painting_hourly_rate?: number
+          painting_hours?: number
+          price?: number
+          sku?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parts_2_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "part_folders_2"
             referencedColumns: ["id"]
           },
         ]

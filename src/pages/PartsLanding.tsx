@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { Puzzle, BookOpen, Layers, ChevronRight } from 'lucide-react';
+import { Puzzle, BookOpen, Layers, ChevronRight, BookOpenCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useParts } from '@/hooks/useParts';
+import { useParts2 } from '@/hooks/useParts2';
 
 export function PartsLanding() {
   const navigate = useNavigate();
   const { parts } = useParts();
+  const { parts: parts2 } = useParts2();
 
   const sections = [
     {
@@ -14,6 +16,13 @@ export function PartsLanding() {
       icon: BookOpen,
       url: '/parts/library',
       stat: `${parts.length} part${parts.length !== 1 ? 's' : ''}`,
+    },
+    {
+      title: 'Parts Library 2',
+      description: 'A second independent parts library for additional part management',
+      icon: BookOpenCheck,
+      url: '/parts/library2',
+      stat: `${parts2.length} part${parts2.length !== 1 ? 's' : ''}`,
     },
     {
       title: 'Parts Assemblies',
