@@ -426,8 +426,16 @@ export function TrailerConfigurator() {
                   <Card>
                     <CardContent className="p-6 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
-                        <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
+                        {selectedFront ? (
+                          <>
+                            <SummaryRow label="Front End" value={selectedFront.name} imageUrl={selectedFront.image_url} price={selectedFront.price} />
+                            {selectedFrontSub && (
+                              <SummaryRow label="Front End Option" value={selectedFrontSub.name} imageUrl={selectedFrontSub.image_url} price={selectedFrontSub.price} />
+                            )}
+                          </>
+                        ) : (
+                          <SummaryRow label="Front End" value="—" />
+                        )}
                         <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
                         <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
                         {selectedUnderCarriage ? (
