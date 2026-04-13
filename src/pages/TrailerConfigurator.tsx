@@ -52,7 +52,7 @@ function SelectionCard({ id, name, imageUrl, selected, onSelect, price }: Select
 
 const STEPS = [
   { key: 'trailer_type', label: 'Select Trailer Type' },
-  { key: 'under_carriage', label: 'Select Under Carriage (Optional)' },
+  { key: 'under_carriage', label: 'Select Under Carriage' },
   { key: 'front_end', label: 'Select Front End' },
   { key: 'back_end', label: 'Select Back End' },
   { key: 'deck_type', label: 'Select Deck Type (Optional)' },
@@ -72,6 +72,7 @@ export function TrailerConfigurator() {
   const [deckTypeId, setDeckTypeId] = useState<string | null>(null);
   const [underCarriageId, setUnderCarriageId] = useState<string | null>(null);
   const [underCarriageSubId, setUnderCarriageSubId] = useState<string | null>(null);
+  const [underCarriageTier3Id, setUnderCarriageTier3Id] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [matchedAssembly, setMatchedAssembly] = useState<PrebuiltAssembly | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -84,6 +85,7 @@ export function TrailerConfigurator() {
   const deckTypes = useMemo(() => getByCategory('deck_type', trailerTypeId || undefined), [components, trailerTypeId]);
   const underCarriages = useMemo(() => getByCategory('under_carriage', trailerTypeId || undefined, null), [components, trailerTypeId]);
   const underCarriageSubs = useMemo(() => underCarriageId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageId) : [], [components, trailerTypeId, underCarriageId]);
+  const underCarriageTier3s = useMemo(() => underCarriageSubId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageSubId) : [], [components, trailerTypeId, underCarriageSubId]);
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
   const selectedFront = components.find(c => c.id === frontEndId);
@@ -92,8 +94,9 @@ export function TrailerConfigurator() {
   const selectedDeck = components.find(c => c.id === deckTypeId);
   const selectedUnderCarriage = components.find(c => c.id === underCarriageId);
   const selectedUnderCarriageSub = components.find(c => c.id === underCarriageSubId);
+  const selectedUnderCarriageTier3 = components.find(c => c.id === underCarriageTier3Id);
 
-  const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0);
+  const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0) + (selectedUnderCarriageTier3?.price || 0);
   const totalPrice = (selectedFront?.price || 0) + (selectedFrontSub?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
 
   // Lookup prebuilt assembly when entering step 5
@@ -117,7 +120,7 @@ export function TrailerConfigurator() {
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
-    if (step === 1) return true; // under carriage is optional
+    if (step === 1) return !!underCarriageId; // under carriage is required
     if (step === 2) return !!frontEndId;
     if (step === 3) return !!backEndId;
     if (step === 4) return true; // deck is optional
@@ -155,6 +158,9 @@ export function TrailerConfigurator() {
       rows.push({ label: 'Under Carriage', value: selectedUnderCarriage.name, price: selectedUnderCarriage.price });
       if (selectedUnderCarriageSub) {
         rows.push({ label: 'Under Carriage Option', value: selectedUnderCarriageSub.name, price: selectedUnderCarriageSub.price });
+      }
+      if (selectedUnderCarriageTier3) {
+        rows.push({ label: 'Under Carriage Detail', value: selectedUnderCarriageTier3.name, price: selectedUnderCarriageTier3.price });
       }
     } else {
       rows.push({ label: 'Under Carriage', value: 'None' });
@@ -258,6 +264,7 @@ export function TrailerConfigurator() {
                       setDeckTypeId(null);
                       setUnderCarriageId(null);
                       setUnderCarriageSubId(null);
+                      setUnderCarriageTier3Id(null);
                     }}
                   />
                 </div>
@@ -284,6 +291,7 @@ export function TrailerConfigurator() {
                         onSelect={(id) => {
                           setUnderCarriageId(underCarriageId === id ? null : id);
                           setUnderCarriageSubId(null);
+                          setUnderCarriageTier3Id(null);
                         }}
                         price={c.price}
                       />
@@ -306,7 +314,30 @@ export function TrailerConfigurator() {
                           name={c.name}
                           imageUrl={c.image_url}
                           selected={underCarriageSubId === c.id}
-                          onSelect={(id) => setUnderCarriageSubId(underCarriageSubId === id ? null : id)}
+                        onSelect={(id) => {
+                          setUnderCarriageSubId(underCarriageSubId === id ? null : id);
+                          setUnderCarriageTier3Id(null);
+                        }}
+                          price={c.price}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {underCarriageSubId && underCarriageTier3s.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 3: Select Option for {selectedUnderCarriageSub?.name}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {underCarriageTier3s.map(c => (
+                      <div key={c.id} className="relative">
+                        <SelectionCard
+                          id={c.id}
+                          name={c.name}
+                          imageUrl={c.image_url}
+                          selected={underCarriageTier3Id === c.id}
+                          onSelect={(id) => setUnderCarriageTier3Id(underCarriageTier3Id === id ? null : id)}
                           price={c.price}
                         />
                       </div>
@@ -444,6 +475,9 @@ export function TrailerConfigurator() {
                             <SummaryRow label="Under Carriage" value={selectedUnderCarriage.name} imageUrl={selectedUnderCarriage.image_url} price={selectedUnderCarriage.price} />
                             {selectedUnderCarriageSub && (
                               <SummaryRow label="Under Carriage Option" value={selectedUnderCarriageSub.name} imageUrl={selectedUnderCarriageSub.image_url} price={selectedUnderCarriageSub.price} />
+                            )}
+                            {selectedUnderCarriageTier3 && (
+                              <SummaryRow label="Under Carriage Detail" value={selectedUnderCarriageTier3.name} imageUrl={selectedUnderCarriageTier3.image_url} price={selectedUnderCarriageTier3.price} />
                             )}
                           </>
                         ) : (
