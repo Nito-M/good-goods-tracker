@@ -21,6 +21,7 @@ export interface AssemblyComponent {
   price: number;
   compatible_trailer_type_ids: string[];
   assembly_id: string | null;
+  parent_component_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -105,7 +106,7 @@ export function useAssemblyComponents() {
 
   useEffect(() => { fetchComponents(); }, [user]);
 
-  const create = async (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => {
+  const create = async (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string; parent_component_id?: string }) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('assembly_components')
@@ -117,6 +118,7 @@ export function useAssemblyComponents() {
         price: comp.price ?? 0,
         compatible_trailer_type_ids: comp.compatible_trailer_type_ids || [],
         assembly_id: comp.assembly_id || null,
+        parent_component_id: comp.parent_component_id || null,
       } as any)
       .select()
       .single();
@@ -125,7 +127,7 @@ export function useAssemblyComponents() {
     return data as AssemblyComponent;
   };
 
-  const update = async (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => {
+  const update = async (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null; parent_component_id?: string | null }) => {
     const { error } = await supabase.from('assembly_components').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchComponents();
@@ -137,9 +139,14 @@ export function useAssemblyComponents() {
     else await fetchComponents();
   };
 
-  const getByCategory = (category: string, trailerTypeId?: string) => {
+  const getByCategory = (category: string, trailerTypeId?: string, parentId?: string | null) => {
     return components.filter(c => {
       if (c.category !== category) return false;
+      // Filter by parent: undefined = no filter, null = root only, string = specific parent
+      if (parentId !== undefined) {
+        if (parentId === null && c.parent_component_id !== null) return false;
+        if (parentId !== null && c.parent_component_id !== parentId) return false;
+      }
       if (trailerTypeId && c.compatible_trailer_type_ids.length > 0) {
         return c.compatible_trailer_type_ids.includes(trailerTypeId);
       }
