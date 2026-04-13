@@ -707,56 +707,116 @@ function PrebuiltTab({
   const { toast } = useToast();
   const [trailerTypeId, setTrailerTypeId] = useState('');
   const [frontEndId, setFrontEndId] = useState('');
+  const [frontEndTier2Id, setFrontEndTier2Id] = useState('');
   const [backEndId, setBackEndId] = useState('');
   const [deckTypeId, setDeckTypeId] = useState('');
   const [underCarriageId, setUnderCarriageId] = useState('');
+  const [underCarriageTier2Id, setUnderCarriageTier2Id] = useState('');
+  const [underCarriageTier3Id, setUnderCarriageTier3Id] = useState('');
+  const [underCarriageAxleCount, setUnderCarriageAxleCount] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFrontEndId, setEditFrontEndId] = useState('');
+  const [editFrontEndTier2Id, setEditFrontEndTier2Id] = useState('');
   const [editBackEndId, setEditBackEndId] = useState('');
   const [editDeckTypeId, setEditDeckTypeId] = useState('');
   const [editUnderCarriageId, setEditUnderCarriageId] = useState('');
+  const [editUnderCarriageTier2Id, setEditUnderCarriageTier2Id] = useState('');
+  const [editUnderCarriageTier3Id, setEditUnderCarriageTier3Id] = useState('');
+  const [editUnderCarriageAxleCount, setEditUnderCarriageAxleCount] = useState('');
   const [editTotalPrice, setEditTotalPrice] = useState('');
 
-  const frontEnds = components.filter(c => c.category === 'front_end');
+  // Helper to get components by category and tier
+  const getByStep = (cat: string, step: number) => {
+    if (step === 1) return components.filter(c => c.category === cat && !c.parent_component_id);
+    if (step === 2) {
+      const roots = components.filter(c => c.category === cat && !c.parent_component_id);
+      return components.filter(c => c.category === cat && c.parent_component_id && roots.some(r => r.id === c.parent_component_id));
+    }
+    if (step === 3) {
+      const roots = components.filter(c => c.category === cat && !c.parent_component_id);
+      const tier2 = components.filter(c => c.category === cat && c.parent_component_id && roots.some(r => r.id === c.parent_component_id));
+      return components.filter(c => c.category === cat && c.parent_component_id && tier2.some(t => t.id === c.parent_component_id));
+    }
+    return [];
+  };
+
+  const frontEndStep1 = getByStep('front_end', 1);
+  const frontEndStep2 = useMemo(() => {
+    const id = frontEndId && frontEndId !== 'none' ? frontEndId : null;
+    return id ? getByStep('front_end', 2).filter(c => c.parent_component_id === id) : [];
+  }, [components, frontEndId]);
+
+  const ucStep1 = getByStep('under_carriage', 1);
+  const ucStep2 = useMemo(() => {
+    const id = underCarriageId && underCarriageId !== 'none' ? underCarriageId : null;
+    return id ? getByStep('under_carriage', 2).filter(c => c.parent_component_id === id) : [];
+  }, [components, underCarriageId]);
+  const ucStep3 = useMemo(() => {
+    const id = underCarriageTier2Id && underCarriageTier2Id !== 'none' ? underCarriageTier2Id : null;
+    return id ? getByStep('under_carriage', 3).filter(c => c.parent_component_id === id) : [];
+  }, [components, underCarriageTier2Id]);
+
+  // Edit versions
+  const editFrontEndStep2 = useMemo(() => {
+    const id = editFrontEndId && editFrontEndId !== 'none' ? editFrontEndId : null;
+    return id ? getByStep('front_end', 2).filter(c => c.parent_component_id === id) : [];
+  }, [components, editFrontEndId]);
+
+  const editUcStep2 = useMemo(() => {
+    const id = editUnderCarriageId && editUnderCarriageId !== 'none' ? editUnderCarriageId : null;
+    return id ? getByStep('under_carriage', 2).filter(c => c.parent_component_id === id) : [];
+  }, [components, editUnderCarriageId]);
+  const editUcStep3 = useMemo(() => {
+    const id = editUnderCarriageTier2Id && editUnderCarriageTier2Id !== 'none' ? editUnderCarriageTier2Id : null;
+    return id ? getByStep('under_carriage', 3).filter(c => c.parent_component_id === id) : [];
+  }, [components, editUnderCarriageTier2Id]);
+
   const backEnds = components.filter(c => c.category === 'back_end');
   const deckTypes = components.filter(c => c.category === 'deck_type');
-  const underCarriages = components.filter(c => c.category === 'under_carriage');
 
   const handleAdd = async () => {
     if (!trailerTypeId) { toast({ title: 'Required', description: 'Select a trailer type.', variant: 'destructive' }); return; }
     await onSave({
       trailer_type_id: trailerTypeId,
       front_end_id: frontEndId && frontEndId !== 'none' ? frontEndId : null,
+      front_end_tier2_id: frontEndTier2Id && frontEndTier2Id !== 'none' ? frontEndTier2Id : null,
       back_end_id: backEndId && backEndId !== 'none' ? backEndId : null,
       deck_type_id: deckTypeId && deckTypeId !== 'none' ? deckTypeId : null,
       under_carriage_id: underCarriageId && underCarriageId !== 'none' ? underCarriageId : null,
+      under_carriage_tier2_id: underCarriageTier2Id && underCarriageTier2Id !== 'none' ? underCarriageTier2Id : null,
+      under_carriage_tier3_id: underCarriageTier3Id && underCarriageTier3Id !== 'none' ? underCarriageTier3Id : null,
+      under_carriage_axle_count: underCarriageAxleCount ? parseInt(underCarriageAxleCount) : null,
       total_price: parseFloat(totalPrice) || 0,
     });
-    setTrailerTypeId('');
-    setFrontEndId('');
-    setBackEndId('');
-    setDeckTypeId('');
-    setUnderCarriageId('');
-    setTotalPrice('');
+    setTrailerTypeId(''); setFrontEndId(''); setFrontEndTier2Id(''); setBackEndId(''); setDeckTypeId('');
+    setUnderCarriageId(''); setUnderCarriageTier2Id(''); setUnderCarriageTier3Id(''); setUnderCarriageAxleCount(''); setTotalPrice('');
   };
 
   const startEdit = (a: typeof assemblies[0]) => {
     setEditingId(a.id);
     setEditFrontEndId(a.front_end_id || 'none');
+    setEditFrontEndTier2Id((a as any).front_end_tier2_id || 'none');
     setEditBackEndId(a.back_end_id || 'none');
     setEditDeckTypeId(a.deck_type_id || 'none');
     setEditUnderCarriageId((a as any).under_carriage_id || 'none');
+    setEditUnderCarriageTier2Id((a as any).under_carriage_tier2_id || 'none');
+    setEditUnderCarriageTier3Id((a as any).under_carriage_tier3_id || 'none');
+    setEditUnderCarriageAxleCount(String((a as any).under_carriage_axle_count || ''));
     setEditTotalPrice(String(a.total_price));
   };
 
   const saveEdit = async (id: string) => {
     await onUpdate(id, {
       front_end_id: editFrontEndId && editFrontEndId !== 'none' ? editFrontEndId : null,
+      front_end_tier2_id: editFrontEndTier2Id && editFrontEndTier2Id !== 'none' ? editFrontEndTier2Id : null,
       back_end_id: editBackEndId && editBackEndId !== 'none' ? editBackEndId : null,
       deck_type_id: editDeckTypeId && editDeckTypeId !== 'none' ? editDeckTypeId : null,
       under_carriage_id: editUnderCarriageId && editUnderCarriageId !== 'none' ? editUnderCarriageId : null,
+      under_carriage_tier2_id: editUnderCarriageTier2Id && editUnderCarriageTier2Id !== 'none' ? editUnderCarriageTier2Id : null,
+      under_carriage_tier3_id: editUnderCarriageTier3Id && editUnderCarriageTier3Id !== 'none' ? editUnderCarriageTier3Id : null,
+      under_carriage_axle_count: editUnderCarriageAxleCount ? parseInt(editUnderCarriageAxleCount) : null,
       total_price: parseFloat(editTotalPrice) || 0,
     });
     setEditingId(null);
@@ -781,16 +841,32 @@ function PrebuiltTab({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Front End Tier 1 */}
           <div className="space-y-1">
-            <Label>Front End</Label>
-            <Select value={frontEndId} onValueChange={setFrontEndId}>
+            <Label>Front End (Step 1)</Label>
+            <Select value={frontEndId} onValueChange={v => { setFrontEndId(v); setFrontEndTier2Id(''); }}>
               <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                {frontEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                {frontEndStep1.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+          {/* Front End Tier 2 */}
+          {frontEndStep2.length > 0 && (
+            <div className="space-y-1">
+              <Label>Front End (Step 2)</Label>
+              <Select value={frontEndTier2Id} onValueChange={setFrontEndTier2Id}>
+                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {frontEndStep2.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-1">
             <Label>Back End</Label>
             <Select value={backEndId} onValueChange={setBackEndId}>
@@ -811,16 +887,58 @@ function PrebuiltTab({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Under Carriage Tier 1 */}
           <div className="space-y-1">
-            <Label>Under Carriage</Label>
-            <Select value={underCarriageId} onValueChange={setUnderCarriageId}>
+            <Label>Under Carriage (Step 1)</Label>
+            <Select value={underCarriageId} onValueChange={v => { setUnderCarriageId(v); setUnderCarriageTier2Id(''); setUnderCarriageTier3Id(''); setUnderCarriageAxleCount(''); }}>
               <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                {underCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                {ucStep1.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+          {/* Axle Count */}
+          {underCarriageId && underCarriageId !== 'none' && (
+            <div className="space-y-1">
+              <Label>Axle Count</Label>
+              <Select value={underCarriageAxleCount} onValueChange={setUnderCarriageAxleCount}>
+                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">2 Axles</SelectItem>
+                  <SelectItem value="3">3 Axles</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {/* Under Carriage Tier 2 */}
+          {ucStep2.length > 0 && (
+            <div className="space-y-1">
+              <Label>Under Carriage (Step 2)</Label>
+              <Select value={underCarriageTier2Id} onValueChange={v => { setUnderCarriageTier2Id(v); setUnderCarriageTier3Id(''); }}>
+                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {ucStep2.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {/* Under Carriage Tier 3 */}
+          {ucStep3.length > 0 && (
+            <div className="space-y-1">
+              <Label>Under Carriage (Step 3)</Label>
+              <Select value={underCarriageTier3Id} onValueChange={setUnderCarriageTier3Id}>
+                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {ucStep3.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-1">
             <Label>Total Price</Label>
             <Input type="number" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} placeholder="0.00" />
@@ -835,92 +953,101 @@ function PrebuiltTab({
         ) : assemblies.length === 0 ? (
           <p className="text-muted-foreground text-sm text-center py-6">No prebuilt assemblies yet.</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Trailer Type</TableHead>
-                <TableHead>Front End</TableHead>
-                <TableHead>Back End</TableHead>
-                <TableHead>Deck Type</TableHead>
-                <TableHead>Under Carriage</TableHead>
-                <TableHead>Total Price</TableHead>
-                <TableHead className="w-24" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {assemblies.map(a => (
-                <TableRow key={a.id}>
-                  <TableCell className="font-medium">{getName(a.trailer_type_id, types)}</TableCell>
-                  <TableCell>
-                    {editingId === a.id ? (
-                      <Select value={editFrontEndId} onValueChange={setEditFrontEndId}>
-                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {frontEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : getName(a.front_end_id, components)}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === a.id ? (
-                      <Select value={editBackEndId} onValueChange={setEditBackEndId}>
-                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {backEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : getName(a.back_end_id, components)}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === a.id ? (
-                      <Select value={editDeckTypeId} onValueChange={setEditDeckTypeId}>
-                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {deckTypes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : getName(a.deck_type_id, components)}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === a.id ? (
-                      <Select value={editUnderCarriageId} onValueChange={setEditUnderCarriageId}>
-                        <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {underCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : getName((a as any).under_carriage_id, components)}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === a.id ? (
-                      <Input type="number" value={editTotalPrice} onChange={e => setEditTotalPrice(e.target.value)} className="h-8 w-24" />
-                    ) : (
-                      <span>${Number(a.total_price).toFixed(2)}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      {editingId === a.id ? (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={() => saveEdit(a.id)}><Check className="h-4 w-4 text-green-600" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={() => startEdit(a)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => onRemove(a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Trailer Type</TableHead>
+                  <TableHead>Front End</TableHead>
+                  <TableHead>FE Tier 2</TableHead>
+                  <TableHead>Back End</TableHead>
+                  <TableHead>Deck Type</TableHead>
+                  <TableHead>Under Carriage</TableHead>
+                  <TableHead>Axles</TableHead>
+                  <TableHead>UC Tier 2</TableHead>
+                  <TableHead>UC Tier 3</TableHead>
+                  <TableHead>Total Price</TableHead>
+                  <TableHead className="w-24" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {assemblies.map(a => {
+                  const aAny = a as any;
+                  return (
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium">{getName(a.trailer_type_id, types)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editFrontEndId} onValueChange={v => { setEditFrontEndId(v); setEditFrontEndTier2Id('none'); }}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{frontEndStep1.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : getName(a.front_end_id, components)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editFrontEndTier2Id} onValueChange={setEditFrontEndTier2Id}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{editFrontEndStep2.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : getName(aAny.front_end_tier2_id, components)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editBackEndId} onValueChange={setEditBackEndId}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{backEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : getName(a.back_end_id, components)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editDeckTypeId} onValueChange={setEditDeckTypeId}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{deckTypes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : getName(a.deck_type_id, components)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editUnderCarriageId} onValueChange={v => { setEditUnderCarriageId(v); setEditUnderCarriageTier2Id('none'); setEditUnderCarriageTier3Id('none'); setEditUnderCarriageAxleCount(''); }}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{ucStep1.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : getName(aAny.under_carriage_id, components)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editUnderCarriageAxleCount} onValueChange={setEditUnderCarriageAxleCount}>
+                          <SelectTrigger className="h-8 w-20"><SelectValue placeholder="—" /></SelectTrigger>
+                          <SelectContent><SelectItem value="2">2</SelectItem><SelectItem value="3">3</SelectItem></SelectContent>
+                        </Select>
+                      ) : (aAny.under_carriage_axle_count || '—')}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editUnderCarriageTier2Id} onValueChange={v => { setEditUnderCarriageTier2Id(v); setEditUnderCarriageTier3Id('none'); }}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{editUcStep2.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : getName(aAny.under_carriage_tier2_id, components)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editUnderCarriageTier3Id} onValueChange={setEditUnderCarriageTier3Id}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{editUcStep3.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : getName(aAny.under_carriage_tier3_id, components)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Input type="number" value={editTotalPrice} onChange={e => setEditTotalPrice(e.target.value)} className="h-8 w-24" />
+                      ) : <span>${Number(a.total_price).toFixed(2)}</span>}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {editingId === a.id ? (
+                            <>
+                              <Button variant="ghost" size="icon" onClick={() => saveEdit(a.id)}><Check className="h-4 w-4 text-green-600" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button variant="ghost" size="icon" onClick={() => startEdit(a)}><Pencil className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => onRemove(a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>

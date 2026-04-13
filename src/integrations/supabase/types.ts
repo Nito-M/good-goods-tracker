@@ -2060,10 +2060,14 @@ export type Database = {
           created_at: string
           deck_type_id: string | null
           front_end_id: string | null
+          front_end_tier2_id: string | null
           id: string
           total_price: number
           trailer_type_id: string
+          under_carriage_axle_count: number | null
           under_carriage_id: string | null
+          under_carriage_tier2_id: string | null
+          under_carriage_tier3_id: string | null
           updated_at: string
           user_id: string
         }
@@ -2072,10 +2076,14 @@ export type Database = {
           created_at?: string
           deck_type_id?: string | null
           front_end_id?: string | null
+          front_end_tier2_id?: string | null
           id?: string
           total_price?: number
           trailer_type_id: string
+          under_carriage_axle_count?: number | null
           under_carriage_id?: string | null
+          under_carriage_tier2_id?: string | null
+          under_carriage_tier3_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2084,10 +2092,14 @@ export type Database = {
           created_at?: string
           deck_type_id?: string | null
           front_end_id?: string | null
+          front_end_tier2_id?: string | null
           id?: string
           total_price?: number
           trailer_type_id?: string
+          under_carriage_axle_count?: number | null
           under_carriage_id?: string | null
+          under_carriage_tier2_id?: string | null
+          under_carriage_tier3_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2114,6 +2126,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "prebuilt_assemblies_front_end_tier2_id_fkey"
+            columns: ["front_end_tier2_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "prebuilt_assemblies_trailer_type_id_fkey"
             columns: ["trailer_type_id"]
             isOneToOne: false
@@ -2123,6 +2142,20 @@ export type Database = {
           {
             foreignKeyName: "prebuilt_assemblies_under_carriage_id_fkey"
             columns: ["under_carriage_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_under_carriage_tier2_id_fkey"
+            columns: ["under_carriage_tier2_id"]
+            isOneToOne: false
+            referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_under_carriage_tier3_id_fkey"
+            columns: ["under_carriage_tier3_id"]
             isOneToOne: false
             referencedRelation: "assembly_components"
             referencedColumns: ["id"]
