@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package } from 'lucide-react';
+import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package, Settings } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { usePartsAssemblies2, usePartsAssemblyItems2, PartsAssembly2, PartsAssemblyItem2 } from '@/hooks/usePartsAssemblies2';
 import { useParts2 } from '@/hooks/useParts2';
@@ -7,7 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { FullScreenPartsPicker2 } from '@/components/FullScreenPartsPicker2';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
-import { generatePartsAssemblyPDF } from '@/lib/partsAssemblyPdfGenerator';
+import { generatePartsAssemblyPDF, getAssemblyPdfVisibility } from '@/lib/partsAssemblyPdfGenerator';
+import { AssemblyPdfSettingsDialog } from '@/components/AssemblyPdfSettingsDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,7 +47,7 @@ function AssemblyDetail2({
   const [editingStatusNotes, setEditingStatusNotes] = useState(false);
   const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
   const [savingStatus, setSavingStatus] = useState(false);
-
+  const [pdfSettingsOpen, setPdfSettingsOpen] = useState(false);
   const isFinished = assembly.status === 'finished';
 
   const getItemCost = (item: PartsAssemblyItem2): number => {
@@ -136,6 +137,9 @@ function AssemblyDetail2({
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setPdfSettingsOpen(true)}>
+                <Settings className="h-3 w-3 mr-1" /> PDF Settings
+              </Button>
               <Button variant="outline" size="sm" onClick={() => {
                 generatePartsAssemblyPDF({
                   name: assembly.name,
@@ -143,6 +147,7 @@ function AssemblyDetail2({
                   sellingPrice: assembly.selling_price,
                   status: assembly.status,
                   statusNotes: assembly.status_notes,
+                  visibility: getAssemblyPdfVisibility(),
                   items: items.map(i => ({ partName: i.part_name, partSku: i.part_sku, quantity: i.quantity, notes: i.notes })),
                 });
               }}>
@@ -264,6 +269,8 @@ function AssemblyDetail2({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AssemblyPdfSettingsDialog open={pdfSettingsOpen} onOpenChange={setPdfSettingsOpen} />
 
       <FullScreenPartsPicker2
         open={showPicker}
