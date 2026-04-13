@@ -567,6 +567,7 @@ function ComponentsTab({
                 <TableHead>Price</TableHead>
                  <TableHead>Compatible With</TableHead>
                  <TableHead>Assembly</TableHead>
+                 <TableHead>Step</TableHead>
                  <TableHead>Parent</TableHead>
                  <TableHead className="w-24" />
               </TableRow>
@@ -633,20 +634,35 @@ function ComponentsTab({
                      )}
                    </TableCell>
                    <TableCell>
-                     {(c.category === 'under_carriage' || c.category === 'front_end') ? (
-                       editingId === c.id ? (
-                         <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
-                           <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
-                           <SelectContent>
-                             <SelectItem value="none">None (root)</SelectItem>
-                             {(c.category === 'under_carriage' ? rootUnderCarriages : rootFrontEnds).filter(p => p.id !== c.id).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                           </SelectContent>
-                         </Select>
-                       ) : c.parent_component_id ? (
-                         <Badge variant="outline" className="text-xs">{components.find(x => x.id === c.parent_component_id)?.name || 'Unknown'}</Badge>
-                       ) : (
-                         <span className="text-xs text-muted-foreground">Root</span>
-                       )
+                     {editingId === c.id ? (
+                       <Select value={editStep} onValueChange={(v) => { setEditStep(v); setEditParentComponentId('none'); }}>
+                         <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="1">1</SelectItem>
+                           <SelectItem value="2">2</SelectItem>
+                           <SelectItem value="3">3</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     ) : (
+                       <Badge variant="outline" className="text-xs">
+                         {!c.parent_component_id ? 'Step 1' : (() => {
+                           const parent = components.find(p => p.id === c.parent_component_id);
+                           return parent && !parent.parent_component_id ? 'Step 2' : 'Step 3';
+                         })()}
+                       </Badge>
+                     )}
+                   </TableCell>
+                   <TableCell>
+                     {editingId === c.id && editStep !== '1' ? (
+                       <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
+                         <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="none">None</SelectItem>
+                           {editPossibleParents.filter(p => p.id !== c.id).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                         </SelectContent>
+                       </Select>
+                     ) : c.parent_component_id ? (
+                       <Badge variant="outline" className="text-xs">{components.find(x => x.id === c.parent_component_id)?.name || 'Unknown'}</Badge>
                      ) : (
                        <span className="text-xs text-muted-foreground">—</span>
                      )}
