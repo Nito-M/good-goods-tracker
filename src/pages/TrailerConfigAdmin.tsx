@@ -294,8 +294,8 @@ function ComponentsTab({
   inventoryItems: { id: string; name: string; imageUrl?: string | null; price: number; sku: string }[];
   getItemImageUrl: (imagePath: string | null | undefined) => Promise<string | null>;
   loading: boolean;
-  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string }) => Promise<any>;
-  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null }) => Promise<void>;
+  onCreate: (comp: { name: string; category: string; image_url?: string; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string; parent_component_id?: string }) => Promise<any>;
+  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null; parent_component_id?: string | null }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [name, setName] = useState('');
@@ -304,6 +304,7 @@ function ComponentsTab({
   const [price, setPrice] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
   const [assemblyId, setAssemblyId] = useState('');
+  const [parentComponentId, setParentComponentId] = useState('');
   const [inventorySearch, setInventorySearch] = useState('');
   const [showInventoryPicker, setShowInventoryPicker] = useState(false);
   const { uploading } = useTrailerImageUpload();
@@ -313,6 +314,10 @@ function ComponentsTab({
   const [editPrice, setEditPrice] = useState('');
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
   const [editAssemblyId, setEditAssemblyId] = useState('');
+  const [editParentComponentId, setEditParentComponentId] = useState('');
+
+  // Root under carriage components (for parent selection)
+  const rootUnderCarriages = components.filter(c => c.category === 'under_carriage' && !c.parent_component_id);
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -323,12 +328,14 @@ function ComponentsTab({
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
       assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
+      parent_component_id: category === 'under_carriage' && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
     });
     setName('');
     setImageUrl('');
     setPrice('');
     setCompatibleIds([]);
     setAssemblyId('');
+    setParentComponentId('');
   };
 
   const toggleCompatible = (id: string) => {
