@@ -319,21 +319,49 @@ export function TrailerConfigurator() {
 
           {/* Step 3: Front End */}
           {step === 2 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {frontEnds.map(c => (
-                <div key={c.id} className="relative">
-                  <SelectionCard
-                    id={c.id}
-                    name={c.name}
-                    imageUrl={c.image_url}
-                    selected={frontEndId === c.id}
-                    onSelect={setFrontEndId}
-                    price={c.price}
-                  />
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 1: Select Front End Type</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {frontEnds.map(c => (
+                    <div key={c.id} className="relative">
+                      <SelectionCard
+                        id={c.id}
+                        name={c.name}
+                        imageUrl={c.image_url}
+                        selected={frontEndId === c.id}
+                        onSelect={(id) => {
+                          setFrontEndId(frontEndId === id ? null : id);
+                          setFrontEndSubId(null);
+                        }}
+                        price={c.price}
+                      />
+                    </div>
+                  ))}
+                  {frontEnds.length === 0 && (
+                    <p className="col-span-full text-muted-foreground text-center py-12">No front end components available.</p>
+                  )}
                 </div>
-              ))}
-              {frontEnds.length === 0 && (
-                <p className="col-span-full text-muted-foreground text-center py-12">No front end components available.</p>
+              </div>
+
+              {frontEndId && frontEndSubs.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 2: Select Option for {selectedFront?.name}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {frontEndSubs.map(c => (
+                      <div key={c.id} className="relative">
+                        <SelectionCard
+                          id={c.id}
+                          name={c.name}
+                          imageUrl={c.image_url}
+                          selected={frontEndSubId === c.id}
+                          onSelect={(id) => setFrontEndSubId(frontEndSubId === id ? null : id)}
+                          price={c.price}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}
