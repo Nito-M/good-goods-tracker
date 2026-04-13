@@ -521,6 +521,7 @@ function ComponentsTab({
                 <TableHead>Price</TableHead>
                  <TableHead>Compatible With</TableHead>
                  <TableHead>Assembly</TableHead>
+                 <TableHead>Parent</TableHead>
                  <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -581,6 +582,25 @@ function ComponentsTab({
                          <Link className="h-3 w-3 text-muted-foreground" />
                          <span className="text-sm">{assemblies.find(a => a.id === (c as any).assembly_id)?.name || 'Unknown'}</span>
                        </div>
+                     ) : (
+                       <span className="text-xs text-muted-foreground">—</span>
+                     )}
+                   </TableCell>
+                   <TableCell>
+                     {c.category === 'under_carriage' ? (
+                       editingId === c.id ? (
+                         <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
+                           <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="none">None (root)</SelectItem>
+                             {rootUnderCarriages.filter(uc => uc.id !== c.id).map(uc => <SelectItem key={uc.id} value={uc.id}>{uc.name}</SelectItem>)}
+                           </SelectContent>
+                         </Select>
+                       ) : c.parent_component_id ? (
+                         <Badge variant="outline" className="text-xs">{components.find(x => x.id === c.parent_component_id)?.name || 'Unknown'}</Badge>
+                       ) : (
+                         <span className="text-xs text-muted-foreground">Root</span>
+                       )
                      ) : (
                        <span className="text-xs text-muted-foreground">—</span>
                      )}
