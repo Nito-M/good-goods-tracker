@@ -96,6 +96,10 @@ export function AddPart() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="price">Price</Label>
+              <Input id="price" type="number" step="0.01" min="0" value={partPrice} onChange={e => setPartPrice(e.target.value)} placeholder="0.00" />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description" rows={3} />
             </div>
