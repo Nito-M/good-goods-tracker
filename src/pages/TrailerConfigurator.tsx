@@ -261,6 +261,7 @@ export function TrailerConfigurator() {
                       setDeckTypeId(null);
                       setUnderCarriageId(null);
                       setUnderCarriageSubId(null);
+                      setUnderCarriageTier3Id(null);
                     }}
                   />
                 </div>
@@ -287,6 +288,7 @@ export function TrailerConfigurator() {
                         onSelect={(id) => {
                           setUnderCarriageId(underCarriageId === id ? null : id);
                           setUnderCarriageSubId(null);
+                          setUnderCarriageTier3Id(null);
                         }}
                         price={c.price}
                       />
@@ -309,7 +311,30 @@ export function TrailerConfigurator() {
                           name={c.name}
                           imageUrl={c.image_url}
                           selected={underCarriageSubId === c.id}
-                          onSelect={(id) => setUnderCarriageSubId(underCarriageSubId === id ? null : id)}
+                        onSelect={(id) => {
+                          setUnderCarriageSubId(underCarriageSubId === id ? null : id);
+                          setUnderCarriageTier3Id(null);
+                        }}
+                          price={c.price}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {underCarriageSubId && underCarriageTier3s.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 3: Select Option for {selectedUnderCarriageSub?.name}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {underCarriageTier3s.map(c => (
+                      <div key={c.id} className="relative">
+                        <SelectionCard
+                          id={c.id}
+                          name={c.name}
+                          imageUrl={c.image_url}
+                          selected={underCarriageTier3Id === c.id}
+                          onSelect={(id) => setUnderCarriageTier3Id(underCarriageTier3Id === id ? null : id)}
                           price={c.price}
                         />
                       </div>
