@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 const CATEGORY_LABELS: Record<string, string> = {
   front_end: 'Front End',
   back_end: 'Back End',
-  deck_type: 'Deck Type',
+  deck_type: 'Add Ons',
   under_carriage: 'Under Carriage',
 };
 
@@ -489,7 +489,7 @@ function ComponentsTab({
               <SelectContent>
                 <SelectItem value="front_end">Front End</SelectItem>
                 <SelectItem value="back_end">Back End</SelectItem>
-                <SelectItem value="deck_type">Deck Type</SelectItem>
+                <SelectItem value="deck_type">Add Ons</SelectItem>
                 <SelectItem value="under_carriage">Under Carriage</SelectItem>
               </SelectContent>
             </Select>
@@ -878,7 +878,7 @@ function PrebuiltTab({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label>Deck Type</Label>
+            <Label>Add Ons</Label>
             <Select value={deckTypeId} onValueChange={setDeckTypeId}>
               <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
@@ -961,7 +961,7 @@ function PrebuiltTab({
                   <TableHead>Front End</TableHead>
                   <TableHead>FE Tier 2</TableHead>
                   <TableHead>Back End</TableHead>
-                  <TableHead>Deck Type</TableHead>
+                  <TableHead>Add Ons</TableHead>
                   <TableHead>Under Carriage</TableHead>
                   <TableHead>Axles</TableHead>
                   <TableHead>UC Tier 2</TableHead>
