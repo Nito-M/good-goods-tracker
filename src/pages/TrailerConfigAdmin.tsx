@@ -305,6 +305,7 @@ function ComponentsTab({
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
   const [assemblyId, setAssemblyId] = useState('');
   const [parentComponentId, setParentComponentId] = useState('');
+  const [selectedStep, setSelectedStep] = useState('1');
   const [inventorySearch, setInventorySearch] = useState('');
   const [showInventoryPicker, setShowInventoryPicker] = useState(false);
   const { uploading } = useTrailerImageUpload();
@@ -315,10 +316,32 @@ function ComponentsTab({
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
   const [editAssemblyId, setEditAssemblyId] = useState('');
   const [editParentComponentId, setEditParentComponentId] = useState('');
+  const [editStep, setEditStep] = useState('1');
+  // Helper: get components of a category at a specific tier
+  const getComponentsByStep = (cat: string, stepNum: number) => {
+    if (stepNum === 1) return components.filter(c => c.category === cat && !c.parent_component_id);
+    if (stepNum === 2) {
+      const roots = components.filter(c => c.category === cat && !c.parent_component_id);
+      return components.filter(c => c.category === cat && c.parent_component_id && roots.some(r => r.id === c.parent_component_id));
+    }
+    return [];
+  };
 
-  // Root under carriage components (for parent selection)
-  const rootUnderCarriages = components.filter(c => c.category === 'under_carriage' && !c.parent_component_id);
-  const rootFrontEnds = components.filter(c => c.category === 'front_end' && !c.parent_component_id);
+  // Possible parents based on selected step
+  const possibleParents = useMemo(() => {
+    if (selectedStep === '2') return getComponentsByStep(category, 1);
+    if (selectedStep === '3') return getComponentsByStep(category, 2);
+    return [];
+  }, [components, category, selectedStep]);
+
+  const editPossibleParents = useMemo(() => {
+    if (!editingId) return [];
+    const editComp = components.find(c => c.id === editingId);
+    if (!editComp) return [];
+    if (editStep === '2') return getComponentsByStep(editComp.category, 1);
+    if (editStep === '3') return getComponentsByStep(editComp.category, 2);
+    return [];
+  }, [components, editingId, editStep]);
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -329,7 +352,7 @@ function ComponentsTab({
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
       assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
-      parent_component_id: (category === 'under_carriage' || category === 'front_end') && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
+      parent_component_id: selectedStep !== '1' && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
     });
     setName('');
     setImageUrl('');
@@ -337,6 +360,7 @@ function ComponentsTab({
     setCompatibleIds([]);
     setAssemblyId('');
     setParentComponentId('');
+    setSelectedStep('1');
   };
 
   const toggleCompatible = (id: string) => {
@@ -350,6 +374,17 @@ function ComponentsTab({
     setEditCompatibleIds([...c.compatible_trailer_type_ids]);
     setEditAssemblyId((c as any).assembly_id || 'none');
     setEditParentComponentId(c.parent_component_id || 'none');
+    // Determine step from parent chain
+    if (!c.parent_component_id) {
+      setEditStep('1');
+    } else {
+      const parent = components.find(p => p.id === c.parent_component_id);
+      if (parent && !parent.parent_component_id) {
+        setEditStep('2');
+      } else {
+        setEditStep('3');
+      }
+    }
   };
 
   const saveEdit = async (id: string) => {
@@ -474,30 +509,27 @@ function ComponentsTab({
               </SelectContent>
             </Select>
           </div>
-          {category === 'under_carriage' && rootUnderCarriages.length > 0 && (
+          <div className="space-y-1">
+            <Label>Step / Tier</Label>
+            <Select value={selectedStep} onValueChange={(v) => { setSelectedStep(v); setParentComponentId(''); }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Step 1 (Root)</SelectItem>
+                <SelectItem value="2">Step 2 (Sub-option)</SelectItem>
+                <SelectItem value="3">Step 3 (Detail)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {selectedStep !== '1' && possibleParents.length > 0 && (
             <div className="space-y-1">
-              <Label>Parent Under Carriage (Step 2)</Label>
+              <Label>Parent Component ({selectedStep === '2' ? 'Step 1' : 'Step 2'})</Label>
               <Select value={parentComponentId} onValueChange={setParentComponentId}>
-                <SelectTrigger><SelectValue placeholder="None (root level)" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select parent..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None (root level)</SelectItem>
-                  {rootUnderCarriages.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  <SelectItem value="none">None</SelectItem>
+                  {possibleParents.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected under carriage</p>
-            </div>
-          )}
-          {category === 'front_end' && rootFrontEnds.length > 0 && (
-            <div className="space-y-1">
-              <Label>Parent Front End (Step 2)</Label>
-              <Select value={parentComponentId} onValueChange={setParentComponentId}>
-                <SelectTrigger><SelectValue placeholder="None (root level)" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None (root level)</SelectItem>
-                  {rootFrontEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected front end</p>
             </div>
           )}
         </div>
@@ -535,6 +567,7 @@ function ComponentsTab({
                 <TableHead>Price</TableHead>
                  <TableHead>Compatible With</TableHead>
                  <TableHead>Assembly</TableHead>
+                 <TableHead>Step</TableHead>
                  <TableHead>Parent</TableHead>
                  <TableHead className="w-24" />
               </TableRow>
@@ -601,20 +634,35 @@ function ComponentsTab({
                      )}
                    </TableCell>
                    <TableCell>
-                     {(c.category === 'under_carriage' || c.category === 'front_end') ? (
-                       editingId === c.id ? (
-                         <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
-                           <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
-                           <SelectContent>
-                             <SelectItem value="none">None (root)</SelectItem>
-                             {(c.category === 'under_carriage' ? rootUnderCarriages : rootFrontEnds).filter(p => p.id !== c.id).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                           </SelectContent>
-                         </Select>
-                       ) : c.parent_component_id ? (
-                         <Badge variant="outline" className="text-xs">{components.find(x => x.id === c.parent_component_id)?.name || 'Unknown'}</Badge>
-                       ) : (
-                         <span className="text-xs text-muted-foreground">Root</span>
-                       )
+                     {editingId === c.id ? (
+                       <Select value={editStep} onValueChange={(v) => { setEditStep(v); setEditParentComponentId('none'); }}>
+                         <SelectTrigger className="h-8 w-20"><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="1">1</SelectItem>
+                           <SelectItem value="2">2</SelectItem>
+                           <SelectItem value="3">3</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     ) : (
+                       <Badge variant="outline" className="text-xs">
+                         {!c.parent_component_id ? 'Step 1' : (() => {
+                           const parent = components.find(p => p.id === c.parent_component_id);
+                           return parent && !parent.parent_component_id ? 'Step 2' : 'Step 3';
+                         })()}
+                       </Badge>
+                     )}
+                   </TableCell>
+                   <TableCell>
+                     {editingId === c.id && editStep !== '1' ? (
+                       <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
+                         <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="none">None</SelectItem>
+                           {editPossibleParents.filter(p => p.id !== c.id).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                         </SelectContent>
+                       </Select>
+                     ) : c.parent_component_id ? (
+                       <Badge variant="outline" className="text-xs">{components.find(x => x.id === c.parent_component_id)?.name || 'Unknown'}</Badge>
                      ) : (
                        <span className="text-xs text-muted-foreground">—</span>
                      )}
