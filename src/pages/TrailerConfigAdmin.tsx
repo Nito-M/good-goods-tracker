@@ -601,13 +601,13 @@ function ComponentsTab({
                      )}
                    </TableCell>
                    <TableCell>
-                     {c.category === 'under_carriage' ? (
+                     {(c.category === 'under_carriage' || c.category === 'front_end') ? (
                        editingId === c.id ? (
                          <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
                            <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
                            <SelectContent>
                              <SelectItem value="none">None (root)</SelectItem>
-                             {rootUnderCarriages.filter(uc => uc.id !== c.id).map(uc => <SelectItem key={uc.id} value={uc.id}>{uc.name}</SelectItem>)}
+                             {(c.category === 'under_carriage' ? rootUnderCarriages : rootFrontEnds).filter(p => p.id !== c.id).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                            </SelectContent>
                          </Select>
                        ) : c.parent_component_id ? (
