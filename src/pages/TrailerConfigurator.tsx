@@ -67,6 +67,7 @@ export function TrailerConfigurator() {
   const [step, setStep] = useState(0);
   const [trailerTypeId, setTrailerTypeId] = useState<string | null>(null);
   const [frontEndId, setFrontEndId] = useState<string | null>(null);
+  const [frontEndSubId, setFrontEndSubId] = useState<string | null>(null);
   const [backEndId, setBackEndId] = useState<string | null>(null);
   const [deckTypeId, setDeckTypeId] = useState<string | null>(null);
   const [underCarriageId, setUnderCarriageId] = useState<string | null>(null);
@@ -77,7 +78,8 @@ export function TrailerConfigurator() {
   const [lookupDone, setLookupDone] = useState(false);
   const [configNotes, setConfigNotes] = useState('');
 
-  const frontEnds = useMemo(() => getByCategory('front_end', trailerTypeId || undefined), [components, trailerTypeId]);
+  const frontEnds = useMemo(() => getByCategory('front_end', trailerTypeId || undefined, null), [components, trailerTypeId]);
+  const frontEndSubs = useMemo(() => frontEndId ? getByCategory('front_end', trailerTypeId || undefined, frontEndId) : [], [components, trailerTypeId, frontEndId]);
   const backEnds = useMemo(() => getByCategory('back_end', trailerTypeId || undefined), [components, trailerTypeId]);
   const deckTypes = useMemo(() => getByCategory('deck_type', trailerTypeId || undefined), [components, trailerTypeId]);
   const underCarriages = useMemo(() => getByCategory('under_carriage', trailerTypeId || undefined, null), [components, trailerTypeId]);
@@ -85,13 +87,14 @@ export function TrailerConfigurator() {
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
   const selectedFront = components.find(c => c.id === frontEndId);
+  const selectedFrontSub = components.find(c => c.id === frontEndSubId);
   const selectedBack = components.find(c => c.id === backEndId);
   const selectedDeck = components.find(c => c.id === deckTypeId);
   const selectedUnderCarriage = components.find(c => c.id === underCarriageId);
   const selectedUnderCarriageSub = components.find(c => c.id === underCarriageSubId);
 
   const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0);
-  const totalPrice = (selectedFront?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
+  const totalPrice = (selectedFront?.price || 0) + (selectedFrontSub?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
 
   // Lookup prebuilt assembly when entering step 5
   useEffect(() => {
@@ -156,7 +159,14 @@ export function TrailerConfigurator() {
     } else {
       rows.push({ label: 'Under Carriage', value: 'None' });
     }
-    rows.push({ label: 'Front End', value: selectedFront?.name || '—', price: selectedFront?.price });
+    if (selectedFront) {
+      rows.push({ label: 'Front End', value: selectedFront.name, price: selectedFront.price });
+      if (selectedFrontSub) {
+        rows.push({ label: 'Front End Option', value: selectedFrontSub.name, price: selectedFrontSub.price });
+      }
+    } else {
+      rows.push({ label: 'Front End', value: '—' });
+    }
     rows.push({ label: 'Back End', value: selectedBack?.name || '—', price: selectedBack?.price });
     rows.push({ label: 'Deck Type', value: selectedDeck?.name || 'None', price: selectedDeck?.price });
 
@@ -243,6 +253,7 @@ export function TrailerConfigurator() {
                     onSelect={(id) => {
                       setTrailerTypeId(id);
                       setFrontEndId(null);
+                      setFrontEndSubId(null);
                       setBackEndId(null);
                       setDeckTypeId(null);
                       setUnderCarriageId(null);
@@ -308,21 +319,49 @@ export function TrailerConfigurator() {
 
           {/* Step 3: Front End */}
           {step === 2 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {frontEnds.map(c => (
-                <div key={c.id} className="relative">
-                  <SelectionCard
-                    id={c.id}
-                    name={c.name}
-                    imageUrl={c.image_url}
-                    selected={frontEndId === c.id}
-                    onSelect={setFrontEndId}
-                    price={c.price}
-                  />
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 1: Select Front End Type</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {frontEnds.map(c => (
+                    <div key={c.id} className="relative">
+                      <SelectionCard
+                        id={c.id}
+                        name={c.name}
+                        imageUrl={c.image_url}
+                        selected={frontEndId === c.id}
+                        onSelect={(id) => {
+                          setFrontEndId(frontEndId === id ? null : id);
+                          setFrontEndSubId(null);
+                        }}
+                        price={c.price}
+                      />
+                    </div>
+                  ))}
+                  {frontEnds.length === 0 && (
+                    <p className="col-span-full text-muted-foreground text-center py-12">No front end components available.</p>
+                  )}
                 </div>
-              ))}
-              {frontEnds.length === 0 && (
-                <p className="col-span-full text-muted-foreground text-center py-12">No front end components available.</p>
+              </div>
+
+              {frontEndId && frontEndSubs.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 2: Select Option for {selectedFront?.name}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {frontEndSubs.map(c => (
+                      <div key={c.id} className="relative">
+                        <SelectionCard
+                          id={c.id}
+                          name={c.name}
+                          imageUrl={c.image_url}
+                          selected={frontEndSubId === c.id}
+                          onSelect={(id) => setFrontEndSubId(frontEndSubId === id ? null : id)}
+                          price={c.price}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           )}
@@ -388,7 +427,16 @@ export function TrailerConfigurator() {
                     <CardContent className="p-6 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
-                        <SummaryRow label="Front End" value={selectedFront?.name} imageUrl={selectedFront?.image_url} price={selectedFront?.price} />
+                        {selectedFront ? (
+                          <>
+                            <SummaryRow label="Front End" value={selectedFront.name} imageUrl={selectedFront.image_url} price={selectedFront.price} />
+                            {selectedFrontSub && (
+                              <SummaryRow label="Front End Option" value={selectedFrontSub.name} imageUrl={selectedFrontSub.image_url} price={selectedFrontSub.price} />
+                            )}
+                          </>
+                        ) : (
+                          <SummaryRow label="Front End" value="—" />
+                        )}
                         <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
                         <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
                         {selectedUnderCarriage ? (

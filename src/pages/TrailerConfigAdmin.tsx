@@ -318,6 +318,7 @@ function ComponentsTab({
 
   // Root under carriage components (for parent selection)
   const rootUnderCarriages = components.filter(c => c.category === 'under_carriage' && !c.parent_component_id);
+  const rootFrontEnds = components.filter(c => c.category === 'front_end' && !c.parent_component_id);
 
   const handleAdd = async () => {
     if (!name.trim()) return;
@@ -328,7 +329,7 @@ function ComponentsTab({
       price: parseFloat(price) || 0,
       compatible_trailer_type_ids: compatibleIds,
       assembly_id: assemblyId && assemblyId !== 'none' ? assemblyId : undefined,
-      parent_component_id: category === 'under_carriage' && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
+      parent_component_id: (category === 'under_carriage' || category === 'front_end') && parentComponentId && parentComponentId !== 'none' ? parentComponentId : undefined,
     });
     setName('');
     setImageUrl('');
@@ -486,6 +487,19 @@ function ComponentsTab({
               <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected under carriage</p>
             </div>
           )}
+          {category === 'front_end' && rootFrontEnds.length > 0 && (
+            <div className="space-y-1">
+              <Label>Parent Front End (Step 2)</Label>
+              <Select value={parentComponentId} onValueChange={setParentComponentId}>
+                <SelectTrigger><SelectValue placeholder="None (root level)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (root level)</SelectItem>
+                  {rootFrontEnds.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Set a parent to make this a Step 2 option under the selected front end</p>
+            </div>
+          )}
         </div>
 
         {types.length > 0 && (
@@ -587,13 +601,13 @@ function ComponentsTab({
                      )}
                    </TableCell>
                    <TableCell>
-                     {c.category === 'under_carriage' ? (
+                     {(c.category === 'under_carriage' || c.category === 'front_end') ? (
                        editingId === c.id ? (
                          <Select value={editParentComponentId} onValueChange={setEditParentComponentId}>
                            <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
                            <SelectContent>
                              <SelectItem value="none">None (root)</SelectItem>
-                             {rootUnderCarriages.filter(uc => uc.id !== c.id).map(uc => <SelectItem key={uc.id} value={uc.id}>{uc.name}</SelectItem>)}
+                             {(c.category === 'under_carriage' ? rootUnderCarriages : rootFrontEnds).filter(p => p.id !== c.id).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                            </SelectContent>
                          </Select>
                        ) : c.parent_component_id ? (
