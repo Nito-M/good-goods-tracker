@@ -47,7 +47,7 @@ function AssemblyDetail2({
   const [editingStatusNotes, setEditingStatusNotes] = useState(false);
   const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
   const [savingStatus, setSavingStatus] = useState(false);
-
+  const [pdfSettingsOpen, setPdfSettingsOpen] = useState(false);
   const isFinished = assembly.status === 'finished';
 
   const getItemCost = (item: PartsAssemblyItem2): number => {
