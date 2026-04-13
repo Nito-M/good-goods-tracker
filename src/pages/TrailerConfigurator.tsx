@@ -55,7 +55,7 @@ const STEPS = [
   { key: 'under_carriage', label: 'Select Under Carriage' },
   { key: 'front_end', label: 'Select Front End' },
   { key: 'back_end', label: 'Select Back End' },
-  { key: 'deck_type', label: 'Select Deck Type (Optional)' },
+  { key: 'deck_type', label: 'Select Add Ons (Optional)' },
   { key: 'summary', label: 'Configuration Summary' },
 ];
 
@@ -178,7 +178,7 @@ export function TrailerConfigurator() {
       rows.push({ label: 'Front End', value: '—' });
     }
     rows.push({ label: 'Back End', value: selectedBack?.name || '—', price: selectedBack?.price });
-    rows.push({ label: 'Deck Type', value: selectedDeck?.name || 'None', price: selectedDeck?.price });
+    rows.push({ label: 'Add Ons', value: selectedDeck?.name || 'None', price: selectedDeck?.price });
 
     rows.forEach(r => {
       doc.setFont('helvetica', 'bold');
@@ -456,7 +456,7 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 5: Deck Type */}
+          {/* Step 5: Add Ons */}
           {step === 4 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {deckTypes.map(c => (
@@ -472,7 +472,7 @@ export function TrailerConfigurator() {
                 </div>
               ))}
               {deckTypes.length === 0 && (
-                <p className="col-span-full text-muted-foreground text-center py-12">No deck type components available.</p>
+                <p className="col-span-full text-muted-foreground text-center py-12">No add ons available.</p>
               )}
             </div>
           )}
@@ -507,7 +507,7 @@ export function TrailerConfigurator() {
                           <SummaryRow label="Front End" value="—" />
                         )}
                         <SummaryRow label="Back End" value={selectedBack?.name} imageUrl={selectedBack?.image_url} price={selectedBack?.price} />
-                        <SummaryRow label="Deck Type" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
+                        <SummaryRow label="Add Ons" value={selectedDeck?.name || 'None'} imageUrl={selectedDeck?.image_url} price={selectedDeck?.price} />
                         {selectedUnderCarriage ? (
                           <>
                             <SummaryRow label="Under Carriage" value={selectedUnderCarriage.name} imageUrl={selectedUnderCarriage.image_url} price={selectedUnderCarriage.price} />
