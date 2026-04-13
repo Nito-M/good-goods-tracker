@@ -157,6 +157,9 @@ export function TrailerConfigurator() {
     ];
     if (selectedUnderCarriage) {
       rows.push({ label: 'Under Carriage', value: selectedUnderCarriage.name, price: selectedUnderCarriage.price });
+      if (axleCount) {
+        rows.push({ label: 'Axles', value: `${axleCount} Axle${axleCount > 1 ? 's' : ''}` });
+      }
       if (selectedUnderCarriageSub) {
         rows.push({ label: 'Under Carriage Option', value: selectedUnderCarriageSub.name, price: selectedUnderCarriageSub.price });
       }
