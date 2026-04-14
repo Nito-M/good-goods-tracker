@@ -1956,7 +1956,7 @@ export type Database = {
           hours?: number
           id?: string
           image_url?: string | null
-          name: string
+          name?: string
           painting_hourly_rate?: number
           painting_hours?: number
           price?: number
@@ -2027,7 +2027,7 @@ export type Database = {
           hours?: number
           id?: string
           image_url?: string | null
-          name: string
+          name?: string
           painting_hourly_rate?: number
           painting_hours?: number
           price?: number
