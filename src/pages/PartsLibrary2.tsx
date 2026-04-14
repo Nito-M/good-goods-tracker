@@ -193,7 +193,12 @@ export function PartsLibrary2() {
         </div>
       </header>
 
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
+      <main className="px-4 py-8 sm:px-6 lg:px-8" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
+        {isDragOver && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/10 border-4 border-dashed border-primary pointer-events-none rounded-lg">
+            <p className="text-xl font-semibold text-primary">Drop part here to import</p>
+          </div>
+        )}
         {breadcrumb.length > 0 && (
           <div className="flex items-center gap-1 mb-4 text-sm text-muted-foreground flex-wrap">
             <button onClick={() => updateLibraryState(null, search)} className="hover:text-foreground transition-colors">Root</button>
@@ -247,7 +252,7 @@ export function PartsLibrary2() {
                   {pagedParts.map((part, i) => {
                     const globalIndex = (currentPage - 1) * PAGE_SIZE + i;
                     return (
-                    <div key={part.id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
+                    <div key={part.id} draggable={!selectMode} onDragStart={(e) => handleDragStart(e, part)} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
                       onClick={(e) => { if (selectMode) { handlePartClick(part.id, globalIndex, e); } else { navigate(`/parts/library2/${part.id}${libraryLocationSuffix}`); } }}>
                       {selectMode && <div onClick={e => e.stopPropagation()} className="shrink-0"><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
@@ -271,7 +276,7 @@ export function PartsLibrary2() {
                   {pagedParts.map((part, i) => {
                     const globalIndex = (currentPage - 1) * PAGE_SIZE + i;
                     return (
-                    <Card key={part.id} className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
+                    <Card key={part.id} draggable={!selectMode} onDragStart={(e) => handleDragStart(e, part)} className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
                       onClick={(e) => { if (selectMode) { handlePartClick(part.id, globalIndex, e); } else { navigate(`/parts/library2/${part.id}${libraryLocationSuffix}`); } }}>
                       {selectMode && <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
