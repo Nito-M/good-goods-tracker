@@ -326,6 +326,7 @@ export function PartsLibrary() {
                     <CheckSquare className="h-4 w-4" />
                   </Button>
                   <PartsCsvImport currentFolderId={currentFolderId} />
+                  <PartJsonImport addPart={addPart} currentFolderId={currentFolderId} />
                   <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2">
                     <FolderPlus className="h-4 w-4" />
                     New Folder
