@@ -382,7 +382,7 @@ export function PartDetail() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-card-foreground">{part.name}</h1>
-                {part.sku && <p className="text-sm text-muted-foreground">SKU: {part.sku}</p>}
+                {part.sku && <p className="text-sm text-muted-foreground">Part #: {part.sku}</p>}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -476,7 +476,7 @@ export function PartDetail() {
                     <Input id="edit-name" value={editName} onChange={e => setEditName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-sku">SKU</Label>
+                    <Label htmlFor="edit-sku">Part Number</Label>
                     <Input id="edit-sku" value={editSku} onChange={e => setEditSku(e.target.value)} />
                   </div>
                   <div className="space-y-2">
@@ -495,7 +495,7 @@ export function PartDetail() {
                     <p className="text-foreground">{part.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">SKU</p>
+                    <p className="text-sm font-medium text-muted-foreground">Part Number</p>
                     <p className="text-foreground">{part.sku || '—'}</p>
                   </div>
                   <div>
@@ -537,7 +537,7 @@ export function PartDetail() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Item</TableHead>
-                      <TableHead>SKU</TableHead>
+                      <TableHead>Part #</TableHead>
                       <TableHead className="text-right">Cost</TableHead>
                       <TableHead className="text-right">Price</TableHead>
                       <TableHead className="text-center">Qty</TableHead>

@@ -37,7 +37,7 @@ export function AddPart() {
 
   const handleSave = async () => {
     if (!name.trim() && !sku.trim()) {
-      toast({ title: 'Name or SKU is required', variant: 'destructive' });
+      toast({ title: 'Name or Part Number is required', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -91,8 +91,8 @@ export function AddPart() {
                 <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Part name" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
-                <Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU number" />
+                <Label htmlFor="sku">Part Number</Label>
+                <Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="Part number" />
               </div>
             </div>
             <div className="space-y-2">
