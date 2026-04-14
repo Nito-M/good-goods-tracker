@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
 import { PartsCsvImport } from '@/components/PartsCsvImport';
+import { PartJsonImport } from '@/components/PartJsonImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
@@ -326,6 +327,7 @@ export function PartsLibrary() {
                     <CheckSquare className="h-4 w-4" />
                   </Button>
                   <PartsCsvImport currentFolderId={currentFolderId} />
+                  <PartJsonImport addPart={addPart} currentFolderId={currentFolderId} />
                   <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2">
                     <FolderPlus className="h-4 w-4" />
                     New Folder

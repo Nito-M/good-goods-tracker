@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useParts2 } from '@/hooks/useParts2';
 import { usePartFolders2 } from '@/hooks/usePartFolders2';
 import { PartsCsvImport2 } from '@/components/PartsCsvImport2';
+import { PartJsonImport } from '@/components/PartJsonImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
@@ -183,7 +184,8 @@ export function PartsLibrary2() {
                     <Button variant={viewMode === 'cards' ? 'default' : 'ghost'} size="icon" className="rounded-none h-9 w-9" onClick={() => { setViewMode('cards'); localStorage.setItem('partsLibrary2ViewMode', 'cards'); }} title="Card view"><LayoutGrid className="h-4 w-4" /></Button>
                   </div>
                   <Button variant="outline" size="icon" onClick={() => setSelectMode(true)} title="Select multiple"><CheckSquare className="h-4 w-4" /></Button>
-                  <PartsCsvImport2 currentFolderId={currentFolderId} />
+                   <PartsCsvImport2 currentFolderId={currentFolderId} />
+                  <PartJsonImport addPart={addPart} currentFolderId={currentFolderId} />
                   <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2"><FolderPlus className="h-4 w-4" />New Folder</Button>
                   <Button onClick={() => navigate(`/parts/library2/new${libraryLocationSuffix}`)} className="gap-2"><Plus className="h-4 w-4" />Add Part</Button>
                 </>
