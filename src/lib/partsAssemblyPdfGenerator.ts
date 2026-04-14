@@ -96,10 +96,11 @@ export async function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
   type Col = { label: string; x: number; w: number };
   const cols: Col[] = [];
   let cx = margin;
-  const nameW = vis.sku ? 85 : (vis.quantity ? 110 : 130);
-  cols.push({ label: 'Part Name', x: cx, w: nameW });
-  cx += nameW;
-  if (vis.sku) { const w = 45; cols.push({ label: 'SKU', x: cx, w }); cx += w; }
+  const totalAvail = pageWidth - margin * 2;
+  // Count enabled columns to distribute width
+  const enabledCount = [vis.partName, vis.sku, vis.quantity, vis.notes].filter(Boolean).length;
+  if (vis.partName) { const w = vis.sku ? 85 : (enabledCount <= 2 ? 130 : 110); cols.push({ label: 'Part Name', x: cx, w }); cx += w; }
+  if (vis.sku) { const w = vis.partName ? 45 : 85; cols.push({ label: 'Part #', x: cx, w }); cx += w; }
   if (vis.quantity) { const w = 18; cols.push({ label: 'Qty', x: cx, w }); cx += w; }
   if (vis.notes) { cols.push({ label: 'Notes', x: cx, w: pageWidth - margin - cx }); }
   const tableRight = pageWidth - margin;
