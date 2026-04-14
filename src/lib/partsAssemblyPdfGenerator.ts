@@ -3,6 +3,7 @@ import { formatCurrency } from '@/lib/utils';
 import { savePdfBlob } from '@/lib/pdfSave';
 
 export interface AssemblyPdfVisibility {
+  partName: boolean;
   description: boolean;
   sellingPrice: boolean;
   sku: boolean;
@@ -11,7 +12,7 @@ export interface AssemblyPdfVisibility {
 }
 
 export const DEFAULT_ASSEMBLY_PDF_VISIBILITY: AssemblyPdfVisibility = {
-  description: true,
+  partName: true,
   sellingPrice: true,
   sku: true,
   quantity: true,
