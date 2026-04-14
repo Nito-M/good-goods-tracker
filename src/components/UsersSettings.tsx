@@ -602,6 +602,23 @@ export function UsersSettings() {
                 ))}
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>Special Permissions</Label>
+              <p className="text-sm text-muted-foreground">Grant additional capabilities</p>
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <Checkbox
+                  checked={editFeatures.includes('view_all_requests')}
+                  onCheckedChange={() => {
+                    setEditFeatures(prev =>
+                      prev.includes('view_all_requests')
+                        ? prev.filter(f => f !== 'view_all_requests')
+                        : [...prev, 'view_all_requests']
+                    );
+                  }}
+                />
+                <span className="text-sm">View All Requests</span>
+              </label>
+            </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditUser(null)}>
                 Cancel
