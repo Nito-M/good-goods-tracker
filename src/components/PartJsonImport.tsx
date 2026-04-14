@@ -7,9 +7,10 @@ import type { DragPartData } from '@/lib/partDragDrop';
 interface Props {
   addPart: (part: { name: string; sku: string; description?: string; price?: number; folderId?: string | null }) => Promise<string | null>;
   currentFolderId: string | null;
+  existingSkus?: string[];
 }
 
-export function PartJsonImport({ addPart, currentFolderId }: Props) {
+export function PartJsonImport({ addPart, currentFolderId, existingSkus = [] }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -24,6 +25,10 @@ export function PartJsonImport({ addPart, currentFolderId }: Props) {
         const data: DragPartData = JSON.parse(text);
         if (!data.name && !data.sku) {
           toast({ title: `Skipped ${file.name}`, description: 'Missing name and part number.', variant: 'destructive' });
+          continue;
+        }
+        if (data.sku && existingSkus.some(s => s.toLowerCase() === data.sku.toLowerCase())) {
+          toast({ title: 'Skipped', description: `Part # "${data.sku}" already exists.`, variant: 'destructive' });
           continue;
         }
         const id = await addPart({

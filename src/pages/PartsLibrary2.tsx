@@ -136,6 +136,10 @@ export function PartsLibrary2() {
     try {
       const data = JSON.parse(text);
       if (!data.name && !data.sku) return false;
+      if (data.sku && parts.some(p => p.sku.toLowerCase() === data.sku.toLowerCase())) {
+        toast({ title: 'Skipped', description: `Part # "${data.sku}" already exists.`, variant: 'destructive' });
+        return false;
+      }
       const id = await addPart({ name: data.name || '', sku: data.sku || '', price: data.price ?? 0, description: data.description || undefined, folderId: currentFolderId });
       if (id) toast({ title: 'Part imported', description: `"${data.name || data.sku}" added to library.` });
       return !!id;
@@ -143,7 +147,7 @@ export function PartsLibrary2() {
       toast({ title: `Failed to import${fileName ? ` ${fileName}` : ''}`, description: 'Invalid JSON format.', variant: 'destructive' });
       return false;
     }
-  }, [addPart, currentFolderId, toast]);
+  }, [addPart, currentFolderId, toast, parts]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -209,7 +213,7 @@ export function PartsLibrary2() {
                   </div>
                   <Button variant="outline" size="icon" onClick={() => setSelectMode(true)} title="Select multiple"><CheckSquare className="h-4 w-4" /></Button>
                    <PartsCsvImport2 currentFolderId={currentFolderId} />
-                  <PartJsonImport addPart={addPart} currentFolderId={currentFolderId} />
+                  <PartJsonImport addPart={addPart} currentFolderId={currentFolderId} existingSkus={parts.map(p => p.sku)} />
                   <Button variant="outline" onClick={() => setNewFolderOpen(true)} className="gap-2"><FolderPlus className="h-4 w-4" />New Folder</Button>
                   <Button onClick={() => navigate(`/parts/library2/new${libraryLocationSuffix}`)} className="gap-2"><Plus className="h-4 w-4" />Add Part</Button>
                 </>
