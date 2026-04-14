@@ -147,6 +147,12 @@ export function UsersSettings() {
           .select('user_id, page_key')
           .in('user_id', userIds);
 
+        // Fetch feature permissions
+        const { data: featurePerms } = await supabase
+          .from('user_feature_permissions' as any)
+          .select('user_id, feature_key')
+          .in('user_id', userIds);
+
         // Get requesters for this org
         const { data: reqData } = await supabase
           .from('org_requesters')
@@ -160,6 +166,10 @@ export function UsersSettings() {
             ?.filter(p => p.user_id === member.user_id)
             .map(p => p.page_key) || [];
 
+          const userFeaturePerms = (featurePerms as any[] || [])
+            .filter((p: any) => p.user_id === member.user_id)
+            .map((p: any) => p.feature_key);
+
           const linkedReq = reqData?.find(r => r.linked_user_id === member.user_id);
 
           allUsers.push({
@@ -171,6 +181,7 @@ export function UsersSettings() {
             orgId: org.id,
             orgName: org.name,
             permissions: userPerms,
+            featurePermissions: userFeaturePerms,
             linkedRequesterName: linkedReq?.name || null,
           });
         }
