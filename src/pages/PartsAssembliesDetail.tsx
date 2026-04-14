@@ -391,21 +391,21 @@ export function PartsAssembliesDetail() {
     let imported = 0;
     for (const file of files) {
       const text = await file.text();
-      if (await importAssemblyFromJson(text, file.name)) imported++;
+      if (await importItemsFromJson(text, file.name)) imported++;
     }
-    if (imported > 1) toast({ title: `${imported} assemblies imported` });
-  }, [importAssemblyFromJson, toast]);
+    if (imported > 1) toast({ title: `${imported} files imported` });
+  }, [importItemsFromJson, toast]);
 
   const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.json'));
     let imported = 0;
     for (const file of files) {
       const text = await file.text();
-      if (await importAssemblyFromJson(text, file.name)) imported++;
+      if (await importItemsFromJson(text, file.name)) imported++;
     }
-    if (imported > 1) toast({ title: `${imported} assemblies imported` });
+    if (imported > 1) toast({ title: `${imported} files imported` });
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [importAssemblyFromJson, toast]);
+  }, [importItemsFromJson, toast]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
