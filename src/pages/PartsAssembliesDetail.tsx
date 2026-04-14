@@ -508,6 +508,10 @@ export function PartsAssembliesDetail() {
                   )}
                 </>
               )}
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1">
+                <Upload className="h-3 w-3" /> Import JSON
+              </Button>
+              <input ref={fileInputRef} type="file" accept=".json" multiple className="hidden" onChange={handleFileInput} />
               <Button onClick={() => setCreateOpen(true)} className="gap-2">
                 <Plus className="h-4 w-4" /> New Assembly
               </Button>
@@ -516,7 +520,17 @@ export function PartsAssembliesDetail() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl flex h-[calc(100vh-8rem)]">
+      <div
+        className="mx-auto max-w-7xl flex h-[calc(100vh-8rem)] relative"
+        onDrop={handleFileDrop}
+        onDragOver={(e) => { e.preventDefault(); if (Array.from(e.dataTransfer.types).includes('Files')) setIsDragOver(true); }}
+        onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setIsDragOver(false); }}
+      >
+        {isDragOver && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-primary/10 border-2 border-dashed border-primary rounded-lg pointer-events-none">
+            <p className="text-lg font-semibold text-primary">Drop JSON files here to import assemblies</p>
+          </div>
+        )}
         {/* Sidebar list */}
         <aside className="w-72 shrink-0 border-r overflow-auto">
           {loading ? (
