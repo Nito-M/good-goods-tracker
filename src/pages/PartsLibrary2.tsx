@@ -120,6 +120,32 @@ export function PartsLibrary2() {
 
   const openImageViewer = async (storagePath: string) => { const url = await getSignedUrl('part-images-2', storagePath); if (url) { setViewerImageUrl(url); setViewerOpen(true); } };
 
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragStart = useCallback((e: React.DragEvent, part: typeof parts[0]) => {
+    setPartDragData(e, {
+      name: part.name, sku: part.sku, price: part.price,
+      description: part.description, hours: part.hours, hourlyRate: part.hourlyRate,
+      paintingHours: part.paintingHours, paintingHourlyRate: part.paintingHourlyRate,
+      dxfLabel1: part.dxfLabel1, dxfLabel2: part.dxfLabel2,
+    });
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const data = getPartDropData(e);
+    if (!data) return;
+    const id = await addPart({ name: data.name, sku: data.sku, price: data.price, description: data.description || undefined, folderId: currentFolderId });
+    if (id) toast({ title: 'Part imported', description: `"${data.name || data.sku}" added to library.` });
+  }, [addPart, currentFolderId, toast]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (isPartDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setIsDragOver(true); }
+  }, []);
+
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
