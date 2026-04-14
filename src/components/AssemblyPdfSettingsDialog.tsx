@@ -16,9 +16,10 @@ interface Props {
 }
 
 const FIELDS: { key: keyof AssemblyPdfVisibility; label: string; description: string }[] = [
+  { key: 'partName', label: 'Part Name Column', description: 'Show the part name column in the parts table' },
   { key: 'description', label: 'Description', description: 'Show assembly description below the title' },
   { key: 'sellingPrice', label: 'Selling Price', description: 'Show the selling price' },
-  { key: 'sku', label: 'SKU Column', description: 'Show the SKU column in the parts table' },
+  { key: 'sku', label: 'Part Number Column', description: 'Show the part number column in the parts table' },
   { key: 'quantity', label: 'Quantity Column', description: 'Show the quantity column in the parts table' },
   { key: 'notes', label: 'Notes Column', description: 'Show the notes column in the parts table' },
 ];

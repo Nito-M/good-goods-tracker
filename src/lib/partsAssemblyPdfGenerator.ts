@@ -13,6 +13,7 @@ export interface AssemblyPdfVisibility {
 
 export const DEFAULT_ASSEMBLY_PDF_VISIBILITY: AssemblyPdfVisibility = {
   partName: true,
+  description: true,
   sellingPrice: true,
   sku: true,
   quantity: true,
