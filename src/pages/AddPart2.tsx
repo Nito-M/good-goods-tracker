@@ -33,7 +33,7 @@ export function AddPart2() {
   };
 
   const handleSave = async () => {
-    if (!name.trim() && !sku.trim()) { toast({ title: 'Name or SKU is required', variant: 'destructive' }); return; }
+    if (!name.trim() && !sku.trim()) { toast({ title: 'Name or Part Number is required', variant: 'destructive' }); return; }
     setSaving(true);
     let imageUrl: string | undefined;
     let dxfUrl1: string | undefined;
@@ -62,7 +62,7 @@ export function AddPart2() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2"><Label htmlFor="name">Name</Label><Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Part name" /></div>
-              <div className="space-y-2"><Label htmlFor="sku">SKU</Label><Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU number" /></div>
+              <div className="space-y-2"><Label htmlFor="sku">Part Number</Label><Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="Part number" /></div>
             </div>
             <div className="space-y-2"><Label htmlFor="price">Price</Label><Input id="price" type="number" step="0.01" min="0" value={partPrice} onChange={e => setPartPrice(e.target.value)} placeholder="0.00" /></div>
             <div className="space-y-2"><Label htmlFor="description">Description</Label><Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description" rows={3} /></div>

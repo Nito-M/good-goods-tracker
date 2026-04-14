@@ -210,7 +210,7 @@ export function PartDetail2() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={() => navigate(backToLibraryPath)}><ArrowLeft className="h-4 w-4" /></Button>
-              <div><h1 className="text-2xl font-bold tracking-tight text-card-foreground">{part.name}</h1>{part.sku && <p className="text-sm text-muted-foreground">SKU: {part.sku}</p>}</div>
+              <div><h1 className="text-2xl font-bold tracking-tight text-card-foreground">{part.name}</h1>{part.sku && <p className="text-sm text-muted-foreground">Part #: {part.sku}</p>}</div>
             </div>
             <div className="flex items-center gap-2">
               {editing ? (
@@ -253,14 +253,14 @@ export function PartDetail2() {
               {editing ? (
                 <>
                   <div className="space-y-2"><Label htmlFor="edit-name">Name *</Label><Input id="edit-name" value={editName} onChange={e => setEditName(e.target.value)} /></div>
-                  <div className="space-y-2"><Label htmlFor="edit-sku">SKU</Label><Input id="edit-sku" value={editSku} onChange={e => setEditSku(e.target.value)} /></div>
+                  <div className="space-y-2"><Label htmlFor="edit-sku">Part Number</Label><Input id="edit-sku" value={editSku} onChange={e => setEditSku(e.target.value)} /></div>
                   <div className="space-y-2"><Label htmlFor="edit-price">Price</Label><Input id="edit-price" type="number" step="0.01" min="0" value={editPrice} onChange={e => setEditPrice(e.target.value)} /></div>
                   <div className="space-y-2"><Label htmlFor="edit-desc">Description</Label><Textarea id="edit-desc" value={editDescription} onChange={e => setEditDescription(e.target.value)} rows={3} /></div>
                 </>
               ) : (
                 <>
                   <div><p className="text-sm font-medium text-muted-foreground">Name</p><p className="text-foreground">{part.name}</p></div>
-                  <div><p className="text-sm font-medium text-muted-foreground">SKU</p><p className="text-foreground">{part.sku || '—'}</p></div>
+                  <div><p className="text-sm font-medium text-muted-foreground">Part Number</p><p className="text-foreground">{part.sku || '—'}</p></div>
                   <div><p className="text-sm font-medium text-muted-foreground">Price</p><p className="text-foreground font-semibold">{(part.price ?? 0) > 0 ? formatCurrency(part.price) : '—'}</p></div>
                   {part.description && <div><p className="text-sm font-medium text-muted-foreground">Description</p><p className="text-foreground">{part.description}</p></div>}
                   <div><p className="text-sm font-medium text-muted-foreground">Created</p><p className="text-foreground">{part.createdAt.toLocaleDateString()}</p></div>
@@ -282,7 +282,7 @@ export function PartDetail2() {
             ) : (
               <>
                 <Table>
-                  <TableHeader><TableRow><TableHead>Item</TableHead><TableHead>SKU</TableHead><TableHead className="text-right">Cost</TableHead><TableHead className="text-right">Price</TableHead><TableHead className="text-center">Qty</TableHead><TableHead className="text-right">Total Cost</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Part #</TableHead><TableHead className="text-right">Cost</TableHead><TableHead className="text-right">Price</TableHead><TableHead className="text-center">Qty</TableHead><TableHead className="text-right">Total Cost</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
                   <TableBody>
                     {partItems.map(item => (
                       <TableRow key={item.id}>

@@ -178,7 +178,7 @@ export function PartsLibrary2() {
 
         <div className="mb-6 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search by name or SKU..." value={search} onChange={e => updateLibraryState(currentFolderId, e.target.value, true)} className="pl-10 max-w-md" />
+          <Input placeholder="Search by name or part number..." value={search} onChange={e => updateLibraryState(currentFolderId, e.target.value, true)} className="pl-10 max-w-md" />
         </div>
 
         {loading ? (
@@ -253,7 +253,7 @@ export function PartsLibrary2() {
                       </div>
                       <CardContent className="p-3">
                         <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{part.sku || 'No SKU'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{part.sku || 'No Part #'}</p>
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-sm font-medium text-primary">{part.price > 0 ? formatCurrency(part.price) : '—'}</span>
                           <div className="flex gap-1">{part.dxfUrl1 && <span className="text-[10px] bg-accent text-accent-foreground px-1 py-0.5 rounded">DXF</span>}</div>
