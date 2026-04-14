@@ -236,23 +236,25 @@ function AssemblyDetail({
             {items.map((item) => {
               const unitCost = getItemCost(item);
               const lineTotal = unitCost * item.quantity;
+              const partMatch = item.part_id ? parts.find(p => p.id === item.part_id) : (!item.inventory_item_id && item.part_sku ? parts.find(p => p.sku.toLowerCase() === item.part_sku.toLowerCase()) : undefined);
+              const linkTo = item.part_id ? `/parts/library/${item.part_id}` : item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : null;
               return (
               <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
                 <div>
-                  {(() => {
-                    const partMatch = item.part_id ? parts.find(p => p.id === item.part_id) : (!item.inventory_item_id && item.part_sku ? parts.find(p => p.sku.toLowerCase() === item.part_sku.toLowerCase()) : undefined);
-                    const linkTo = item.part_id ? `/parts/library/${item.part_id}` : item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : null;
-                    return linkTo ? (
-                      <button className="font-medium text-sm text-primary hover:underline cursor-pointer text-left flex items-center gap-1" onClick={() => navigate(linkTo)}>
-                        {item.inventory_item_id && !item.part_id && <Package className="h-3 w-3" />}{item.part_name}
-                      </button>
-                    ) : (
-                      <p className="font-medium text-sm">{item.part_name}</p>
-                    );
-                  })()}
+                  {linkTo ? (
+                    <button className="font-medium text-sm text-primary hover:underline cursor-pointer text-left flex items-center gap-1" onClick={() => navigate(linkTo)}>
+                      {item.inventory_item_id && !item.part_id && <Package className="h-3 w-3" />}{item.part_name}
+                    </button>
+                  ) : (
+                    <p className="font-medium text-sm">{item.part_name}</p>
+                  )}
                   {item.notes && <p className="text-xs text-muted-foreground">{item.notes}</p>}
                 </div>
-                <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.part_sku || '—'}</span>
+                {linkTo && item.part_sku ? (
+                  <button className="w-20 text-xs text-primary text-center font-mono hover:underline cursor-pointer" onClick={() => navigate(linkTo)}>{item.part_sku}</button>
+                ) : (
+                  <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.part_sku || '—'}</span>
+                )}
                 {editingId === item.id ? (
                   <div className="flex items-center gap-1 w-24">
                     <Input type="number" min={1} value={editQty} onChange={(e) => setEditQty(Number(e.target.value))} className="h-7 w-16 text-center text-sm px-1" />
