@@ -63,6 +63,7 @@ interface OrgUser {
   orgId: string;
   orgName: string;
   permissions: string[]; // page_keys the user has access to
+  featurePermissions: string[]; // feature keys like 'view_all_requests'
   linkedRequesterName: string | null;
 }
 
@@ -86,6 +87,7 @@ export function UsersSettings() {
   // Edit permissions dialog
   const [editUser, setEditUser] = useState<OrgUser | null>(null);
   const [editPages, setEditPages] = useState<string[]>([]);
+  const [editFeatures, setEditFeatures] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Delete confirmation
@@ -146,6 +148,12 @@ export function UsersSettings() {
           .select('user_id, page_key')
           .in('user_id', userIds);
 
+        // Fetch feature permissions
+        const { data: featurePerms } = await supabase
+          .from('user_feature_permissions' as any)
+          .select('user_id, feature_key')
+          .in('user_id', userIds);
+
         // Get requesters for this org
         const { data: reqData } = await supabase
           .from('org_requesters')
@@ -159,6 +167,10 @@ export function UsersSettings() {
             ?.filter(p => p.user_id === member.user_id)
             .map(p => p.page_key) || [];
 
+          const userFeaturePerms = (featurePerms as any[] || [])
+            .filter((p: any) => p.user_id === member.user_id)
+            .map((p: any) => p.feature_key);
+
           const linkedReq = reqData?.find(r => r.linked_user_id === member.user_id);
 
           allUsers.push({
@@ -170,6 +182,7 @@ export function UsersSettings() {
             orgId: org.id,
             orgName: org.name,
             permissions: userPerms,
+            featurePermissions: userFeaturePerms,
             linkedRequesterName: linkedReq?.name || null,
           });
         }
@@ -281,6 +294,7 @@ export function UsersSettings() {
   const openEditPermissions = (u: OrgUser) => {
     setEditUser(u);
     setEditPages(u.permissions.length > 0 ? [...u.permissions] : [...PAGE_KEYS.map(p => p.key)]);
+    setEditFeatures([...u.featurePermissions]);
   };
 
   const handleSavePermissions = async () => {
@@ -288,19 +302,34 @@ export function UsersSettings() {
     setSaving(true);
 
     try {
-      // Delete existing permissions
+      // Delete existing page permissions
       await supabase
         .from('user_page_permissions')
         .delete()
         .eq('user_id', editUser.userId);
 
-      // Insert new permissions
+      // Insert new page permissions
       if (editPages.length > 0) {
         const permRows = editPages.map(pageKey => ({
           user_id: editUser.userId,
           page_key: pageKey,
         }));
         await supabase.from('user_page_permissions').insert(permRows);
+      }
+
+      // Delete existing feature permissions
+      await supabase
+        .from('user_feature_permissions' as any)
+        .delete()
+        .eq('user_id', editUser.userId);
+
+      // Insert new feature permissions
+      if (editFeatures.length > 0) {
+        const featureRows = editFeatures.map(featureKey => ({
+          user_id: editUser.userId,
+          feature_key: featureKey,
+        }));
+        await supabase.from('user_feature_permissions' as any).insert(featureRows as any);
       }
 
       toast({ title: 'Permissions updated' });
@@ -452,6 +481,11 @@ export function UsersSettings() {
                           </span>
                         ))
                       )}
+                      {u.featurePermissions.includes('view_all_requests') && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          View All Requests
+                        </span>
+                      )}
                     </div>
                     {/* Requester linking */}
                     <div className="flex items-center gap-2 pt-1">
@@ -572,6 +606,23 @@ export function UsersSettings() {
                   </label>
                 ))}
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Special Permissions</Label>
+              <p className="text-sm text-muted-foreground">Grant additional capabilities</p>
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <Checkbox
+                  checked={editFeatures.includes('view_all_requests')}
+                  onCheckedChange={() => {
+                    setEditFeatures(prev =>
+                      prev.includes('view_all_requests')
+                        ? prev.filter(f => f !== 'view_all_requests')
+                        : [...prev, 'view_all_requests']
+                    );
+                  }}
+                />
+                <span className="text-sm">View All Requests</span>
+              </label>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditUser(null)}>

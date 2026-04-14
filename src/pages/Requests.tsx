@@ -5,6 +5,7 @@ import { useRequests } from "@/hooks/useRequests";
 import { useVendors } from "@/hooks/useVendors";
 import { useProfile } from "@/hooks/useProfile";
 import { useLinkedRequester } from "@/hooks/useLinkedRequester";
+import { useFeaturePermissions } from "@/hooks/useFeaturePermissions";
 import { useBankCards } from "@/hooks/useBankCards";
 import { Button } from "@/components/ui/button";
 import { RequestCard } from "@/components/RequestCard";
@@ -86,6 +87,7 @@ export function Requests() {
   const { vendors } = useVendors();
   const { profile } = useProfile();
   const { linkedName, allOrgRequesterNames, isAdminUser, refetch: refetchRequesters } = useLinkedRequester();
+  const { hasFeature } = useFeaturePermissions();
   const { cards } = useBankCards();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,13 +98,15 @@ export function Requests() {
     return (localStorage.getItem('requestsViewMode') as 'lines' | 'cards') || 'cards';
   });
 
-  // For regular members, only show their own requester name; admins see all
-  const visibleRequesterNames = isAdminUser ?
+  const canViewAll = isAdminUser || hasFeature('view_all_requests');
+
+  // For regular members, only show their own requester name; admins/permitted users see all
+  const visibleRequesterNames = canViewAll ?
   allOrgRequesterNames.length > 0 ? allOrgRequesterNames : profile?.requesterNames || [] :
   linkedName ? [linkedName] : [];
 
   // Filter requests: regular members only see requests matching their linked requester name
-  const visibleRequests = isAdminUser ?
+  const visibleRequests = canViewAll ?
   requests :
   requests.filter((r) => r.requesterName === linkedName);
 
