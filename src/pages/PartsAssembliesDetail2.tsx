@@ -342,45 +342,39 @@ export function PartsAssembliesDetail2() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const importAssemblyFromJson = useCallback(async (text: string, fileName?: string) => {
+  const importItemsFromJson = useCallback(async (text: string, fileName?: string) => {
+    if (!selectedId) {
+      toast({ title: 'No assembly selected', description: 'Please select an assembly first, then import items.', variant: 'destructive' });
+      return false;
+    }
     try {
       const data = JSON.parse(text);
-      const name = data.name?.trim();
-      if (!name) {
-        toast({ title: 'Invalid JSON', description: 'Assembly must have a name.', variant: 'destructive' });
+      const items = Array.isArray(data.items) ? data.items : Array.isArray(data) ? data : [data];
+      const rows = items.filter((i: any) => i.part_name || i.partName || i.name).map((i: any) => ({
+        assembly_id: selectedId,
+        part_name: i.part_name || i.partName || i.name || '',
+        part_sku: i.part_sku || i.partSku || i.sku || '',
+        quantity: i.quantity ?? 1,
+        notes: i.notes || null,
+        part_id: null,
+        inventory_item_id: null,
+      }));
+      if (rows.length === 0) {
+        toast({ title: 'No items found', description: 'JSON file does not contain valid items.', variant: 'destructive' });
         return false;
       }
-      if (filtered.some(a => a.name.toLowerCase() === name.toLowerCase())) {
-        toast({ title: 'Skipped', description: `Assembly "${name}" already exists.`, variant: 'destructive' });
+      const { error } = await (supabase as any).from('parts_assembly_items_2').insert(rows);
+      if (error) {
+        toast({ title: 'Error', description: 'Failed to add items.', variant: 'destructive' });
         return false;
       }
-      const result = await createAssembly(name, data.description || undefined, decodedType);
-      if (!result) return false;
-      if (Array.isArray(data.items) && data.items.length > 0) {
-        const rows = data.items.filter((i: any) => i.part_name || i.partName).map((i: any) => ({
-          assembly_id: result.id,
-          part_name: i.part_name || i.partName || '',
-          part_sku: i.part_sku || i.partSku || '',
-          quantity: i.quantity ?? 1,
-          notes: i.notes || null,
-          part_id: null,
-          inventory_item_id: null,
-        }));
-        if (rows.length > 0) {
-          await (supabase as any).from('parts_assembly_items_2').insert(rows);
-        }
-      }
-      if (data.selling_price || data.sellingPrice) {
-        await updateAssembly(result.id, { selling_price: data.selling_price ?? data.sellingPrice ?? 0 });
-      }
-      setSelectedId(result.id);
-      toast({ title: 'Assembly imported', description: `"${name}" added.` });
+      toast({ title: `${rows.length} item${rows.length !== 1 ? 's' : ''} added`, description: `Items imported into the selected assembly.` });
       return true;
     } catch {
       toast({ title: `Failed to import${fileName ? ` ${fileName}` : ''}`, description: 'Invalid JSON format.', variant: 'destructive' });
       return false;
     }
-  }, [createAssembly, updateAssembly, decodedType, filtered, toast]);
+  }, [selectedId, toast]);
 
   const handleFileDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -390,21 +384,21 @@ export function PartsAssembliesDetail2() {
     let imported = 0;
     for (const file of files) {
       const text = await file.text();
-      if (await importAssemblyFromJson(text, file.name)) imported++;
+      if (await importItemsFromJson(text, file.name)) imported++;
     }
-    if (imported > 1) toast({ title: `${imported} assemblies imported` });
-  }, [importAssemblyFromJson, toast]);
+    if (imported > 1) toast({ title: `${imported} files imported` });
+  }, [importItemsFromJson, toast]);
 
   const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.json'));
     let imported = 0;
     for (const file of files) {
       const text = await file.text();
-      if (await importAssemblyFromJson(text, file.name)) imported++;
+      if (await importItemsFromJson(text, file.name)) imported++;
     }
-    if (imported > 1) toast({ title: `${imported} assemblies imported` });
+    if (imported > 1) toast({ title: `${imported} files imported` });
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [importAssemblyFromJson, toast]);
+  }, [importItemsFromJson, toast]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
