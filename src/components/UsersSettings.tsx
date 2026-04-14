@@ -87,6 +87,7 @@ export function UsersSettings() {
   // Edit permissions dialog
   const [editUser, setEditUser] = useState<OrgUser | null>(null);
   const [editPages, setEditPages] = useState<string[]>([]);
+  const [editFeatures, setEditFeatures] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Delete confirmation
@@ -293,6 +294,7 @@ export function UsersSettings() {
   const openEditPermissions = (u: OrgUser) => {
     setEditUser(u);
     setEditPages(u.permissions.length > 0 ? [...u.permissions] : [...PAGE_KEYS.map(p => p.key)]);
+    setEditFeatures([...u.featurePermissions]);
   };
 
   const handleSavePermissions = async () => {
@@ -300,19 +302,34 @@ export function UsersSettings() {
     setSaving(true);
 
     try {
-      // Delete existing permissions
+      // Delete existing page permissions
       await supabase
         .from('user_page_permissions')
         .delete()
         .eq('user_id', editUser.userId);
 
-      // Insert new permissions
+      // Insert new page permissions
       if (editPages.length > 0) {
         const permRows = editPages.map(pageKey => ({
           user_id: editUser.userId,
           page_key: pageKey,
         }));
         await supabase.from('user_page_permissions').insert(permRows);
+      }
+
+      // Delete existing feature permissions
+      await supabase
+        .from('user_feature_permissions' as any)
+        .delete()
+        .eq('user_id', editUser.userId);
+
+      // Insert new feature permissions
+      if (editFeatures.length > 0) {
+        const featureRows = editFeatures.map(featureKey => ({
+          user_id: editUser.userId,
+          feature_key: featureKey,
+        }));
+        await supabase.from('user_feature_permissions' as any).insert(featureRows as any);
       }
 
       toast({ title: 'Permissions updated' });
