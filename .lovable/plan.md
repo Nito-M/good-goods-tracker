@@ -1,31 +1,35 @@
 
 
-# Reorder Trailer Configurator: Make Step 2 "Under Carriage"
+## Plan: Drag-and-Drop Parts Between Browser Windows + Export as File
 
-## Current Step Order
-1. Select Trailer Type
-2. Select Front End
-3. Select Back End
-4. Select Deck Type (Optional)
-5. Select Under Carriage (Optional)
-6. Summary
+### What this does
+Makes parts in both Parts Libraries draggable so you can:
+1. **Drag to another browser window/tab** of the same app — the part data gets imported into that library
+2. **Drag to desktop/file explorer** — downloads a JSON file with the part data
 
-## New Step Order
-1. Select Trailer Type
-2. **Select Under Carriage** (moved up, multi-select)
-3. Select Front End
-4. Select Back End
-5. Select Deck Type (Optional)
-6. Summary
+### How it works
 
-## Changes
+**HTML Drag API** — uses the browser's native `dragstart`/`drop` events with `dataTransfer`:
+- On `dragstart`: serialize part data (name, part number, price, description) as JSON into `dataTransfer.setData('application/json', ...)` and also set `text/plain` with a human-readable summary. The `DownloadURL` type enables dragging to desktop as a `.json` file.
+- On `drop`: the receiving library listens for drops, parses the JSON, and creates a new part via `addPart`.
 
-**File: `src/pages/TrailerConfigurator.tsx`**
-- Reorder the `STEPS` array so "Under Carriage" is index 1 (after Trailer Type)
-- Move the Under Carriage selection UI block from step 4 to step 1
-- Move Front End to step 2, Back End to step 3, Deck Type to step 4
-- Update `canNext()` logic to match new step indices (under carriage is optional at step 1, front end required at step 2, back end required at step 3, deck optional at step 4)
-- Update the summary lookup trigger from `step === 5` to remain at the last step (still index 5)
+### Files to change
 
-No database or hook changes needed — purely a UI reorder.
+1. **`src/pages/PartsLibrary.tsx`**
+   - Add `draggable` attribute + `onDragStart` handler to each part row (lines view) and card (cards view)
+   - Add `onDragOver`/`onDrop` handlers on the parts list container to accept incoming parts from other windows
+   - On drop: parse JSON, call `addPart` to create the part, show a toast
+
+2. **`src/pages/PartsLibrary2.tsx`**
+   - Same changes as PartsLibrary.tsx for the second library
+
+3. **No database changes needed** — uses existing `addPart` mutations
+
+### Technical details
+
+- `dataTransfer.setData('application/json', JSON.stringify(partData))` for cross-window transfer
+- `dataTransfer.setData('DownloadURL', 'application/json:PartName.json:data:...')` for desktop file export
+- Visual feedback: drop zone highlight when dragging over the library area
+- Part images are NOT transferred (storage paths are user-specific); only metadata is copied
+- Each library accepts drops from either library (cross-library transfer works too)
 
