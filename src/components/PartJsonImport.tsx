@@ -7,6 +7,7 @@ import type { DragPartData } from '@/lib/partDragDrop';
 interface Props {
   addPart: (part: { name: string; sku: string; description?: string; price?: number; folderId?: string | null }) => Promise<string | null>;
   currentFolderId: string | null;
+  existingSkus?: string[];
 }
 
 export function PartJsonImport({ addPart, currentFolderId }: Props) {
