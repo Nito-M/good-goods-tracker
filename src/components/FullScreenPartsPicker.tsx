@@ -63,6 +63,8 @@ export function FullScreenPartsPicker({
   const [cart, setCart] = useState<PartsPickerCartItem[]>([]);
 
   const closedByBackRef = useRef(false);
+  const cartRef = useRef<PartsPickerCartItem[]>([]);
+  cartRef.current = cart;
 
   useEffect(() => {
     if (open) {
@@ -78,15 +80,19 @@ export function FullScreenPartsPicker({
   useEffect(() => {
     if (!open) return;
     const handlePopState = () => {
-      closedByBackRef.current = true;
-      onClose(cart);
+      if (!closedByBackRef.current) {
+        closedByBackRef.current = true;
+        onClose(cartRef.current);
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [open, cart, onClose]);
+  }, [open, onClose]);
 
   const handleDone = () => {
     if (!closedByBackRef.current) {
+      closedByBackRef.current = true;
+      onClose(cartRef.current);
       window.history.back();
     }
   };
