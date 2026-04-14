@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useParts2 } from '@/hooks/useParts2';
 import { usePartFolders2 } from '@/hooks/usePartFolders2';
 import { PartsCsvImport2 } from '@/components/PartsCsvImport2';
+import { PartJsonImport } from '@/components/PartJsonImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
