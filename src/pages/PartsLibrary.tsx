@@ -341,7 +341,12 @@ export function PartsLibrary() {
         </div>
       </header>
 
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
+      <main className="px-4 py-8 sm:px-6 lg:px-8" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
+        {isDragOver && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/10 border-4 border-dashed border-primary pointer-events-none rounded-lg">
+            <p className="text-xl font-semibold text-primary">Drop part here to import</p>
+          </div>
+        )}
         {/* Breadcrumb */}
         {breadcrumb.length > 0 && (
           <div className="flex items-center gap-1 mb-4 text-sm text-muted-foreground flex-wrap">
