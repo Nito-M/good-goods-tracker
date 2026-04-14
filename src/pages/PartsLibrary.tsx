@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid, Copy } from 'lucide-react';
+import { setPartDragData, getPartDropData, isPartDrag } from '@/lib/partDragDrop';
 import {
   Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
   PaginationLink, PaginationNext, PaginationPrevious,
@@ -31,7 +32,7 @@ import {
 export function PartsLibrary() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, getSignedUrl } = useParts();
+  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, addPart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
@@ -203,6 +204,32 @@ export function PartsLibrary() {
     }
   };
 
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragStart = useCallback((e: React.DragEvent, part: typeof parts[0]) => {
+    setPartDragData(e, {
+      name: part.name, sku: part.sku, price: part.price,
+      description: part.description, hours: part.hours, hourlyRate: part.hourlyRate,
+      paintingHours: part.paintingHours, paintingHourlyRate: part.paintingHourlyRate,
+      dxfLabel1: part.dxfLabel1, dxfLabel2: part.dxfLabel2,
+    });
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const data = getPartDropData(e);
+    if (!data) return;
+    const id = await addPart({ name: data.name, sku: data.sku, price: data.price, description: data.description || undefined, folderId: currentFolderId });
+    if (id) toast({ title: 'Part imported', description: `"${data.name || data.sku}" added to library.` });
+  }, [addPart, currentFolderId, toast]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (isPartDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setIsDragOver(true); }
+  }, []);
+
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -314,7 +341,12 @@ export function PartsLibrary() {
         </div>
       </header>
 
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
+      <main className="px-4 py-8 sm:px-6 lg:px-8" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
+        {isDragOver && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/10 border-4 border-dashed border-primary pointer-events-none rounded-lg">
+            <p className="text-xl font-semibold text-primary">Drop part here to import</p>
+          </div>
+        )}
         {/* Breadcrumb */}
         {breadcrumb.length > 0 && (
           <div className="flex items-center gap-1 mb-4 text-sm text-muted-foreground flex-wrap">
@@ -415,6 +447,8 @@ export function PartsLibrary() {
                     return (
                     <div
                       key={part.id}
+                      draggable={!selectMode}
+                      onDragStart={(e) => handleDragStart(e, part)}
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
                       onClick={(e) => {
                         if (selectMode) { handlePartClick(part.id, globalIndex, e); }
@@ -458,6 +492,8 @@ export function PartsLibrary() {
                     return (
                     <Card
                       key={part.id}
+                      draggable={!selectMode}
+                      onDragStart={(e) => handleDragStart(e, part)}
                       className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
                       onClick={(e) => {
                         if (selectMode) { handlePartClick(part.id, globalIndex, e); }

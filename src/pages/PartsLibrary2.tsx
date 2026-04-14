@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Search, Trash2, ArrowLeft, Folder, FolderPlus, ChevronRight, Pencil, MoreVertical, FolderInput, CheckSquare, X, LayoutList, LayoutGrid, Copy } from 'lucide-react';
+import { setPartDragData, getPartDropData, isPartDrag } from '@/lib/partDragDrop';
 import {
   Pagination, PaginationContent, PaginationEllipsis, PaginationItem,
   PaginationLink, PaginationNext, PaginationPrevious,
@@ -31,7 +32,7 @@ import {
 export function PartsLibrary2() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, getSignedUrl } = useParts2();
+  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, addPart, getSignedUrl } = useParts2();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb } = usePartFolders2();
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
@@ -119,6 +120,32 @@ export function PartsLibrary2() {
 
   const openImageViewer = async (storagePath: string) => { const url = await getSignedUrl('part-images-2', storagePath); if (url) { setViewerImageUrl(url); setViewerOpen(true); } };
 
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragStart = useCallback((e: React.DragEvent, part: typeof parts[0]) => {
+    setPartDragData(e, {
+      name: part.name, sku: part.sku, price: part.price,
+      description: part.description, hours: part.hours, hourlyRate: part.hourlyRate,
+      paintingHours: part.paintingHours, paintingHourlyRate: part.paintingHourlyRate,
+      dxfLabel1: part.dxfLabel1, dxfLabel2: part.dxfLabel2,
+    });
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const data = getPartDropData(e);
+    if (!data) return;
+    const id = await addPart({ name: data.name, sku: data.sku, price: data.price, description: data.description || undefined, folderId: currentFolderId });
+    if (id) toast({ title: 'Part imported', description: `"${data.name || data.sku}" added to library.` });
+  }, [addPart, currentFolderId, toast]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (isPartDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setIsDragOver(true); }
+  }, []);
+
+  const handleDragLeave = useCallback(() => setIsDragOver(false), []);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -166,7 +193,12 @@ export function PartsLibrary2() {
         </div>
       </header>
 
-      <main className="px-4 py-8 sm:px-6 lg:px-8">
+      <main className="px-4 py-8 sm:px-6 lg:px-8" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
+        {isDragOver && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/10 border-4 border-dashed border-primary pointer-events-none rounded-lg">
+            <p className="text-xl font-semibold text-primary">Drop part here to import</p>
+          </div>
+        )}
         {breadcrumb.length > 0 && (
           <div className="flex items-center gap-1 mb-4 text-sm text-muted-foreground flex-wrap">
             <button onClick={() => updateLibraryState(null, search)} className="hover:text-foreground transition-colors">Root</button>
@@ -220,7 +252,7 @@ export function PartsLibrary2() {
                   {pagedParts.map((part, i) => {
                     const globalIndex = (currentPage - 1) * PAGE_SIZE + i;
                     return (
-                    <div key={part.id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
+                    <div key={part.id} draggable={!selectMode} onDragStart={(e) => handleDragStart(e, part)} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
                       onClick={(e) => { if (selectMode) { handlePartClick(part.id, globalIndex, e); } else { navigate(`/parts/library2/${part.id}${libraryLocationSuffix}`); } }}>
                       {selectMode && <div onClick={e => e.stopPropagation()} className="shrink-0"><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
@@ -244,7 +276,7 @@ export function PartsLibrary2() {
                   {pagedParts.map((part, i) => {
                     const globalIndex = (currentPage - 1) * PAGE_SIZE + i;
                     return (
-                    <Card key={part.id} className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
+                    <Card key={part.id} draggable={!selectMode} onDragStart={(e) => handleDragStart(e, part)} className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
                       onClick={(e) => { if (selectMode) { handlePartClick(part.id, globalIndex, e); } else { navigate(`/parts/library2/${part.id}${libraryLocationSuffix}`); } }}>
                       {selectMode && <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
