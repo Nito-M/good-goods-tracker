@@ -32,7 +32,7 @@ import {
 export function PartsLibrary2() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, getSignedUrl } = useParts2();
+  const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, addPart, getSignedUrl } = useParts2();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb } = usePartFolders2();
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
