@@ -447,6 +447,8 @@ export function PartsLibrary() {
                     return (
                     <div
                       key={part.id}
+                      draggable={!selectMode}
+                      onDragStart={(e) => handleDragStart(e, part)}
                       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors group ${i > 0 ? 'border-t border-border' : ''} ${selectMode && selectedPartIds.has(part.id) ? 'bg-primary/5' : ''}`}
                       onClick={(e) => {
                         if (selectMode) { handlePartClick(part.id, globalIndex, e); }
@@ -490,6 +492,8 @@ export function PartsLibrary() {
                     return (
                     <Card
                       key={part.id}
+                      draggable={!selectMode}
+                      onDragStart={(e) => handleDragStart(e, part)}
                       className={`cursor-pointer hover:shadow-md transition-shadow group relative ${selectMode && selectedPartIds.has(part.id) ? 'ring-2 ring-primary' : ''}`}
                       onClick={(e) => {
                         if (selectMode) { handlePartClick(part.id, globalIndex, e); }
