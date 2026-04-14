@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package, Upload } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssemblyItem } from '@/hooks/usePartsAssemblies';
 import { useParts } from '@/hooks/useParts';
@@ -153,6 +153,21 @@ function AssemblyDetail({
                 });
               }}>
                 <Download className="h-3 w-3 mr-1" /> PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                const json = JSON.stringify({
+                  name: assembly.name,
+                  description: assembly.description,
+                  selling_price: assembly.selling_price,
+                  status: assembly.status,
+                  items: items.map(i => ({ part_name: i.part_name, part_sku: i.part_sku, quantity: i.quantity, notes: i.notes })),
+                }, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `${assembly.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`; a.click();
+                URL.revokeObjectURL(url);
+              }}>
+                <Download className="h-3 w-3 mr-1" /> JSON
               </Button>
               <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                 <Pencil className="h-3 w-3 mr-1" /> Edit
@@ -331,6 +346,74 @@ export function PartsAssembliesDetail() {
   const [deletingType, setDeletingType] = useState(false);
 
   const selected = filtered.find(a => a.id === selectedId) || null;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const importAssemblyFromJson = useCallback(async (text: string, fileName?: string) => {
+    try {
+      const data = JSON.parse(text);
+      const name = data.name?.trim();
+      if (!name) {
+        toast({ title: 'Invalid JSON', description: 'Assembly must have a name.', variant: 'destructive' });
+        return false;
+      }
+      // Check for duplicate name
+      if (filtered.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+        toast({ title: 'Skipped', description: `Assembly "${name}" already exists.`, variant: 'destructive' });
+        return false;
+      }
+      const result = await createAssembly(name, data.description || undefined, decodedType);
+      if (!result) return false;
+      // Import line items if present
+      if (Array.isArray(data.items) && data.items.length > 0) {
+        const rows = data.items.filter((i: any) => i.part_name || i.partName).map((i: any) => ({
+          assembly_id: result.id,
+          part_name: i.part_name || i.partName || '',
+          part_sku: i.part_sku || i.partSku || '',
+          quantity: i.quantity ?? 1,
+          notes: i.notes || null,
+          part_id: null,
+          inventory_item_id: null,
+        }));
+        if (rows.length > 0) {
+          await (supabase as any).from('parts_assembly_items').insert(rows);
+        }
+      }
+      if (data.selling_price || data.sellingPrice) {
+        await updateAssembly(result.id, { selling_price: data.selling_price ?? data.sellingPrice ?? 0 });
+      }
+      setSelectedId(result.id);
+      toast({ title: 'Assembly imported', description: `"${name}" added.` });
+      return true;
+    } catch {
+      toast({ title: `Failed to import${fileName ? ` ${fileName}` : ''}`, description: 'Invalid JSON format.', variant: 'destructive' });
+      return false;
+    }
+  }, [createAssembly, updateAssembly, decodedType, filtered, toast]);
+
+  const handleFileDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json'));
+    if (files.length === 0) return;
+    let imported = 0;
+    for (const file of files) {
+      const text = await file.text();
+      if (await importAssemblyFromJson(text, file.name)) imported++;
+    }
+    if (imported > 1) toast({ title: `${imported} assemblies imported` });
+  }, [importAssemblyFromJson, toast]);
+
+  const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.json'));
+    let imported = 0;
+    for (const file of files) {
+      const text = await file.text();
+      if (await importAssemblyFromJson(text, file.name)) imported++;
+    }
+    if (imported > 1) toast({ title: `${imported} assemblies imported` });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [importAssemblyFromJson, toast]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -440,6 +523,10 @@ export function PartsAssembliesDetail() {
                   )}
                 </>
               )}
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1">
+                <Upload className="h-3 w-3" /> Import JSON
+              </Button>
+              <input ref={fileInputRef} type="file" accept=".json" multiple className="hidden" onChange={handleFileInput} />
               <Button onClick={() => setCreateOpen(true)} className="gap-2">
                 <Plus className="h-4 w-4" /> New Assembly
               </Button>
@@ -448,7 +535,17 @@ export function PartsAssembliesDetail() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl flex h-[calc(100vh-8rem)]">
+      <div
+        className="mx-auto max-w-7xl flex h-[calc(100vh-8rem)] relative"
+        onDrop={handleFileDrop}
+        onDragOver={(e) => { e.preventDefault(); if (Array.from(e.dataTransfer.types).includes('Files')) setIsDragOver(true); }}
+        onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setIsDragOver(false); }}
+      >
+        {isDragOver && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-primary/10 border-2 border-dashed border-primary rounded-lg pointer-events-none">
+            <p className="text-lg font-semibold text-primary">Drop JSON files here to import assemblies</p>
+          </div>
+        )}
         {/* Sidebar list */}
         <aside className="w-72 shrink-0 border-r overflow-auto">
           {loading ? (
