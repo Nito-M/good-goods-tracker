@@ -153,6 +153,21 @@ function AssemblyDetail2({
               }}>
                 <Download className="h-3 w-3 mr-1" /> PDF
               </Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                const json = JSON.stringify({
+                  name: assembly.name,
+                  description: assembly.description,
+                  selling_price: assembly.selling_price,
+                  status: assembly.status,
+                  items: items.map(i => ({ part_name: i.part_name, part_sku: i.part_sku, quantity: i.quantity, notes: i.notes })),
+                }, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `${assembly.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`; a.click();
+                URL.revokeObjectURL(url);
+              }}>
+                <Download className="h-3 w-3 mr-1" /> JSON
+              </Button>
               <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                 <Pencil className="h-3 w-3 mr-1" /> Edit
               </Button>
