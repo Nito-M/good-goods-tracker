@@ -1,0 +1,6 @@
+
+ALTER TABLE public.parts ALTER COLUMN name SET DEFAULT '';
+ALTER TABLE public.parts ALTER COLUMN sku SET DEFAULT '';
+
+ALTER TABLE public.parts_2 ALTER COLUMN name SET DEFAULT '';
+ALTER TABLE public.parts_2 ALTER COLUMN sku SET DEFAULT '';

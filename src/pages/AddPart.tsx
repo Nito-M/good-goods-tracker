@@ -36,8 +36,8 @@ export function AddPart() {
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      toast({ title: 'Name is required', variant: 'destructive' });
+    if (!name.trim() && !sku.trim()) {
+      toast({ title: 'Name or SKU is required', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -87,7 +87,7 @@ export function AddPart() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">Name</Label>
                 <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Part name" />
               </div>
               <div className="space-y-2">
