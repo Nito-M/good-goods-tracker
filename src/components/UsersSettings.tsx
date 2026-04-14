@@ -481,6 +481,11 @@ export function UsersSettings() {
                           </span>
                         ))
                       )}
+                      {u.featurePermissions.includes('view_all_requests') && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          View All Requests
+                        </span>
+                      )}
                     </div>
                     {/* Requester linking */}
                     <div className="flex items-center gap-2 pt-1">
