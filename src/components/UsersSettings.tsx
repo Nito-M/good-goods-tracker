@@ -63,6 +63,7 @@ interface OrgUser {
   orgId: string;
   orgName: string;
   permissions: string[]; // page_keys the user has access to
+  featurePermissions: string[]; // feature keys like 'view_all_requests'
   linkedRequesterName: string | null;
 }
 
