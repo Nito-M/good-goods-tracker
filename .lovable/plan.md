@@ -1,35 +1,27 @@
 
 
-## Plan: Drag-and-Drop Parts Between Browser Windows + Export as File
+## Plan: Prevent Duplicate Part Numbers on Import/Drop
 
-### What this does
-Makes parts in both Parts Libraries draggable so you can:
-1. **Drag to another browser window/tab** of the same app — the part data gets imported into that library
-2. **Drag to desktop/file explorer** — downloads a JSON file with the part data
+### Problem
+Currently you can drag a part and drop it back into the same library, or import a JSON file, and it creates a duplicate even if a part with that Part Number already exists.
 
-### How it works
-
-**HTML Drag API** — uses the browser's native `dragstart`/`drop` events with `dataTransfer`:
-- On `dragstart`: serialize part data (name, part number, price, description) as JSON into `dataTransfer.setData('application/json', ...)` and also set `text/plain` with a human-readable summary. The `DownloadURL` type enables dragging to desktop as a `.json` file.
-- On `drop`: the receiving library listens for drops, parses the JSON, and creates a new part via `addPart`.
+### Solution
+Add a duplicate-check before creating a part in all import paths (drag-drop, JSON file drop, and Import JSON button). If a part with the same Part Number (SKU) already exists in the library, skip it and show a toast saying it was skipped.
 
 ### Files to change
 
-1. **`src/pages/PartsLibrary.tsx`**
-   - Add `draggable` attribute + `onDragStart` handler to each part row (lines view) and card (cards view)
-   - Add `onDragOver`/`onDrop` handlers on the parts list container to accept incoming parts from other windows
-   - On drop: parse JSON, call `addPart` to create the part, show a toast
+1. **`src/pages/PartsLibrary.tsx`** — In `importPartFromJson`, check if `parts` array already contains a part with the same `sku` before calling `addPart`. Skip and toast if duplicate found.
 
-2. **`src/pages/PartsLibrary2.tsx`**
-   - Same changes as PartsLibrary.tsx for the second library
+2. **`src/pages/PartsLibrary2.tsx`** — Same duplicate check.
 
-3. **No database changes needed** — uses existing `addPart` mutations
+3. **`src/components/PartJsonImport.tsx`** — Accept `existingParts` prop (or just the list of existing SKUs), check before calling `addPart`. Skip duplicates with a toast.
 
-### Technical details
-
-- `dataTransfer.setData('application/json', JSON.stringify(partData))` for cross-window transfer
-- `dataTransfer.setData('DownloadURL', 'application/json:PartName.json:data:...')` for desktop file export
-- Visual feedback: drop zone highlight when dragging over the library area
-- Part images are NOT transferred (storage paths are user-specific); only metadata is copied
-- Each library accepts drops from either library (cross-library transfer works too)
+### Logic
+```typescript
+// Before addPart:
+if (data.sku && parts.some(p => p.sku.toLowerCase() === data.sku.toLowerCase())) {
+  toast({ title: 'Skipped', description: `Part # "${data.sku}" already exists.`, variant: 'destructive' });
+  return;
+}
+```
 
