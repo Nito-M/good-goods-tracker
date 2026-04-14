@@ -216,17 +216,43 @@ export function PartsLibrary() {
     });
   }, []);
 
+  const importPartFromJson = useCallback(async (text: string, fileName?: string) => {
+    try {
+      const data = JSON.parse(text);
+      if (!data.name && !data.sku) return false;
+      const id = await addPart({ name: data.name || '', sku: data.sku || '', price: data.price ?? 0, description: data.description || undefined, folderId: currentFolderId });
+      if (id) toast({ title: 'Part imported', description: `"${data.name || data.sku}" added to library.` });
+      return !!id;
+    } catch {
+      toast({ title: `Failed to import${fileName ? ` ${fileName}` : ''}`, description: 'Invalid JSON format.', variant: 'destructive' });
+      return false;
+    }
+  }, [addPart, currentFolderId, toast]);
+
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+
+    // Try drag data first (cross-window)
     const data = getPartDropData(e);
-    if (!data) return;
-    const id = await addPart({ name: data.name, sku: data.sku, price: data.price, description: data.description || undefined, folderId: currentFolderId });
-    if (id) toast({ title: 'Part imported', description: `"${data.name || data.sku}" added to library.` });
-  }, [addPart, currentFolderId, toast]);
+    if (data) {
+      await importPartFromJson(JSON.stringify(data));
+      return;
+    }
+
+    // Try dropped files
+    const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json'));
+    if (files.length === 0) return;
+    let imported = 0;
+    for (const file of files) {
+      const text = await file.text();
+      if (await importPartFromJson(text, file.name)) imported++;
+    }
+    if (imported > 1) toast({ title: `${imported} parts imported` });
+  }, [importPartFromJson]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    if (isPartDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setIsDragOver(true); }
+    if (isPartDrag(e) || e.dataTransfer.types.includes('Files')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setIsDragOver(true); }
   }, []);
 
   const handleDragLeave = useCallback(() => setIsDragOver(false), []);
@@ -346,7 +372,7 @@ export function PartsLibrary() {
       <main className="px-4 py-8 sm:px-6 lg:px-8" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
         {isDragOver && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/10 border-4 border-dashed border-primary pointer-events-none rounded-lg">
-            <p className="text-xl font-semibold text-primary">Drop part here to import</p>
+            <p className="text-xl font-semibold text-primary">Drop parts or JSON files here to import</p>
           </div>
         )}
         {/* Breadcrumb */}
