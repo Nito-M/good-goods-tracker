@@ -3,6 +3,7 @@ import { formatCurrency } from '@/lib/utils';
 import { savePdfBlob } from '@/lib/pdfSave';
 
 export interface AssemblyPdfVisibility {
+  partName: boolean;
   description: boolean;
   sellingPrice: boolean;
   sku: boolean;
@@ -11,6 +12,7 @@ export interface AssemblyPdfVisibility {
 }
 
 export const DEFAULT_ASSEMBLY_PDF_VISIBILITY: AssemblyPdfVisibility = {
+  partName: true,
   description: true,
   sellingPrice: true,
   sku: true,
@@ -94,10 +96,11 @@ export async function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
   type Col = { label: string; x: number; w: number };
   const cols: Col[] = [];
   let cx = margin;
-  const nameW = vis.sku ? 85 : (vis.quantity ? 110 : 130);
-  cols.push({ label: 'Part Name', x: cx, w: nameW });
-  cx += nameW;
-  if (vis.sku) { const w = 45; cols.push({ label: 'SKU', x: cx, w }); cx += w; }
+  const totalAvail = pageWidth - margin * 2;
+  // Count enabled columns to distribute width
+  const enabledCount = [vis.partName, vis.sku, vis.quantity, vis.notes].filter(Boolean).length;
+  if (vis.partName) { const w = vis.sku ? 85 : (enabledCount <= 2 ? 130 : 110); cols.push({ label: 'Part Name', x: cx, w }); cx += w; }
+  if (vis.sku) { const w = vis.partName ? 45 : 85; cols.push({ label: 'Part #', x: cx, w }); cx += w; }
   if (vis.quantity) { const w = 18; cols.push({ label: 'Qty', x: cx, w }); cx += w; }
   if (vis.notes) { cols.push({ label: 'Notes', x: cx, w: pageWidth - margin - cx }); }
   const tableRight = pageWidth - margin;
@@ -128,11 +131,11 @@ export async function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
   doc.setFontSize(9);
 
   for (const item of assembly.items) {
-    const nameCol = cols.find(c => c.label === 'Part Name')!;
-    const skuCol = cols.find(c => c.label === 'SKU');
+    const nameCol = cols.find(c => c.label === 'Part Name');
+    const skuCol = cols.find(c => c.label === 'Part #');
     const notesCol = cols.find(c => c.label === 'Notes');
 
-    const nameLines = doc.splitTextToSize(item.partName, nameCol.w - 4);
+    const nameLines = nameCol ? doc.splitTextToSize(item.partName, nameCol.w - 4) : [];
     const skuLines = skuCol ? doc.splitTextToSize(item.partSku || '—', skuCol.w - 4) : [];
     const notesLines = notesCol && item.notes ? doc.splitTextToSize(item.notes, notesCol.w - 4) : [];
     const rowLines = Math.max(nameLines.length, skuLines.length, notesLines.length, 1);
@@ -148,7 +151,7 @@ export async function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
 
     const textY = y + rowPadding + 4;
     doc.setTextColor(0, 0, 0);
-    doc.text(nameLines, nameCol.x + 2, textY);
+    if (nameCol) doc.text(nameLines, nameCol.x + 2, textY);
     if (skuCol) doc.text(skuLines, skuCol.x + 2, textY);
     const qtyCol = cols.find(c => c.label === 'Qty');
     if (qtyCol) doc.text(String(item.quantity), qtyCol.x + 2, textY);
