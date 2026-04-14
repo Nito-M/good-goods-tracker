@@ -331,6 +331,74 @@ export function PartsAssembliesDetail() {
   const [deletingType, setDeletingType] = useState(false);
 
   const selected = filtered.find(a => a.id === selectedId) || null;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const importAssemblyFromJson = useCallback(async (text: string, fileName?: string) => {
+    try {
+      const data = JSON.parse(text);
+      const name = data.name?.trim();
+      if (!name) {
+        toast({ title: 'Invalid JSON', description: 'Assembly must have a name.', variant: 'destructive' });
+        return false;
+      }
+      // Check for duplicate name
+      if (filtered.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+        toast({ title: 'Skipped', description: `Assembly "${name}" already exists.`, variant: 'destructive' });
+        return false;
+      }
+      const result = await createAssembly(name, data.description || undefined, decodedType);
+      if (!result) return false;
+      // Import line items if present
+      if (Array.isArray(data.items) && data.items.length > 0) {
+        const rows = data.items.filter((i: any) => i.part_name || i.partName).map((i: any) => ({
+          assembly_id: result.id,
+          part_name: i.part_name || i.partName || '',
+          part_sku: i.part_sku || i.partSku || '',
+          quantity: i.quantity ?? 1,
+          notes: i.notes || null,
+          part_id: null,
+          inventory_item_id: null,
+        }));
+        if (rows.length > 0) {
+          await (supabase as any).from('parts_assembly_items').insert(rows);
+        }
+      }
+      if (data.selling_price || data.sellingPrice) {
+        await updateAssembly(result.id, { selling_price: data.selling_price ?? data.sellingPrice ?? 0 });
+      }
+      setSelectedId(result.id);
+      toast({ title: 'Assembly imported', description: `"${name}" added.` });
+      return true;
+    } catch {
+      toast({ title: `Failed to import${fileName ? ` ${fileName}` : ''}`, description: 'Invalid JSON format.', variant: 'destructive' });
+      return false;
+    }
+  }, [createAssembly, updateAssembly, decodedType, filtered, toast]);
+
+  const handleFileDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json'));
+    if (files.length === 0) return;
+    let imported = 0;
+    for (const file of files) {
+      const text = await file.text();
+      if (await importAssemblyFromJson(text, file.name)) imported++;
+    }
+    if (imported > 1) toast({ title: `${imported} assemblies imported` });
+  }, [importAssemblyFromJson, toast]);
+
+  const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.name.endsWith('.json'));
+    let imported = 0;
+    for (const file of files) {
+      const text = await file.text();
+      if (await importAssemblyFromJson(text, file.name)) imported++;
+    }
+    if (imported > 1) toast({ title: `${imported} assemblies imported` });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [importAssemblyFromJson, toast]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
