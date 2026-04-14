@@ -136,8 +136,10 @@ export function PartsLibrary2() {
     try {
       const data = JSON.parse(text);
       if (!data.name && !data.sku) return false;
-      if (data.sku && parts.some(p => p.sku.toLowerCase() === data.sku.toLowerCase())) {
-        toast({ title: 'Skipped', description: `Part # "${data.sku}" already exists.`, variant: 'destructive' });
+      const dupBySku = data.sku && parts.some(p => p.sku && p.sku.toLowerCase() === data.sku.toLowerCase());
+      const dupByName = !dupBySku && data.name && parts.some(p => p.name && p.name.toLowerCase() === data.name.toLowerCase());
+      if (dupBySku || dupByName) {
+        toast({ title: 'Skipped', description: `"${data.sku || data.name}" already exists in this library.`, variant: 'destructive' });
         return false;
       }
       const id = await addPart({ name: data.name || '', sku: data.sku || '', price: data.price ?? 0, description: data.description || undefined, folderId: currentFolderId });
