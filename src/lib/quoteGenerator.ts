@@ -8,7 +8,12 @@ const PAGE_MARGIN_BOTTOM = 20; // mm from bottom edge where we trigger a new pag
 const LINE_HEIGHT = 7;
 const NOTE_LINE_HEIGHT = 4;
 
-export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) => {
+export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings, options?: { isSalesOrder?: boolean }) => {
+  const isSalesOrder = options?.isSalesOrder ?? false;
+  const documentTitle = isSalesOrder ? 'SALES ORDER' : 'QUOTE';
+  const documentLabel = isSalesOrder ? 'Sales Order #' : 'Quote #';
+  const billToLabel = isSalesOrder ? 'Sales Order For:' : 'Quote For:';
+  const filePrefix = isSalesOrder ? 'SO' : quote.quoteNumber;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
