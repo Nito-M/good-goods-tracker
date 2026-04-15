@@ -6,6 +6,7 @@ import DxfParser from 'dxf-parser';
 
 interface DxfThreeViewerProps {
   dxfText: string;
+  bgMode?: 'dark' | 'white';
 }
 
 interface ParsedGeometry {
