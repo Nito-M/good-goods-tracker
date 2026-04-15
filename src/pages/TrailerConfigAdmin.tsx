@@ -438,6 +438,7 @@ function TrailerLengthsTab({
               <TableRow>
                 <TableHead>Label</TableHead>
                 <TableHead>Compatible Types</TableHead>
+                <TableHead>Compatible Subtypes</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -473,6 +474,33 @@ function TrailerLengthsTab({
                           l.compatible_trailer_type_ids.map(tid => {
                             const t = types.find(x => x.id === tid);
                             return t ? <Badge key={tid} variant="outline">{t.name}</Badge> : null;
+                          })
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === l.id ? (
+                      <div className="flex flex-wrap gap-2">
+                        {editRelevantSubtypes.map(s => (
+                          <label key={s.id} className="flex items-center gap-1.5 text-sm">
+                            <Checkbox
+                              checked={editCompatibleSubtypeIds.includes(s.id)}
+                              onCheckedChange={() => toggleEditSubtypeCompatible(s.id)}
+                            />
+                            {s.name}
+                          </label>
+                        ))}
+                        {editRelevantSubtypes.length === 0 && <span className="text-xs text-muted-foreground">No subtypes</span>}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {(l.compatible_trailer_subtype_ids || []).length === 0 ? (
+                          <Badge variant="secondary">All</Badge>
+                        ) : (
+                          (l.compatible_trailer_subtype_ids || []).map(sid => {
+                            const s = subtypes.find(x => x.id === sid);
+                            return s ? <Badge key={sid} variant="outline">{s.name}</Badge> : null;
                           })
                         )}
                       </div>
