@@ -208,9 +208,10 @@ function AssemblyDetail({
     const pa = list.find(a => a.id === partsAssemblyId);
     if (pa) {
       const table = source === 'parts1' ? 'parts_assembly_items' : 'parts_assembly_items_2';
+      const partsJoin = source === 'parts1' ? 'parts ( price )' : 'parts_2 ( price )';
       const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
         .from(table as any)
-        .select('quantity, part_id, inventory_item_id, parts ( price ), inventory_items ( cost )')
+        .select(`quantity, part_id, inventory_item_id, ${partsJoin}, inventory_items ( cost )`)
         .eq('assembly_id', partsAssemblyId);
 
       let totalCost = 0;
