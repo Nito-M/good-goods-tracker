@@ -2417,6 +2417,7 @@ export type Database = {
           front_end_tier2_id: string | null
           id: string
           total_price: number
+          trailer_length_id: string | null
           trailer_type_id: string
           under_carriage_axle_count: number | null
           under_carriage_id: string | null
@@ -2433,6 +2434,7 @@ export type Database = {
           front_end_tier2_id?: string | null
           id?: string
           total_price?: number
+          trailer_length_id?: string | null
           trailer_type_id: string
           under_carriage_axle_count?: number | null
           under_carriage_id?: string | null
@@ -2449,6 +2451,7 @@ export type Database = {
           front_end_tier2_id?: string | null
           id?: string
           total_price?: number
+          trailer_length_id?: string | null
           trailer_type_id?: string
           under_carriage_axle_count?: number | null
           under_carriage_id?: string | null
@@ -2484,6 +2487,13 @@ export type Database = {
             columns: ["front_end_tier2_id"]
             isOneToOne: false
             referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_trailer_length_id_fkey"
+            columns: ["trailer_length_id"]
+            isOneToOne: false
+            referencedRelation: "trailer_lengths"
             referencedColumns: ["id"]
           },
           {
@@ -3717,6 +3727,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trailer_lengths: {
+        Row: {
+          compatible_trailer_type_ids: string[]
+          created_at: string
+          id: string
+          label: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compatible_trailer_type_ids?: string[]
+          created_at?: string
+          id?: string
+          label: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compatible_trailer_type_ids?: string[]
+          created_at?: string
+          id?: string
+          label?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       trailer_types: {
         Row: {
