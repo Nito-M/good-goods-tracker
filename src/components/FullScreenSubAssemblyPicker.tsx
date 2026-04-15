@@ -36,6 +36,7 @@ export function FullScreenSubAssemblyPicker({
   subAssemblies1,
   subAssemblies2,
   adding,
+  existingSubAssemblyIds = [],
 }: FullScreenSubAssemblyPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSource, setSelectedSource] = useState<'parts1' | 'parts2' | null>(null);
