@@ -78,7 +78,46 @@ export function SalesOrderDetail() {
   const { quotes, loading: quotesLoading } = useQuotes();
   const { vendors, loading: vendorsLoading } = useVendors();
   const { createJob } = useJobs();
+  const { profile } = useProfile();
+  const { companies } = useCompanies();
   const { toast } = useToast();
+
+  const quoteSettings = useMemo<QuoteSettings>(() => ({
+    businessName: profile?.businessName || null,
+    businessAddress: profile?.businessAddress || null,
+    businessPhone: profile?.businessPhone || null,
+    businessEmail: profile?.businessEmail || null,
+    businessNumber: profile?.businessNumber || null,
+    thankYouNote: profile?.quoteThankYouNote || null,
+    logoUrl: profile?.logoUrl || null,
+    layout: profile?.quoteLayout || profile?.invoiceLayout || null,
+    validityDays: profile?.quoteValidityDays || null,
+  }), [profile]);
+
+  const getQuoteSettingsForQuote = (q: any): QuoteSettings => {
+    const companyId = q.companyId;
+    const company = companyId ? companies.find((c: any) => c.id === companyId) : null;
+    if (company) {
+      return {
+        businessName: company.name,
+        businessAddress: company.address,
+        businessPhone: company.phone,
+        businessEmail: company.email,
+        businessNumber: company.businessNumber,
+        logoUrl: company.logoUrl,
+        thankYouNote: company.quoteThankYouNote || quoteSettings.thankYouNote,
+        layout: company.quoteLayout || quoteSettings.layout,
+        validityDays: company.quoteValidityDays || quoteSettings.validityDays,
+      };
+    }
+    return quoteSettings;
+  };
+
+  const handleDownloadSalesOrder = () => {
+    if (!quote) return;
+    const settings = getQuoteSettingsForQuote(quote);
+    generateQuotePDF(quote, settings, { isSalesOrder: true });
+  };
 
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
