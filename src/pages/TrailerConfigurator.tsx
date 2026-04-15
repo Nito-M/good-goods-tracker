@@ -160,6 +160,7 @@ export function TrailerConfigurator() {
     doc.setFontSize(11);
     const rows: { label: string; value: string; price?: number }[] = [
       { label: 'Trailer Type', value: selectedTrailer?.name || '—' },
+      { label: 'Trailer Length', value: selectedLength?.label || '—' },
     ];
     if (selectedUnderCarriage) {
       rows.push({ label: 'Under Carriage', value: selectedUnderCarriage.name, price: selectedUnderCarriage.price });
@@ -287,8 +288,37 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 2: Under Carriage */}
+          {/* Step 2: Trailer Length */}
           {step === 1 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {availableLengths.map(l => (
+                <div key={l.id} className="relative">
+                  <Card
+                    className={cn(
+                      'cursor-pointer transition-all hover:shadow-md',
+                      trailerLengthId === l.id && 'ring-2 ring-primary bg-primary/5'
+                    )}
+                    onClick={() => setTrailerLengthId(l.id)}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center gap-2">
+                      <span className="text-2xl font-bold">{l.label}</span>
+                      {trailerLengthId === l.id && (
+                        <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="h-4 w-4 text-primary-foreground" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+              {availableLengths.length === 0 && (
+                <p className="col-span-full text-muted-foreground text-center py-12">No trailer lengths configured for this type. Add them in Admin.</p>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Under Carriage */}
+          {step === 2 && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 1: Select Under Carriage Type</h3>
@@ -393,8 +423,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 3: Front End */}
-          {step === 2 && (
+          {/* Step 4: Front End */}
+          {step === 3 && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 1: Select Front End Type</h3>
@@ -442,8 +472,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 4: Back End */}
-          {step === 3 && (
+          {/* Step 5: Back End */}
+          {step === 4 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {backEnds.map(c => (
                 <div key={c.id} className="relative">
@@ -463,8 +493,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 5: Add Ons */}
-          {step === 4 && (
+          {/* Step 6: Add Ons */}
+          {step === 5 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {deckTypes.map(c => (
                 <div key={c.id} className="relative">
@@ -484,8 +514,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 6: Summary */}
-          {step === 5 && (
+          {/* Step 7: Summary */}
+          {step === 6 && (
             <div className="space-y-6">
               {lookupLoading ? (
                 <p className="text-muted-foreground text-center py-12">Looking up configuration...</p>
