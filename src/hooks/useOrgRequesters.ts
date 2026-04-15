@@ -143,6 +143,21 @@ export function useOrgRequesters() {
     }
   };
 
+  const updateRequesterName = async (id: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('org_requesters')
+        .update({ name: name.trim() })
+        .eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Requester renamed' });
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error renaming requester:', error);
+      toast({ title: 'Error', description: 'Failed to rename requester.', variant: 'destructive' });
+    }
+  };
+
   return {
     requesters,
     members,
@@ -151,6 +166,7 @@ export function useOrgRequesters() {
     deleteRequester,
     linkRequester,
     unlinkRequester,
+    updateRequesterName,
     refetch: fetchData,
     requesterNames: requesters.map(r => r.name),
   };

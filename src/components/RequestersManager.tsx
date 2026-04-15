@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Users, ChevronDown, Link2 } from 'lucide-react';
+import { Plus, Trash2, Users, ChevronDown, Link2, Pencil, Check, X } from 'lucide-react';
 import { useOrgRequesters } from '@/hooks/useOrgRequesters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +11,11 @@ interface RequestersManagerProps {
 }
 
 export function RequestersManager({ onRequestersChanged }: RequestersManagerProps) {
-  const { requesters, members, loading, addRequester, deleteRequester, linkRequester, unlinkRequester } = useOrgRequesters();
+  const { requesters, members, loading, addRequester, deleteRequester, linkRequester, unlinkRequester, updateRequesterName } = useOrgRequesters();
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
@@ -35,6 +37,21 @@ export function RequestersManager({ onRequestersChanged }: RequestersManagerProp
     }
     onRequestersChanged?.();
   };
+
+  const startEdit = (id: string, currentName: string) => {
+    setEditingId(id);
+    setEditValue(currentName);
+  };
+
+  const saveEdit = async () => {
+    if (editingId && editValue.trim()) {
+      await updateRequesterName(editingId, editValue.trim());
+      onRequestersChanged?.();
+    }
+    setEditingId(null);
+  };
+
+  const cancelEdit = () => setEditingId(null);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -79,7 +96,33 @@ export function RequestersManager({ onRequestersChanged }: RequestersManagerProp
 
                   return (
                     <div key={r.id} className="flex items-center gap-2 p-2 rounded-md border bg-background">
-                      <span className="font-medium text-sm flex-1 min-w-0 truncate">{r.name}</span>
+                      {editingId === r.id ? (
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                          <Input
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            className="h-7 text-sm flex-1"
+                            autoFocus
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') saveEdit();
+                              if (e.key === 'Escape') cancelEdit();
+                            }}
+                          />
+                          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={saveEdit}>
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={cancelEdit}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span
+                          className="font-medium text-sm flex-1 min-w-0 truncate cursor-pointer hover:text-primary transition-colors"
+                          onDoubleClick={() => startEdit(r.id, r.name)}
+                        >
+                          {r.name}
+                        </span>
+                      )}
                       <div className="flex items-center gap-1.5">
                         <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
                         <Select
@@ -99,6 +142,16 @@ export function RequestersManager({ onRequestersChanged }: RequestersManagerProp
                           </SelectContent>
                         </Select>
                       </div>
+                      {editingId !== r.id && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => startEdit(r.id, r.name)}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
