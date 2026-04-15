@@ -1,0 +1,1 @@
+ALTER TABLE public.trailer_lengths ADD COLUMN compatible_trailer_subtype_ids text[] DEFAULT '{}' NOT NULL;

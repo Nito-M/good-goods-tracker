@@ -180,7 +180,7 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="trailer_lengths" className="mt-4">
-          <TrailerLengthsTab lengths={lengths} types={types} loading={lengthsLoading} onCreate={createLength} onUpdate={updateLength} onRemove={removeLength} />
+          <TrailerLengthsTab lengths={lengths} types={types} subtypes={subtypes} loading={lengthsLoading} onCreate={createLength} onUpdate={updateLength} onRemove={removeLength} />
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
@@ -325,37 +325,45 @@ function TrailerSubtypesTab({
 
 // --- Trailer Lengths Tab ---
 function TrailerLengthsTab({
-  lengths, types, loading, onCreate, onUpdate, onRemove,
+  lengths, types, subtypes, loading, onCreate, onUpdate, onRemove,
 }: {
-  lengths: { id: string; label: string; compatible_trailer_type_ids: string[] }[];
+  lengths: { id: string; label: string; compatible_trailer_type_ids: string[]; compatible_trailer_subtype_ids: string[] }[];
   types: { id: string; name: string }[];
+  subtypes: { id: string; name: string; trailer_type_id: string }[];
   loading: boolean;
-  onCreate: (label: string, compatible_trailer_type_ids?: string[]) => Promise<any>;
-  onUpdate: (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[] }) => Promise<void>;
+  onCreate: (label: string, compatible_trailer_type_ids?: string[], compatible_trailer_subtype_ids?: string[]) => Promise<any>;
+  onUpdate: (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[] }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [label, setLabel] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
+  const [compatibleSubtypeIds, setCompatibleSubtypeIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
+  const [editCompatibleSubtypeIds, setEditCompatibleSubtypeIds] = useState<string[]>([]);
+
+  const relevantSubtypes = subtypes.filter(s => compatibleIds.length === 0 || compatibleIds.includes(s.trailer_type_id));
+  const editRelevantSubtypes = subtypes.filter(s => editCompatibleIds.length === 0 || editCompatibleIds.includes(s.trailer_type_id));
 
   const handleAdd = async () => {
     if (!label.trim()) return;
-    await onCreate(label.trim(), compatibleIds);
+    await onCreate(label.trim(), compatibleIds, compatibleSubtypeIds);
     setLabel('');
     setCompatibleIds([]);
+    setCompatibleSubtypeIds([]);
   };
 
   const startEdit = (l: typeof lengths[0]) => {
     setEditingId(l.id);
     setEditLabel(l.label);
     setEditCompatibleIds([...l.compatible_trailer_type_ids]);
+    setEditCompatibleSubtypeIds([...(l.compatible_trailer_subtype_ids || [])]);
   };
 
   const saveEdit = async (id: string) => {
     if (!editLabel.trim()) return;
-    await onUpdate(id, { label: editLabel.trim(), compatible_trailer_type_ids: editCompatibleIds });
+    await onUpdate(id, { label: editLabel.trim(), compatible_trailer_type_ids: editCompatibleIds, compatible_trailer_subtype_ids: editCompatibleSubtypeIds });
     setEditingId(null);
   };
 
@@ -365,6 +373,14 @@ function TrailerLengthsTab({
 
   const toggleEditCompatible = (id: string) => {
     setEditCompatibleIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSubtypeCompatible = (id: string) => {
+    setCompatibleSubtypeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleEditSubtypeCompatible = (id: string) => {
+    setEditCompatibleSubtypeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   return (
@@ -391,6 +407,22 @@ function TrailerLengthsTab({
               {types.length === 0 && <span className="text-xs text-muted-foreground">Add trailer types first</span>}
             </div>
           </div>
+          {relevantSubtypes.length > 0 && (
+            <div className="space-y-1">
+              <Label>Compatible Subtypes <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <div className="flex flex-wrap gap-2">
+                {relevantSubtypes.map(s => (
+                  <label key={s.id} className="flex items-center gap-1.5 text-sm">
+                    <Checkbox
+                      checked={compatibleSubtypeIds.includes(s.id)}
+                      onCheckedChange={() => toggleSubtypeCompatible(s.id)}
+                    />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <Button onClick={handleAdd} disabled={!label.trim()}>
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
@@ -406,6 +438,7 @@ function TrailerLengthsTab({
               <TableRow>
                 <TableHead>Label</TableHead>
                 <TableHead>Compatible Types</TableHead>
+                <TableHead>Compatible Subtypes</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -441,6 +474,33 @@ function TrailerLengthsTab({
                           l.compatible_trailer_type_ids.map(tid => {
                             const t = types.find(x => x.id === tid);
                             return t ? <Badge key={tid} variant="outline">{t.name}</Badge> : null;
+                          })
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === l.id ? (
+                      <div className="flex flex-wrap gap-2">
+                        {editRelevantSubtypes.map(s => (
+                          <label key={s.id} className="flex items-center gap-1.5 text-sm">
+                            <Checkbox
+                              checked={editCompatibleSubtypeIds.includes(s.id)}
+                              onCheckedChange={() => toggleEditSubtypeCompatible(s.id)}
+                            />
+                            {s.name}
+                          </label>
+                        ))}
+                        {editRelevantSubtypes.length === 0 && <span className="text-xs text-muted-foreground">No subtypes</span>}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {(l.compatible_trailer_subtype_ids || []).length === 0 ? (
+                          <Badge variant="secondary">All</Badge>
+                        ) : (
+                          (l.compatible_trailer_subtype_ids || []).map(sid => {
+                            const s = subtypes.find(x => x.id === sid);
+                            return s ? <Badge key={sid} variant="outline">{s.name}</Badge> : null;
                           })
                         )}
                       </div>
