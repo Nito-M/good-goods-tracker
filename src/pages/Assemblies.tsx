@@ -53,7 +53,7 @@ import { Assembly } from '@/hooks/useAssemblies';
 
 
 function AssemblyDetail({
-  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onDuplicate, onItemsChanged, allAssemblies, partsAssemblies,
+  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onDuplicate, onItemsChanged, allAssemblies, partsAssemblies, partsAssemblies2,
 }: {
   assembly: Assembly;
   partsItems?: { id: string; name: string; sku: string; price: number }[];
@@ -67,6 +67,7 @@ function AssemblyDetail({
   onItemsChanged?: () => void;
   allAssemblies: Assembly[];
   partsAssemblies?: PartsAssembly[];
+  partsAssemblies2?: PartsAssembly2[];
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
