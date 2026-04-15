@@ -937,6 +937,7 @@ function PrebuiltTab({
     if (!trailerTypeId) { toast({ title: 'Required', description: 'Select a trailer type.', variant: 'destructive' }); return; }
     await onSave({
       trailer_type_id: trailerTypeId,
+      trailer_length_id: trailerLengthId && trailerLengthId !== 'none' ? trailerLengthId : null,
       front_end_id: frontEndId && frontEndId !== 'none' ? frontEndId : null,
       front_end_tier2_id: frontEndTier2Id && frontEndTier2Id !== 'none' ? frontEndTier2Id : null,
       back_end_id: backEndId && backEndId !== 'none' ? backEndId : null,
@@ -947,12 +948,13 @@ function PrebuiltTab({
       under_carriage_axle_count: underCarriageAxleCount ? parseInt(underCarriageAxleCount) : null,
       total_price: parseFloat(totalPrice) || 0,
     });
-    setTrailerTypeId(''); setFrontEndId(''); setFrontEndTier2Id(''); setBackEndId(''); setDeckTypeId('');
+    setTrailerTypeId(''); setTrailerLengthId(''); setFrontEndId(''); setFrontEndTier2Id(''); setBackEndId(''); setDeckTypeId('');
     setUnderCarriageId(''); setUnderCarriageTier2Id(''); setUnderCarriageTier3Id(''); setUnderCarriageAxleCount(''); setTotalPrice('');
   };
 
   const startEdit = (a: typeof assemblies[0]) => {
     setEditingId(a.id);
+    setEditTrailerLengthId(a.trailer_length_id || 'none');
     setEditFrontEndId(a.front_end_id || 'none');
     setEditFrontEndTier2Id((a as any).front_end_tier2_id || 'none');
     setEditBackEndId(a.back_end_id || 'none');
@@ -966,6 +968,7 @@ function PrebuiltTab({
 
   const saveEdit = async (id: string) => {
     await onUpdate(id, {
+      trailer_length_id: editTrailerLengthId && editTrailerLengthId !== 'none' ? editTrailerLengthId : null,
       front_end_id: editFrontEndId && editFrontEndId !== 'none' ? editFrontEndId : null,
       front_end_tier2_id: editFrontEndTier2Id && editFrontEndTier2Id !== 'none' ? editFrontEndTier2Id : null,
       back_end_id: editBackEndId && editBackEndId !== 'none' ? editBackEndId : null,
