@@ -458,8 +458,9 @@ function AssemblyDetail({
         <FullScreenSubAssemblyPicker
           open={showSubAssemblyPicker}
           onClose={() => setShowSubAssemblyPicker(false)}
-          onSelect={(id) => handleAddSubAssembly(id)}
-          subAssemblies={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          onSelect={(id, source) => handleAddSubAssembly(id, source)}
+          subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          subAssemblies2={(partsAssemblies2 || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           adding={addingSubAssemblyId}
         />
 
