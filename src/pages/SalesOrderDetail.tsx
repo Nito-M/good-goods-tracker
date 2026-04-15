@@ -4,9 +4,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
+import { useProfile } from '@/hooks/useProfile';
+import { useCompanies } from '@/hooks/useCompanies';
+import { generateQuotePDF } from '@/lib/quoteGenerator';
+import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
