@@ -252,7 +252,7 @@ export function DxfThreeViewer({ dxfText }: DxfThreeViewerProps) {
   const geometry = useMemo(() => parseDxfToGeometry(dxfText), [dxfText]);
   const controlsRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [bgMode, setBgMode] = useState<'dark' | 'white'>('dark');
+  const [bgMode, setBgMode] = useState<'dark' | 'white'>('white');
 
   const bgColor = bgMode === 'dark' ? '#1a1a2e' : '#ffffff';
   const lineColor = bgMode === 'dark' ? '#ffffff' : '#000000';
