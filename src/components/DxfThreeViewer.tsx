@@ -173,7 +173,7 @@ function parseDxfToGeometry(dxfText: string): ParsedGeometry {
   return { positions, boundingBox };
 }
 
-function DxfScene({ geometry, controlsRef }: { geometry: ParsedGeometry; controlsRef: React.MutableRefObject<any> }) {
+function DxfScene({ geometry, controlsRef, lineColor }: { geometry: ParsedGeometry; controlsRef: React.MutableRefObject<any>; lineColor: string }) {
   const { camera, gl } = useThree();
   const linesRef = useRef<THREE.LineSegments>(null);
 
