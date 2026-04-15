@@ -195,6 +195,134 @@ export function TrailerConfigAdmin() {
   );
 }
 
+// --- Trailer Subtypes Tab ---
+function TrailerSubtypesTab({
+  subtypes, types, loading, onCreate, onUpdate, onRemove,
+}: {
+  subtypes: { id: string; name: string; image_url: string | null; trailer_type_id: string }[];
+  types: { id: string; name: string }[];
+  loading: boolean;
+  onCreate: (name: string, trailer_type_id: string, image_url?: string) => Promise<any>;
+  onUpdate: (id: string, updates: { name?: string; image_url?: string | null; trailer_type_id?: string }) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
+}) {
+  const [name, setName] = useState('');
+  const [typeId, setTypeId] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const { uploading } = useTrailerImageUpload();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editTypeId, setEditTypeId] = useState('');
+
+  const handleAdd = async () => {
+    if (!name.trim() || !typeId) return;
+    await onCreate(name.trim(), typeId, imageUrl || undefined);
+    setName('');
+    setTypeId('');
+    setImageUrl('');
+  };
+
+  const startEdit = (s: typeof subtypes[0]) => {
+    setEditingId(s.id);
+    setEditName(s.name);
+    setEditTypeId(s.trailer_type_id);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editName.trim() || !editTypeId) return;
+    await onUpdate(id, { name: editName.trim(), trailer_type_id: editTypeId });
+    setEditingId(null);
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-lg">Trailer Subtypes</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-3 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px] space-y-1">
+            <Label>Name</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Tilt, Fixed" />
+          </div>
+          <div className="min-w-[200px] space-y-1">
+            <Label>Trailer Type</Label>
+            <Select value={typeId} onValueChange={setTypeId}>
+              <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+              <SelectContent>
+                {types.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <ImageUploadField imageUrl={imageUrl} onImageChange={setImageUrl} uploading={uploading} />
+          <Button onClick={handleAdd} disabled={!name.trim() || !typeId}>
+            <Plus className="h-4 w-4 mr-1" /> Add
+          </Button>
+        </div>
+
+        {loading ? (
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        ) : subtypes.length === 0 ? (
+          <p className="text-muted-foreground text-sm text-center py-6">No subtypes yet.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Trailer Type</TableHead>
+                <TableHead className="w-24" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subtypes.map(s => (
+                <TableRow key={s.id}>
+                  <TableCell>
+                    <InlineImageUpload imageUrl={s.image_url} onImageChange={(url) => onUpdate(s.id, { image_url: url })} />
+                  </TableCell>
+                  <TableCell>
+                    {editingId === s.id ? (
+                      <Input value={editName} onChange={e => setEditName(e.target.value)} className="h-8"
+                        onKeyDown={e => { if (e.key === 'Enter') saveEdit(s.id); if (e.key === 'Escape') setEditingId(null); }} autoFocus />
+                    ) : (
+                      <span className="font-medium">{s.name}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === s.id ? (
+                      <Select value={editTypeId} onValueChange={setEditTypeId}>
+                        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {types.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="outline">{types.find(t => t.id === s.trailer_type_id)?.name || '—'}</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {editingId === s.id ? (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => saveEdit(s.id)}><Check className="h-4 w-4 text-green-600" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(s)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => onRemove(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // --- Trailer Lengths Tab ---
 function TrailerLengthsTab({
   lengths, types, loading, onCreate, onUpdate, onRemove,
