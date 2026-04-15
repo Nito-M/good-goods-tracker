@@ -597,21 +597,6 @@ function AssemblyDetail({
   );
 }
 
-        {/* Right panel */}
-        <div className="flex-1 overflow-hidden bg-background">
-          {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <div className="text-center">
-                <Layers className="h-16 w-16 mx-auto mb-4 opacity-20" />
-                <p className="text-lg font-medium mb-1">Select an assembly</p>
-                <p className="text-sm">Choose from the left or create a new one.</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
