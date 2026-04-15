@@ -533,6 +533,7 @@ export function TrailerConfigurator() {
                     <CardContent className="p-6 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
+                        <SummaryRow label="Trailer Length" value={selectedLength?.label} />
                         {selectedFront ? (
                           <>
                             <SummaryRow label="Front End" value={selectedFront.name} imageUrl={selectedFront.image_url} price={selectedFront.price} />
@@ -609,7 +610,7 @@ export function TrailerConfigurator() {
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
         </Button>
-        {step < 5 && (
+        {step < 7 && (
           <Button
             onClick={() => setStep(s => s + 1)}
             disabled={!canNext()}
