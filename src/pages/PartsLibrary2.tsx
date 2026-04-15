@@ -19,6 +19,7 @@ import { PartJsonImport } from '@/components/PartJsonImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
+import { DxfThumbnail } from '@/components/DxfThumbnail';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -289,7 +290,7 @@ export function PartsLibrary2() {
                       {selectMode && <div onClick={e => e.stopPropagation()} className="shrink-0"><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => { e.stopPropagation(); if (part.imageUrl) openImageViewer(part.imageUrl); }}>
-                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>}
+                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" /> : <span className="text-muted-foreground text-[10px]">—</span>}
                       </div>
                       <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
                       <span className="text-sm text-muted-foreground truncate w-28 shrink-0 hidden sm:block">{part.sku || '—'}</span>
@@ -313,7 +314,7 @@ export function PartsLibrary2() {
                       {selectMode && <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => { e.stopPropagation(); if (part.imageUrl) openImageViewer(part.imageUrl); }}>
-                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
+                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} className="w-full h-full" /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
                       </div>
                       <CardContent className="p-3">
                         <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
@@ -434,4 +435,17 @@ function PartImage2({ storagePath, className }: { storagePath: string; className
   useEffect(() => { getSignedUrl('part-images-2', storagePath).then(setUrl); }, [storagePath]);
   if (!url) return <span className="text-muted-foreground text-sm">Loading...</span>;
   return <img src={url} alt="Part" className={className || "w-full h-full object-contain"} />;
+}
+
+function DxfThumbnailLoader({ storagePath, bucket, className }: { storagePath: string; bucket: string; className?: string }) {
+  const [dxfText, setDxfText] = useState<string | null>(null);
+  const { getSignedUrl } = useParts2();
+  useEffect(() => {
+    getSignedUrl(bucket, storagePath).then(async (url) => {
+      if (!url) return;
+      try { const res = await fetch(url); setDxfText(await res.text()); } catch { /* ignore */ }
+    });
+  }, [storagePath, bucket]);
+  if (!dxfText) return <span className="text-muted-foreground text-[10px]">DXF</span>;
+  return <DxfThumbnail dxfText={dxfText} className={className} />;
 }
