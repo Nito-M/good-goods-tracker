@@ -92,7 +92,7 @@ export function TrailerConfigurator() {
   const underCarriages = useMemo(() => getByCategory('under_carriage', trailerTypeId || undefined, null), [components, trailerTypeId]);
   const underCarriageSubs = useMemo(() => underCarriageId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageId) : [], [components, trailerTypeId, underCarriageId]);
   const underCarriageTier3s = useMemo(() => underCarriageSubId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageSubId) : [], [components, trailerTypeId, underCarriageSubId]);
-  const availableLengths = useMemo(() => trailerTypeId ? getByTrailerType(trailerTypeId) : [], [lengths, trailerTypeId]);
+  const availableLengths = useMemo(() => trailerTypeId ? getByTrailerType(trailerTypeId, trailerSubtypeId) : [], [lengths, trailerTypeId, trailerSubtypeId]);
   const availableSubtypes = useMemo(() => trailerTypeId ? getSubtypesByType(trailerTypeId) : [], [subtypes, trailerTypeId]);
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
