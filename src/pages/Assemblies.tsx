@@ -446,7 +446,7 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
-              {partsAssemblies && partsAssemblies.length > 0 && (
+              {((partsAssemblies && partsAssemblies.length > 0) || (partsAssemblies2 && partsAssemblies2.length > 0)) && (
                 <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowSubAssemblyPicker(true)}>
                   <PackagePlus className="h-4 w-4" /> Sub Assembly
                 </Button>
