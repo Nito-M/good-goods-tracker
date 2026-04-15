@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths } from '@/hooks/useTrailerConfig';
+import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, useTrailerSubtypes } from '@/hooks/useTrailerConfig';
 import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
@@ -147,6 +147,7 @@ export function TrailerConfigAdmin() {
   const navigate = useNavigate();
   const { types, loading: typesLoading, create: createType, update: updateType, remove: removeType } = useTrailerTypes();
   const { lengths, loading: lengthsLoading, create: createLength, update: updateLength, remove: removeLength } = useTrailerLengths();
+  const { subtypes, loading: subtypesLoading, create: createSubtype, update: updateSubtype, remove: removeSubtype } = useTrailerSubtypes();
   const { components, loading: compsLoading, create: createComp, update: updateComp, remove: removeComp } = useAssemblyComponents();
   const { assemblies: prebuiltAssemblies, loading: assembliesLoading, save: saveAssembly, update: updateAssembly, remove: removeAssembly } = usePrebuiltAssemblies();
   const { assemblies: allAssemblies } = useAssemblies();
@@ -162,8 +163,9 @@ export function TrailerConfigAdmin() {
       </div>
 
       <Tabs defaultValue="trailer_types">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="trailer_types">Trailer Types</TabsTrigger>
+          <TabsTrigger value="trailer_subtypes">Subtypes</TabsTrigger>
           <TabsTrigger value="trailer_lengths">Trailer Lengths</TabsTrigger>
           <TabsTrigger value="components">Components</TabsTrigger>
           <TabsTrigger value="prebuilt">Prebuilt Assemblies</TabsTrigger>
@@ -171,6 +173,10 @@ export function TrailerConfigAdmin() {
 
         <TabsContent value="trailer_types" className="mt-4">
           <TrailerTypesTab types={types} loading={typesLoading} onCreate={createType} onUpdate={updateType} onRemove={removeType} />
+        </TabsContent>
+
+        <TabsContent value="trailer_subtypes" className="mt-4">
+          <TrailerSubtypesTab subtypes={subtypes} types={types} loading={subtypesLoading} onCreate={createSubtype} onUpdate={updateSubtype} onRemove={removeSubtype} />
         </TabsContent>
 
         <TabsContent value="trailer_lengths" className="mt-4">
