@@ -98,7 +98,20 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
         {c.inventoryItem.name}
       </TableCell>
       <TableCell>
-        {formatCurrency(getItemPrice(c))}
+        <Input
+          type="number"
+          step="0.01"
+          className="w-24"
+          value={getItemPrice(c)}
+          onChange={(e) => {
+            const newPrice = parseFloat(e.target.value) || 0;
+            setCart(prev => prev.map(item =>
+              item.inventoryItem.id === c.inventoryItem.id
+                ? { ...item, customPrice: newPrice }
+                : item
+            ));
+          }}
+        />
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
