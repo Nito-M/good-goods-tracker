@@ -12,6 +12,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
 import { usePartsAssemblies, PartsAssembly } from '@/hooks/usePartsAssemblies';
+import { usePartsAssemblies2, PartsAssembly2 } from '@/hooks/usePartsAssemblies2';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,7 +53,7 @@ import { Assembly } from '@/hooks/useAssemblies';
 
 
 function AssemblyDetail({
-  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onDuplicate, onItemsChanged, allAssemblies, partsAssemblies,
+  assembly, inventoryItems, partsItems, partsRaw, folders, summary, onDelete, onUpdate, onDuplicate, onItemsChanged, allAssemblies, partsAssemblies, partsAssemblies2,
 }: {
   assembly: Assembly;
   partsItems?: { id: string; name: string; sku: string; price: number }[];
@@ -66,6 +67,7 @@ function AssemblyDetail({
   onItemsChanged?: () => void;
   allAssemblies: Assembly[];
   partsAssemblies?: PartsAssembly[];
+  partsAssemblies2?: PartsAssembly2[];
 }) {
   const { items, loading, addItem, updateItem, removeItem } = useAssemblyItems(assembly.id);
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
@@ -199,14 +201,15 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddSubAssembly = async (partsAssemblyId: string) => {
-    if (!partsAssemblies) return;
+  const handleAddSubAssembly = async (partsAssemblyId: string, source: 'parts1' | 'parts2') => {
+    const list = source === 'parts1' ? partsAssemblies : partsAssemblies2;
+    if (!list) return;
     setAddingSubAssemblyId(partsAssemblyId);
-    const pa = partsAssemblies.find(a => a.id === partsAssemblyId);
+    const pa = list.find(a => a.id === partsAssemblyId);
     if (pa) {
-      // Fetch parts assembly items to calculate total cost (parts + inventory items)
+      const table = source === 'parts1' ? 'parts_assembly_items' : 'parts_assembly_items_2';
       const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
-        .from('parts_assembly_items')
+        .from(table as any)
         .select('quantity, part_id, inventory_item_id, parts ( price ), inventory_items ( cost )')
         .eq('assembly_id', partsAssemblyId);
 
@@ -443,7 +446,7 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
-              {partsAssemblies && partsAssemblies.length > 0 && (
+              {((partsAssemblies && partsAssemblies.length > 0) || (partsAssemblies2 && partsAssemblies2.length > 0)) && (
                 <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowSubAssemblyPicker(true)}>
                   <PackagePlus className="h-4 w-4" /> Sub Assembly
                 </Button>
@@ -455,8 +458,9 @@ function AssemblyDetail({
         <FullScreenSubAssemblyPicker
           open={showSubAssemblyPicker}
           onClose={() => setShowSubAssemblyPicker(false)}
-          onSelect={(id) => handleAddSubAssembly(id)}
-          subAssemblies={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          onSelect={(id, source) => handleAddSubAssembly(id, source)}
+          subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          subAssemblies2={(partsAssemblies2 || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           adding={addingSubAssemblyId}
         />
 
@@ -608,6 +612,7 @@ export function Assemblies() {
   const { parts } = useParts();
   const { folders } = usePartFolders();
   const { assemblies: partsAssembliesList } = usePartsAssemblies();
+  const { assemblies: partsAssembliesList2 } = usePartsAssemblies2();
   const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
   const [searchParams] = useSearchParams();
   const idFromUrl = searchParams.get('id');
@@ -719,7 +724,7 @@ export function Assemblies() {
 
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} partsAssemblies2={partsAssembliesList2} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
