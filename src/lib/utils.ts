@@ -13,3 +13,12 @@ export function formatCurrency(value: number) {
     maximumFractionDigits: 5,
   }).format(value);
 }
+
+export function formatCurrencyPdf(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
