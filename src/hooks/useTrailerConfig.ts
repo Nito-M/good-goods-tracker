@@ -237,3 +237,65 @@ export function usePrebuiltAssemblies() {
 
   return { assemblies, loading, save, update, remove, lookup, refetch: fetchAssemblies };
 }
+
+export interface TrailerLength {
+  id: string;
+  user_id: string;
+  label: string;
+  compatible_trailer_type_ids: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export function useTrailerLengths() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [lengths, setLengths] = useState<TrailerLength[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLengths = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('trailer_lengths')
+      .select('*')
+      .order('label');
+    if (error) console.error(error);
+    else setLengths((data as any[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchLengths(); }, [user]);
+
+  const create = async (label: string, compatible_trailer_type_ids: string[] = []) => {
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from('trailer_lengths')
+      .insert({ user_id: user.id, label, compatible_trailer_type_ids } as any)
+      .select()
+      .single();
+    if (error) { toast({ title: 'Error', description: 'Failed to create trailer length.', variant: 'destructive' }); return null; }
+    await fetchLengths();
+    return data as TrailerLength;
+  };
+
+  const update = async (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[] }) => {
+    const { error } = await supabase.from('trailer_lengths').update(updates).eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
+    else await fetchLengths();
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from('trailer_lengths').delete().eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
+    else await fetchLengths();
+  };
+
+  const getByTrailerType = (trailerTypeId: string) => {
+    return lengths.filter(l =>
+      l.compatible_trailer_type_ids.length === 0 || l.compatible_trailer_type_ids.includes(trailerTypeId)
+    );
+  };
+
+  return { lengths, loading, create, update, remove, getByTrailerType, refetch: fetchLengths };
+}

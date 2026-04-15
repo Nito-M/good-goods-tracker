@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
+import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
 import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -52,6 +52,7 @@ function SelectionCard({ id, name, imageUrl, selected, onSelect, price }: Select
 
 const STEPS = [
   { key: 'trailer_type', label: 'Select Trailer Type' },
+  { key: 'trailer_length', label: 'Select Trailer Length' },
   { key: 'under_carriage', label: 'Select Under Carriage' },
   { key: 'front_end', label: 'Select Front End' },
   { key: 'back_end', label: 'Select Back End' },
@@ -63,9 +64,11 @@ export function TrailerConfigurator() {
   const { types, loading: typesLoading } = useTrailerTypes();
   const { components, loading: compsLoading, getByCategory } = useAssemblyComponents();
   const { save, lookup } = usePrebuiltAssemblies();
+  const { lengths, loading: lengthsLoading, getByTrailerType } = useTrailerLengths();
 
   const [step, setStep] = useState(0);
   const [trailerTypeId, setTrailerTypeId] = useState<string | null>(null);
+  const [trailerLengthId, setTrailerLengthId] = useState<string | null>(null);
   const [frontEndId, setFrontEndId] = useState<string | null>(null);
   const [frontEndSubId, setFrontEndSubId] = useState<string | null>(null);
   const [backEndId, setBackEndId] = useState<string | null>(null);
@@ -87,8 +90,10 @@ export function TrailerConfigurator() {
   const underCarriages = useMemo(() => getByCategory('under_carriage', trailerTypeId || undefined, null), [components, trailerTypeId]);
   const underCarriageSubs = useMemo(() => underCarriageId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageId) : [], [components, trailerTypeId, underCarriageId]);
   const underCarriageTier3s = useMemo(() => underCarriageSubId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageSubId) : [], [components, trailerTypeId, underCarriageSubId]);
+  const availableLengths = useMemo(() => trailerTypeId ? getByTrailerType(trailerTypeId) : [], [lengths, trailerTypeId]);
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
+  const selectedLength = lengths.find(l => l.id === trailerLengthId);
   const selectedFront = components.find(c => c.id === frontEndId);
   const selectedFrontSub = components.find(c => c.id === frontEndSubId);
   const selectedBack = components.find(c => c.id === backEndId);
@@ -100,9 +105,9 @@ export function TrailerConfigurator() {
   const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0) + (selectedUnderCarriageTier3?.price || 0);
   const totalPrice = (selectedFront?.price || 0) + (selectedFrontSub?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
 
-  // Lookup prebuilt assembly when entering step 5
+  // Lookup prebuilt assembly when entering summary step (now step 7)
   useEffect(() => {
-    if (step === 5 && trailerTypeId) {
+    if (step === 6 && trailerTypeId) {
       setLookupLoading(true);
       setLookupDone(false);
       lookup({
@@ -121,10 +126,11 @@ export function TrailerConfigurator() {
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
-    if (step === 1) return !!underCarriageId; // under carriage is required
-    if (step === 2) return !!frontEndId;
-    if (step === 3) return !!backEndId;
-    if (step === 4) return true; // deck is optional
+    if (step === 1) return !!trailerLengthId; // trailer length is required
+    if (step === 2) return !!underCarriageId; // under carriage is required
+    if (step === 3) return !!frontEndId;
+    if (step === 4) return !!backEndId;
+    if (step === 5) return true; // deck is optional
     return false;
   };
 
@@ -154,6 +160,7 @@ export function TrailerConfigurator() {
     doc.setFontSize(11);
     const rows: { label: string; value: string; price?: number }[] = [
       { label: 'Trailer Type', value: selectedTrailer?.name || '—' },
+      { label: 'Trailer Length', value: selectedLength?.label || '—' },
     ];
     if (selectedUnderCarriage) {
       rows.push({ label: 'Under Carriage', value: selectedUnderCarriage.name, price: selectedUnderCarriage.price });
@@ -214,7 +221,7 @@ export function TrailerConfigurator() {
     doc.save(`Trailer_Config_${trailerName}.pdf`);
   };
 
-  const loading = typesLoading || compsLoading;
+  const loading = typesLoading || compsLoading || lengthsLoading;
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4">
@@ -262,6 +269,7 @@ export function TrailerConfigurator() {
                     selected={trailerTypeId === t.id}
                     onSelect={(id) => {
                       setTrailerTypeId(id);
+                      setTrailerLengthId(null);
                       setFrontEndId(null);
                       setFrontEndSubId(null);
                       setBackEndId(null);
@@ -280,8 +288,37 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 2: Under Carriage */}
+          {/* Step 2: Trailer Length */}
           {step === 1 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {availableLengths.map(l => (
+                <div key={l.id} className="relative">
+                  <Card
+                    className={cn(
+                      'cursor-pointer transition-all hover:shadow-md',
+                      trailerLengthId === l.id && 'ring-2 ring-primary bg-primary/5'
+                    )}
+                    onClick={() => setTrailerLengthId(l.id)}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center gap-2">
+                      <span className="text-2xl font-bold">{l.label}</span>
+                      {trailerLengthId === l.id && (
+                        <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="h-4 w-4 text-primary-foreground" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+              {availableLengths.length === 0 && (
+                <p className="col-span-full text-muted-foreground text-center py-12">No trailer lengths configured for this type. Add them in Admin.</p>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Under Carriage */}
+          {step === 2 && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 1: Select Under Carriage Type</h3>
@@ -386,8 +423,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 3: Front End */}
-          {step === 2 && (
+          {/* Step 4: Front End */}
+          {step === 3 && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 1: Select Front End Type</h3>
@@ -435,8 +472,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 4: Back End */}
-          {step === 3 && (
+          {/* Step 5: Back End */}
+          {step === 4 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {backEnds.map(c => (
                 <div key={c.id} className="relative">
@@ -456,8 +493,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 5: Add Ons */}
-          {step === 4 && (
+          {/* Step 6: Add Ons */}
+          {step === 5 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {deckTypes.map(c => (
                 <div key={c.id} className="relative">
@@ -477,8 +514,8 @@ export function TrailerConfigurator() {
             </div>
           )}
 
-          {/* Step 6: Summary */}
-          {step === 5 && (
+          {/* Step 7: Summary */}
+          {step === 6 && (
             <div className="space-y-6">
               {lookupLoading ? (
                 <p className="text-muted-foreground text-center py-12">Looking up configuration...</p>
@@ -496,6 +533,7 @@ export function TrailerConfigurator() {
                     <CardContent className="p-6 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
+                        <SummaryRow label="Trailer Length" value={selectedLength?.label} />
                         {selectedFront ? (
                           <>
                             <SummaryRow label="Front End" value={selectedFront.name} imageUrl={selectedFront.image_url} price={selectedFront.price} />
@@ -572,7 +610,7 @@ export function TrailerConfigurator() {
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
         </Button>
-        {step < 5 && (
+        {step < 6 && (
           <Button
             onClick={() => setStep(s => s + 1)}
             disabled={!canNext()}
