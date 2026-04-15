@@ -70,13 +70,13 @@ function AssemblyDetail({
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
   const [showPicker, setShowPicker] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
-  const [showPartsAssemblyPicker, setShowPartsAssemblyPicker] = useState(false);
+  const [showSubAssemblyPicker, setShowSubAssemblyPicker] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
   const [addingFolderId, setAddingFolderId] = useState<string | null>(null);
   const [assemblySearchQuery, setAssemblySearchQuery] = useState('');
-  const [partsAssemblySearchQuery, setPartsAssemblySearchQuery] = useState('');
+  
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
-  const [addingPartsAssemblyId, setAddingPartsAssemblyId] = useState<string | null>(null);
+  const [addingSubAssemblyId, setAddingSubAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -198,9 +198,9 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddPartsAssembly = async (partsAssemblyId: string) => {
+  const handleAddSubAssembly = async (partsAssemblyId: string) => {
     if (!partsAssemblies) return;
-    setAddingPartsAssemblyId(partsAssemblyId);
+    setAddingSubAssemblyId(partsAssemblyId);
     const pa = partsAssemblies.find(a => a.id === partsAssemblyId);
     if (pa) {
       // Fetch parts assembly items to calculate total cost (parts + inventory items)
@@ -230,8 +230,8 @@ function AssemblyDetail({
       });
       onItemsChanged?.();
     }
-    setAddingPartsAssemblyId(null);
-    setShowPartsAssemblyPicker(false);
+    setAddingSubAssemblyId(null);
+    setShowSubAssemblyPicker(false);
   };
 
   return (
