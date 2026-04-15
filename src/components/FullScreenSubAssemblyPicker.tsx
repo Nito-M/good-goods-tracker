@@ -1,8 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { X, Search, PackagePlus, ArrowLeft } from 'lucide-react';
+import { X, Search, PackagePlus, ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 
 interface SubAssemblyRow {
@@ -13,31 +14,38 @@ interface SubAssemblyRow {
   type: string;
 }
 
+export interface SelectedSubAssembly {
+  id: string;
+  source: 'parts1' | 'parts2';
+}
+
 interface FullScreenSubAssemblyPickerProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (subAssemblyId: string, source: 'parts1' | 'parts2') => void;
+  onConfirm: (selections: SelectedSubAssembly[]) => void;
   subAssemblies1: SubAssemblyRow[];
   subAssemblies2: SubAssemblyRow[];
-  adding?: string | null;
+  adding?: boolean;
 }
 
 export function FullScreenSubAssemblyPicker({
   open,
   onClose,
-  onSelect,
+  onConfirm,
   subAssemblies1,
   subAssemblies2,
   adding,
 }: FullScreenSubAssemblyPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSource, setSelectedSource] = useState<'parts1' | 'parts2' | null>(null);
+  const [selections, setSelections] = useState<SelectedSubAssembly[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setSearchQuery('');
       setSelectedSource(null);
+      setSelections([]);
       window.history.pushState({ picker: 'subassembly' }, '');
     }
   }, [open]);
@@ -63,6 +71,20 @@ export function FullScreenSubAssemblyPicker({
     window.history.pushState({ picker: 'subassembly-list' }, '');
     setTimeout(() => searchInputRef.current?.focus(), 100);
   };
+
+  const toggleSelection = (id: string, source: 'parts1' | 'parts2') => {
+    setSelections(prev => {
+      const exists = prev.find(s => s.id === id && s.source === source);
+      if (exists) return prev.filter(s => !(s.id === id && s.source === source));
+      return [...prev, { id, source }];
+    });
+  };
+
+  const isSelected = (id: string, source: 'parts1' | 'parts2') =>
+    selections.some(s => s.id === id && s.source === source);
+
+  const countForSource = (source: 'parts1' | 'parts2') =>
+    selections.filter(s => s.source === source).length;
 
   const activeList = selectedSource === 'parts1' ? subAssemblies1 : selectedSource === 'parts2' ? subAssemblies2 : [];
 
@@ -95,6 +117,9 @@ export function FullScreenSubAssemblyPicker({
         <h2 className="text-lg font-semibold flex-1">
           {selectedSource ? (selectedSource === 'parts1' ? 'Parts Assemblies 1' : 'Parts Assemblies 2') : 'Add Sub Assembly'}
         </h2>
+        {selections.length > 0 && (
+          <Badge variant="secondary" className="mr-2">{selections.length} selected</Badge>
+        )}
       </div>
 
       {!selectedSource ? (
@@ -108,7 +133,10 @@ export function FullScreenSubAssemblyPicker({
             >
               <div>
                 <p className="font-semibold text-base">Parts Assemblies 1</p>
-                <p className="text-sm text-muted-foreground mt-1">{subAssemblies1.length} sub assembl{subAssemblies1.length !== 1 ? 'ies' : 'y'}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {subAssemblies1.length} sub assembl{subAssemblies1.length !== 1 ? 'ies' : 'y'}
+                  {countForSource('parts1') > 0 && <span className="text-primary ml-2">({countForSource('parts1')} selected)</span>}
+                </p>
               </div>
               <PackagePlus className="h-6 w-6 text-muted-foreground" />
             </button>
@@ -118,7 +146,10 @@ export function FullScreenSubAssemblyPicker({
             >
               <div>
                 <p className="font-semibold text-base">Parts Assemblies 2</p>
-                <p className="text-sm text-muted-foreground mt-1">{subAssemblies2.length} sub assembl{subAssemblies2.length !== 1 ? 'ies' : 'y'}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {subAssemblies2.length} sub assembl{subAssemblies2.length !== 1 ? 'ies' : 'y'}
+                  {countForSource('parts2') > 0 && <span className="text-primary ml-2">({countForSource('parts2')} selected)</span>}
+                </p>
               </div>
               <PackagePlus className="h-6 w-6 text-muted-foreground" />
             </button>
@@ -149,34 +180,56 @@ export function FullScreenSubAssemblyPicker({
                   <p className="text-sm">No sub assemblies found.</p>
                 </div>
               ) : (
-                filtered.map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => onSelect(a.id, selectedSource)}
-                    disabled={adding === a.id}
-                    className="w-full text-left px-4 py-3 rounded-lg border bg-card hover:bg-accent transition-colors flex items-center justify-between gap-4"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{a.name}</p>
-                      {a.description && (
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-0.5">{a.type}</p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      {a.selling_price > 0 && (
-                        <span className="text-sm font-medium text-primary">{formatCurrency(a.selling_price)}</span>
-                      )}
-                      {adding === a.id && (
-                        <span className="text-xs text-primary block">Adding...</span>
-                      )}
-                    </div>
-                  </button>
-                ))
+                filtered.map((a) => {
+                  const selected = isSelected(a.id, selectedSource);
+                  return (
+                    <button
+                      key={a.id}
+                      onClick={() => toggleSelection(a.id, selectedSource)}
+                      className={`w-full text-left px-4 py-3 rounded-lg border transition-colors flex items-center justify-between gap-4 ${
+                        selected ? 'border-primary bg-primary/10' : 'bg-card hover:bg-accent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className={`shrink-0 h-5 w-5 rounded border flex items-center justify-center ${
+                          selected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                        }`}>
+                          {selected && <Check className="h-3 w-3 text-primary-foreground" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{a.name}</p>
+                          {a.description && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-0.5">{a.type}</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        {a.selling_price > 0 && (
+                          <span className="text-sm font-medium text-primary">{formatCurrency(a.selling_price)}</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
               )}
             </div>
           </ScrollArea>
         </>
+      )}
+
+      {/* Bottom bar with confirm */}
+      {selections.length > 0 && (
+        <div className="border-t bg-card px-4 py-3 shrink-0">
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={() => onConfirm(selections)}
+            disabled={adding}
+          >
+            {adding ? 'Adding...' : `Add ${selections.length} Sub Assembl${selections.length !== 1 ? 'ies' : 'y'}`}
+          </Button>
+        </div>
       )}
     </div>
   );
