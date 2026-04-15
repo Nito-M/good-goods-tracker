@@ -180,7 +180,7 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="trailer_lengths" className="mt-4">
-          <TrailerLengthsTab lengths={lengths} types={types} loading={lengthsLoading} onCreate={createLength} onUpdate={updateLength} onRemove={removeLength} />
+          <TrailerLengthsTab lengths={lengths} types={types} subtypes={subtypes} loading={lengthsLoading} onCreate={createLength} onUpdate={updateLength} onRemove={removeLength} />
         </TabsContent>
 
         <TabsContent value="components" className="mt-4">
@@ -348,20 +348,22 @@ function TrailerLengthsTab({
 
   const handleAdd = async () => {
     if (!label.trim()) return;
-    await onCreate(label.trim(), compatibleIds);
+    await onCreate(label.trim(), compatibleIds, compatibleSubtypeIds);
     setLabel('');
     setCompatibleIds([]);
+    setCompatibleSubtypeIds([]);
   };
 
   const startEdit = (l: typeof lengths[0]) => {
     setEditingId(l.id);
     setEditLabel(l.label);
     setEditCompatibleIds([...l.compatible_trailer_type_ids]);
+    setEditCompatibleSubtypeIds([...(l.compatible_trailer_subtype_ids || [])]);
   };
 
   const saveEdit = async (id: string) => {
     if (!editLabel.trim()) return;
-    await onUpdate(id, { label: editLabel.trim(), compatible_trailer_type_ids: editCompatibleIds });
+    await onUpdate(id, { label: editLabel.trim(), compatible_trailer_type_ids: editCompatibleIds, compatible_trailer_subtype_ids: editCompatibleSubtypeIds });
     setEditingId(null);
   };
 
@@ -371,6 +373,14 @@ function TrailerLengthsTab({
 
   const toggleEditCompatible = (id: string) => {
     setEditCompatibleIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleSubtypeCompatible = (id: string) => {
+    setCompatibleSubtypeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleEditSubtypeCompatible = (id: string) => {
+    setEditCompatibleSubtypeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   return (
