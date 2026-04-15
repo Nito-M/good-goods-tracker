@@ -1129,6 +1129,7 @@ function PrebuiltTab({
               <TableHeader>
                 <TableRow>
                   <TableHead>Trailer Type</TableHead>
+                  <TableHead>Length</TableHead>
                   <TableHead>Front End</TableHead>
                   <TableHead>FE Tier 2</TableHead>
                   <TableHead>Back End</TableHead>
@@ -1147,6 +1148,12 @@ function PrebuiltTab({
                   return (
                     <TableRow key={a.id}>
                       <TableCell className="font-medium">{getName(a.trailer_type_id, types)}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editTrailerLengthId} onValueChange={setEditTrailerLengthId}>
+                          <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">None</SelectItem>{lengths.filter(l => l.compatible_trailer_type_ids.length === 0 || l.compatible_trailer_type_ids.includes(a.trailer_type_id)).map(l => <SelectItem key={l.id} value={l.id}>{l.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      ) : (lengths.find(l => l.id === a.trailer_length_id)?.label || '—')}</TableCell>
                       <TableCell>{editingId === a.id ? (
                         <Select value={editFrontEndId} onValueChange={v => { setEditFrontEndId(v); setEditFrontEndTier2Id('none'); }}>
                           <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
