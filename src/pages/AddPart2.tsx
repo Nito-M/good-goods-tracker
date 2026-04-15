@@ -24,6 +24,7 @@ export function AddPart2() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [dxfFile1, setDxfFile1] = useState<File | null>(null);
+  const [dragOverDxf1, setDragOverDxf1] = useState(false);
   const [dxfFile2, setDxfFile2] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
