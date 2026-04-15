@@ -325,20 +325,26 @@ function TrailerSubtypesTab({
 
 // --- Trailer Lengths Tab ---
 function TrailerLengthsTab({
-  lengths, types, loading, onCreate, onUpdate, onRemove,
+  lengths, types, subtypes, loading, onCreate, onUpdate, onRemove,
 }: {
-  lengths: { id: string; label: string; compatible_trailer_type_ids: string[] }[];
+  lengths: { id: string; label: string; compatible_trailer_type_ids: string[]; compatible_trailer_subtype_ids: string[] }[];
   types: { id: string; name: string }[];
+  subtypes: { id: string; name: string; trailer_type_id: string }[];
   loading: boolean;
-  onCreate: (label: string, compatible_trailer_type_ids?: string[]) => Promise<any>;
-  onUpdate: (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[] }) => Promise<void>;
+  onCreate: (label: string, compatible_trailer_type_ids?: string[], compatible_trailer_subtype_ids?: string[]) => Promise<any>;
+  onUpdate: (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[] }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [label, setLabel] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
+  const [compatibleSubtypeIds, setCompatibleSubtypeIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
+  const [editCompatibleSubtypeIds, setEditCompatibleSubtypeIds] = useState<string[]>([]);
+
+  const relevantSubtypes = subtypes.filter(s => compatibleIds.length === 0 || compatibleIds.includes(s.trailer_type_id));
+  const editRelevantSubtypes = subtypes.filter(s => editCompatibleIds.length === 0 || editCompatibleIds.includes(s.trailer_type_id));
 
   const handleAdd = async () => {
     if (!label.trim()) return;
