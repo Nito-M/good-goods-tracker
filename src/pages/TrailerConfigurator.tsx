@@ -313,7 +313,7 @@ export function TrailerConfigurator() {
                           name={s.name}
                           imageUrl={s.image_url}
                           selected={trailerSubtypeId === s.id}
-                          onSelect={(id) => setTrailerSubtypeId(trailerSubtypeId === id ? null : id)}
+                          onSelect={(id) => { setTrailerSubtypeId(trailerSubtypeId === id ? null : id); setTrailerLengthId(null); }}
                         />
                       </div>
                     ))}
