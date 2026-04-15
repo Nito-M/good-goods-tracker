@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Building2, UserPlus } from 'lucide-react';
+import { Plus, Trash2, Building2, UserPlus, Pencil, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +60,10 @@ export function OrganizationsSettings() {
 
   // Delete confirmation
   const [deleteOrgId, setDeleteOrgId] = useState<string | null>(null);
+
+  // Inline name editing
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState('');
 
   // Members per org
   const [orgMembers, setOrgMembers] = useState<Record<string, OrgMember[]>>({});
@@ -278,6 +282,23 @@ export function OrganizationsSettings() {
     }
   };
 
+  const handleRenameMember = async (userId: string) => {
+    if (!editNameValue.trim()) { setEditingMemberId(null); return; }
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ display_name: editNameValue.trim() })
+        .eq('user_id', userId);
+      if (error) throw error;
+      toast({ title: 'Name updated' });
+      setEditingMemberId(null);
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error updating name:', error);
+      toast({ title: 'Error', description: 'Failed to update name.', variant: 'destructive' });
+    }
+  };
+
   if (loading) {
     return <div className="text-muted-foreground py-8 text-center">Loading organizations...</div>;
   }
@@ -342,15 +363,44 @@ export function OrganizationsSettings() {
                             key={member.id}
                             className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
                           >
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">
-                                  {member.display_name || 'Unknown'}
-                                </span>
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
-                                  {member.role}
-                                </span>
-                              </div>
+                            <div className="flex-1 min-w-0">
+                              {editingMemberId === member.id ? (
+                                <div className="flex items-center gap-1.5">
+                                  <Input
+                                    value={editNameValue}
+                                    onChange={e => setEditNameValue(e.target.value)}
+                                    className="h-7 text-sm w-40"
+                                    autoFocus
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') handleRenameMember(member.user_id);
+                                      if (e.key === 'Escape') setEditingMemberId(null);
+                                    }}
+                                  />
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => handleRenameMember(member.user_id)}>
+                                    <Check className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingMemberId(null)}>
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">
+                                    {member.display_name || 'Unknown'}
+                                  </span>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6 shrink-0"
+                                    onClick={() => { setEditingMemberId(member.id); setEditNameValue(member.display_name || ''); }}
+                                  >
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
+                                    {member.role}
+                                  </span>
+                                </div>
+                              )}
                               {member.email && (
                                 <span className="text-xs text-muted-foreground">{member.email}</span>
                               )}
