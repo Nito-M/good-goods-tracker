@@ -171,8 +171,9 @@ export function TrailerConfigurator() {
     doc.setFontSize(11);
     const rows: { label: string; value: string; price?: number }[] = [
       { label: 'Trailer Type', value: selectedTrailer?.name || '—' },
-      { label: 'Trailer Length', value: selectedLength?.label || '—' },
     ];
+    if (selectedSubtype) rows.push({ label: 'Subtype', value: selectedSubtype.name });
+    rows.push({ label: 'Trailer Length', value: selectedLength?.label || '—' });
     if (selectedUnderCarriage) {
       rows.push({ label: 'Under Carriage', value: selectedUnderCarriage.name, price: selectedUnderCarriage.price });
       if (axleCount) {
