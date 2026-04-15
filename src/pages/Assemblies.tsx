@@ -217,7 +217,7 @@ function AssemblyDetail({
       let totalCost = 0;
       if (paItems) {
         for (const row of paItems as any[]) {
-          const cost = row.parts?.price ?? row.inventory_items?.cost ?? 0;
+          const cost = row.parts?.price ?? row.parts_2?.price ?? row.inventory_items?.cost ?? 0;
           totalCost += row.quantity * cost;
         }
       }
