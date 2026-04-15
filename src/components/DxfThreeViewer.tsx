@@ -252,9 +252,12 @@ export function DxfThreeViewer({ dxfText }: DxfThreeViewerProps) {
   const geometry = useMemo(() => parseDxfToGeometry(dxfText), [dxfText]);
   const controlsRef = useRef<any>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [bgMode, setBgMode] = useState<'dark' | 'white'>('dark');
+
+  const bgColor = bgMode === 'dark' ? '#1a1a2e' : '#ffffff';
+  const lineColor = bgMode === 'dark' ? '#ffffff' : '#000000';
 
   const handleZoom = (factor: number) => {
-    // Access the Three.js state through the canvas
     const canvas = canvasRef.current;
     if (!canvas) return;
     const state = (canvas as any).__r3f;
@@ -274,12 +277,21 @@ export function DxfThreeViewer({ dxfText }: DxfThreeViewerProps) {
         ref={canvasRef}
         orthographic
         camera={{ position: [0, 0, 100], zoom: 1, near: 0.1, far: 1000 }}
-        style={{ width: '100%', height: '100%', background: '#1a1a2e' }}
+        style={{ width: '100%', height: '100%', background: bgColor }}
         gl={{ antialias: true }}
       >
-        <DxfScene geometry={geometry} controlsRef={controlsRef} />
+        <DxfScene geometry={geometry} controlsRef={controlsRef} lineColor={lineColor} />
         <MapControls ref={controlsRef} enableRotate={false} mouseButtons={{ LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }} />
       </Canvas>
+      <div className="absolute top-4 right-4 flex gap-1">
+        <button
+          onClick={() => setBgMode(bgMode === 'dark' ? 'white' : 'dark')}
+          className="px-3 h-8 rounded-md bg-background/80 backdrop-blur border border-border text-foreground flex items-center justify-center hover:bg-accent transition-colors text-xs font-medium"
+          title="Toggle background"
+        >
+          {bgMode === 'dark' ? '☀️ Light' : '🌙 Dark'}
+        </button>
+      </div>
       <div className="absolute bottom-4 right-4 flex flex-col gap-1">
         <button
           onClick={() => handleZoom(0.8)}
