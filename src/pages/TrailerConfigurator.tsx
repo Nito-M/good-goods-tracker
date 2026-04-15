@@ -90,8 +90,10 @@ export function TrailerConfigurator() {
   const underCarriages = useMemo(() => getByCategory('under_carriage', trailerTypeId || undefined, null), [components, trailerTypeId]);
   const underCarriageSubs = useMemo(() => underCarriageId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageId) : [], [components, trailerTypeId, underCarriageId]);
   const underCarriageTier3s = useMemo(() => underCarriageSubId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageSubId) : [], [components, trailerTypeId, underCarriageSubId]);
+  const availableLengths = useMemo(() => trailerTypeId ? getByTrailerType(trailerTypeId) : [], [lengths, trailerTypeId]);
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
+  const selectedLength = lengths.find(l => l.id === trailerLengthId);
   const selectedFront = components.find(c => c.id === frontEndId);
   const selectedFrontSub = components.find(c => c.id === frontEndSubId);
   const selectedBack = components.find(c => c.id === backEndId);
@@ -103,9 +105,9 @@ export function TrailerConfigurator() {
   const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0) + (selectedUnderCarriageTier3?.price || 0);
   const totalPrice = (selectedFront?.price || 0) + (selectedFrontSub?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
 
-  // Lookup prebuilt assembly when entering step 5
+  // Lookup prebuilt assembly when entering summary step (now step 7)
   useEffect(() => {
-    if (step === 5 && trailerTypeId) {
+    if (step === 7 && trailerTypeId) {
       setLookupLoading(true);
       setLookupDone(false);
       lookup({
@@ -124,10 +126,11 @@ export function TrailerConfigurator() {
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
-    if (step === 1) return !!underCarriageId; // under carriage is required
-    if (step === 2) return !!frontEndId;
-    if (step === 3) return !!backEndId;
-    if (step === 4) return true; // deck is optional
+    if (step === 1) return !!trailerLengthId; // trailer length is required
+    if (step === 2) return !!underCarriageId; // under carriage is required
+    if (step === 3) return !!frontEndId;
+    if (step === 4) return !!backEndId;
+    if (step === 5) return true; // deck is optional
     return false;
   };
 
