@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye } from 'lucide-react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,13 +50,14 @@ interface QuoteCardProps {
   onEdit: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote, percentage: number) => void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
+  onRevertInvoiceLink?: (quoteId: string, saleId: string, percentage: number) => void;
   onPreview?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
   linkedInvoiceNumber?: string | null;
   linkedPoNumber?: string | null;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
@@ -266,6 +267,32 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                   <div key={idx} className="flex items-center gap-2 pl-4 text-muted-foreground">
                     <span>{link.invoiceNumber || 'Invoice'}</span>
                     <Badge variant="secondary" className="text-xs">{link.percentage}%</Badge>
+                    {onRevertInvoiceLink && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive hover:text-destructive">
+                            <Undo2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Revert this invoice?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will delete {link.invoiceNumber || 'the linked invoice'} ({link.percentage}%) and restore the quote's invoiced percentage. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => onRevertInvoiceLink(quote.id, link.saleId, link.percentage)}
+                            >
+                              Revert
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
                 ))}
               </div>

@@ -247,7 +247,7 @@ import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
 
 export function Quotes() {
   const { signOut } = useAuth();
-  const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder } = useQuotes();
+  const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder, revertInvoiceLink } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
   const { vendors, addVendor } = useVendors();
   const { customers } = useCustomers();
@@ -1131,6 +1131,7 @@ export function Quotes() {
                                 onEdit={handleEditQuote}
                                 onConvertToInvoice={(quote, percentage) => convertToInvoice(quote, percentage)}
                                 onConvertToPurchaseOrder={convertToPurchaseOrder}
+                                onRevertInvoiceLink={revertInvoiceLink}
                                 onPreview={setPreviewQuote}
                                 quoteSettings={getQuoteSettingsForQuote(quote)}
                                 linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
