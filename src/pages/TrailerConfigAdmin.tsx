@@ -407,6 +407,22 @@ function TrailerLengthsTab({
               {types.length === 0 && <span className="text-xs text-muted-foreground">Add trailer types first</span>}
             </div>
           </div>
+          {relevantSubtypes.length > 0 && (
+            <div className="space-y-1">
+              <Label>Compatible Subtypes <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <div className="flex flex-wrap gap-2">
+                {relevantSubtypes.map(s => (
+                  <label key={s.id} className="flex items-center gap-1.5 text-sm">
+                    <Checkbox
+                      checked={compatibleSubtypeIds.includes(s.id)}
+                      onCheckedChange={() => toggleSubtypeCompatible(s.id)}
+                    />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <Button onClick={handleAdd} disabled={!label.trim()}>
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
