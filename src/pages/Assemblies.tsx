@@ -468,6 +468,19 @@ function AssemblyDetail({
           subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           subAssemblies2={(partsAssemblies2 || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           adding={!!addingSubAssemblyId}
+          existingSubAssemblyIds={(() => {
+            const ids: string[] = [];
+            const allPA = [...(partsAssemblies || []), ...(partsAssemblies2 || [])];
+            for (const item of items) {
+              if (item.parts_assembly_id) {
+                ids.push(item.parts_assembly_id);
+              } else {
+                const match = allPA.find(pa => pa.name === item.item_name);
+                if (match) ids.push(match.id);
+              }
+            }
+            return ids;
+          })()}
         />
 
         <FullScreenPartsPicker
