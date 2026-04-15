@@ -248,6 +248,7 @@ export interface TrailerLength {
   user_id: string;
   label: string;
   compatible_trailer_type_ids: string[];
+  compatible_trailer_subtype_ids: string[];
   created_at: string;
   updated_at: string;
 }
@@ -272,11 +273,11 @@ export function useTrailerLengths() {
 
   useEffect(() => { fetchLengths(); }, [user]);
 
-  const create = async (label: string, compatible_trailer_type_ids: string[] = []) => {
+  const create = async (label: string, compatible_trailer_type_ids: string[] = [], compatible_trailer_subtype_ids: string[] = []) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('trailer_lengths')
-      .insert({ user_id: user.id, label, compatible_trailer_type_ids } as any)
+      .insert({ user_id: user.id, label, compatible_trailer_type_ids, compatible_trailer_subtype_ids } as any)
       .select()
       .single();
     if (error) { toast({ title: 'Error', description: 'Failed to create trailer length.', variant: 'destructive' }); return null; }
@@ -284,7 +285,7 @@ export function useTrailerLengths() {
     return data as TrailerLength;
   };
 
-  const update = async (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[] }) => {
+  const update = async (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[] }) => {
     const { error } = await supabase.from('trailer_lengths').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchLengths();
@@ -296,10 +297,16 @@ export function useTrailerLengths() {
     else await fetchLengths();
   };
 
-  const getByTrailerType = (trailerTypeId: string) => {
-    return lengths.filter(l =>
-      l.compatible_trailer_type_ids.length === 0 || l.compatible_trailer_type_ids.includes(trailerTypeId)
-    );
+  const getByTrailerType = (trailerTypeId: string, subtypeId?: string | null) => {
+    return lengths.filter(l => {
+      const typeMatch = l.compatible_trailer_type_ids.length === 0 || l.compatible_trailer_type_ids.includes(trailerTypeId);
+      if (!typeMatch) return false;
+      if (subtypeId && l.compatible_trailer_subtype_ids.length > 0) {
+        return l.compatible_trailer_subtype_ids.includes(subtypeId);
+      }
+      if (subtypeId && l.compatible_trailer_subtype_ids.length === 0) return true;
+      return true;
+    });
   };
 
   return { lengths, loading, create, update, remove, getByTrailerType, refetch: fetchLengths };
