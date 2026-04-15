@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus, ExternalLink } from 'lucide-react';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
 const decimalToHM = (decimal: number): string => {
@@ -380,7 +380,12 @@ export function PartDetail2() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>{editing ? <Input value={editDxfLabel1} onChange={e => setEditDxfLabel1(e.target.value)} placeholder="Plasma DXF" className="text-base font-semibold" /> : part.dxfLabel1}</CardTitle>
-              {!editing && dxfSignedUrl1 && <Button variant="outline" size="sm" className="gap-1.5" asChild><a href={dxfSignedUrl1} download={`${part.name} - ${part.dxfLabel1}.dxf`}><Download className="h-3.5 w-3.5" /> Download</a></Button>}
+              {!editing && dxfSignedUrl1 && (
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { const a = document.createElement('a'); a.href = dxfSignedUrl1; a.download = `${part.name} - ${part.dxfLabel1}.dxf`; a.click(); }}><ExternalLink className="h-3.5 w-3.5" /> Open in Aspire</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5" asChild><a href={dxfSignedUrl1} download={`${part.name} - ${part.dxfLabel1}.dxf`}><Download className="h-3.5 w-3.5" /> Download</a></Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div className={`aspect-square bg-muted rounded-md overflow-hidden transition-all ${dragOverDxf1 ? 'ring-2 ring-primary bg-primary/10' : ''}`}
