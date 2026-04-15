@@ -290,7 +290,7 @@ export function PartsLibrary2() {
                       {selectMode && <div onClick={e => e.stopPropagation()} className="shrink-0"><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="h-10 w-10 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => { e.stopPropagation(); if (part.imageUrl) openImageViewer(part.imageUrl); }}>
-                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files-2" /> : <span className="text-muted-foreground text-[10px]">—</span>}
+                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" /> : <span className="text-muted-foreground text-[10px]">—</span>}
                       </div>
                       <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
                       <span className="text-sm text-muted-foreground truncate w-28 shrink-0 hidden sm:block">{part.sku || '—'}</span>
