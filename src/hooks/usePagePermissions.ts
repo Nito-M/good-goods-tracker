@@ -21,6 +21,7 @@ const PAGE_KEY_TO_ROUTES: Record<string, string[]> = {
   assets: ['/assets'],
   parts: ['/parts'],
   'tax-documents': ['/tax-documents'],
+  'trailer-config': ['/trailer-configurator'],
 };
 
 export function usePagePermissions() {
@@ -84,7 +85,7 @@ export function usePagePermissions() {
 
   const getFirstAllowedRoute = (): string => {
     if (allowedPages === null) return '/';
-    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'bank', 'jobs', 'assemblies', 'settings'];
+    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'bank', 'jobs', 'assemblies', 'trailer-config', 'settings'];
     for (const key of orderedKeys) {
       if (allowedPages.includes(key)) {
         return PAGE_KEY_TO_ROUTES[key]?.[0] || '/';
