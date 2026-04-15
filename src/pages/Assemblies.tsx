@@ -597,6 +597,139 @@ function AssemblyDetail({
   );
 }
 
+export function Assemblies() {
+  const { type: typeParam } = useParams<{ type: string }>();
+  const navigate = useNavigate();
+  const activeType = typeParam ? decodeURIComponent(typeParam) : 'General';
+
+  const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, duplicateAssembly } = useAssemblies();
+  const { allItems: inventoryItems } = useInventory();
+  const { parts } = useParts();
+  const { folders } = usePartFolders();
+  const { assemblies: partsAssembliesList } = usePartsAssemblies();
+  const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
+  const [searchParams] = useSearchParams();
+  const idFromUrl = searchParams.get('id');
+  const [selectedId, setSelectedId] = useState<string | null>(idFromUrl);
+
+  useEffect(() => {
+    if (idFromUrl) setSelectedId(idFromUrl);
+  }, [idFromUrl]);
+  const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
+  const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
+  const searchTerm = search.toLowerCase().trim();
+  const filtered = typeAssemblies.filter((a) =>
+    !searchTerm ||
+    a.name.toLowerCase().includes(searchTerm) ||
+    (a.description ?? '').toLowerCase().includes(searchTerm)
+  );
+  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost }));
+  const sortedParts = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }));
+  const partsWithFolder = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price, folderId: p.folderId }));
+  const sortedFolders = [...folders].sort((a, b) => a.name.localeCompare(b.name));
+  const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost]));
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    setCreating(true);
+    const created = await createAssembly(newName.trim(), newDesc.trim() || undefined, activeType);
+    setCreating(false);
+    if (created) { setSelectedId(created.id); setCreateOpen(false); setNewName(''); setNewDesc(''); setTimeout(refetchSummaries, 300); }
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteAssembly(id);
+    if (selectedId === id) setSelectedId(null);
+    setDeleteId(null);
+  };
+
+  return (
+    <div className="flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3rem)] overflow-hidden flex-col">
+      <div className="flex items-center gap-2 px-4 py-2 border-b bg-card shrink-0">
+        <button onClick={() => navigate('/assemblies')} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm">
+          <ArrowLeft className="h-3.5 w-3.5" /> All Types
+        </button>
+        <span className="text-muted-foreground text-sm">/</span>
+        <span className="font-semibold text-sm">{activeType}</span>
+        <span className="text-xs text-muted-foreground">({typeAssemblies.length})</span>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {sidebarOpen ? (
+        <div className="w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden transition-all min-h-0">
+          <div className="p-4 border-b space-y-3">
+            <div className="flex items-center justify-between">
+              <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
+              <div className="flex items-center gap-1">
+                <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
+                <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(false)}><PanelLeftClose className="h-4 w-4" /></Button>
+              </div>
+            </div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input placeholder="Search assemblies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
+            </div>
+          </div>
+          <div className="flex-1 overflow-auto p-2 space-y-1">
+            {loading ? (
+              <p className="text-xs text-muted-foreground text-center py-6">Loading...</p>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">
+                <Layers className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="text-xs">No assemblies yet</p>
+              </div>
+            ) : (
+              filtered.map((a) => {
+                const s = summaries.get(a.id);
+                return (
+                  <button key={a.id} onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-muted/50 text-foreground')}>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium truncate flex-1">{a.name}</p>
+                      {a.status === 'finished' ? <CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> : <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
+                    </div>
+                    {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
+                    {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic">{a.status_notes}</p>}
+                    {(s && s.itemCount > 0) || a.selling_price > 0 ? (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
+                        {a.selling_price > 0 && <>{s && s.itemCount > 0 ? ' · ' : ''}Sell: <span className="font-medium text-primary">{formatCurrency(a.selling_price)}</span></>}
+                      </p>
+                    ) : null}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+        ) : (
+          <div className="shrink-0 border-r bg-sidebar flex items-start p-2">
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(true)}><PanelLeftOpen className="h-4 w-4" /></Button>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-hidden bg-background">
+          {selectedAssembly ? (
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="text-center">
+                <Layers className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                <p className="text-lg font-medium mb-1">Select an assembly</p>
+                <p className="text-sm">Choose from the left or create a new one.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
