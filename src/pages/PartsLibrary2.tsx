@@ -19,6 +19,7 @@ import { PartJsonImport } from '@/components/PartJsonImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
+import { DxfThumbnail } from '@/components/DxfThumbnail';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
