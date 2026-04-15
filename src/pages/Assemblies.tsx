@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy } from 'lucide-react';
 import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
+import { FullScreenSubAssemblyPicker } from '@/components/FullScreenSubAssemblyPicker';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { AssemblyPreviewDialog } from '@/components/AssemblyPreviewDialog';
 import { AssemblyCsvImport } from '@/components/AssemblyCsvImport';
@@ -70,13 +71,13 @@ function AssemblyDetail({
   const inventoryCostMap = new Map(inventoryItems.map(i => [i.id, i.cost ?? 0]));
   const [showPicker, setShowPicker] = useState(false);
   const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
-  const [showPartsAssemblyPicker, setShowPartsAssemblyPicker] = useState(false);
+  const [showSubAssemblyPicker, setShowSubAssemblyPicker] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
   const [addingFolderId, setAddingFolderId] = useState<string | null>(null);
   const [assemblySearchQuery, setAssemblySearchQuery] = useState('');
-  const [partsAssemblySearchQuery, setPartsAssemblySearchQuery] = useState('');
+  
   const [addingAssemblyId, setAddingAssemblyId] = useState<string | null>(null);
-  const [addingPartsAssemblyId, setAddingPartsAssemblyId] = useState<string | null>(null);
+  const [addingSubAssemblyId, setAddingSubAssemblyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -198,9 +199,9 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddPartsAssembly = async (partsAssemblyId: string) => {
+  const handleAddSubAssembly = async (partsAssemblyId: string) => {
     if (!partsAssemblies) return;
-    setAddingPartsAssemblyId(partsAssemblyId);
+    setAddingSubAssemblyId(partsAssemblyId);
     const pa = partsAssemblies.find(a => a.id === partsAssemblyId);
     if (pa) {
       // Fetch parts assembly items to calculate total cost (parts + inventory items)
@@ -230,8 +231,8 @@ function AssemblyDetail({
       });
       onItemsChanged?.();
     }
-    setAddingPartsAssemblyId(null);
-    setShowPartsAssemblyPicker(false);
+    setAddingSubAssemblyId(null);
+    setShowSubAssemblyPicker(false);
   };
 
   return (
@@ -443,45 +444,21 @@ function AssemblyDetail({
                 </Popover>
               )}
               {partsAssemblies && partsAssemblies.length > 0 && (
-                <Popover open={showPartsAssemblyPicker} onOpenChange={(open) => { setShowPartsAssemblyPicker(open); if (!open) setPartsAssemblySearchQuery(''); }}>
-                  <PopoverTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-1"><PackagePlus className="h-4 w-4" /> Parts Assembly</Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-0" align="end">
-                    <Command shouldFilter={true}>
-                      <CommandInput placeholder="Search parts assemblies..." value={partsAssemblySearchQuery} onValueChange={setPartsAssemblySearchQuery} />
-                      <CommandList>
-                        {partsAssemblySearchQuery.trim().length > 0 ? (
-                          <>
-                            <CommandEmpty>No parts assemblies found.</CommandEmpty>
-                            <CommandGroup>
-                              {partsAssemblies.map((a) => (
-                                <CommandItem
-                                  key={a.id}
-                                  value={`${a.name} ${a.description || ''} ${a.type}`}
-                                  onSelect={() => handleAddPartsAssembly(a.id)}
-                                  disabled={!!addingPartsAssemblyId}
-                                  className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
-                                >
-                                  <span className="font-medium text-sm">{a.name}</span>
-                                  {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
-                                  {a.selling_price > 0 && <span className="text-xs text-muted-foreground">Sell: {formatCurrency(a.selling_price)}</span>}
-                                  {addingPartsAssemblyId === a.id && <span className="text-xs text-primary">Adding...</span>}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </>
-                        ) : (
-                          <div className="py-6 text-center text-sm text-muted-foreground">Type to search parts assemblies...</div>
-                        )}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowSubAssemblyPicker(true)}>
+                  <PackagePlus className="h-4 w-4" /> Sub Assembly
+                </Button>
               )}
               <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
             </div>
         </div>
+
+        <FullScreenSubAssemblyPicker
+          open={showSubAssemblyPicker}
+          onClose={() => setShowSubAssemblyPicker(false)}
+          onSelect={(id) => handleAddSubAssembly(id)}
+          subAssemblies={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          adding={addingSubAssemblyId}
+        />
 
         <FullScreenPartsPicker
           open={showPicker}
@@ -677,7 +654,6 @@ export function Assemblies() {
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3rem)] overflow-hidden flex-col">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 px-4 py-2 border-b bg-card shrink-0">
         <button onClick={() => navigate('/assemblies')} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm">
           <ArrowLeft className="h-3.5 w-3.5" /> All Types
@@ -688,7 +664,6 @@ export function Assemblies() {
       </div>
 
       <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* Left panel */}
         {sidebarOpen ? (
         <div className="w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden transition-all min-h-0">
           <div className="p-4 border-b space-y-3">
@@ -742,7 +717,6 @@ export function Assemblies() {
           </div>
         )}
 
-        {/* Right panel */}
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
             <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
