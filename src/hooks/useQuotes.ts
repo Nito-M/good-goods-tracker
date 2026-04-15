@@ -629,6 +629,76 @@ export function useQuotes() {
     }
   };
 
+  const revertInvoiceLink = async (quoteId: string, saleId: string, percentage: number) => {
+    if (!user) return;
+
+    try {
+      // Delete bank transactions tied to this sale
+      await supabase.from('bank_transactions').delete().eq('sale_id', saleId);
+
+      // Delete PO allocations for sale items
+      const { data: saleItems } = await supabase
+        .from('sale_items')
+        .select('id, inventory_item_id, quantity')
+        .eq('sale_id', saleId);
+
+      if (saleItems) {
+        for (const si of saleItems) {
+          await supabase.from('po_item_allocations').delete().eq('sale_item_id', si.id);
+          // Restore inventory if picked up
+          if (si.inventory_item_id) {
+            const { data: inv } = await supabase
+              .from('inventory_items')
+              .select('quantity')
+              .eq('id', si.inventory_item_id)
+              .single();
+            if (inv) {
+              await supabase
+                .from('inventory_items')
+                .update({ quantity: inv.quantity + si.quantity })
+                .eq('id', si.inventory_item_id);
+            }
+          }
+        }
+      }
+
+      // Delete the link record
+      await supabase
+        .from('quote_invoice_links')
+        .delete()
+        .match({ quote_id: quoteId, sale_id: saleId });
+
+      // Delete the sale (cascades sale_items)
+      await supabase.from('sales').delete().eq('id', saleId);
+
+      // Update quote invoiced_percentage
+      const quote = quotes.find(q => q.id === quoteId);
+      const newPercentage = Math.max(0, (quote?.invoicedPercentage || percentage) - percentage);
+
+      await supabase
+        .from('quotes')
+        .update({
+          invoiced_percentage: newPercentage,
+          status: quote?.status === 'converted' ? 'accepted' : quote?.status,
+        } as any)
+        .eq('id', quoteId);
+
+      toast({
+        title: 'Invoice reverted',
+        description: `Removed ${percentage}% invoice from quote. Invoiced percentage is now ${newPercentage}%.`,
+      });
+
+      await fetchQuotes();
+    } catch (error) {
+      console.error('Error reverting invoice link:', error);
+      toast({
+        title: 'Error reverting invoice',
+        description: 'Unable to revert invoice. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     quotes,
     loading,
@@ -640,6 +710,7 @@ export function useQuotes() {
     removeAttachment,
     convertToInvoice,
     convertToPurchaseOrder,
+    revertInvoiceLink,
     refetch: fetchQuotes,
   };
 }
