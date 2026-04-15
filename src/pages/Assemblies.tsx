@@ -612,6 +612,7 @@ export function Assemblies() {
   const { parts } = useParts();
   const { folders } = usePartFolders();
   const { assemblies: partsAssembliesList } = usePartsAssemblies();
+  const { assemblies: partsAssembliesList2 } = usePartsAssemblies2();
   const { summaries, refetch: refetchSummaries } = useAssemblySummaries(assemblies.map((a) => a.id));
   const [searchParams] = useSearchParams();
   const idFromUrl = searchParams.get('id');
@@ -723,7 +724,7 @@ export function Assemblies() {
 
         <div className="flex-1 overflow-hidden bg-background">
           {selectedAssembly ? (
-            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} />
+            <AssemblyDetail key={selectedAssembly.id} assembly={selectedAssembly} inventoryItems={sortedInventory} partsItems={sortedParts} partsRaw={partsWithFolder} folders={sortedFolders} summary={summaries.get(selectedAssembly.id)} onDelete={(id) => setDeleteId(id)} onUpdate={updateAssembly} onDuplicate={async (id) => { const dup = await duplicateAssembly(id); if (dup) { refetchSummaries(); setSelectedId(dup.id); } }} onItemsChanged={refetchSummaries} allAssemblies={assemblies} partsAssemblies={partsAssembliesList} partsAssemblies2={partsAssembliesList2} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center">
