@@ -848,18 +848,19 @@ function ComponentsTab({
 
 // --- Prebuilt Assemblies Tab ---
 function PrebuiltTab({
-  assemblies, types, components, loading, onSave, onUpdate, onRemove,
+  assemblies, types, components, lengths, loading, onSave, onUpdate, onRemove,
 }: {
   assemblies: ReturnType<typeof usePrebuiltAssemblies>['assemblies'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   components: ReturnType<typeof useAssemblyComponents>['components'];
+  lengths: ReturnType<typeof useTrailerLengths>['lengths'];
   loading: boolean;
   onSave: (config: any) => Promise<any>;
   onUpdate: (id: string, updates: any) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
-  const { toast } = useToast();
   const [trailerTypeId, setTrailerTypeId] = useState('');
+  const [trailerLengthId, setTrailerLengthId] = useState('');
   const [frontEndId, setFrontEndId] = useState('');
   const [frontEndTier2Id, setFrontEndTier2Id] = useState('');
   const [backEndId, setBackEndId] = useState('');
@@ -871,6 +872,7 @@ function PrebuiltTab({
   const [totalPrice, setTotalPrice] = useState('');
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTrailerLengthId, setEditTrailerLengthId] = useState('');
   const [editFrontEndId, setEditFrontEndId] = useState('');
   const [editFrontEndTier2Id, setEditFrontEndTier2Id] = useState('');
   const [editBackEndId, setEditBackEndId] = useState('');
