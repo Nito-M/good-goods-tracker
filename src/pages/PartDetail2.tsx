@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Trash2, Pencil, Upload, X, Check, DollarSign, Download, Clock, Package, Plus, Minus, ExternalLink } from 'lucide-react';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
 const decimalToHM = (decimal: number): string => {
