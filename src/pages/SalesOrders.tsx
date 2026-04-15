@@ -2,9 +2,12 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useVendors } from '@/hooks/useVendors';
-import { Search, FileText } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
+import { useCompanies } from '@/hooks/useCompanies';
+import { Search, FileText, Download, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -13,15 +16,49 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { generateQuotePDF } from '@/lib/quoteGenerator';
+import { QuoteSettings, Quote } from '@/types/quote';
 
 export function SalesOrders() {
   const { quotes, loading: quotesLoading } = useQuotes();
   const { vendors, loading: vendorsLoading } = useVendors();
+  const { profile } = useProfile();
+  const { companies } = useCompanies();
   const [searchQuery, setSearchQuery] = useState('');
 
   const loading = quotesLoading || vendorsLoading;
+
+  const quoteSettings = useMemo<QuoteSettings>(() => ({
+    businessName: profile?.businessName || null,
+    businessAddress: profile?.businessAddress || null,
+    businessPhone: profile?.businessPhone || null,
+    businessEmail: profile?.businessEmail || null,
+    businessNumber: profile?.businessNumber || null,
+    thankYouNote: profile?.quoteThankYouNote || null,
+    logoUrl: profile?.logoUrl || null,
+    layout: profile?.quoteLayout || profile?.invoiceLayout || null,
+    validityDays: profile?.quoteValidityDays || null,
+  }), [profile]);
+
+  const getQuoteSettingsForQuote = (quote: Quote): QuoteSettings => {
+    const companyId = (quote as any).companyId;
+    const company = companyId ? companies.find((c: any) => c.id === companyId) : null;
+    if (company) {
+      return {
+        businessName: company.name,
+        businessAddress: company.address,
+        businessPhone: company.phone,
+        businessEmail: company.email,
+        businessNumber: company.businessNumber,
+        logoUrl: company.logoUrl,
+        thankYouNote: company.quoteThankYouNote || quoteSettings.thankYouNote,
+        layout: company.quoteLayout || quoteSettings.layout,
+        validityDays: company.quoteValidityDays || quoteSettings.validityDays,
+      };
+    }
+    return quoteSettings;
+  };
 
   const acceptedQuotes = useMemo(() => {
     const accepted = quotes.filter((q) => q.status === 'sales_order');
@@ -35,15 +72,6 @@ export function SalesOrders() {
       return vendorName.includes(query) || quoteNumber.includes(query);
     });
   }, [quotes, searchQuery]);
-
-  const getVendorDetails = (vendorId: string | null) => {
-    if (!vendorId) return { phone: '—', email: '—' };
-    const vendor = vendors.find((v) => v.id === vendorId);
-    return {
-      phone: vendor?.contact_phone || '—',
-      email: vendor?.contact_email || '—',
-    };
-  };
 
   if (loading) {
     return (
@@ -88,6 +116,7 @@ export function SalesOrders() {
                 <TableHead className="text-right">Total Amount</TableHead>
                 <TableHead>Date Accepted</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -116,6 +145,16 @@ export function SalesOrders() {
                           Accepted
                         </Badge>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title="Download Sales Order PDF"
+                        onClick={() => generateQuotePDF(quote, getQuoteSettingsForQuote(quote), { isSalesOrder: true })}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );

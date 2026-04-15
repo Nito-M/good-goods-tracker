@@ -8,7 +8,12 @@ const PAGE_MARGIN_BOTTOM = 20; // mm from bottom edge where we trigger a new pag
 const LINE_HEIGHT = 7;
 const NOTE_LINE_HEIGHT = 4;
 
-export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) => {
+export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings, options?: { isSalesOrder?: boolean }) => {
+  const isSalesOrder = options?.isSalesOrder ?? false;
+  const documentTitle = isSalesOrder ? 'SALES ORDER' : 'QUOTE';
+  const documentLabel = isSalesOrder ? 'Sales Order #' : 'Quote #';
+  const billToLabel = isSalesOrder ? 'Sales Order For:' : 'Quote For:';
+  const filePrefix = isSalesOrder ? 'SO' : quote.quoteNumber;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -117,7 +122,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
     const titleAlign = layout.invoiceTitle.align || 'center';
-    doc.text('QUOTE', getXPosition(layout.invoiceTitle.x, titleAlign), titleY, {
+    doc.text(documentTitle, getXPosition(layout.invoiceTitle.x, titleAlign), titleY, {
       align: titleAlign as 'left' | 'center' | 'right',
     });
     flowY = Math.max(flowY, titleY + 10);
@@ -130,7 +135,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
     doc.setFont('helvetica', 'normal');
 
     // LEFT: Quote #, Date, Valid Until
-    doc.text(`Quote #: ${quote.quoteNumber}`, layout.invoiceDetails.x, detailsY);
+    doc.text(`${documentLabel}: ${quote.quoteNumber}`, layout.invoiceDetails.x, detailsY);
     let leftY = detailsY + 7;
     doc.text(`Date: ${formatDate(quote.createdAt)}`, layout.invoiceDetails.x, leftY);
     leftY += 7;
@@ -151,7 +156,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
   if (layout.billTo.visible && quote.vendorName) {
     const billToY = layout.billTo.y > 0 ? layout.billTo.y : flowY;
     doc.setFont('helvetica', 'bold');
-    doc.text('Quote For:', layout.billTo.x, billToY);
+    doc.text(billToLabel, layout.billTo.x, billToY);
     doc.setFont('helvetica', 'normal');
     doc.text(quote.vendorName, layout.billTo.x, billToY + 6);
 
@@ -358,7 +363,8 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings) =>
   }
 
   // Save the PDF
-  await savePdfBlob(doc, `${quote.quoteNumber}.pdf`);
+  const fileName = isSalesOrder ? `SO-${quote.quoteNumber}.pdf` : `${quote.quoteNumber}.pdf`;
+  await savePdfBlob(doc, fileName);
 };
 
 function loadImage(url: string): Promise<HTMLImageElement> {
