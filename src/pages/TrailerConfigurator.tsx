@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
+import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
 import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -52,6 +52,7 @@ function SelectionCard({ id, name, imageUrl, selected, onSelect, price }: Select
 
 const STEPS = [
   { key: 'trailer_type', label: 'Select Trailer Type' },
+  { key: 'trailer_length', label: 'Select Trailer Length' },
   { key: 'under_carriage', label: 'Select Under Carriage' },
   { key: 'front_end', label: 'Select Front End' },
   { key: 'back_end', label: 'Select Back End' },
