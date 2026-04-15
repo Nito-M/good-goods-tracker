@@ -201,14 +201,15 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddSubAssembly = async (partsAssemblyId: string) => {
-    if (!partsAssemblies) return;
+  const handleAddSubAssembly = async (partsAssemblyId: string, source: 'parts1' | 'parts2') => {
+    const list = source === 'parts1' ? partsAssemblies : partsAssemblies2;
+    if (!list) return;
     setAddingSubAssemblyId(partsAssemblyId);
-    const pa = partsAssemblies.find(a => a.id === partsAssemblyId);
+    const pa = list.find(a => a.id === partsAssemblyId);
     if (pa) {
-      // Fetch parts assembly items to calculate total cost (parts + inventory items)
+      const table = source === 'parts1' ? 'parts_assembly_items' : 'parts_assembly_items_2';
       const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
-        .from('parts_assembly_items')
+        .from(table as any)
         .select('quantity, part_id, inventory_item_id, parts ( price ), inventory_items ( cost )')
         .eq('assembly_id', partsAssemblyId);
 
