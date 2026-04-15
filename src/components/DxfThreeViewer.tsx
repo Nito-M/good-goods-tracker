@@ -226,7 +226,7 @@ function DxfScene({ geometry, controlsRef }: { geometry: ParsedGeometry; control
 
   return (
     <lineSegments ref={linesRef} geometry={bufferGeometry}>
-      <lineBasicMaterial color="#ffffff" linewidth={1} />
+      <lineBasicMaterial color={lineColor} linewidth={1} />
     </lineSegments>
   );
 }
