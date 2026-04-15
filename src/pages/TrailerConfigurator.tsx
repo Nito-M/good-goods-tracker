@@ -107,7 +107,7 @@ export function TrailerConfigurator() {
 
   // Lookup prebuilt assembly when entering summary step (now step 7)
   useEffect(() => {
-    if (step === 7 && trailerTypeId) {
+    if (step === 6 && trailerTypeId) {
       setLookupLoading(true);
       setLookupDone(false);
       lookup({
@@ -610,7 +610,7 @@ export function TrailerConfigurator() {
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
         </Button>
-        {step < 7 && (
+        {step < 6 && (
           <Button
             onClick={() => setStep(s => s + 1)}
             disabled={!canNext()}
