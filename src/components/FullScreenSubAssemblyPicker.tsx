@@ -26,6 +26,7 @@ interface FullScreenSubAssemblyPickerProps {
   subAssemblies1: SubAssemblyRow[];
   subAssemblies2: SubAssemblyRow[];
   adding?: boolean;
+  existingSubAssemblyIds?: string[];
 }
 
 export function FullScreenSubAssemblyPicker({
