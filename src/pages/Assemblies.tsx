@@ -467,6 +467,8 @@ function AssemblyDetail({
           onConfirm={(selections) => handleAddSubAssemblies(selections)}
           subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           subAssemblies2={(partsAssemblies2 || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          label1={(() => { try { const s = localStorage.getItem('parts-landing-names'); const n = s ? JSON.parse(s) : {}; return n['parts-assemblies'] || 'Parts Assemblies'; } catch { return 'Parts Assemblies'; } })()}
+          label2={(() => { try { const s = localStorage.getItem('parts-landing-names'); const n = s ? JSON.parse(s) : {}; return n['parts-assemblies-2'] || 'Parts Assemblies 2'; } catch { return 'Parts Assemblies 2'; } })()}
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {
             const ids: string[] = [];
