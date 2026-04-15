@@ -859,6 +859,7 @@ function PrebuiltTab({
   onUpdate: (id: string, updates: any) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
+  const { toast } = useToast();
   const [trailerTypeId, setTrailerTypeId] = useState('');
   const [trailerLengthId, setTrailerLengthId] = useState('');
   const [frontEndId, setFrontEndId] = useState('');
