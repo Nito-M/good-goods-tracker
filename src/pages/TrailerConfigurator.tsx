@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
+import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, useTrailerSubtypes, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
 import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -65,9 +65,11 @@ export function TrailerConfigurator() {
   const { components, loading: compsLoading, getByCategory } = useAssemblyComponents();
   const { save, lookup } = usePrebuiltAssemblies();
   const { lengths, loading: lengthsLoading, getByTrailerType } = useTrailerLengths();
+  const { subtypes, loading: subtypesLoading, getByTrailerType: getSubtypesByType } = useTrailerSubtypes();
 
   const [step, setStep] = useState(0);
   const [trailerTypeId, setTrailerTypeId] = useState<string | null>(null);
+  const [trailerSubtypeId, setTrailerSubtypeId] = useState<string | null>(null);
   const [trailerLengthId, setTrailerLengthId] = useState<string | null>(null);
   const [frontEndId, setFrontEndId] = useState<string | null>(null);
   const [frontEndSubId, setFrontEndSubId] = useState<string | null>(null);
@@ -91,8 +93,10 @@ export function TrailerConfigurator() {
   const underCarriageSubs = useMemo(() => underCarriageId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageId) : [], [components, trailerTypeId, underCarriageId]);
   const underCarriageTier3s = useMemo(() => underCarriageSubId ? getByCategory('under_carriage', trailerTypeId || undefined, underCarriageSubId) : [], [components, trailerTypeId, underCarriageSubId]);
   const availableLengths = useMemo(() => trailerTypeId ? getByTrailerType(trailerTypeId) : [], [lengths, trailerTypeId]);
+  const availableSubtypes = useMemo(() => trailerTypeId ? getSubtypesByType(trailerTypeId) : [], [subtypes, trailerTypeId]);
 
   const selectedTrailer = types.find(t => t.id === trailerTypeId);
+  const selectedSubtype = subtypes.find(s => s.id === trailerSubtypeId);
   const selectedLength = lengths.find(l => l.id === trailerLengthId);
   const selectedFront = components.find(c => c.id === frontEndId);
   const selectedFrontSub = components.find(c => c.id === frontEndSubId);
@@ -126,12 +130,17 @@ export function TrailerConfigurator() {
   }, [step, trailerTypeId, trailerLengthId, frontEndId, backEndId, deckTypeId, underCarriageId]);
 
   const canNext = () => {
-    if (step === 0) return !!trailerTypeId;
-    if (step === 1) return !!trailerLengthId; // trailer length is required
-    if (step === 2) return !!underCarriageId; // under carriage is required
+    if (step === 0) {
+      if (!trailerTypeId) return false;
+      // If subtypes exist for this type, one must be selected
+      if (availableSubtypes.length > 0 && !trailerSubtypeId) return false;
+      return true;
+    }
+    if (step === 1) return !!trailerLengthId;
+    if (step === 2) return !!underCarriageId;
     if (step === 3) return !!frontEndId;
     if (step === 4) return !!backEndId;
-    if (step === 5) return true; // deck is optional
+    if (step === 5) return true;
     return false;
   };
 
@@ -162,8 +171,9 @@ export function TrailerConfigurator() {
     doc.setFontSize(11);
     const rows: { label: string; value: string; price?: number }[] = [
       { label: 'Trailer Type', value: selectedTrailer?.name || '—' },
-      { label: 'Trailer Length', value: selectedLength?.label || '—' },
     ];
+    if (selectedSubtype) rows.push({ label: 'Subtype', value: selectedSubtype.name });
+    rows.push({ label: 'Trailer Length', value: selectedLength?.label || '—' });
     if (selectedUnderCarriage) {
       rows.push({ label: 'Under Carriage', value: selectedUnderCarriage.name, price: selectedUnderCarriage.price });
       if (axleCount) {
@@ -223,7 +233,7 @@ export function TrailerConfigurator() {
     doc.save(`Trailer_Config_${trailerName}.pdf`);
   };
 
-  const loading = typesLoading || compsLoading || lengthsLoading;
+  const loading = typesLoading || compsLoading || lengthsLoading || subtypesLoading;
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4">
@@ -259,33 +269,56 @@ export function TrailerConfigurator() {
         <p className="text-muted-foreground">Loading...</p>
       ) : (
         <>
-          {/* Step 1: Trailer Type */}
+          {/* Step 1: Trailer Type + Subtype */}
           {step === 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {types.map(t => (
-                <div key={t.id} className="relative">
-                  <SelectionCard
-                    id={t.id}
-                    name={t.name}
-                    imageUrl={t.image_url}
-                    selected={trailerTypeId === t.id}
-                    onSelect={(id) => {
-                      setTrailerTypeId(id);
-                      setTrailerLengthId(null);
-                      setFrontEndId(null);
-                      setFrontEndSubId(null);
-                      setBackEndId(null);
-                      setDeckTypeId(null);
-                      setUnderCarriageId(null);
-                      setUnderCarriageSubId(null);
-                      setUnderCarriageTier3Id(null);
-                      setAxleCount(null);
-                    }}
-                  />
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {types.map(t => (
+                  <div key={t.id} className="relative">
+                    <SelectionCard
+                      id={t.id}
+                      name={t.name}
+                      imageUrl={t.image_url}
+                      selected={trailerTypeId === t.id}
+                      onSelect={(id) => {
+                        setTrailerTypeId(id);
+                        setTrailerSubtypeId(null);
+                        setTrailerLengthId(null);
+                        setFrontEndId(null);
+                        setFrontEndSubId(null);
+                        setBackEndId(null);
+                        setDeckTypeId(null);
+                        setUnderCarriageId(null);
+                        setUnderCarriageSubId(null);
+                        setUnderCarriageTier3Id(null);
+                        setAxleCount(null);
+                      }}
+                    />
+                  </div>
+                ))}
+                {types.length === 0 && (
+                  <p className="col-span-full text-muted-foreground text-center py-12">No trailer types configured yet. Add them in Settings.</p>
+                )}
+              </div>
+
+              {/* Subtype selection (shown after selecting a type, if subtypes exist) */}
+              {trailerTypeId && availableSubtypes.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">What type of {selectedTrailer?.name}?</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {availableSubtypes.map(s => (
+                      <div key={s.id} className="relative">
+                        <SelectionCard
+                          id={s.id}
+                          name={s.name}
+                          imageUrl={s.image_url}
+                          selected={trailerSubtypeId === s.id}
+                          onSelect={(id) => setTrailerSubtypeId(trailerSubtypeId === id ? null : id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-              {types.length === 0 && (
-                <p className="col-span-full text-muted-foreground text-center py-12">No trailer types configured yet. Add them in Settings.</p>
               )}
             </div>
           )}
@@ -535,6 +568,7 @@ export function TrailerConfigurator() {
                     <CardContent className="p-6 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <SummaryRow label="Trailer Type" value={selectedTrailer?.name} imageUrl={selectedTrailer?.image_url} />
+                        {selectedSubtype && <SummaryRow label="Subtype" value={selectedSubtype.name} imageUrl={selectedSubtype.image_url} />}
                         <SummaryRow label="Trailer Length" value={selectedLength?.label} />
                         {selectedFront ? (
                           <>

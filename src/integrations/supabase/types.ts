@@ -2418,6 +2418,7 @@ export type Database = {
           id: string
           total_price: number
           trailer_length_id: string | null
+          trailer_subtype_id: string | null
           trailer_type_id: string
           under_carriage_axle_count: number | null
           under_carriage_id: string | null
@@ -2435,6 +2436,7 @@ export type Database = {
           id?: string
           total_price?: number
           trailer_length_id?: string | null
+          trailer_subtype_id?: string | null
           trailer_type_id: string
           under_carriage_axle_count?: number | null
           under_carriage_id?: string | null
@@ -2452,6 +2454,7 @@ export type Database = {
           id?: string
           total_price?: number
           trailer_length_id?: string | null
+          trailer_subtype_id?: string | null
           trailer_type_id?: string
           under_carriage_axle_count?: number | null
           under_carriage_id?: string | null
@@ -2494,6 +2497,13 @@ export type Database = {
             columns: ["trailer_length_id"]
             isOneToOne: false
             referencedRelation: "trailer_lengths"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_trailer_subtype_id_fkey"
+            columns: ["trailer_subtype_id"]
+            isOneToOne: false
+            referencedRelation: "trailer_subtypes"
             referencedColumns: ["id"]
           },
           {
@@ -3754,6 +3764,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      trailer_subtypes: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          trailer_type_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          trailer_type_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          trailer_type_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trailer_subtypes_trailer_type_id_fkey"
+            columns: ["trailer_type_id"]
+            isOneToOne: false
+            referencedRelation: "trailer_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trailer_types: {
         Row: {

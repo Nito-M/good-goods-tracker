@@ -304,3 +304,64 @@ export function useTrailerLengths() {
 
   return { lengths, loading, create, update, remove, getByTrailerType, refetch: fetchLengths };
 }
+
+export interface TrailerSubtype {
+  id: string;
+  user_id: string;
+  name: string;
+  image_url: string | null;
+  trailer_type_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export function useTrailerSubtypes() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [subtypes, setSubtypes] = useState<TrailerSubtype[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSubtypes = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('trailer_subtypes')
+      .select('*')
+      .order('name');
+    if (error) console.error(error);
+    else setSubtypes((data as any[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchSubtypes(); }, [user]);
+
+  const create = async (name: string, trailer_type_id: string, image_url?: string) => {
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from('trailer_subtypes')
+      .insert({ user_id: user.id, name, trailer_type_id, image_url: image_url || null } as any)
+      .select()
+      .single();
+    if (error) { toast({ title: 'Error', description: 'Failed to create subtype.', variant: 'destructive' }); return null; }
+    await fetchSubtypes();
+    return data as TrailerSubtype;
+  };
+
+  const update = async (id: string, updates: { name?: string; image_url?: string | null; trailer_type_id?: string }) => {
+    const { error } = await supabase.from('trailer_subtypes').update(updates).eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
+    else await fetchSubtypes();
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from('trailer_subtypes').delete().eq('id', id);
+    if (error) toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
+    else await fetchSubtypes();
+  };
+
+  const getByTrailerType = (trailerTypeId: string) => {
+    return subtypes.filter(s => s.trailer_type_id === trailerTypeId);
+  };
+
+  return { subtypes, loading, create, update, remove, getByTrailerType, refetch: fetchSubtypes };
+}
