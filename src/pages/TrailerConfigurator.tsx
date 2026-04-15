@@ -268,6 +268,7 @@ export function TrailerConfigurator() {
                     selected={trailerTypeId === t.id}
                     onSelect={(id) => {
                       setTrailerTypeId(id);
+                      setTrailerLengthId(null);
                       setFrontEndId(null);
                       setFrontEndSubId(null);
                       setBackEndId(null);
