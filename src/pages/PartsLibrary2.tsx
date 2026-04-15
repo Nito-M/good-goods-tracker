@@ -313,7 +313,7 @@ export function PartsLibrary2() {
                       {selectMode && <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}><Checkbox checked={selectedPartIds.has(part.id)} onCheckedChange={() => toggleSelect(part.id)} /></div>}
                       <div className="aspect-square bg-muted rounded-t-lg overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={(e) => { e.stopPropagation(); if (part.imageUrl) openImageViewer(part.imageUrl); }}>
-                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
+                        {part.imageUrl ? <PartImage2 storagePath={part.imageUrl} className="w-full h-full" /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files-2" className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
                       </div>
                       <CardContent className="p-3">
                         <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
