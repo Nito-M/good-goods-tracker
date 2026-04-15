@@ -189,6 +189,154 @@ export function TrailerConfigAdmin() {
   );
 }
 
+// --- Trailer Lengths Tab ---
+function TrailerLengthsTab({
+  lengths, types, loading, onCreate, onUpdate, onRemove,
+}: {
+  lengths: { id: string; label: string; compatible_trailer_type_ids: string[] }[];
+  types: { id: string; name: string }[];
+  loading: boolean;
+  onCreate: (label: string, compatible_trailer_type_ids?: string[]) => Promise<any>;
+  onUpdate: (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[] }) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
+}) {
+  const [label, setLabel] = useState('');
+  const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState('');
+  const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
+
+  const handleAdd = async () => {
+    if (!label.trim()) return;
+    await onCreate(label.trim(), compatibleIds);
+    setLabel('');
+    setCompatibleIds([]);
+  };
+
+  const startEdit = (l: typeof lengths[0]) => {
+    setEditingId(l.id);
+    setEditLabel(l.label);
+    setEditCompatibleIds([...l.compatible_trailer_type_ids]);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editLabel.trim()) return;
+    await onUpdate(id, { label: editLabel.trim(), compatible_trailer_type_ids: editCompatibleIds });
+    setEditingId(null);
+  };
+
+  const toggleCompatible = (id: string) => {
+    setCompatibleIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleEditCompatible = (id: string) => {
+    setEditCompatibleIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-lg">Trailer Lengths</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-3 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px] space-y-1">
+            <Label>Length Label</Label>
+            <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. 16ft, 20ft, 24ft" />
+          </div>
+          <div className="space-y-1">
+            <Label>Compatible Trailer Types</Label>
+            <div className="flex flex-wrap gap-2">
+              {types.map(t => (
+                <label key={t.id} className="flex items-center gap-1.5 text-sm">
+                  <Checkbox
+                    checked={compatibleIds.includes(t.id)}
+                    onCheckedChange={() => toggleCompatible(t.id)}
+                  />
+                  {t.name}
+                </label>
+              ))}
+              {types.length === 0 && <span className="text-xs text-muted-foreground">Add trailer types first</span>}
+            </div>
+          </div>
+          <Button onClick={handleAdd} disabled={!label.trim()}>
+            <Plus className="h-4 w-4 mr-1" /> Add
+          </Button>
+        </div>
+
+        {loading ? (
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        ) : lengths.length === 0 ? (
+          <p className="text-muted-foreground text-sm text-center py-6">No trailer lengths yet.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Label</TableHead>
+                <TableHead>Compatible Types</TableHead>
+                <TableHead className="w-24" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {lengths.map(l => (
+                <TableRow key={l.id}>
+                  <TableCell>
+                    {editingId === l.id ? (
+                      <Input value={editLabel} onChange={e => setEditLabel(e.target.value)} className="h-8"
+                        onKeyDown={e => { if (e.key === 'Enter') saveEdit(l.id); if (e.key === 'Escape') setEditingId(null); }} autoFocus />
+                    ) : (
+                      <span className="font-medium">{l.label}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === l.id ? (
+                      <div className="flex flex-wrap gap-2">
+                        {types.map(t => (
+                          <label key={t.id} className="flex items-center gap-1.5 text-sm">
+                            <Checkbox
+                              checked={editCompatibleIds.includes(t.id)}
+                              onCheckedChange={() => toggleEditCompatible(t.id)}
+                            />
+                            {t.name}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {l.compatible_trailer_type_ids.length === 0 ? (
+                          <Badge variant="secondary">All Types</Badge>
+                        ) : (
+                          l.compatible_trailer_type_ids.map(tid => {
+                            const t = types.find(x => x.id === tid);
+                            return t ? <Badge key={tid} variant="outline">{t.name}</Badge> : null;
+                          })
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {editingId === l.id ? (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => saveEdit(l.id)}><Check className="h-4 w-4 text-green-600" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(l)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => onRemove(l.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // --- Trailer Types Tab ---
 function TrailerTypesTab({
   types, loading, onCreate, onUpdate, onRemove,
