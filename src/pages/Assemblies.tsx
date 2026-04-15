@@ -201,42 +201,47 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddSubAssembly = async (partsAssemblyId: string, source: 'parts1' | 'parts2') => {
-    const list = source === 'parts1' ? partsAssemblies : partsAssemblies2;
-    if (!list) return;
-    setAddingSubAssemblyId(partsAssemblyId);
-    const pa = list.find(a => a.id === partsAssemblyId);
-    if (pa) {
-      const table = source === 'parts1' ? 'parts_assembly_items' : 'parts_assembly_items_2';
-      const partsJoin = source === 'parts1' ? 'parts ( price )' : 'parts_2 ( price )';
-      const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
-        .from(table as any)
-        .select(`quantity, part_id, inventory_item_id, ${partsJoin}, inventory_items ( cost )`)
-        .eq('assembly_id', partsAssemblyId);
+  const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' | 'parts2' }[]) => {
+    setAddingSubAssemblyId('batch');
+    try {
+      for (const { id: partsAssemblyId, source } of selections) {
+        const list = source === 'parts1' ? partsAssemblies : partsAssemblies2;
+        if (!list) continue;
+        const pa = list.find(a => a.id === partsAssemblyId);
+        if (!pa) continue;
 
-      let totalCost = 0;
-      if (paItems) {
-        for (const row of paItems as any[]) {
-          const cost = row.parts?.price ?? row.parts_2?.price ?? row.inventory_items?.cost ?? 0;
-          totalCost += row.quantity * cost;
+        const table = source === 'parts1' ? 'parts_assembly_items' : 'parts_assembly_items_2';
+        const partsJoin = source === 'parts1' ? 'parts ( price )' : 'parts_2 ( price )';
+        const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
+          .from(table as any)
+          .select(`quantity, part_id, inventory_item_id, ${partsJoin}, inventory_items ( cost )`)
+          .eq('assembly_id', partsAssemblyId);
+
+        let totalCost = 0;
+        if (paItems) {
+          for (const row of paItems as any[]) {
+            const cost = row.parts?.price ?? row.parts_2?.price ?? row.inventory_items?.cost ?? 0;
+            totalCost += row.quantity * cost;
+          }
         }
+
+        const price = pa.selling_price > 0 ? pa.selling_price : totalCost;
+
+        await addItem({
+          inventory_item_id: null,
+          item_name: pa.name,
+          sku: '',
+          quantity: 1,
+          unit_cost: price,
+          notes: pa.description || undefined,
+          parts_assembly_id: source === 'parts1' ? partsAssemblyId : null,
+        });
       }
-
-      const price = pa.selling_price > 0 ? pa.selling_price : totalCost;
-
-      await addItem({
-        inventory_item_id: null,
-        item_name: pa.name,
-        sku: '',
-        quantity: 1,
-        unit_cost: price,
-        notes: pa.description || undefined,
-        parts_assembly_id: source === 'parts1' ? partsAssemblyId : null,
-      });
       onItemsChanged?.();
+    } finally {
+      setAddingSubAssemblyId(null);
+      setShowSubAssemblyPicker(false);
     }
-    setAddingSubAssemblyId(null);
-    setShowSubAssemblyPicker(false);
   };
 
   return (
@@ -459,10 +464,10 @@ function AssemblyDetail({
         <FullScreenSubAssemblyPicker
           open={showSubAssemblyPicker}
           onClose={() => setShowSubAssemblyPicker(false)}
-          onSelect={(id, source) => handleAddSubAssembly(id, source)}
+          onConfirm={(selections) => handleAddSubAssemblies(selections)}
           subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           subAssemblies2={(partsAssemblies2 || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
-          adding={addingSubAssemblyId}
+          adding={!!addingSubAssemblyId}
         />
 
         <FullScreenPartsPicker
