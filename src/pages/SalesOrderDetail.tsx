@@ -363,6 +363,10 @@ export function SalesOrderDetail() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownloadSalesOrder}>
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
           <div className="flex items-center gap-1.5">
             <Label htmlFor="jobNumber" className="text-sm whitespace-nowrap flex items-center gap-1">
               <Hash className="h-3.5 w-3.5" />Job #
