@@ -112,6 +112,7 @@ export function TrailerConfigurator() {
       setLookupDone(false);
       lookup({
         trailer_type_id: trailerTypeId,
+        trailer_length_id: trailerLengthId,
         front_end_id: frontEndId,
         back_end_id: backEndId,
         deck_type_id: deckTypeId,
@@ -122,7 +123,7 @@ export function TrailerConfigurator() {
         setLookupDone(true);
       });
     }
-  }, [step, trailerTypeId, frontEndId, backEndId, deckTypeId, underCarriageId]);
+  }, [step, trailerTypeId, trailerLengthId, frontEndId, backEndId, deckTypeId, underCarriageId]);
 
   const canNext = () => {
     if (step === 0) return !!trailerTypeId;
@@ -139,6 +140,7 @@ export function TrailerConfigurator() {
     setSaving(true);
     await save({
       trailer_type_id: trailerTypeId,
+      trailer_length_id: trailerLengthId,
       front_end_id: frontEndId,
       back_end_id: backEndId,
       deck_type_id: deckTypeId,
