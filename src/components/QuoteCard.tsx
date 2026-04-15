@@ -50,13 +50,14 @@ interface QuoteCardProps {
   onEdit: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote, percentage: number) => void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
+  onRevertInvoiceLink?: (quoteId: string, saleId: string, percentage: number) => void;
   onPreview?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
   linkedInvoiceNumber?: string | null;
   linkedPoNumber?: string | null;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
