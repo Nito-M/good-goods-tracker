@@ -121,7 +121,7 @@ export function FullScreenSubAssemblyPicker({
           </Button>
         )}
         <h2 className="text-lg font-semibold flex-1">
-          {selectedSource ? (selectedSource === 'parts1' ? 'Parts Assemblies 1' : 'Parts Assemblies 2') : 'Add Sub Assembly'}
+          {selectedSource ? (selectedSource === 'parts1' ? label1 : label2) : 'Add Sub Assembly'}
         </h2>
         {selections.length > 0 && (
           <Badge variant="secondary" className="mr-2">{selections.length} selected</Badge>
@@ -138,7 +138,7 @@ export function FullScreenSubAssemblyPicker({
               className="w-full text-left px-6 py-5 rounded-lg border bg-card hover:bg-accent transition-colors flex items-center justify-between gap-4"
             >
               <div>
-                <p className="font-semibold text-base">Parts Assemblies 1</p>
+                <p className="font-semibold text-base">{label1}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {subAssemblies1.length} sub assembl{subAssemblies1.length !== 1 ? 'ies' : 'y'}
                   {countForSource('parts1') > 0 && <span className="text-primary ml-2">({countForSource('parts1')} selected)</span>}
@@ -151,7 +151,7 @@ export function FullScreenSubAssemblyPicker({
               className="w-full text-left px-6 py-5 rounded-lg border bg-card hover:bg-accent transition-colors flex items-center justify-between gap-4"
             >
               <div>
-                <p className="font-semibold text-base">Parts Assemblies 2</p>
+                <p className="font-semibold text-base">{label2}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {subAssemblies2.length} sub assembl{subAssemblies2.length !== 1 ? 'ies' : 'y'}
                   {countForSource('parts2') > 0 && <span className="text-primary ml-2">({countForSource('parts2')} selected)</span>}
