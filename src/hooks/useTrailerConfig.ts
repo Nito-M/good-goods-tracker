@@ -30,6 +30,7 @@ export interface PrebuiltAssembly {
   id: string;
   user_id: string;
   trailer_type_id: string;
+  trailer_length_id: string | null;
   front_end_id: string | null;
   front_end_tier2_id: string | null;
   back_end_id: string | null;
@@ -181,7 +182,7 @@ export function usePrebuiltAssemblies() {
 
   useEffect(() => { fetchAssemblies(); }, [user]);
 
-  const save = async (config: { trailer_type_id: string; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null; total_price: number }) => {
+  const save = async (config: { trailer_type_id: string; trailer_length_id?: string | null; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null; total_price: number }) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('prebuilt_assemblies')
@@ -194,7 +195,7 @@ export function usePrebuiltAssemblies() {
     return data as PrebuiltAssembly;
   };
 
-  const update = async (id: string, updates: { total_price?: number; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null }) => {
+  const update = async (id: string, updates: { total_price?: number; trailer_length_id?: string | null; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null }) => {
     const { error } = await supabase.from('prebuilt_assemblies').update(updates as any).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchAssemblies();
@@ -208,6 +209,7 @@ export function usePrebuiltAssemblies() {
 
   const lookup = async (config: {
     trailer_type_id: string;
+    trailer_length_id: string | null;
     front_end_id: string | null;
     back_end_id: string | null;
     deck_type_id: string | null;
@@ -218,6 +220,9 @@ export function usePrebuiltAssemblies() {
       .from('prebuilt_assemblies')
       .select('*')
       .eq('trailer_type_id', config.trailer_type_id);
+
+    if (config.trailer_length_id) query = query.eq('trailer_length_id', config.trailer_length_id);
+    else query = query.is('trailer_length_id', null);
 
     if (config.front_end_id) query = query.eq('front_end_id', config.front_end_id);
     else query = query.is('front_end_id', null);
