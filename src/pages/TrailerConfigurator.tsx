@@ -64,9 +64,11 @@ export function TrailerConfigurator() {
   const { types, loading: typesLoading } = useTrailerTypes();
   const { components, loading: compsLoading, getByCategory } = useAssemblyComponents();
   const { save, lookup } = usePrebuiltAssemblies();
+  const { lengths, loading: lengthsLoading, getByTrailerType } = useTrailerLengths();
 
   const [step, setStep] = useState(0);
   const [trailerTypeId, setTrailerTypeId] = useState<string | null>(null);
+  const [trailerLengthId, setTrailerLengthId] = useState<string | null>(null);
   const [frontEndId, setFrontEndId] = useState<string | null>(null);
   const [frontEndSubId, setFrontEndSubId] = useState<string | null>(null);
   const [backEndId, setBackEndId] = useState<string | null>(null);
