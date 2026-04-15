@@ -1002,6 +1002,17 @@ function PrebuiltTab({
             </Select>
           </div>
 
+          <div className="space-y-1">
+            <Label>Trailer Length</Label>
+            <Select value={trailerLengthId} onValueChange={setTrailerLengthId}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {lengths.filter(l => !trailerTypeId || l.compatible_trailer_type_ids.length === 0 || l.compatible_trailer_type_ids.includes(trailerTypeId)).map(l => <SelectItem key={l.id} value={l.id}>{l.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Front End Tier 1 */}
           <div className="space-y-1">
             <Label>Front End (Step 1)</Label>
