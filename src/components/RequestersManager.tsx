@@ -11,9 +11,11 @@ interface RequestersManagerProps {
 }
 
 export function RequestersManager({ onRequestersChanged }: RequestersManagerProps) {
-  const { requesters, members, loading, addRequester, deleteRequester, linkRequester, unlinkRequester } = useOrgRequesters();
+  const { requesters, members, loading, addRequester, deleteRequester, linkRequester, unlinkRequester, updateRequesterName } = useOrgRequesters();
   const [open, setOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
