@@ -182,7 +182,7 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
-          <PrebuiltTab assemblies={prebuiltAssemblies} types={types} components={components} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
+          <PrebuiltTab assemblies={prebuiltAssemblies} types={types} components={components} lengths={lengths} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
         </TabsContent>
       </Tabs>
     </div>
