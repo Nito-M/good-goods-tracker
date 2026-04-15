@@ -184,26 +184,33 @@ export function FullScreenSubAssemblyPicker({
               ) : (
                 filtered.map((a) => {
                   const selected = isSelected(a.id, selectedSource);
+                  const alreadyAdded = existingSubAssemblyIds.includes(a.id);
                   return (
                     <button
                       key={a.id}
-                      onClick={() => toggleSelection(a.id, selectedSource)}
+                      onClick={() => !alreadyAdded && toggleSelection(a.id, selectedSource)}
+                      disabled={alreadyAdded}
                       className={`w-full text-left px-4 py-3 rounded-lg border transition-colors flex items-center justify-between gap-4 ${
+                        alreadyAdded ? 'opacity-50 cursor-not-allowed bg-muted' :
                         selected ? 'border-primary bg-primary/10' : 'bg-card hover:bg-accent'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className={`shrink-0 h-5 w-5 rounded border flex items-center justify-center ${
+                          alreadyAdded ? 'bg-muted-foreground/20 border-muted-foreground/30' :
                           selected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
                         }`}>
-                          {selected && <Check className="h-3 w-3 text-primary-foreground" />}
+                          {(selected || alreadyAdded) && <Check className="h-3 w-3 text-primary-foreground" />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-sm truncate">{a.name}</p>
                           {a.description && (
                             <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>
                           )}
-                          <p className="text-xs text-muted-foreground mt-0.5">{a.type}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {a.type}
+                            {alreadyAdded && <span className="ml-2 text-primary">(already added)</span>}
+                          </p>
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
