@@ -84,7 +84,14 @@ export function AddPart2() {
           <CardHeader><CardTitle>DXF Files</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Plasma DXF</Label><label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors text-sm w-full justify-center"><Upload className="h-4 w-4" />{dxfFile1 ? dxfFile1.name : 'Upload DXF'}<input type="file" accept=".dxf" className="hidden" onChange={e => setDxfFile1(e.target.files?.[0] || null)} /></label></div>
+              <div className="space-y-2"><Label>Plasma DXF</Label>
+                <div className={`rounded-md border border-input bg-background transition-all ${dragOverDxf1 ? 'ring-2 ring-primary bg-primary/10' : ''}`}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverDxf1(true); }}
+                  onDragLeave={() => setDragOverDxf1(false)}
+                  onDrop={(e) => { e.preventDefault(); setDragOverDxf1(false); const file = Array.from(e.dataTransfer.files).find(f => f.name.toLowerCase().endsWith('.dxf')); if (file) setDxfFile1(file); }}>
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 hover:bg-accent hover:text-accent-foreground transition-colors text-sm w-full justify-center"><Upload className="h-4 w-4" />{dxfFile1 ? dxfFile1.name : 'Upload or drop DXF'}<input type="file" accept=".dxf" className="hidden" onChange={e => setDxfFile1(e.target.files?.[0] || null)} /></label>
+                </div>
+              </div>
               <div className="space-y-2"><Label>Laser DXF</Label><label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors text-sm w-full justify-center"><Upload className="h-4 w-4" />{dxfFile2 ? dxfFile2.name : 'Upload DXF'}<input type="file" accept=".dxf" className="hidden" onChange={e => setDxfFile2(e.target.files?.[0] || null)} /></label></div>
             </div>
           </CardContent>
