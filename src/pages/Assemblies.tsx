@@ -12,6 +12,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
 import { usePartsAssemblies, PartsAssembly } from '@/hooks/usePartsAssemblies';
+import { usePartsAssemblies2, PartsAssembly2 } from '@/hooks/usePartsAssemblies2';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
