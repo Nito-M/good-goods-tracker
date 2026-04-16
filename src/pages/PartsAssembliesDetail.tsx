@@ -333,6 +333,7 @@ export function PartsAssembliesDetail() {
   const { toast } = useToast();
   const decodedType = decodeURIComponent(type || 'General');
   const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, refetch } = usePartsAssemblies();
+  const { assemblies: assembliesV2 } = usePartsAssembliesV2();
   const { parts } = useParts();
   const { items: inventoryItemsList } = useInventory();
 
