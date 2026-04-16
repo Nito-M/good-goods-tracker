@@ -19,6 +19,8 @@ import { PartJsonImport } from '@/components/PartJsonImport';
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
+import { DxfThumbnail } from '@/components/DxfThumbnail';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -35,6 +37,8 @@ export function PartsLibrary() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, addPart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
+  const { hasFeature } = useFeaturePermissions();
+  const preferDxf = hasFeature('parts_prefer_dxf');
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(() => searchParams.get('folder') || null);
@@ -503,7 +507,9 @@ export function PartsLibrary() {
                           }
                         }}
                       >
-                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>}
+                        {preferDxf
+                          ? (part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} /> : part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>)
+                          : (part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>)}
                       </div>
                       <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
                       <span className="text-sm text-muted-foreground truncate w-28 shrink-0 hidden sm:block">{part.sku || '—'}</span>
@@ -548,7 +554,9 @@ export function PartsLibrary() {
                           }
                         }}
                       >
-                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
+                        {preferDxf
+                          ? (part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} className="w-full h-full" /> : part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>)
+                          : (part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>)}
                       </div>
                       <CardContent className="p-3">
                         <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
@@ -859,4 +867,16 @@ function PartImage({ storagePath, className }: { storagePath: string; className?
 
   if (!url) return <span className="text-muted-foreground text-sm">Loading...</span>;
   return <img src={url} alt="Part" className={className || "w-full h-full object-contain"} />;
+}
+
+function DxfThumbnailLoader({ storagePath, bucket, getSignedUrl, className }: { storagePath: string; bucket: string; getSignedUrl: (bucket: string, path: string) => Promise<string | null>; className?: string }) {
+  const [dxfText, setDxfText] = useState<string | null>(null);
+  useEffect(() => {
+    getSignedUrl(bucket, storagePath).then(async (url) => {
+      if (!url) return;
+      try { const res = await fetch(url); setDxfText(await res.text()); } catch { /* ignore */ }
+    });
+  }, [storagePath, bucket]);
+  if (!dxfText) return <span className="text-muted-foreground text-[10px]">DXF</span>;
+  return <DxfThumbnail dxfText={dxfText} className={className} />;
 }

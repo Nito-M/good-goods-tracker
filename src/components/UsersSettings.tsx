@@ -624,6 +624,19 @@ export function UsersSettings() {
                 />
                 <span className="text-sm">View All Requests</span>
               </label>
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <Checkbox
+                  checked={editFeatures.includes('parts_prefer_dxf')}
+                  onCheckedChange={() => {
+                    setEditFeatures(prev =>
+                      prev.includes('parts_prefer_dxf')
+                        ? prev.filter(f => f !== 'parts_prefer_dxf')
+                        : [...prev, 'parts_prefer_dxf']
+                    );
+                  }}
+                />
+                <span className="text-sm">Show DXF Drawing Instead of Image (Parts Library)</span>
+              </label>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditUser(null)}>
