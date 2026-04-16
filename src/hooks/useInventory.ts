@@ -45,6 +45,7 @@ interface DbInventoryItem {
   bundle_amount: number;
   piece_length: number;
   internal_part_number: string | null;
+  organization_id: string | null;
 }
 
 function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
@@ -85,6 +86,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
 function inventoryItemToDb(
   item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>,
   userId: string,
+  organizationId: string | null,
   id?: string
 ): DbInventoryItem {
   const now = new Date().toISOString();
@@ -119,11 +121,12 @@ function inventoryItemToDb(
     box_amount: item.boxAmount || 0,
     bundle_amount: item.bundleAmount || 0,
     piece_length: item.pieceLength || 0,
+    organization_id: organizationId,
   };
 }
 
 
-export function useInventory() {
+export function useInventory(activeOrgId?: string | null) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -160,11 +163,17 @@ export function useInventory() {
 
     // If online, always fetch from server
     if (isOnline) {
-      const { data, error } = await supabase
+      let query = supabase
         .from('inventory_items')
         .select('*')
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
+
+      if (activeOrgId) {
+        query = query.eq('organization_id', activeOrgId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error loading inventory:', error);
@@ -186,7 +195,7 @@ export function useInventory() {
     }
 
     setLoading(false);
-  }, [toast, user, isOnline]);
+  }, [toast, user, isOnline, activeOrgId]);
 
   useEffect(() => {
     fetchItems();
@@ -265,7 +274,7 @@ export function useInventory() {
       return;
     }
 
-    const dbItem = inventoryItemToDb(validation.data as Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>, user.id);
+    const dbItem = inventoryItemToDb(validation.data as Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>, user.id, activeOrgId ?? null);
 
     // Save locally first
     await put('inventory_items', dbItem as unknown as Record<string, unknown>);
@@ -294,6 +303,7 @@ export function useInventory() {
         description: item.description,
         image_url: item.imageUrl || null,
         user_id: user.id,
+        organization_id: activeOrgId ?? null,
         warehouse_id: item.warehouseId || null,
         internal_part_number: item.internalPartNumber || null,
         pallet_amount: item.palletAmount || 0,
@@ -562,6 +572,59 @@ export function useInventory() {
     return data.signedUrl;
   };
 
+  const copyItemToOrg = async (itemId: string, targetOrgId: string): Promise<boolean> => {
+    if (!user) return false;
+    const { data: src, error: fetchErr } = await supabase
+      .from('inventory_items')
+      .select('*')
+      .eq('id', itemId)
+      .maybeSingle();
+
+    if (fetchErr || !src) {
+      toast({ title: 'Copy failed', description: 'Item not found.', variant: 'destructive' });
+      return false;
+    }
+
+    const newId = crypto.randomUUID();
+    const { error: insertErr } = await supabase.from('inventory_items').insert({
+      id: newId,
+      name: src.name,
+      sku: src.sku,
+      category: src.category,
+      subcategory: src.subcategory,
+      quantity: src.quantity,
+      quantity_unit: src.quantity_unit,
+      price: src.price,
+      cost: src.cost,
+      min_stock: src.min_stock,
+      weight: src.weight,
+      weight_unit: src.weight_unit,
+      dimensions_length: src.dimensions_length,
+      dimensions_width: src.dimensions_width,
+      dimensions_height: src.dimensions_height,
+      dimensions_unit: src.dimensions_unit,
+      colors: src.colors,
+      description: src.description,
+      image_url: src.image_url,
+      dxf_url: src.dxf_url,
+      internal_part_number: src.internal_part_number,
+      pallet_amount: src.pallet_amount,
+      box_amount: src.box_amount,
+      bundle_amount: src.bundle_amount,
+      piece_length: src.piece_length,
+      user_id: user.id,
+      organization_id: targetOrgId,
+      warehouse_id: null,
+    });
+
+    if (insertErr) {
+      toast({ title: 'Copy failed', description: insertErr.message, variant: 'destructive' });
+      return false;
+    }
+
+    return true;
+  };
+
   return {
     items: filteredItems,
     allItems: items,
@@ -576,5 +639,7 @@ export function useInventory() {
     deleteItem,
     uploadItemImage,
     getItemImageUrl,
+    copyItemToOrg,
+    refetch: fetchItems,
   };
 }

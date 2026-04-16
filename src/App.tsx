@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useUserOrganizations, getStoredActiveOrgId, setStoredActiveOrgId } from "@/hooks/useUserOrganizations";
 import { CartProvider } from "@/contexts/CartContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -74,6 +75,20 @@ const queryClient = new QueryClient();
 
 function AppContent() {
   useColorTheme();
+  const { organizations } = useUserOrganizations();
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(() => getStoredActiveOrgId());
+
+  // Once orgs load, ensure activeOrgId is one we belong to (default to first).
+  useEffect(() => {
+    if (organizations.length === 0) return;
+    const stillValid = activeOrgId && organizations.some((o) => o.id === activeOrgId);
+    if (!stillValid) {
+      const next = organizations[0].id;
+      setActiveOrgId(next);
+      setStoredActiveOrgId(next);
+    }
+  }, [organizations, activeOrgId]);
+
   const {
     items,
     allItems,
@@ -87,7 +102,14 @@ function AppContent() {
     updateItem,
     deleteItem,
     uploadItemImage,
-  } = useInventory();
+    copyItemToOrg,
+    refetch,
+  } = useInventory(activeOrgId);
+
+  const handleOrgChange = (orgId: string) => {
+    setActiveOrgId(orgId);
+    setStoredActiveOrgId(orgId);
+  };
 
   const { allCategories, categories } = useCategories();
   const { subcategories } = useSubcategories();
@@ -147,6 +169,11 @@ function AppContent() {
                   onDelete={deleteItem}
                   addItem={addItem}
                   subcategoriesByCategory={subcategoriesByCategory}
+                  organizations={organizations}
+                  activeOrgId={activeOrgId}
+                  onOrgChange={handleOrgChange}
+                  copyItemToOrg={copyItemToOrg}
+                  refetchInventory={refetch}
                 />
               </AppLayout>
             </ProtectedRoute>

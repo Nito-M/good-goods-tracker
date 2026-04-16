@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, Building2 } from 'lucide-react';
 import { ItemCsvImport } from '@/components/ItemCsvImport';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,9 @@ import { useTags } from '@/hooks/useTags';
 import { useBulkItemTags } from '@/hooks/useItemTags';
 import { useBulkItemLocationQuantities } from '@/hooks/useBulkItemLocationQuantities';
 import { useWarehouses, Warehouse } from '@/hooks/useWarehouses';
+import { UserOrganization } from '@/hooks/useUserOrganizations';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -49,6 +52,11 @@ interface ItemsProps {
   onDelete: (id: string) => void;
   addItem: (item: Omit<import('@/types/inventory').InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
   subcategoriesByCategory: Map<string, { id: string; name: string }[]>;
+  organizations: UserOrganization[];
+  activeOrgId: string | null;
+  onOrgChange: (orgId: string) => void;
+  copyItemToOrg: (itemId: string, targetOrgId: string) => Promise<boolean>;
+  refetchInventory: () => Promise<void>;
 }
 
 export const Items = ({
@@ -62,8 +70,14 @@ export const Items = ({
   onDelete,
   addItem,
   subcategoriesByCategory,
+  organizations,
+  activeOrgId,
+  onOrgChange,
+  copyItemToOrg,
+  refetchInventory,
 }: ItemsProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tagFilter, setTagFilter] = useState('all');
   const [subcategoryFilter, setSubcategoryFilter] = useState('all');
@@ -82,6 +96,11 @@ export const Items = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [locName, setLocName] = useState('');
   const [locDesc, setLocDesc] = useState('');
+
+  // Cross-org drag state
+  const [dragOverOrgId, setDragOverOrgId] = useState<string | null>(null);
+  const [pendingCopy, setPendingCopy] = useState<{ itemId: string; targetOrgId: string } | null>(null);
+  const [isCopying, setIsCopying] = useState(false);
 
   const setWarehouseFilter = (value: string) => {
     if (value === 'all') {
@@ -118,7 +137,6 @@ export const Items = ({
 
   const handleDeleteLocation = async () => {
     if (deleteId) {
-      // If we're viewing the deleted location, reset to all
       if (warehouseFilter === deleteId) {
         setWarehouseFilter('all');
       }
@@ -145,20 +163,15 @@ export const Items = ({
     return subcategoriesByCategory.get(categoryFilter) || [];
   }, [categoryFilter, subcategoriesByCategory]);
 
-  // Reset subcategory filter when category changes
   const handleCategoryChange = (cat: string) => {
     setCategoryFilter(cat);
     setSubcategoryFilter('all');
   };
 
-  // No longer require subcategory pick — "All Subcategories" shows all items in category
   const mustPickSubcategory = false;
 
-  // Filter items by tag, warehouse, and subcategory
   const filteredItems = useMemo(() => {
-    // If user must pick a subcategory first, show no items
     if (mustPickSubcategory) return [];
-
     let result = items;
     if (tagFilter !== 'all') {
       result = result.filter((item) => {
@@ -180,6 +193,23 @@ export const Items = ({
     }
     return result;
   }, [items, tagFilter, itemTagsMap, warehouseFilter, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
+
+  const activeOrg = organizations.find((o) => o.id === activeOrgId) || null;
+  const targetOrgForCopy = pendingCopy ? organizations.find((o) => o.id === pendingCopy.targetOrgId) : null;
+  const itemForCopy = pendingCopy ? items.find((i) => i.id === pendingCopy.itemId) : null;
+
+  const handleConfirmCopy = async () => {
+    if (!pendingCopy) return;
+    setIsCopying(true);
+    const ok = await copyItemToOrg(pendingCopy.itemId, pendingCopy.targetOrgId);
+    setIsCopying(false);
+    if (ok) {
+      const targetName = organizations.find((o) => o.id === pendingCopy.targetOrgId)?.name || 'org';
+      toast({ title: `Copied to ${targetName}` });
+      await refetchInventory();
+    }
+    setPendingCopy(null);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -203,6 +233,55 @@ export const Items = ({
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Organization tabs (drop targets for cross-org copy) */}
+        {organizations.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            {organizations.map((org) => {
+              const isActive = org.id === activeOrgId;
+              const isDropTarget = !isActive;
+              const isDragOver = dragOverOrgId === org.id;
+              return (
+                <Button
+                  key={org.id}
+                  variant={isActive ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => onOrgChange(org.id)}
+                  onDragOver={(e) => {
+                    if (!isDropTarget) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    if (dragOverOrgId !== org.id) setDragOverOrgId(org.id);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverOrgId === org.id) setDragOverOrgId(null);
+                  }}
+                  onDrop={(e) => {
+                    if (!isDropTarget) return;
+                    e.preventDefault();
+                    setDragOverOrgId(null);
+                    const itemId = e.dataTransfer.getData('application/x-inventory-item');
+                    if (itemId) {
+                      setPendingCopy({ itemId, targetOrgId: org.id });
+                    }
+                  }}
+                  className={cn(
+                    'transition-all',
+                    isDragOver && 'ring-2 ring-primary ring-offset-2 scale-105',
+                  )}
+                >
+                  {org.name}
+                </Button>
+              );
+            })}
+            {activeOrg && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                Drag a row onto another organization to copy it.
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Location selector bar */}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -287,6 +366,7 @@ export const Items = ({
             onDelete={onDelete}
             warehouseFilter={warehouseFilter !== 'all' ? warehouseFilter : undefined}
             warehouseItemQtyMap={warehouseItemQtyMap}
+            draggable
           />
         )}
       </main>
@@ -328,7 +408,7 @@ export const Items = ({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirm */}
+      {/* Delete Location Confirm */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -340,6 +420,26 @@ export const Items = ({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteLocation}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cross-org Copy Confirm */}
+      <AlertDialog open={!!pendingCopy} onOpenChange={(open) => !open && !isCopying && setPendingCopy(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Copy item to {targetOrgForCopy?.name || 'organization'}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will create a copy of <span className="font-medium text-foreground">{itemForCopy?.name || 'this item'}</span>{' '}
+              in <span className="font-medium text-foreground">{targetOrgForCopy?.name}</span>. The original stays in{' '}
+              <span className="font-medium text-foreground">{activeOrg?.name}</span>. Quantity and core details copy across; location assignments do not.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCopying}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCopy} disabled={isCopying}>
+              {isCopying ? 'Copying...' : 'Copy'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

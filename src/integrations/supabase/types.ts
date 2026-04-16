@@ -967,6 +967,7 @@ export type Database = {
           internal_part_number: string | null
           min_stock: number
           name: string
+          organization_id: string | null
           pallet_amount: number
           piece_length: number
           price: number
@@ -1001,6 +1002,7 @@ export type Database = {
           internal_part_number?: string | null
           min_stock?: number
           name: string
+          organization_id?: string | null
           pallet_amount?: number
           piece_length?: number
           price?: number
@@ -1035,6 +1037,7 @@ export type Database = {
           internal_part_number?: string | null
           min_stock?: number
           name?: string
+          organization_id?: string | null
           pallet_amount?: number
           piece_length?: number
           price?: number
@@ -1051,6 +1054,13 @@ export type Database = {
           weight_unit?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inventory_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inventory_items_warehouse_id_fkey"
             columns: ["warehouse_id"]
