@@ -31,11 +31,12 @@ interface InventoryTableProps {
   onDelete: (id: string) => void;
   warehouseFilter?: string;
   warehouseItemQtyMap?: Map<string, number>;
+  draggable?: boolean;
 }
 
 const PAGE_SIZE = 40;
 
-export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItemQtyMap }: InventoryTableProps) {
+export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItemQtyMap, draggable }: InventoryTableProps) {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   useEffect(() => {setCurrentPage(1);}, [items]);
@@ -80,7 +81,15 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             return (
               <TableRow
                 key={item.id}
-                className="transition-colors hover:bg-muted/30">
+                draggable={draggable}
+                onDragStart={draggable ? (e) => {
+                  e.dataTransfer.effectAllowed = 'copy';
+                  e.dataTransfer.setData('application/x-inventory-item', item.id);
+                } : undefined}
+                className={cn(
+                  'transition-colors hover:bg-muted/30',
+                  draggable && 'cursor-grab active:cursor-grabbing',
+                )}>
 
                   <TableCell className="w-14 py-1">
                     {thumbnailMap.get(item.id) || item.imageUrl ?
