@@ -86,9 +86,14 @@ export function PartsLibrary() {
 
   const PAGE_SIZE = 40;
   const loading = partsLoading || foldersLoading;
+  const naturalCompare = (a: string, b: string) =>
+    (a || '').localeCompare(b || '', undefined, { numeric: true, sensitivity: 'base' });
+
   const breadcrumb = getBreadcrumb(currentFolderId);
-  const childFolders = getFoldersInParent(currentFolderId);
-  const partsInFolder = parts.filter(p => p.folderId === currentFolderId);
+  const childFolders = [...getFoldersInParent(currentFolderId)].sort((a, b) => naturalCompare(a.name, b.name));
+  const partsInFolder = parts
+    .filter(p => p.folderId === currentFolderId)
+    .sort((a, b) => naturalCompare(a.name, b.name));
 
   const filtered = search
     ? partsInFolder.filter(p =>
