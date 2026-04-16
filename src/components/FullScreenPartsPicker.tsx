@@ -41,6 +41,7 @@ interface FullScreenPartsPickerProps {
   inventoryItems: InventoryRow[];
   existingPartIds: string[];
   existingInventoryItemIds: string[];
+  allowInventory?: boolean;
 }
 
 let nextId = 1;
@@ -55,6 +56,7 @@ export function FullScreenPartsPicker({
   inventoryItems,
   existingPartIds,
   existingInventoryItemIds,
+  allowInventory = true,
 }: FullScreenPartsPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [source, setSource] = useState<'parts' | 'inventory'>('parts');
@@ -219,14 +221,16 @@ export function FullScreenPartsPicker({
             <Wrench className="h-4 w-4 mr-1" />
             Parts Library
           </Button>
-          <Button
-            variant={source === 'inventory' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSource('inventory')}
-          >
-            <Package className="h-4 w-4 mr-1" />
-            Inventory
-          </Button>
+          {allowInventory && (
+            <Button
+              variant={source === 'inventory' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSource('inventory')}
+            >
+              <Package className="h-4 w-4 mr-1" />
+              Inventory
+            </Button>
+          )}
           <Button onClick={handleDone} size="lg" className="ml-2">
             Done — Return to Assembly
           </Button>

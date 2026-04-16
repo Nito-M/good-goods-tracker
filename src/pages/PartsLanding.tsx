@@ -11,6 +11,7 @@ const STORAGE_KEY = 'parts-landing-names';
 const defaultNames: Record<string, string> = {
   'parts-library': 'Parts Library',
   'parts-assemblies': 'Parts Assemblies',
+  'parts-assemblies-v2': 'Parts Assemblies 2',
 };
 
 function getSavedNames(): Record<string, string> {
@@ -68,6 +69,13 @@ export function PartsLanding() {
       description: 'Create reusable assemblies from your parts library',
       icon: Layers,
       url: '/parts/assemblies',
+      stat: null,
+    },
+    {
+      key: 'parts-assemblies-v2',
+      description: 'Build a second assembly layer from Parts Library 1 and Parts Assemblies 1',
+      icon: Layers,
+      url: '/parts/assemblies-v2',
       stat: null,
     },
   ];
