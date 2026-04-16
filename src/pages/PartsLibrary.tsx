@@ -96,7 +96,7 @@ export function PartsLibrary() {
   const childFolders = [...getFoldersInParent(currentFolderId)].sort((a, b) => naturalCompare(a.name, b.name));
   const partsInFolder = parts
     .filter(p => p.folderId === currentFolderId)
-    .sort((a, b) => naturalCompare(a.name, b.name));
+    .sort((a, b) => naturalCompare(sortBy === 'sku' ? a.sku : a.name, sortBy === 'sku' ? b.sku : b.name));
 
   const filtered = search
     ? partsInFolder.filter(p =>
