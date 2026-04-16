@@ -236,10 +236,10 @@ export const Items = ({
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Organization tabs (drop targets for cross-org copy) */}
-        {organizations.length > 0 && (
+        {orgList.length > 0 && (
           <div className="mb-6 flex flex-wrap items-center gap-2">
             <Building2 className="h-4 w-4 text-muted-foreground" />
-            {organizations.map((org) => {
+            {orgList.map((org) => {
               const isActive = org.id === activeOrgId;
               const isDropTarget = !isActive;
               const isDragOver = dragOverOrgId === org.id;
