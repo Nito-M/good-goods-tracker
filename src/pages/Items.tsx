@@ -206,7 +206,7 @@ export const Items = ({
     const ok = await copyItemToOrg(pendingCopy.itemId, pendingCopy.targetOrgId);
     setIsCopying(false);
     if (ok) {
-      const targetName = organizations.find((o) => o.id === pendingCopy.targetOrgId)?.name || 'org';
+      const targetName = orgList.find((o) => o.id === pendingCopy.targetOrgId)?.name || 'org';
       toast({ title: `Copied to ${targetName}` });
       await refetchInventory();
     }
