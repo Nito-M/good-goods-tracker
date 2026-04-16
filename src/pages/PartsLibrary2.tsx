@@ -55,6 +55,9 @@ export function PartsLibrary2() {
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'sku'>(() => {
+    return (localStorage.getItem('partsLibrary2SortBy') as 'name' | 'sku') || 'name';
+  });
   const { toast } = useToast();
 
   const buildLibraryQueryString = useCallback((folderId: string | null, query: string) => {
@@ -85,7 +88,7 @@ export function PartsLibrary2() {
   const childFolders = [...getFoldersInParent(currentFolderId)].sort((a, b) => naturalCompare(a.name, b.name));
   const partsInFolder = parts
     .filter(p => p.folderId === currentFolderId)
-    .sort((a, b) => naturalCompare(a.name, b.name));
+    .sort((a, b) => naturalCompare(sortBy === 'sku' ? a.sku : a.name, sortBy === 'sku' ? b.sku : b.name));
   const filtered = search ? partsInFolder.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase())) : partsInFolder;
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pagedParts = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -249,9 +252,27 @@ export function PartsLibrary2() {
           </div>
         )}
 
-        <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search by name or part number..." value={search} onChange={e => updateLibraryState(currentFolderId, e.target.value, true)} className="pl-10 max-w-md" />
+        <div className="mb-6 flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search by name or part number..." value={search} onChange={e => updateLibraryState(currentFolderId, e.target.value, true)} className="pl-10" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="parts2-sort" className="text-sm text-muted-foreground whitespace-nowrap">Sort by</Label>
+            <select
+              id="parts2-sort"
+              value={sortBy}
+              onChange={e => {
+                const v = e.target.value as 'name' | 'sku';
+                setSortBy(v);
+                localStorage.setItem('partsLibrary2SortBy', v);
+              }}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="name">Name (A–Z, 1–9)</option>
+              <option value="sku">Part Number (A–Z, 1–9)</option>
+            </select>
+          </div>
         </div>
 
         {loading ? (
