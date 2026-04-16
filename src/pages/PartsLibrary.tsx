@@ -413,14 +413,32 @@ export function PartsLibrary() {
           </div>
         )}
 
-        <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name or part number..."
-            value={search}
-            onChange={e => updateLibraryState(currentFolderId, e.target.value, true)}
-            className="pl-10 max-w-md"
-          />
+        <div className="mb-6 flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or part number..."
+              value={search}
+              onChange={e => updateLibraryState(currentFolderId, e.target.value, true)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="parts-sort" className="text-sm text-muted-foreground whitespace-nowrap">Sort by</Label>
+            <select
+              id="parts-sort"
+              value={sortBy}
+              onChange={e => {
+                const v = e.target.value as 'name' | 'sku';
+                setSortBy(v);
+                localStorage.setItem('partsLibrarySortBy', v);
+              }}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="name">Name (A–Z, 1–9)</option>
+              <option value="sku">Part Number (A–Z, 1–9)</option>
+            </select>
+          </div>
         </div>
 
         {loading ? (
