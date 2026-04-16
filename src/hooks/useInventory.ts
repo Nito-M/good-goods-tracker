@@ -86,6 +86,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
 function inventoryItemToDb(
   item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>,
   userId: string,
+  organizationId: string | null,
   id?: string
 ): DbInventoryItem {
   const now = new Date().toISOString();
@@ -120,11 +121,12 @@ function inventoryItemToDb(
     box_amount: item.boxAmount || 0,
     bundle_amount: item.bundleAmount || 0,
     piece_length: item.pieceLength || 0,
+    organization_id: organizationId,
   };
 }
 
 
-export function useInventory() {
+export function useInventory(activeOrgId?: string | null) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
