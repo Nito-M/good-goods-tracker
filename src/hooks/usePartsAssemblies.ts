@@ -21,6 +21,7 @@ export interface PartsAssemblyItem {
   assembly_id: string;
   part_id: string | null;
   inventory_item_id: string | null;
+  parts_assembly_v2_id: string | null;
   part_name: string;
   part_sku: string;
   quantity: number;
@@ -108,7 +109,6 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
     } else {
       const fetched = (data as PartsAssemblyItem[]) || [];
 
-      // Auto-merge duplicates (same part_id)
       const partIdMap = new Map<string, PartsAssemblyItem[]>();
       for (const item of fetched) {
         if (item.part_id) {
@@ -119,7 +119,6 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
       }
       for (const [, dupes] of partIdMap) {
         if (dupes.length > 1) {
-          // Keep the first, merge quantity from the rest, delete the rest
           const keep = dupes[0];
           const totalQty = dupes.reduce((sum, d) => sum + d.quantity, 0);
           const deleteIds = dupes.slice(1).map(d => d.id);
@@ -128,7 +127,6 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
         }
       }
 
-      // If we merged anything, re-fetch clean data
       const hadDupes = Array.from(partIdMap.values()).some(d => d.length > 1);
       if (hadDupes) {
         const { data: cleanData } = await (supabase as any)
@@ -149,6 +147,7 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
   const addItem = async (item: {
     part_id?: string | null;
     inventory_item_id?: string | null;
+    parts_assembly_v2_id?: string | null;
     part_name: string;
     part_sku: string;
     quantity: number;
@@ -156,7 +155,6 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
   }): Promise<boolean> => {
     if (!assemblyId) return false;
 
-    // Block if this part already exists in the assembly
     if (item.part_id) {
       const existing = items.find(i => i.part_id && i.part_id === item.part_id);
       if (existing) {
@@ -171,11 +169,19 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
         return false;
       }
     }
+    if (item.parts_assembly_v2_id) {
+      const existing = items.find(i => i.parts_assembly_v2_id && i.parts_assembly_v2_id === item.parts_assembly_v2_id);
+      if (existing) {
+        toast({ title: 'Assembly already in list', description: `"${item.part_name}" is already in this assembly. Update its quantity instead.`, variant: 'destructive' });
+        return false;
+      }
+    }
 
     const { error } = await (supabase as any).from('parts_assembly_items').insert({
       assembly_id: assemblyId,
       part_id: item.part_id || null,
       inventory_item_id: item.inventory_item_id || null,
+      parts_assembly_v2_id: item.parts_assembly_v2_id || null,
       part_name: item.part_name,
       part_sku: item.part_sku,
       quantity: item.quantity,
@@ -210,6 +216,7 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
   const addItems = async (newItems: {
     part_id?: string | null;
     inventory_item_id?: string | null;
+    parts_assembly_v2_id?: string | null;
     part_name: string;
     part_sku: string;
     quantity: number;
@@ -221,6 +228,7 @@ export function usePartsAssemblyItems(assemblyId: string | null) {
       assembly_id: assemblyId,
       part_id: item.part_id || null,
       inventory_item_id: item.inventory_item_id || null,
+      parts_assembly_v2_id: item.parts_assembly_v2_id || null,
       part_name: item.part_name,
       part_sku: item.part_sku,
       quantity: item.quantity,

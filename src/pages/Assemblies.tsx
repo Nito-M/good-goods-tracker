@@ -199,10 +199,11 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' }[]) => {
+  const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' | 'parts2' }[]) => {
     setAddingSubAssemblyId('batch');
     try {
-      for (const { id: partsAssemblyId } of selections) {
+      for (const { id: partsAssemblyId, source } of selections) {
+        if (source !== 'parts1') continue;
         const list = partsAssemblies;
         if (!list) continue;
         const pa = list.find(a => a.id === partsAssemblyId);
