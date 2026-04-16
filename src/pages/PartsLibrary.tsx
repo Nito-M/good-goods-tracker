@@ -37,6 +37,8 @@ export function PartsLibrary() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { parts, loading: partsLoading, deletePart, deleteParts, updatePart, duplicatePart, addPart, getSignedUrl } = useParts();
   const { folders, loading: foldersLoading, addFolder, renameFolder, deleteFolder, moveFolder, getFoldersInParent, getBreadcrumb } = usePartFolders();
+  const { hasFeature } = useFeaturePermissions();
+  const preferDxf = hasFeature('parts_prefer_dxf');
   
   const [search, setSearch] = useState(() => searchParams.get('q') || '');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(() => searchParams.get('folder') || null);
@@ -505,7 +507,9 @@ export function PartsLibrary() {
                           }
                         }}
                       >
-                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>}
+                        {preferDxf
+                          ? (part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} /> : part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>)
+                          : (part.imageUrl ? <PartImage storagePath={part.imageUrl} /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} /> : <span className="text-muted-foreground text-[10px]">—</span>)}
                       </div>
                       <span className="font-medium text-foreground truncate flex-1 min-w-0">{part.name}</span>
                       <span className="text-sm text-muted-foreground truncate w-28 shrink-0 hidden sm:block">{part.sku || '—'}</span>
@@ -550,7 +554,9 @@ export function PartsLibrary() {
                           }
                         }}
                       >
-                        {part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>}
+                        {preferDxf
+                          ? (part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} className="w-full h-full" /> : part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>)
+                          : (part.imageUrl ? <PartImage storagePath={part.imageUrl} className="w-full h-full" /> : part.dxfUrl1 ? <DxfThumbnailLoader storagePath={part.dxfUrl1} bucket="dxf-files" getSignedUrl={getSignedUrl} className="w-full h-full" /> : <span className="text-muted-foreground text-3xl">—</span>)}
                       </div>
                       <CardContent className="p-3">
                         <p className="font-medium text-foreground text-sm truncate">{part.name}</p>
