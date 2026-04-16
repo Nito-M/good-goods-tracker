@@ -39,16 +39,11 @@ import { AssemblyTypes } from "./pages/AssemblyTypes";
 import { Assets } from "./pages/Assets";
 import { AssetDetail } from "./pages/AssetDetail";
 import { PartsLibrary } from "./pages/PartsLibrary";
-import { PartsLibrary2 } from "./pages/PartsLibrary2";
 import { PartsLanding } from "./pages/PartsLanding";
 import { PartsAssemblies } from "./pages/PartsAssemblies";
 import { PartsAssembliesDetail } from "./pages/PartsAssembliesDetail";
-import { PartsAssemblies2 } from "./pages/PartsAssemblies2";
-import { PartsAssembliesDetail2 } from "./pages/PartsAssembliesDetail2";
 import { AddPart } from "./pages/AddPart";
-import { AddPart2 } from "./pages/AddPart2";
 import { PartDetail } from "./pages/PartDetail";
-import { PartDetail2 } from "./pages/PartDetail2";
 import { TaxDocuments } from "./pages/TaxDocuments";
 import { Storefront } from "./pages/Storefront";
 import { PublicShop } from "./pages/PublicShop";
@@ -566,36 +561,6 @@ function AppContent() {
           }
         />
         <Route
-          path="/parts/library2"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <PartsLibrary2 />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/parts/library2/new"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <AddPart2 />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/parts/library2/:id"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <PartDetail2 />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/parts/assemblies"
           element={
             <ProtectedRoute>
@@ -611,26 +576,6 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <PartsAssembliesDetail />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/parts/assemblies2"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <PartsAssemblies2 />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/parts/assemblies2/:type"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <PartsAssembliesDetail2 />
               </AppLayout>
             </ProtectedRoute>
           }

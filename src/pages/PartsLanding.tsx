@@ -1,19 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Puzzle, BookOpen, Layers, ChevronRight, BookOpenCheck, Pencil, Check, X } from 'lucide-react';
+import { Puzzle, BookOpen, Layers, ChevronRight, Pencil, Check, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useParts } from '@/hooks/useParts';
-import { useParts2 } from '@/hooks/useParts2';
 
 const STORAGE_KEY = 'parts-landing-names';
 
 const defaultNames: Record<string, string> = {
   'parts-library': 'Parts Library',
-  'parts-library-2': 'Parts Library 2',
   'parts-assemblies': 'Parts Assemblies',
-  'parts-assemblies-2': 'Parts Assemblies 2',
 };
 
 function getSavedNames(): Record<string, string> {
@@ -34,7 +31,6 @@ function saveName(key: string, name: string) {
 export function PartsLanding() {
   const navigate = useNavigate();
   const { parts } = useParts();
-  const { parts: parts2 } = useParts2();
   const [names, setNames] = useState(getSavedNames);
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -68,24 +64,10 @@ export function PartsLanding() {
       stat: `${parts.length} part${parts.length !== 1 ? 's' : ''}`,
     },
     {
-      key: 'parts-library-2',
-      description: 'A second independent parts library for additional part management',
-      icon: BookOpenCheck,
-      url: '/parts/library2',
-      stat: `${parts2.length} part${parts2.length !== 1 ? 's' : ''}`,
-    },
-    {
       key: 'parts-assemblies',
       description: 'Create reusable assemblies from your parts library',
       icon: Layers,
       url: '/parts/assemblies',
-      stat: null,
-    },
-    {
-      key: 'parts-assemblies-2',
-      description: 'Create reusable assemblies from Parts Library 2',
-      icon: Layers,
-      url: '/parts/assemblies2',
       stat: null,
     },
   ];
