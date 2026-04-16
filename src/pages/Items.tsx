@@ -194,9 +194,11 @@ export const Items = ({
     return result;
   }, [items, tagFilter, itemTagsMap, warehouseFilter, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
 
-  const activeOrg = organizations.find((o) => o.id === activeOrgId) || null;
-  const targetOrgForCopy = pendingCopy ? organizations.find((o) => o.id === pendingCopy.targetOrgId) : null;
-  const itemForCopy = pendingCopy ? items.find((i) => i.id === pendingCopy.itemId) : null;
+  const orgList = organizations ?? [];
+  const itemList = items ?? [];
+  const activeOrg = orgList.find((o) => o.id === activeOrgId) || null;
+  const targetOrgForCopy = pendingCopy ? orgList.find((o) => o.id === pendingCopy.targetOrgId) : null;
+  const itemForCopy = pendingCopy ? itemList.find((i) => i.id === pendingCopy.itemId) : null;
 
   const handleConfirmCopy = async () => {
     if (!pendingCopy) return;
