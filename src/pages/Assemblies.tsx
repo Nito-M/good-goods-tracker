@@ -230,7 +230,7 @@ function AssemblyDetail({
           quantity: 1,
           unit_cost: price,
           notes: pa.description || undefined,
-          parts_assembly_id: source === 'parts1' ? partsAssemblyId : null,
+          parts_assembly_id: partsAssemblyId,
         });
       }
       onItemsChanged?.();
