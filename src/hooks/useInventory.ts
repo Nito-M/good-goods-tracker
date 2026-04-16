@@ -45,6 +45,7 @@ interface DbInventoryItem {
   bundle_amount: number;
   piece_length: number;
   internal_part_number: string | null;
+  organization_id: string | null;
 }
 
 function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
