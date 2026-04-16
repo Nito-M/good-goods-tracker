@@ -194,9 +194,11 @@ export const Items = ({
     return result;
   }, [items, tagFilter, itemTagsMap, warehouseFilter, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
 
-  const activeOrg = organizations.find((o) => o.id === activeOrgId) || null;
-  const targetOrgForCopy = pendingCopy ? organizations.find((o) => o.id === pendingCopy.targetOrgId) : null;
-  const itemForCopy = pendingCopy ? items.find((i) => i.id === pendingCopy.itemId) : null;
+  const orgList = organizations ?? [];
+  const itemList = items ?? [];
+  const activeOrg = orgList.find((o) => o.id === activeOrgId) || null;
+  const targetOrgForCopy = pendingCopy ? orgList.find((o) => o.id === pendingCopy.targetOrgId) : null;
+  const itemForCopy = pendingCopy ? itemList.find((i) => i.id === pendingCopy.itemId) : null;
 
   const handleConfirmCopy = async () => {
     if (!pendingCopy) return;
@@ -204,7 +206,7 @@ export const Items = ({
     const ok = await copyItemToOrg(pendingCopy.itemId, pendingCopy.targetOrgId);
     setIsCopying(false);
     if (ok) {
-      const targetName = organizations.find((o) => o.id === pendingCopy.targetOrgId)?.name || 'org';
+      const targetName = orgList.find((o) => o.id === pendingCopy.targetOrgId)?.name || 'org';
       toast({ title: `Copied to ${targetName}` });
       await refetchInventory();
     }
@@ -234,10 +236,10 @@ export const Items = ({
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Organization tabs (drop targets for cross-org copy) */}
-        {organizations.length > 0 && (
+        {orgList.length > 0 && (
           <div className="mb-6 flex flex-wrap items-center gap-2">
             <Building2 className="h-4 w-4 text-muted-foreground" />
-            {organizations.map((org) => {
+            {orgList.map((org) => {
               const isActive = org.id === activeOrgId;
               const isDropTarget = !isActive;
               const isDragOver = dragOverOrgId === org.id;
