@@ -868,3 +868,15 @@ function PartImage({ storagePath, className }: { storagePath: string; className?
   if (!url) return <span className="text-muted-foreground text-sm">Loading...</span>;
   return <img src={url} alt="Part" className={className || "w-full h-full object-contain"} />;
 }
+
+function DxfThumbnailLoader({ storagePath, bucket, getSignedUrl, className }: { storagePath: string; bucket: string; getSignedUrl: (bucket: string, path: string) => Promise<string | null>; className?: string }) {
+  const [dxfText, setDxfText] = useState<string | null>(null);
+  useEffect(() => {
+    getSignedUrl(bucket, storagePath).then(async (url) => {
+      if (!url) return;
+      try { const res = await fetch(url); setDxfText(await res.text()); } catch { /* ignore */ }
+    });
+  }, [storagePath, bucket]);
+  if (!dxfText) return <span className="text-muted-foreground text-[10px]">DXF</span>;
+  return <DxfThumbnail dxfText={dxfText} className={className} />;
+}
