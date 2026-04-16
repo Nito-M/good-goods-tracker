@@ -58,6 +58,9 @@ export function PartsLibrary() {
   const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'sku'>(() => {
+    return (localStorage.getItem('partsLibrarySortBy') as 'name' | 'sku') || 'name';
+  });
   const { toast } = useToast();
 
   const buildLibraryQueryString = useCallback((folderId: string | null, query: string) => {
