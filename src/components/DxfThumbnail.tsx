@@ -43,12 +43,41 @@ export function DxfThumbnail({ dxfText, className }: DxfThumbnailProps) {
                 addArc(e.center?.x || 0, e.center?.y || 0, e.radius || 1, (e.startAngle || 0) * Math.PI / 180, (e.endAngle || 360) * Math.PI / 180);
                 break;
               case 'LWPOLYLINE':
-              case 'POLYLINE':
-                if (e.vertices?.length >= 2) {
-                  for (let i = 0; i < e.vertices.length - 1; i++) addLine(e.vertices[i].x, e.vertices[i].y, e.vertices[i + 1].x, e.vertices[i + 1].y);
-                  if (e.shape) addLine(e.vertices[e.vertices.length - 1].x, e.vertices[e.vertices.length - 1].y, e.vertices[0].x, e.vertices[0].y);
+              case 'POLYLINE': {
+                const verts = e.vertices;
+                const addBulgeArc = (v1: any, v2: any, bulge: number) => {
+                  const theta = 4 * Math.atan(Math.abs(bulge));
+                  const dx = v2.x - v1.x, dy = v2.y - v1.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  if (dist < 1e-10) return;
+                  const r = dist / (2 * Math.sin(theta / 2));
+                  const midX = (v1.x + v2.x) / 2, midY = (v1.y + v2.y) / 2;
+                  const perpX = -dy / dist, perpY = dx / dist;
+                  const offset = r * Math.cos(theta / 2);
+                  const sign = bulge > 0 ? 1 : -1;
+                  const cx = midX + sign * perpX * offset, cy = midY + sign * perpY * offset;
+                  const sAngle = Math.atan2(v1.y - cy, v1.x - cx);
+                  const sweepAngle = bulge > 0 ? theta : -theta;
+                  const segs = 32, stp = sweepAngle / segs;
+                  for (let s = 0; s < segs; s++) {
+                    const a1 = sAngle + stp * s, a2 = sAngle + stp * (s + 1);
+                    addLine(cx + Math.abs(r) * Math.cos(a1), cy + Math.abs(r) * Math.sin(a1), cx + Math.abs(r) * Math.cos(a2), cy + Math.abs(r) * Math.sin(a2));
+                  }
+                };
+                if (verts?.length >= 2) {
+                  for (let i = 0; i < verts.length - 1; i++) {
+                    const v1 = verts[i], v2 = verts[i + 1];
+                    if (v1.bulge && v1.bulge !== 0) addBulgeArc(v1, v2, v1.bulge);
+                    else addLine(v1.x, v1.y, v2.x, v2.y);
+                  }
+                  if (e.shape) {
+                    const last = verts[verts.length - 1], first = verts[0];
+                    if (last.bulge && last.bulge !== 0) addBulgeArc(last, first, last.bulge);
+                    else addLine(last.x, last.y, first.x, first.y);
+                  }
                 }
                 break;
+              }
               case 'ELLIPSE': {
                 const cx = e.center?.x || 0, cy = e.center?.y || 0;
                 const mx = e.majorAxisEndPoint?.x || 1, my = e.majorAxisEndPoint?.y || 0;
