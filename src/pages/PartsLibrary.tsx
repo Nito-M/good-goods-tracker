@@ -611,6 +611,11 @@ export function PartsLibrary() {
                             {part.price > 0 ? formatCurrency(part.price) : '—'}
                           </span>
                           <div className="flex gap-1">
+                            {isDuplicateSku(part.sku) && (
+                              <span className="text-[10px] bg-destructive text-destructive-foreground px-1 py-0.5 rounded font-medium" title="Another part has the same Part Number">
+                                Duplicate
+                              </span>
+                            )}
                             {part.dxfUrl1 && <span className="text-[10px] bg-accent text-accent-foreground px-1 py-0.5 rounded">DXF</span>}
                           </div>
                         </div>
