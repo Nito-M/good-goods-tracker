@@ -557,6 +557,11 @@ export function PartsLibrary() {
                         {part.price > 0 ? formatCurrency(part.price) : '—'}
                       </span>
                       <div className="flex gap-1 shrink-0 hidden md:flex">
+                        {isDuplicateSku(part.sku) && (
+                          <span className="text-xs bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-medium" title="Another part has the same Part Number">
+                            Duplicate
+                          </span>
+                        )}
                         {part.dxfUrl1 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 1</span>}
                         {part.dxfUrl2 && <span className="text-xs bg-accent text-accent-foreground px-1.5 py-0.5 rounded">DXF 2</span>}
                       </div>
