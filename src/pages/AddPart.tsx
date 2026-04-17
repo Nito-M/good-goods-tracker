@@ -110,7 +110,12 @@ export function AddPart() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="sku">Part Number</Label>
-                <Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="Part number" />
+                <Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="Part number" className={duplicateMatch ? 'border-destructive focus-visible:ring-destructive' : undefined} />
+                {duplicateMatch && (
+                  <p className="text-xs text-destructive">
+                    ⚠ A part with this Part Number already exists: <span className="font-medium">{duplicateMatch.name || duplicateMatch.sku}</span>
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
