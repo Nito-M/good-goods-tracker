@@ -178,6 +178,25 @@ export function AddPart() {
           </Button>
         </div>
       </main>
+
+      <AlertDialog open={duplicateConfirmOpen} onOpenChange={setDuplicateConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Duplicate Part Number</AlertDialogTitle>
+            <AlertDialogDescription>
+              A part with the Part Number <span className="font-medium text-foreground">{trimmedSku}</span> already exists
+              {duplicateMatch?.name ? <> (<span className="font-medium text-foreground">{duplicateMatch.name}</span>)</> : null}.
+              Do you still want to create another part with the same Part Number?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => { setDuplicateConfirmOpen(false); await performSave(); }}>
+              Create anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
