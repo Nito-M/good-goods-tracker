@@ -32,7 +32,7 @@ export function useItemVendorPrices(itemId?: string) {
       .from('item_vendor_prices')
       .select('*')
       .eq('item_id', itemId)
-      .order('updated_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     if (error) {
       console.error('Error loading item vendor prices:', error);
@@ -48,63 +48,83 @@ export function useItemVendorPrices(itemId?: string) {
     fetchPrices();
   }, [fetchPrices]);
 
-  const upsertPrice = async (vendorId: string, price: number, link?: string, vendorSku?: string, leadTimeDays?: number | null) => {
+  // Update an existing row by its id
+  const updatePriceById = async (
+    rowId: string,
+    vendorId: string,
+    price: number,
+    link?: string,
+    vendorSku?: string,
+    leadTimeDays?: number | null
+  ) => {
     if (!user || !itemId) return false;
 
-    // Check if record exists
-    const existing = prices.find(p => p.vendor_id === vendorId);
+    const { error } = await supabase
+      .from('item_vendor_prices')
+      .update({
+        vendor_id: vendorId,
+        price,
+        link: link || null,
+        vendor_sku: vendorSku || null,
+        lead_time_days: leadTimeDays ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', rowId);
 
-    if (existing) {
-      const { error } = await supabase
-        .from('item_vendor_prices')
-        .update({ price, link: link || null, vendor_sku: vendorSku || null, lead_time_days: leadTimeDays ?? null, updated_at: new Date().toISOString() })
-        .eq('id', existing.id);
-
-      if (error) {
-        console.error('Error updating vendor price:', error);
-        toast({
-          title: 'Error updating vendor price',
-          description: 'Unable to update vendor price. Please try again.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-    } else {
-      const { error } = await supabase
-        .from('item_vendor_prices')
-        .insert({
-          item_id: itemId,
-          vendor_id: vendorId,
-          price,
-          link: link || null,
-          vendor_sku: vendorSku || null,
-          lead_time_days: leadTimeDays ?? null,
-          user_id: user.id,
-        });
-
-      if (error) {
-        console.error('Error adding vendor price:', error);
-        toast({
-          title: 'Error adding vendor price',
-          description: 'Unable to add vendor price. Please try again.',
-          variant: 'destructive',
-        });
-        return false;
-      }
+    if (error) {
+      console.error('Error updating vendor price:', error);
+      toast({
+        title: 'Error updating vendor price',
+        description: 'Unable to update vendor price. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
     }
-
-    await fetchPrices();
     return true;
   };
 
-  const deletePrice = async (vendorId: string) => {
+  // Insert a new vendor price row (duplicates allowed)
+  const insertPrice = async (
+    vendorId: string,
+    price: number,
+    link?: string,
+    vendorSku?: string,
+    leadTimeDays?: number | null
+  ) => {
+    if (!user || !itemId) return false;
+
+    const { error } = await supabase
+      .from('item_vendor_prices')
+      .insert({
+        item_id: itemId,
+        vendor_id: vendorId,
+        price,
+        link: link || null,
+        vendor_sku: vendorSku || null,
+        lead_time_days: leadTimeDays ?? null,
+        user_id: user.id,
+      });
+
+    if (error) {
+      console.error('Error adding vendor price:', error);
+      toast({
+        title: 'Error adding vendor price',
+        description: 'Unable to add vendor price. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // Delete a row by its id
+  const deletePriceById = async (rowId: string) => {
     if (!user || !itemId) return;
 
     const { error } = await supabase
       .from('item_vendor_prices')
       .delete()
-      .eq('item_id', itemId)
-      .eq('vendor_id', vendorId);
+      .eq('id', rowId);
 
     if (error) {
       console.error('Error deleting vendor price:', error);
@@ -115,9 +135,6 @@ export function useItemVendorPrices(itemId?: string) {
       });
       return;
     }
-
-    await fetchPrices();
-    toast({ title: 'Vendor removed from item' });
   };
 
   const getVendorPrice = (vendorId: string): number | null => {
@@ -128,27 +145,30 @@ export function useItemVendorPrices(itemId?: string) {
   return {
     prices,
     loading,
-    upsertPrice,
-    deletePrice,
+    insertPrice,
+    updatePriceById,
+    deletePriceById,
     getVendorPrice,
     refetch: fetchPrices,
   };
 }
 
 // Static function to update vendor price from PO (can be called without hook context)
+// Updates the most recent matching row, or inserts if none exists.
 export async function updateVendorPriceFromPO(
   userId: string,
   itemId: string,
   vendorId: string,
   price: number
 ): Promise<boolean> {
-  // Check if record exists
   const { data: existing } = await supabase
     .from('item_vendor_prices')
     .select('id')
     .eq('item_id', itemId)
     .eq('vendor_id', vendorId)
-    .single();
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (existing) {
     const { error } = await supabase

@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ItemVendorPricing } from '@/components/ItemVendorPricing';
+import { ItemVendorPricing, VendorPriceEntry } from '@/components/ItemVendorPricing';
 import { ItemTagSelector } from '@/components/ItemTagSelector';
 import { MultiImageUploader, StagedImage } from '@/components/MultiImageUploader';
 import { useVendors, Vendor } from '@/hooks/useVendors';
@@ -39,15 +39,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
-
-interface VendorPriceEntry {
-  vendorId: string;
-  price: string;
-  link?: string;
-  vendorSku?: string;
-  leadTimeDays?: string;
-  isNew?: boolean;
-}
 
 interface AddItemPageProps {
   categories: string[];
@@ -73,7 +64,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   // Vendor and pricing hooks
   const { vendors } = useVendors();
   const { warehouses } = useWarehouses();
-  const { prices: existingPrices, upsertPrice, deletePrice } = useItemVendorPrices(editItem?.id);
+  const { prices: existingPrices, insertPrice, updatePriceById, deletePriceById } = useItemVendorPrices(editItem?.id);
   const { locations: existingLocations, saveLocations } = useItemLocationQuantities(editItem?.id);
   const { selectedTagIds, setTagsForItem } = useItemTags(editItem?.id);
   // Multi-image support for editing mode
@@ -220,6 +211,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     if (isEditing && existingPrices.length > 0 && vendorPrices.length === 0) {
       setVendorPrices(
         existingPrices.map((p) => ({
+          id: p.id,
           vendorId: p.vendor_id,
           price: String(p.price),
           link: p.link || '',
@@ -343,21 +335,22 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
         .update({ storefront_page: storefrontPage || null } as any)
         .eq('id', editItem.id);
       
-      // Handle vendor price updates
-      const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
-      const existingVendorIds = existingPrices.map((p) => p.vendor_id);
-      
-      // Delete removed vendors
-      for (const vendorId of existingVendorIds) {
-        if (!currentVendorIds.includes(vendorId)) {
-          await deletePrice(vendorId);
+      // Handle vendor price updates (row-based: same vendor can repeat)
+      const currentRowIds = vendorPrices.filter((vp) => !vp.id.startsWith('new-')).map((vp) => vp.id);
+      // Delete rows that were removed in the UI
+      for (const p of existingPrices) {
+        if (!currentRowIds.includes(p.id)) {
+          await deletePriceById(p.id);
         }
       }
-      
-      // Upsert current vendor prices
+      // Insert new rows / update existing rows
       for (const vp of vendorPrices) {
-        if (vp.price) {
-          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null);
+        if (!vp.price) continue;
+        const leadTime = vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null;
+        if (vp.id.startsWith('new-')) {
+          await insertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
+        } else {
+          await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
         }
       }
 
@@ -435,16 +428,19 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     if (!editItem) return;
     setIsSavingVendors(true);
     try {
-      const currentVendorIds = vendorPrices.map((vp) => vp.vendorId);
-      const existingVendorIds = existingPrices.map((p) => p.vendor_id);
-      for (const vendorId of existingVendorIds) {
-        if (!currentVendorIds.includes(vendorId)) {
-          await deletePrice(vendorId);
+      const currentRowIds = vendorPrices.filter((vp) => !vp.id.startsWith('new-')).map((vp) => vp.id);
+      for (const p of existingPrices) {
+        if (!currentRowIds.includes(p.id)) {
+          await deletePriceById(p.id);
         }
       }
       for (const vp of vendorPrices) {
-        if (vp.price) {
-          await upsertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null);
+        if (!vp.price) continue;
+        const leadTime = vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null;
+        if (vp.id.startsWith('new-')) {
+          await insertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
+        } else {
+          await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
         }
       }
       toast({ title: 'Vendor prices saved successfully' });
