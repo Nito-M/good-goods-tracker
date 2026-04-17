@@ -8,12 +8,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useParts } from '@/hooks/useParts';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export function AddPart() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const folderId = searchParams.get('folder') || null;
-  const { addPart, uploadPartImage, uploadPartDxf } = useParts();
+  const { addPart, uploadPartImage, uploadPartDxf, parts } = useParts();
   const { toast } = useToast();
   const backToLibraryPath = `/parts/library${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
 
@@ -26,6 +30,12 @@ export function AddPart() {
   const [dxfFile1, setDxfFile1] = useState<File | null>(null);
   const [dxfFile2, setDxfFile2] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
+
+  const trimmedSku = sku.trim();
+  const duplicateMatch = trimmedSku
+    ? parts.find(p => (p.sku || '').trim().toLowerCase() === trimmedSku.toLowerCase())
+    : null;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,11 +45,7 @@ export function AddPart() {
     }
   };
 
-  const handleSave = async () => {
-    if (!name.trim() && !sku.trim()) {
-      toast({ title: 'Name or Part Number is required', variant: 'destructive' });
-      return;
-    }
+  const performSave = async () => {
     setSaving(true);
 
     let imageUrl: string | undefined;
@@ -59,13 +65,25 @@ export function AddPart() {
       if (path) dxfUrl2 = path;
     }
 
-    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), price: parseFloat(partPrice) || 0, imageUrl, dxfUrl1, dxfUrl2, folderId });
+    const id = await addPart({ name: name.trim(), sku: trimmedSku, description: description.trim(), price: parseFloat(partPrice) || 0, imageUrl, dxfUrl1, dxfUrl2, folderId });
     setSaving(false);
 
     if (id) {
       toast({ title: 'Part created' });
       navigate(backToLibraryPath);
     }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim() && !trimmedSku) {
+      toast({ title: 'Name or Part Number is required', variant: 'destructive' });
+      return;
+    }
+    if (duplicateMatch) {
+      setDuplicateConfirmOpen(true);
+      return;
+    }
+    await performSave();
   };
 
   return (
@@ -92,7 +110,12 @@ export function AddPart() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="sku">Part Number</Label>
-                <Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="Part number" />
+                <Input id="sku" value={sku} onChange={e => setSku(e.target.value)} placeholder="Part number" className={duplicateMatch ? 'border-destructive focus-visible:ring-destructive' : undefined} />
+                {duplicateMatch && (
+                  <p className="text-xs text-destructive">
+                    ⚠ A part with this Part Number already exists: <span className="font-medium">{duplicateMatch.name || duplicateMatch.sku}</span>
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -155,6 +178,25 @@ export function AddPart() {
           </Button>
         </div>
       </main>
+
+      <AlertDialog open={duplicateConfirmOpen} onOpenChange={setDuplicateConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Duplicate Part Number</AlertDialogTitle>
+            <AlertDialogDescription>
+              A part with the Part Number <span className="font-medium text-foreground">{trimmedSku}</span> already exists
+              {duplicateMatch?.name ? <> (<span className="font-medium text-foreground">{duplicateMatch.name}</span>)</> : null}.
+              Do you still want to create another part with the same Part Number?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => { setDuplicateConfirmOpen(false); await performSave(); }}>
+              Create anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
