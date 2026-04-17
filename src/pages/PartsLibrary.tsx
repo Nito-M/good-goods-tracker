@@ -105,6 +105,20 @@ export function PartsLibrary() {
       )
     : partsInFolder;
 
+  // SKUs that appear on more than one part across the entire library (case-insensitive, non-empty)
+  const duplicateSkus = (() => {
+    const counts = new Map<string, number>();
+    for (const p of parts) {
+      const key = (p.sku || '').trim().toLowerCase();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const dup = new Set<string>();
+    counts.forEach((n, k) => { if (n > 1) dup.add(k); });
+    return dup;
+  })();
+  const isDuplicateSku = (sku: string) => duplicateSkus.has((sku || '').trim().toLowerCase());
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pagedParts = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
