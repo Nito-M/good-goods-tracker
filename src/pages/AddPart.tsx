@@ -30,6 +30,12 @@ export function AddPart() {
   const [dxfFile1, setDxfFile1] = useState<File | null>(null);
   const [dxfFile2, setDxfFile2] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
+
+  const trimmedSku = sku.trim();
+  const duplicateMatch = trimmedSku
+    ? parts.find(p => (p.sku || '').trim().toLowerCase() === trimmedSku.toLowerCase())
+    : null;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
