@@ -45,11 +45,7 @@ export function AddPart() {
     }
   };
 
-  const handleSave = async () => {
-    if (!name.trim() && !sku.trim()) {
-      toast({ title: 'Name or Part Number is required', variant: 'destructive' });
-      return;
-    }
+  const performSave = async () => {
     setSaving(true);
 
     let imageUrl: string | undefined;
@@ -69,13 +65,25 @@ export function AddPart() {
       if (path) dxfUrl2 = path;
     }
 
-    const id = await addPart({ name: name.trim(), sku: sku.trim(), description: description.trim(), price: parseFloat(partPrice) || 0, imageUrl, dxfUrl1, dxfUrl2, folderId });
+    const id = await addPart({ name: name.trim(), sku: trimmedSku, description: description.trim(), price: parseFloat(partPrice) || 0, imageUrl, dxfUrl1, dxfUrl2, folderId });
     setSaving(false);
 
     if (id) {
       toast({ title: 'Part created' });
       navigate(backToLibraryPath);
     }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim() && !trimmedSku) {
+      toast({ title: 'Name or Part Number is required', variant: 'destructive' });
+      return;
+    }
+    if (duplicateMatch) {
+      setDuplicateConfirmOpen(true);
+      return;
+    }
+    await performSave();
   };
 
   return (
