@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Vendor } from '@/hooks/useVendors';
 import { ItemVendorPrice } from '@/hooks/useItemVendorPrices';
 
-interface VendorPriceEntry {
+export interface VendorPriceEntry {
+  id: string; // existing row id, or temp id like `new-<uuid>`
   vendorId: string;
   price: string;
   link?: string;
@@ -40,18 +41,19 @@ export function ItemVendorPricing({
 }: ItemVendorPricingProps) {
   const [selectedVendor, setSelectedVendor] = useState<string>('');
   const [vendorOpen, setVendorOpen] = useState(false);
-  // Track dirty state by comparing current entries against existing prices
+
+  // Track dirty state by comparing current entries against existing prices (matched by row id)
   const hasUnsavedChanges = useMemo(() => {
     if (!isEditing) return false;
-    const existingVendorIds = existingPrices.map(p => p.vendor_id);
-    const currentVendorIds = vendorPrices.map(vp => vp.vendorId);
-    // Check for added or removed vendors
-    if (existingVendorIds.length !== currentVendorIds.length) return true;
-    if (existingVendorIds.some(id => !currentVendorIds.includes(id))) return true;
-    // Check for changed prices, links, or vendor SKUs
+    const existingIds = existingPrices.map(p => p.id).sort();
+    const currentIds = vendorPrices.filter(vp => !vp.id.startsWith('new-')).map(vp => vp.id).sort();
+    if (vendorPrices.some(vp => vp.id.startsWith('new-'))) return true;
+    if (existingIds.length !== currentIds.length) return true;
+    if (existingIds.some((id, i) => id !== currentIds[i])) return true;
     for (const vp of vendorPrices) {
-      const existing = existingPrices.find(p => p.vendor_id === vp.vendorId);
+      const existing = existingPrices.find(p => p.id === vp.id);
       if (!existing) return true;
+      if (existing.vendor_id !== vp.vendorId) return true;
       if (String(existing.price) !== vp.price) return true;
       if ((existing.link || '') !== (vp.link || '')) return true;
       if ((existing.vendor_sku || '') !== (vp.vendorSku || '')) return true;
@@ -60,65 +62,56 @@ export function ItemVendorPricing({
     return false;
   }, [isEditing, existingPrices, vendorPrices]);
 
-  // Get vendors not already added
-  const availableVendors = vendors.filter(
-    (v) => !vendorPrices.some((vp) => vp.vendorId === v.id)
-  );
-
   const handleAddVendor = () => {
     if (!selectedVendor) return;
-
-    // Check if there's an existing price for this vendor
-    const existingPrice = existingPrices.find((p) => p.vendor_id === selectedVendor);
 
     onVendorPricesChange([
       ...vendorPrices,
       {
+        id: `new-${crypto.randomUUID()}`,
         vendorId: selectedVendor,
-        price: existingPrice ? String(existingPrice.price) : '',
-        link: existingPrice?.link || '',
-        vendorSku: existingPrice?.vendor_sku || '',
-        leadTimeDays: existingPrice?.lead_time_days ? String(existingPrice.lead_time_days) : '',
-        isNew: !existingPrice,
+        price: '',
+        link: '',
+        vendorSku: '',
+        leadTimeDays: '',
+        isNew: true,
       },
     ]);
     setSelectedVendor('');
   };
 
-  const handlePriceChange = (vendorId: string, price: string) => {
+  const handlePriceChange = (rowId: string, price: string) => {
     onVendorPricesChange(
-      vendorPrices.map((vp) =>
-        vp.vendorId === vendorId ? { ...vp, price } : vp
-      )
+      vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, price } : vp))
     );
   };
 
-  const handleLinkChange = (vendorId: string, link: string) => {
+  const handleLinkChange = (rowId: string, link: string) => {
     onVendorPricesChange(
-      vendorPrices.map((vp) =>
-        vp.vendorId === vendorId ? { ...vp, link } : vp
-      )
+      vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, link } : vp))
     );
   };
 
-  const handleVendorSkuChange = (vendorId: string, vendorSku: string) => {
+  const handleVendorSkuChange = (rowId: string, vendorSku: string) => {
     onVendorPricesChange(
-      vendorPrices.map((vp) =>
-        vp.vendorId === vendorId ? { ...vp, vendorSku } : vp
-      )
+      vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, vendorSku } : vp))
     );
   };
 
-  const handleLeadTimeChange = (vendorId: string, leadTimeDays: string) => {
+  const handleLeadTimeChange = (rowId: string, leadTimeDays: string) => {
     onVendorPricesChange(
-      vendorPrices.map((vp) =>
-        vp.vendorId === vendorId ? { ...vp, leadTimeDays } : vp
-      )
+      vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, leadTimeDays } : vp))
     );
   };
 
-  const handleRemoveVendor = (vendorId: string) => {
-    onVendorPricesChange(vendorPrices.filter((vp) => vp.vendorId !== vendorId));
+  const handleVendorChange = (rowId: string, vendorId: string) => {
+    onVendorPricesChange(
+      vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, vendorId } : vp))
+    );
+  };
+
+  const handleRemoveRow = (rowId: string) => {
+    onVendorPricesChange(vendorPrices.filter((vp) => vp.id !== rowId));
   };
 
   const getVendorName = (vendorId: string) => {
@@ -129,8 +122,8 @@ export function ItemVendorPricing({
     return vendors.find((v) => v.id === vendorId)?.link || null;
   };
 
-  const getLastUpdated = (vendorId: string) => {
-    const existing = existingPrices.find((p) => p.vendor_id === vendorId);
+  const getLastUpdated = (rowId: string) => {
+    const existing = existingPrices.find((p) => p.id === rowId);
     if (!existing) return null;
     return new Date(existing.updated_at).toLocaleDateString('en-US', {
       month: 'short',
@@ -155,8 +148,8 @@ export function ItemVendorPricing({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Add vendor selector */}
-        {availableVendors.length > 0 && (
+        {/* Add vendor selector — same vendor can be added multiple times */}
+        {vendors.length > 0 && (
           <div className="flex gap-2">
             <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
               <PopoverTrigger asChild>
@@ -178,7 +171,7 @@ export function ItemVendorPricing({
                   <CommandList>
                     <CommandEmpty>No vendor found.</CommandEmpty>
                     <CommandGroup>
-                      {availableVendors.map((vendor) => (
+                      {vendors.map((vendor) => (
                         <CommandItem
                           key={vendor.id}
                           value={vendor.name}
@@ -223,13 +216,14 @@ export function ItemVendorPricing({
         ) : (
           <div className="space-y-3">
             {vendorPrices.map((vp) => {
-              const lastUpdated = getLastUpdated(vp.vendorId);
-              const existingPrice = existingPrices.find((p) => p.vendor_id === vp.vendorId);
+              const lastUpdated = getLastUpdated(vp.id);
+              const existingPrice = existingPrices.find((p) => p.id === vp.id);
               const vendorLink = getVendorLink(vp.vendorId);
+              const sameVendorCount = vendorPrices.filter((x) => x.vendorId === vp.vendorId).length;
 
               return (
                 <div
-                  key={vp.vendorId}
+                  key={vp.id}
                   className="flex items-center gap-3 p-3 rounded-lg border bg-card"
                 >
                   <div className="flex-1 min-w-0">
@@ -253,6 +247,11 @@ export function ItemVendorPricing({
                           New
                         </Badge>
                       )}
+                      {sameVendorCount > 1 && (
+                        <Badge variant="outline" className="text-xs">
+                          Multiple entries
+                        </Badge>
+                      )}
                     </div>
                     {lastUpdated && (
                       <p className="text-xs text-muted-foreground">
@@ -270,7 +269,7 @@ export function ItemVendorPricing({
                         step="0.00001"
                         placeholder="0.00"
                         value={vp.price}
-                        onChange={(e) => handlePriceChange(vp.vendorId, e.target.value)}
+                        onChange={(e) => handlePriceChange(vp.id, e.target.value)}
                         className="pl-7"
                       />
                     </div>
@@ -280,7 +279,7 @@ export function ItemVendorPricing({
                         type="text"
                         placeholder="Vendor SKU"
                         value={vp.vendorSku || ''}
-                        onChange={(e) => handleVendorSkuChange(vp.vendorId, e.target.value)}
+                        onChange={(e) => handleVendorSkuChange(vp.id, e.target.value)}
                         className="pl-7"
                       />
                     </div>
@@ -290,7 +289,7 @@ export function ItemVendorPricing({
                         type="url"
                         placeholder="https://..."
                         value={vp.link || ''}
-                        onChange={(e) => handleLinkChange(vp.vendorId, e.target.value)}
+                        onChange={(e) => handleLinkChange(vp.id, e.target.value)}
                         className="pl-8"
                       />
                     </div>
@@ -302,7 +301,7 @@ export function ItemVendorPricing({
                         step="1"
                         placeholder="Days"
                         value={vp.leadTimeDays || ''}
-                        onChange={(e) => handleLeadTimeChange(vp.vendorId, e.target.value)}
+                        onChange={(e) => handleLeadTimeChange(vp.id, e.target.value)}
                         className="pl-7"
                         title="Lead time in days"
                       />
@@ -322,7 +321,7 @@ export function ItemVendorPricing({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveVendor(vp.vendorId)}
+                      onClick={() => handleRemoveRow(vp.id)}
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4" />
