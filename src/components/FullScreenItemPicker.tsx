@@ -605,6 +605,27 @@ export function FullScreenItemPicker({
           </div>
         </div>
       </div>
+
+      <AlertDialog open={confirmCreateOpen} onOpenChange={setConfirmCreateOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave this Purchase Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Creating a new item will navigate you away from this Purchase Order.
+              <br /><br />
+              <strong>Any unsaved changes to this PO — including added items, quantities, vendor selection, and notes — will be lost.</strong>
+              <br /><br />
+              You will be taken to the Add Item page. After saving the new item, you'll need to come back and start this Purchase Order again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel — Stay on PO</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCreateNewItem}>
+              Yes, create new item
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
