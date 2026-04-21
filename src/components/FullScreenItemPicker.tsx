@@ -373,7 +373,7 @@ export function FullScreenItemPicker({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/items/new')}
+            onClick={handleCreateNewItemClick}
           >
             <PackagePlus className="h-4 w-4 mr-1" />
             Create New Item
