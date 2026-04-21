@@ -30,8 +30,10 @@ import { useCompanies } from '@/hooks/useCompanies';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 
 interface VendorPrice {
+  id: string;
   itemId: string;
   price: number;
+  vendorSku: string | null;
 }
 
 // PO cart item extends PickerCartItem
