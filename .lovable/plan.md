@@ -1,41 +1,29 @@
 
-Remove Parts Library 2 (and Parts Assemblies 2) from the system entirely.
 
-## Scope
+## Use Vendor SKU on Purchase Orders
 
-Per memory `mem://features/parts-library-2`, Parts Library 2 / Parts Assemblies 2 are isolated clones with their own tables, hooks, pages, storage bucket, and landing-page tiles. I'll remove all of it.
+When a vendor is selected on a PO, swap the inventory item's primary SKU for that vendor's SKU (from `item_vendor_prices.vendor_sku`) on each line item — and also use the vendor's price (already done). The internal item name and link to the inventory item stay the same; only what's printed/saved in the PO line `sku` changes.
 
-## Frontend changes
+### Behavior
 
-**Delete files:**
-- `src/pages/PartsLibrary2.tsx`
-- `src/pages/PartDetail2.tsx`
-- `src/pages/PartsAssemblies2.tsx`
-- `src/pages/PartsAssembliesDetail2.tsx`
-- `src/pages/AddPart2.tsx`
-- `src/hooks/useParts2.ts`
-- `src/hooks/usePartFolders2.ts`
-- `src/hooks/usePartInventoryItems2.ts`
-- `src/hooks/useManufacturingSteps2.ts`
-- `src/hooks/useStepImages2.ts`
-- `src/hooks/usePartsAssemblies2.ts`
-- `src/components/FullScreenPartsPicker2.tsx`
-- `src/components/ManufacturingInstructions2.tsx`
-- `src/components/PartsCsvImport2.tsx`
+1. **No vendor selected** → use the item's primary SKU (current behavior, unchanged).
+2. **Vendor selected, vendor has one price row for that item with a `vendor_sku`** → auto-fill that vendor SKU on the PO line.
+3. **Vendor selected, no `vendor_sku` set on the row** → fall back to the item's primary SKU.
+4. **Vendor has multiple price rows for that item** (now possible after the recent change) → use the row whose price was applied to the line. If the chosen row has no `vendor_sku`, fall back to primary SKU.
+5. **Changing the vendor on an existing PO** → recompute the SKU for every cart line that links to an inventory item, the same way unit cost is already recomputed.
+6. **Editing the SKU manually** → the user can still type over the SKU field on a custom line; for inventory-linked lines the SKU continues to be read-only (no change to that UX).
 
-**Edit:**
-- `src/App.tsx` — remove all `/parts/library2`, `/parts/assemblies2`, `/parts/add2`, `/parts/:id/detail2`, etc. routes and their imports.
-- `src/pages/PartsLanding.tsx` — drop the `parts-library-2` and `parts-assemblies-2` tiles (keep only the two original ones), and remove `useParts2` import/usage.
-- `src/components/AppSidebar.tsx` — remove any sidebar links pointing to library2/assemblies2 (will verify and clean).
+### Where the change lives
 
-## Backend changes (migration)
+- `src/pages/AddPurchaseOrder.tsx`
+  - Extend the vendor-prices fetch to also pull `vendor_sku` (and the row `id`, so we can match the specific row used for the price).
+  - Update `handleAddItem` to set `sku` to `vendor_sku ?? item.sku`.
+  - Update `handleVendorChange` to update both `unitPrice/unitCost` and `sku` on existing inventory-linked cart lines.
+  - When a vendor is cleared (set to "none"), restore each inventory-linked line's `sku` back to the item's primary SKU.
 
-Drop the secondary tables and storage bucket so nothing lingers:
-- `DROP TABLE` (CASCADE) for: `part_step_images_2`, `part_manufacturing_steps_2`, `part_inventory_items_2`, `parts_assembly_items_2`, `parts_assemblies_2`, `parts_2`, `part_folders_2`.
-- Delete all objects in the `part-images-2` storage bucket, then delete the bucket.
-- Drop any associated triggers/functions/policies that reference `*_2` tables (will be removed via CASCADE).
+### Out of scope
 
-## Notes
-- Permanent and irreversible — all data in Parts Library 2 will be deleted.
-- The original Parts Library and Parts Assemblies are untouched.
-- The Parts landing page will show just the two original tiles.
+- The PO PDF, edit dialog, and storage schema already accept any string in the line `sku` field, so no DB or PDF changes are needed.
+- Item Details, Add Item, and Vendor Pricing UI are unchanged — vendor SKUs are still entered there.
+- Receiving stock still matches against the inventory item via `inventoryItemId` (not the SKU string), so receipt flow is unaffected.
+
