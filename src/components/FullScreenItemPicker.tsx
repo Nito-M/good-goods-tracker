@@ -16,6 +16,16 @@ import {
 import { InventoryItem, QuantityUnit, QUANTITY_UNIT_LABELS } from '@/types/inventory';
 import { formatCurrency } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Generic cart item shape that both Quotes and Sales can use
 export interface PickerCartItem {
@@ -190,6 +200,20 @@ export function FullScreenItemPicker({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
+  const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
+
+  const handleCreateNewItemClick = () => {
+    if (documentType === 'Purchase Order') {
+      setConfirmCreateOpen(true);
+    } else {
+      navigate('/items/new');
+    }
+  };
+
+  const handleConfirmCreateNewItem = () => {
+    setConfirmCreateOpen(false);
+    navigate('/items/new');
+  };
 
   const assemblyTypes = useMemo(() => {
     const typeMap = new Map<string, number>();
@@ -349,7 +373,7 @@ export function FullScreenItemPicker({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/items/new')}
+            onClick={handleCreateNewItemClick}
           >
             <PackagePlus className="h-4 w-4 mr-1" />
             Create New Item
@@ -581,6 +605,27 @@ export function FullScreenItemPicker({
           </div>
         </div>
       </div>
+
+      <AlertDialog open={confirmCreateOpen} onOpenChange={setConfirmCreateOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave this Purchase Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Creating a new item will navigate you away from this Purchase Order.
+              <br /><br />
+              <strong>Any unsaved changes to this PO — including added items, quantities, vendor selection, and notes — will be lost.</strong>
+              <br /><br />
+              You will be taken to the Add Item page. After saving the new item, you'll need to come back and start this Purchase Order again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel — Stay on PO</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCreateNewItem}>
+              Yes, create new item
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
