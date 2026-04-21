@@ -130,50 +130,83 @@ export function AddPurchaseOrder() {
       }
       const { data } = await supabase
         .from('item_vendor_prices')
-        .select('item_id, price')
+        .select('id, item_id, price, vendor_sku')
         .eq('vendor_id', vendorId);
       if (data) {
-        setVendorPrices(data.map(d => ({ itemId: d.item_id, price: Number(d.price) })));
+        setVendorPrices(data.map(d => ({
+          id: d.id,
+          itemId: d.item_id,
+          price: Number(d.price),
+          vendorSku: d.vendor_sku,
+        })));
       }
     };
     fetchVendorPrices();
   }, [vendorId]);
 
-  // When vendor changes, update unit costs on existing cart items
+  // When vendor changes, update unit costs AND skus on existing cart items
   const handleVendorChange = (newVendorId: string) => {
     setVendorId(newVendorId);
     setContactPersonName('');
-    if (newVendorId && newVendorId !== 'none') {
-      supabase
-        .from('item_vendor_prices')
-        .select('item_id, price')
-        .eq('vendor_id', newVendorId)
-        .then(({ data }) => {
-          if (data) {
-            const priceMap = new Map(data.map(d => [d.item_id, Number(d.price)]));
-            setCart(prev => prev.map(c => {
-              if (c.inventoryItemId) {
-                const vp = priceMap.get(c.inventoryItemId);
-                if (vp !== undefined) {
-                  return { ...c, unitPrice: vp, unitCost: vp };
-                }
-              }
-              return c;
-            }));
+    if (!newVendorId || newVendorId === 'none') {
+      // Restore primary SKU on inventory-linked lines
+      setCart(prev => prev.map(c => {
+        if (c.inventoryItemId) {
+          const inv = inventoryItems.find(i => i.id === c.inventoryItemId);
+          if (inv) {
+            return { ...c, sku: inv.sku };
           }
-        });
+        }
+        return c;
+      }));
+      return;
     }
+    supabase
+      .from('item_vendor_prices')
+      .select('id, item_id, price, vendor_sku')
+      .eq('vendor_id', newVendorId)
+      .then(({ data }) => {
+        if (data) {
+          // Group by item_id; first matching row wins
+          const rowsByItem = new Map<string, { price: number; vendorSku: string | null }>();
+          data.forEach(d => {
+            if (!rowsByItem.has(d.item_id)) {
+              rowsByItem.set(d.item_id, { price: Number(d.price), vendorSku: d.vendor_sku });
+            }
+          });
+          setCart(prev => prev.map(c => {
+            if (c.inventoryItemId) {
+              const row = rowsByItem.get(c.inventoryItemId);
+              const inv = inventoryItems.find(i => i.id === c.inventoryItemId);
+              if (row) {
+                return {
+                  ...c,
+                  unitPrice: row.price,
+                  unitCost: row.price,
+                  sku: row.vendorSku || inv?.sku || c.sku,
+                };
+              }
+              // No vendor row → revert to primary SKU
+              if (inv) {
+                return { ...c, sku: inv.sku };
+              }
+            }
+            return c;
+          }));
+        }
+      });
   };
 
   // Picker callbacks
   const handleAddItem = (item: any) => {
     const vendorPrice = vendorPrices.find(vp => vp.itemId === item.id);
     const cost = vendorPrice?.price ?? item.cost ?? 0;
+    const sku = (vendorId && vendorId !== 'none' && vendorPrice?.vendorSku) || item.sku;
     const newItem: POCartItem = {
       id: crypto.randomUUID(),
       inventoryItemId: item.id,
       itemName: item.name,
-      sku: item.sku,
+      sku,
       quantity: 1,
       quantityUnit: item.quantityUnit || 'pcs',
       unitPrice: cost,
