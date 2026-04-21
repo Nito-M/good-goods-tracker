@@ -200,6 +200,20 @@ export function FullScreenItemPicker({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
+  const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
+
+  const handleCreateNewItemClick = () => {
+    if (documentType === 'Purchase Order') {
+      setConfirmCreateOpen(true);
+    } else {
+      navigate('/items/new');
+    }
+  };
+
+  const handleConfirmCreateNewItem = () => {
+    setConfirmCreateOpen(false);
+    navigate('/items/new');
+  };
 
   const assemblyTypes = useMemo(() => {
     const typeMap = new Map<string, number>();
