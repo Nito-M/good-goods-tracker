@@ -264,6 +264,7 @@ export default function BoardDetail() {
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightRowId = searchParams.get('row');
   const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
+  const [rowSearch, setRowSearch] = useState('');
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
