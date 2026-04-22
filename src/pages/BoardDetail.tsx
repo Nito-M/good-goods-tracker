@@ -610,7 +610,7 @@ export default function BoardDetail() {
                   setCollapsedGroups((s) => ({ ...s, [group.key]: !s[group.key] }))
                 }
                 getCellValue={getCellValue}
-                setCellValue={setCellValue}
+                setCellValue={setCellValueLogged}
                 deleteRow={deleteRow}
                 getFiles={getFiles}
                 uploadFile={uploadFile}
