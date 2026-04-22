@@ -254,7 +254,10 @@ export function TrailerConfigurator() {
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
+        <Button variant="ghost" size="sm" onClick={handleReset}>
+          <RotateCcw className="h-4 w-4 mr-1" /> Start Over
+        </Button>
         <Button variant="outline" size="sm" asChild>
           <Link to="/trailer-configurator/admin"><Settings className="h-4 w-4 mr-1" /> Admin</Link>
         </Button>
@@ -664,22 +667,13 @@ export function TrailerConfigurator() {
 
       {/* Navigation */}
       <div className="flex justify-between mt-8">
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setStep(s => s - 1)}
-            disabled={step === 0}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={handleReset}
-            className="text-muted-foreground"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" /> Start Over
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={() => setStep(s => s - 1)}
+          disabled={step === 0}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back
+        </Button>
         {step < 6 && (
           <Button
             onClick={() => setStep(s => s + 1)}
