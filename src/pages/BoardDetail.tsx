@@ -390,7 +390,7 @@ export default function BoardDetail() {
     return () => clearTimeout(t);
   }, [highlightRowId, rows, loading]);
 
-  const groupByColumn = columns.find((c) => c.id === board?.group_by_column_id);
+  const groupByColumn = visibleColumns.find((c) => c.id === board?.group_by_column_id);
 
   // Build a fast lookup so search can scan every cell of every row
   const cellsByRow = useMemo(() => {
@@ -408,7 +408,7 @@ export default function BoardDetail() {
     if (!q) return rows;
     return rows.filter((row) => {
       const rowCells = cellsByRow.get(row.id) || {};
-      return columns.some((col) => {
+      return visibleColumns.some((col) => {
         const raw = rowCells[col.id];
         if (!raw) return false;
         if (col.type === 'status') {
@@ -419,7 +419,7 @@ export default function BoardDetail() {
         return raw.toLowerCase().includes(q);
       });
     });
-  }, [rows, columns, cellsByRow, rowSearch]);
+  }, [rows, visibleColumns, cellsByRow, rowSearch]);
 
   const grouped = useMemo(() => {
     if (!board?.group_by_column_id || !groupByColumn) {
@@ -459,7 +459,7 @@ export default function BoardDetail() {
     else setTitleValue(board.name);
   };
 
-  const groupableColumns = columns.filter((c) => c.type !== 'files' && c.type !== 'link' && c.type !== 'connect');
+  const groupableColumns = visibleColumns.filter((c) => c.type !== 'files' && c.type !== 'link' && c.type !== 'connect');
   const statusDialogColumn = columns.find((c) => c.id === statusDialogColumnId) || null;
   const connectDialogColumn = columns.find((c) => c.id === connectDialogColumnId) || null;
 
