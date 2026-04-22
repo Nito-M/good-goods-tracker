@@ -36,18 +36,21 @@ import { CheckboxCell } from '@/components/board/cells/CheckboxCell';
 import { StatusCell } from '@/components/board/cells/StatusCell';
 import { FilesCell } from '@/components/board/cells/FilesCell';
 import { LinkCell } from '@/components/board/cells/LinkCell';
+import { ConnectBoardCell } from '@/components/board/cells/ConnectBoardCell';
+import { ConnectBoardSetupDialog } from '@/components/board/ConnectBoardSetupDialog';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
   onRename: (name: string) => void;
   onChangeType: (type: BoardColumnType) => void;
   onManageOptions: () => void;
+  onConfigureConnect: () => void;
   onEditNotes: () => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -66,6 +69,7 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditN
     { type: 'status', label: 'Status' },
     { type: 'files', label: 'Files' },
     { type: 'link', label: 'Link' },
+    { type: 'connect', label: 'Connect board' },
   ];
 
   const hasNotes = column.notes.trim().length > 0;
@@ -145,6 +149,9 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditN
               )}
               {column.type === 'status' && !isPrimary && (
                 <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+              )}
+              {column.type === 'connect' && !isPrimary && (
+                <DropdownMenuItem onClick={onConfigureConnect}>Configure connection</DropdownMenuItem>
               )}
               {onDelete && !isPrimary && (
                 <>
