@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
+import { useBoardRowNotes } from '@/hooks/useBoardRowNotes';
+import { RowNoteDialog } from '@/components/board/RowNoteDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -39,9 +41,10 @@ interface ColumnHeaderProps {
   onChangeType: (type: BoardColumnType) => void;
   onManageOptions: () => void;
   onDelete?: () => void;
+  isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelete }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -100,26 +103,28 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelet
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEditing(true)}>Rename</DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent>
-                  {types.map((t) => (
-                    <DropdownMenuItem
-                      key={t.type}
-                      onClick={() => onChangeType(t.type)}
-                      disabled={t.type === column.type}
-                    >
-                      {t.label} {t.type === column.type && '✓'}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-            {column.type === 'status' && (
+            {!isPrimary && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {types.map((t) => (
+                      <DropdownMenuItem
+                        key={t.type}
+                        onClick={() => onChangeType(t.type)}
+                        disabled={t.type === column.type}
+                      >
+                        {t.label} {t.type === column.type && '✓'}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+            )}
+            {column.type === 'status' && !isPrimary && (
               <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
             )}
-            {onDelete && (
+            {onDelete && !isPrimary && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onDelete} className="text-destructive">
