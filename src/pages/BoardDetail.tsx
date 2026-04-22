@@ -500,6 +500,17 @@ export default function BoardDetail() {
             {board.name}
           </h1>
         )}
+        {canManageAccess && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+            onClick={() => setAccessSheetOpen(true)}
+          >
+            <Shield className="h-4 w-4" />
+            Manage Access
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
