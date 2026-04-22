@@ -381,37 +381,45 @@ export function TrailerConfigurator() {
                 </div>
               </div>
 
-              {underCarriageId && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 2: How many Axles?</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {[2, 3].map(num => (
-                      <Card
-                        key={num}
-                        className={cn(
-                          'cursor-pointer transition-all hover:shadow-md',
-                          axleCount === num && 'ring-2 ring-primary bg-primary/5'
-                        )}
-                        onClick={() => {
-                          setAxleCount(axleCount === num ? null : num);
-                          setUnderCarriageSubId(null);
-                          setUnderCarriageTier3Id(null);
-                        }}
-                      >
-                        <CardContent className="p-6 flex flex-col items-center gap-2">
-                          <span className="text-3xl font-bold">{num}</span>
-                          <span className="text-sm text-muted-foreground">{num} Axle{num > 1 ? 's' : ''}</span>
-                          {axleCount === num && (
-                            <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                              <Check className="h-4 w-4 text-primary-foreground" />
-                            </div>
+              {underCarriageId && (() => {
+                const allowed = (selectedLength?.allowed_axle_counts && selectedLength.allowed_axle_counts.length > 0)
+                  ? selectedLength.allowed_axle_counts
+                  : [2, 3];
+                return (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">Step 2: How many Axles?</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {allowed.map(num => (
+                        <Card
+                          key={num}
+                          className={cn(
+                            'cursor-pointer transition-all hover:shadow-md',
+                            axleCount === num && 'ring-2 ring-primary bg-primary/5'
                           )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                          onClick={() => {
+                            setAxleCount(axleCount === num ? null : num);
+                            setUnderCarriageSubId(null);
+                            setUnderCarriageTier3Id(null);
+                          }}
+                        >
+                          <CardContent className="p-6 flex flex-col items-center gap-2">
+                            <span className="text-3xl font-bold">{num}</span>
+                            <span className="text-sm text-muted-foreground">{num} Axle{num > 1 ? 's' : ''}</span>
+                            {axleCount === num && (
+                              <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="h-4 w-4 text-primary-foreground" />
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {allowed.length === 0 && (
+                        <p className="col-span-full text-muted-foreground text-sm">No axle counts allowed for this trailer length.</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {underCarriageId && axleCount && underCarriageSubs.length > 0 && (
                 <div>
