@@ -34,10 +34,18 @@ export default function Boards() {
     [companies, selectedCompanyId],
   );
 
-  const filteredBoards = useMemo(
-    () => boards.filter((b) => b.company_id === selectedCompanyId),
-    [boards, selectedCompanyId],
-  );
+  const filteredBoards = useMemo(() => {
+    const list = boards.filter((b) => b.company_id === selectedCompanyId);
+    const q = boardSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((b) => b.name.toLowerCase().includes(q));
+  }, [boards, selectedCompanyId, boardSearch]);
+
+  const filteredCompanies = useMemo(() => {
+    const q = companySearch.trim().toLowerCase();
+    if (!q) return companies;
+    return companies.filter((c) => c.name.toLowerCase().includes(q));
+  }, [companies, companySearch]);
 
   // Count boards per company for the picker
   const boardCounts = useMemo(() => {
