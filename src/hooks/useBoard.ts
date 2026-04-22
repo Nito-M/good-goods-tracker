@@ -13,6 +13,8 @@ export interface BoardColumn {
   options: StatusOption[];
   width: number;
   notes: string;
+  connect_board_id: string | null;
+  connect_mirror_column_id: string | null;
 }
 
 export interface BoardRow {
@@ -36,15 +38,25 @@ export interface BoardDetail {
 }
 
 function normalizeColumn(raw: any): BoardColumn {
+  const rawOptions = Array.isArray(raw.options) ? raw.options : [];
+  // Connect-type columns store a single config object inside options[0]
+  let connect_board_id: string | null = null;
+  let connect_mirror_column_id: string | null = null;
+  if (raw.type === 'connect' && rawOptions.length > 0 && typeof rawOptions[0] === 'object') {
+    connect_board_id = rawOptions[0].connect_board_id ?? null;
+    connect_mirror_column_id = rawOptions[0].connect_mirror_column_id ?? null;
+  }
   return {
     id: raw.id,
     board_id: raw.board_id,
     name: raw.name,
     position: raw.position,
     type: (raw.type as BoardColumnType) || 'text',
-    options: Array.isArray(raw.options) ? (raw.options as StatusOption[]) : [],
+    options: raw.type === 'connect' ? [] : (rawOptions as StatusOption[]),
     width: typeof raw.width === 'number' && raw.width > 0 ? raw.width : 200,
     notes: typeof raw.notes === 'string' ? raw.notes : '',
+    connect_board_id,
+    connect_mirror_column_id,
   };
 }
 
@@ -145,6 +157,31 @@ export function useBoard(boardId: string | undefined) {
       .eq('id', id);
     if (error) {
       toast.error('Failed to save options');
+      await fetchAll();
+    }
+  };
+
+  const setColumnConnectConfig = async (
+    id: string,
+    config: { connect_board_id: string | null; connect_mirror_column_id: string | null }
+  ) => {
+    setColumns((cs) =>
+      cs.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              connect_board_id: config.connect_board_id,
+              connect_mirror_column_id: config.connect_mirror_column_id,
+            }
+          : c
+      )
+    );
+    const { error } = await supabase
+      .from('board_columns')
+      .update({ options: [config] as any })
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to save connection');
       await fetchAll();
     }
   };
