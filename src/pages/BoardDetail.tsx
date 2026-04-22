@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
@@ -260,10 +260,32 @@ export default function BoardDetail() {
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
   const [draggedColId, setDraggedColId] = useState<string | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightRowId = searchParams.get('row');
+  const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
   }, [board?.name]);
+
+  // When ?row= is present and rows are loaded, scroll to & highlight that row
+  useEffect(() => {
+    if (!highlightRowId || loading) return;
+    if (!rows.some((r) => r.id === highlightRowId)) return;
+    setActiveHighlight(highlightRowId);
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-row-id="${highlightRowId}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    const t = setTimeout(() => {
+      setActiveHighlight(null);
+      // Strip the query param so it doesn't keep highlighting on refresh
+      const next = new URLSearchParams(searchParams);
+      next.delete('row');
+      setSearchParams(next, { replace: true });
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [highlightRowId, rows, loading]);
 
   const groupByColumn = columns.find((c) => c.id === board?.group_by_column_id);
 
@@ -460,6 +482,7 @@ export default function BoardDetail() {
                 getNote={getNote}
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
+                highlightRowId={activeHighlight}
               />
             ))}
 
@@ -553,6 +576,7 @@ interface GroupSectionProps {
   getNote: (row_id: string) => string;
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
+  highlightRowId?: string | null;
 }
 
 function GroupSection({
@@ -572,6 +596,7 @@ function GroupSection({
   getNote,
   onOpenNote,
   onConfigureConnect,
+  highlightRowId,
 }: GroupSectionProps) {
   return (
     <>
@@ -597,7 +622,14 @@ function GroupSection({
       )}
       {!collapsed &&
         rows.map((row) => (
-          <tr key={row.id} className="border-b border-border hover:bg-accent/20 group">
+          <tr
+            key={row.id}
+            data-row-id={row.id}
+            className={cn(
+              'border-b border-border hover:bg-accent/20 group transition-colors',
+              highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
+            )}
+          >
             <td className="sticky left-0 bg-card z-10 border-r border-border w-16 px-1 group-hover:bg-accent/20">
               <div className="flex items-center justify-center gap-0.5">
                 <Button

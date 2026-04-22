@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, X, Link2, Search } from 'lucide-react';
+import { Plus, X, Link2, Search, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ export function ConnectBoardCell({
   const [search, setSearch] = useState('');
   const linkedIds = useMemo(() => parseIds(value), [value]);
   const { rows, loading } = useBoardConnectData(connectBoardId, mirrorColumnId);
+  const navigate = useNavigate();
 
   if (!connectBoardId || !mirrorColumnId) {
     return (
@@ -77,12 +79,17 @@ export function ConnectBoardCell({
         <Badge
           key={r.row_id}
           variant="secondary"
-          className="gap-1 pr-1 max-w-[200px]"
-          title={r.mirror_value ? `${r.primary_value} → ${r.mirror_value}` : r.primary_value || '(empty row)'}
+          className="gap-1 pr-1 max-w-[200px] cursor-pointer hover:bg-accent transition-colors"
+          title={r.mirror_value ? `Open: ${r.primary_value} → ${r.mirror_value}` : `Open: ${r.primary_value || '(empty row)'}`}
+          onClick={() => navigate(`/boards/${connectBoardId}?row=${r.row_id}`)}
         >
+          <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
           <span className="truncate">{display}</span>
           <button
-            onClick={() => toggleLink(r.row_id, false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleLink(r.row_id, false);
+            }}
             className="hover:text-destructive"
             title="Remove link"
           >
