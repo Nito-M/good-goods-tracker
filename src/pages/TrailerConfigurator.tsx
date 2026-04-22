@@ -159,6 +159,23 @@ export function TrailerConfigurator() {
     setSaving(false);
   };
 
+  const handleReset = () => {
+    setStep(0);
+    setTrailerTypeId(null);
+    setTrailerSubtypeId(null);
+    setTrailerLengthId(null);
+    setFrontEndId(null);
+    setFrontEndSubId(null);
+    setBackEndId(null);
+    setDeckTypeId(null);
+    setUnderCarriageId(null);
+    setUnderCarriageSubId(null);
+    setUnderCarriageTier3Id(null);
+    setAxleCount(null);
+    setMatchedAssembly(null);
+    setConfigNotes('');
+  };
+
   const handleDownloadPdf = () => {
     const doc = new jsPDF();
     const pw = doc.internal.pageSize.getWidth();
