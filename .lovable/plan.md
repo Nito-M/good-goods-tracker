@@ -1,62 +1,75 @@
 
 
-## Boards — Monday.com-style spreadsheet page
-
-A new "Boards" module: create multiple sheets, define your own columns (rename anytime), add rows, edit cells inline, and group rows under collapsible headers by any column.
+## Column types: text, date, checkbox, status, files
 
 ### What you'll get
 
-**Sidebar entry**: New "Boards" item in the left sidebar (after Notes), with collapsible sub-items listing each board you've created. Click a board name to open it.
+**Add column**: clicking "+" in the header row opens a small popover with type choices:
+- **Text** (current default)
+- **Date** — opens a date picker; cell shows formatted date
+- **Checkbox** — toggleable boolean
+- **Status** — dropdown of predefined options with colored badges; you define the options/colors per column
+- **Files** — multiple PDFs per cell, click to upload, list with download/delete
 
-**Boards landing page** (`/boards`)
-- Grid of board cards (name, row count, last updated)
-- "+ New Board" button — creates a fresh board with 3 default columns ("Item", "Status", "Notes") that you can immediately rename
+**Column menu** (⋮ on header) gains:
+- Rename
+- **Change type** — sub-menu lets you convert; existing values are kept as text fallback when conversion doesn't match (e.g. "yes" → checkbox unchecked, invalid date → empty)
+- **Manage status options** (only on Status columns) — opens a dialog to add/rename/recolor/delete options
+- Delete column
 
-**Board detail page** (`/boards/:id`)
-- Editable board title at the top
-- Spreadsheet table with:
-  - **First column** = row label ("Item"), always pinned
-  - **Custom columns** — click the header to rename inline; drag to reorder; "+" button at the end of the header row to add a new column; right-click (or "⋮" menu) on a header to delete it
-  - **Cells** — click to edit text inline (auto-save on blur / Enter). Plain text only, no colors per your choice
-  - **Rows** — "+ Add row" button at the bottom of each group; right-click row to delete
-- **Group by** dropdown in the toolbar — pick any column; rows collapse under headers like "▼ 2026" with a row count badge. Pick "(none)" for a flat list
-- Empty state when no rows yet
+**Cell rendering by type**:
+- Text → inline input (existing behavior)
+- Date → button showing date or "—", click opens calendar popover
+- Checkbox → centered checkbox
+- Status → colored badge button, click opens dropdown of options (or "Clear")
+- Files → row of file chips with name + download + ✕; "+" button to upload PDFs
 
-**Permissions**: Standard org-scoped RLS — all org members can view/edit boards in their org. Page-permission key `boards` so admins can hide it per user via existing user permissions.
+### Database changes (one migration)
 
-### Technical details
+- `board_columns` add columns:
+  - `type TEXT NOT NULL DEFAULT 'text'` (allowed: text, date, checkbox, status, files)
+  - `options JSONB NOT NULL DEFAULT '[]'` — for status: `[{ id, label, color }]`
+- New table `board_cell_files`:
+  - `id, cell_row_id, cell_column_id, file_url, file_name, file_size, created_at, user_id`
+  - Unique not needed; ordered by created_at
+  - RLS: same org-share check via parent board
+- New storage bucket `board-files` (private), with org-share RLS policies (view/insert/update/delete by org members of the uploader)
 
-**Database** (one migration)
-- `boards` — `id`, `organization_id`, `user_id`, `name`, `group_by_column_id` (nullable), `created_at`, `updated_at`
-- `board_columns` — `id`, `board_id`, `name`, `position` (int), `created_at`
-- `board_rows` — `id`, `board_id`, `position` (int), `created_at`, `updated_at`
-- `board_cells` — `id`, `row_id`, `column_id`, `value` (text), `updated_at`; unique `(row_id, column_id)`
-- RLS on all four: SELECT/INSERT/UPDATE/DELETE allowed when `users_share_org(auth.uid(), boards.user_id)` (via join to `boards`)
-- `update_updated_at_column` triggers on `boards`, `board_rows`, `board_cells`
+### Cell value encoding (single `value TEXT` column, no schema migration to cells)
 
-**Files to create**
-- `src/hooks/useBoards.ts` — list/create/rename/delete boards
-- `src/hooks/useBoard.ts` — single board with columns, rows, cells; mutations for column add/rename/delete/reorder, row add/delete/reorder, cell upsert
-- `src/pages/Boards.tsx` — landing grid
-- `src/pages/BoardDetail.tsx` — spreadsheet view with grouping, inline editing, column management
+Keep existing `board_cells.value TEXT`; just interpret per column type:
+- text → raw string
+- date → ISO date string `YYYY-MM-DD` or empty
+- checkbox → `"true"` or `""` 
+- status → option `id` (UUID) referencing `board_columns.options[]`, or empty
+- files → not stored in `board_cells`; lives in `board_cell_files` table keyed on (row_id, column_id)
 
-**Files to edit**
-- `src/App.tsx` — register `/boards` and `/boards/:id` routes inside `AppLayout` + `ProtectedRoute`
-- `src/components/AppSidebar.tsx` — add "Boards" menu item with `pageKey: "boards"`; collapsible sub-list of boards (similar to existing Jobs sub-links pattern)
-- `src/hooks/usePagePermissions.ts` — add `boards: ['/boards']` to `PAGE_KEY_TO_ROUTES`
-- `src/components/UsersSettings.tsx` (page-permissions UI) — add "Boards" toggle so admins can restrict access
+This avoids touching cell schema and keeps grouping logic working (group by status uses the option's label looked up from the column's `options`).
 
-**UX details**
-- Column rename uses the same inline-edit pattern as `PartsLanding.tsx` (Pencil → Input + Check/X)
-- Row grouping built client-side: group cells by `group_by_column_id`'s value, render collapsible `<Collapsible>` sections; rows with empty group value go under "(Ungrouped)"
-- Cell saves are debounced/on-blur upserts to `board_cells` keyed on `(row_id, column_id)`
-- Horizontal scroll on the table container so wide boards (many columns) work like the screenshot
+### Files to create
+- `src/hooks/useBoardCellFiles.ts` — list/upload/delete files for a (row, column) pair across the whole board (single fetch keyed by board_id)
+- `src/components/board/AddColumnPopover.tsx` — type picker on "+"
+- `src/components/board/StatusOptionsDialog.tsx` — manage status options (add, rename, color picker, delete)
+- `src/components/board/cells/TextCell.tsx`, `DateCell.tsx`, `CheckboxCell.tsx`, `StatusCell.tsx`, `FilesCell.tsx`
 
-### Out of scope (can add later if you want)
+### Files to edit
+- `src/hooks/useBoard.ts` — extend `BoardColumn` with `type` + `options`; add `setColumnType`, `setColumnOptions`; expose `getCellFiles`, `uploadCellFile`, `deleteCellFile` (delegates to new hook)
+- `src/pages/BoardDetail.tsx` — replace inline `<CellInput>` with `<CellRenderer>` that picks the right cell component by `column.type`; update `ColumnHeader` menu with "Change type" + "Manage status options"; render `+` column button as `AddColumnPopover`; update grouping to resolve status `id` → label
+- Migration adds `type` + `options` to `board_columns`, creates `board_cell_files` table + RLS, creates `board-files` storage bucket + RLS
 
-- Cell colors / status dropdowns (you chose plain text)
-- Column types beyond text (date, number, person, dropdown)
-- Drag-and-drop row reordering across groups
-- CSV import/export
-- Sharing boards across orgs
+### UX details
+- Status colors use a fixed palette of 10 HSL tokens (defined in cell component) so they respect light/dark themes
+- File upload limited to PDF (`.pdf`, `application/pdf`) per your earlier choice; max 20MB matches platform default
+- Files cell expands row height naturally; chips wrap
+- Date cell uses `date-fns` and the existing `Calendar` component with `pointer-events-auto`
+- Group-by on a status column shows the option label (or "(Ungrouped)" when empty)
+- Group-by on a checkbox column shows "Checked" / "Unchecked"
+- Group-by on a date column shows the raw date string (good enough for v1)
+- Group-by on a files column is hidden from the dropdown (doesn't make sense)
+
+### Out of scope (can add later)
+- Drag-to-reorder status options
+- Number / person / dropdown (non-status) column types
+- Image previews inside file cells (PDFs only for now)
+- Bulk converting cell values when changing type (kept as text fallback)
 
