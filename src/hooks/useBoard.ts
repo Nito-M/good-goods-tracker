@@ -43,6 +43,8 @@ function normalizeColumn(raw: any): BoardColumn {
     position: raw.position,
     type: (raw.type as BoardColumnType) || 'text',
     options: Array.isArray(raw.options) ? (raw.options as StatusOption[]) : [],
+    width: typeof raw.width === 'number' && raw.width > 0 ? raw.width : 200,
+    notes: typeof raw.notes === 'string' ? raw.notes : '',
   };
 }
 
