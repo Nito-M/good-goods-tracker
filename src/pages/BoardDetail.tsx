@@ -736,6 +736,16 @@ export default function BoardDetail() {
           />
         );
       })()}
+
+      {board && (
+        <BoardAccessSheet
+          open={accessSheetOpen}
+          onOpenChange={setAccessSheetOpen}
+          boardId={board.id}
+          organizationId={null}
+          columns={columns}
+        />
+      )}
     </div>
   );
 }
