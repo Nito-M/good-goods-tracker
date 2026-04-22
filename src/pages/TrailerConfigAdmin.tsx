@@ -555,6 +555,7 @@ function TrailerLengthsTab({
                     )}
                   </TableCell>
                   <TableCell>
+                    <div className="flex gap-1">
                       {editingId === l.id ? (
                         <>
                           <Button variant="ghost" size="icon" onClick={() => saveEdit(l.id)}><Check className="h-4 w-4 text-green-600" /></Button>
