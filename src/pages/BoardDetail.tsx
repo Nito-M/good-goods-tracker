@@ -302,8 +302,9 @@ export default function BoardDetail() {
     else setTitleValue(board.name);
   };
 
-  const groupableColumns = columns.filter((c) => c.type !== 'files' && c.type !== 'link');
+  const groupableColumns = columns.filter((c) => c.type !== 'files' && c.type !== 'link' && c.type !== 'connect');
   const statusDialogColumn = columns.find((c) => c.id === statusDialogColumnId) || null;
+  const connectDialogColumn = columns.find((c) => c.id === connectDialogColumnId) || null;
 
   return (
     <div className="w-full p-6 space-y-4">
@@ -455,6 +456,19 @@ export default function BoardDetail() {
           onOpenChange={(o) => !o && setStatusDialogColumnId(null)}
           initialOptions={statusDialogColumn.options}
           onSave={(opts) => setColumnOptions(statusDialogColumn.id, opts)}
+        />
+      )}
+
+      {connectDialogColumn && board && (
+        <ConnectBoardSetupDialog
+          open={!!connectDialogColumnId}
+          onOpenChange={(o) => !o && setConnectDialogColumnId(null)}
+          currentBoardId={board.id}
+          initialConfig={{
+            connect_board_id: connectDialogColumn.connect_board_id,
+            connect_mirror_column_id: connectDialogColumn.connect_mirror_column_id,
+          }}
+          onSave={(cfg) => setColumnConnectConfig(connectDialogColumn.id, cfg)}
         />
       )}
 
