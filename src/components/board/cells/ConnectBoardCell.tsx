@@ -36,6 +36,7 @@ export function ConnectBoardCell({
   const [search, setSearch] = useState('');
   const linkedIds = useMemo(() => parseIds(value), [value]);
   const { rows, loading } = useBoardConnectData(connectBoardId, mirrorColumnId);
+  const navigate = useNavigate();
 
   if (!connectBoardId || !mirrorColumnId) {
     return (
