@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 interface LinkCellProps {
   value: string;
   onSave: (value: string) => void;
+  readOnly?: boolean;
 }
 
 function normalizeUrl(v: string): string {
@@ -16,7 +17,7 @@ function normalizeUrl(v: string): string {
   return `https://${trimmed}`;
 }
 
-export function LinkCell({ value, onSave }: LinkCellProps) {
+export function LinkCell({ value, onSave, readOnly }: LinkCellProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +35,7 @@ export function LinkCell({ value, onSave }: LinkCellProps) {
     if (draft !== value) onSave(draft.trim());
   };
 
-  if (editing) {
+  if (editing && !readOnly) {
     return (
       <Input
         ref={inputRef}
@@ -55,6 +56,9 @@ export function LinkCell({ value, onSave }: LinkCellProps) {
   }
 
   if (!value) {
+    if (readOnly) {
+      return <div className="px-2 py-1.5 text-xs text-muted-foreground">—</div>;
+    }
     return (
       <button
         onClick={() => setEditing(true)}
@@ -79,13 +83,15 @@ export function LinkCell({ value, onSave }: LinkCellProps) {
         <ExternalLink className="h-3 w-3 shrink-0" />
         <span className="truncate">{value}</span>
       </a>
-      <button
-        onClick={() => setEditing(true)}
-        className="text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover/link:opacity-100"
-        title="Edit"
-      >
-        Edit
-      </button>
+      {!readOnly && (
+        <button
+          onClick={() => setEditing(true)}
+          className="text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover/link:opacity-100"
+          title="Edit"
+        >
+          Edit
+        </button>
+      )}
     </div>
   );
 }

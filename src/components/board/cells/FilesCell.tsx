@@ -9,6 +9,7 @@ interface FilesCellProps {
   onUpload: (file: File) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onOpen: (id: string) => Promise<string | null>;
+  readOnly?: boolean;
 }
 
 const isImageFile = (f: BoardCellFile) => {
@@ -16,7 +17,7 @@ const isImageFile = (f: BoardCellFile) => {
   return /\.(png|jpe?g|gif|webp|bmp|svg|heic|heif)$/.test(name);
 };
 
-export function FilesCell({ files, onUpload, onDelete, onOpen }: FilesCellProps) {
+export function FilesCell({ files, onUpload, onDelete, onOpen, readOnly }: FilesCellProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({});
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
@@ -80,13 +81,15 @@ export function FilesCell({ files, onUpload, onDelete, onOpen }: FilesCellProps)
               ) : (
                 <div className="h-10 w-10 rounded-md border border-border bg-muted animate-pulse" />
               )}
-              <button
-                onClick={() => onDelete(f.id)}
-                className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove"
-              >
-                <X className="h-2.5 w-2.5" />
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={() => onDelete(f.id)}
+                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              )}
             </div>
           );
         }
@@ -110,33 +113,42 @@ export function FilesCell({ files, onUpload, onDelete, onOpen }: FilesCellProps)
             >
               <Download className="h-3 w-3" />
             </button>
-            <button
-              onClick={() => onDelete(f.id)}
-              className="text-muted-foreground hover:text-destructive"
-              title="Remove"
-            >
-              <X className="h-3 w-3" />
-            </button>
+            {!readOnly && (
+              <button
+                onClick={() => onDelete(f.id)}
+                className="text-muted-foreground hover:text-destructive"
+                title="Remove"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
         );
       })}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6"
-        onClick={() => inputRef.current?.click()}
-        title="Upload file or image"
-      >
-        <Plus className="h-3 w-3" />
-      </Button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".pdf,application/pdf,image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => handleFiles(e.target.files)}
-      />
+      {!readOnly && (
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => inputRef.current?.click()}
+            title="Upload file or image"
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,application/pdf,image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+        </>
+      )}
+      {readOnly && files.length === 0 && (
+        <span className="text-xs text-muted-foreground px-1">—</span>
+      )}
       <ImageViewerDialog
         imageUrl={viewerUrl}
         alt="Preview"

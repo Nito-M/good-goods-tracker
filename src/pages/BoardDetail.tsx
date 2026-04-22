@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNoteEntries } from '@/hooks/useBoardRowNoteEntries';
@@ -39,6 +39,10 @@ import { FilesCell } from '@/components/board/cells/FilesCell';
 import { LinkCell } from '@/components/board/cells/LinkCell';
 import { ConnectBoardCell } from '@/components/board/cells/ConnectBoardCell';
 import { ConnectBoardSetupDialog } from '@/components/board/ConnectBoardSetupDialog';
+import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
+import { useBoardAccess } from '@/hooks/useBoardAccess';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
@@ -248,6 +252,19 @@ export default function BoardDetail() {
     getCellValue,
   } = useBoard(id);
 
+  const { user } = useAuth();
+  // Need org id from board (needed even before columns load); we read from `board`
+  const { currentUserColumnPerms, isOwnerOrAdmin } = useBoardAccess(id, null);
+
+  // Visible columns (hide ones marked 'hidden' for this user)
+  const visibleColumns = useMemo(
+    () => columns.filter((c) => currentUserColumnPerms(c.id) !== 'hidden'),
+    [columns, currentUserColumnPerms]
+  );
+
+  const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
+  const [accessSheetOpen, setAccessSheetOpen] = useState(false);
+
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
   const {
@@ -260,9 +277,15 @@ export default function BoardDetail() {
   } = useBoardRowNoteEntries(rowIds);
   const { getActivity, logActivity, userNames } = useBoardRowActivity(rowIds);
 
-  // Wrap cell setter to log changes to activity log
+  // Wrap cell setter to log changes to activity log + enforce view-only
   const setCellValueLogged = useCallback(
     async (row_id: string, column_id: string, value: string) => {
+      // Block writes on view-only / hidden columns
+      const perm = currentUserColumnPerms(column_id);
+      if (perm !== 'edit') {
+        toast.error('You do not have permission to edit this column');
+        return;
+      }
       const oldValue = getCellValue(row_id, column_id);
       if (oldValue === value) return;
       await setCellValue(row_id, column_id, value);
@@ -284,7 +307,7 @@ export default function BoardDetail() {
         new_value: displayNew || null,
       });
     },
-    [getCellValue, setCellValue, columns, logActivity]
+    [getCellValue, setCellValue, columns, logActivity, currentUserColumnPerms]
   );
 
   // Wrap note operations to log them
@@ -367,7 +390,7 @@ export default function BoardDetail() {
     return () => clearTimeout(t);
   }, [highlightRowId, rows, loading]);
 
-  const groupByColumn = columns.find((c) => c.id === board?.group_by_column_id);
+  const groupByColumn = visibleColumns.find((c) => c.id === board?.group_by_column_id);
 
   // Build a fast lookup so search can scan every cell of every row
   const cellsByRow = useMemo(() => {
@@ -385,7 +408,7 @@ export default function BoardDetail() {
     if (!q) return rows;
     return rows.filter((row) => {
       const rowCells = cellsByRow.get(row.id) || {};
-      return columns.some((col) => {
+      return visibleColumns.some((col) => {
         const raw = rowCells[col.id];
         if (!raw) return false;
         if (col.type === 'status') {
@@ -396,7 +419,7 @@ export default function BoardDetail() {
         return raw.toLowerCase().includes(q);
       });
     });
-  }, [rows, columns, cellsByRow, rowSearch]);
+  }, [rows, visibleColumns, cellsByRow, rowSearch]);
 
   const grouped = useMemo(() => {
     if (!board?.group_by_column_id || !groupByColumn) {
@@ -436,7 +459,7 @@ export default function BoardDetail() {
     else setTitleValue(board.name);
   };
 
-  const groupableColumns = columns.filter((c) => c.type !== 'files' && c.type !== 'link' && c.type !== 'connect');
+  const groupableColumns = visibleColumns.filter((c) => c.type !== 'files' && c.type !== 'link' && c.type !== 'connect');
   const statusDialogColumn = columns.find((c) => c.id === statusDialogColumnId) || null;
   const connectDialogColumn = columns.find((c) => c.id === connectDialogColumnId) || null;
 
@@ -476,6 +499,17 @@ export default function BoardDetail() {
           >
             {board.name}
           </h1>
+        )}
+        {canManageAccess && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+            onClick={() => setAccessSheetOpen(true)}
+          >
+            <Shield className="h-4 w-4" />
+            Manage Access
+          </Button>
         )}
       </div>
 
@@ -524,7 +558,7 @@ export default function BoardDetail() {
           <thead>
             <tr className="border-b border-border bg-muted">
               <th className="sticky left-0 top-0 z-30 border-r w-16 border-border shadow-none bg-muted"></th>
-              {columns.map((col, idx) => {
+              {visibleColumns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
                 return (
                   <th
@@ -572,7 +606,7 @@ export default function BoardDetail() {
                       onManageOptions={() => setStatusDialogColumnId(col.id)}
                       onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
-                      onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
+                      onDelete={visibleColumns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
                     />
                     <ResizeHandle
@@ -603,7 +637,8 @@ export default function BoardDetail() {
                 groupKey={group.key}
                 label={group.label}
                 rows={group.rows}
-                columns={columns}
+                columns={visibleColumns}
+                currentUserColumnPerms={currentUserColumnPerms}
                 liveWidths={liveWidths}
                 collapsed={!!collapsedGroups[group.key]}
                 onToggle={() =>
@@ -625,14 +660,14 @@ export default function BoardDetail() {
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
+                <td colSpan={visibleColumns.length + 2} className="text-center py-8 text-muted-foreground">
                   No rows yet — click "+ Add row" to start
                 </td>
               </tr>
             )}
             {rows.length > 0 && filteredRows.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
+                <td colSpan={visibleColumns.length + 2} className="text-center py-8 text-muted-foreground">
                   No rows match "{rowSearch}"
                 </td>
               </tr>
@@ -645,7 +680,7 @@ export default function BoardDetail() {
                   Add row
                 </Button>
               </td>
-              <td colSpan={columns.length + 1}></td>
+              <td colSpan={visibleColumns.length + 1}></td>
             </tr>
           </tbody>
         </table>
@@ -701,6 +736,16 @@ export default function BoardDetail() {
           />
         );
       })()}
+
+      {board && (
+        <BoardAccessSheet
+          open={accessSheetOpen}
+          onOpenChange={setAccessSheetOpen}
+          boardId={board.id}
+          organizationId={null}
+          columns={columns}
+        />
+      )}
     </div>
   );
 }
@@ -724,6 +769,7 @@ interface GroupSectionProps {
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
   highlightRowId?: string | null;
+  currentUserColumnPerms: (columnId: string) => 'edit' | 'view' | 'hidden';
 }
 
 function GroupSection({
@@ -744,6 +790,7 @@ function GroupSection({
   onOpenNote,
   onConfigureConnect,
   highlightRowId,
+  currentUserColumnPerms,
 }: GroupSectionProps) {
   return (
     <>
@@ -836,6 +883,7 @@ function GroupSection({
                     onDeleteFile={deleteFile}
                     onOpenFile={refreshSignedUrl}
                     onConfigureConnect={() => onConfigureConnect(col.id)}
+                    readOnly={currentUserColumnPerms(col.id) !== 'edit'}
                   />
                 </td>
               );
@@ -857,6 +905,7 @@ interface CellRendererProps {
   onDeleteFile: (id: string) => Promise<void>;
   onOpenFile: (id: string) => Promise<string | null>;
   onConfigureConnect: () => void;
+  readOnly?: boolean;
 }
 
 function CellRenderer({
@@ -868,14 +917,15 @@ function CellRenderer({
   onDeleteFile,
   onOpenFile,
   onConfigureConnect,
+  readOnly,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
-      return <DateCell value={value} onSave={onSave} />;
+      return <DateCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'checkbox':
-      return <CheckboxCell value={value} onSave={onSave} />;
+      return <CheckboxCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'status':
-      return <StatusCell value={value} options={column.options} onSave={onSave} />;
+      return <StatusCell value={value} options={column.options} onSave={onSave} readOnly={readOnly} />;
     case 'files':
       return (
         <FilesCell
@@ -883,10 +933,11 @@ function CellRenderer({
           onUpload={onUploadFile}
           onDelete={onDeleteFile}
           onOpen={onOpenFile}
+          readOnly={readOnly}
         />
       );
     case 'link':
-      return <LinkCell value={value} onSave={onSave} />;
+      return <LinkCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'connect':
       return (
         <ConnectBoardCell
@@ -895,10 +946,11 @@ function CellRenderer({
           connectBoardId={column.connect_board_id}
           mirrorColumnId={column.connect_mirror_column_id}
           onConfigure={onConfigureConnect}
+          readOnly={readOnly}
         />
       );
     case 'text':
     default:
-      return <TextCell value={value} onSave={onSave} />;
+      return <TextCell value={value} onSave={onSave} readOnly={readOnly} />;
   }
 }

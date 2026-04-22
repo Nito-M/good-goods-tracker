@@ -7,11 +7,27 @@ interface StatusCellProps {
   value: string;
   options: StatusOption[];
   onSave: (value: string) => void;
+  readOnly?: boolean;
 }
 
-export function StatusCell({ value, options, onSave }: StatusCellProps) {
+export function StatusCell({ value, options, onSave, readOnly }: StatusCellProps) {
   const selected = options.find((o) => o.id === value);
   const color = selected ? getStatusColorClasses(selected.color) : null;
+
+  if (readOnly) {
+    return (
+      <div className="px-2 py-1">
+        <div
+          className={cn(
+            'w-full px-2 py-1 rounded-md text-sm text-center truncate',
+            color ? cn(color.bg, color.text) : 'text-muted-foreground'
+          )}
+        >
+          {selected?.label || '—'}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-2 py-1">
