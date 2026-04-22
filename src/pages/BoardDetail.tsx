@@ -660,14 +660,14 @@ export default function BoardDetail() {
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
+                <td colSpan={visibleColumns.length + 2} className="text-center py-8 text-muted-foreground">
                   No rows yet — click "+ Add row" to start
                 </td>
               </tr>
             )}
             {rows.length > 0 && filteredRows.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
+                <td colSpan={visibleColumns.length + 2} className="text-center py-8 text-muted-foreground">
                   No rows match "{rowSearch}"
                 </td>
               </tr>
@@ -680,7 +680,7 @@ export default function BoardDetail() {
                   Add row
                 </Button>
               </td>
-              <td colSpan={columns.length + 1}></td>
+              <td colSpan={visibleColumns.length + 1}></td>
             </tr>
           </tbody>
         </table>
@@ -759,6 +759,7 @@ interface GroupSectionProps {
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
   highlightRowId?: string | null;
+  currentUserColumnPerms: (columnId: string) => 'edit' | 'view' | 'hidden';
 }
 
 function GroupSection({
@@ -779,6 +780,7 @@ function GroupSection({
   onOpenNote,
   onConfigureConnect,
   highlightRowId,
+  currentUserColumnPerms,
 }: GroupSectionProps) {
   return (
     <>
@@ -871,6 +873,7 @@ function GroupSection({
                     onDeleteFile={deleteFile}
                     onOpenFile={refreshSignedUrl}
                     onConfigureConnect={() => onConfigureConnect(col.id)}
+                    readOnly={currentUserColumnPerms(col.id) !== 'edit'}
                   />
                 </td>
               );
@@ -892,6 +895,7 @@ interface CellRendererProps {
   onDeleteFile: (id: string) => Promise<void>;
   onOpenFile: (id: string) => Promise<string | null>;
   onConfigureConnect: () => void;
+  readOnly?: boolean;
 }
 
 function CellRenderer({
@@ -903,14 +907,15 @@ function CellRenderer({
   onDeleteFile,
   onOpenFile,
   onConfigureConnect,
+  readOnly,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
-      return <DateCell value={value} onSave={onSave} />;
+      return <DateCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'checkbox':
-      return <CheckboxCell value={value} onSave={onSave} />;
+      return <CheckboxCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'status':
-      return <StatusCell value={value} options={column.options} onSave={onSave} />;
+      return <StatusCell value={value} options={column.options} onSave={onSave} readOnly={readOnly} />;
     case 'files':
       return (
         <FilesCell
@@ -918,10 +923,11 @@ function CellRenderer({
           onUpload={onUploadFile}
           onDelete={onDeleteFile}
           onOpen={onOpenFile}
+          readOnly={readOnly}
         />
       );
     case 'link':
-      return <LinkCell value={value} onSave={onSave} />;
+      return <LinkCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'connect':
       return (
         <ConnectBoardCell
@@ -930,10 +936,11 @@ function CellRenderer({
           connectBoardId={column.connect_board_id}
           mirrorColumnId={column.connect_mirror_column_id}
           onConfigure={onConfigureConnect}
+          readOnly={readOnly}
         />
       );
     case 'text':
     default:
-      return <TextCell value={value} onSave={onSave} />;
+      return <TextCell value={value} onSave={onSave} readOnly={readOnly} />;
   }
 }
