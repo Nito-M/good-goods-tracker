@@ -9,12 +9,22 @@ import { cn } from '@/lib/utils';
 interface DateCellProps {
   value: string;
   onSave: (value: string) => void;
+  readOnly?: boolean;
 }
 
-export function DateCell({ value, onSave }: DateCellProps) {
+export function DateCell({ value, onSave, readOnly }: DateCellProps) {
   const [open, setOpen] = useState(false);
   const parsed = value ? parseISO(value) : undefined;
   const date = parsed && isValid(parsed) ? parsed : undefined;
+
+  if (readOnly) {
+    return (
+      <div className="flex items-center px-3 py-2 text-sm text-muted-foreground">
+        <CalIcon className="h-3 w-3 mr-1 opacity-60" />
+        {date ? format(date, 'PP') : <span className="opacity-50">—</span>}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center px-2 py-1 gap-1">

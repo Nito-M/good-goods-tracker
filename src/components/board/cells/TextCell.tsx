@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 interface TextCellProps {
   value: string;
   onSave: (value: string) => void;
+  readOnly?: boolean;
 }
 
-export function TextCell({ value, onSave }: TextCellProps) {
+export function TextCell({ value, onSave, readOnly }: TextCellProps) {
   const [v, setV] = useState(value);
   const initial = useRef(value);
 
@@ -21,6 +22,14 @@ export function TextCell({ value, onSave }: TextCellProps) {
       initial.current = v;
     }
   };
+
+  if (readOnly) {
+    return (
+      <div className="w-full px-3 py-2 text-sm truncate text-muted-foreground" title={value}>
+        {value || <span className="opacity-50">—</span>}
+      </div>
+    );
+  }
 
   return (
     <input
