@@ -79,64 +79,66 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-none w-screen h-screen sm:rounded-none p-0 flex flex-col gap-0">
+        <DialogHeader className="px-6 py-4 border-b border-border">
           <DialogTitle>Manage status options</DialogTitle>
+          <p className="text-xs text-muted-foreground">
+            Tip: click the <Zap className="inline h-3 w-3 -mt-0.5" /> icon to mark one status as automatic — it will be
+            applied to every new row in this column.
+          </p>
         </DialogHeader>
-        <p className="text-xs text-muted-foreground -mt-2">
-          Tip: click the <Zap className="inline h-3 w-3 -mt-0.5" /> icon to mark one status as automatic — it will be
-          applied to every new row in this column.
-        </p>
-        <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {options.length === 0 && (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              No options yet — click "Add option" to create one.
-            </p>
-          )}
-          {options.map((opt) => {
-            const color = getStatusColorClasses(opt.color);
-            return (
-              <div key={opt.id} className="flex items-center gap-2">
-                <div className="flex flex-wrap gap-1 shrink-0">
-                  {STATUS_COLORS.map((c) => (
-                    <button
-                      key={c.key}
-                      onClick={() => updateOption(opt.id, { color: c.key })}
-                      className={cn(
-                        'h-5 w-5 rounded-full border-2',
-                        c.bg,
-                        opt.color === c.key ? 'border-foreground' : 'border-transparent'
-                      )}
-                      title={c.key}
-                    />
-                  ))}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="max-w-3xl mx-auto space-y-2">
+            {options.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No options yet — click "Add option" to create one.
+              </p>
+            )}
+            {options.map((opt) => {
+              const color = getStatusColorClasses(opt.color);
+              return (
+                <div key={opt.id} className="flex items-center gap-2">
+                  <div className="flex flex-wrap gap-1 shrink-0">
+                    {STATUS_COLORS.map((c) => (
+                      <button
+                        key={c.key}
+                        onClick={() => updateOption(opt.id, { color: c.key })}
+                        className={cn(
+                          'h-5 w-5 rounded-full border-2',
+                          c.bg,
+                          opt.color === c.key ? 'border-foreground' : 'border-transparent'
+                        )}
+                        title={c.key}
+                      />
+                    ))}
+                  </div>
+                  <Input
+                    value={opt.label}
+                    onChange={(e) => updateOption(opt.id, { label: e.target.value })}
+                    className={cn('h-8 flex-1', color.bg, color.text)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleAutomatic(opt.id)}
+                    title={opt.isAutomatic ? 'Automatic for new rows (click to disable)' : 'Make automatic for new rows'}
+                    className={cn(opt.isAutomatic && 'text-primary')}
+                  >
+                    <Zap className={cn('h-4 w-4', opt.isAutomatic && 'fill-current')} />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => deleteOption(opt.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
-                <Input
-                  value={opt.label}
-                  onChange={(e) => updateOption(opt.id, { label: e.target.value })}
-                  className={cn('h-8 flex-1', color.bg, color.text)}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => toggleAutomatic(opt.id)}
-                  title={opt.isAutomatic ? 'Automatic for new rows (click to disable)' : 'Make automatic for new rows'}
-                  className={cn(opt.isAutomatic && 'text-primary')}
-                >
-                  <Zap className={cn('h-4 w-4', opt.isAutomatic && 'fill-current')} />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => deleteOption(opt.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            );
-          })}
-          <Button variant="outline" size="sm" onClick={addOption} className="w-full mt-2">
-            <Plus className="h-3 w-3" />
-            Add option
-          </Button>
+              );
+            })}
+            <Button variant="outline" size="sm" onClick={addOption} className="w-full mt-2">
+              <Plus className="h-3 w-3" />
+              Add option
+            </Button>
+          </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="px-6 py-4 border-t border-border">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
