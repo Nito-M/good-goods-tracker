@@ -311,33 +311,52 @@ export function RowNoteDialog({
               </p>
             ) : (
               <ol className="relative border-l border-border ml-2 space-y-4 pt-1">
-                {activity.map((entry) => (
-                  <li key={entry.id} className="ml-4">
-                    <span className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
-                    <div className="text-xs text-muted-foreground">
-                      {format(new Date(entry.created_at), 'MMM d, yyyy · h:mm a')}
-                    </div>
-                    <div className="text-sm font-medium mt-0.5">
-                      {userNames[entry.user_id] || 'User'} — {activityLabel(entry)}
-                    </div>
-                    {entry.action === 'cell_changed' && (
-                      <div className="mt-1 text-xs flex flex-wrap items-center gap-1.5">
-                        <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                          {formatActivityValue(entry.action, entry.old_value)}
-                        </span>
-                        <span className="text-muted-foreground">→</span>
-                        <span className="px-1.5 py-0.5 rounded bg-primary/10 text-foreground">
-                          {formatActivityValue(entry.action, entry.new_value)}
-                        </span>
+                {activity.map((entry) => {
+                  const name = userNames[entry.user_id] || 'Unknown user';
+                  const initials = name
+                    .split(/\s+/)
+                    .map((p) => p[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase() || '?';
+                  return (
+                    <li key={entry.id} className="ml-4">
+                      <span className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-primary border-2 border-background" />
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-6 w-6 shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-semibold flex items-center justify-center"
+                          title={name}
+                        >
+                          {initials}
+                        </div>
+                        <div className="text-sm">
+                          <span className="font-semibold text-foreground">{name}</span>
+                          <span className="text-muted-foreground"> {activityLabel(entry).replace(/^Updated/, 'updated').replace(/^Added/, 'added').replace(/^Edited/, 'edited').replace(/^Deleted/, 'deleted').replace(/^Created/, 'created')}</span>
+                        </div>
                       </div>
-                    )}
-                    {entry.action.startsWith('note_') && entry.new_value && (
-                      <div className="mt-1 text-xs text-muted-foreground italic break-words">
-                        “{formatActivityValue(entry.action, entry.new_value)}”
+                      <div className="text-xs text-muted-foreground mt-0.5 ml-8">
+                        {format(new Date(entry.created_at), 'MMM d, yyyy · h:mm a')}
                       </div>
-                    )}
-                  </li>
-                ))}
+                      {entry.action === 'cell_changed' && (
+                        <div className="mt-1 ml-8 text-xs flex flex-wrap items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {formatActivityValue(entry.action, entry.old_value)}
+                          </span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="px-1.5 py-0.5 rounded bg-primary/10 text-foreground">
+                            {formatActivityValue(entry.action, entry.new_value)}
+                          </span>
+                        </div>
+                      )}
+                      {entry.action.startsWith('note_') && entry.new_value && (
+                        <div className="mt-1 ml-8 text-xs text-muted-foreground italic break-words">
+                          “{formatActivityValue(entry.action, entry.new_value)}”
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
               </ol>
             )}
           </TabsContent>
