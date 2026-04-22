@@ -37,6 +37,32 @@ export default function Boards() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handle browser back button - go back to company picker when viewing boards
+  useEffect(() => {
+    const handlePopState = () => {
+      if (selectedCompanyId) {
+        // Prevent default navigation and go back to company picker instead
+        setSelectedCompanyId(null);
+        // Push a new state to prevent leaving the page entirely
+        window.history.pushState({}, '', window.location.pathname);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedCompanyId]);
+
+  // Push history state when selecting a company so back button works
+  const handleSelectCompany = (companyId: string) => {
+    window.history.pushState({}, '', window.location.pathname);
+    setSelectedCompanyId(companyId);
+  };
+
+  // Handle back button click - same behavior as browser back
+  const handleBack = () => {
+    setSelectedCompanyId(null);
+  };
+
   const loading = boardsLoading || companiesLoading;
 
   const selectedCompany = useMemo(
