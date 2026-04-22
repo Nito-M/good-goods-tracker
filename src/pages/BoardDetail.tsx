@@ -163,11 +163,13 @@ export default function BoardDetail() {
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
+  const { getNote, saveNote } = useBoardRowNotes(rowIds);
 
   const [titleEditing, setTitleEditing] = useState(false);
   const [titleValue, setTitleValue] = useState('');
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [statusDialogColumnId, setStatusDialogColumnId] = useState<string | null>(null);
+  const [noteRowId, setNoteRowId] = useState<string | null>(null);
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
@@ -285,7 +287,8 @@ export default function BoardDetail() {
                     onRename={(name) => renameColumn(col.id, name)}
                     onChangeType={(type) => setColumnType(col.id, type)}
                     onManageOptions={() => setStatusDialogColumnId(col.id)}
-                    onDelete={columns.length > 1 ? () => deleteColumn(col.id) : undefined}
+                    onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
+                    isPrimary={idx === 0}
                   />
                 </th>
               ))}
@@ -313,6 +316,8 @@ export default function BoardDetail() {
                 uploadFile={uploadFile}
                 deleteFile={deleteFile}
                 refreshSignedUrl={refreshSignedUrl}
+                getNote={getNote}
+                onOpenNote={setNoteRowId}
               />
             ))}
 
@@ -344,6 +349,18 @@ export default function BoardDetail() {
           onSave={(opts) => setColumnOptions(statusDialogColumn.id, opts)}
         />
       )}
+
+      {noteRowId && (
+        <RowNoteDialog
+          open={!!noteRowId}
+          onOpenChange={(o) => !o && setNoteRowId(null)}
+          initialContent={getNote(noteRowId)}
+          rowLabel={
+            columns[0] ? getCellValue(noteRowId, columns[0].id) : ''
+          }
+          onSave={(content) => saveNote(noteRowId, content)}
+        />
+      )}
     </div>
   );
 }
@@ -362,6 +379,8 @@ interface GroupSectionProps {
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
+  getNote: (row_id: string) => string;
+  onOpenNote: (row_id: string) => void;
 }
 
 function GroupSection({
@@ -377,6 +396,8 @@ function GroupSection({
   uploadFile,
   deleteFile,
   refreshSignedUrl,
+  getNote,
+  onOpenNote,
 }: GroupSectionProps) {
   return (
     <>
