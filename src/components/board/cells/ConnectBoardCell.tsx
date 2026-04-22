@@ -153,6 +153,7 @@ export function ConnectBoardCell({
           </div>
         </PopoverContent>
       </Popover>
+      )}
     </div>
   );
 }
