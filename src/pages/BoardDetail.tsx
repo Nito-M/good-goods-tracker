@@ -482,6 +482,7 @@ export default function BoardDetail() {
                 getNote={getNote}
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
+                highlightRowId={activeHighlight}
               />
             ))}
 
