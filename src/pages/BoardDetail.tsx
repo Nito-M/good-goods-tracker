@@ -273,13 +273,13 @@ export default function BoardDetail() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-border bg-muted/40">
-              <th className="sticky left-0 bg-muted/40 z-10 border-r border-border w-10"></th>
+              <th className="sticky left-0 bg-muted/40 z-10 border-r border-border w-16"></th>
               {columns.map((col, idx) => (
                 <th
                   key={col.id}
                   className={cn(
                     'border-r border-border min-w-[180px] text-left',
-                    idx === 0 && 'sticky left-10 bg-muted/40 z-10'
+                    idx === 0 && 'sticky left-16 bg-muted/40 z-10'
                   )}
                 >
                   <ColumnHeader
@@ -424,27 +424,43 @@ function GroupSection({
       {!collapsed &&
         rows.map((row) => (
           <tr key={row.id} className="border-b border-border hover:bg-accent/20 group">
-            <td className="sticky left-0 bg-card z-10 border-r border-border w-10 text-center group-hover:bg-accent/20">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                  >
-                    <MoreVertical className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem
-                    onClick={() => deleteRow(row.id)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Delete row
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <td className="sticky left-0 bg-card z-10 border-r border-border w-16 px-1 group-hover:bg-accent/20">
+              <div className="flex items-center justify-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'h-6 w-6 shrink-0',
+                    getNote(row.id)
+                      ? 'text-primary opacity-100'
+                      : 'opacity-0 group-hover:opacity-100'
+                  )}
+                  onClick={() => onOpenNote(row.id)}
+                  title={getNote(row.id) ? 'Edit note' : 'Add note'}
+                >
+                  <StickyNote className="h-3 w-3" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
+                    >
+                      <MoreVertical className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem
+                      onClick={() => deleteRow(row.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete row
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </td>
             {columns.map((col, idx) => (
               <td
