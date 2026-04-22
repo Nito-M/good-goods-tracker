@@ -475,6 +475,7 @@ interface GroupSectionProps {
   label: string | null;
   rows: BoardRow[];
   columns: BoardColumn[];
+  liveWidths: Record<string, number>;
   collapsed: boolean;
   onToggle: () => void;
   getCellValue: (row_id: string, column_id: string) => string;
@@ -492,6 +493,7 @@ function GroupSection({
   label,
   rows,
   columns,
+  liveWidths,
   collapsed,
   onToggle,
   getCellValue,
@@ -567,26 +569,30 @@ function GroupSection({
                 </DropdownMenu>
               </div>
             </td>
-            {columns.map((col, idx) => (
-              <td
-                key={col.id}
-                className={cn(
-                  'border-r border-border p-0 min-w-[180px] align-top',
-                  idx === 0 && 'sticky left-16 bg-card z-10 group-hover:bg-accent/20'
-                )}
-              >
-                <CellRenderer
-                  column={col}
-                  rowId={row.id}
-                  value={getCellValue(row.id, col.id)}
-                  onSave={(v) => setCellValue(row.id, col.id, v)}
-                  files={col.type === 'files' ? getFiles(row.id, col.id) : []}
-                  onUploadFile={(f) => uploadFile(row.id, col.id, f)}
-                  onDeleteFile={deleteFile}
-                  onOpenFile={refreshSignedUrl}
-                />
-              </td>
-            ))}
+            {columns.map((col, idx) => {
+              const w = liveWidths[col.id] ?? col.width;
+              return (
+                <td
+                  key={col.id}
+                  style={{ width: w, minWidth: w, maxWidth: w }}
+                  className={cn(
+                    'border-r border-border p-0 align-top',
+                    idx === 0 && 'sticky left-16 bg-card z-10 group-hover:bg-accent/20'
+                  )}
+                >
+                  <CellRenderer
+                    column={col}
+                    rowId={row.id}
+                    value={getCellValue(row.id, col.id)}
+                    onSave={(v) => setCellValue(row.id, col.id, v)}
+                    files={col.type === 'files' ? getFiles(row.id, col.id) : []}
+                    onUploadFile={(f) => uploadFile(row.id, col.id, f)}
+                    onDeleteFile={deleteFile}
+                    onOpenFile={refreshSignedUrl}
+                  />
+                </td>
+              );
+            })}
             <td></td>
           </tr>
         ))}
