@@ -71,14 +71,16 @@ export function ConnectBoardCell({
 
   return (
     <div className="flex flex-wrap items-center gap-1 px-2 py-1.5">
-      {linkedRows.map((r) => (
+      {linkedRows.map((r) => {
+        const display = r.mirror_value || r.primary_value || '(empty)';
+        return (
         <Badge
           key={r.row_id}
           variant="secondary"
           className="gap-1 pr-1 max-w-[200px]"
-          title={`${r.primary_value} → ${r.mirror_value}`}
+          title={r.mirror_value ? `${r.primary_value} → ${r.mirror_value}` : r.primary_value || '(empty row)'}
         >
-          <span className="truncate">{r.mirror_value || '(empty)'}</span>
+          <span className="truncate">{display}</span>
           <button
             onClick={() => toggleLink(r.row_id, false)}
             className="hover:text-destructive"
@@ -87,7 +89,8 @@ export function ConnectBoardCell({
             <X className="h-3 w-3" />
           </button>
         </Badge>
-      ))}
+        );
+      })}
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
