@@ -363,7 +363,7 @@ export default function BoardDetail() {
   const connectDialogColumn = columns.find((c) => c.id === connectDialogColumnId) || null;
 
   return (
-    <div className="w-full p-6 space-y-4">
+    <div className="w-full h-full flex flex-col p-6 space-y-4 overflow-hidden">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -441,7 +441,7 @@ export default function BoardDetail() {
         </Select>
       </div>
 
-      <div className="border border-border rounded-lg overflow-x-auto bg-card">
+      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-auto bg-card">
         <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
             <tr className="border-b border-border bg-muted">
