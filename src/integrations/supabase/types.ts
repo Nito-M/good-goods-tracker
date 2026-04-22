@@ -3513,6 +3513,7 @@ export type Database = {
       }
       trailer_lengths: {
         Row: {
+          allowed_axle_counts: number[]
           compatible_trailer_subtype_ids: string[]
           compatible_trailer_type_ids: string[]
           created_at: string
@@ -3522,6 +3523,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          allowed_axle_counts?: number[]
           compatible_trailer_subtype_ids?: string[]
           compatible_trailer_type_ids?: string[]
           created_at?: string
@@ -3531,6 +3533,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          allowed_axle_counts?: number[]
           compatible_trailer_subtype_ids?: string[]
           compatible_trailer_type_ids?: string[]
           created_at?: string
