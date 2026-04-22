@@ -35,6 +35,7 @@ import { DateCell } from '@/components/board/cells/DateCell';
 import { CheckboxCell } from '@/components/board/cells/CheckboxCell';
 import { StatusCell } from '@/components/board/cells/StatusCell';
 import { FilesCell } from '@/components/board/cells/FilesCell';
+import { LinkCell } from '@/components/board/cells/LinkCell';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
@@ -64,6 +65,7 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditN
     { type: 'checkbox', label: 'Checkbox' },
     { type: 'status', label: 'Status' },
     { type: 'files', label: 'Files' },
+    { type: 'link', label: 'Link' },
   ];
 
   const hasNotes = column.notes.trim().length > 0;
@@ -291,7 +293,7 @@ export default function BoardDetail() {
     else setTitleValue(board.name);
   };
 
-  const groupableColumns = columns.filter((c) => c.type !== 'files');
+  const groupableColumns = columns.filter((c) => c.type !== 'files' && c.type !== 'link');
   const statusDialogColumn = columns.find((c) => c.id === statusDialogColumnId) || null;
 
   return (
@@ -641,6 +643,8 @@ function CellRenderer({
           onOpen={onOpenFile}
         />
       );
+    case 'link':
+      return <LinkCell value={value} onSave={onSave} />;
     case 'text':
     default:
       return <TextCell value={value} onSave={onSave} />;
