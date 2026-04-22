@@ -13,6 +13,7 @@ interface ConnectBoardCellProps {
   connectBoardId: string | null;
   mirrorColumnId: string | null;
   onConfigure: () => void;
+  readOnly?: boolean;
 }
 
 function parseIds(value: string): string[] {
@@ -31,6 +32,7 @@ export function ConnectBoardCell({
   connectBoardId,
   mirrorColumnId,
   onConfigure,
+  readOnly,
 }: ConnectBoardCellProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -39,6 +41,9 @@ export function ConnectBoardCell({
   const navigate = useNavigate();
 
   if (!connectBoardId || !mirrorColumnId) {
+    if (readOnly) {
+      return <div className="px-2 py-1.5 text-xs text-muted-foreground">—</div>;
+    }
     return (
       <button
         onClick={onConfigure}
@@ -85,20 +90,23 @@ export function ConnectBoardCell({
         >
           <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
           <span className="truncate">{display}</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleLink(r.row_id, false);
-            }}
-            className="hover:text-destructive"
-            title="Remove link"
-          >
-            <X className="h-3 w-3" />
-          </button>
+          {!readOnly && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLink(r.row_id, false);
+              }}
+              className="hover:text-destructive"
+              title="Remove link"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
         </Badge>
         );
       })}
 
+      {!readOnly && (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="h-6 w-6" title="Link a row">
