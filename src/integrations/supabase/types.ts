@@ -707,6 +707,60 @@ export type Database = {
           },
         ]
       }
+      board_row_activity: {
+        Row: {
+          action: string
+          column_id: string | null
+          column_name: string | null
+          column_type: string | null
+          created_at: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          row_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          column_id?: string | null
+          column_name?: string | null
+          column_type?: string | null
+          created_at?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          row_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          column_id?: string | null
+          column_name?: string | null
+          column_type?: string | null
+          created_at?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          row_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_row_activity_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "board_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_row_activity_row_id_fkey"
+            columns: ["row_id"]
+            isOneToOne: false
+            referencedRelation: "board_rows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_row_note_entries: {
         Row: {
           content: string
