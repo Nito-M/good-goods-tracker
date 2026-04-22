@@ -558,7 +558,7 @@ export default function BoardDetail() {
           <thead>
             <tr className="border-b border-border bg-muted">
               <th className="sticky left-0 top-0 z-30 border-r w-16 border-border shadow-none bg-muted"></th>
-              {columns.map((col, idx) => {
+              {visibleColumns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
                 return (
                   <th
@@ -606,7 +606,7 @@ export default function BoardDetail() {
                       onManageOptions={() => setStatusDialogColumnId(col.id)}
                       onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
-                      onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
+                      onDelete={visibleColumns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
                     />
                     <ResizeHandle
@@ -637,7 +637,8 @@ export default function BoardDetail() {
                 groupKey={group.key}
                 label={group.label}
                 rows={group.rows}
-                columns={columns}
+                columns={visibleColumns}
+                currentUserColumnPerms={currentUserColumnPerms}
                 liveWidths={liveWidths}
                 collapsed={!!collapsedGroups[group.key]}
                 onToggle={() =>
