@@ -14,6 +14,7 @@ const PAGE_KEY_TO_ROUTES: Record<string, string[]> = {
   requests: ['/requests'],
   calendar: ['/calendar'],
   notes: ['/notes'],
+  boards: ['/boards'],
   bank: ['/bank'],
   settings: ['/settings'],
   jobs: ['/jobs'],
