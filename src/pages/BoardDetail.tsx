@@ -372,9 +372,39 @@ export default function BoardDetail() {
                     key={col.id}
                     style={{ width: w, minWidth: w, maxWidth: w }}
                     className={cn(
-                      'border-r border-border text-left relative',
-                      idx === 0 && 'sticky left-16 bg-muted/40 z-10'
+                      'border-r border-border text-left relative transition-colors',
+                      idx === 0 && 'sticky left-16 bg-muted/40 z-10',
+                      dragOverColId === col.id && draggedColId !== col.id && 'bg-primary/10',
+                      draggedColId === col.id && 'opacity-40'
                     )}
+                    draggable={idx !== 0}
+                    onDragStart={(e) => {
+                      if (idx === 0) return;
+                      setDraggedColId(col.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData('text/plain', col.id);
+                    }}
+                    onDragOver={(e) => {
+                      if (!draggedColId || draggedColId === col.id || idx === 0) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      setDragOverColId(col.id);
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverColId === col.id) setDragOverColId(null);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (draggedColId && draggedColId !== col.id && idx !== 0) {
+                        reorderColumns(draggedColId, col.id);
+                      }
+                      setDraggedColId(null);
+                      setDragOverColId(null);
+                    }}
+                    onDragEnd={() => {
+                      setDraggedColId(null);
+                      setDragOverColId(null);
+                    }}
                   >
                     <ColumnHeader
                       column={col}
