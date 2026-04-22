@@ -561,7 +561,7 @@ export default function BoardDetail() {
             )}
 
             <tr>
-              <td className="p-2 sticky left-0 bg-card z-10 w-16">
+              <td className="p-2 sticky left-0 bg-muted/40 z-10 w-16">
                 <Button variant="ghost" size="sm" onClick={() => addRow()}>
                   <Plus className="h-3 w-3" />
                   Add row
@@ -696,7 +696,7 @@ function GroupSection({
               highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
             )}
           >
-            <td className="sticky left-0 bg-card z-10 border-r border-border w-16 px-1 group-hover:bg-accent/20">
+            <td className="sticky left-0 bg-muted/40 z-10 border-r border-border w-16 px-1 group-hover:bg-accent/20">
               <div className="flex items-center justify-center gap-0.5">
                 <Button
                   variant="ghost"
@@ -742,7 +742,7 @@ function GroupSection({
                   style={{ width: w, minWidth: w, maxWidth: w }}
                   className={cn(
                     'border-r border-border p-0 align-top',
-                    idx === 0 && 'sticky left-16 bg-card z-10 group-hover:bg-accent/20'
+                    idx === 0 && 'sticky left-16 bg-muted/40 z-10 group-hover:bg-accent/20'
                   )}
                 >
                   <CellRenderer
