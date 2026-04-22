@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
 import { useCompanies, type Company } from '@/hooks/useCompanies';
@@ -21,11 +21,21 @@ import { format } from 'date-fns';
 
 export default function Boards() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialCompanyId = (location.state as { companyId?: string } | null)?.companyId ?? null;
   const { boards, loading: boardsLoading, createBoard, deleteBoard } = useBoards();
   const { companies, loading: companiesLoading, defaultCompany } = useCompanies();
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(initialCompanyId);
   const [companySearch, setCompanySearch] = useState('');
   const [boardSearch, setBoardSearch] = useState('');
+
+  // Clear navigation state after consuming it so manual nav to /boards still shows picker
+  useEffect(() => {
+    if (location.state) {
+      window.history.replaceState({}, '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loading = boardsLoading || companiesLoading;
 

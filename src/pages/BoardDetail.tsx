@@ -365,7 +365,15 @@ export default function BoardDetail() {
   return (
     <div className="w-full p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/boards')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() =>
+            navigate('/boards', {
+              state: board.company_id ? { companyId: board.company_id } : undefined,
+            })
+          }
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         {titleEditing ? (
