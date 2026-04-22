@@ -19,7 +19,7 @@ export function StatusCell({ value, options, onSave }: StatusCellProps) {
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'w-full flex items-center justify-between gap-1 px-2 py-1 rounded-md text-sm hover:opacity-80',
+              'w-full flex items-center justify-between gap-1 px-2 py-1 rounded-md text-sm hover:opacity-80 text-center',
               color ? cn(color.bg, color.text) : 'text-muted-foreground hover:bg-accent/40'
             )}
           >
