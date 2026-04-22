@@ -445,7 +445,7 @@ export default function BoardDetail() {
         <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
             <tr className="border-b border-border bg-muted">
-              <th className="sticky left-0 z-20 border-r w-16 border-border shadow-none bg-muted"></th>
+              <th className="sticky left-0 top-0 z-30 border-r w-16 border-border shadow-none bg-muted"></th>
               {columns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
                 return (
@@ -453,8 +453,8 @@ export default function BoardDetail() {
                     key={col.id}
                     style={{ width: w, minWidth: w, maxWidth: w }}
                     className={cn(
-                      'border-r border-border text-left relative transition-colors',
-                      idx === 0 && 'sticky left-16 bg-muted z-20',
+                      'border-r border-border text-left relative transition-colors sticky top-0 bg-muted z-20',
+                      idx === 0 && 'left-16 z-30',
                       dragOverColId === col.id && draggedColId !== col.id && 'bg-primary/10',
                       draggedColId === col.id && 'opacity-40'
                     )}
@@ -513,7 +513,7 @@ export default function BoardDetail() {
                   </th>
                 );
               })}
-              <th className="w-12 px-2">
+              <th className="w-12 px-2 sticky top-0 bg-muted z-20">
                 <AddColumnPopover onAdd={(name, type) => addColumn(name, type)} />
               </th>
             </tr>
