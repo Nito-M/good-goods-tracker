@@ -140,7 +140,7 @@ export default function Boards() {
                     key={c.id}
                     company={c}
                     boardCount={boardCounts.get(c.id) || 0}
-                    onSelect={() => setSelectedCompanyId(c.id)}
+                    onSelect={() => handleSelectCompany(c.id)}
                   />
                 ))}
               </div>
@@ -156,7 +156,7 @@ export default function Boards() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <Button variant="ghost" size="icon" onClick={() => setSelectedCompanyId(null)}>
+          <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           {selectedCompany?.logoUrl ? (
