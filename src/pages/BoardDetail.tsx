@@ -41,11 +41,12 @@ interface ColumnHeaderProps {
   onRename: (name: string) => void;
   onChangeType: (type: BoardColumnType) => void;
   onManageOptions: () => void;
+  onEditNotes: () => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -65,8 +66,10 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelet
     { type: 'files', label: 'Files' },
   ];
 
+  const hasNotes = column.notes.trim().length > 0;
+
   return (
-    <div className="flex items-center gap-1 px-2 py-2 group">
+    <div className="flex items-center gap-1 px-2 py-2 group/header">
       {editing ? (
         <Input
           autoFocus
@@ -85,61 +88,130 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelet
       ) : (
         <button
           onClick={() => setEditing(true)}
-          className="flex-1 text-left font-medium text-sm truncate hover:text-primary"
+          className="flex-1 text-left font-medium text-sm truncate hover:text-primary min-w-0"
         >
           {column.name}
           <span className="ml-1 text-xs text-muted-foreground font-normal">({column.type})</span>
         </button>
       )}
       {!editing && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
-            >
-              <MoreVertical className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditing(true)}>Rename</DropdownMenuItem>
-            {!isPrimary && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {types.map((t) => (
-                      <DropdownMenuItem
-                        key={t.type}
-                        onClick={() => onChangeType(t.type)}
-                        disabled={t.type === column.type}
-                      >
-                        {t.label} {t.type === column.type && '✓'}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'h-6 w-6 shrink-0',
+              hasNotes ? 'text-primary opacity-100' : 'opacity-0 group-hover/header:opacity-100'
             )}
-            {column.type === 'status' && !isPrimary && (
-              <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
-            )}
-            {onDelete && !isPrimary && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                  <Trash2 className="h-3 w-3" />
-                  Delete column
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            onClick={onEditNotes}
+            title={hasNotes ? column.notes : 'Add column notes'}
+          >
+            <FileText className="h-3 w-3" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover/header:opacity-100 shrink-0"
+              >
+                <MoreVertical className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditing(true)}>Rename</DropdownMenuItem>
+              <DropdownMenuItem onClick={onEditNotes}>
+                {hasNotes ? 'Edit notes' : 'Add notes'}
+              </DropdownMenuItem>
+              {!isPrimary && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      {types.map((t) => (
+                        <DropdownMenuItem
+                          key={t.type}
+                          onClick={() => onChangeType(t.type)}
+                          disabled={t.type === column.type}
+                        >
+                          {t.label} {t.type === column.type && '✓'}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+              )}
+              {column.type === 'status' && !isPrimary && (
+                <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+              )}
+              {onDelete && !isPrimary && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                    <Trash2 className="h-3 w-3" />
+                    Delete column
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       )}
     </div>
   );
 }
+
+interface ResizeHandleProps {
+  onResize: (newWidth: number) => void;
+  startWidth: number;
+}
+
+function ResizeHandle({ onResize, startWidth }: ResizeHandleProps) {
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(startWidth);
+  const draggingRef = useRef(false);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startXRef.current = e.clientX;
+      startWidthRef.current = startWidth;
+      draggingRef.current = true;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      let latestWidth = startWidth;
+
+      const onMove = (ev: MouseEvent) => {
+        const delta = ev.clientX - startXRef.current;
+        latestWidth = Math.max(80, Math.min(900, startWidthRef.current + delta));
+        onResize(latestWidth);
+      };
+
+      const onUp = () => {
+        draggingRef.current = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [onResize, startWidth]
+  );
+
+  return (
+    <div
+      onMouseDown={handleMouseDown}
+      className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/60 transition-colors z-20"
+      title="Drag to resize"
+    />
+  );
+}
+
 
 export default function BoardDetail() {
   const { id } = useParams<{ id: string }>();
