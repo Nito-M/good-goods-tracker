@@ -258,6 +258,8 @@ export default function BoardDetail() {
   const [noteRowId, setNoteRowId] = useState<string | null>(null);
   const [columnNoteId, setColumnNoteId] = useState<string | null>(null);
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
+  const [draggedColId, setDraggedColId] = useState<string | null>(null);
+  const [dragOverColId, setDragOverColId] = useState<string | null>(null);
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
