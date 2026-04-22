@@ -576,6 +576,7 @@ interface GroupSectionProps {
   getNote: (row_id: string) => string;
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
+  highlightRowId?: string | null;
 }
 
 function GroupSection({
