@@ -34,6 +34,7 @@ export interface BoardDetail {
   id: string;
   name: string;
   user_id: string;
+  company_id: string | null;
   group_by_column_id: string | null;
 }
 
@@ -72,7 +73,7 @@ export function useBoard(boardId: string | undefined) {
     setLoading(true);
 
     const [boardRes, colRes, rowRes] = await Promise.all([
-      supabase.from('boards').select('id, name, user_id, group_by_column_id').eq('id', boardId).maybeSingle(),
+      supabase.from('boards').select('id, name, user_id, company_id, group_by_column_id').eq('id', boardId).maybeSingle(),
       supabase.from('board_columns').select('*').eq('board_id', boardId).order('position'),
       supabase.from('board_rows').select('*').eq('board_id', boardId).order('position'),
     ]);
