@@ -60,6 +60,15 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
     setOptions((os) => os.filter((o) => o.id !== id));
   };
 
+  const toggleAutomatic = (id: string) => {
+    setOptions((os) =>
+      os.map((o) => ({
+        ...o,
+        isAutomatic: o.id === id ? !o.isAutomatic : false,
+      }))
+    );
+  };
+
   const handleSave = () => {
     const cleaned = options
       .map((o) => ({ ...o, label: o.label.trim() }))
