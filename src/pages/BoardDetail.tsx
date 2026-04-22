@@ -544,6 +544,13 @@ export default function BoardDetail() {
                 </td>
               </tr>
             )}
+            {rows.length > 0 && filteredRows.length === 0 && (
+              <tr>
+                <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
+                  No rows match "{rowSearch}"
+                </td>
+              </tr>
+            )}
 
             <tr>
               <td className="p-2 sticky left-0 bg-card z-10 w-16">
