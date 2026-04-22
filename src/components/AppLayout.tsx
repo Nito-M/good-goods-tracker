@@ -202,7 +202,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 min-h-0 overflow-hidden">
+          <main className="flex-1 min-h-0 overflow-hidden text-center">
             {children}
           </main>
         </div>
