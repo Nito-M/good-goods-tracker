@@ -255,7 +255,7 @@ export function TrailerConfigurator() {
   return (
     <div className="max-w-5xl mx-auto py-6 px-4">
       <div className="flex justify-end mb-4 gap-2">
-        <Button variant="ghost" size="sm" onClick={handleReset}>
+        <Button variant="outline" size="sm" onClick={handleReset}>
           <RotateCcw className="h-4 w-4 mr-1" /> Start Over
         </Button>
         <Button variant="outline" size="sm" asChild>
