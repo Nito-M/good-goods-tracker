@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
-import { useBoardRowNotes } from '@/hooks/useBoardRowNotes';
+import { useBoardRowNoteEntries } from '@/hooks/useBoardRowNoteEntries';
 import { RowNoteDialog } from '@/components/board/RowNoteDialog';
 import { ColumnNoteDialog } from '@/components/board/ColumnNoteDialog';
 import { Button } from '@/components/ui/button';
@@ -249,7 +249,14 @@ export default function BoardDetail() {
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
-  const { getNote, saveNote } = useBoardRowNotes(rowIds);
+  const {
+    getEntries: getNoteEntries,
+    getCount: getNoteCount,
+    addEntry: addNoteEntry,
+    updateEntry: updateNoteEntry,
+    deleteEntry: deleteNoteEntry,
+    refreshImageUrl: refreshNoteImageUrl,
+  } = useBoardRowNoteEntries(rowIds);
 
   const [titleEditing, setTitleEditing] = useState(false);
   const [titleValue, setTitleValue] = useState('');
@@ -538,7 +545,7 @@ export default function BoardDetail() {
                 uploadFile={uploadFile}
                 deleteFile={deleteFile}
                 refreshSignedUrl={refreshSignedUrl}
-                getNote={getNote}
+                getNoteCount={getNoteCount}
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
                 highlightRowId={activeHighlight}
@@ -599,11 +606,12 @@ export default function BoardDetail() {
         <RowNoteDialog
           open={!!noteRowId}
           onOpenChange={(o) => !o && setNoteRowId(null)}
-          initialContent={getNote(noteRowId)}
-          rowLabel={
-            columns[0] ? getCellValue(noteRowId, columns[0].id) : ''
-          }
-          onSave={(content) => saveNote(noteRowId, content)}
+          rowLabel={columns[0] ? getCellValue(noteRowId, columns[0].id) : ''}
+          entries={getNoteEntries(noteRowId)}
+          onAdd={(content, imageFile) => addNoteEntry(noteRowId, content, imageFile)}
+          onUpdate={updateNoteEntry}
+          onDelete={deleteNoteEntry}
+          onRefreshImageUrl={refreshNoteImageUrl}
         />
       )}
 
@@ -639,7 +647,7 @@ interface GroupSectionProps {
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
-  getNote: (row_id: string) => string;
+  getNoteCount: (row_id: string) => number;
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
   highlightRowId?: string | null;
@@ -659,7 +667,7 @@ function GroupSection({
   uploadFile,
   deleteFile,
   refreshSignedUrl,
-  getNote,
+  getNoteCount,
   onOpenNote,
   onConfigureConnect,
   highlightRowId,
@@ -703,12 +711,12 @@ function GroupSection({
                   size="icon"
                   className={cn(
                     'h-6 w-6 shrink-0',
-                    getNote(row.id)
+                    getNoteCount(row.id) > 0
                       ? 'text-primary opacity-100'
                       : 'opacity-0 group-hover:opacity-100'
                   )}
                   onClick={() => onOpenNote(row.id)}
-                  title={getNote(row.id) ? 'Edit note' : 'Add note'}
+                  title={getNoteCount(row.id) > 0 ? `${getNoteCount(row.id)} note(s)` : 'Add note'}
                 >
                   <StickyNote className="h-3 w-3" />
                 </Button>
