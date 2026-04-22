@@ -257,51 +257,21 @@ export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
               </SidebarMenuItem>
               }
 
-              {/* Boards with collapsible sub-list */}
+              {/* Boards (no sub-list — pick a company on the page) */}
               {isPageAllowed('boards') &&
               <SidebarMenuItem>
-                <Collapsible open={boardsOpen} onOpenChange={setBoardsOpen}>
-                  <div className="flex items-center">
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname.startsWith("/boards")}
-                      tooltip="Boards"
-                      className="flex-1">
-                      <NavLink
-                        to="/boards"
-                        className="flex items-center gap-3"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground">
-                        <Table2 className="h-4 w-4" />
-                        <span>Boards</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                    {!collapsed &&
-                    <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                          <ChevronDown className={`h-3 w-3 transition-transform ${boardsOpen ? '' : '-rotate-90'}`} />
-                        </Button>
-                      </CollapsibleTrigger>
-                    }
-                  </div>
-                  {!collapsed &&
-                  <CollapsibleContent>
-                      <div className="ml-7 border-l border-border pl-2 mt-1 space-y-0.5">
-                        {boards.map((board) =>
-                          <NavLink
-                            key={board.id}
-                            to={`/boards/${board.id}`}
-                            className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
-                            activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
-                            {board.name}
-                          </NavLink>
-                        )}
-                        {boards.length === 0 &&
-                          <p className="text-xs text-muted-foreground px-2 py-1">No boards yet</p>
-                        }
-                      </div>
-                    </CollapsibleContent>
-                  }
-                </Collapsible>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname.startsWith("/boards")}
+                  tooltip="Boards">
+                  <NavLink
+                    to="/boards"
+                    className="flex items-center gap-3"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground">
+                    <Table2 className="h-4 w-4" />
+                    <span>Boards</span>
+                  </NavLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               }
             </SidebarMenu>
