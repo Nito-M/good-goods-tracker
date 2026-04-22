@@ -664,13 +664,22 @@ export function TrailerConfigurator() {
 
       {/* Navigation */}
       <div className="flex justify-between mt-8">
-        <Button
-          variant="outline"
-          onClick={() => setStep(s => s - 1)}
-          disabled={step === 0}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setStep(s => s - 1)}
+            disabled={step === 0}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleReset}
+            className="text-muted-foreground"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" /> Start Over
+          </Button>
+        </div>
         {step < 6 && (
           <Button
             onClick={() => setStep(s => s + 1)}
