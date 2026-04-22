@@ -24,6 +24,8 @@ import { EditRequest } from "./pages/EditRequest";
 import { RequestDetail } from "./pages/RequestDetail";
 import { Calendar } from "./pages/Calendar";
 import { Notes } from "./pages/Notes";
+import Boards from "./pages/Boards";
+import BoardDetail from "./pages/BoardDetail";
 import { Settings } from "./pages/Settings";
 import { Bank } from "./pages/Bank";
 import { BankCardDetail } from "./pages/BankCardDetail";
@@ -360,6 +362,26 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Notes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/boards"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Boards />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/boards/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <BoardDetail />
               </AppLayout>
             </ProtectedRoute>
           }
