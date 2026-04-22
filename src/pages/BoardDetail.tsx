@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, Stick
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNoteEntries } from '@/hooks/useBoardRowNoteEntries';
+import { useBoardRowActivity } from '@/hooks/useBoardRowActivity';
 import { RowNoteDialog } from '@/components/board/RowNoteDialog';
 import { ColumnNoteDialog } from '@/components/board/ColumnNoteDialog';
 import { Button } from '@/components/ui/button';
@@ -252,11 +253,81 @@ export default function BoardDetail() {
   const {
     getEntries: getNoteEntries,
     getCount: getNoteCount,
-    addEntry: addNoteEntry,
-    updateEntry: updateNoteEntry,
-    deleteEntry: deleteNoteEntry,
+    addEntry: addNoteEntryRaw,
+    updateEntry: updateNoteEntryRaw,
+    deleteEntry: deleteNoteEntryRaw,
     refreshImageUrl: refreshNoteImageUrl,
   } = useBoardRowNoteEntries(rowIds);
+  const { getActivity, logActivity, userNames } = useBoardRowActivity(rowIds);
+
+  // Wrap cell setter to log changes to activity log
+  const setCellValueLogged = useCallback(
+    async (row_id: string, column_id: string, value: string) => {
+      const oldValue = getCellValue(row_id, column_id);
+      if (oldValue === value) return;
+      await setCellValue(row_id, column_id, value);
+      const col = columns.find((c) => c.id === column_id);
+      // For status columns, log the human-readable label
+      let displayOld = oldValue;
+      let displayNew = value;
+      if (col?.type === 'status') {
+        displayOld = col.options.find((o) => o.id === oldValue)?.label || oldValue;
+        displayNew = col.options.find((o) => o.id === value)?.label || value;
+      }
+      logActivity({
+        row_id,
+        column_id,
+        action: 'cell_changed',
+        column_name: col?.name || null,
+        column_type: col?.type || null,
+        old_value: displayOld || null,
+        new_value: displayNew || null,
+      });
+    },
+    [getCellValue, setCellValue, columns, logActivity]
+  );
+
+  // Wrap note operations to log them
+  const addNoteEntry = useCallback(
+    async (row_id: string, content: string, imageFile: File | null) => {
+      const result = await addNoteEntryRaw(row_id, content, imageFile);
+      if (result) {
+        logActivity({
+          row_id,
+          action: 'note_added',
+          new_value: content || (imageFile ? '[image]' : ''),
+        });
+      }
+      return result;
+    },
+    [addNoteEntryRaw, logActivity]
+  );
+
+  const updateNoteEntry = useCallback(
+    async (id: string, content: string) => {
+      // Find the row this note belongs to
+      const noteRows = rows.filter((r) => getNoteEntries(r.id).some((e) => e.id === id));
+      const row_id = noteRows[0]?.id;
+      await updateNoteEntryRaw(id, content);
+      if (row_id) {
+        logActivity({ row_id, action: 'note_updated', new_value: content });
+      }
+    },
+    [updateNoteEntryRaw, rows, getNoteEntries, logActivity]
+  );
+
+  const deleteNoteEntry = useCallback(
+    async (id: string) => {
+      const noteRows = rows.filter((r) => getNoteEntries(r.id).some((e) => e.id === id));
+      const row_id = noteRows[0]?.id;
+      const oldContent = noteRows[0] ? getNoteEntries(noteRows[0].id).find((e) => e.id === id)?.content : '';
+      await deleteNoteEntryRaw(id);
+      if (row_id) {
+        logActivity({ row_id, action: 'note_deleted', old_value: oldContent || null });
+      }
+    },
+    [deleteNoteEntryRaw, rows, getNoteEntries, logActivity]
+  );
 
   const [titleEditing, setTitleEditing] = useState(false);
   const [titleValue, setTitleValue] = useState('');
