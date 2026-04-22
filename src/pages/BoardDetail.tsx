@@ -187,7 +187,7 @@ export default function BoardDetail() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-4">
+    <div className="w-full p-6 space-y-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate('/boards')}>
           <ArrowLeft className="h-4 w-4" />
