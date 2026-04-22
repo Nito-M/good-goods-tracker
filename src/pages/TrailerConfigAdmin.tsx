@@ -464,6 +464,7 @@ function TrailerLengthsTab({
                 <TableHead>Label</TableHead>
                 <TableHead>Compatible Types</TableHead>
                 <TableHead>Compatible Subtypes</TableHead>
+                <TableHead>Allowed Axles</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
