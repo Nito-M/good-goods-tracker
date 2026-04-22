@@ -663,6 +663,48 @@ export type Database = {
           },
         ]
       }
+      board_column_permissions: {
+        Row: {
+          board_id: string
+          column_id: string
+          created_at: string
+          id: string
+          permission: string
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          column_id: string
+          created_at?: string
+          id?: string
+          permission?: string
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          column_id?: string
+          created_at?: string
+          id?: string
+          permission?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_column_permissions_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_column_permissions_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "board_columns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_columns: {
         Row: {
           board_id: string
@@ -700,6 +742,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "board_columns_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_member_access: {
+        Row: {
+          board_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_member_access_board_id_fkey"
             columns: ["board_id"]
             isOneToOne: false
             referencedRelation: "boards"
@@ -4256,6 +4327,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_column_permission: {
+        Args: { _column_id: string; _user_id: string }
+        Returns: string
+      }
+      has_board_access: {
+        Args: { _board_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
