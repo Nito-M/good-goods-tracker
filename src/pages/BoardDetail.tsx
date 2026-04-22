@@ -260,10 +260,32 @@ export default function BoardDetail() {
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
   const [draggedColId, setDraggedColId] = useState<string | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightRowId = searchParams.get('row');
+  const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
   }, [board?.name]);
+
+  // When ?row= is present and rows are loaded, scroll to & highlight that row
+  useEffect(() => {
+    if (!highlightRowId || loading) return;
+    if (!rows.some((r) => r.id === highlightRowId)) return;
+    setActiveHighlight(highlightRowId);
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-row-id="${highlightRowId}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    const t = setTimeout(() => {
+      setActiveHighlight(null);
+      // Strip the query param so it doesn't keep highlighting on refresh
+      const next = new URLSearchParams(searchParams);
+      next.delete('row');
+      setSearchParams(next, { replace: true });
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [highlightRowId, rows, loading]);
 
   const groupByColumn = columns.find((c) => c.id === board?.group_by_column_id);
 
