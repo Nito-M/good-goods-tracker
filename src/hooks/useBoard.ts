@@ -192,6 +192,26 @@ export function useBoard(boardId: string | undefined) {
       return null;
     }
     setRows((r) => [...r, data]);
+
+    // Apply automatic status defaults for any status column with an isAutomatic option
+    const autoCells = columns
+      .filter((c) => c.type === 'status')
+      .map((c) => {
+        const auto = c.options.find((o) => o.isAutomatic);
+        return auto ? { row_id: data.id, column_id: c.id, value: auto.id } : null;
+      })
+      .filter((x): x is { row_id: string; column_id: string; value: string } => x !== null);
+
+    if (autoCells.length > 0) {
+      const { data: insertedCells } = await supabase
+        .from('board_cells')
+        .insert(autoCells)
+        .select();
+      if (insertedCells) {
+        setCells((cs) => [...cs, ...insertedCells]);
+      }
+    }
+
     return data.id;
   };
 
