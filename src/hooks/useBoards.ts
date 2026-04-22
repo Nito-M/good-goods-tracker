@@ -77,6 +77,14 @@ export function useBoards() {
     ];
     await supabase.from('board_columns').insert(defaultColumns);
 
+    // Grant access to the creator (so they can see their own board)
+    await supabase
+      .from('board_member_access')
+      .upsert(
+        { board_id: board.id, user_id: user.id },
+        { onConflict: 'board_id,user_id' }
+      );
+
     await fetchBoards();
     toast.success('Board created');
     return board;
