@@ -596,6 +596,7 @@ function GroupSection({
   getNote,
   onOpenNote,
   onConfigureConnect,
+  highlightRowId,
 }: GroupSectionProps) {
   return (
     <>
@@ -621,7 +622,14 @@ function GroupSection({
       )}
       {!collapsed &&
         rows.map((row) => (
-          <tr key={row.id} className="border-b border-border hover:bg-accent/20 group">
+          <tr
+            key={row.id}
+            data-row-id={row.id}
+            className={cn(
+              'border-b border-border hover:bg-accent/20 group transition-colors',
+              highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
+            )}
+          >
             <td className="sticky left-0 bg-card z-10 border-r border-border w-16 px-1 group-hover:bg-accent/20">
               <div className="flex items-center justify-center gap-0.5">
                 <Button
