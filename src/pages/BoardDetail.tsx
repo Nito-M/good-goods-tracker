@@ -235,6 +235,7 @@ export default function BoardDetail() {
     renameColumn,
     setColumnType,
     setColumnOptions,
+    setColumnConnectConfig,
     setColumnWidth,
     setColumnNotes,
     deleteColumn,
@@ -252,6 +253,7 @@ export default function BoardDetail() {
   const [titleValue, setTitleValue] = useState('');
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [statusDialogColumnId, setStatusDialogColumnId] = useState<string | null>(null);
+  const [connectDialogColumnId, setConnectDialogColumnId] = useState<string | null>(null);
   const [noteRowId, setNoteRowId] = useState<string | null>(null);
   const [columnNoteId, setColumnNoteId] = useState<string | null>(null);
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
@@ -375,6 +377,7 @@ export default function BoardDetail() {
                       onRename={(name) => renameColumn(col.id, name)}
                       onChangeType={(type) => setColumnType(col.id, type)}
                       onManageOptions={() => setStatusDialogColumnId(col.id)}
+                      onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
                       onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
