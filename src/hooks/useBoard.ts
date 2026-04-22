@@ -202,6 +202,24 @@ export function useBoard(boardId: string | undefined) {
     }
   };
 
+  const reorderColumns = async (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    const current = [...columns].sort((a, b) => a.position - b.position);
+    const fromIdx = current.findIndex((c) => c.id === sourceId);
+    const toIdx = current.findIndex((c) => c.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = current.splice(fromIdx, 1);
+    current.splice(toIdx, 0, moved);
+    const reindexed = current.map((c, i) => ({ ...c, position: i }));
+    setColumns(reindexed);
+    // Persist all positions
+    await Promise.all(
+      reindexed.map((c) =>
+        supabase.from('board_columns').update({ position: c.position }).eq('id', c.id)
+      )
+    );
+  };
+
   const deleteColumn = async (id: string) => {
     setColumns((cs) => cs.filter((c) => c.id !== id));
     setCells((cs) => cs.filter((c) => c.column_id !== id));
@@ -305,6 +323,7 @@ export function useBoard(boardId: string | undefined) {
     setColumnWidth,
     setColumnNotes,
     deleteColumn,
+    reorderColumns,
     addRow,
     deleteRow,
     setCellValue,
