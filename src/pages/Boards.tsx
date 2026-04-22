@@ -89,16 +89,27 @@ export default function Boards() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {companies.map((c) => (
-              <CompanyTile
-                key={c.id}
-                company={c}
-                boardCount={boardCounts.get(c.id) || 0}
-                onSelect={() => setSelectedCompanyId(c.id)}
-              />
-            ))}
-          </div>
+          <>
+            <SearchBar
+              value={companySearch}
+              onChange={setCompanySearch}
+              placeholder="Search companies…"
+            />
+            {filteredCompanies.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No companies match "{companySearch}".</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCompanies.map((c) => (
+                  <CompanyTile
+                    key={c.id}
+                    company={c}
+                    boardCount={boardCounts.get(c.id) || 0}
+                    onSelect={() => setSelectedCompanyId(c.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     );
