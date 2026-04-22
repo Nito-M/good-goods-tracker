@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNotes } from '@/hooks/useBoardRowNotes';
 import { RowNoteDialog } from '@/components/board/RowNoteDialog';
+import { ColumnNoteDialog } from '@/components/board/ColumnNoteDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
