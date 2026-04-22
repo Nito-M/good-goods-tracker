@@ -24,6 +24,8 @@ export default function Boards() {
   const { boards, loading: boardsLoading, createBoard, deleteBoard } = useBoards();
   const { companies, loading: companiesLoading, defaultCompany } = useCompanies();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [companySearch, setCompanySearch] = useState('');
+  const [boardSearch, setBoardSearch] = useState('');
 
   const loading = boardsLoading || companiesLoading;
 
