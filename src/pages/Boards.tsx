@@ -149,24 +149,36 @@ export default function Boards() {
         </Button>
       </div>
 
+      {boards.filter((b) => b.company_id === selectedCompanyId).length > 0 && (
+        <SearchBar
+          value={boardSearch}
+          onChange={setBoardSearch}
+          placeholder="Search boards…"
+        />
+      )}
+
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Loading…</div>
       ) : filteredBoards.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 flex flex-col items-center text-center gap-4">
-            <Table2 className="h-12 w-12 text-muted-foreground" />
-            <div>
-              <h3 className="font-semibold text-lg">No boards yet</h3>
-              <p className="text-muted-foreground text-sm">
-                Create your first board for {selectedCompany?.name}.
-              </p>
-            </div>
-            <Button onClick={handleCreate}>
-              <Plus className="h-4 w-4" />
-              Create Board
-            </Button>
-          </CardContent>
-        </Card>
+        boardSearch.trim() ? (
+          <p className="text-sm text-muted-foreground">No boards match "{boardSearch}".</p>
+        ) : (
+          <Card>
+            <CardContent className="py-12 flex flex-col items-center text-center gap-4">
+              <Table2 className="h-12 w-12 text-muted-foreground" />
+              <div>
+                <h3 className="font-semibold text-lg">No boards yet</h3>
+                <p className="text-muted-foreground text-sm">
+                  Create your first board for {selectedCompany?.name}.
+                </p>
+              </div>
+              <Button onClick={handleCreate}>
+                <Plus className="h-4 w-4" />
+                Create Board
+              </Button>
+            </CardContent>
+          </Card>
+        )
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBoards.map((board) => (
