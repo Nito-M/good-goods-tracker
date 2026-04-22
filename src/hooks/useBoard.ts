@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { StatusOption } from '@/components/board/StatusOptionsDialog';
+import type { BoardColumnType } from '@/components/board/AddColumnPopover';
 
 export interface BoardColumn {
   id: string;
   board_id: string;
   name: string;
   position: number;
+  type: BoardColumnType;
+  options: StatusOption[];
 }
 
 export interface BoardRow {
@@ -27,6 +31,17 @@ export interface BoardDetail {
   name: string;
   user_id: string;
   group_by_column_id: string | null;
+}
+
+function normalizeColumn(raw: any): BoardColumn {
+  return {
+    id: raw.id,
+    board_id: raw.board_id,
+    name: raw.name,
+    position: raw.position,
+    type: (raw.type as BoardColumnType) || 'text',
+    options: Array.isArray(raw.options) ? (raw.options as StatusOption[]) : [],
+  };
 }
 
 export function useBoard(boardId: string | undefined) {
@@ -52,7 +67,7 @@ export function useBoard(boardId: string | undefined) {
       return;
     }
     setBoard(boardRes.data);
-    setColumns(colRes.data || []);
+    setColumns((colRes.data || []).map(normalizeColumn));
     setRows(rowRes.data || []);
 
     const rowIds = (rowRes.data || []).map((r) => r.id);
@@ -88,25 +103,46 @@ export function useBoard(boardId: string | undefined) {
   };
 
   // Column mutations
-  const addColumn = async (name: string = 'New Column') => {
+  const addColumn = async (name: string = 'New Column', type: BoardColumnType = 'text') => {
     if (!boardId) return;
     const position = columns.length;
     const { data, error } = await supabase
       .from('board_columns')
-      .insert({ board_id: boardId, name, position })
+      .insert({ board_id: boardId, name, position, type, options: [] })
       .select()
       .single();
     if (error || !data) {
       toast.error('Failed to add column');
       return;
     }
-    setColumns((c) => [...c, data]);
+    setColumns((c) => [...c, normalizeColumn(data)]);
   };
 
   const renameColumn = async (id: string, name: string) => {
     setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, name } : c)));
     const { error } = await supabase.from('board_columns').update({ name }).eq('id', id);
     if (error) toast.error('Failed to rename column');
+  };
+
+  const setColumnType = async (id: string, type: BoardColumnType) => {
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, type } : c)));
+    const { error } = await supabase.from('board_columns').update({ type }).eq('id', id);
+    if (error) {
+      toast.error('Failed to change type');
+      await fetchAll();
+    }
+  };
+
+  const setColumnOptions = async (id: string, options: StatusOption[]) => {
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, options } : c)));
+    const { error } = await supabase
+      .from('board_columns')
+      .update({ options: options as any })
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to save options');
+      await fetchAll();
+    }
   };
 
   const deleteColumn = async (id: string) => {
@@ -186,6 +222,8 @@ export function useBoard(boardId: string | undefined) {
     setGroupBy,
     addColumn,
     renameColumn,
+    setColumnType,
+    setColumnOptions,
     deleteColumn,
     addRow,
     deleteRow,
