@@ -426,6 +426,7 @@ export default function BoardDetail() {
                 refreshSignedUrl={refreshSignedUrl}
                 getNote={getNote}
                 onOpenNote={setNoteRowId}
+                onConfigureConnect={setConnectDialogColumnId}
               />
             ))}
 
@@ -518,6 +519,7 @@ interface GroupSectionProps {
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
   getNote: (row_id: string) => string;
   onOpenNote: (row_id: string) => void;
+  onConfigureConnect: (col_id: string) => void;
 }
 
 function GroupSection({
