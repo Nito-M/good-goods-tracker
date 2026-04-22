@@ -347,28 +347,41 @@ export default function BoardDetail() {
       </div>
 
       <div className="border border-border rounded-lg overflow-x-auto bg-card">
-        <table className="w-full border-collapse">
+        <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
             <tr className="border-b border-border bg-muted/40">
               <th className="sticky left-0 bg-muted/40 z-10 border-r border-border w-16"></th>
-              {columns.map((col, idx) => (
-                <th
-                  key={col.id}
-                  className={cn(
-                    'border-r border-border min-w-[180px] text-left',
-                    idx === 0 && 'sticky left-16 bg-muted/40 z-10'
-                  )}
-                >
-                  <ColumnHeader
-                    column={col}
-                    onRename={(name) => renameColumn(col.id, name)}
-                    onChangeType={(type) => setColumnType(col.id, type)}
-                    onManageOptions={() => setStatusDialogColumnId(col.id)}
-                    onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
-                    isPrimary={idx === 0}
-                  />
-                </th>
-              ))}
+              {columns.map((col, idx) => {
+                const w = liveWidths[col.id] ?? col.width;
+                return (
+                  <th
+                    key={col.id}
+                    style={{ width: w, minWidth: w, maxWidth: w }}
+                    className={cn(
+                      'border-r border-border text-left relative',
+                      idx === 0 && 'sticky left-16 bg-muted/40 z-10'
+                    )}
+                  >
+                    <ColumnHeader
+                      column={col}
+                      onRename={(name) => renameColumn(col.id, name)}
+                      onChangeType={(type) => setColumnType(col.id, type)}
+                      onManageOptions={() => setStatusDialogColumnId(col.id)}
+                      onEditNotes={() => setColumnNoteId(col.id)}
+                      onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
+                      isPrimary={idx === 0}
+                    />
+                    <ResizeHandle
+                      startWidth={col.width}
+                      onResize={(newW) => {
+                        setLiveWidths((s) => ({ ...s, [col.id]: newW }));
+                        // Persist on each change but throttle via state diff in hook
+                        setColumnWidth(col.id, newW);
+                      }}
+                    />
+                  </th>
+                );
+              })}
               <th className="w-12 px-2">
                 <AddColumnPopover onAdd={(name, type) => addColumn(name, type)} />
               </th>
@@ -382,6 +395,7 @@ export default function BoardDetail() {
                 label={group.label}
                 rows={group.rows}
                 columns={columns}
+                liveWidths={liveWidths}
                 collapsed={!!collapsedGroups[group.key]}
                 onToggle={() =>
                   setCollapsedGroups((s) => ({ ...s, [group.key]: !s[group.key] }))
