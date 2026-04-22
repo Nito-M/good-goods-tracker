@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Table2, Trash2, ArrowLeft, Building2 } from 'lucide-react';
+import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
 import { useCompanies, type Company } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
@@ -23,6 +24,8 @@ export default function Boards() {
   const { boards, loading: boardsLoading, createBoard, deleteBoard } = useBoards();
   const { companies, loading: companiesLoading, defaultCompany } = useCompanies();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [companySearch, setCompanySearch] = useState('');
+  const [boardSearch, setBoardSearch] = useState('');
 
   const loading = boardsLoading || companiesLoading;
 
@@ -31,10 +34,18 @@ export default function Boards() {
     [companies, selectedCompanyId],
   );
 
-  const filteredBoards = useMemo(
-    () => boards.filter((b) => b.company_id === selectedCompanyId),
-    [boards, selectedCompanyId],
-  );
+  const filteredBoards = useMemo(() => {
+    const list = boards.filter((b) => b.company_id === selectedCompanyId);
+    const q = boardSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((b) => b.name.toLowerCase().includes(q));
+  }, [boards, selectedCompanyId, boardSearch]);
+
+  const filteredCompanies = useMemo(() => {
+    const q = companySearch.trim().toLowerCase();
+    if (!q) return companies;
+    return companies.filter((c) => c.name.toLowerCase().includes(q));
+  }, [companies, companySearch]);
 
   // Count boards per company for the picker
   const boardCounts = useMemo(() => {
@@ -78,16 +89,27 @@ export default function Boards() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {companies.map((c) => (
-              <CompanyTile
-                key={c.id}
-                company={c}
-                boardCount={boardCounts.get(c.id) || 0}
-                onSelect={() => setSelectedCompanyId(c.id)}
-              />
-            ))}
-          </div>
+          <>
+            <SearchBar
+              value={companySearch}
+              onChange={setCompanySearch}
+              placeholder="Search companies…"
+            />
+            {filteredCompanies.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No companies match "{companySearch}".</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredCompanies.map((c) => (
+                  <CompanyTile
+                    key={c.id}
+                    company={c}
+                    boardCount={boardCounts.get(c.id) || 0}
+                    onSelect={() => setSelectedCompanyId(c.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     );
@@ -127,24 +149,36 @@ export default function Boards() {
         </Button>
       </div>
 
+      {boards.filter((b) => b.company_id === selectedCompanyId).length > 0 && (
+        <SearchBar
+          value={boardSearch}
+          onChange={setBoardSearch}
+          placeholder="Search boards…"
+        />
+      )}
+
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Loading…</div>
       ) : filteredBoards.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 flex flex-col items-center text-center gap-4">
-            <Table2 className="h-12 w-12 text-muted-foreground" />
-            <div>
-              <h3 className="font-semibold text-lg">No boards yet</h3>
-              <p className="text-muted-foreground text-sm">
-                Create your first board for {selectedCompany?.name}.
-              </p>
-            </div>
-            <Button onClick={handleCreate}>
-              <Plus className="h-4 w-4" />
-              Create Board
-            </Button>
-          </CardContent>
-        </Card>
+        boardSearch.trim() ? (
+          <p className="text-sm text-muted-foreground">No boards match "{boardSearch}".</p>
+        ) : (
+          <Card>
+            <CardContent className="py-12 flex flex-col items-center text-center gap-4">
+              <Table2 className="h-12 w-12 text-muted-foreground" />
+              <div>
+                <h3 className="font-semibold text-lg">No boards yet</h3>
+                <p className="text-muted-foreground text-sm">
+                  Create your first board for {selectedCompany?.name}.
+                </p>
+              </div>
+              <Button onClick={handleCreate}>
+                <Plus className="h-4 w-4" />
+                Create Board
+              </Button>
+            </CardContent>
+          </Card>
+        )
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBoards.map((board) => (
@@ -237,5 +271,37 @@ function CompanyTile({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function SearchBar({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="relative max-w-md">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="pl-9 pr-9 h-10"
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+          aria-label="Clear search"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNotes } from '@/hooks/useBoardRowNotes';
@@ -228,6 +228,7 @@ export default function BoardDetail() {
     board,
     columns,
     rows,
+    cells,
     loading,
     renameBoard,
     setGroupBy,
@@ -263,6 +264,7 @@ export default function BoardDetail() {
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightRowId = searchParams.get('row');
   const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
+  const [rowSearch, setRowSearch] = useState('');
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
@@ -289,12 +291,41 @@ export default function BoardDetail() {
 
   const groupByColumn = columns.find((c) => c.id === board?.group_by_column_id);
 
+  // Build a fast lookup so search can scan every cell of every row
+  const cellsByRow = useMemo(() => {
+    const map = new Map<string, Record<string, string>>();
+    cells.forEach((c) => {
+      const r = map.get(c.row_id) || {};
+      r[c.column_id] = c.value;
+      map.set(c.row_id, r);
+    });
+    return map;
+  }, [cells]);
+
+  const filteredRows = useMemo(() => {
+    const q = rowSearch.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((row) => {
+      const rowCells = cellsByRow.get(row.id) || {};
+      return columns.some((col) => {
+        const raw = rowCells[col.id];
+        if (!raw) return false;
+        if (col.type === 'status') {
+          const opt = col.options.find((o) => o.id === raw);
+          return (opt?.label || '').toLowerCase().includes(q);
+        }
+        // For text/date/link/checkbox/connect (json arrays) — plain substring works
+        return raw.toLowerCase().includes(q);
+      });
+    });
+  }, [rows, columns, cellsByRow, rowSearch]);
+
   const grouped = useMemo(() => {
     if (!board?.group_by_column_id || !groupByColumn) {
-      return [{ key: '__all__', label: null, rows }];
+      return [{ key: '__all__', label: null, rows: filteredRows }];
     }
     const groups: Record<string, BoardRow[]> = {};
-    rows.forEach((row) => {
+    filteredRows.forEach((row) => {
       const raw = getCellValue(row.id, board.group_by_column_id!);
       let key: string;
       if (groupByColumn.type === 'status') {
@@ -311,7 +342,7 @@ export default function BoardDetail() {
     return Object.entries(groups)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, rs]) => ({ key, label: key, rows: rs }));
-  }, [rows, board?.group_by_column_id, groupByColumn, getCellValue]);
+  }, [filteredRows, board?.group_by_column_id, groupByColumn, getCellValue]);
 
   if (loading || !board) {
     return (
@@ -362,8 +393,28 @@ export default function BoardDetail() {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Group by:</span>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            value={rowSearch}
+            onChange={(e) => setRowSearch(e.target.value)}
+            placeholder="Search rows…"
+            className="pl-9 pr-9 h-9"
+          />
+          {rowSearch && (
+            <button
+              type="button"
+              onClick={() => setRowSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        <span className="text-sm text-muted-foreground ml-auto">Group by:</span>
         <Select
           value={board.group_by_column_id || 'none'}
           onValueChange={(v) => setGroupBy(v === 'none' ? null : v)}
@@ -490,6 +541,13 @@ export default function BoardDetail() {
               <tr>
                 <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
                   No rows yet — click "+ Add row" to start
+                </td>
+              </tr>
+            )}
+            {rows.length > 0 && filteredRows.length === 0 && (
+              <tr>
+                <td colSpan={columns.length + 2} className="text-center py-8 text-muted-foreground">
+                  No rows match "{rowSearch}"
                 </td>
               </tr>
             )}
