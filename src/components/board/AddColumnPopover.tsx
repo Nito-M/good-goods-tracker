@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Plus, Type, Calendar as CalIcon, CheckSquare, Tag, Paperclip, Link as LinkIcon } from 'lucide-react';
+import { Plus, Type, Calendar as CalIcon, CheckSquare, Tag, Paperclip, Link as LinkIcon, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 
-export type BoardColumnType = 'text' | 'date' | 'checkbox' | 'status' | 'files' | 'link';
+export type BoardColumnType = 'text' | 'date' | 'checkbox' | 'status' | 'files' | 'link' | 'connect';
 
 interface AddColumnPopoverProps {
   onAdd: (name: string, type: BoardColumnType) => void;
@@ -17,6 +17,7 @@ const TYPES: { type: BoardColumnType; label: string; icon: React.ComponentType<{
   { type: 'status', label: 'Status', icon: Tag },
   { type: 'files', label: 'Files', icon: Paperclip },
   { type: 'link', label: 'Link', icon: LinkIcon },
+  { type: 'connect', label: 'Connect board', icon: Link2 },
 ];
 
 export function AddColumnPopover({ onAdd }: AddColumnPopoverProps) {
@@ -75,6 +76,7 @@ function defaultNameForType(type: BoardColumnType): string {
     status: 'Status',
     files: 'Files',
     link: 'Link',
+    connect: 'Connect board',
   };
   return map[type];
 }
