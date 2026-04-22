@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Table2, Trash2, ArrowLeft, Building2 } from 'lucide-react';
+import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
 import { useCompanies, type Company } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
