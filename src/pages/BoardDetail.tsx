@@ -291,12 +291,41 @@ export default function BoardDetail() {
 
   const groupByColumn = columns.find((c) => c.id === board?.group_by_column_id);
 
+  // Build a fast lookup so search can scan every cell of every row
+  const cellsByRow = useMemo(() => {
+    const map = new Map<string, Record<string, string>>();
+    cells.forEach((c) => {
+      const r = map.get(c.row_id) || {};
+      r[c.column_id] = c.value;
+      map.set(c.row_id, r);
+    });
+    return map;
+  }, [cells]);
+
+  const filteredRows = useMemo(() => {
+    const q = rowSearch.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((row) => {
+      const rowCells = cellsByRow.get(row.id) || {};
+      return columns.some((col) => {
+        const raw = rowCells[col.id];
+        if (!raw) return false;
+        if (col.type === 'status') {
+          const opt = col.options.find((o) => o.id === raw);
+          return (opt?.label || '').toLowerCase().includes(q);
+        }
+        // For text/date/link/checkbox/connect (json arrays) — plain substring works
+        return raw.toLowerCase().includes(q);
+      });
+    });
+  }, [rows, columns, cellsByRow, rowSearch]);
+
   const grouped = useMemo(() => {
     if (!board?.group_by_column_id || !groupByColumn) {
-      return [{ key: '__all__', label: null, rows }];
+      return [{ key: '__all__', label: null, rows: filteredRows }];
     }
     const groups: Record<string, BoardRow[]> = {};
-    rows.forEach((row) => {
+    filteredRows.forEach((row) => {
       const raw = getCellValue(row.id, board.group_by_column_id!);
       let key: string;
       if (groupByColumn.type === 'status') {
@@ -313,7 +342,7 @@ export default function BoardDetail() {
     return Object.entries(groups)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, rs]) => ({ key, label: key, rows: rs }));
-  }, [rows, board?.group_by_column_id, groupByColumn, getCellValue]);
+  }, [filteredRows, board?.group_by_column_id, groupByColumn, getCellValue]);
 
   if (loading || !board) {
     return (
