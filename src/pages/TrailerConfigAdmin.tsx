@@ -533,7 +533,28 @@ function TrailerLengthsTab({
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
+                    {editingId === l.id ? (
+                      <div className="flex flex-wrap gap-2">
+                        {AXLE_OPTIONS.map(n => (
+                          <label key={n} className="flex items-center gap-1.5 text-sm">
+                            <Checkbox checked={editAxleCounts.includes(n)} onCheckedChange={() => toggleEditAxle(n)} />
+                            {n}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {(l.allowed_axle_counts || []).length === 0 ? (
+                          <Badge variant="secondary">All</Badge>
+                        ) : (
+                          (l.allowed_axle_counts || []).map(n => (
+                            <Badge key={n} variant="outline">{n}</Badge>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
                       {editingId === l.id ? (
                         <>
                           <Button variant="ghost" size="icon" onClick={() => saveEdit(l.id)}><Check className="h-4 w-4 text-green-600" /></Button>
