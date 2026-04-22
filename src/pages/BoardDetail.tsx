@@ -545,7 +545,7 @@ export default function BoardDetail() {
                 uploadFile={uploadFile}
                 deleteFile={deleteFile}
                 refreshSignedUrl={refreshSignedUrl}
-                getNote={getNote}
+                getNoteCount={getNoteCount}
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
                 highlightRowId={activeHighlight}
@@ -647,7 +647,7 @@ interface GroupSectionProps {
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
-  getNote: (row_id: string) => string;
+  getNoteCount: (row_id: string) => number;
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
   highlightRowId?: string | null;
@@ -667,7 +667,7 @@ function GroupSection({
   uploadFile,
   deleteFile,
   refreshSignedUrl,
-  getNote,
+  getNoteCount,
   onOpenNote,
   onConfigureConnect,
   highlightRowId,
