@@ -11,6 +11,8 @@ export interface BoardColumn {
   position: number;
   type: BoardColumnType;
   options: StatusOption[];
+  width: number;
+  notes: string;
 }
 
 export interface BoardRow {
@@ -41,6 +43,8 @@ function normalizeColumn(raw: any): BoardColumn {
     position: raw.position,
     type: (raw.type as BoardColumnType) || 'text',
     options: Array.isArray(raw.options) ? (raw.options as StatusOption[]) : [],
+    width: typeof raw.width === 'number' && raw.width > 0 ? raw.width : 200,
+    notes: typeof raw.notes === 'string' ? raw.notes : '',
   };
 }
 
@@ -145,6 +149,22 @@ export function useBoard(boardId: string | undefined) {
     }
   };
 
+  const setColumnWidth = async (id: string, width: number) => {
+    const w = Math.max(80, Math.min(900, Math.round(width)));
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, width: w } : c)));
+    const { error } = await supabase.from('board_columns').update({ width: w }).eq('id', id);
+    if (error) toast.error('Failed to save width');
+  };
+
+  const setColumnNotes = async (id: string, notes: string) => {
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, notes } : c)));
+    const { error } = await supabase.from('board_columns').update({ notes }).eq('id', id);
+    if (error) {
+      toast.error('Failed to save notes');
+      await fetchAll();
+    }
+  };
+
   const deleteColumn = async (id: string) => {
     setColumns((cs) => cs.filter((c) => c.id !== id));
     setCells((cs) => cs.filter((c) => c.column_id !== id));
@@ -224,6 +244,8 @@ export function useBoard(boardId: string | undefined) {
     renameColumn,
     setColumnType,
     setColumnOptions,
+    setColumnWidth,
+    setColumnNotes,
     deleteColumn,
     addRow,
     deleteRow,

@@ -669,27 +669,33 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          notes: string
           options: Json
           position: number
           type: string
+          width: number
         }
         Insert: {
           board_id: string
           created_at?: string
           id?: string
           name?: string
+          notes?: string
           options?: Json
           position?: number
           type?: string
+          width?: number
         }
         Update: {
           board_id?: string
           created_at?: string
           id?: string
           name?: string
+          notes?: string
           options?: Json
           position?: number
           type?: string
+          width?: number
         }
         Relationships: [
           {

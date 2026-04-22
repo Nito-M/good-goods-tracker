@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNotes } from '@/hooks/useBoardRowNotes';
 import { RowNoteDialog } from '@/components/board/RowNoteDialog';
+import { ColumnNoteDialog } from '@/components/board/ColumnNoteDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -40,11 +41,12 @@ interface ColumnHeaderProps {
   onRename: (name: string) => void;
   onChangeType: (type: BoardColumnType) => void;
   onManageOptions: () => void;
+  onEditNotes: () => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -64,8 +66,10 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelet
     { type: 'files', label: 'Files' },
   ];
 
+  const hasNotes = column.notes.trim().length > 0;
+
   return (
-    <div className="flex items-center gap-1 px-2 py-2 group">
+    <div className="flex items-center gap-1 px-2 py-2 group/header">
       {editing ? (
         <Input
           autoFocus
@@ -84,61 +88,129 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelet
       ) : (
         <button
           onClick={() => setEditing(true)}
-          className="flex-1 text-left font-medium text-sm truncate hover:text-primary"
+          className="flex-1 text-left font-medium text-sm truncate hover:text-primary min-w-0"
         >
           {column.name}
           <span className="ml-1 text-xs text-muted-foreground font-normal">({column.type})</span>
         </button>
       )}
       {!editing && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
-            >
-              <MoreVertical className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditing(true)}>Rename</DropdownMenuItem>
-            {!isPrimary && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {types.map((t) => (
-                      <DropdownMenuItem
-                        key={t.type}
-                        onClick={() => onChangeType(t.type)}
-                        disabled={t.type === column.type}
-                      >
-                        {t.label} {t.type === column.type && '✓'}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'h-6 w-6 shrink-0',
+              hasNotes ? 'text-primary opacity-100' : 'opacity-0 group-hover/header:opacity-100'
             )}
-            {column.type === 'status' && !isPrimary && (
-              <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
-            )}
-            {onDelete && !isPrimary && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                  <Trash2 className="h-3 w-3" />
-                  Delete column
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            onClick={onEditNotes}
+            title={hasNotes ? column.notes : 'Add column notes'}
+          >
+            <FileText className="h-3 w-3" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover/header:opacity-100 shrink-0"
+              >
+                <MoreVertical className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditing(true)}>Rename</DropdownMenuItem>
+              <DropdownMenuItem onClick={onEditNotes}>
+                {hasNotes ? 'Edit notes' : 'Add notes'}
+              </DropdownMenuItem>
+              {!isPrimary && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      {types.map((t) => (
+                        <DropdownMenuItem
+                          key={t.type}
+                          onClick={() => onChangeType(t.type)}
+                          disabled={t.type === column.type}
+                        >
+                          {t.label} {t.type === column.type && '✓'}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+              )}
+              {column.type === 'status' && !isPrimary && (
+                <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+              )}
+              {onDelete && !isPrimary && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                    <Trash2 className="h-3 w-3" />
+                    Delete column
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       )}
     </div>
   );
 }
+
+interface ResizeHandleProps {
+  onLiveResize: (newWidth: number) => void;
+  onCommit: (newWidth: number) => void;
+  startWidth: number;
+}
+
+function ResizeHandle({ onLiveResize, onCommit, startWidth }: ResizeHandleProps) {
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(startWidth);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startXRef.current = e.clientX;
+      startWidthRef.current = startWidth;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      let latestWidth = startWidth;
+
+      const onMove = (ev: MouseEvent) => {
+        const delta = ev.clientX - startXRef.current;
+        latestWidth = Math.max(80, Math.min(900, startWidthRef.current + delta));
+        onLiveResize(latestWidth);
+      };
+
+      const onUp = () => {
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+        onCommit(latestWidth);
+      };
+
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [onLiveResize, onCommit, startWidth]
+  );
+
+  return (
+    <div
+      onMouseDown={handleMouseDown}
+      className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/60 transition-colors z-20"
+      title="Drag to resize"
+    />
+  );
+}
+
 
 export default function BoardDetail() {
   const { id } = useParams<{ id: string }>();
@@ -154,6 +226,8 @@ export default function BoardDetail() {
     renameColumn,
     setColumnType,
     setColumnOptions,
+    setColumnWidth,
+    setColumnNotes,
     deleteColumn,
     addRow,
     deleteRow,
@@ -170,6 +244,8 @@ export default function BoardDetail() {
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [statusDialogColumnId, setStatusDialogColumnId] = useState<string | null>(null);
   const [noteRowId, setNoteRowId] = useState<string | null>(null);
+  const [columnNoteId, setColumnNoteId] = useState<string | null>(null);
+  const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
@@ -270,28 +346,46 @@ export default function BoardDetail() {
       </div>
 
       <div className="border border-border rounded-lg overflow-x-auto bg-card">
-        <table className="w-full border-collapse">
+        <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
             <tr className="border-b border-border bg-muted/40">
               <th className="sticky left-0 bg-muted/40 z-10 border-r border-border w-16"></th>
-              {columns.map((col, idx) => (
-                <th
-                  key={col.id}
-                  className={cn(
-                    'border-r border-border min-w-[180px] text-left',
-                    idx === 0 && 'sticky left-16 bg-muted/40 z-10'
-                  )}
-                >
-                  <ColumnHeader
-                    column={col}
-                    onRename={(name) => renameColumn(col.id, name)}
-                    onChangeType={(type) => setColumnType(col.id, type)}
-                    onManageOptions={() => setStatusDialogColumnId(col.id)}
-                    onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
-                    isPrimary={idx === 0}
-                  />
-                </th>
-              ))}
+              {columns.map((col, idx) => {
+                const w = liveWidths[col.id] ?? col.width;
+                return (
+                  <th
+                    key={col.id}
+                    style={{ width: w, minWidth: w, maxWidth: w }}
+                    className={cn(
+                      'border-r border-border text-left relative',
+                      idx === 0 && 'sticky left-16 bg-muted/40 z-10'
+                    )}
+                  >
+                    <ColumnHeader
+                      column={col}
+                      onRename={(name) => renameColumn(col.id, name)}
+                      onChangeType={(type) => setColumnType(col.id, type)}
+                      onManageOptions={() => setStatusDialogColumnId(col.id)}
+                      onEditNotes={() => setColumnNoteId(col.id)}
+                      onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
+                      isPrimary={idx === 0}
+                    />
+                    <ResizeHandle
+                      startWidth={col.width}
+                      onLiveResize={(newW) => {
+                        setLiveWidths((s) => ({ ...s, [col.id]: newW }));
+                      }}
+                      onCommit={(newW) => {
+                        setColumnWidth(col.id, newW);
+                        setLiveWidths((s) => {
+                          const { [col.id]: _, ...rest } = s;
+                          return rest;
+                        });
+                      }}
+                    />
+                  </th>
+                );
+              })}
               <th className="w-12 px-2">
                 <AddColumnPopover onAdd={(name, type) => addColumn(name, type)} />
               </th>
@@ -305,6 +399,7 @@ export default function BoardDetail() {
                 label={group.label}
                 rows={group.rows}
                 columns={columns}
+                liveWidths={liveWidths}
                 collapsed={!!collapsedGroups[group.key]}
                 onToggle={() =>
                   setCollapsedGroups((s) => ({ ...s, [group.key]: !s[group.key] }))
@@ -361,6 +456,20 @@ export default function BoardDetail() {
           onSave={(content) => saveNote(noteRowId, content)}
         />
       )}
+
+      {columnNoteId && (() => {
+        const col = columns.find((c) => c.id === columnNoteId);
+        if (!col) return null;
+        return (
+          <ColumnNoteDialog
+            open={!!columnNoteId}
+            onOpenChange={(o) => !o && setColumnNoteId(null)}
+            initialContent={col.notes}
+            columnName={col.name}
+            onSave={(content) => setColumnNotes(col.id, content)}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -370,6 +479,7 @@ interface GroupSectionProps {
   label: string | null;
   rows: BoardRow[];
   columns: BoardColumn[];
+  liveWidths: Record<string, number>;
   collapsed: boolean;
   onToggle: () => void;
   getCellValue: (row_id: string, column_id: string) => string;
@@ -387,6 +497,7 @@ function GroupSection({
   label,
   rows,
   columns,
+  liveWidths,
   collapsed,
   onToggle,
   getCellValue,
@@ -462,26 +573,30 @@ function GroupSection({
                 </DropdownMenu>
               </div>
             </td>
-            {columns.map((col, idx) => (
-              <td
-                key={col.id}
-                className={cn(
-                  'border-r border-border p-0 min-w-[180px] align-top',
-                  idx === 0 && 'sticky left-16 bg-card z-10 group-hover:bg-accent/20'
-                )}
-              >
-                <CellRenderer
-                  column={col}
-                  rowId={row.id}
-                  value={getCellValue(row.id, col.id)}
-                  onSave={(v) => setCellValue(row.id, col.id, v)}
-                  files={col.type === 'files' ? getFiles(row.id, col.id) : []}
-                  onUploadFile={(f) => uploadFile(row.id, col.id, f)}
-                  onDeleteFile={deleteFile}
-                  onOpenFile={refreshSignedUrl}
-                />
-              </td>
-            ))}
+            {columns.map((col, idx) => {
+              const w = liveWidths[col.id] ?? col.width;
+              return (
+                <td
+                  key={col.id}
+                  style={{ width: w, minWidth: w, maxWidth: w }}
+                  className={cn(
+                    'border-r border-border p-0 align-top',
+                    idx === 0 && 'sticky left-16 bg-card z-10 group-hover:bg-accent/20'
+                  )}
+                >
+                  <CellRenderer
+                    column={col}
+                    rowId={row.id}
+                    value={getCellValue(row.id, col.id)}
+                    onSave={(v) => setCellValue(row.id, col.id, v)}
+                    files={col.type === 'files' ? getFiles(row.id, col.id) : []}
+                    onUploadFile={(f) => uploadFile(row.id, col.id, f)}
+                    onDeleteFile={deleteFile}
+                    onOpenFile={refreshSignedUrl}
+                  />
+                </td>
+              );
+            })}
             <td></td>
           </tr>
         ))}
