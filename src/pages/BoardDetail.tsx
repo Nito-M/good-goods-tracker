@@ -679,6 +679,8 @@ export default function BoardDetail() {
           onOpenChange={(o) => !o && setNoteRowId(null)}
           rowLabel={columns[0] ? getCellValue(noteRowId, columns[0].id) : ''}
           entries={getNoteEntries(noteRowId)}
+          activity={getActivity(noteRowId)}
+          userNames={userNames}
           onAdd={(content, imageFile) => addNoteEntry(noteRowId, content, imageFile)}
           onUpdate={updateNoteEntry}
           onDelete={deleteNoteEntry}
