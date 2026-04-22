@@ -162,14 +162,14 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditN
 }
 
 interface ResizeHandleProps {
-  onResize: (newWidth: number) => void;
+  onLiveResize: (newWidth: number) => void;
+  onCommit: (newWidth: number) => void;
   startWidth: number;
 }
 
-function ResizeHandle({ onResize, startWidth }: ResizeHandleProps) {
+function ResizeHandle({ onLiveResize, onCommit, startWidth }: ResizeHandleProps) {
   const startXRef = useRef(0);
   const startWidthRef = useRef(startWidth);
-  const draggingRef = useRef(false);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -177,7 +177,6 @@ function ResizeHandle({ onResize, startWidth }: ResizeHandleProps) {
       e.stopPropagation();
       startXRef.current = e.clientX;
       startWidthRef.current = startWidth;
-      draggingRef.current = true;
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
 
@@ -186,21 +185,21 @@ function ResizeHandle({ onResize, startWidth }: ResizeHandleProps) {
       const onMove = (ev: MouseEvent) => {
         const delta = ev.clientX - startXRef.current;
         latestWidth = Math.max(80, Math.min(900, startWidthRef.current + delta));
-        onResize(latestWidth);
+        onLiveResize(latestWidth);
       };
 
       const onUp = () => {
-        draggingRef.current = false;
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
         window.removeEventListener('mousemove', onMove);
         window.removeEventListener('mouseup', onUp);
+        onCommit(latestWidth);
       };
 
       window.addEventListener('mousemove', onMove);
       window.addEventListener('mouseup', onUp);
     },
-    [onResize, startWidth]
+    [onLiveResize, onCommit, startWidth]
   );
 
   return (
