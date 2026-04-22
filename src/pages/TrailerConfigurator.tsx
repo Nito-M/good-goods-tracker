@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, useTrailerSubtypes, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
-import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
@@ -157,6 +157,23 @@ export function TrailerConfigurator() {
       total_price: matchedAssembly?.total_price ?? totalPrice,
     });
     setSaving(false);
+  };
+
+  const handleReset = () => {
+    setStep(0);
+    setTrailerTypeId(null);
+    setTrailerSubtypeId(null);
+    setTrailerLengthId(null);
+    setFrontEndId(null);
+    setFrontEndSubId(null);
+    setBackEndId(null);
+    setDeckTypeId(null);
+    setUnderCarriageId(null);
+    setUnderCarriageSubId(null);
+    setUnderCarriageTier3Id(null);
+    setAxleCount(null);
+    setMatchedAssembly(null);
+    setConfigNotes('');
   };
 
   const handleDownloadPdf = () => {
@@ -647,13 +664,22 @@ export function TrailerConfigurator() {
 
       {/* Navigation */}
       <div className="flex justify-between mt-8">
-        <Button
-          variant="outline"
-          onClick={() => setStep(s => s - 1)}
-          disabled={step === 0}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setStep(s => s - 1)}
+            disabled={step === 0}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleReset}
+            className="text-muted-foreground"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" /> Start Over
+          </Button>
+        </div>
         {step < 6 && (
           <Button
             onClick={() => setStep(s => s + 1)}
