@@ -64,11 +64,13 @@ export function usePagePermissions() {
   }, [user, isAdmin, isOrgAdmin, adminLoading, orgAdminLoading]);
 
   const isPageAllowed = (pageKey: string): boolean => {
+    if (loading) return false; // Hide everything until permissions resolve
     if (allowedPages === null) return true;
     return allowedPages.includes(pageKey);
   };
 
   const isRouteAllowed = (path: string): boolean => {
+    if (loading) return false; // Block route checks until permissions resolve
     if (allowedPages === null) return true;
     // Settings is always allowed
     if (path.startsWith('/settings')) return true;
