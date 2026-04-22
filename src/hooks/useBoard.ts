@@ -244,6 +244,8 @@ export function useBoard(boardId: string | undefined) {
     renameColumn,
     setColumnType,
     setColumnOptions,
+    setColumnWidth,
+    setColumnNotes,
     deleteColumn,
     addRow,
     deleteRow,
