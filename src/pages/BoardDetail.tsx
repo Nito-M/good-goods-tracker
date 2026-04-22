@@ -444,8 +444,8 @@ export default function BoardDetail() {
       <div className="border border-border rounded-lg overflow-x-auto bg-card">
         <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
-            <tr className="border-b border-border bg-muted/40">
-              <th className="sticky left-0 z-10 border-r w-16 border-black shadow-none bg-inherit"></th>
+            <tr className="border-b border-border bg-muted">
+              <th className="sticky left-0 z-20 border-r w-16 border-border shadow-none bg-muted"></th>
               {columns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
                 return (
@@ -454,7 +454,7 @@ export default function BoardDetail() {
                     style={{ width: w, minWidth: w, maxWidth: w }}
                     className={cn(
                       'border-r border-border text-left relative transition-colors',
-                      idx === 0 && 'sticky left-16 bg-muted/40 z-10',
+                      idx === 0 && 'sticky left-16 bg-muted z-20',
                       dragOverColId === col.id && draggedColId !== col.id && 'bg-primary/10',
                       draggedColId === col.id && 'opacity-40'
                     )}
@@ -561,7 +561,7 @@ export default function BoardDetail() {
             )}
 
             <tr>
-              <td className="p-2 sticky left-0 bg-muted/40 z-10 w-16">
+              <td className="p-2 sticky left-0 bg-muted z-10 w-16 border-r border-border">
                 <Button variant="ghost" size="sm" onClick={() => addRow()}>
                   <Plus className="h-3 w-3" />
                   Add row
@@ -696,7 +696,7 @@ function GroupSection({
               highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
             )}
           >
-            <td className="sticky left-0 bg-muted/40 z-10 border-r border-border w-16 px-1 group-hover:bg-accent/20">
+            <td className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1">
               <div className="flex items-center justify-center gap-0.5">
                 <Button
                   variant="ghost"
@@ -742,7 +742,7 @@ function GroupSection({
                   style={{ width: w, minWidth: w, maxWidth: w }}
                   className={cn(
                     'border-r border-border p-0 align-top',
-                    idx === 0 && 'sticky left-16 bg-muted/40 z-10 group-hover:bg-accent/20'
+                    idx === 0 && 'sticky left-16 bg-muted z-10'
                   )}
                 >
                   <CellRenderer
