@@ -215,16 +215,16 @@ function CompanyTile({
       className="cursor-pointer hover:border-primary transition-colors group"
       onClick={onSelect}
     >
-      <CardContent className="p-6 flex items-center gap-4">
+      <CardContent className="p-6 flex items-center gap-5">
         {company.logoUrl ? (
           <img
             src={company.logoUrl}
             alt={company.name}
-            className="h-16 w-16 rounded-md object-contain bg-muted/40 p-2 shrink-0"
+            className="h-28 w-28 rounded-md object-contain bg-muted/40 p-2 shrink-0"
           />
         ) : (
-          <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center shrink-0">
-            <Building2 className="h-8 w-8 text-muted-foreground" />
+          <div className="h-28 w-28 rounded-md bg-muted flex items-center justify-center shrink-0">
+            <Building2 className="h-14 w-14 text-muted-foreground" />
           </div>
         )}
         <div className="min-w-0 flex-1">
