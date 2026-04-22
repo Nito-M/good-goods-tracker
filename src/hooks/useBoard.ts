@@ -11,6 +11,8 @@ export interface BoardColumn {
   position: number;
   type: BoardColumnType;
   options: StatusOption[];
+  width: number;
+  notes: string;
 }
 
 export interface BoardRow {
