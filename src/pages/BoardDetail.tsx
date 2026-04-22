@@ -393,8 +393,28 @@ export default function BoardDetail() {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Group by:</span>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            value={rowSearch}
+            onChange={(e) => setRowSearch(e.target.value)}
+            placeholder="Search rows…"
+            className="pl-9 pr-9 h-9"
+          />
+          {rowSearch && (
+            <button
+              type="button"
+              onClick={() => setRowSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        <span className="text-sm text-muted-foreground ml-auto">Group by:</span>
         <Select
           value={board.group_by_column_id || 'none'}
           onValueChange={(v) => setGroupBy(v === 'none' ? null : v)}
