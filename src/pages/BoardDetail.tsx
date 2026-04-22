@@ -467,7 +467,7 @@ function GroupSection({
                 key={col.id}
                 className={cn(
                   'border-r border-border p-0 min-w-[180px] align-top',
-                  idx === 0 && 'sticky left-10 bg-card z-10 group-hover:bg-accent/20'
+                  idx === 0 && 'sticky left-16 bg-card z-10 group-hover:bg-accent/20'
                 )}
               >
                 <CellRenderer
