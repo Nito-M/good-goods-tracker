@@ -228,6 +228,7 @@ export default function BoardDetail() {
     board,
     columns,
     rows,
+    cells,
     loading,
     renameBoard,
     setGroupBy,
