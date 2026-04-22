@@ -83,6 +83,10 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
         <DialogHeader>
           <DialogTitle>Manage status options</DialogTitle>
         </DialogHeader>
+        <p className="text-xs text-muted-foreground -mt-2">
+          Tip: click the <Zap className="inline h-3 w-3 -mt-0.5" /> icon to mark one status as automatic — it will be
+          applied to every new row in this column.
+        </p>
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
           {options.length === 0 && (
             <p className="text-sm text-muted-foreground py-4 text-center">
@@ -112,6 +116,15 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
                   onChange={(e) => updateOption(opt.id, { label: e.target.value })}
                   className={cn('h-8 flex-1', color.bg, color.text)}
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleAutomatic(opt.id)}
+                  title={opt.isAutomatic ? 'Automatic for new rows (click to disable)' : 'Make automatic for new rows'}
+                  className={cn(opt.isAutomatic && 'text-primary')}
+                >
+                  <Zap className={cn('h-4 w-4', opt.isAutomatic && 'fill-current')} />
+                </Button>
                 <Button variant="ghost" size="icon" onClick={() => deleteOption(opt.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
