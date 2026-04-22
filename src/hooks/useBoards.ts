@@ -38,7 +38,10 @@ export function useBoards() {
     fetchBoards();
   }, [fetchBoards]);
 
-  const createBoard = async (name: string = 'Untitled Board'): Promise<Board | null> => {
+  const createBoard = async (
+    name: string = 'Untitled Board',
+    company_id: string | null = null,
+  ): Promise<Board | null> => {
     if (!user) return null;
 
     // Find user's primary org
@@ -54,6 +57,7 @@ export function useBoards() {
       .insert({
         user_id: user.id,
         organization_id: orgMember?.organization_id ?? null,
+        company_id,
         name,
       })
       .select()
