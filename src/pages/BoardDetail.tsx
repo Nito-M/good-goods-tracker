@@ -36,18 +36,21 @@ import { CheckboxCell } from '@/components/board/cells/CheckboxCell';
 import { StatusCell } from '@/components/board/cells/StatusCell';
 import { FilesCell } from '@/components/board/cells/FilesCell';
 import { LinkCell } from '@/components/board/cells/LinkCell';
+import { ConnectBoardCell } from '@/components/board/cells/ConnectBoardCell';
+import { ConnectBoardSetupDialog } from '@/components/board/ConnectBoardSetupDialog';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
   onRename: (name: string) => void;
   onChangeType: (type: BoardColumnType) => void;
   onManageOptions: () => void;
+  onConfigureConnect: () => void;
   onEditNotes: () => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -66,6 +69,7 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditN
     { type: 'status', label: 'Status' },
     { type: 'files', label: 'Files' },
     { type: 'link', label: 'Link' },
+    { type: 'connect', label: 'Connect board' },
   ];
 
   const hasNotes = column.notes.trim().length > 0;
@@ -145,6 +149,9 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onEditN
               )}
               {column.type === 'status' && !isPrimary && (
                 <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+              )}
+              {column.type === 'connect' && !isPrimary && (
+                <DropdownMenuItem onClick={onConfigureConnect}>Configure connection</DropdownMenuItem>
               )}
               {onDelete && !isPrimary && (
                 <>
@@ -228,6 +235,7 @@ export default function BoardDetail() {
     renameColumn,
     setColumnType,
     setColumnOptions,
+    setColumnConnectConfig,
     setColumnWidth,
     setColumnNotes,
     deleteColumn,
@@ -245,6 +253,7 @@ export default function BoardDetail() {
   const [titleValue, setTitleValue] = useState('');
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [statusDialogColumnId, setStatusDialogColumnId] = useState<string | null>(null);
+  const [connectDialogColumnId, setConnectDialogColumnId] = useState<string | null>(null);
   const [noteRowId, setNoteRowId] = useState<string | null>(null);
   const [columnNoteId, setColumnNoteId] = useState<string | null>(null);
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
@@ -293,8 +302,9 @@ export default function BoardDetail() {
     else setTitleValue(board.name);
   };
 
-  const groupableColumns = columns.filter((c) => c.type !== 'files' && c.type !== 'link');
+  const groupableColumns = columns.filter((c) => c.type !== 'files' && c.type !== 'link' && c.type !== 'connect');
   const statusDialogColumn = columns.find((c) => c.id === statusDialogColumnId) || null;
+  const connectDialogColumn = columns.find((c) => c.id === connectDialogColumnId) || null;
 
   return (
     <div className="w-full p-6 space-y-4">
@@ -368,6 +378,7 @@ export default function BoardDetail() {
                       onRename={(name) => renameColumn(col.id, name)}
                       onChangeType={(type) => setColumnType(col.id, type)}
                       onManageOptions={() => setStatusDialogColumnId(col.id)}
+                      onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
                       onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
@@ -415,6 +426,7 @@ export default function BoardDetail() {
                 refreshSignedUrl={refreshSignedUrl}
                 getNote={getNote}
                 onOpenNote={setNoteRowId}
+                onConfigureConnect={setConnectDialogColumnId}
               />
             ))}
 
@@ -445,6 +457,19 @@ export default function BoardDetail() {
           onOpenChange={(o) => !o && setStatusDialogColumnId(null)}
           initialOptions={statusDialogColumn.options}
           onSave={(opts) => setColumnOptions(statusDialogColumn.id, opts)}
+        />
+      )}
+
+      {connectDialogColumn && board && (
+        <ConnectBoardSetupDialog
+          open={!!connectDialogColumnId}
+          onOpenChange={(o) => !o && setConnectDialogColumnId(null)}
+          currentBoardId={board.id}
+          initialConfig={{
+            connect_board_id: connectDialogColumn.connect_board_id,
+            connect_mirror_column_id: connectDialogColumn.connect_mirror_column_id,
+          }}
+          onSave={(cfg) => setColumnConnectConfig(connectDialogColumn.id, cfg)}
         />
       )}
 
@@ -494,6 +519,7 @@ interface GroupSectionProps {
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
   getNote: (row_id: string) => string;
   onOpenNote: (row_id: string) => void;
+  onConfigureConnect: (col_id: string) => void;
 }
 
 function GroupSection({
@@ -512,6 +538,7 @@ function GroupSection({
   refreshSignedUrl,
   getNote,
   onOpenNote,
+  onConfigureConnect,
 }: GroupSectionProps) {
   return (
     <>
@@ -596,6 +623,7 @@ function GroupSection({
                     onUploadFile={(f) => uploadFile(row.id, col.id, f)}
                     onDeleteFile={deleteFile}
                     onOpenFile={refreshSignedUrl}
+                    onConfigureConnect={() => onConfigureConnect(col.id)}
                   />
                 </td>
               );
@@ -616,6 +644,7 @@ interface CellRendererProps {
   onUploadFile: (file: File) => Promise<void>;
   onDeleteFile: (id: string) => Promise<void>;
   onOpenFile: (id: string) => Promise<string | null>;
+  onConfigureConnect: () => void;
 }
 
 function CellRenderer({
@@ -626,6 +655,7 @@ function CellRenderer({
   onUploadFile,
   onDeleteFile,
   onOpenFile,
+  onConfigureConnect,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
@@ -645,6 +675,16 @@ function CellRenderer({
       );
     case 'link':
       return <LinkCell value={value} onSave={onSave} />;
+    case 'connect':
+      return (
+        <ConnectBoardCell
+          value={value}
+          onSave={onSave}
+          connectBoardId={column.connect_board_id}
+          mirrorColumnId={column.connect_mirror_column_id}
+          onConfigure={onConfigureConnect}
+        />
+      );
     case 'text':
     default:
       return <TextCell value={value} onSave={onSave} />;
