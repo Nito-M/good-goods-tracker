@@ -227,6 +227,8 @@ export default function BoardDetail() {
     renameColumn,
     setColumnType,
     setColumnOptions,
+    setColumnWidth,
+    setColumnNotes,
     deleteColumn,
     addRow,
     deleteRow,
@@ -243,6 +245,8 @@ export default function BoardDetail() {
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [statusDialogColumnId, setStatusDialogColumnId] = useState<string | null>(null);
   const [noteRowId, setNoteRowId] = useState<string | null>(null);
+  const [columnNoteId, setColumnNoteId] = useState<string | null>(null);
+  const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
