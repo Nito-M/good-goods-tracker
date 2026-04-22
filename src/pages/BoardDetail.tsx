@@ -711,12 +711,12 @@ function GroupSection({
                   size="icon"
                   className={cn(
                     'h-6 w-6 shrink-0',
-                    getNote(row.id)
+                    getNoteCount(row.id) > 0
                       ? 'text-primary opacity-100'
                       : 'opacity-0 group-hover:opacity-100'
                   )}
                   onClick={() => onOpenNote(row.id)}
-                  title={getNote(row.id) ? 'Edit note' : 'Add note'}
+                  title={getNoteCount(row.id) > 0 ? `${getNoteCount(row.id)} note(s)` : 'Add note'}
                 >
                   <StickyNote className="h-3 w-3" />
                 </Button>
