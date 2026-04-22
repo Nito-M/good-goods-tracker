@@ -538,6 +538,7 @@ function GroupSection({
   refreshSignedUrl,
   getNote,
   onOpenNote,
+  onConfigureConnect,
 }: GroupSectionProps) {
   return (
     <>
@@ -622,6 +623,7 @@ function GroupSection({
                     onUploadFile={(f) => uploadFile(row.id, col.id, f)}
                     onDeleteFile={deleteFile}
                     onOpenFile={refreshSignedUrl}
+                    onConfigureConnect={() => onConfigureConnect(col.id)}
                   />
                 </td>
               );
@@ -642,6 +644,7 @@ interface CellRendererProps {
   onUploadFile: (file: File) => Promise<void>;
   onDeleteFile: (id: string) => Promise<void>;
   onOpenFile: (id: string) => Promise<string | null>;
+  onConfigureConnect: () => void;
 }
 
 function CellRenderer({
@@ -652,6 +655,7 @@ function CellRenderer({
   onUploadFile,
   onDeleteFile,
   onOpenFile,
+  onConfigureConnect,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
@@ -671,6 +675,16 @@ function CellRenderer({
       );
     case 'link':
       return <LinkCell value={value} onSave={onSave} />;
+    case 'connect':
+      return (
+        <ConnectBoardCell
+          value={value}
+          onSave={onSave}
+          connectBoardId={column.connect_board_id}
+          mirrorColumnId={column.connect_mirror_column_id}
+          onConfigure={onConfigureConnect}
+        />
+      );
     case 'text':
     default:
       return <TextCell value={value} onSave={onSave} />;
