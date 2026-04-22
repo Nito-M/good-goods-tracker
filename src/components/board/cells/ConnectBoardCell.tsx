@@ -72,7 +72,7 @@ export function ConnectBoardCell({
   return (
     <div className="flex flex-wrap items-center gap-1 px-2 py-1.5">
       {linkedRows.map((r) => {
-        const display = r.mirror_value || r.primary_value || '(empty)';
+        const display = r.mirror_value || '(empty)';
         return (
         <Badge
           key={r.row_id}
