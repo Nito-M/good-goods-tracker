@@ -252,6 +252,19 @@ export default function BoardDetail() {
     getCellValue,
   } = useBoard(id);
 
+  const { user } = useAuth();
+  // Need org id from board (needed even before columns load); we read from `board`
+  const { currentUserColumnPerms, isOwnerOrAdmin } = useBoardAccess(id, null);
+
+  // Visible columns (hide ones marked 'hidden' for this user)
+  const visibleColumns = useMemo(
+    () => columns.filter((c) => currentUserColumnPerms(c.id) !== 'hidden'),
+    [columns, currentUserColumnPerms]
+  );
+
+  const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
+  const [accessSheetOpen, setAccessSheetOpen] = useState(false);
+
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
   const {
