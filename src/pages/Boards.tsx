@@ -1,6 +1,8 @@
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Table2, Trash2 } from 'lucide-react';
+import { Plus, Table2, Trash2, ArrowLeft, Building2 } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
+import { useCompanies, type Company } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -18,21 +20,106 @@ import { format } from 'date-fns';
 
 export default function Boards() {
   const navigate = useNavigate();
-  const { boards, loading, createBoard, deleteBoard } = useBoards();
+  const { boards, loading: boardsLoading, createBoard, deleteBoard } = useBoards();
+  const { companies, loading: companiesLoading, defaultCompany } = useCompanies();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
+  const loading = boardsLoading || companiesLoading;
+
+  const selectedCompany = useMemo(
+    () => companies.find((c) => c.id === selectedCompanyId) || null,
+    [companies, selectedCompanyId],
+  );
+
+  const filteredBoards = useMemo(
+    () => boards.filter((b) => b.company_id === selectedCompanyId),
+    [boards, selectedCompanyId],
+  );
+
+  // Count boards per company for the picker
+  const boardCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    boards.forEach((b) => {
+      if (b.company_id) map.set(b.company_id, (map.get(b.company_id) || 0) + 1);
+    });
+    return map;
+  }, [boards]);
 
   const handleCreate = async () => {
-    const board = await createBoard();
+    if (!selectedCompanyId) return;
+    const board = await createBoard('Untitled Board', selectedCompanyId);
     if (board) navigate(`/boards/${board.id}`);
   };
 
-  return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+  // ---------- Company picker view ----------
+  if (!selectedCompanyId) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Boards</h1>
           <p className="text-muted-foreground mt-1">
-            Customizable spreadsheets for tracking anything
+            Choose a company to view its boards
           </p>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-12 text-muted-foreground">Loading…</div>
+        ) : companies.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 flex flex-col items-center text-center gap-4">
+              <Building2 className="h-12 w-12 text-muted-foreground" />
+              <div>
+                <h3 className="font-semibold text-lg">No companies yet</h3>
+                <p className="text-muted-foreground text-sm">
+                  Add a company in Settings to start organizing boards.
+                </p>
+              </div>
+              <Button onClick={() => navigate('/settings')}>Go to Settings</Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {companies.map((c) => (
+              <CompanyTile
+                key={c.id}
+                company={c}
+                boardCount={boardCounts.get(c.id) || 0}
+                onSelect={() => setSelectedCompanyId(c.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- Boards-for-company view ----------
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button variant="ghost" size="icon" onClick={() => setSelectedCompanyId(null)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          {selectedCompany?.logoUrl ? (
+            <img
+              src={selectedCompany.logoUrl}
+              alt={selectedCompany.name}
+              className="h-10 w-10 rounded-md object-contain bg-muted/40 p-1"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight truncate">
+              {selectedCompany?.name} Boards
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Customizable spreadsheets for {selectedCompany?.name}
+            </p>
+          </div>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4" />
@@ -42,14 +129,14 @@ export default function Boards() {
 
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Loading…</div>
-      ) : boards.length === 0 ? (
+      ) : filteredBoards.length === 0 ? (
         <Card>
           <CardContent className="py-12 flex flex-col items-center text-center gap-4">
             <Table2 className="h-12 w-12 text-muted-foreground" />
             <div>
               <h3 className="font-semibold text-lg">No boards yet</h3>
               <p className="text-muted-foreground text-sm">
-                Create your first board to start organizing data.
+                Create your first board for {selectedCompany?.name}.
               </p>
             </div>
             <Button onClick={handleCreate}>
@@ -60,7 +147,7 @@ export default function Boards() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {boards.map((board) => (
+          {filteredBoards.map((board) => (
             <Card
               key={board.id}
               className="cursor-pointer hover:border-primary transition-colors group"
@@ -111,5 +198,44 @@ export default function Boards() {
         </div>
       )}
     </div>
+  );
+}
+
+function CompanyTile({
+  company,
+  boardCount,
+  onSelect,
+}: {
+  company: Company;
+  boardCount: number;
+  onSelect: () => void;
+}) {
+  return (
+    <Card
+      className="cursor-pointer hover:border-primary transition-colors group"
+      onClick={onSelect}
+    >
+      <CardContent className="p-6 flex items-center gap-4">
+        {company.logoUrl ? (
+          <img
+            src={company.logoUrl}
+            alt={company.name}
+            className="h-16 w-16 rounded-md object-contain bg-muted/40 p-2 shrink-0"
+          />
+        ) : (
+          <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center shrink-0">
+            <Building2 className="h-8 w-8 text-muted-foreground" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-lg truncate group-hover:text-primary transition-colors">
+            {company.name}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {boardCount} {boardCount === 1 ? 'board' : 'boards'}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
