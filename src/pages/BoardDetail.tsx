@@ -277,9 +277,15 @@ export default function BoardDetail() {
   } = useBoardRowNoteEntries(rowIds);
   const { getActivity, logActivity, userNames } = useBoardRowActivity(rowIds);
 
-  // Wrap cell setter to log changes to activity log
+  // Wrap cell setter to log changes to activity log + enforce view-only
   const setCellValueLogged = useCallback(
     async (row_id: string, column_id: string, value: string) => {
+      // Block writes on view-only / hidden columns
+      const perm = currentUserColumnPerms(column_id);
+      if (perm !== 'edit') {
+        toast.error('You do not have permission to edit this column');
+        return;
+      }
       const oldValue = getCellValue(row_id, column_id);
       if (oldValue === value) return;
       await setCellValue(row_id, column_id, value);
@@ -301,7 +307,7 @@ export default function BoardDetail() {
         new_value: displayNew || null,
       });
     },
-    [getCellValue, setCellValue, columns, logActivity]
+    [getCellValue, setCellValue, columns, logActivity, currentUserColumnPerms]
   );
 
   // Wrap note operations to log them
