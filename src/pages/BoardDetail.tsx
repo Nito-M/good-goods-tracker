@@ -372,10 +372,15 @@ export default function BoardDetail() {
                     />
                     <ResizeHandle
                       startWidth={col.width}
-                      onResize={(newW) => {
+                      onLiveResize={(newW) => {
                         setLiveWidths((s) => ({ ...s, [col.id]: newW }));
-                        // Persist on each change but throttle via state diff in hook
+                      }}
+                      onCommit={(newW) => {
                         setColumnWidth(col.id, newW);
+                        setLiveWidths((s) => {
+                          const { [col.id]: _, ...rest } = s;
+                          return rest;
+                        });
                       }}
                     />
                   </th>
