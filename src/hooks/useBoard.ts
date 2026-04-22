@@ -323,6 +323,7 @@ export function useBoard(boardId: string | undefined) {
     setColumnWidth,
     setColumnNotes,
     deleteColumn,
+    reorderColumns,
     addRow,
     deleteRow,
     setCellValue,
