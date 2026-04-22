@@ -1,75 +1,89 @@
 
 
-## Column types: text, date, checkbox, status, files
+## Board Permissions System
 
-### What you'll get
+Add per-board access control letting the board owner (and org admins) decide **who can see the board** and, for each visible user, **which columns are blocked or read-only**.
 
-**Add column**: clicking "+" in the header row opens a small popover with type choices:
-- **Text** (current default)
-- **Date** — opens a date picker; cell shows formatted date
-- **Checkbox** — toggleable boolean
-- **Status** — dropdown of predefined options with colored badges; you define the options/colors per column
-- **Files** — multiple PDFs per cell, click to upload, list with download/delete
+### Where to manage permissions
 
-**Column menu** (⋮ on header) gains:
-- Rename
-- **Change type** — sub-menu lets you convert; existing values are kept as text fallback when conversion doesn't match (e.g. "yes" → checkbox unchecked, invalid date → empty)
-- **Manage status options** (only on Status columns) — opens a dialog to add/rename/recolor/delete options
-- Delete column
+A new **"Manage Access"** button in the board's header dropdown (next to Rename / Delete in `BoardDetail.tsx`). It opens a side sheet titled **Board Access**, the natural place because:
+- Settings live with the board they apply to (not buried in app Settings).
+- Only org members who can edit the board see the button.
+- Same pattern users already know from the Notes side panel.
 
-**Cell rendering by type**:
-- Text → inline input (existing behavior)
-- Date → button showing date or "—", click opens calendar popover
-- Checkbox → centered checkbox
-- Status → colored badge button, click opens dropdown of options (or "Clear")
-- Files → row of file chips with name + download + ✕; "+" button to upload PDFs
+### The Board Access panel
 
-### Database changes (one migration)
+Two sections in one sheet:
 
-- `board_columns` add columns:
-  - `type TEXT NOT NULL DEFAULT 'text'` (allowed: text, date, checkbox, status, files)
-  - `options JSONB NOT NULL DEFAULT '[]'` — for status: `[{ id, label, color }]`
-- New table `board_cell_files`:
-  - `id, cell_row_id, cell_column_id, file_url, file_name, file_size, created_at, user_id`
-  - Unique not needed; ordered by created_at
-  - RLS: same org-share check via parent board
-- New storage bucket `board-files` (private), with org-share RLS policies (view/insert/update/delete by org members of the uploader)
+**1. Members**
+List every user in the organization with a row each:
+- Avatar + name + email
+- Toggle: **Has access** (off = board hidden from sidebar/list and route blocked)
+- Owner row is locked (always full access)
 
-### Cell value encoding (single `value TEXT` column, no schema migration to cells)
+**2. Column permissions** (per member, expandable under their row)
+For each board column, three radio choices:
+- **Full access** (default) — view + edit
+- **View only** — sees the column, can't change cells
+- **Hidden** — column is invisible; cells skipped during render
 
-Keep existing `board_cells.value TEXT`; just interpret per column type:
-- text → raw string
-- date → ISO date string `YYYY-MM-DD` or empty
-- checkbox → `"true"` or `""` 
-- status → option `id` (UUID) referencing `board_columns.options[]`, or empty
-- files → not stored in `board_cells`; lives in `board_cell_files` table keyed on (row_id, column_id)
+Org admins always have full access and bypass these checks.
 
-This avoids touching cell schema and keeps grouping logic working (group by status uses the option's label looked up from the column's `options`).
+### Behavior on the board
 
-### Files to create
-- `src/hooks/useBoardCellFiles.ts` — list/upload/delete files for a (row, column) pair across the whole board (single fetch keyed by board_id)
-- `src/components/board/AddColumnPopover.tsx` — type picker on "+"
-- `src/components/board/StatusOptionsDialog.tsx` — manage status options (add, rename, color picker, delete)
-- `src/components/board/cells/TextCell.tsx`, `DateCell.tsx`, `CheckboxCell.tsx`, `StatusCell.tsx`, `FilesCell.tsx`
+- **No access** → board doesn't appear in `/boards` list, navigating directly redirects with a toast.
+- **Hidden columns** → filtered out of the columns array client-side; cells, headers, and the group-by selector skip them.
+- **View-only columns** → cells render in a read-only state (inputs disabled, status pickers don't open, no hover edit affordances). Server enforces it via RLS.
 
-### Files to edit
-- `src/hooks/useBoard.ts` — extend `BoardColumn` with `type` + `options`; add `setColumnType`, `setColumnOptions`; expose `getCellFiles`, `uploadCellFile`, `deleteCellFile` (delegates to new hook)
-- `src/pages/BoardDetail.tsx` — replace inline `<CellInput>` with `<CellRenderer>` that picks the right cell component by `column.type`; update `ColumnHeader` menu with "Change type" + "Manage status options"; render `+` column button as `AddColumnPopover`; update grouping to resolve status `id` → label
-- Migration adds `type` + `options` to `board_columns`, creates `board_cell_files` table + RLS, creates `board-files` storage bucket + RLS
+### Data model
 
-### UX details
-- Status colors use a fixed palette of 10 HSL tokens (defined in cell component) so they respect light/dark themes
-- File upload limited to PDF (`.pdf`, `application/pdf`) per your earlier choice; max 20MB matches platform default
-- Files cell expands row height naturally; chips wrap
-- Date cell uses `date-fns` and the existing `Calendar` component with `pointer-events-auto`
-- Group-by on a status column shows the option label (or "(Ungrouped)" when empty)
-- Group-by on a checkbox column shows "Checked" / "Unchecked"
-- Group-by on a date column shows the raw date string (good enough for v1)
-- Group-by on a files column is hidden from the dropdown (doesn't make sense)
+New table `board_member_access`:
+| column | type | notes |
+|---|---|---|
+| id | uuid pk | |
+| board_id | uuid | FK boards, cascade |
+| user_id | uuid | the org member granted access |
+| created_at | timestamptz | |
 
-### Out of scope (can add later)
-- Drag-to-reorder status options
-- Number / person / dropdown (non-status) column types
-- Image previews inside file cells (PDFs only for now)
-- Bulk converting cell values when changing type (kept as text fallback)
+Unique on (board_id, user_id). Presence of a row = user has board access.
+
+New table `board_column_permissions`:
+| column | type | notes |
+|---|---|---|
+| id | uuid pk | |
+| board_id | uuid | FK boards, cascade |
+| column_id | uuid | FK board_columns, cascade |
+| user_id | uuid | |
+| permission | text | `'edit' \| 'view' \| 'hidden'` |
+
+Unique on (column_id, user_id). Default (no row) = `edit`.
+
+**RLS rules** (using `users_share_org` and a new SECURITY DEFINER `has_board_access(_user, _board)` helper to avoid recursion):
+
+- `boards` SELECT: owner OR org admin OR has row in `board_member_access`.
+- `board_columns` / `board_cells` SELECT/UPDATE: must pass `has_board_access` AND column permission ≠ `hidden` (and ≠ `view` for writes). Owner & org admins bypass.
+- `board_member_access` & `board_column_permissions` writable only by board owner or org admin.
+
+**Default for new boards**: only the creator has access. They open the panel to invite others.
+
+**Backfill migration**: insert a `board_member_access` row for every existing org member of every existing board so current behavior is preserved.
+
+### Files
+
+New:
+- `supabase/migrations/...` — two tables, RLS policies, backfill, `has_board_access` function.
+- `src/hooks/useBoardAccess.ts` — fetch members + column permissions, mutations.
+- `src/components/board/BoardAccessSheet.tsx` — the side panel UI.
+
+Edited:
+- `src/pages/BoardDetail.tsx` — add "Manage Access" menu item; filter hidden columns; pass `readOnlyColumnIds` to cells; route-guard if no access.
+- `src/hooks/useBoard.ts` — accept and apply column permission filter; block writes on view-only columns client-side.
+- `src/hooks/useBoards.ts` — auto-grant creator access on `createBoard`.
+- All `src/components/board/cells/*.tsx` — accept `readOnly` prop and disable interactions.
+
+### Technical notes
+
+- Permission lookups happen once per board load and are cached in the hook; column visibility derived via `useMemo`.
+- RLS policies reference the helper function (no joins on the same policied table) to prevent infinite recursion.
+- Realtime not required — permissions are low-frequency changes; refetch on panel close.
 
