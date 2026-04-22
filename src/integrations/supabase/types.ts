@@ -776,6 +776,7 @@ export type Database = {
       }
       boards: {
         Row: {
+          company_id: string | null
           created_at: string
           group_by_column_id: string | null
           id: string
@@ -785,6 +786,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           group_by_column_id?: string | null
           id?: string
@@ -794,6 +796,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           group_by_column_id?: string | null
           id?: string
@@ -803,6 +806,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "boards_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "boards_organization_id_fkey"
             columns: ["organization_id"]
