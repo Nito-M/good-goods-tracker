@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
+import { useBoardRowNotes } from '@/hooks/useBoardRowNotes';
+import { RowNoteDialog } from '@/components/board/RowNoteDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -39,9 +41,10 @@ interface ColumnHeaderProps {
   onChangeType: (type: BoardColumnType) => void;
   onManageOptions: () => void;
   onDelete?: () => void;
+  isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelete }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -100,26 +103,28 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onDelet
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEditing(true)}>Rename</DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent>
-                  {types.map((t) => (
-                    <DropdownMenuItem
-                      key={t.type}
-                      onClick={() => onChangeType(t.type)}
-                      disabled={t.type === column.type}
-                    >
-                      {t.label} {t.type === column.type && '✓'}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-            {column.type === 'status' && (
+            {!isPrimary && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {types.map((t) => (
+                      <DropdownMenuItem
+                        key={t.type}
+                        onClick={() => onChangeType(t.type)}
+                        disabled={t.type === column.type}
+                      >
+                        {t.label} {t.type === column.type && '✓'}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+            )}
+            {column.type === 'status' && !isPrimary && (
               <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
             )}
-            {onDelete && (
+            {onDelete && !isPrimary && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onDelete} className="text-destructive">
@@ -158,11 +163,13 @@ export default function BoardDetail() {
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
+  const { getNote, saveNote } = useBoardRowNotes(rowIds);
 
   const [titleEditing, setTitleEditing] = useState(false);
   const [titleValue, setTitleValue] = useState('');
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [statusDialogColumnId, setStatusDialogColumnId] = useState<string | null>(null);
+  const [noteRowId, setNoteRowId] = useState<string | null>(null);
 
   useEffect(() => {
     if (board) setTitleValue(board.name);
@@ -266,13 +273,13 @@ export default function BoardDetail() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-border bg-muted/40">
-              <th className="sticky left-0 bg-muted/40 z-10 border-r border-border w-10"></th>
+              <th className="sticky left-0 bg-muted/40 z-10 border-r border-border w-16"></th>
               {columns.map((col, idx) => (
                 <th
                   key={col.id}
                   className={cn(
                     'border-r border-border min-w-[180px] text-left',
-                    idx === 0 && 'sticky left-10 bg-muted/40 z-10'
+                    idx === 0 && 'sticky left-16 bg-muted/40 z-10'
                   )}
                 >
                   <ColumnHeader
@@ -280,7 +287,8 @@ export default function BoardDetail() {
                     onRename={(name) => renameColumn(col.id, name)}
                     onChangeType={(type) => setColumnType(col.id, type)}
                     onManageOptions={() => setStatusDialogColumnId(col.id)}
-                    onDelete={columns.length > 1 ? () => deleteColumn(col.id) : undefined}
+                    onDelete={columns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
+                    isPrimary={idx === 0}
                   />
                 </th>
               ))}
@@ -308,6 +316,8 @@ export default function BoardDetail() {
                 uploadFile={uploadFile}
                 deleteFile={deleteFile}
                 refreshSignedUrl={refreshSignedUrl}
+                getNote={getNote}
+                onOpenNote={setNoteRowId}
               />
             ))}
 
@@ -339,6 +349,18 @@ export default function BoardDetail() {
           onSave={(opts) => setColumnOptions(statusDialogColumn.id, opts)}
         />
       )}
+
+      {noteRowId && (
+        <RowNoteDialog
+          open={!!noteRowId}
+          onOpenChange={(o) => !o && setNoteRowId(null)}
+          initialContent={getNote(noteRowId)}
+          rowLabel={
+            columns[0] ? getCellValue(noteRowId, columns[0].id) : ''
+          }
+          onSave={(content) => saveNote(noteRowId, content)}
+        />
+      )}
     </div>
   );
 }
@@ -357,6 +379,8 @@ interface GroupSectionProps {
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
+  getNote: (row_id: string) => string;
+  onOpenNote: (row_id: string) => void;
 }
 
 function GroupSection({
@@ -372,6 +396,8 @@ function GroupSection({
   uploadFile,
   deleteFile,
   refreshSignedUrl,
+  getNote,
+  onOpenNote,
 }: GroupSectionProps) {
   return (
     <>
@@ -398,34 +424,50 @@ function GroupSection({
       {!collapsed &&
         rows.map((row) => (
           <tr key={row.id} className="border-b border-border hover:bg-accent/20 group">
-            <td className="sticky left-0 bg-card z-10 border-r border-border w-10 text-center group-hover:bg-accent/20">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                  >
-                    <MoreVertical className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem
-                    onClick={() => deleteRow(row.id)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Delete row
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <td className="sticky left-0 bg-card z-10 border-r border-border w-16 px-1 group-hover:bg-accent/20">
+              <div className="flex items-center justify-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'h-6 w-6 shrink-0',
+                    getNote(row.id)
+                      ? 'text-primary opacity-100'
+                      : 'opacity-0 group-hover:opacity-100'
+                  )}
+                  onClick={() => onOpenNote(row.id)}
+                  title={getNote(row.id) ? 'Edit note' : 'Add note'}
+                >
+                  <StickyNote className="h-3 w-3" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
+                    >
+                      <MoreVertical className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem
+                      onClick={() => deleteRow(row.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete row
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </td>
             {columns.map((col, idx) => (
               <td
                 key={col.id}
                 className={cn(
                   'border-r border-border p-0 min-w-[180px] align-top',
-                  idx === 0 && 'sticky left-10 bg-card z-10 group-hover:bg-accent/20'
+                  idx === 0 && 'sticky left-16 bg-card z-10 group-hover:bg-accent/20'
                 )}
               >
                 <CellRenderer
