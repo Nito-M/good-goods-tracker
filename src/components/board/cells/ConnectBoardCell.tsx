@@ -89,7 +89,8 @@ export function ConnectBoardCell({
             <X className="h-3 w-3" />
           </button>
         </Badge>
-      ))}
+        );
+      })}
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
