@@ -425,12 +425,13 @@ export default function BoardDetail() {
             )}
 
             <tr>
-              <td colSpan={columns.length + 2} className="p-2 sticky left-0 bg-card z-10">
+              <td className="p-2 sticky left-0 bg-card z-10 w-16">
                 <Button variant="ghost" size="sm" onClick={() => addRow()}>
                   <Plus className="h-3 w-3" />
                   Add row
                 </Button>
               </td>
+              <td colSpan={columns.length + 1}></td>
             </tr>
           </tbody>
         </table>
