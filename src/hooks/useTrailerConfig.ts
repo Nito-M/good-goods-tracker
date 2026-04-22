@@ -249,6 +249,7 @@ export interface TrailerLength {
   label: string;
   compatible_trailer_type_ids: string[];
   compatible_trailer_subtype_ids: string[];
+  allowed_axle_counts: number[];
   created_at: string;
   updated_at: string;
 }
