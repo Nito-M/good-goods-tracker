@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X } from 'lucide-react';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
-import { useBoardRowNotes } from '@/hooks/useBoardRowNotes';
+import { useBoardRowNoteEntries } from '@/hooks/useBoardRowNoteEntries';
 import { RowNoteDialog } from '@/components/board/RowNoteDialog';
 import { ColumnNoteDialog } from '@/components/board/ColumnNoteDialog';
 import { Button } from '@/components/ui/button';
@@ -249,7 +249,14 @@ export default function BoardDetail() {
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
-  const { getNote, saveNote } = useBoardRowNotes(rowIds);
+  const {
+    getEntries: getNoteEntries,
+    getCount: getNoteCount,
+    addEntry: addNoteEntry,
+    updateEntry: updateNoteEntry,
+    deleteEntry: deleteNoteEntry,
+    refreshImageUrl: refreshNoteImageUrl,
+  } = useBoardRowNoteEntries(rowIds);
 
   const [titleEditing, setTitleEditing] = useState(false);
   const [titleValue, setTitleValue] = useState('');
@@ -599,11 +606,12 @@ export default function BoardDetail() {
         <RowNoteDialog
           open={!!noteRowId}
           onOpenChange={(o) => !o && setNoteRowId(null)}
-          initialContent={getNote(noteRowId)}
-          rowLabel={
-            columns[0] ? getCellValue(noteRowId, columns[0].id) : ''
-          }
-          onSave={(content) => saveNote(noteRowId, content)}
+          rowLabel={columns[0] ? getCellValue(noteRowId, columns[0].id) : ''}
+          entries={getNoteEntries(noteRowId)}
+          onAdd={(content, imageFile) => addNoteEntry(noteRowId, content, imageFile)}
+          onUpdate={updateNoteEntry}
+          onDelete={deleteNoteEntry}
+          onRefreshImageUrl={refreshNoteImageUrl}
         />
       )}
 
