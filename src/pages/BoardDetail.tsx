@@ -349,7 +349,7 @@ export default function BoardDetail() {
         <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
             <tr className="border-b border-border bg-muted/40">
-              <th className="sticky left-0 z-10 border-r w-16 border-black shadow-none bg-sidebar-ring"></th>
+              <th className="sticky left-0 z-10 border-r w-16 border-black shadow-none bg-inherit"></th>
               {columns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
                 return (
