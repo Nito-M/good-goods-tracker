@@ -22,46 +22,17 @@ import { format } from 'date-fns';
 export default function Boards() {
   const navigate = useNavigate();
   const location = useLocation();
-  const initialCompanyId = (location.state as { companyId?: string } | null)?.companyId ?? null;
+  const routeCompanyId = (location.state as { companyId?: string } | null)?.companyId ?? null;
   const { boards, loading: boardsLoading, createBoard, deleteBoard } = useBoards();
-  const { companies, loading: companiesLoading, defaultCompany } = useCompanies();
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(initialCompanyId);
+  const { companies, loading: companiesLoading } = useCompanies();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(routeCompanyId);
   const [companySearch, setCompanySearch] = useState('');
   const [boardSearch, setBoardSearch] = useState('');
 
-  // Clear navigation state after consuming it so manual nav to /boards still shows picker
   useEffect(() => {
-    if (location.state) {
-      window.history.replaceState({}, '');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Handle browser back button - go back to company picker when viewing boards
-  useEffect(() => {
-    const handlePopState = () => {
-      if (selectedCompanyId) {
-        // Prevent default navigation and go back to company picker instead
-        setSelectedCompanyId(null);
-        // Push a new state to prevent leaving the page entirely
-        window.history.pushState({}, '', window.location.pathname);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedCompanyId]);
-
-  // Push history state when selecting a company so back button works
-  const handleSelectCompany = (companyId: string) => {
-    window.history.pushState({}, '', window.location.pathname);
-    setSelectedCompanyId(companyId);
-  };
-
-  // Handle back button click - same behavior as browser back
-  const handleBack = () => {
-    setSelectedCompanyId(null);
-  };
+    setSelectedCompanyId(routeCompanyId);
+    setBoardSearch('');
+  }, [routeCompanyId]);
 
   const loading = boardsLoading || companiesLoading;
 
@@ -83,7 +54,6 @@ export default function Boards() {
     return companies.filter((c) => c.name.toLowerCase().includes(q));
   }, [companies, companySearch]);
 
-  // Count boards per company for the picker
   const boardCounts = useMemo(() => {
     const map = new Map<string, number>();
     boards.forEach((b) => {
@@ -98,7 +68,14 @@ export default function Boards() {
     if (board) navigate(`/boards/${board.id}`);
   };
 
-  // ---------- Company picker view ----------
+  const handleSelectCompany = (companyId: string) => {
+    navigate('/boards', { state: { companyId } });
+  };
+
+  const handleBack = () => {
+    navigate('/boards', { replace: true });
+  };
+
   if (!selectedCompanyId) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -151,7 +128,6 @@ export default function Boards() {
     );
   }
 
-  // ---------- Boards-for-company view ----------
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
