@@ -701,6 +701,41 @@ export type Database = {
           },
         ]
       }
+      board_row_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          row_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          row_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          row_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_row_notes_row_id_fkey"
+            columns: ["row_id"]
+            isOneToOne: true
+            referencedRelation: "board_rows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_rows: {
         Row: {
           board_id: string
