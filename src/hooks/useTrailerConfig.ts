@@ -249,6 +249,7 @@ export interface TrailerLength {
   label: string;
   compatible_trailer_type_ids: string[];
   compatible_trailer_subtype_ids: string[];
+  allowed_axle_counts: number[];
   created_at: string;
   updated_at: string;
 }
@@ -273,11 +274,11 @@ export function useTrailerLengths() {
 
   useEffect(() => { fetchLengths(); }, [user]);
 
-  const create = async (label: string, compatible_trailer_type_ids: string[] = [], compatible_trailer_subtype_ids: string[] = []) => {
+  const create = async (label: string, compatible_trailer_type_ids: string[] = [], compatible_trailer_subtype_ids: string[] = [], allowed_axle_counts: number[] = []) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('trailer_lengths')
-      .insert({ user_id: user.id, label, compatible_trailer_type_ids, compatible_trailer_subtype_ids } as any)
+      .insert({ user_id: user.id, label, compatible_trailer_type_ids, compatible_trailer_subtype_ids, allowed_axle_counts } as any)
       .select()
       .single();
     if (error) { toast({ title: 'Error', description: 'Failed to create trailer length.', variant: 'destructive' }); return null; }
@@ -285,7 +286,7 @@ export function useTrailerLengths() {
     return data as TrailerLength;
   };
 
-  const update = async (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[] }) => {
+  const update = async (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[]; allowed_axle_counts?: number[] }) => {
     const { error } = await supabase.from('trailer_lengths').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchLengths();

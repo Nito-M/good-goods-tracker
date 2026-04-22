@@ -324,34 +324,39 @@ function TrailerSubtypesTab({
 }
 
 // --- Trailer Lengths Tab ---
+const AXLE_OPTIONS = [2, 3, 4, 5, 6];
+
 function TrailerLengthsTab({
   lengths, types, subtypes, loading, onCreate, onUpdate, onRemove,
 }: {
-  lengths: { id: string; label: string; compatible_trailer_type_ids: string[]; compatible_trailer_subtype_ids: string[] }[];
+  lengths: { id: string; label: string; compatible_trailer_type_ids: string[]; compatible_trailer_subtype_ids: string[]; allowed_axle_counts: number[] }[];
   types: { id: string; name: string }[];
   subtypes: { id: string; name: string; trailer_type_id: string }[];
   loading: boolean;
-  onCreate: (label: string, compatible_trailer_type_ids?: string[], compatible_trailer_subtype_ids?: string[]) => Promise<any>;
-  onUpdate: (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[] }) => Promise<void>;
+  onCreate: (label: string, compatible_trailer_type_ids?: string[], compatible_trailer_subtype_ids?: string[], allowed_axle_counts?: number[]) => Promise<any>;
+  onUpdate: (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[]; allowed_axle_counts?: number[] }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
   const [label, setLabel] = useState('');
   const [compatibleIds, setCompatibleIds] = useState<string[]>([]);
   const [compatibleSubtypeIds, setCompatibleSubtypeIds] = useState<string[]>([]);
+  const [axleCounts, setAxleCounts] = useState<number[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editCompatibleIds, setEditCompatibleIds] = useState<string[]>([]);
   const [editCompatibleSubtypeIds, setEditCompatibleSubtypeIds] = useState<string[]>([]);
+  const [editAxleCounts, setEditAxleCounts] = useState<number[]>([]);
 
   const relevantSubtypes = subtypes.filter(s => compatibleIds.length === 0 || compatibleIds.includes(s.trailer_type_id));
   const editRelevantSubtypes = subtypes.filter(s => editCompatibleIds.length === 0 || editCompatibleIds.includes(s.trailer_type_id));
 
   const handleAdd = async () => {
     if (!label.trim()) return;
-    await onCreate(label.trim(), compatibleIds, compatibleSubtypeIds);
+    await onCreate(label.trim(), compatibleIds, compatibleSubtypeIds, axleCounts);
     setLabel('');
     setCompatibleIds([]);
     setCompatibleSubtypeIds([]);
+    setAxleCounts([]);
   };
 
   const startEdit = (l: typeof lengths[0]) => {
@@ -359,11 +364,12 @@ function TrailerLengthsTab({
     setEditLabel(l.label);
     setEditCompatibleIds([...l.compatible_trailer_type_ids]);
     setEditCompatibleSubtypeIds([...(l.compatible_trailer_subtype_ids || [])]);
+    setEditAxleCounts([...(l.allowed_axle_counts || [])]);
   };
 
   const saveEdit = async (id: string) => {
     if (!editLabel.trim()) return;
-    await onUpdate(id, { label: editLabel.trim(), compatible_trailer_type_ids: editCompatibleIds, compatible_trailer_subtype_ids: editCompatibleSubtypeIds });
+    await onUpdate(id, { label: editLabel.trim(), compatible_trailer_type_ids: editCompatibleIds, compatible_trailer_subtype_ids: editCompatibleSubtypeIds, allowed_axle_counts: editAxleCounts });
     setEditingId(null);
   };
 
@@ -381,6 +387,14 @@ function TrailerLengthsTab({
 
   const toggleEditSubtypeCompatible = (id: string) => {
     setEditCompatibleSubtypeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleAxle = (n: number) => {
+    setAxleCounts(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n].sort((a, b) => a - b));
+  };
+
+  const toggleEditAxle = (n: number) => {
+    setEditAxleCounts(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n].sort((a, b) => a - b));
   };
 
   return (
@@ -423,6 +437,17 @@ function TrailerLengthsTab({
               </div>
             </div>
           )}
+          <div className="space-y-1">
+            <Label>Allowed Axles <span className="text-xs text-muted-foreground">(empty = all)</span></Label>
+            <div className="flex flex-wrap gap-2">
+              {AXLE_OPTIONS.map(n => (
+                <label key={n} className="flex items-center gap-1.5 text-sm">
+                  <Checkbox checked={axleCounts.includes(n)} onCheckedChange={() => toggleAxle(n)} />
+                  {n}
+                </label>
+              ))}
+            </div>
+          </div>
           <Button onClick={handleAdd} disabled={!label.trim()}>
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
@@ -439,6 +464,7 @@ function TrailerLengthsTab({
                 <TableHead>Label</TableHead>
                 <TableHead>Compatible Types</TableHead>
                 <TableHead>Compatible Subtypes</TableHead>
+                <TableHead>Allowed Axles</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -502,6 +528,28 @@ function TrailerLengthsTab({
                             const s = subtypes.find(x => x.id === sid);
                             return s ? <Badge key={sid} variant="outline">{s.name}</Badge> : null;
                           })
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === l.id ? (
+                      <div className="flex flex-wrap gap-2">
+                        {AXLE_OPTIONS.map(n => (
+                          <label key={n} className="flex items-center gap-1.5 text-sm">
+                            <Checkbox checked={editAxleCounts.includes(n)} onCheckedChange={() => toggleEditAxle(n)} />
+                            {n}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {(l.allowed_axle_counts || []).length === 0 ? (
+                          <Badge variant="secondary">All</Badge>
+                        ) : (
+                          (l.allowed_axle_counts || []).map(n => (
+                            <Badge key={n} variant="outline">{n}</Badge>
+                          ))
                         )}
                       </div>
                     )}
