@@ -742,7 +742,7 @@ function GroupSection({
                   style={{ width: w, minWidth: w, maxWidth: w }}
                   className={cn(
                     'border-r border-border p-0 align-top',
-                    idx === 0 && 'sticky left-16 bg-muted/40 z-10 group-hover:bg-accent/20'
+                    idx === 0 && 'sticky left-16 bg-muted z-10'
                   )}
                 >
                   <CellRenderer
