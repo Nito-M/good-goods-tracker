@@ -573,6 +573,57 @@ export type Database = {
           },
         ]
       }
+      board_cell_files: {
+        Row: {
+          column_id: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          row_id: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          column_id: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          row_id: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          column_id?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          row_id?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_cell_files_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "board_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_cell_files_row_id_fkey"
+            columns: ["row_id"]
+            isOneToOne: false
+            referencedRelation: "board_rows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_cells: {
         Row: {
           column_id: string
@@ -618,21 +669,27 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          options: Json
           position: number
+          type: string
         }
         Insert: {
           board_id: string
           created_at?: string
           id?: string
           name?: string
+          options?: Json
           position?: number
+          type?: string
         }
         Update: {
           board_id?: string
           created_at?: string
           id?: string
           name?: string
+          options?: Json
           position?: number
+          type?: string
         }
         Relationships: [
           {
