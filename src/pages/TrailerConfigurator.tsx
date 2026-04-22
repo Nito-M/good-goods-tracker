@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, useTrailerSubtypes, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
-import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
