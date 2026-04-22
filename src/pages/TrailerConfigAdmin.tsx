@@ -437,6 +437,17 @@ function TrailerLengthsTab({
               </div>
             </div>
           )}
+          <div className="space-y-1">
+            <Label>Allowed Axles <span className="text-xs text-muted-foreground">(empty = all)</span></Label>
+            <div className="flex flex-wrap gap-2">
+              {AXLE_OPTIONS.map(n => (
+                <label key={n} className="flex items-center gap-1.5 text-sm">
+                  <Checkbox checked={axleCounts.includes(n)} onCheckedChange={() => toggleAxle(n)} />
+                  {n}
+                </label>
+              ))}
+            </div>
+          </div>
           <Button onClick={handleAdd} disabled={!label.trim()}>
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
