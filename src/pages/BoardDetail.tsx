@@ -452,6 +452,20 @@ export default function BoardDetail() {
           onSave={(content) => saveNote(noteRowId, content)}
         />
       )}
+
+      {columnNoteId && (() => {
+        const col = columns.find((c) => c.id === columnNoteId);
+        if (!col) return null;
+        return (
+          <ColumnNoteDialog
+            open={!!columnNoteId}
+            onOpenChange={(o) => !o && setColumnNoteId(null)}
+            initialContent={col.notes}
+            columnName={col.name}
+            onSave={(content) => setColumnNotes(col.id, content)}
+          />
+        );
+      })()}
     </div>
   );
 }
