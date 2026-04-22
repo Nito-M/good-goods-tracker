@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Zap } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ export interface StatusOption {
   id: string;
   label: string;
   color: string; // palette key
+  isAutomatic?: boolean;
 }
 
 export const STATUS_COLORS: { key: string; bg: string; text: string }[] = [
