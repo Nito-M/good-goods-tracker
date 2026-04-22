@@ -98,12 +98,27 @@ export function useBoardConnectData(boardId: string | null, mirrorColId: string 
     subSet.add(handler);
     subscribers.set(key, subSet);
 
-    const existing = cache.get(key);
-    if (existing) setState(existing);
-    else loadBoardData(boardId, mirrorColId);
+    // Always refetch so edits in the source board appear after caching
+    loadBoardData(boardId, mirrorColId);
+
+    // Realtime: refresh whenever cells/rows in the source board change
+    const channel = supabase
+      .channel(`connect-board-${boardId}-${mirrorColId || 'none'}-${Math.random()}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'board_cells' },
+        () => loadBoardData(boardId, mirrorColId)
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'board_rows', filter: `board_id=eq.${boardId}` },
+        () => loadBoardData(boardId, mirrorColId)
+      )
+      .subscribe();
 
     return () => {
       subSet.delete(handler);
+      supabase.removeChannel(channel);
     };
   }, [boardId, mirrorColId]);
 
