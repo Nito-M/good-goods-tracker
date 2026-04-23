@@ -389,6 +389,7 @@ export default function BoardDetail() {
   const { merges, createMerge, deleteMerges } = useBoardMerges(id);
   const [selectionAnchor, setSelectionAnchor] = useState<{ rowId: string; colId: string } | null>(null);
   const [selectionFocus, setSelectionFocus] = useState<{ rowId: string; colId: string } | null>(null);
+  const [isDragSelecting, setIsDragSelecting] = useState(false);
   const [mergePromptOpen, setMergePromptOpen] = useState(false);
   const [pendingMergeContext, setPendingMergeContext] = useState<{
     nonEmptyCount: number;
@@ -536,14 +537,66 @@ export default function BoardDetail() {
         setSelectionAnchor({ rowId, colId });
         setSelectionFocus({ rowId, colId });
       }
+      setIsDragSelecting(true);
     },
     [selectionAnchor]
+  );
+
+  const handleCellMouseEnter = useCallback(
+    (rowId: string, colId: string) => {
+      if (!isDragSelecting) return;
+      setSelectionFocus({ rowId, colId });
+    },
+    [isDragSelecting]
+  );
+
+  // Global mouseup ends drag-selection
+  useEffect(() => {
+    if (!isDragSelecting) return;
+    const onUp = () => setIsDragSelecting(false);
+    window.addEventListener('mouseup', onUp);
+    return () => window.removeEventListener('mouseup', onUp);
+  }, [isDragSelecting]);
+
+  // Select an entire row (clicking the row gutter). Shift extends.
+  const handleSelectRow = useCallback(
+    (rowId: string, shiftKey: boolean) => {
+      if (visibleColumnIds.length === 0) return;
+      const firstCol = visibleColumnIds[0];
+      const lastCol = visibleColumnIds[visibleColumnIds.length - 1];
+      if (shiftKey && selectionAnchor) {
+        setSelectionFocus({ rowId, colId: lastCol });
+      } else {
+        setSelectionAnchor({ rowId, colId: firstCol });
+        setSelectionFocus({ rowId, colId: lastCol });
+      }
+    },
+    [selectionAnchor, visibleColumnIds]
+  );
+
+  // Select an entire column (clicking the column header). Shift extends.
+  const handleSelectColumn = useCallback(
+    (colId: string, shiftKey: boolean) => {
+      if (renderedRowIds.length === 0) return;
+      const firstRow = renderedRowIds[0];
+      const lastRow = renderedRowIds[renderedRowIds.length - 1];
+      if (shiftKey && selectionAnchor) {
+        setSelectionFocus({ rowId: lastRow, colId });
+      } else {
+        setSelectionAnchor({ rowId: firstRow, colId });
+        setSelectionFocus({ rowId: lastRow, colId });
+      }
+    },
+    [selectionAnchor, renderedRowIds]
   );
 
   const clearSelection = useCallback(() => {
     setSelectionAnchor(null);
     setSelectionFocus(null);
+    setIsDragSelecting(false);
   }, []);
+
+  // Keyboard: Esc clears selection. Cmd/Ctrl+M triggers merge prompt when applicable.
 
   const requestMerge = useCallback(() => {
     if (!selectionRect || selectedCellCount < 2) return;
@@ -647,6 +700,27 @@ export default function BoardDetail() {
     clearSelection();
   }, [selectedMergeIds, deleteMerges, clearSelection]);
 
+  // Keyboard shortcuts: Esc clears, Cmd/Ctrl+M merges
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = target && target.closest('input, textarea, [contenteditable="true"]');
+      if (e.key === 'Escape' && (selectionAnchor || selectionFocus)) {
+        clearSelection();
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'm' || e.key === 'M') && !inField) {
+        if (selectedCellCount >= 2 && selectedMergeIds.length === 0) {
+          e.preventDefault();
+          requestMerge();
+        } else if (selectedMergeIds.length > 0) {
+          e.preventDefault();
+          handleUnmerge();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectionAnchor, selectionFocus, selectedCellCount, selectedMergeIds, requestMerge, handleUnmerge, clearSelection]);
+
 
   if (loading || !board) {
     return (
@@ -705,21 +779,26 @@ export default function BoardDetail() {
         )}
         <div className="ml-auto flex items-center gap-2">
           {selectedCellCount >= 2 && selectedMergeIds.length === 0 && (
-            <Button variant="outline" size="sm" onClick={requestMerge}>
+            <Button variant="default" size="sm" onClick={requestMerge}>
               <Combine className="h-4 w-4" />
               Merge {selectedCellCount} cells
             </Button>
           )}
           {selectedMergeIds.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleUnmerge}>
+            <Button variant="default" size="sm" onClick={handleUnmerge}>
               <Split className="h-4 w-4" />
               Unmerge
             </Button>
           )}
+          {(selectionAnchor || selectionFocus) && selectedCellCount < 2 && selectedMergeIds.length === 0 && (
+            <span className="text-xs text-muted-foreground hidden md:inline">
+              Drag across cells, or click a row/column header to select more — then Merge.
+            </span>
+          )}
           {(selectionAnchor || selectionFocus) && (
             <Button variant="ghost" size="sm" onClick={clearSelection}>
               <X className="h-4 w-4" />
-              Clear selection
+              Clear
             </Button>
           )}
           <Button
@@ -814,6 +893,13 @@ export default function BoardDetail() {
                       draggedColId === col.id && 'opacity-40'
                     )}
                     draggable={idx !== 0}
+                    onMouseDown={(e) => {
+                      if (e.button !== 0) return;
+                      const target = e.target as HTMLElement;
+                      if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
+                      handleSelectColumn(col.id, e.shiftKey);
+                    }}
+                    title="Click to select column (Shift+Click to extend)"
                     onDragStart={(e) => {
                       if (idx === 0) return;
                       setDraggedColId(col.id);
@@ -901,6 +987,8 @@ export default function BoardDetail() {
                 highlightRowId={activeHighlight}
                 cellGeometry={cellGeometry}
                 onCellMouseDown={handleCellMouseDown}
+                onCellMouseEnter={handleCellMouseEnter}
+                onSelectRow={handleSelectRow}
                 isCellSelected={(rowId, colId) => {
                   if (!selectionRect) return false;
                   const r = renderedRowIds.indexOf(rowId);
@@ -1040,6 +1128,8 @@ interface GroupSectionProps {
   currentUserColumnPerms: (columnId: string) => 'edit' | 'view' | 'hidden';
   cellGeometry: Map<string, { span?: { rowSpan: number; colSpan: number; mergeId: string }; hidden?: boolean }>;
   onCellMouseDown: (rowId: string, colId: string, shiftKey: boolean) => void;
+  onCellMouseEnter: (rowId: string, colId: string) => void;
+  onSelectRow: (rowId: string, shiftKey: boolean) => void;
   isCellSelected: (rowId: string, colId: string) => boolean;
 }
 
@@ -1064,6 +1154,8 @@ function GroupSection({
   currentUserColumnPerms,
   cellGeometry,
   onCellMouseDown,
+  onCellMouseEnter,
+  onSelectRow,
   isCellSelected,
 }: GroupSectionProps) {
   return (
@@ -1098,7 +1190,16 @@ function GroupSection({
               highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
             )}
           >
-            <td className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1">
+            <td
+              className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1 cursor-pointer"
+              title="Click to select row (Shift+Click to extend)"
+              onMouseDown={(e) => {
+                if (e.button !== 0) return;
+                const target = e.target as HTMLElement;
+                if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
+                onSelectRow(row.id, e.shiftKey);
+              }}
+            >
               <div className="flex items-center justify-center gap-0.5">
                 <Button
                   variant="ghost"
@@ -1161,6 +1262,7 @@ function GroupSection({
                     if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
                     onCellMouseDown(row.id, col.id, e.shiftKey);
                   }}
+                  onMouseEnter={() => onCellMouseEnter(row.id, col.id)}
                 >
                   <CellRenderer
                     column={col}
