@@ -1154,20 +1154,6 @@ export default function BoardDetail() {
         />
       )}
 
-      {board && (
-        <CopyBoardDialog
-          open={copyOpen}
-          onOpenChange={setCopyOpen}
-          sourceBoardId={board.id}
-          sourceBoardName={board.name}
-          sourceCompanyId={board.company_id}
-          onCopy={async (targetCompanyId, newName) => {
-            await copyBoard(board.id, targetCompanyId, newName, (newId) =>
-              navigate(`/boards/${newId}`),
-            );
-          }}
-        />
-      )}
 
       <MergeConfirmDialog
         open={mergePromptOpen}
