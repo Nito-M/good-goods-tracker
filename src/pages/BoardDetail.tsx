@@ -1,13 +1,15 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split } from 'lucide-react';
 import { generateBoardPdf } from '@/lib/boardPdfGenerator';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNoteEntries } from '@/hooks/useBoardRowNoteEntries';
 import { useBoardRowActivity } from '@/hooks/useBoardRowActivity';
+import { useBoardMerges } from '@/hooks/useBoardMerges';
 import { RowNoteDialog } from '@/components/board/RowNoteDialog';
 import { ColumnNoteDialog } from '@/components/board/ColumnNoteDialog';
+import { MergeConfirmDialog } from '@/components/board/MergeConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -45,6 +47,7 @@ import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
+import { computeMergeRects, buildCellGeometryMap, findContainingMerge } from '@/lib/boardMergeGeometry';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
