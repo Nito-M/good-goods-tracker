@@ -52,11 +52,12 @@ interface ColumnHeaderProps {
   onManageOptions: () => void;
   onConfigureConnect: () => void;
   onEditNotes: () => void;
+  onTogglePerRowOptions: () => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onTogglePerRowOptions, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -154,7 +155,14 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
                 </DropdownMenuSub>
               )}
               {column.type === 'status' && !isPrimary && (
-                <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+                <>
+                  <DropdownMenuItem onClick={onTogglePerRowOptions}>
+                    {column.per_row_options ? 'Use shared column options' : 'Per-row status options'}
+                  </DropdownMenuItem>
+                  {!column.per_row_options && (
+                    <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+                  )}
+                </>
               )}
               {column.type === 'connect' && !isPrimary && (
                 <DropdownMenuItem onClick={onConfigureConnect}>Configure connection</DropdownMenuItem>
