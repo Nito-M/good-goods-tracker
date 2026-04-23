@@ -958,7 +958,15 @@ function CellRenderer({
     case 'checkbox':
       return <CheckboxCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'status':
-      return <StatusCell value={value} options={column.options} onSave={onSave} readOnly={readOnly} />;
+      return (
+        <StatusCell
+          value={value}
+          options={column.options}
+          onSave={onSave}
+          readOnly={readOnly}
+          perRowOptions={column.per_row_options}
+        />
+      );
     case 'files':
       return (
         <FilesCell
