@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split, GripVertical } from 'lucide-react';
 import { generateBoardPdf } from '@/lib/boardPdfGenerator';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
@@ -280,6 +280,7 @@ export default function BoardDetail() {
     reorderColumns,
     addRow,
     deleteRow,
+    reorderRows,
     setCellValue,
     getCellValue,
     getCellTextAlign,
@@ -400,6 +401,8 @@ export default function BoardDetail() {
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
   const [draggedColId, setDraggedColId] = useState<string | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
+  const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
+  const [dragOverRowId, setDragOverRowId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightRowId = searchParams.get('row');
   const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
@@ -1025,6 +1028,24 @@ export default function BoardDetail() {
                     c <= selectionRect.c2
                   );
                 }}
+                draggedRowId={draggedRowId}
+                dragOverRowId={dragOverRowId}
+                onRowDragStart={(rowId) => setDraggedRowId(rowId)}
+                onRowDragOver={(rowId) => setDragOverRowId(rowId)}
+                onRowDragLeave={(rowId) => {
+                  setDragOverRowId((cur) => (cur === rowId ? null : cur));
+                }}
+                onRowDrop={(rowId) => {
+                  if (draggedRowId && draggedRowId !== rowId) {
+                    reorderRows(draggedRowId, rowId);
+                  }
+                  setDraggedRowId(null);
+                  setDragOverRowId(null);
+                }}
+                onRowDragEnd={() => {
+                  setDraggedRowId(null);
+                  setDragOverRowId(null);
+                }}
               />
             ))}
 
@@ -1158,6 +1179,13 @@ interface GroupSectionProps {
   onCellMouseEnter: (rowId: string, colId: string) => void;
   onSelectRow: (rowId: string, shiftKey: boolean) => void;
   isCellSelected: (rowId: string, colId: string) => boolean;
+  draggedRowId: string | null;
+  dragOverRowId: string | null;
+  onRowDragStart: (rowId: string) => void;
+  onRowDragOver: (rowId: string) => void;
+  onRowDragLeave: (rowId: string) => void;
+  onRowDrop: (rowId: string) => void;
+  onRowDragEnd: () => void;
 }
 
 function GroupSection({
@@ -1186,6 +1214,13 @@ function GroupSection({
   onCellMouseEnter,
   onSelectRow,
   isCellSelected,
+  draggedRowId,
+  dragOverRowId,
+  onRowDragStart,
+  onRowDragOver,
+  onRowDragLeave,
+  onRowDrop,
+  onRowDragEnd,
 }: GroupSectionProps) {
   // Long-press: hold ~400ms anywhere on a cell (even on inputs) to start a merge selection.
   const longPressRef = useRef<{
@@ -1232,8 +1267,21 @@ function GroupSection({
             data-row-id={row.id}
             className={cn(
               'border-b border-border hover:bg-accent/20 group transition-colors',
-              highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
+              highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset',
+              draggedRowId === row.id && 'opacity-40',
+              dragOverRowId === row.id && draggedRowId !== row.id && 'border-t-2 border-t-primary'
             )}
+            onDragOver={(e) => {
+              if (!draggedRowId || draggedRowId === row.id) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              if (dragOverRowId !== row.id) onRowDragOver(row.id);
+            }}
+            onDragLeave={() => onRowDragLeave(row.id)}
+            onDrop={(e) => {
+              e.preventDefault();
+              onRowDrop(row.id);
+            }}
           >
             <td
               className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1 cursor-pointer"
@@ -1246,6 +1294,20 @@ function GroupSection({
               }}
             >
               <div className="flex items-center justify-center gap-0.5">
+                <button
+                  type="button"
+                  draggable
+                  onDragStart={(e) => {
+                    onRowDragStart(row.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', row.id);
+                  }}
+                  onDragEnd={onRowDragEnd}
+                  className="h-6 w-4 flex items-center justify-center cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                  title="Drag to reorder row"
+                >
+                  <GripVertical className="h-3 w-3" />
+                </button>
                 <Button
                   variant="ghost"
                   size="icon"
