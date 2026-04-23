@@ -1344,6 +1344,8 @@ function GroupSection({
                     onOpenFile={refreshSignedUrl}
                     onConfigureConnect={() => onConfigureConnect(col.id)}
                     readOnly={currentUserColumnPerms(col.id) !== 'edit'}
+                    cellAlign={getCellTextAlign(row.id, col.id)}
+                    onChangeCellAlign={(a) => setCellTextAlign(row.id, col.id, a)}
                   />
                 </td>
               );
