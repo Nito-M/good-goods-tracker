@@ -1161,6 +1161,13 @@ interface GroupSectionProps {
   onCellMouseEnter: (rowId: string, colId: string) => void;
   onSelectRow: (rowId: string, shiftKey: boolean) => void;
   isCellSelected: (rowId: string, colId: string) => boolean;
+  draggedRowId: string | null;
+  dragOverRowId: string | null;
+  onRowDragStart: (rowId: string) => void;
+  onRowDragOver: (rowId: string) => void;
+  onRowDragLeave: (rowId: string) => void;
+  onRowDrop: (rowId: string) => void;
+  onRowDragEnd: () => void;
 }
 
 function GroupSection({
