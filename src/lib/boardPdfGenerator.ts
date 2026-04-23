@@ -1,9 +1,11 @@
 import jsPDF from 'jspdf';
-import autoTable, { type RowInput, type CellHookData } from 'jspdf-autotable';
+import autoTable, { type RowInput, type CellHookData, type CellDef } from 'jspdf-autotable';
 import type { BoardColumn, BoardRow } from '@/hooks/useBoard';
 import type { BoardCellFile } from '@/hooks/useBoardCellFiles';
+import type { BoardMerge } from '@/hooks/useBoardMerges';
 import { savePdfBlob } from '@/lib/pdfSave';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
+import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 
 interface GroupBlock {
   label: string | null;
@@ -17,6 +19,7 @@ interface GenerateOpts {
   getCellValue: (rowId: string, columnId: string) => string;
   getCellTextAlign?: (rowId: string, columnId: string) => 'left' | 'center' | 'right' | null;
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
+  merges?: BoardMerge[];
 }
 
 /**
@@ -82,7 +85,7 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 };
 
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
-  const { boardName, columns, groups, getCellValue, getCellTextAlign, getFiles } = opts;
+  const { boardName, columns, groups, getCellValue, getCellTextAlign, getFiles, merges = [] } = opts;
 
   // Use landscape — boards usually have many columns
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
@@ -101,6 +104,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   doc.setTextColor(0);
 
   const head: RowInput[] = [columns.map((c) => c.name || '')];
+  const colIds = columns.map((c) => c.id);
 
   // Map column index -> column for the cell hook (so we can color status pills)
   const columnByIdx = new Map<number, BoardColumn>();
@@ -139,11 +143,22 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       return;
     }
 
-    const body: RowInput[] = group.rows.map((row, rIdx) =>
-      columns.map((col, cIdx) => {
+    // Compute merge geometry scoped to this group's rows + the visible columns.
+    const groupRowIds = group.rows.map((r) => r.id);
+    const groupRects = computeMergeRects(merges, groupRowIds, colIds);
+    const geometry = buildCellGeometryMap(groupRects, groupRowIds, colIds);
+
+    const body: RowInput[] = group.rows.map((row, rIdx) => {
+      const rowCells: Array<string | CellDef> = [];
+      columns.forEach((col, cIdx) => {
+        const key = `${row.id}::${col.id}`;
+        const geo = geometry.get(key);
+        if (geo?.hidden) return; // covered by another anchor cell — skip in autoTable
+
         const raw = getCellValue(row.id, col.id);
         const files = col.type === 'files' ? getFiles(row.id, col.id) : [];
         const text = renderCell(col, raw, files);
+
         if (col.type === 'status' && raw) {
           const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
           if (option?.color) {
@@ -154,9 +169,19 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         if (cellAlign) {
           cellAligns.set(`${gIdx}-${rIdx}-${cIdx}`, cellAlign);
         }
-        return text;
-      })
-    );
+
+        if (geo?.span) {
+          rowCells.push({
+            content: text,
+            rowSpan: geo.span.rowSpan,
+            colSpan: geo.span.colSpan,
+          });
+        } else {
+          rowCells.push(text);
+        }
+      });
+      return rowCells as RowInput;
+    });
 
     autoTable(doc, {
       startY: cursorY,

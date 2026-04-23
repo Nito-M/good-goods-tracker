@@ -833,6 +833,7 @@ export default function BoardDetail() {
                   getCellValue,
                   getCellTextAlign,
                   getFiles,
+                  merges,
                 });
               } catch (err) {
                 console.error('Board PDF export failed', err);
