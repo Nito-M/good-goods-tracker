@@ -980,6 +980,8 @@ export default function BoardDetail() {
                 highlightRowId={activeHighlight}
                 cellGeometry={cellGeometry}
                 onCellMouseDown={handleCellMouseDown}
+                onCellMouseEnter={handleCellMouseEnter}
+                onSelectRow={handleSelectRow}
                 isCellSelected={(rowId, colId) => {
                   if (!selectionRect) return false;
                   const r = renderedRowIds.indexOf(rowId);
