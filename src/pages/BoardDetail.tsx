@@ -1119,6 +1119,8 @@ interface GroupSectionProps {
   currentUserColumnPerms: (columnId: string) => 'edit' | 'view' | 'hidden';
   cellGeometry: Map<string, { span?: { rowSpan: number; colSpan: number; mergeId: string }; hidden?: boolean }>;
   onCellMouseDown: (rowId: string, colId: string, shiftKey: boolean) => void;
+  onCellMouseEnter: (rowId: string, colId: string) => void;
+  onSelectRow: (rowId: string, shiftKey: boolean) => void;
   isCellSelected: (rowId: string, colId: string) => boolean;
 }
 
