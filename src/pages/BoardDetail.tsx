@@ -1003,6 +1003,17 @@ export default function BoardDetail() {
           columns={columns}
         />
       )}
+
+      <MergeConfirmDialog
+        open={mergePromptOpen}
+        onOpenChange={(o) => {
+          setMergePromptOpen(o);
+          if (!o) setPendingMergeContext(null);
+        }}
+        cellCount={pendingMergeContext?.cellCount ?? 0}
+        hasMultipleNonEmpty={(pendingMergeContext?.nonEmptyCount ?? 0) > 1}
+        onConfirm={confirmMerge}
+      />
     </div>
   );
 }
