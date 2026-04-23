@@ -57,11 +57,12 @@ interface ColumnHeaderProps {
   onConfigureConnect: () => void;
   onEditNotes: () => void;
   onTogglePerRowOptions: () => void;
+  onChangeTextAlign: (align: 'left' | 'center' | 'right') => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onTogglePerRowOptions, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onTogglePerRowOptions, onChangeTextAlign, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
