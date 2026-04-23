@@ -862,10 +862,16 @@ export default function BoardDetail() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCopyOpen(true)}
+            onClick={() => {
+              if (!board) return;
+              copyToClipboard({ id: board.id, name: board.name, company_id: board.company_id });
+              toast.success('Board copied', {
+                description: 'Open another workspace and paste it from the Boards page.',
+              });
+            }}
           >
             <Copy className="h-4 w-4" />
-            Copy to…
+            Copy board
           </Button>
         </div>
       </div>
