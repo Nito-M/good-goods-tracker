@@ -781,6 +781,75 @@ export type Database = {
           },
         ]
       }
+      board_merges: {
+        Row: {
+          board_id: string
+          created_at: string
+          end_column_id: string
+          end_row_id: string
+          id: string
+          start_column_id: string
+          start_row_id: string
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          end_column_id: string
+          end_row_id: string
+          id?: string
+          start_column_id: string
+          start_row_id: string
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          end_column_id?: string
+          end_row_id?: string
+          id?: string
+          start_column_id?: string
+          start_row_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_merges_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_merges_end_column_id_fkey"
+            columns: ["end_column_id"]
+            isOneToOne: false
+            referencedRelation: "board_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_merges_end_row_id_fkey"
+            columns: ["end_row_id"]
+            isOneToOne: false
+            referencedRelation: "board_rows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_merges_start_column_id_fkey"
+            columns: ["start_column_id"]
+            isOneToOne: false
+            referencedRelation: "board_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_merges_start_row_id_fkey"
+            columns: ["start_row_id"]
+            isOneToOne: false
+            referencedRelation: "board_rows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_row_activity: {
         Row: {
           action: string
