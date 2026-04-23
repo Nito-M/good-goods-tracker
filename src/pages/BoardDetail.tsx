@@ -282,6 +282,8 @@ export default function BoardDetail() {
     deleteRow,
     setCellValue,
     getCellValue,
+    getCellTextAlign,
+    setCellTextAlign,
   } = useBoard(id);
 
   const { user } = useAuth();
