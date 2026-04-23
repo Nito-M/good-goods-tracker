@@ -1266,7 +1266,7 @@ function GroupSection({
             key={row.id}
             data-row-id={row.id}
             className={cn(
-              'border-b border-border hover:bg-accent/20 group transition-colors',
+              'hover:bg-accent/20 group transition-colors',
               highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset',
               draggedRowId === row.id && 'opacity-40',
               dragOverRowId === row.id && draggedRowId !== row.id && 'border-t-2 border-t-primary'
