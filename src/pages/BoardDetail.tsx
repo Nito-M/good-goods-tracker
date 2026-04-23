@@ -44,6 +44,7 @@ import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
@@ -304,8 +305,12 @@ export default function BoardDetail() {
       let displayOld = oldValue;
       let displayNew = value;
       if (col?.type === 'status') {
-        displayOld = col.options.find((o) => o.id === oldValue)?.label || oldValue;
-        displayNew = col.options.find((o) => o.id === value)?.label || value;
+        displayOld =
+          resolveSelectedStatus(oldValue, col.options, col.per_row_options).option?.label ||
+          (col.per_row_options ? '' : oldValue);
+        displayNew =
+          resolveSelectedStatus(value, col.options, col.per_row_options).option?.label ||
+          (col.per_row_options ? '' : value);
       }
       logActivity({
         row_id,
@@ -422,8 +427,8 @@ export default function BoardDetail() {
         const raw = rowCells[col.id];
         if (!raw) return false;
         if (col.type === 'status') {
-          const opt = col.options.find((o) => o.id === raw);
-          return (opt?.label || '').toLowerCase().includes(q);
+          const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
+          return (option?.label || '').toLowerCase().includes(q);
         }
         // For text/date/link/checkbox/connect (json arrays) — plain substring works
         return raw.toLowerCase().includes(q);
@@ -440,8 +445,8 @@ export default function BoardDetail() {
       const raw = getCellValue(row.id, board.group_by_column_id!);
       let key: string;
       if (groupByColumn.type === 'status') {
-        const opt = groupByColumn.options.find((o) => o.id === raw);
-        key = opt?.label || '(Ungrouped)';
+        const { option } = resolveSelectedStatus(raw, groupByColumn.options, groupByColumn.per_row_options);
+        key = option?.label || '(Ungrouped)';
       } else if (groupByColumn.type === 'checkbox') {
         key = raw === 'true' ? 'Checked' : 'Unchecked';
       } else {
