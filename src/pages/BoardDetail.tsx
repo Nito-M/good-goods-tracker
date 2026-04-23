@@ -253,6 +253,7 @@ export default function BoardDetail() {
     setColumnConnectConfig,
     setColumnWidth,
     setColumnNotes,
+    setColumnPerRowOptions,
     deleteColumn,
     reorderColumns,
     addRow,
@@ -637,6 +638,7 @@ export default function BoardDetail() {
                       onManageOptions={() => setStatusDialogColumnId(col.id)}
                       onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
+                      onTogglePerRowOptions={() => setColumnPerRowOptions(col.id, !col.per_row_options)}
                       onDelete={visibleColumns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
                     />
