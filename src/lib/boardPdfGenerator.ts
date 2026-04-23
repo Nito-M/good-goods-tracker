@@ -3,6 +3,7 @@ import autoTable, { type RowInput, type CellHookData } from 'jspdf-autotable';
 import type { BoardColumn, BoardRow } from '@/hooks/useBoard';
 import type { BoardCellFile } from '@/hooks/useBoardCellFiles';
 import { savePdfBlob } from '@/lib/pdfSave';
+import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 
 interface GroupBlock {
   label: string | null;
@@ -52,8 +53,8 @@ function renderCell(
   }
 
   if (col.type === 'status') {
-    const opt = col.options.find((o) => o.id === raw);
-    return opt?.label || '';
+    const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
+    return option?.label || '';
   }
 
   if (col.type === 'date') {
@@ -141,9 +142,9 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         const files = col.type === 'files' ? getFiles(row.id, col.id) : [];
         const text = renderCell(col, raw, files);
         if (col.type === 'status' && raw) {
-          const opt = col.options.find((o) => o.id === raw);
-          if (opt?.color) {
-            statusFills.set(`${gIdx}-${rIdx}-${cIdx}`, opt.color);
+          const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
+          if (option?.color) {
+            statusFills.set(`${gIdx}-${rIdx}-${cIdx}`, option.color);
           }
         }
         return text;

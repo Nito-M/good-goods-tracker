@@ -15,6 +15,7 @@ export interface BoardColumn {
   notes: string;
   connect_board_id: string | null;
   connect_mirror_column_id: string | null;
+  per_row_options: boolean;
 }
 
 export interface BoardRow {
@@ -58,6 +59,7 @@ function normalizeColumn(raw: any): BoardColumn {
     notes: typeof raw.notes === 'string' ? raw.notes : '',
     connect_board_id,
     connect_mirror_column_id,
+    per_row_options: !!raw.per_row_options,
   };
 }
 
@@ -203,6 +205,18 @@ export function useBoard(boardId: string | undefined) {
     }
   };
 
+  const setColumnPerRowOptions = async (id: string, per_row_options: boolean) => {
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, per_row_options } : c)));
+    const { error } = await supabase
+      .from('board_columns')
+      .update({ per_row_options } as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to update column');
+      await fetchAll();
+    }
+  };
+
   const reorderColumns = async (sourceId: string, targetId: string) => {
     if (sourceId === targetId) return;
     const current = [...columns].sort((a, b) => a.position - b.position);
@@ -323,6 +337,7 @@ export function useBoard(boardId: string | undefined) {
     setColumnConnectConfig,
     setColumnWidth,
     setColumnNotes,
+    setColumnPerRowOptions,
     deleteColumn,
     reorderColumns,
     addRow,

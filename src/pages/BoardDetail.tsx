@@ -44,6 +44,7 @@ import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
@@ -52,11 +53,12 @@ interface ColumnHeaderProps {
   onManageOptions: () => void;
   onConfigureConnect: () => void;
   onEditNotes: () => void;
+  onTogglePerRowOptions: () => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onTogglePerRowOptions, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -154,7 +156,14 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
                 </DropdownMenuSub>
               )}
               {column.type === 'status' && !isPrimary && (
-                <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+                <>
+                  <DropdownMenuItem onClick={onTogglePerRowOptions}>
+                    {column.per_row_options ? 'Use shared column options' : 'Per-row status options'}
+                  </DropdownMenuItem>
+                  {!column.per_row_options && (
+                    <DropdownMenuItem onClick={onManageOptions}>Manage status options</DropdownMenuItem>
+                  )}
+                </>
               )}
               {column.type === 'connect' && !isPrimary && (
                 <DropdownMenuItem onClick={onConfigureConnect}>Configure connection</DropdownMenuItem>
@@ -245,6 +254,7 @@ export default function BoardDetail() {
     setColumnConnectConfig,
     setColumnWidth,
     setColumnNotes,
+    setColumnPerRowOptions,
     deleteColumn,
     reorderColumns,
     addRow,
@@ -295,8 +305,12 @@ export default function BoardDetail() {
       let displayOld = oldValue;
       let displayNew = value;
       if (col?.type === 'status') {
-        displayOld = col.options.find((o) => o.id === oldValue)?.label || oldValue;
-        displayNew = col.options.find((o) => o.id === value)?.label || value;
+        displayOld =
+          resolveSelectedStatus(oldValue, col.options, col.per_row_options).option?.label ||
+          (col.per_row_options ? '' : oldValue);
+        displayNew =
+          resolveSelectedStatus(value, col.options, col.per_row_options).option?.label ||
+          (col.per_row_options ? '' : value);
       }
       logActivity({
         row_id,
@@ -413,8 +427,8 @@ export default function BoardDetail() {
         const raw = rowCells[col.id];
         if (!raw) return false;
         if (col.type === 'status') {
-          const opt = col.options.find((o) => o.id === raw);
-          return (opt?.label || '').toLowerCase().includes(q);
+          const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
+          return (option?.label || '').toLowerCase().includes(q);
         }
         // For text/date/link/checkbox/connect (json arrays) — plain substring works
         return raw.toLowerCase().includes(q);
@@ -431,8 +445,8 @@ export default function BoardDetail() {
       const raw = getCellValue(row.id, board.group_by_column_id!);
       let key: string;
       if (groupByColumn.type === 'status') {
-        const opt = groupByColumn.options.find((o) => o.id === raw);
-        key = opt?.label || '(Ungrouped)';
+        const { option } = resolveSelectedStatus(raw, groupByColumn.options, groupByColumn.per_row_options);
+        key = option?.label || '(Ungrouped)';
       } else if (groupByColumn.type === 'checkbox') {
         key = raw === 'true' ? 'Checked' : 'Unchecked';
       } else {
@@ -629,6 +643,7 @@ export default function BoardDetail() {
                       onManageOptions={() => setStatusDialogColumnId(col.id)}
                       onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
+                      onTogglePerRowOptions={() => setColumnPerRowOptions(col.id, !col.per_row_options)}
                       onDelete={visibleColumns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
                     />
@@ -948,7 +963,15 @@ function CellRenderer({
     case 'checkbox':
       return <CheckboxCell value={value} onSave={onSave} readOnly={readOnly} />;
     case 'status':
-      return <StatusCell value={value} options={column.options} onSave={onSave} readOnly={readOnly} />;
+      return (
+        <StatusCell
+          value={value}
+          options={column.options}
+          onSave={onSave}
+          readOnly={readOnly}
+          perRowOptions={column.per_row_options}
+        />
+      );
     case 'files':
       return (
         <FilesCell
