@@ -87,9 +87,12 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const { boardName, columns, groups, getCellValue, getCellTextAlign, getFiles, merges = [] } = opts;
 
-  // Use landscape — boards usually have many columns
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  // Portrait A4 — fit all columns to upright page width
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const sideMargin = 40;
+  const availableWidth = pageWidth - sideMargin * 2;
+  const dynamicFontSize = columns.length > 6 ? 8 : 9;
 
   // Header
   doc.setFont('helvetica', 'bold');
