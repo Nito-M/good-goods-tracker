@@ -97,14 +97,15 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   // Header
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
   doc.text(boardName || 'Board', 40, 40);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.setTextColor(120);
+  doc.setTextColor(0, 0, 0);
   const generatedLabel = `Generated ${new Date().toLocaleString()}`;
   doc.text(generatedLabel, pageWidth - 40, 40, { align: 'right' });
-  doc.setTextColor(0);
+  doc.setTextColor(0, 0, 0);
 
   const head: RowInput[] = [columns.map((c) => c.name || '')];
   const colIds = columns.map((c) => c.id);
