@@ -133,7 +133,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         tableWidth: availableWidth,
         styles: {
           fillColor: [243, 244, 246],
-          textColor: [55, 65, 81],
+          textColor: [0, 0, 0],
           fontStyle: 'bold',
           fontSize: 10,
           cellPadding: { top: 6, bottom: 6, left: 8, right: 8 },
