@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { ChevronDown, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Settings2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { StatusOption, getStatusColorClasses, STATUS_COLORS } from '../StatusOptionsDialog';
+import { StatusOption, StatusOptionsDialog, getStatusColorClasses } from '../StatusOptionsDialog';
 import { parseStatusValue } from '@/lib/boardStatusValue';
 
 interface StatusCellProps {
