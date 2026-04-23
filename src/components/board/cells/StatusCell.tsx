@@ -30,7 +30,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
   const selected = activeOptions.find((o) => o.id === selectedId);
   const color = selected ? getStatusColorClasses(selected.color) : null;
 
-  const [draftLabel, setDraftLabel] = useState('');
+  const [manageOpen, setManageOpen] = useState(false);
 
   const commitSelection = (id: string) => {
     if (perRowOptions) {
@@ -40,31 +40,13 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
     }
   };
 
-  const addOption = () => {
-    if (!perRowOptions) return;
-    const label = draftLabel.trim();
-    if (!label) return;
-    const used = new Set(state.rowOptions.map((o) => o.color));
-    const nextColor = STATUS_COLORS.find((c) => !used.has(c.key))?.key || 'gray';
-    const newOpt: StatusOption = { id: crypto.randomUUID(), label, color: nextColor };
-    onSave(serialize({ selectedId: state.selectedId, rowOptions: [...state.rowOptions, newOpt] }));
-    setDraftLabel('');
-  };
-
-  const updateOption = (id: string, patch: Partial<StatusOption>) => {
+  const handleSaveRowOptions = (newOptions: StatusOption[]) => {
+    // Keep selection only if it still exists
+    const stillExists = newOptions.some((o) => o.id === state.selectedId);
     onSave(
       serialize({
-        selectedId: state.selectedId,
-        rowOptions: state.rowOptions.map((o) => (o.id === id ? { ...o, ...patch } : o)),
-      })
-    );
-  };
-
-  const deleteOption = (id: string) => {
-    onSave(
-      serialize({
-        selectedId: state.selectedId === id ? '' : state.selectedId,
-        rowOptions: state.rowOptions.filter((o) => o.id !== id),
+        selectedId: stillExists ? state.selectedId : '',
+        rowOptions: newOptions,
       })
     );
   };
@@ -106,38 +88,25 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
           )}
           {activeOptions.length === 0 && perRowOptions && (
             <p className="text-xs text-muted-foreground p-2">
-              No options yet — add one for this row below.
+              No options yet — click "Manage options" below to add some for this row.
             </p>
           )}
 
           {activeOptions.map((opt) => {
             const c = getStatusColorClasses(opt.color);
             return (
-              <div key={opt.id} className="flex items-center gap-1 mb-0.5">
-                <button
-                  onClick={() => commitSelection(opt.id)}
-                  className={cn(
-                    'flex-1 text-left px-2 py-1 rounded-md text-sm truncate',
-                    c.bg,
-                    c.text,
-                    selectedId === opt.id && 'ring-2 ring-ring'
-                  )}
-                >
-                  {opt.label}
-                </button>
-                {perRowOptions && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => deleteOption(opt.id)}
-                    title="Delete option"
-                  >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
+              <button
+                key={opt.id}
+                onClick={() => commitSelection(opt.id)}
+                className={cn(
+                  'w-full text-left px-2 py-1 rounded-md text-sm truncate mb-0.5',
+                  c.bg,
+                  c.text,
+                  selectedId === opt.id && 'ring-2 ring-ring'
                 )}
-              </div>
+              >
+                {opt.label}
+              </button>
             );
           })}
 
@@ -153,72 +122,29 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
           {perRowOptions && (
             <>
               <div className="border-t border-border my-1" />
-              <div className="p-1 space-y-1">
-                {state.rowOptions.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {STATUS_COLORS.map((c) => (
-                      <span key={c.key} className={cn('h-3 w-3 rounded-full', c.bg)} title={c.key} />
-                    ))}
-                  </div>
-                )}
-                <p className="text-[10px] text-muted-foreground px-1">Add an option for this row</p>
-                <div className="flex gap-1">
-                  <Input
-                    value={draftLabel}
-                    onChange={(e) => setDraftLabel(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addOption();
-                      }
-                    }}
-                    placeholder="Status name"
-                    className="h-7 text-xs"
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="secondary"
-                    className="h-7 w-7 shrink-0"
-                    onClick={addOption}
-                    disabled={!draftLabel.trim()}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-                {state.rowOptions.length > 0 && (
-                  <div className="space-y-1 pt-1">
-                    {state.rowOptions.map((opt) => (
-                      <div key={`edit-${opt.id}`} className="flex items-center gap-1">
-                        <div className="flex flex-wrap gap-0.5 shrink-0">
-                          {STATUS_COLORS.map((c) => (
-                            <button
-                              key={c.key}
-                              type="button"
-                              onClick={() => updateOption(opt.id, { color: c.key })}
-                              className={cn(
-                                'h-3 w-3 rounded-full border',
-                                c.bg,
-                                opt.color === c.key ? 'border-foreground' : 'border-transparent'
-                              )}
-                              title={c.key}
-                            />
-                          ))}
-                        </div>
-                        <Input
-                          value={opt.label}
-                          onChange={(e) => updateOption(opt.id, { label: e.target.value })}
-                          className="h-6 text-xs flex-1"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 h-8"
+                onClick={() => setManageOpen(true)}
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+                Manage options for this row
+              </Button>
             </>
           )}
         </PopoverContent>
       </Popover>
+
+      {perRowOptions && (
+        <StatusOptionsDialog
+          open={manageOpen}
+          onOpenChange={setManageOpen}
+          initialOptions={state.rowOptions}
+          onSave={handleSaveRowOptions}
+        />
+      )}
     </div>
   );
 }
