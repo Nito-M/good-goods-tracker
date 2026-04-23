@@ -402,6 +402,8 @@ export function useBoard(boardId: string | undefined) {
     deleteRow,
     setCellValue,
     getCellValue,
+    getCellTextAlign,
+    setCellTextAlign,
     refetch: fetchAll,
   };
 }
