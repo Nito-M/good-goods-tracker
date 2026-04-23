@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download } from 'lucide-react';
+import { generateBoardPdf } from '@/lib/boardPdfGenerator';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNoteEntries } from '@/hooks/useBoardRowNoteEntries';
@@ -500,17 +501,39 @@ export default function BoardDetail() {
             {board.name}
           </h1>
         )}
-        {canManageAccess && (
+        <div className="ml-auto flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="ml-auto"
-            onClick={() => setAccessSheetOpen(true)}
+            onClick={async () => {
+              try {
+                await generateBoardPdf({
+                  boardName: board.name,
+                  columns: visibleColumns,
+                  groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
+                  getCellValue,
+                  getFiles,
+                });
+              } catch (err) {
+                console.error('Board PDF export failed', err);
+                toast.error('Failed to export PDF');
+              }
+            }}
           >
-            <Shield className="h-4 w-4" />
-            Manage Access
+            <Download className="h-4 w-4" />
+            Download PDF
           </Button>
-        )}
+          {canManageAccess && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAccessSheetOpen(true)}
+            >
+              <Shield className="h-4 w-4" />
+              Manage Access
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
