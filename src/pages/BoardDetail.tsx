@@ -301,6 +301,8 @@ export default function BoardDetail() {
 
   const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
   const [accessSheetOpen, setAccessSheetOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const { copyBoard } = useBoards();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
