@@ -5,9 +5,10 @@ interface TextCellProps {
   value: string;
   onSave: (value: string) => void;
   readOnly?: boolean;
+  align?: 'left' | 'center' | 'right';
 }
 
-export function TextCell({ value, onSave, readOnly }: TextCellProps) {
+export function TextCell({ value, onSave, readOnly, align = 'left' }: TextCellProps) {
   const [v, setV] = useState(value);
   const initial = useRef(value);
 
@@ -23,9 +24,12 @@ export function TextCell({ value, onSave, readOnly }: TextCellProps) {
     }
   };
 
+  const alignClass =
+    align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+
   if (readOnly) {
     return (
-      <div className="w-full px-3 py-2 text-sm truncate text-muted-foreground" title={value}>
+      <div className={cn('w-full px-3 py-2 text-sm truncate text-muted-foreground', alignClass)} title={value}>
         {value || <span className="opacity-50">—</span>}
       </div>
     );
@@ -44,7 +48,8 @@ export function TextCell({ value, onSave, readOnly }: TextCellProps) {
         }
       }}
       className={cn(
-        'w-full bg-transparent border-0 outline-none px-3 py-2 text-sm focus:bg-accent/40 focus:ring-2 focus:ring-ring rounded-none'
+        'w-full bg-transparent border-0 outline-none px-3 py-2 text-sm focus:bg-accent/40 focus:ring-2 focus:ring-ring rounded-none',
+        alignClass
       )}
     />
   );
