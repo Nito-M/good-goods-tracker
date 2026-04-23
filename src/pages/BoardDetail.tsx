@@ -899,6 +899,19 @@ export default function BoardDetail() {
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
                 highlightRowId={activeHighlight}
+                cellGeometry={cellGeometry}
+                onCellMouseDown={handleCellMouseDown}
+                isCellSelected={(rowId, colId) => {
+                  if (!selectionRect) return false;
+                  const r = renderedRowIds.indexOf(rowId);
+                  const c = visibleColumnIds.indexOf(colId);
+                  return (
+                    r >= selectionRect.r1 &&
+                    r <= selectionRect.r2 &&
+                    c >= selectionRect.c1 &&
+                    c <= selectionRect.c2
+                  );
+                }}
               />
             ))}
 
