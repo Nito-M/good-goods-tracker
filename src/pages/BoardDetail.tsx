@@ -1284,7 +1284,7 @@ function GroupSection({
             }}
           >
             <td
-              className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1 cursor-pointer"
+              className="sticky left-0 bg-muted z-10 border-r border-b border-border w-16 px-1 cursor-pointer"
               title="Click to select row (Shift+Click to extend)"
               onMouseDown={(e) => {
                 if (e.button !== 0) return;
