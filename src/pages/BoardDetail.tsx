@@ -953,6 +953,7 @@ export default function BoardDetail() {
                       onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
                       onTogglePerRowOptions={() => setColumnPerRowOptions(col.id, !col.per_row_options)}
+                      onChangeTextAlign={(a) => setColumnTextAlign(col.id, a)}
                       onDelete={visibleColumns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
                     />
