@@ -629,6 +629,7 @@ export type Database = {
           column_id: string
           id: string
           row_id: string
+          text_align: string | null
           updated_at: string
           value: string
         }
@@ -636,6 +637,7 @@ export type Database = {
           column_id: string
           id?: string
           row_id: string
+          text_align?: string | null
           updated_at?: string
           value?: string
         }
@@ -643,6 +645,7 @@ export type Database = {
           column_id?: string
           id?: string
           row_id?: string
+          text_align?: string | null
           updated_at?: string
           value?: string
         }

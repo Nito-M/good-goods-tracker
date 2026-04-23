@@ -282,6 +282,8 @@ export default function BoardDetail() {
     deleteRow,
     setCellValue,
     getCellValue,
+    getCellTextAlign,
+    setCellTextAlign,
   } = useBoard(id);
 
   const { user } = useAuth();
@@ -829,6 +831,7 @@ export default function BoardDetail() {
                   columns: visibleColumns,
                   groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
                   getCellValue,
+                  getCellTextAlign,
                   getFiles,
                 });
               } catch (err) {
@@ -995,6 +998,8 @@ export default function BoardDetail() {
                 }
                 getCellValue={getCellValue}
                 setCellValue={setCellValueLogged}
+                getCellTextAlign={getCellTextAlign}
+                setCellTextAlign={setCellTextAlign}
                 deleteRow={deleteRow}
                 getFiles={getFiles}
                 uploadFile={uploadFile}
@@ -1135,6 +1140,8 @@ interface GroupSectionProps {
   onToggle: () => void;
   getCellValue: (row_id: string, column_id: string) => string;
   setCellValue: (row_id: string, column_id: string, value: string) => void;
+  getCellTextAlign: (row_id: string, column_id: string) => 'left' | 'center' | 'right' | null;
+  setCellTextAlign: (row_id: string, column_id: string, align: 'left' | 'center' | 'right' | null) => void;
   deleteRow: (id: string) => void;
   getFiles: ReturnType<typeof useBoardCellFiles>['getFiles'];
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
@@ -1161,6 +1168,8 @@ function GroupSection({
   onToggle,
   getCellValue,
   setCellValue,
+  getCellTextAlign,
+  setCellTextAlign,
   deleteRow,
   getFiles,
   uploadFile,
@@ -1336,6 +1345,8 @@ function GroupSection({
                     onOpenFile={refreshSignedUrl}
                     onConfigureConnect={() => onConfigureConnect(col.id)}
                     readOnly={currentUserColumnPerms(col.id) !== 'edit'}
+                    cellAlign={getCellTextAlign(row.id, col.id)}
+                    onChangeCellAlign={(a) => setCellTextAlign(row.id, col.id, a)}
                   />
                 </td>
               );
@@ -1358,6 +1369,8 @@ interface CellRendererProps {
   onOpenFile: (id: string) => Promise<string | null>;
   onConfigureConnect: () => void;
   readOnly?: boolean;
+  cellAlign?: 'left' | 'center' | 'right' | null;
+  onChangeCellAlign?: (a: 'left' | 'center' | 'right' | null) => void;
 }
 
 function CellRenderer({
@@ -1370,6 +1383,8 @@ function CellRenderer({
   onOpenFile,
   onConfigureConnect,
   readOnly,
+  cellAlign,
+  onChangeCellAlign,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
@@ -1410,7 +1425,18 @@ function CellRenderer({
         />
       );
     case 'text':
-    default:
-      return <TextCell value={value} onSave={onSave} readOnly={readOnly} align={column.text_align} />;
+    default: {
+      const effectiveAlign = cellAlign ?? column.text_align;
+      return (
+        <TextCell
+          value={value}
+          onSave={onSave}
+          readOnly={readOnly}
+          align={effectiveAlign}
+          cellAlign={cellAlign ?? null}
+          onChangeCellAlign={onChangeCellAlign}
+        />
+      );
+    }
   }
 }
