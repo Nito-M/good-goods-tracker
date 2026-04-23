@@ -893,6 +893,13 @@ export default function BoardDetail() {
                       draggedColId === col.id && 'opacity-40'
                     )}
                     draggable={idx !== 0}
+                    onMouseDown={(e) => {
+                      if (e.button !== 0) return;
+                      const target = e.target as HTMLElement;
+                      if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
+                      handleSelectColumn(col.id, e.shiftKey);
+                    }}
+                    title="Click to select column (Shift+Click to extend)"
                     onDragStart={(e) => {
                       if (idx === 0) return;
                       setDraggedColId(col.id);
