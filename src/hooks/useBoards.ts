@@ -52,18 +52,28 @@ export function useBoards() {
       .limit(1)
       .maybeSingle();
 
-    const { data: board, error } = await supabase
-      .from('boards')
-      .insert({
-        user_id: user.id,
-        organization_id: orgMember?.organization_id ?? null,
-        company_id,
-        name,
-      })
-      .select()
-      .single();
+    const boardId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const newBoard: Board = {
+      id: boardId,
+      user_id: user.id,
+      organization_id: orgMember?.organization_id ?? null,
+      company_id,
+      name,
+      group_by_column_id: null,
+      created_at: now,
+      updated_at: now,
+    };
 
-    if (error || !board) {
+    const { error } = await supabase.from('boards').insert({
+      id: boardId,
+      user_id: user.id,
+      organization_id: orgMember?.organization_id ?? null,
+      company_id,
+      name,
+    });
+
+    if (error) {
       toast.error('Failed to create board');
       console.error(error);
       return null;
@@ -71,9 +81,9 @@ export function useBoards() {
 
     // Create 3 default columns
     const defaultColumns = [
-      { board_id: board.id, name: 'Item', position: 0 },
-      { board_id: board.id, name: 'Status', position: 1 },
-      { board_id: board.id, name: 'Notes', position: 2 },
+      { board_id: boardId, name: 'Item', position: 0 },
+      { board_id: boardId, name: 'Status', position: 1 },
+      { board_id: boardId, name: 'Notes', position: 2 },
     ];
     await supabase.from('board_columns').insert(defaultColumns);
 
@@ -81,13 +91,13 @@ export function useBoards() {
     await supabase
       .from('board_member_access')
       .upsert(
-        { board_id: board.id, user_id: user.id },
+        { board_id: boardId, user_id: user.id },
         { onConflict: 'board_id,user_id' }
       );
 
-    await fetchBoards();
+    setBoards((current) => [newBoard, ...current]);
     toast.success('Board created');
-    return board;
+    return newBoard;
   };
 
   const renameBoard = async (id: string, name: string) => {
