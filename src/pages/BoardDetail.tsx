@@ -477,6 +477,177 @@ export default function BoardDetail() {
       .map(([key, rs]) => ({ key, label: key, rows: rs }));
   }, [filteredRows, board?.group_by_column_id, groupByColumn, getCellValue]);
 
+  // Flatten the actual rendered row order across groups so merge geometry
+  // matches what the user sees on screen.
+  const renderedRowIds = useMemo(
+    () => grouped.flatMap((g) => g.rows.map((r) => r.id)),
+    [grouped]
+  );
+  const visibleColumnIds = useMemo(() => visibleColumns.map((c) => c.id), [visibleColumns]);
+
+  const mergeRects = useMemo(
+    () => computeMergeRects(merges, renderedRowIds, visibleColumnIds),
+    [merges, renderedRowIds, visibleColumnIds]
+  );
+
+  const cellGeometry = useMemo(
+    () => buildCellGeometryMap(mergeRects, renderedRowIds, visibleColumnIds),
+    [mergeRects, renderedRowIds, visibleColumnIds]
+  );
+
+  // Compute current selection rectangle (anchor + focus, normalized).
+  const selectionRect = useMemo(() => {
+    if (!selectionAnchor || !selectionFocus) return null;
+    const aRow = renderedRowIds.indexOf(selectionAnchor.rowId);
+    const fRow = renderedRowIds.indexOf(selectionFocus.rowId);
+    const aCol = visibleColumnIds.indexOf(selectionAnchor.colId);
+    const fCol = visibleColumnIds.indexOf(selectionFocus.colId);
+    if (aRow < 0 || fRow < 0 || aCol < 0 || fCol < 0) return null;
+    return {
+      r1: Math.min(aRow, fRow),
+      r2: Math.max(aRow, fRow),
+      c1: Math.min(aCol, fCol),
+      c2: Math.max(aCol, fCol),
+    };
+  }, [selectionAnchor, selectionFocus, renderedRowIds, visibleColumnIds]);
+
+  const selectedCellCount = selectionRect
+    ? (selectionRect.r2 - selectionRect.r1 + 1) * (selectionRect.c2 - selectionRect.c1 + 1)
+    : 0;
+
+  const selectedMergeIds = useMemo(() => {
+    if (!selectionRect) return [];
+    return mergeRects
+      .filter(
+        (r) =>
+          r.startRowIdx >= selectionRect.r1 &&
+          r.endRowIdx <= selectionRect.r2 &&
+          r.startColIdx >= selectionRect.c1 &&
+          r.endColIdx <= selectionRect.c2
+      )
+      .map((r) => r.id);
+  }, [mergeRects, selectionRect]);
+
+  const handleCellMouseDown = useCallback(
+    (rowId: string, colId: string, shiftKey: boolean) => {
+      if (shiftKey && selectionAnchor) {
+        setSelectionFocus({ rowId, colId });
+      } else {
+        setSelectionAnchor({ rowId, colId });
+        setSelectionFocus({ rowId, colId });
+      }
+    },
+    [selectionAnchor]
+  );
+
+  const clearSelection = useCallback(() => {
+    setSelectionAnchor(null);
+    setSelectionFocus(null);
+  }, []);
+
+  const requestMerge = useCallback(() => {
+    if (!selectionRect || selectedCellCount < 2) return;
+    const startRowId = renderedRowIds[selectionRect.r1];
+    const endRowId = renderedRowIds[selectionRect.r2];
+    const startColId = visibleColumnIds[selectionRect.c1];
+    const endColId = visibleColumnIds[selectionRect.c2];
+
+    let nonEmpty = 0;
+    for (let r = selectionRect.r1; r <= selectionRect.r2; r++) {
+      for (let c = selectionRect.c1; c <= selectionRect.c2; c++) {
+        const v = getCellValue(renderedRowIds[r], visibleColumnIds[c]);
+        if (v && v.trim() !== '') nonEmpty++;
+      }
+    }
+
+    setPendingMergeContext({
+      nonEmptyCount: nonEmpty,
+      cellCount: selectedCellCount,
+      startRowId,
+      endRowId,
+      startColId,
+      endColId,
+    });
+    setMergePromptOpen(true);
+  }, [selectionRect, selectedCellCount, renderedRowIds, visibleColumnIds, getCellValue]);
+
+  const confirmMerge = useCallback(
+    async (mode: 'keep-top-left' | 'concatenate') => {
+      if (!pendingMergeContext || !id) {
+        setMergePromptOpen(false);
+        return;
+      }
+      const startRowIdx = renderedRowIds.indexOf(pendingMergeContext.startRowId);
+      const endRowIdx = renderedRowIds.indexOf(pendingMergeContext.endRowId);
+      const startColIdx = visibleColumnIds.indexOf(pendingMergeContext.startColId);
+      const endColIdx = visibleColumnIds.indexOf(pendingMergeContext.endColId);
+
+      // Remove any merges that overlap the new rectangle to avoid duplicates.
+      const overlappingIds = mergeRects
+        .filter(
+          (r) =>
+            !(
+              r.endRowIdx < startRowIdx ||
+              r.startRowIdx > endRowIdx ||
+              r.endColIdx < startColIdx ||
+              r.startColIdx > endColIdx
+            )
+        )
+        .map((r) => r.id);
+      if (overlappingIds.length > 0) {
+        await deleteMerges(overlappingIds);
+      }
+
+      if (mode === 'concatenate') {
+        const parts: string[] = [];
+        for (let r = startRowIdx; r <= endRowIdx; r++) {
+          for (let c = startColIdx; c <= endColIdx; c++) {
+            const v = getCellValue(renderedRowIds[r], visibleColumnIds[c]);
+            if (v && v.trim() !== '') parts.push(v);
+          }
+        }
+        if (parts.length > 0) {
+          await setCellValueLogged(
+            pendingMergeContext.startRowId,
+            pendingMergeContext.startColId,
+            parts.join(' • ')
+          );
+        }
+      }
+
+      await createMerge({
+        board_id: id,
+        start_row_id: pendingMergeContext.startRowId,
+        end_row_id: pendingMergeContext.endRowId,
+        start_column_id: pendingMergeContext.startColId,
+        end_column_id: pendingMergeContext.endColId,
+      });
+
+      setMergePromptOpen(false);
+      setPendingMergeContext(null);
+      clearSelection();
+    },
+    [
+      pendingMergeContext,
+      id,
+      mergeRects,
+      renderedRowIds,
+      visibleColumnIds,
+      deleteMerges,
+      createMerge,
+      getCellValue,
+      setCellValueLogged,
+      clearSelection,
+    ]
+  );
+
+  const handleUnmerge = useCallback(async () => {
+    if (selectedMergeIds.length === 0) return;
+    await deleteMerges(selectedMergeIds);
+    clearSelection();
+  }, [selectedMergeIds, deleteMerges, clearSelection]);
+
+
   if (loading || !board) {
     return (
       <div className="container mx-auto p-6">
