@@ -389,6 +389,7 @@ export default function BoardDetail() {
   const { merges, createMerge, deleteMerges } = useBoardMerges(id);
   const [selectionAnchor, setSelectionAnchor] = useState<{ rowId: string; colId: string } | null>(null);
   const [selectionFocus, setSelectionFocus] = useState<{ rowId: string; colId: string } | null>(null);
+  const [isDragSelecting, setIsDragSelecting] = useState(false);
   const [mergePromptOpen, setMergePromptOpen] = useState(false);
   const [pendingMergeContext, setPendingMergeContext] = useState<{
     nonEmptyCount: number;
