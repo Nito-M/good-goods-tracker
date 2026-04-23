@@ -399,6 +399,7 @@ export default function BoardDetail() {
     endColId: string;
   } | null>(null);
 
+  useEffect(() => {
     if (board) setTitleValue(board.name);
   }, [board?.name]);
 
