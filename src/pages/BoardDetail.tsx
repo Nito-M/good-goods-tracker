@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split, GripVertical, Copy } from 'lucide-react';
 import { generateBoardPdf } from '@/lib/boardPdfGenerator';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
@@ -43,6 +43,8 @@ import { LinkCell } from '@/components/board/cells/LinkCell';
 import { ConnectBoardCell } from '@/components/board/cells/ConnectBoardCell';
 import { ConnectBoardSetupDialog } from '@/components/board/ConnectBoardSetupDialog';
 import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
+import { CopyBoardDialog } from '@/components/board/CopyBoardDialog';
+import { useBoards } from '@/hooks/useBoards';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -299,6 +301,8 @@ export default function BoardDetail() {
 
   const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
   const [accessSheetOpen, setAccessSheetOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const { copyBoard } = useBoards();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
@@ -857,6 +861,14 @@ export default function BoardDetail() {
               Manage Access
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCopyOpen(true)}
+          >
+            <Copy className="h-4 w-4" />
+            Copy to…
+          </Button>
         </div>
       </div>
 
@@ -1135,6 +1147,21 @@ export default function BoardDetail() {
           boardId={board.id}
           organizationId={null}
           columns={columns}
+        />
+      )}
+
+      {board && (
+        <CopyBoardDialog
+          open={copyOpen}
+          onOpenChange={setCopyOpen}
+          sourceBoardId={board.id}
+          sourceBoardName={board.name}
+          sourceCompanyId={board.company_id}
+          onCopy={async (targetCompanyId, newName) => {
+            await copyBoard(board.id, targetCompanyId, newName, (newId) =>
+              navigate(`/boards/${newId}`),
+            );
+          }}
         />
       )}
 

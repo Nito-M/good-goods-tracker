@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X } from 'lucide-react';
+import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X, Copy } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
 import { useCompanies, type Company } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
@@ -18,16 +18,18 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
+import { CopyBoardDialog } from '@/components/board/CopyBoardDialog';
 
 export default function Boards() {
   const navigate = useNavigate();
   const location = useLocation();
   const routeCompanyId = (location.state as { companyId?: string } | null)?.companyId ?? null;
-  const { boards, loading: boardsLoading, createBoard, deleteBoard } = useBoards();
+  const { boards, loading: boardsLoading, createBoard, deleteBoard, copyBoard } = useBoards();
   const { companies, loading: companiesLoading } = useCompanies();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(routeCompanyId);
   const [companySearch, setCompanySearch] = useState('');
   const [boardSearch, setBoardSearch] = useState('');
+  const [copyTarget, setCopyTarget] = useState<{ id: string; name: string; companyId: string | null } | null>(null);
 
   useEffect(() => {
     setSelectedCompanyId(routeCompanyId);
@@ -204,35 +206,49 @@ export default function Boards() {
                   <Table2 className="h-5 w-5 text-primary shrink-0" />
                   <CardTitle className="truncate">{board.name}</CardTitle>
                 </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete board?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete "{board.name}" and all its data.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteBoard(board.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCopyTarget({ id: board.id, name: board.name, companyId: board.company_id });
+                    }}
+                    title="Copy board to another company"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete board?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete "{board.name}" and all its data.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteBoard(board.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
@@ -243,6 +259,20 @@ export default function Boards() {
           ))}
         </div>
       )}
+
+      <CopyBoardDialog
+        open={copyTarget !== null}
+        onOpenChange={(open) => { if (!open) setCopyTarget(null); }}
+        sourceBoardId={copyTarget?.id ?? null}
+        sourceBoardName={copyTarget?.name ?? ''}
+        sourceCompanyId={copyTarget?.companyId ?? null}
+        onCopy={async (targetCompanyId, newName) => {
+          if (!copyTarget) return;
+          await copyBoard(copyTarget.id, targetCompanyId, newName, (newId) =>
+            navigate(`/boards/${newId}`),
+          );
+        }}
+      />
     </div>
   );
 }
