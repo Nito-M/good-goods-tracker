@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import { ChevronDown, Plus, Trash2, Pencil } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, Plus, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { StatusOption, getStatusColorClasses, STATUS_COLORS } from '../StatusOptionsDialog';
+import { parseStatusValue } from '@/lib/boardStatusValue';
 
 interface StatusCellProps {
   value: string;
@@ -19,35 +20,18 @@ interface PerRowState {
   rowOptions: StatusOption[];
 }
 
-function parseValue(value: string, perRow: boolean): PerRowState {
-  if (!perRow) return { selectedId: value || '', rowOptions: [] };
-  if (!value) return { selectedId: '', rowOptions: [] };
-  try {
-    const parsed = JSON.parse(value);
-    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.rowOptions)) {
-      return {
-        selectedId: typeof parsed.selectedId === 'string' ? parsed.selectedId : '',
-        rowOptions: parsed.rowOptions,
-      };
-    }
-  } catch {
-    // legacy plain string
-  }
-  return { selectedId: value, rowOptions: [] };
-}
-
 function serialize(state: PerRowState): string {
   return JSON.stringify({ selectedId: state.selectedId, rowOptions: state.rowOptions });
 }
 
 export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: StatusCellProps) {
-  const state = parseValue(value, !!perRowOptions);
+  const state = parseStatusValue(value, !!perRowOptions);
   const activeOptions = perRowOptions ? state.rowOptions : options;
   const selectedId = state.selectedId;
   const selected = activeOptions.find((o) => o.id === selectedId);
   const color = selected ? getStatusColorClasses(selected.color) : null;
 
-  const [editing, setEditing] = useState(false);
+  const [, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState('');
 
   const commitSelection = (id: string) => {
