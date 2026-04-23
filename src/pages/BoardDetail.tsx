@@ -1411,6 +1411,6 @@ function CellRenderer({
       );
     case 'text':
     default:
-      return <TextCell value={value} onSave={onSave} readOnly={readOnly} />;
+      return <TextCell value={value} onSave={onSave} readOnly={readOnly} align={column.text_align} />;
   }
 }
