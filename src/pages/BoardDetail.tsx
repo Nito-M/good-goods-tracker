@@ -596,6 +596,8 @@ export default function BoardDetail() {
     setIsDragSelecting(false);
   }, []);
 
+  // Keyboard: Esc clears selection. Cmd/Ctrl+M triggers merge prompt when applicable.
+
   const requestMerge = useCallback(() => {
     if (!selectionRect || selectedCellCount < 2) return;
     const startRowId = renderedRowIds[selectionRect.r1];
