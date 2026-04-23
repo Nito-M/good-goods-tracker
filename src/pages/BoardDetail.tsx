@@ -756,21 +756,26 @@ export default function BoardDetail() {
         )}
         <div className="ml-auto flex items-center gap-2">
           {selectedCellCount >= 2 && selectedMergeIds.length === 0 && (
-            <Button variant="outline" size="sm" onClick={requestMerge}>
+            <Button variant="default" size="sm" onClick={requestMerge}>
               <Combine className="h-4 w-4" />
               Merge {selectedCellCount} cells
             </Button>
           )}
           {selectedMergeIds.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleUnmerge}>
+            <Button variant="default" size="sm" onClick={handleUnmerge}>
               <Split className="h-4 w-4" />
               Unmerge
             </Button>
           )}
+          {(selectionAnchor || selectionFocus) && selectedCellCount < 2 && selectedMergeIds.length === 0 && (
+            <span className="text-xs text-muted-foreground hidden md:inline">
+              Drag across cells, or click a row/column header to select more — then Merge.
+            </span>
+          )}
           {(selectionAnchor || selectionFocus) && (
             <Button variant="ghost" size="sm" onClick={clearSelection}>
               <X className="h-4 w-4" />
-              Clear selection
+              Clear
             </Button>
           )}
           <Button
