@@ -242,7 +242,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
-    doc.setTextColor(140);
+    doc.setTextColor(0, 0, 0);
     doc.text(
       `Page ${i} of ${pageCount}`,
       pageWidth - 40,
