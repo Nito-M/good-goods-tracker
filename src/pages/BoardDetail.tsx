@@ -1139,6 +1139,8 @@ interface GroupSectionProps {
   onToggle: () => void;
   getCellValue: (row_id: string, column_id: string) => string;
   setCellValue: (row_id: string, column_id: string, value: string) => void;
+  getCellTextAlign: (row_id: string, column_id: string) => 'left' | 'center' | 'right' | null;
+  setCellTextAlign: (row_id: string, column_id: string, align: 'left' | 'center' | 'right' | null) => void;
   deleteRow: (id: string) => void;
   getFiles: ReturnType<typeof useBoardCellFiles>['getFiles'];
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
@@ -1165,6 +1167,8 @@ function GroupSection({
   onToggle,
   getCellValue,
   setCellValue,
+  getCellTextAlign,
+  setCellTextAlign,
   deleteRow,
   getFiles,
   uploadFile,
