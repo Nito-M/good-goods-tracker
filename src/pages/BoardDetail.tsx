@@ -172,6 +172,22 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
               {column.type === 'connect' && !isPrimary && (
                 <DropdownMenuItem onClick={onConfigureConnect}>Configure connection</DropdownMenuItem>
               )}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Text alignment</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {(['left', 'center', 'right'] as const).map((a) => (
+                      <DropdownMenuItem
+                        key={a}
+                        onClick={() => onChangeTextAlign(a)}
+                        disabled={column.text_align === a}
+                      >
+                        {a.charAt(0).toUpperCase() + a.slice(1)} {column.text_align === a && '✓'}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
               {onDelete && !isPrimary && (
                 <>
                   <DropdownMenuSeparator />
