@@ -1158,6 +1158,22 @@ function GroupSection({
   onSelectRow,
   isCellSelected,
 }: GroupSectionProps) {
+  // Long-press: hold ~400ms anywhere on a cell (even on inputs) to start a merge selection.
+  const longPressRef = useRef<{
+    timer: number | null;
+    startX: number;
+    startY: number;
+    rowId: string;
+    colId: string;
+  } | null>(null);
+
+  const cancelLongPress = () => {
+    if (longPressRef.current?.timer) {
+      window.clearTimeout(longPressRef.current.timer);
+    }
+    longPressRef.current = null;
+  };
+
   return (
     <>
       {label !== null && (
