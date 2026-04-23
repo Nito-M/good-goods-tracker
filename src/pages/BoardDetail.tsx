@@ -700,6 +700,27 @@ export default function BoardDetail() {
     clearSelection();
   }, [selectedMergeIds, deleteMerges, clearSelection]);
 
+  // Keyboard shortcuts: Esc clears, Cmd/Ctrl+M merges
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = target && target.closest('input, textarea, [contenteditable="true"]');
+      if (e.key === 'Escape' && (selectionAnchor || selectionFocus)) {
+        clearSelection();
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'm' || e.key === 'M') && !inField) {
+        if (selectedCellCount >= 2 && selectedMergeIds.length === 0) {
+          e.preventDefault();
+          requestMerge();
+        } else if (selectedMergeIds.length > 0) {
+          e.preventDefault();
+          handleUnmerge();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectionAnchor, selectionFocus, selectedCellCount, selectedMergeIds, requestMerge, handleUnmerge, clearSelection]);
+
 
   if (loading || !board) {
     return (
