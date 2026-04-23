@@ -537,13 +537,63 @@ export default function BoardDetail() {
         setSelectionAnchor({ rowId, colId });
         setSelectionFocus({ rowId, colId });
       }
+      setIsDragSelecting(true);
     },
     [selectionAnchor]
+  );
+
+  const handleCellMouseEnter = useCallback(
+    (rowId: string, colId: string) => {
+      if (!isDragSelecting) return;
+      setSelectionFocus({ rowId, colId });
+    },
+    [isDragSelecting]
+  );
+
+  // Global mouseup ends drag-selection
+  useEffect(() => {
+    if (!isDragSelecting) return;
+    const onUp = () => setIsDragSelecting(false);
+    window.addEventListener('mouseup', onUp);
+    return () => window.removeEventListener('mouseup', onUp);
+  }, [isDragSelecting]);
+
+  // Select an entire row (clicking the row gutter). Shift extends.
+  const handleSelectRow = useCallback(
+    (rowId: string, shiftKey: boolean) => {
+      if (visibleColumnIds.length === 0) return;
+      const firstCol = visibleColumnIds[0];
+      const lastCol = visibleColumnIds[visibleColumnIds.length - 1];
+      if (shiftKey && selectionAnchor) {
+        setSelectionFocus({ rowId, colId: lastCol });
+      } else {
+        setSelectionAnchor({ rowId, colId: firstCol });
+        setSelectionFocus({ rowId, colId: lastCol });
+      }
+    },
+    [selectionAnchor, visibleColumnIds]
+  );
+
+  // Select an entire column (clicking the column header). Shift extends.
+  const handleSelectColumn = useCallback(
+    (colId: string, shiftKey: boolean) => {
+      if (renderedRowIds.length === 0) return;
+      const firstRow = renderedRowIds[0];
+      const lastRow = renderedRowIds[renderedRowIds.length - 1];
+      if (shiftKey && selectionAnchor) {
+        setSelectionFocus({ rowId: lastRow, colId });
+      } else {
+        setSelectionAnchor({ rowId: firstRow, colId });
+        setSelectionFocus({ rowId: lastRow, colId });
+      }
+    },
+    [selectionAnchor, renderedRowIds]
   );
 
   const clearSelection = useCallback(() => {
     setSelectionAnchor(null);
     setSelectionFocus(null);
+    setIsDragSelecting(false);
   }, []);
 
   const requestMerge = useCallback(() => {
