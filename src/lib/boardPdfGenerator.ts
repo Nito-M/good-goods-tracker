@@ -1,9 +1,11 @@
 import jsPDF from 'jspdf';
-import autoTable, { type RowInput, type CellHookData } from 'jspdf-autotable';
+import autoTable, { type RowInput, type CellHookData, type CellDef } from 'jspdf-autotable';
 import type { BoardColumn, BoardRow } from '@/hooks/useBoard';
 import type { BoardCellFile } from '@/hooks/useBoardCellFiles';
+import type { BoardMerge } from '@/hooks/useBoardMerges';
 import { savePdfBlob } from '@/lib/pdfSave';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
+import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 
 interface GroupBlock {
   label: string | null;
@@ -17,6 +19,7 @@ interface GenerateOpts {
   getCellValue: (rowId: string, columnId: string) => string;
   getCellTextAlign?: (rowId: string, columnId: string) => 'left' | 'center' | 'right' | null;
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
+  merges?: BoardMerge[];
 }
 
 /**
