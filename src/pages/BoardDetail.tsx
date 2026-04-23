@@ -1147,6 +1147,8 @@ function GroupSection({
   currentUserColumnPerms,
   cellGeometry,
   onCellMouseDown,
+  onCellMouseEnter,
+  onSelectRow,
   isCellSelected,
 }: GroupSectionProps) {
   return (
