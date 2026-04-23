@@ -1,18 +1,91 @@
-import { ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, Plus, Trash2, Pencil } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { StatusOption, getStatusColorClasses } from '../StatusOptionsDialog';
+import { StatusOption, getStatusColorClasses, STATUS_COLORS } from '../StatusOptionsDialog';
 
 interface StatusCellProps {
   value: string;
   options: StatusOption[];
   onSave: (value: string) => void;
   readOnly?: boolean;
+  perRowOptions?: boolean;
 }
 
-export function StatusCell({ value, options, onSave, readOnly }: StatusCellProps) {
-  const selected = options.find((o) => o.id === value);
+interface PerRowState {
+  selectedId: string;
+  rowOptions: StatusOption[];
+}
+
+function parseValue(value: string, perRow: boolean): PerRowState {
+  if (!perRow) return { selectedId: value || '', rowOptions: [] };
+  if (!value) return { selectedId: '', rowOptions: [] };
+  try {
+    const parsed = JSON.parse(value);
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.rowOptions)) {
+      return {
+        selectedId: typeof parsed.selectedId === 'string' ? parsed.selectedId : '',
+        rowOptions: parsed.rowOptions,
+      };
+    }
+  } catch {
+    // legacy plain string
+  }
+  return { selectedId: value, rowOptions: [] };
+}
+
+function serialize(state: PerRowState): string {
+  return JSON.stringify({ selectedId: state.selectedId, rowOptions: state.rowOptions });
+}
+
+export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: StatusCellProps) {
+  const state = parseValue(value, !!perRowOptions);
+  const activeOptions = perRowOptions ? state.rowOptions : options;
+  const selectedId = state.selectedId;
+  const selected = activeOptions.find((o) => o.id === selectedId);
   const color = selected ? getStatusColorClasses(selected.color) : null;
+
+  const [editing, setEditing] = useState(false);
+  const [draftLabel, setDraftLabel] = useState('');
+
+  const commitSelection = (id: string) => {
+    if (perRowOptions) {
+      onSave(serialize({ selectedId: id, rowOptions: state.rowOptions }));
+    } else {
+      onSave(id);
+    }
+  };
+
+  const addOption = () => {
+    if (!perRowOptions) return;
+    const label = draftLabel.trim();
+    if (!label) return;
+    const used = new Set(state.rowOptions.map((o) => o.color));
+    const nextColor = STATUS_COLORS.find((c) => !used.has(c.key))?.key || 'gray';
+    const newOpt: StatusOption = { id: crypto.randomUUID(), label, color: nextColor };
+    onSave(serialize({ selectedId: state.selectedId, rowOptions: [...state.rowOptions, newOpt] }));
+    setDraftLabel('');
+  };
+
+  const updateOption = (id: string, patch: Partial<StatusOption>) => {
+    onSave(
+      serialize({
+        selectedId: state.selectedId,
+        rowOptions: state.rowOptions.map((o) => (o.id === id ? { ...o, ...patch } : o)),
+      })
+    );
+  };
+
+  const deleteOption = (id: string) => {
+    onSave(
+      serialize({
+        selectedId: state.selectedId === id ? '' : state.selectedId,
+        rowOptions: state.rowOptions.filter((o) => o.id !== id),
+      })
+    );
+  };
 
   if (readOnly) {
     return (
@@ -43,34 +116,124 @@ export function StatusCell({ value, options, onSave, readOnly }: StatusCellProps
             <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-48 p-1" align="start">
-          {options.length === 0 && (
-            <p className="text-xs text-muted-foreground p-2">No options. Use column menu → Manage options.</p>
+        <PopoverContent className="w-64 p-1" align="start">
+          {activeOptions.length === 0 && !perRowOptions && (
+            <p className="text-xs text-muted-foreground p-2">
+              No options. Use column menu → Manage options.
+            </p>
           )}
-          {options.map((opt) => {
+          {activeOptions.length === 0 && perRowOptions && (
+            <p className="text-xs text-muted-foreground p-2">
+              No options yet — add one for this row below.
+            </p>
+          )}
+
+          {activeOptions.map((opt) => {
             const c = getStatusColorClasses(opt.color);
             return (
-              <button
-                key={opt.id}
-                onClick={() => onSave(opt.id)}
-                className={cn(
-                  'w-full text-left px-2 py-1 rounded-md text-sm mb-0.5',
-                  c.bg,
-                  c.text,
-                  value === opt.id && 'ring-2 ring-ring'
+              <div key={opt.id} className="flex items-center gap-1 mb-0.5">
+                <button
+                  onClick={() => commitSelection(opt.id)}
+                  className={cn(
+                    'flex-1 text-left px-2 py-1 rounded-md text-sm truncate',
+                    c.bg,
+                    c.text,
+                    selectedId === opt.id && 'ring-2 ring-ring'
+                  )}
+                >
+                  {opt.label}
+                </button>
+                {perRowOptions && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => deleteOption(opt.id)}
+                    title="Delete option"
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
                 )}
-              >
-                {opt.label}
-              </button>
+              </div>
             );
           })}
-          {value && (
+
+          {selectedId && (
             <button
-              onClick={() => onSave('')}
+              onClick={() => commitSelection('')}
               className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:bg-accent rounded-md mt-1"
             >
-              Clear
+              Clear selection
             </button>
+          )}
+
+          {perRowOptions && (
+            <>
+              <div className="border-t border-border my-1" />
+              <div className="p-1 space-y-1">
+                {state.rowOptions.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {STATUS_COLORS.map((c) => (
+                      <span key={c.key} className={cn('h-3 w-3 rounded-full', c.bg)} title={c.key} />
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10px] text-muted-foreground px-1">Add an option for this row</p>
+                <div className="flex gap-1">
+                  <Input
+                    value={draftLabel}
+                    onChange={(e) => setDraftLabel(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addOption();
+                      }
+                    }}
+                    placeholder="Status name"
+                    className="h-7 text-xs"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="h-7 w-7 shrink-0"
+                    onClick={addOption}
+                    disabled={!draftLabel.trim()}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+                {state.rowOptions.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    {state.rowOptions.map((opt) => (
+                      <div key={`edit-${opt.id}`} className="flex items-center gap-1">
+                        <div className="flex flex-wrap gap-0.5 shrink-0">
+                          {STATUS_COLORS.map((c) => (
+                            <button
+                              key={c.key}
+                              type="button"
+                              onClick={() => updateOption(opt.id, { color: c.key })}
+                              className={cn(
+                                'h-3 w-3 rounded-full border',
+                                c.bg,
+                                opt.color === c.key ? 'border-foreground' : 'border-transparent'
+                              )}
+                              title={c.key}
+                            />
+                          ))}
+                        </div>
+                        <Input
+                          value={opt.label}
+                          onChange={(e) => updateOption(opt.id, { label: e.target.value })}
+                          className="h-6 text-xs flex-1"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </PopoverContent>
       </Popover>
