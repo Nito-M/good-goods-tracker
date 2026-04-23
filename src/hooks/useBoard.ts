@@ -417,6 +417,7 @@ export function useBoard(boardId: string | undefined) {
     reorderColumns,
     addRow,
     deleteRow,
+    reorderRows,
     setCellValue,
     getCellValue,
     getCellTextAlign,
