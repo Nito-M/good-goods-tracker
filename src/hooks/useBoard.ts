@@ -30,6 +30,7 @@ export interface BoardCell {
   row_id: string;
   column_id: string;
   value: string;
+  text_align: 'left' | 'center' | 'right' | null;
 }
 
 export interface BoardDetail {
