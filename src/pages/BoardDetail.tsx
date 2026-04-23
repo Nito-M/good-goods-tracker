@@ -280,6 +280,7 @@ export default function BoardDetail() {
     reorderColumns,
     addRow,
     deleteRow,
+    reorderRows,
     setCellValue,
     getCellValue,
     getCellTextAlign,
