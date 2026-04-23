@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X } from 'lucide-react';
+import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X, Copy } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
 import { useCompanies, type Company } from '@/hooks/useCompanies';
 import { Button } from '@/components/ui/button';
@@ -18,12 +18,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
+import { CopyBoardDialog } from '@/components/board/CopyBoardDialog';
 
 export default function Boards() {
   const navigate = useNavigate();
   const location = useLocation();
   const routeCompanyId = (location.state as { companyId?: string } | null)?.companyId ?? null;
-  const { boards, loading: boardsLoading, createBoard, deleteBoard } = useBoards();
+  const { boards, loading: boardsLoading, createBoard, deleteBoard, copyBoard } = useBoards();
   const { companies, loading: companiesLoading } = useCompanies();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(routeCompanyId);
   const [companySearch, setCompanySearch] = useState('');
