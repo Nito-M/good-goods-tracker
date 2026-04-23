@@ -82,7 +82,7 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 };
 
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
-  const { boardName, columns, groups, getCellValue, getFiles } = opts;
+  const { boardName, columns, groups, getCellValue, getCellTextAlign, getFiles } = opts;
 
   // Use landscape — boards usually have many columns
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
@@ -109,6 +109,8 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   // Track which body cells should be tinted as status pills.
   // Key: `${groupIdx}-${rowIdx}-${colIdx}` -> color name
   const statusFills = new Map<string, string>();
+  // Per-cell alignment overrides. Key matches statusFills.
+  const cellAligns = new Map<string, 'left' | 'center' | 'right'>();
 
   let cursorY = 60;
 
@@ -147,6 +149,10 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
           if (option?.color) {
             statusFills.set(`${gIdx}-${rIdx}-${cIdx}`, option.color);
           }
+        }
+        const cellAlign = getCellTextAlign?.(row.id, col.id) ?? null;
+        if (cellAlign) {
+          cellAligns.set(`${gIdx}-${rIdx}-${cIdx}`, cellAlign);
         }
         return text;
       })
@@ -188,6 +194,10 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
           const fill = STATUS_FILL[colorName] || STATUS_FILL.gray;
           data.cell.styles.fillColor = fill;
           data.cell.styles.fontStyle = 'bold';
+        }
+        const overrideAlign = cellAligns.get(key);
+        if (overrideAlign) {
+          data.cell.styles.halign = overrideAlign;
         }
       },
     });
