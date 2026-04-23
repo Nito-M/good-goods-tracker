@@ -1358,6 +1358,8 @@ interface CellRendererProps {
   onOpenFile: (id: string) => Promise<string | null>;
   onConfigureConnect: () => void;
   readOnly?: boolean;
+  cellAlign?: 'left' | 'center' | 'right' | null;
+  onChangeCellAlign?: (a: 'left' | 'center' | 'right' | null) => void;
 }
 
 function CellRenderer({
@@ -1370,6 +1372,8 @@ function CellRenderer({
   onOpenFile,
   onConfigureConnect,
   readOnly,
+  cellAlign,
+  onChangeCellAlign,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
@@ -1410,7 +1414,18 @@ function CellRenderer({
         />
       );
     case 'text':
-    default:
-      return <TextCell value={value} onSave={onSave} readOnly={readOnly} align={column.text_align} />;
+    default: {
+      const effectiveAlign = cellAlign ?? column.text_align;
+      return (
+        <TextCell
+          value={value}
+          onSave={onSave}
+          readOnly={readOnly}
+          align={effectiveAlign}
+          cellAlign={cellAlign ?? null}
+          onChangeCellAlign={onChangeCellAlign}
+        />
+      );
+    }
   }
 }
