@@ -304,7 +304,7 @@ export function useBoard(boardId: string | undefined) {
         .insert(autoCells)
         .select();
       if (insertedCells) {
-        setCells((cs) => [...cs, ...insertedCells]);
+        setCells((cs) => [...cs, ...insertedCells.map(normalizeCell)]);
       }
     }
 
