@@ -275,6 +275,7 @@ export default function BoardDetail() {
     setColumnWidth,
     setColumnNotes,
     setColumnPerRowOptions,
+    setColumnTextAlign,
     deleteColumn,
     reorderColumns,
     addRow,
