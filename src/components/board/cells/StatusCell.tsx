@@ -81,43 +81,45 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-1" align="start">
-          {activeOptions.length === 0 && !perRowOptions && (
-            <p className="text-xs text-muted-foreground p-2">
-              No options. Use column menu → Manage options.
-            </p>
-          )}
-          {activeOptions.length === 0 && perRowOptions && (
-            <p className="text-xs text-muted-foreground p-2">
-              No options yet — click "Manage options" below to add some for this row.
-            </p>
-          )}
+          <div className="max-h-[200px] overflow-y-auto">
+            {activeOptions.length === 0 && !perRowOptions && (
+              <p className="text-xs text-muted-foreground p-2">
+                No options. Use column menu → Manage options.
+              </p>
+            )}
+            {activeOptions.length === 0 && perRowOptions && (
+              <p className="text-xs text-muted-foreground p-2">
+                No options yet — click "Manage options" below to add some for this row.
+              </p>
+            )}
 
-          {activeOptions.map((opt) => {
-            const c = getStatusColorClasses(opt.color);
-            return (
+            {activeOptions.map((opt) => {
+              const c = getStatusColorClasses(opt.color);
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => commitSelection(opt.id)}
+                  className={cn(
+                    'w-full text-left px-2 py-1 rounded-md text-sm truncate mb-0.5',
+                    c.bg,
+                    c.text,
+                    selectedId === opt.id && 'ring-2 ring-ring'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+
+            {selectedId && (
               <button
-                key={opt.id}
-                onClick={() => commitSelection(opt.id)}
-                className={cn(
-                  'w-full text-left px-2 py-1 rounded-md text-sm truncate mb-0.5',
-                  c.bg,
-                  c.text,
-                  selectedId === opt.id && 'ring-2 ring-ring'
-                )}
+                onClick={() => commitSelection('')}
+                className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:bg-accent rounded-md mt-1"
               >
-                {opt.label}
+                Clear selection
               </button>
-            );
-          })}
-
-          {selectedId && (
-            <button
-              onClick={() => commitSelection('')}
-              className="w-full text-left px-2 py-1 text-sm text-muted-foreground hover:bg-accent rounded-md mt-1"
-            >
-              Clear selection
-            </button>
-          )}
+            )}
+          </div>
 
           {perRowOptions && (
             <>
