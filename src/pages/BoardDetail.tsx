@@ -1127,14 +1127,29 @@ function GroupSection({
             </td>
             {columns.map((col, idx) => {
               const w = liveWidths[col.id] ?? col.width;
+              const geom = cellGeometry.get(`${row.id}::${col.id}`);
+              if (geom?.hidden) return null;
+              const selected = isCellSelected(row.id, col.id);
+              const isMergedAnchor = !!geom?.span;
               return (
                 <td
                   key={col.id}
+                  rowSpan={geom?.span?.rowSpan}
+                  colSpan={geom?.span?.colSpan}
                   style={{ width: w, minWidth: w, maxWidth: w }}
                   className={cn(
-                    'border-r border-border p-0 align-top',
-                    idx === 0 && 'sticky left-16 bg-muted z-10'
+                    'border-r border-border p-0 align-top relative cursor-cell',
+                    idx === 0 && 'sticky left-16 bg-muted z-10',
+                    selected && 'ring-2 ring-primary ring-inset',
+                    isMergedAnchor && 'bg-accent/30'
                   )}
+                  onMouseDown={(e) => {
+                    // Only handle left-click; ignore clicks on interactive controls
+                    if (e.button !== 0) return;
+                    const target = e.target as HTMLElement;
+                    if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
+                    onCellMouseDown(row.id, col.id, e.shiftKey);
+                  }}
                 >
                   <CellRenderer
                     column={col}
