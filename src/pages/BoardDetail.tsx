@@ -385,7 +385,20 @@ export default function BoardDetail() {
   const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
   const [rowSearch, setRowSearch] = useState('');
 
-  useEffect(() => {
+  // ---- Cell selection & merging ----
+  const { merges, createMerge, deleteMerges } = useBoardMerges(id);
+  const [selectionAnchor, setSelectionAnchor] = useState<{ rowId: string; colId: string } | null>(null);
+  const [selectionFocus, setSelectionFocus] = useState<{ rowId: string; colId: string } | null>(null);
+  const [mergePromptOpen, setMergePromptOpen] = useState(false);
+  const [pendingMergeContext, setPendingMergeContext] = useState<{
+    nonEmptyCount: number;
+    cellCount: number;
+    startRowId: string;
+    endRowId: string;
+    startColId: string;
+    endColId: string;
+  } | null>(null);
+
     if (board) setTitleValue(board.name);
   }, [board?.name]);
 
