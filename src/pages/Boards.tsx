@@ -29,6 +29,7 @@ export default function Boards() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(routeCompanyId);
   const [companySearch, setCompanySearch] = useState('');
   const [boardSearch, setBoardSearch] = useState('');
+  const [copyTarget, setCopyTarget] = useState<{ id: string; name: string; companyId: string | null } | null>(null);
 
   useEffect(() => {
     setSelectedCompanyId(routeCompanyId);
