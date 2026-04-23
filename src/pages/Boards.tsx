@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X, Copy } from 'lucide-react';
+import { Plus, Table2, Trash2, ArrowLeft, Building2, Search, X, Copy, ClipboardPaste } from 'lucide-react';
 import { useBoards } from '@/hooks/useBoards';
 import { useCompanies, type Company } from '@/hooks/useCompanies';
+import { useBoardClipboard } from '@/hooks/useBoardClipboard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +19,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
-import { CopyBoardDialog } from '@/components/board/CopyBoardDialog';
+import { PasteBoardDialog } from '@/components/board/PasteBoardDialog';
+import { toast } from 'sonner';
 
 export default function Boards() {
   const navigate = useNavigate();
@@ -26,10 +28,11 @@ export default function Boards() {
   const routeCompanyId = (location.state as { companyId?: string } | null)?.companyId ?? null;
   const { boards, loading: boardsLoading, createBoard, deleteBoard, copyBoard } = useBoards();
   const { companies, loading: companiesLoading } = useCompanies();
+  const { clipboard, copyToClipboard, clear: clearClipboard } = useBoardClipboard();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(routeCompanyId);
   const [companySearch, setCompanySearch] = useState('');
   const [boardSearch, setBoardSearch] = useState('');
-  const [copyTarget, setCopyTarget] = useState<{ id: string; name: string; companyId: string | null } | null>(null);
+  const [pasteOpen, setPasteOpen] = useState(false);
 
   useEffect(() => {
     setSelectedCompanyId(routeCompanyId);
@@ -78,14 +81,47 @@ export default function Boards() {
     navigate('/boards', { replace: true });
   };
 
+  const handleCopyBoard = (board: { id: string; name: string; company_id: string | null }) => {
+    copyToClipboard(board);
+    toast.success('Board copied', {
+      description: 'Open another workspace and paste it from the Boards page.',
+    });
+  };
+
+  const pasteButton = clipboard ? (
+    <div className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/5 pl-1 pr-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setPasteOpen(true)}
+        className="gap-2 text-primary hover:text-primary"
+      >
+        <ClipboardPaste className="h-4 w-4" />
+        Paste "{clipboard.sourceBoardName}"
+      </Button>
+      <button
+        type="button"
+        onClick={clearClipboard}
+        className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent"
+        aria-label="Discard clipboard"
+        title="Discard clipboard"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  ) : null;
+
   if (!selectedCompanyId) {
     return (
       <div className="container mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Boards</h1>
-          <p className="text-muted-foreground mt-1">
-            Choose a company to view its boards
-          </p>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Boards</h1>
+            <p className="text-muted-foreground mt-1">
+              Choose a company to view its boards
+            </p>
+          </div>
+          {pasteButton}
         </div>
 
         {loading ? (
@@ -126,6 +162,20 @@ export default function Boards() {
             )}
           </>
         )}
+
+        <PasteBoardDialog
+          open={pasteOpen}
+          onOpenChange={setPasteOpen}
+          clipboard={clipboard}
+          onPaste={async (targetCompanyId, newName) => {
+            if (!clipboard) return;
+            const newId = await copyBoard(clipboard.sourceBoardId, targetCompanyId, newName);
+            if (newId) {
+              clearClipboard();
+              navigate(`/boards/${newId}`);
+            }
+          }}
+        />
       </div>
     );
   }
@@ -157,10 +207,13 @@ export default function Boards() {
             </p>
           </div>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4" />
-          New Board
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {pasteButton}
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            New Board
+          </Button>
+        </div>
       </div>
 
       {boards.filter((b) => b.company_id === selectedCompanyId).length > 0 && (
@@ -213,9 +266,13 @@ export default function Boards() {
                     className="h-8 w-8"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setCopyTarget({ id: board.id, name: board.name, companyId: board.company_id });
+                      handleCopyBoard({
+                        id: board.id,
+                        name: board.name,
+                        company_id: board.company_id,
+                      });
                     }}
-                    title="Copy board to another company"
+                    title="Copy board to clipboard"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -260,17 +317,17 @@ export default function Boards() {
         </div>
       )}
 
-      <CopyBoardDialog
-        open={copyTarget !== null}
-        onOpenChange={(open) => { if (!open) setCopyTarget(null); }}
-        sourceBoardId={copyTarget?.id ?? null}
-        sourceBoardName={copyTarget?.name ?? ''}
-        sourceCompanyId={copyTarget?.companyId ?? null}
-        onCopy={async (targetCompanyId, newName) => {
-          if (!copyTarget) return;
-          await copyBoard(copyTarget.id, targetCompanyId, newName, (newId) =>
-            navigate(`/boards/${newId}`),
-          );
+      <PasteBoardDialog
+        open={pasteOpen}
+        onOpenChange={setPasteOpen}
+        clipboard={clipboard}
+        onPaste={async (targetCompanyId, newName) => {
+          if (!clipboard) return;
+          const newId = await copyBoard(clipboard.sourceBoardId, targetCompanyId, newName);
+          if (newId) {
+            clearClipboard();
+            navigate(`/boards/${newId}`);
+          }
         }}
       />
     </div>
