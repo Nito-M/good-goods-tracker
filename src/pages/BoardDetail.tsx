@@ -1255,6 +1255,7 @@ function GroupSection({
                     if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
                     onCellMouseDown(row.id, col.id, e.shiftKey);
                   }}
+                  onMouseEnter={() => onCellMouseEnter(row.id, col.id)}
                 >
                   <CellRenderer
                     column={col}
