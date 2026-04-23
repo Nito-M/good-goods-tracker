@@ -15,6 +15,7 @@ interface GenerateOpts {
   columns: BoardColumn[];
   groups: GroupBlock[];
   getCellValue: (rowId: string, columnId: string) => string;
+  getCellTextAlign?: (rowId: string, columnId: string) => 'left' | 'center' | 'right' | null;
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
 }
 

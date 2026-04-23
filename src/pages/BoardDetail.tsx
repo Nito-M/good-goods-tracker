@@ -831,6 +831,7 @@ export default function BoardDetail() {
                   columns: visibleColumns,
                   groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
                   getCellValue,
+                  getCellTextAlign,
                   getFiles,
                 });
               } catch (err) {
