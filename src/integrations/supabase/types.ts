@@ -713,6 +713,7 @@ export type Database = {
           name: string
           notes: string
           options: Json
+          per_row_options: boolean
           position: number
           type: string
           width: number
@@ -724,6 +725,7 @@ export type Database = {
           name?: string
           notes?: string
           options?: Json
+          per_row_options?: boolean
           position?: number
           type?: string
           width?: number
@@ -735,6 +737,7 @@ export type Database = {
           name?: string
           notes?: string
           options?: Json
+          per_row_options?: boolean
           position?: number
           type?: string
           width?: number
