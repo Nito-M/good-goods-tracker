@@ -31,7 +31,6 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
   const selected = activeOptions.find((o) => o.id === selectedId);
   const color = selected ? getStatusColorClasses(selected.color) : null;
 
-  const [, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState('');
 
   const commitSelection = (id: string) => {
