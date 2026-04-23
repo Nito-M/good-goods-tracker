@@ -1266,7 +1266,7 @@ function GroupSection({
             key={row.id}
             data-row-id={row.id}
             className={cn(
-              'border-b border-border hover:bg-accent/20 group transition-colors',
+              'hover:bg-accent/20 group transition-colors',
               highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset',
               draggedRowId === row.id && 'opacity-40',
               dragOverRowId === row.id && draggedRowId !== row.id && 'border-t-2 border-t-primary'
@@ -1284,7 +1284,7 @@ function GroupSection({
             }}
           >
             <td
-              className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1 cursor-pointer"
+              className="sticky left-0 bg-muted z-10 border-r border-b border-border w-16 px-1 cursor-pointer"
               title="Click to select row (Shift+Click to extend)"
               onMouseDown={(e) => {
                 if (e.button !== 0) return;
@@ -1357,7 +1357,7 @@ function GroupSection({
                   colSpan={geom?.span?.colSpan}
                   style={{ width: w, minWidth: w, maxWidth: w }}
                   className={cn(
-                    'border-r border-border p-0 align-top relative cursor-cell',
+                    'border-r border-b border-border p-0 align-top relative cursor-cell',
                     idx === 0 && 'sticky left-16 bg-muted z-10',
                     selected && 'ring-2 ring-primary ring-inset',
                     isMergedAnchor && 'bg-accent/30'
