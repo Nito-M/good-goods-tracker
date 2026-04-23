@@ -192,8 +192,9 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       head,
       body,
       theme: 'grid',
+      tableWidth: availableWidth,
       styles: {
-        fontSize: 9,
+        fontSize: dynamicFontSize,
         cellPadding: 5,
         overflow: 'linebreak',
         valign: 'top',
@@ -210,7 +211,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       alternateRowStyles: {
         fillColor: [250, 250, 252],
       },
-      margin: { left: 40, right: 40 },
+      margin: { left: sideMargin, right: sideMargin },
       didParseCell: (data: CellHookData) => {
         const col = columnByIdx.get(data.column.index);
         if (col) {
