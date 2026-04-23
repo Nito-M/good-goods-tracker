@@ -87,9 +87,12 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const { boardName, columns, groups, getCellValue, getCellTextAlign, getFiles, merges = [] } = opts;
 
-  // Use landscape — boards usually have many columns
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  // Portrait A4 — fit all columns to upright page width
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const sideMargin = 40;
+  const availableWidth = pageWidth - sideMargin * 2;
+  const dynamicFontSize = columns.length > 6 ? 8 : 9;
 
   // Header
   doc.setFont('helvetica', 'bold');
@@ -126,6 +129,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         head: [],
         body: [[group.label]],
         theme: 'plain',
+        tableWidth: availableWidth,
         styles: {
           fillColor: [243, 244, 246],
           textColor: [55, 65, 81],
@@ -133,7 +137,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
           fontSize: 10,
           cellPadding: { top: 6, bottom: 6, left: 8, right: 8 },
         },
-        margin: { left: 40, right: 40 },
+        margin: { left: sideMargin, right: sideMargin },
       });
       cursorY = (doc as any).lastAutoTable.finalY;
     }
@@ -188,8 +192,9 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       head,
       body,
       theme: 'grid',
+      tableWidth: availableWidth,
       styles: {
-        fontSize: 9,
+        fontSize: dynamicFontSize,
         cellPadding: 5,
         overflow: 'linebreak',
         valign: 'top',
@@ -206,7 +211,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       alternateRowStyles: {
         fillColor: [250, 250, 252],
       },
-      margin: { left: 40, right: 40 },
+      margin: { left: sideMargin, right: sideMargin },
       didParseCell: (data: CellHookData) => {
         const col = columnByIdx.get(data.column.index);
         if (col) {
