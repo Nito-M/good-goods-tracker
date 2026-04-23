@@ -1278,6 +1278,32 @@ function GroupSection({
                     if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
                     onCellMouseDown(row.id, col.id, e.shiftKey);
                   }}
+                  onPointerDown={(e) => {
+                    if (e.button !== 0) return;
+                    // Long-press starts merge selection from anywhere on the cell,
+                    // including over inputs/buttons. Triggers after 400ms.
+                    cancelLongPress();
+                    longPressRef.current = {
+                      timer: window.setTimeout(() => {
+                        onCellMouseDown(row.id, col.id, false);
+                        longPressRef.current = null;
+                      }, 400),
+                      startX: e.clientX,
+                      startY: e.clientY,
+                      rowId: row.id,
+                      colId: col.id,
+                    };
+                  }}
+                  onPointerMove={(e) => {
+                    const lp = longPressRef.current;
+                    if (!lp) return;
+                    const dx = Math.abs(e.clientX - lp.startX);
+                    const dy = Math.abs(e.clientY - lp.startY);
+                    if (dx > 6 || dy > 6) cancelLongPress();
+                  }}
+                  onPointerUp={cancelLongPress}
+                  onPointerCancel={cancelLongPress}
+                  onPointerLeave={cancelLongPress}
                   onMouseEnter={() => onCellMouseEnter(row.id, col.id)}
                 >
                   <CellRenderer
