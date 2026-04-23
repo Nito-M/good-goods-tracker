@@ -176,6 +176,10 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       },
       margin: { left: 40, right: 40 },
       didParseCell: (data: CellHookData) => {
+        const col = columnByIdx.get(data.column.index);
+        if (col) {
+          data.cell.styles.halign = col.text_align || 'left';
+        }
         if (data.section !== 'body') return;
         const key = `${gIdx}-${data.row.index}-${data.column.index}`;
         const colorName = statusFills.get(key);

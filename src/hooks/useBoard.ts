@@ -16,6 +16,7 @@ export interface BoardColumn {
   connect_board_id: string | null;
   connect_mirror_column_id: string | null;
   per_row_options: boolean;
+  text_align: 'left' | 'center' | 'right';
 }
 
 export interface BoardRow {
@@ -60,6 +61,7 @@ function normalizeColumn(raw: any): BoardColumn {
     connect_board_id,
     connect_mirror_column_id,
     per_row_options: !!raw.per_row_options,
+    text_align: (raw.text_align === 'center' || raw.text_align === 'right') ? raw.text_align : 'left',
   };
 }
 
@@ -205,6 +207,18 @@ export function useBoard(boardId: string | undefined) {
     }
   };
 
+  const setColumnTextAlign = async (id: string, text_align: 'left' | 'center' | 'right') => {
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, text_align } : c)));
+    const { error } = await supabase
+      .from('board_columns')
+      .update({ text_align } as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to update alignment');
+      await fetchAll();
+    }
+  };
+
   const setColumnPerRowOptions = async (id: string, per_row_options: boolean) => {
     setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, per_row_options } : c)));
     const { error } = await supabase
@@ -338,6 +352,7 @@ export function useBoard(boardId: string | undefined) {
     setColumnWidth,
     setColumnNotes,
     setColumnPerRowOptions,
+    setColumnTextAlign,
     deleteColumn,
     reorderColumns,
     addRow,

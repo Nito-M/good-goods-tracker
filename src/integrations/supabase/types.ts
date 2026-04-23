@@ -715,6 +715,7 @@ export type Database = {
           options: Json
           per_row_options: boolean
           position: number
+          text_align: string
           type: string
           width: number
         }
@@ -727,6 +728,7 @@ export type Database = {
           options?: Json
           per_row_options?: boolean
           position?: number
+          text_align?: string
           type?: string
           width?: number
         }
@@ -739,6 +741,7 @@ export type Database = {
           options?: Json
           per_row_options?: boolean
           position?: number
+          text_align?: string
           type?: string
           width?: number
         }

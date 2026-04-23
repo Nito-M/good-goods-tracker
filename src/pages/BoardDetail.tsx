@@ -57,11 +57,12 @@ interface ColumnHeaderProps {
   onConfigureConnect: () => void;
   onEditNotes: () => void;
   onTogglePerRowOptions: () => void;
+  onChangeTextAlign: (align: 'left' | 'center' | 'right') => void;
   onDelete?: () => void;
   isPrimary?: boolean;
 }
 
-function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onTogglePerRowOptions, onDelete, isPrimary }: ColumnHeaderProps) {
+function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfigureConnect, onEditNotes, onTogglePerRowOptions, onChangeTextAlign, onDelete, isPrimary }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(column.name);
 
@@ -171,6 +172,22 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
               {column.type === 'connect' && !isPrimary && (
                 <DropdownMenuItem onClick={onConfigureConnect}>Configure connection</DropdownMenuItem>
               )}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Text alignment</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {(['left', 'center', 'right'] as const).map((a) => (
+                      <DropdownMenuItem
+                        key={a}
+                        onClick={() => onChangeTextAlign(a)}
+                        disabled={column.text_align === a}
+                      >
+                        {a.charAt(0).toUpperCase() + a.slice(1)} {column.text_align === a && '✓'}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
               {onDelete && !isPrimary && (
                 <>
                   <DropdownMenuSeparator />
@@ -258,6 +275,7 @@ export default function BoardDetail() {
     setColumnWidth,
     setColumnNotes,
     setColumnPerRowOptions,
+    setColumnTextAlign,
     deleteColumn,
     reorderColumns,
     addRow,
@@ -936,6 +954,7 @@ export default function BoardDetail() {
                       onConfigureConnect={() => setConnectDialogColumnId(col.id)}
                       onEditNotes={() => setColumnNoteId(col.id)}
                       onTogglePerRowOptions={() => setColumnPerRowOptions(col.id, !col.per_row_options)}
+                      onChangeTextAlign={(a) => setColumnTextAlign(col.id, a)}
                       onDelete={visibleColumns.length > 1 && idx !== 0 ? () => deleteColumn(col.id) : undefined}
                       isPrimary={idx === 0}
                     />
@@ -1392,6 +1411,6 @@ function CellRenderer({
       );
     case 'text':
     default:
-      return <TextCell value={value} onSave={onSave} readOnly={readOnly} />;
+      return <TextCell value={value} onSave={onSave} readOnly={readOnly} align={column.text_align} />;
   }
 }
