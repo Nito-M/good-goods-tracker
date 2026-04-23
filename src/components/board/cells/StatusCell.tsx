@@ -31,6 +31,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
   const color = selected ? getStatusColorClasses(selected.color) : null;
 
   const [manageOpen, setManageOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const commitSelection = (id: string) => {
     if (perRowOptions) {
@@ -38,6 +39,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
     } else {
       onSave(id);
     }
+    setPopoverOpen(false);
   };
 
   const handleSaveRowOptions = (newOptions: StatusOption[]) => {
@@ -68,7 +70,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
 
   return (
     <div className="px-2 py-1">
-      <Popover>
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <PopoverTrigger asChild>
           <button
             className={cn(
