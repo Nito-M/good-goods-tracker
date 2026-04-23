@@ -259,6 +259,20 @@ export default function Boards() {
           ))}
         </div>
       )}
+
+      <CopyBoardDialog
+        open={copyTarget !== null}
+        onOpenChange={(open) => { if (!open) setCopyTarget(null); }}
+        sourceBoardId={copyTarget?.id ?? null}
+        sourceBoardName={copyTarget?.name ?? ''}
+        sourceCompanyId={copyTarget?.companyId ?? null}
+        onCopy={async (targetCompanyId, newName) => {
+          if (!copyTarget) return;
+          await copyBoard(copyTarget.id, targetCompanyId, newName, (newId) =>
+            navigate(`/boards/${newId}`),
+          );
+        }}
+      />
     </div>
   );
 }
