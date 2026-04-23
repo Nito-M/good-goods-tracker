@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { copyBoard as copyBoardImpl } from '@/lib/copyBoard';
 
 export interface Board {
   id: string;
@@ -119,5 +120,33 @@ export function useBoards() {
     await fetchBoards();
   };
 
-  return { boards, loading, createBoard, renameBoard, deleteBoard, refetch: fetchBoards };
+  const copyBoard = async (
+    sourceBoardId: string,
+    targetCompanyId: string,
+    newName: string,
+    onOpen?: (newBoardId: string) => void,
+  ): Promise<string | null> => {
+    if (!user) return null;
+    try {
+      const { newBoardId } = await copyBoardImpl({
+        sourceBoardId,
+        targetCompanyId,
+        newName,
+        userId: user.id,
+      });
+      await fetchBoards();
+      toast.success('Board copied', {
+        action: onOpen
+          ? { label: 'Open', onClick: () => onOpen(newBoardId) }
+          : undefined,
+      });
+      return newBoardId;
+    } catch (err) {
+      console.error('copyBoard failed', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to copy board');
+      return null;
+    }
+  };
+
+  return { boards, loading, createBoard, renameBoard, deleteBoard, copyBoard, refetch: fetchBoards };
 }
