@@ -15,6 +15,7 @@ export interface BoardColumn {
   notes: string;
   connect_board_id: string | null;
   connect_mirror_column_id: string | null;
+  per_row_options: boolean;
 }
 
 export interface BoardRow {
@@ -58,6 +59,7 @@ function normalizeColumn(raw: any): BoardColumn {
     notes: typeof raw.notes === 'string' ? raw.notes : '',
     connect_board_id,
     connect_mirror_column_id,
+    per_row_options: !!raw.per_row_options,
   };
 }
 
