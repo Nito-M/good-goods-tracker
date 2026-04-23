@@ -1357,7 +1357,7 @@ function GroupSection({
                   colSpan={geom?.span?.colSpan}
                   style={{ width: w, minWidth: w, maxWidth: w }}
                   className={cn(
-                    'border-r border-border p-0 align-top relative cursor-cell',
+                    'border-r border-b border-border p-0 align-top relative cursor-cell',
                     idx === 0 && 'sticky left-16 bg-muted z-10',
                     selected && 'ring-2 ring-primary ring-inset',
                     isMergedAnchor && 'bg-accent/30'
