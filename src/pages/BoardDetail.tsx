@@ -1027,6 +1027,9 @@ interface GroupSectionProps {
   onConfigureConnect: (col_id: string) => void;
   highlightRowId?: string | null;
   currentUserColumnPerms: (columnId: string) => 'edit' | 'view' | 'hidden';
+  cellGeometry: Map<string, { span?: { rowSpan: number; colSpan: number; mergeId: string }; hidden?: boolean }>;
+  onCellMouseDown: (rowId: string, colId: string, shiftKey: boolean) => void;
+  isCellSelected: (rowId: string, colId: string) => boolean;
 }
 
 function GroupSection({
@@ -1048,6 +1051,9 @@ function GroupSection({
   onConfigureConnect,
   highlightRowId,
   currentUserColumnPerms,
+  cellGeometry,
+  onCellMouseDown,
+  isCellSelected,
 }: GroupSectionProps) {
   return (
     <>
