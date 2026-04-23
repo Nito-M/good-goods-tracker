@@ -1,13 +1,15 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split } from 'lucide-react';
 import { generateBoardPdf } from '@/lib/boardPdfGenerator';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
 import { useBoardRowNoteEntries } from '@/hooks/useBoardRowNoteEntries';
 import { useBoardRowActivity } from '@/hooks/useBoardRowActivity';
+import { useBoardMerges } from '@/hooks/useBoardMerges';
 import { RowNoteDialog } from '@/components/board/RowNoteDialog';
 import { ColumnNoteDialog } from '@/components/board/ColumnNoteDialog';
+import { MergeConfirmDialog } from '@/components/board/MergeConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -45,6 +47,7 @@ import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
+import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
@@ -382,6 +385,20 @@ export default function BoardDetail() {
   const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
   const [rowSearch, setRowSearch] = useState('');
 
+  // ---- Cell selection & merging ----
+  const { merges, createMerge, deleteMerges } = useBoardMerges(id);
+  const [selectionAnchor, setSelectionAnchor] = useState<{ rowId: string; colId: string } | null>(null);
+  const [selectionFocus, setSelectionFocus] = useState<{ rowId: string; colId: string } | null>(null);
+  const [mergePromptOpen, setMergePromptOpen] = useState(false);
+  const [pendingMergeContext, setPendingMergeContext] = useState<{
+    nonEmptyCount: number;
+    cellCount: number;
+    startRowId: string;
+    endRowId: string;
+    startColId: string;
+    endColId: string;
+  } | null>(null);
+
   useEffect(() => {
     if (board) setTitleValue(board.name);
   }, [board?.name]);
@@ -460,6 +477,177 @@ export default function BoardDetail() {
       .map(([key, rs]) => ({ key, label: key, rows: rs }));
   }, [filteredRows, board?.group_by_column_id, groupByColumn, getCellValue]);
 
+  // Flatten the actual rendered row order across groups so merge geometry
+  // matches what the user sees on screen.
+  const renderedRowIds = useMemo(
+    () => grouped.flatMap((g) => g.rows.map((r) => r.id)),
+    [grouped]
+  );
+  const visibleColumnIds = useMemo(() => visibleColumns.map((c) => c.id), [visibleColumns]);
+
+  const mergeRects = useMemo(
+    () => computeMergeRects(merges, renderedRowIds, visibleColumnIds),
+    [merges, renderedRowIds, visibleColumnIds]
+  );
+
+  const cellGeometry = useMemo(
+    () => buildCellGeometryMap(mergeRects, renderedRowIds, visibleColumnIds),
+    [mergeRects, renderedRowIds, visibleColumnIds]
+  );
+
+  // Compute current selection rectangle (anchor + focus, normalized).
+  const selectionRect = useMemo(() => {
+    if (!selectionAnchor || !selectionFocus) return null;
+    const aRow = renderedRowIds.indexOf(selectionAnchor.rowId);
+    const fRow = renderedRowIds.indexOf(selectionFocus.rowId);
+    const aCol = visibleColumnIds.indexOf(selectionAnchor.colId);
+    const fCol = visibleColumnIds.indexOf(selectionFocus.colId);
+    if (aRow < 0 || fRow < 0 || aCol < 0 || fCol < 0) return null;
+    return {
+      r1: Math.min(aRow, fRow),
+      r2: Math.max(aRow, fRow),
+      c1: Math.min(aCol, fCol),
+      c2: Math.max(aCol, fCol),
+    };
+  }, [selectionAnchor, selectionFocus, renderedRowIds, visibleColumnIds]);
+
+  const selectedCellCount = selectionRect
+    ? (selectionRect.r2 - selectionRect.r1 + 1) * (selectionRect.c2 - selectionRect.c1 + 1)
+    : 0;
+
+  const selectedMergeIds = useMemo(() => {
+    if (!selectionRect) return [];
+    return mergeRects
+      .filter(
+        (r) =>
+          r.startRowIdx >= selectionRect.r1 &&
+          r.endRowIdx <= selectionRect.r2 &&
+          r.startColIdx >= selectionRect.c1 &&
+          r.endColIdx <= selectionRect.c2
+      )
+      .map((r) => r.id);
+  }, [mergeRects, selectionRect]);
+
+  const handleCellMouseDown = useCallback(
+    (rowId: string, colId: string, shiftKey: boolean) => {
+      if (shiftKey && selectionAnchor) {
+        setSelectionFocus({ rowId, colId });
+      } else {
+        setSelectionAnchor({ rowId, colId });
+        setSelectionFocus({ rowId, colId });
+      }
+    },
+    [selectionAnchor]
+  );
+
+  const clearSelection = useCallback(() => {
+    setSelectionAnchor(null);
+    setSelectionFocus(null);
+  }, []);
+
+  const requestMerge = useCallback(() => {
+    if (!selectionRect || selectedCellCount < 2) return;
+    const startRowId = renderedRowIds[selectionRect.r1];
+    const endRowId = renderedRowIds[selectionRect.r2];
+    const startColId = visibleColumnIds[selectionRect.c1];
+    const endColId = visibleColumnIds[selectionRect.c2];
+
+    let nonEmpty = 0;
+    for (let r = selectionRect.r1; r <= selectionRect.r2; r++) {
+      for (let c = selectionRect.c1; c <= selectionRect.c2; c++) {
+        const v = getCellValue(renderedRowIds[r], visibleColumnIds[c]);
+        if (v && v.trim() !== '') nonEmpty++;
+      }
+    }
+
+    setPendingMergeContext({
+      nonEmptyCount: nonEmpty,
+      cellCount: selectedCellCount,
+      startRowId,
+      endRowId,
+      startColId,
+      endColId,
+    });
+    setMergePromptOpen(true);
+  }, [selectionRect, selectedCellCount, renderedRowIds, visibleColumnIds, getCellValue]);
+
+  const confirmMerge = useCallback(
+    async (mode: 'keep-top-left' | 'concatenate') => {
+      if (!pendingMergeContext || !id) {
+        setMergePromptOpen(false);
+        return;
+      }
+      const startRowIdx = renderedRowIds.indexOf(pendingMergeContext.startRowId);
+      const endRowIdx = renderedRowIds.indexOf(pendingMergeContext.endRowId);
+      const startColIdx = visibleColumnIds.indexOf(pendingMergeContext.startColId);
+      const endColIdx = visibleColumnIds.indexOf(pendingMergeContext.endColId);
+
+      // Remove any merges that overlap the new rectangle to avoid duplicates.
+      const overlappingIds = mergeRects
+        .filter(
+          (r) =>
+            !(
+              r.endRowIdx < startRowIdx ||
+              r.startRowIdx > endRowIdx ||
+              r.endColIdx < startColIdx ||
+              r.startColIdx > endColIdx
+            )
+        )
+        .map((r) => r.id);
+      if (overlappingIds.length > 0) {
+        await deleteMerges(overlappingIds);
+      }
+
+      if (mode === 'concatenate') {
+        const parts: string[] = [];
+        for (let r = startRowIdx; r <= endRowIdx; r++) {
+          for (let c = startColIdx; c <= endColIdx; c++) {
+            const v = getCellValue(renderedRowIds[r], visibleColumnIds[c]);
+            if (v && v.trim() !== '') parts.push(v);
+          }
+        }
+        if (parts.length > 0) {
+          await setCellValueLogged(
+            pendingMergeContext.startRowId,
+            pendingMergeContext.startColId,
+            parts.join(' • ')
+          );
+        }
+      }
+
+      await createMerge({
+        board_id: id,
+        start_row_id: pendingMergeContext.startRowId,
+        end_row_id: pendingMergeContext.endRowId,
+        start_column_id: pendingMergeContext.startColId,
+        end_column_id: pendingMergeContext.endColId,
+      });
+
+      setMergePromptOpen(false);
+      setPendingMergeContext(null);
+      clearSelection();
+    },
+    [
+      pendingMergeContext,
+      id,
+      mergeRects,
+      renderedRowIds,
+      visibleColumnIds,
+      deleteMerges,
+      createMerge,
+      getCellValue,
+      setCellValueLogged,
+      clearSelection,
+    ]
+  );
+
+  const handleUnmerge = useCallback(async () => {
+    if (selectedMergeIds.length === 0) return;
+    await deleteMerges(selectedMergeIds);
+    clearSelection();
+  }, [selectedMergeIds, deleteMerges, clearSelection]);
+
+
   if (loading || !board) {
     return (
       <div className="container mx-auto p-6">
@@ -516,6 +704,24 @@ export default function BoardDetail() {
           </h1>
         )}
         <div className="ml-auto flex items-center gap-2">
+          {selectedCellCount >= 2 && selectedMergeIds.length === 0 && (
+            <Button variant="outline" size="sm" onClick={requestMerge}>
+              <Combine className="h-4 w-4" />
+              Merge {selectedCellCount} cells
+            </Button>
+          )}
+          {selectedMergeIds.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleUnmerge}>
+              <Split className="h-4 w-4" />
+              Unmerge
+            </Button>
+          )}
+          {(selectionAnchor || selectionFocus) && (
+            <Button variant="ghost" size="sm" onClick={clearSelection}>
+              <X className="h-4 w-4" />
+              Clear selection
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -693,6 +899,19 @@ export default function BoardDetail() {
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
                 highlightRowId={activeHighlight}
+                cellGeometry={cellGeometry}
+                onCellMouseDown={handleCellMouseDown}
+                isCellSelected={(rowId, colId) => {
+                  if (!selectionRect) return false;
+                  const r = renderedRowIds.indexOf(rowId);
+                  const c = visibleColumnIds.indexOf(colId);
+                  return (
+                    r >= selectionRect.r1 &&
+                    r <= selectionRect.r2 &&
+                    c >= selectionRect.c1 &&
+                    c <= selectionRect.c2
+                  );
+                }}
               />
             ))}
 
@@ -784,6 +1003,17 @@ export default function BoardDetail() {
           columns={columns}
         />
       )}
+
+      <MergeConfirmDialog
+        open={mergePromptOpen}
+        onOpenChange={(o) => {
+          setMergePromptOpen(o);
+          if (!o) setPendingMergeContext(null);
+        }}
+        cellCount={pendingMergeContext?.cellCount ?? 0}
+        hasMultipleNonEmpty={(pendingMergeContext?.nonEmptyCount ?? 0) > 1}
+        onConfirm={confirmMerge}
+      />
     </div>
   );
 }
@@ -808,6 +1038,9 @@ interface GroupSectionProps {
   onConfigureConnect: (col_id: string) => void;
   highlightRowId?: string | null;
   currentUserColumnPerms: (columnId: string) => 'edit' | 'view' | 'hidden';
+  cellGeometry: Map<string, { span?: { rowSpan: number; colSpan: number; mergeId: string }; hidden?: boolean }>;
+  onCellMouseDown: (rowId: string, colId: string, shiftKey: boolean) => void;
+  isCellSelected: (rowId: string, colId: string) => boolean;
 }
 
 function GroupSection({
@@ -829,6 +1062,9 @@ function GroupSection({
   onConfigureConnect,
   highlightRowId,
   currentUserColumnPerms,
+  cellGeometry,
+  onCellMouseDown,
+  isCellSelected,
 }: GroupSectionProps) {
   return (
     <>
@@ -902,14 +1138,29 @@ function GroupSection({
             </td>
             {columns.map((col, idx) => {
               const w = liveWidths[col.id] ?? col.width;
+              const geom = cellGeometry.get(`${row.id}::${col.id}`);
+              if (geom?.hidden) return null;
+              const selected = isCellSelected(row.id, col.id);
+              const isMergedAnchor = !!geom?.span;
               return (
                 <td
                   key={col.id}
+                  rowSpan={geom?.span?.rowSpan}
+                  colSpan={geom?.span?.colSpan}
                   style={{ width: w, minWidth: w, maxWidth: w }}
                   className={cn(
-                    'border-r border-border p-0 align-top',
-                    idx === 0 && 'sticky left-16 bg-muted z-10'
+                    'border-r border-border p-0 align-top relative cursor-cell',
+                    idx === 0 && 'sticky left-16 bg-muted z-10',
+                    selected && 'ring-2 ring-primary ring-inset',
+                    isMergedAnchor && 'bg-accent/30'
                   )}
+                  onMouseDown={(e) => {
+                    // Only handle left-click; ignore clicks on interactive controls
+                    if (e.button !== 0) return;
+                    const target = e.target as HTMLElement;
+                    if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
+                    onCellMouseDown(row.id, col.id, e.shiftKey);
+                  }}
                 >
                   <CellRenderer
                     column={col}
