@@ -149,7 +149,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
     const geometry = buildCellGeometryMap(groupRects, groupRowIds, colIds);
 
     const body: RowInput[] = group.rows.map((row, rIdx) => {
-      const rowCells: CellDef[] = [];
+      const rowCells: Array<string | CellDef> = [];
       columns.forEach((col, cIdx) => {
         const key = `${row.id}::${col.id}`;
         const geo = geometry.get(key);
@@ -180,7 +180,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
           rowCells.push(text);
         }
       });
-      return rowCells;
+      return rowCells as RowInput;
     });
 
     autoTable(doc, {
