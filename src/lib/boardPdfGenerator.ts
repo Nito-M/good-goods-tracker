@@ -161,14 +161,15 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         cellPadding: 5,
         overflow: 'linebreak',
         valign: 'top',
-        lineColor: [229, 231, 235],
-        lineWidth: 0.5,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.75,
       },
       headStyles: {
         fillColor: [243, 244, 246],
         textColor: [55, 65, 81],
         fontStyle: 'bold',
-        lineColor: [209, 213, 219],
+        lineColor: [0, 0, 0],
+        lineWidth: 0.75,
       },
       alternateRowStyles: {
         fillColor: [250, 250, 252],
