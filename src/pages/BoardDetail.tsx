@@ -1267,8 +1267,21 @@ function GroupSection({
             data-row-id={row.id}
             className={cn(
               'border-b border-border hover:bg-accent/20 group transition-colors',
-              highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
+              highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset',
+              draggedRowId === row.id && 'opacity-40',
+              dragOverRowId === row.id && draggedRowId !== row.id && 'border-t-2 border-t-primary'
             )}
+            onDragOver={(e) => {
+              if (!draggedRowId || draggedRowId === row.id) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              if (dragOverRowId !== row.id) onRowDragOver(row.id);
+            }}
+            onDragLeave={() => onRowDragLeave(row.id)}
+            onDrop={(e) => {
+              e.preventDefault();
+              onRowDrop(row.id);
+            }}
           >
             <td
               className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1 cursor-pointer"
@@ -1281,6 +1294,20 @@ function GroupSection({
               }}
             >
               <div className="flex items-center justify-center gap-0.5">
+                <button
+                  type="button"
+                  draggable
+                  onDragStart={(e) => {
+                    onRowDragStart(row.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', row.id);
+                  }}
+                  onDragEnd={onRowDragEnd}
+                  className="h-6 w-4 flex items-center justify-center cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                  title="Drag to reorder row"
+                >
+                  <GripVertical className="h-3 w-3" />
+                </button>
                 <Button
                   variant="ghost"
                   size="icon"
