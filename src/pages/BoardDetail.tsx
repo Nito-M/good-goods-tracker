@@ -43,8 +43,7 @@ import { LinkCell } from '@/components/board/cells/LinkCell';
 import { ConnectBoardCell } from '@/components/board/cells/ConnectBoardCell';
 import { ConnectBoardSetupDialog } from '@/components/board/ConnectBoardSetupDialog';
 import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
-import { CopyBoardDialog } from '@/components/board/CopyBoardDialog';
-import { useBoards } from '@/hooks/useBoards';
+import { useBoardClipboard } from '@/hooks/useBoardClipboard';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -301,8 +300,7 @@ export default function BoardDetail() {
 
   const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
   const [accessSheetOpen, setAccessSheetOpen] = useState(false);
-  const [copyOpen, setCopyOpen] = useState(false);
-  const { copyBoard } = useBoards();
+  const { copyToClipboard } = useBoardClipboard();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
   const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
@@ -864,10 +862,16 @@ export default function BoardDetail() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setCopyOpen(true)}
+            onClick={() => {
+              if (!board) return;
+              copyToClipboard({ id: board.id, name: board.name, company_id: board.company_id });
+              toast.success('Board copied', {
+                description: 'Open another workspace and paste it from the Boards page.',
+              });
+            }}
           >
             <Copy className="h-4 w-4" />
-            Copy to…
+            Copy board
           </Button>
         </div>
       </div>
@@ -1150,20 +1154,6 @@ export default function BoardDetail() {
         />
       )}
 
-      {board && (
-        <CopyBoardDialog
-          open={copyOpen}
-          onOpenChange={setCopyOpen}
-          sourceBoardId={board.id}
-          sourceBoardName={board.name}
-          sourceCompanyId={board.company_id}
-          onCopy={async (targetCompanyId, newName) => {
-            await copyBoard(board.id, targetCompanyId, newName, (newId) =>
-              navigate(`/boards/${newId}`),
-            );
-          }}
-        />
-      )}
 
       <MergeConfirmDialog
         open={mergePromptOpen}

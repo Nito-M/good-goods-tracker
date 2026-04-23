@@ -18,44 +18,40 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCompanies } from '@/hooks/useCompanies';
+import type { BoardClipboardEntry } from '@/hooks/useBoardClipboard';
 
-interface CopyBoardDialogProps {
+interface PasteBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sourceBoardId: string | null;
-  sourceBoardName: string;
-  /** Company the source board belongs to (excluded as a target by default? we still allow it) */
-  sourceCompanyId?: string | null;
-  onCopy: (targetCompanyId: string, newName: string) => Promise<unknown> | void;
+  clipboard: BoardClipboardEntry | null;
+  onPaste: (targetCompanyId: string, newName: string) => Promise<unknown> | void;
 }
 
-export function CopyBoardDialog({
+export function PasteBoardDialog({
   open,
   onOpenChange,
-  sourceBoardId,
-  sourceBoardName,
-  sourceCompanyId,
-  onCopy,
-}: CopyBoardDialogProps) {
+  clipboard,
+  onPaste,
+}: PasteBoardDialogProps) {
   const { companies, loading } = useCompanies();
   const [targetCompanyId, setTargetCompanyId] = useState<string>('');
   const [newName, setNewName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setNewName(`${sourceBoardName} (Copy)`);
-      // Default to first company that isn't the source's
-      const first = companies.find((c) => c.id !== sourceCompanyId) || companies[0];
+    if (open && clipboard) {
+      setNewName(`${clipboard.sourceBoardName} (Copy)`);
+      const first =
+        companies.find((c) => c.id !== clipboard.sourceCompanyId) || companies[0];
       setTargetCompanyId(first?.id ?? '');
     }
-  }, [open, sourceBoardName, sourceCompanyId, companies]);
+  }, [open, clipboard, companies]);
 
   const handleSubmit = async () => {
-    if (!sourceBoardId || !targetCompanyId || !newName.trim()) return;
+    if (!clipboard || !targetCompanyId || !newName.trim()) return;
     setSubmitting(true);
     try {
-      await onCopy(targetCompanyId, newName.trim());
+      await onPaste(targetCompanyId, newName.trim());
       onOpenChange(false);
     } finally {
       setSubmitting(false);
@@ -66,17 +62,17 @@ export function CopyBoardDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
-          <DialogTitle>Copy board</DialogTitle>
+          <DialogTitle>Paste board</DialogTitle>
           <DialogDescription>
-            Duplicate "{sourceBoardName}" — including columns, rows, cells, merges, and notes — into another company.
+            Duplicate "{clipboard?.sourceBoardName}" — including columns, rows, cells, merges, and notes — into a company in this workspace.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="copy-board-name">New board name</Label>
+            <Label htmlFor="paste-board-name">New board name</Label>
             <Input
-              id="copy-board-name"
+              id="paste-board-name"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Board name"
@@ -97,14 +93,14 @@ export function CopyBoardDialog({
                 {companies.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
-                    {c.id === sourceCompanyId ? ' (current)' : ''}
+                    {c.id === clipboard?.sourceCompanyId ? ' (original)' : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {!loading && companies.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                No companies available. Add one in Settings first.
+                No companies available in this workspace. Add one in Settings first.
               </p>
             )}
           </div>
@@ -118,7 +114,7 @@ export function CopyBoardDialog({
             onClick={handleSubmit}
             disabled={submitting || !targetCompanyId || !newName.trim()}
           >
-            {submitting ? 'Copying…' : 'Copy board'}
+            {submitting ? 'Pasting…' : 'Paste board'}
           </Button>
         </DialogFooter>
       </DialogContent>
