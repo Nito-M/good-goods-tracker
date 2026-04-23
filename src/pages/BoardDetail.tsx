@@ -1196,6 +1196,13 @@ function GroupSection({
   onCellMouseEnter,
   onSelectRow,
   isCellSelected,
+  draggedRowId,
+  dragOverRowId,
+  onRowDragStart,
+  onRowDragOver,
+  onRowDragLeave,
+  onRowDrop,
+  onRowDragEnd,
 }: GroupSectionProps) {
   // Long-press: hold ~400ms anywhere on a cell (even on inputs) to start a merge selection.
   const longPressRef = useRef<{
