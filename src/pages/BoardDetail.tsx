@@ -401,6 +401,8 @@ export default function BoardDetail() {
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
   const [draggedColId, setDraggedColId] = useState<string | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
+  const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
+  const [dragOverRowId, setDragOverRowId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightRowId = searchParams.get('row');
   const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
