@@ -901,7 +901,7 @@ export default function BoardDetail() {
       </div>
 
       <div className="flex-1 min-h-0 border border-border rounded-lg overflow-auto bg-card">
-        <table className="border-collapse" style={{ width: 'max-content', minWidth: '100%' }}>
+        <table className="border-separate border-spacing-0" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
             <tr className="border-b border-border bg-muted">
               <th className="sticky left-0 top-0 z-30 border-r w-16 border-border shadow-none bg-muted"></th>
