@@ -1183,7 +1183,16 @@ function GroupSection({
               highlightRowId === row.id && 'bg-primary/15 ring-2 ring-primary ring-inset'
             )}
           >
-            <td className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1">
+            <td
+              className="sticky left-0 bg-muted z-10 border-r border-border w-16 px-1 cursor-pointer"
+              title="Click to select row (Shift+Click to extend)"
+              onMouseDown={(e) => {
+                if (e.button !== 0) return;
+                const target = e.target as HTMLElement;
+                if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
+                onSelectRow(row.id, e.shiftKey);
+              }}
+            >
               <div className="flex items-center justify-center gap-0.5">
                 <Button
                   variant="ghost"
