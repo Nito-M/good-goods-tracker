@@ -861,6 +861,14 @@ export default function BoardDetail() {
               Manage Access
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCopyOpen(true)}
+          >
+            <Copy className="h-4 w-4" />
+            Copy to…
+          </Button>
         </div>
       </div>
 
