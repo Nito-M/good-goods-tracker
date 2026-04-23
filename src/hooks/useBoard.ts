@@ -66,6 +66,17 @@ function normalizeColumn(raw: any): BoardColumn {
   };
 }
 
+function normalizeCell(raw: any): BoardCell {
+  const ta = raw.text_align;
+  return {
+    id: raw.id,
+    row_id: raw.row_id,
+    column_id: raw.column_id,
+    value: raw.value ?? '',
+    text_align: ta === 'left' || ta === 'center' || ta === 'right' ? ta : null,
+  };
+}
+
 export function useBoard(boardId: string | undefined) {
   const [board, setBoard] = useState<BoardDetail | null>(null);
   const [columns, setColumns] = useState<BoardColumn[]>([]);
@@ -98,7 +109,7 @@ export function useBoard(boardId: string | undefined) {
         .from('board_cells')
         .select('*')
         .in('row_id', rowIds);
-      setCells(cellData || []);
+      setCells((cellData || []).map(normalizeCell));
     } else {
       setCells([]);
     }
@@ -329,12 +340,43 @@ export function useBoard(boardId: string | undefined) {
         toast.error('Failed to save cell');
         return;
       }
-      setCells((cs) => [...cs, data]);
+      setCells((cs) => [...cs, normalizeCell(data)]);
     }
   };
 
   const getCellValue = (row_id: string, column_id: string): string => {
     return cells.find((c) => c.row_id === row_id && c.column_id === column_id)?.value || '';
+  };
+
+  const getCellTextAlign = (row_id: string, column_id: string): 'left' | 'center' | 'right' | null => {
+    return cells.find((c) => c.row_id === row_id && c.column_id === column_id)?.text_align ?? null;
+  };
+
+  const setCellTextAlign = async (
+    row_id: string,
+    column_id: string,
+    text_align: 'left' | 'center' | 'right' | null
+  ) => {
+    const existing = cells.find((c) => c.row_id === row_id && c.column_id === column_id);
+    if (existing) {
+      setCells((cs) => cs.map((c) => (c.id === existing.id ? { ...c, text_align } : c)));
+      const { error } = await supabase
+        .from('board_cells')
+        .update({ text_align } as any)
+        .eq('id', existing.id);
+      if (error) toast.error('Failed to set alignment');
+    } else {
+      const { data, error } = await supabase
+        .from('board_cells')
+        .insert({ row_id, column_id, value: '', text_align } as any)
+        .select()
+        .single();
+      if (error || !data) {
+        toast.error('Failed to set alignment');
+        return;
+      }
+      setCells((cs) => [...cs, normalizeCell(data)]);
+    }
   };
 
   return {
