@@ -1028,6 +1028,24 @@ export default function BoardDetail() {
                     c <= selectionRect.c2
                   );
                 }}
+                draggedRowId={draggedRowId}
+                dragOverRowId={dragOverRowId}
+                onRowDragStart={(rowId) => setDraggedRowId(rowId)}
+                onRowDragOver={(rowId) => setDragOverRowId(rowId)}
+                onRowDragLeave={(rowId) => {
+                  setDragOverRowId((cur) => (cur === rowId ? null : cur));
+                }}
+                onRowDrop={(rowId) => {
+                  if (draggedRowId && draggedRowId !== rowId) {
+                    reorderRows(draggedRowId, rowId);
+                  }
+                  setDraggedRowId(null);
+                  setDragOverRowId(null);
+                }}
+                onRowDragEnd={() => {
+                  setDraggedRowId(null);
+                  setDragOverRowId(null);
+                }}
               />
             ))}
 
