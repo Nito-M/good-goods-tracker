@@ -1537,6 +1537,7 @@ function CellRenderer({
           align={effectiveAlign}
           cellAlign={cellAlign ?? null}
           onChangeCellAlign={onChangeCellAlign}
+          formulaContext={formulaContext}
         />
       );
     }
