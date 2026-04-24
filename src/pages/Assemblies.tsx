@@ -729,7 +729,17 @@ export function Assemblies() {
   const [editingModelName, setEditingModelName] = useState('');
   const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set());
   const [selectedSubType, setSelectedSubType] = useState<string | null>(null);
-  const [subTypePickerOpen, setSubTypePickerOpen] = useState(false);
+
+  // Sub-type picker page state (mirrors AssemblyTypes look & feel)
+  const [createSubTypeOpen, setCreateSubTypeOpen] = useState(false);
+  const [newSubTypeName, setNewSubTypeName] = useState('');
+  const [creatingSubType, setCreatingSubType] = useState(false);
+  const [editingSubTypeId, setEditingSubTypeId] = useState<string | null>(null);
+  const [editSubTypeName, setEditSubTypeName] = useState('');
+  const [savingSubTypeEdit, setSavingSubTypeEdit] = useState(false);
+  const [deleteSubTypeId, setDeleteSubTypeId] = useState<string | null>(null);
+  const [deletingSubType, setDeletingSubType] = useState(false);
+  const [subTypeSearch, setSubTypeSearch] = useState('');
 
   const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
@@ -740,10 +750,10 @@ export function Assemblies() {
     }
   }, []); // Only run once on mount
 
-  // Reset sub-type selection when switching Types, then prompt picker on entry
+  // Reset sub-type selection when switching Types
   useEffect(() => {
     setSelectedSubType(null);
-    setSubTypePickerOpen(true);
+    setSubTypeSearch('');
   }, [activeType]);
 
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
