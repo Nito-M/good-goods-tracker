@@ -511,6 +511,22 @@ export default function BoardDetail() {
   );
   const visibleColumnIds = useMemo(() => visibleColumns.map((c) => c.id), [visibleColumns]);
 
+  // Spreadsheet formula context: rows/cols are addressed by their visible position.
+  // A1 = first column, first row in the rendered grid.
+  const formulaContext = useMemo(
+    () => ({
+      colCount: visibleColumnIds.length,
+      rowCount: renderedRowIds.length,
+      getValueAt: (col: number, row: number) => {
+        const colId = visibleColumnIds[col];
+        const rowId = renderedRowIds[row];
+        if (!colId || !rowId) return '';
+        return getCellValue(rowId, colId);
+      },
+    }),
+    [visibleColumnIds, renderedRowIds, getCellValue, cells]
+  );
+
   const mergeRects = useMemo(
     () => computeMergeRects(merges, renderedRowIds, visibleColumnIds),
     [merges, renderedRowIds, visibleColumnIds]
