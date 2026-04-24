@@ -6,6 +6,7 @@ import type { BoardMerge } from '@/hooks/useBoardMerges';
 import { savePdfBlob } from '@/lib/pdfSave';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
+import { isFormula, evaluateFormula, formatFormulaResult, type FormulaContext } from '@/lib/boardFormula';
 
 interface GroupBlock {
   label: string | null;
