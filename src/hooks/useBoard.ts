@@ -483,6 +483,7 @@ export function useBoard(boardId: string | undefined) {
     cells,
     loading,
     renameBoard,
+    setHeaderFrozen,
     setGroupBy,
     addColumn,
     renameColumn,
