@@ -740,8 +740,19 @@ export function Assemblies() {
     }
   }, []); // Only run once on mount
 
+  // Reset sub-type selection when switching Types, then prompt picker on entry
+  useEffect(() => {
+    setSelectedSubType(null);
+    setSubTypePickerOpen(true);
+  }, [activeType]);
+
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
-  const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
+  const subTypeFiltered = selectedSubType === null
+    ? typeAssemblies
+    : selectedSubType === '__unassigned__'
+      ? typeAssemblies.filter(a => !a.model)
+      : typeAssemblies.filter(a => a.model === selectedSubType);
+  const selectedAssembly = subTypeFiltered.find((a) => a.id === selectedId) || null;
   const searchTerm = search.toLowerCase().trim();
   const filtered = typeAssemblies.filter((a) =>
     !searchTerm ||
