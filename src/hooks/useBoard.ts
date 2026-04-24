@@ -31,6 +31,7 @@ export interface BoardCell {
   column_id: string;
   value: string;
   text_align: 'left' | 'center' | 'right' | null;
+  bg_color: string | null;
 }
 
 export interface BoardDetail {
