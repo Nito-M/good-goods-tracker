@@ -24,6 +24,7 @@ export interface BoardRow {
   id: string;
   board_id: string;
   position: number;
+  frozen: boolean;
 }
 
 export interface BoardCell {
