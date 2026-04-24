@@ -48,6 +48,7 @@ import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
+import { indexToColumnLetters } from '@/lib/boardFormula';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 
 interface ColumnHeaderProps {
