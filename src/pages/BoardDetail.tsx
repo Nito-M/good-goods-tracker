@@ -48,6 +48,7 @@ import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
+import { indexToColumnLetters } from '@/lib/boardFormula';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 
 interface ColumnHeaderProps {
@@ -985,6 +986,11 @@ export default function BoardDetail() {
                       setDragOverColId(null);
                     }}
                   >
+                    <div className="flex items-center gap-1 px-1 pt-0.5 text-[10px] font-mono text-muted-foreground/70 select-none">
+                      <span title={`Column ${indexToColumnLetters(idx)} — use in formulas like =${indexToColumnLetters(idx)}1`}>
+                        {indexToColumnLetters(idx)}
+                      </span>
+                    </div>
                     <ColumnHeader
                       column={col}
                       onRename={(name) => renameColumn(col.id, name)}
@@ -1079,6 +1085,7 @@ export default function BoardDetail() {
                   setDragOverRowId(null);
                 }}
                 formulaContext={formulaContext}
+                renderedRowIds={renderedRowIds}
               />
             ))}
 
@@ -1221,6 +1228,7 @@ interface GroupSectionProps {
   onRowDrop: (rowId: string) => void;
   onRowDragEnd: () => void;
   formulaContext?: import('@/lib/boardFormula').FormulaContext;
+  renderedRowIds: string[];
 }
 
 function GroupSection({
@@ -1257,6 +1265,7 @@ function GroupSection({
   onRowDrop,
   onRowDragEnd,
   formulaContext,
+  renderedRowIds,
 }: GroupSectionProps) {
   // Long-press: hold ~400ms anywhere on a cell (even on inputs) to start a merge selection.
   const longPressRef = useRef<{
@@ -1330,6 +1339,17 @@ function GroupSection({
               }}
             >
               <div className="flex items-center justify-center gap-0.5">
+                {(() => {
+                  const rowNum = renderedRowIds.indexOf(row.id) + 1;
+                  return rowNum > 0 ? (
+                    <span
+                      className="text-[10px] font-mono text-muted-foreground/70 select-none w-5 text-right tabular-nums group-hover:hidden"
+                      title={`Row ${rowNum} — use in formulas like =A${rowNum}`}
+                    >
+                      {rowNum}
+                    </span>
+                  ) : null;
+                })()}
                 <button
                   type="button"
                   draggable
