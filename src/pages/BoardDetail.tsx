@@ -895,6 +895,7 @@ export default function BoardDetail() {
                   groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
                   getCellValue,
                   getCellTextAlign,
+                  getCellBgColor,
                   getFiles,
                   merges,
                 });
