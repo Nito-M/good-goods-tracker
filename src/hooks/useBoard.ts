@@ -42,6 +42,7 @@ export interface BoardDetail {
   user_id: string;
   company_id: string | null;
   group_by_column_id: string | null;
+  header_frozen: boolean;
 }
 
 function normalizeColumn(raw: any): BoardColumn {
