@@ -1052,7 +1052,7 @@ export function Assemblies() {
                 })
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Deleting a model unassigns it from any assemblies — they aren't deleted.</p>
+            <p className="text-xs text-muted-foreground">Deleting a sub-type unassigns it from any assemblies — they aren't deleted.</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setManageModelsOpen(false)}>Done</Button>
