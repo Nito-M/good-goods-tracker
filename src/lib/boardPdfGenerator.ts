@@ -259,6 +259,21 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         if (overrideAlign) {
           data.cell.styles.halign = overrideAlign;
         }
+        // User-set background colors override status pill colors so the PDF
+        // matches what the user sees on screen.
+        const bgToken = colorFills.get(key);
+        if (bgToken) {
+          const rgb = cellColorToRgb(bgToken);
+          if (rgb) {
+            data.cell.styles.fillColor = rgb;
+            const text = readableTextColor(bgToken);
+            if (text === '#ffffff') {
+              data.cell.styles.textColor = [255, 255, 255];
+            } else {
+              data.cell.styles.textColor = [0, 0, 0];
+            }
+          }
+        }
       },
     });
 
