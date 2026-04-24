@@ -461,6 +461,7 @@ export function useBoard(boardId: string | undefined) {
     setColumnNotes,
     setColumnPerRowOptions,
     setColumnTextAlign,
+    setColumnHeaderBgColor,
     deleteColumn,
     reorderColumns,
     addRow,
