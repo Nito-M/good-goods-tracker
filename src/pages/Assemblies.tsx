@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy, Tag, Settings2, ChevronDown, ChevronRight } from 'lucide-react';
 import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
 import { FullScreenSubAssemblyPicker } from '@/components/FullScreenSubAssemblyPicker';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
@@ -12,6 +12,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
 import { usePartsAssemblies, PartsAssembly } from '@/hooks/usePartsAssemblies';
+import { useAssemblyModels } from '@/hooks/useAssemblyModels';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Assembly } from '@/hooks/useAssemblies';
 
@@ -258,7 +261,14 @@ function AssemblyDetail({
         ) : (
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-semibold">{assembly.name}</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-semibold">{assembly.name}</h2>
+                {assembly.model && (
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                    <Tag className="h-3 w-3" /> {assembly.model}
+                  </span>
+                )}
+              </div>
               {assembly.description && <p className="text-sm text-muted-foreground mt-1">{assembly.description}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-4">
                 {summary && summary.itemCount > 0 && (
@@ -640,9 +650,18 @@ export function Assemblies() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [newModel, setNewModel] = useState<string>('');
+  const [newModelInput, setNewModelInput] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [manageModelsOpen, setManageModelsOpen] = useState(false);
+  const [manageModelInput, setManageModelInput] = useState('');
+  const [editingModelId, setEditingModelId] = useState<string | null>(null);
+  const [editingModelName, setEditingModelName] = useState('');
+  const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set());
+
+  const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
   const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
@@ -661,9 +680,45 @@ export function Assemblies() {
   const handleCreate = async () => {
     if (!newName.trim()) return;
     setCreating(true);
-    const created = await createAssembly(newName.trim(), newDesc.trim() || undefined, activeType);
+    const created = await createAssembly(newName.trim(), newDesc.trim() || undefined, activeType, newModel || null);
     setCreating(false);
-    if (created) { setSelectedId(created.id); setCreateOpen(false); setNewName(''); setNewDesc(''); setTimeout(refetchSummaries, 300); }
+    if (created) { setSelectedId(created.id); setCreateOpen(false); setNewName(''); setNewDesc(''); setNewModel(''); setNewModelInput(''); setTimeout(refetchSummaries, 300); }
+  };
+
+  const handleAddModelInline = async () => {
+    const trimmed = newModelInput.trim();
+    if (!trimmed) return;
+    const m = await addModel(trimmed);
+    if (m) {
+      setNewModel(m.name);
+      setNewModelInput('');
+    }
+  };
+
+  // Group filtered assemblies by model
+  const groupedFiltered = useMemo(() => {
+    const groups = new Map<string, typeof filtered>();
+    // Seed with known models so empty groups show up
+    for (const m of assemblyModels) groups.set(m.name, [] as any);
+    for (const a of filtered) {
+      const key = a.model || '__unassigned__';
+      const arr = groups.get(key) || [];
+      arr.push(a);
+      groups.set(key, arr);
+    }
+    return Array.from(groups.entries()).sort(([a], [b]) => {
+      if (a === '__unassigned__') return 1;
+      if (b === '__unassigned__') return -1;
+      return a.localeCompare(b);
+    });
+  }, [filtered, assemblyModels]);
+
+  const toggleModelCollapse = (key: string) => {
+    setCollapsedModels(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -691,6 +746,7 @@ export function Assemblies() {
               <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
               <div className="flex items-center gap-1">
                 <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
+                <Button size="icon" variant="ghost" className="h-8 w-8" title="Manage models" onClick={() => setManageModelsOpen(true)}><Settings2 className="h-4 w-4" /></Button>
                 <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(false)}><PanelLeftClose className="h-4 w-4" /></Button>
               </div>
@@ -700,7 +756,7 @@ export function Assemblies() {
               <Input placeholder="Search assemblies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
             </div>
           </div>
-          <div className="flex-1 overflow-auto p-2 space-y-1">
+          <div className="flex-1 overflow-auto p-2 space-y-2">
             {loading ? (
               <p className="text-xs text-muted-foreground text-center py-6">Loading...</p>
             ) : filtered.length === 0 ? (
@@ -709,23 +765,45 @@ export function Assemblies() {
                 <p className="text-xs">No assemblies yet</p>
               </div>
             ) : (
-              filtered.map((a) => {
-                const s = summaries.get(a.id);
+              groupedFiltered.map(([modelKey, list]) => {
+                if (list.length === 0 && modelKey === '__unassigned__') return null;
+                const isUnassigned = modelKey === '__unassigned__';
+                const label = isUnassigned ? 'No model' : modelKey;
+                const collapsed = collapsedModels.has(modelKey);
                 return (
-                  <button key={a.id} onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-muted/50 text-foreground')}>
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-medium truncate flex-1">{a.name}</p>
-                      {a.status === 'finished' ? <CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> : <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
-                    </div>
-                    {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
-                    {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic">{a.status_notes}</p>}
-                    {(s && s.itemCount > 0) || a.selling_price > 0 ? (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
-                        {a.selling_price > 0 && <>{s && s.itemCount > 0 ? ' · ' : ''}Sell: <span className="font-medium text-primary">{formatCurrency(a.selling_price)}</span></>}
-                      </p>
-                    ) : null}
-                  </button>
+                  <div key={modelKey} className="space-y-1">
+                    <button
+                      onClick={() => toggleModelCollapse(modelKey)}
+                      className="w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-muted/50 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      <Tag className="h-3 w-3" />
+                      <span className="truncate flex-1 text-left">{label}</span>
+                      <span className="text-[10px] font-normal">{list.length}</span>
+                    </button>
+                    {!collapsed && list.length === 0 && (
+                      <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assemblies in this model yet.</p>
+                    )}
+                    {!collapsed && list.map((a) => {
+                      const s = summaries.get(a.id);
+                      return (
+                        <button key={a.id} onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-muted/50 text-foreground')}>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium truncate flex-1">{a.name}</p>
+                            {a.status === 'finished' ? <CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> : <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
+                          </div>
+                          {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
+                          {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic">{a.status_notes}</p>}
+                          {(s && s.itemCount > 0) || a.selling_price > 0 ? (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
+                              {a.selling_price > 0 && <>{s && s.itemCount > 0 ? ' · ' : ''}Sell: <span className="font-medium text-primary">{formatCurrency(a.selling_price)}</span></>}
+                            </p>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
                 );
               })
             )}
@@ -758,10 +836,124 @@ export function Assemblies() {
           <div className="space-y-4">
             <div className="space-y-1"><Label>Name *</Label><Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. 16ft Flatbed Trailer" onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
             <div className="space-y-1"><Label>Description</Label><Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Optional description..." rows={2} /></div>
+            <div className="space-y-1">
+              <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Model</Label>
+              {assemblyModels.length > 0 && (
+                <Select value={newModel || '__none__'} onValueChange={(v) => setNewModel(v === '__none__' ? '' : v)}>
+                  <SelectTrigger><SelectValue placeholder="Select a model" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No model</SelectItem>
+                    {assemblyModels.map(m => (
+                      <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="flex items-center gap-1">
+                <Input
+                  value={newModelInput}
+                  onChange={(e) => setNewModelInput(e.target.value)}
+                  placeholder={assemblyModels.length > 0 ? 'Or add a new model…' : 'Add a model (e.g. F-150, GT, 24ft)…'}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddModelInline(); } }}
+                  className="h-9 text-sm"
+                />
+                <Button type="button" size="sm" variant="outline" onClick={handleAddModelInline} disabled={!newModelInput.trim()}>
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {newModel && (
+                <p className="text-xs text-muted-foreground">Will be added to model: <Badge variant="secondary" className="ml-1">{newModel}</Badge></p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate} disabled={!newName.trim() || creating}>{creating ? 'Creating...' : 'Create Assembly'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={manageModelsOpen} onOpenChange={setManageModelsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Models in "{activeType}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={manageModelInput}
+                onChange={(e) => setManageModelInput(e.target.value)}
+                placeholder="New model name..."
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && manageModelInput.trim()) {
+                    e.preventDefault();
+                    await addModel(manageModelInput.trim());
+                    setManageModelInput('');
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                onClick={async () => {
+                  if (!manageModelInput.trim()) return;
+                  await addModel(manageModelInput.trim());
+                  setManageModelInput('');
+                }}
+                disabled={!manageModelInput.trim()}
+              >
+                <Plus className="h-3 w-3 mr-1" /> Add
+              </Button>
+            </div>
+            <div className="space-y-1 max-h-72 overflow-auto">
+              {assemblyModels.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">No models yet. Add one above.</p>
+              ) : (
+                assemblyModels.map((m) => {
+                  const count = typeAssemblies.filter(a => a.model === m.name).length;
+                  const isEditing = editingModelId === m.id;
+                  return (
+                    <div key={m.id} className="flex items-center gap-2 px-2 py-1.5 rounded border bg-card">
+                      <Tag className="h-3 w-3 text-muted-foreground shrink-0" />
+                      {isEditing ? (
+                        <>
+                          <Input
+                            value={editingModelName}
+                            onChange={(e) => setEditingModelName(e.target.value)}
+                            className="h-7 text-sm"
+                            autoFocus
+                            onKeyDown={async (e) => {
+                              if (e.key === 'Enter') { await renameModel(m.id, editingModelName); setEditingModelId(null); }
+                              if (e.key === 'Escape') setEditingModelId(null);
+                            }}
+                          />
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={async () => { await renameModel(m.id, editingModelName); setEditingModelId(null); }}>
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingModelId(null)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm flex-1 truncate">{m.name}</span>
+                          <Badge variant="secondary" className="text-[10px]">{count}</Badge>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingModelId(m.id); setEditingModelName(m.name); }}>
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteModel(m.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">Deleting a model unassigns it from any assemblies — they aren't deleted.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManageModelsOpen(false)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

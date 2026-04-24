@@ -12,6 +12,7 @@ export interface Assembly {
   status: string;
   status_notes: string | null;
   type: string;
+  model: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +53,7 @@ export function useAssemblies() {
           status: d.status ?? 'not_finished',
           status_notes: d.status_notes ?? null,
           type: d.type ?? 'General',
+          model: d.model ?? null,
         })) as Assembly[]
       );
     }
@@ -62,11 +64,11 @@ export function useAssemblies() {
     fetchAssemblies();
   }, [user]);
 
-  const createAssembly = async (name: string, description?: string, type?: string): Promise<Assembly | null> => {
+  const createAssembly = async (name: string, description?: string, type?: string, model?: string | null): Promise<Assembly | null> => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('assemblies')
-      .insert({ user_id: user.id, name, description: description || null, type: type || 'General' })
+      .insert({ user_id: user.id, name, description: description || null, type: type || 'General', model: model || null } as any)
       .select()
       .single();
     if (error) {
@@ -77,7 +79,7 @@ export function useAssemblies() {
     return data as Assembly;
   };
 
-  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => {
+  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string; model?: string | null }) => {
     const { error } = await supabase
       .from('assemblies')
       .update(updates)
@@ -114,7 +116,8 @@ export function useAssemblies() {
         status: source.status,
         status_notes: source.status_notes,
         type: source.type,
-      })
+        model: source.model,
+      } as any)
       .select()
       .single();
     if (error || !newAssembly) {
