@@ -421,6 +421,9 @@ export default function BoardDetail() {
   const [selectionAnchor, setSelectionAnchor] = useState<{ rowId: string; colId: string } | null>(null);
   const [selectionFocus, setSelectionFocus] = useState<{ rowId: string; colId: string } | null>(null);
   const [isDragSelecting, setIsDragSelecting] = useState(false);
+  // When true, the column-header row itself is the selection target — applying
+  // a color writes to every visible column's header_bg_color.
+  const [headerRowSelected, setHeaderRowSelected] = useState(false);
   const [mergePromptOpen, setMergePromptOpen] = useState(false);
   const [pendingMergeContext, setPendingMergeContext] = useState<{
     nonEmptyCount: number;
