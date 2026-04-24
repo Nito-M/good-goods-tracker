@@ -670,6 +670,32 @@ export default function BoardDetail() {
     setMergePromptOpen(true);
   }, [selectionRect, selectedCellCount, renderedRowIds, visibleColumnIds, getCellValue]);
 
+  // Apply (or clear) a background color across every cell in the current
+  // selection. Falls back to the single anchor cell if no rectangle is active.
+  const applyColorToSelection = useCallback(
+    (token: string | null) => {
+      if (selectionRect) {
+        for (let r = selectionRect.r1; r <= selectionRect.r2; r++) {
+          for (let c = selectionRect.c1; c <= selectionRect.c2; c++) {
+            const rowId = renderedRowIds[r];
+            const colId = visibleColumnIds[c];
+            if (rowId && colId) setCellBgColor(rowId, colId, token);
+          }
+        }
+        return;
+      }
+      if (selectionAnchor) {
+        setCellBgColor(selectionAnchor.rowId, selectionAnchor.colId, token);
+      }
+    },
+    [selectionRect, selectionAnchor, renderedRowIds, visibleColumnIds, setCellBgColor]
+  );
+
+  // Color value to show in the trigger swatch — uses the anchor cell if any.
+  const selectionAnchorColor = selectionAnchor
+    ? getCellBgColor(selectionAnchor.rowId, selectionAnchor.colId)
+    : null;
+
   const confirmMerge = useCallback(
     async (mode: 'keep-top-left' | 'concatenate') => {
       if (!pendingMergeContext || !id) {
