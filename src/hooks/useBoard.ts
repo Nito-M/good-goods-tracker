@@ -75,6 +75,7 @@ function normalizeCell(raw: any): BoardCell {
     column_id: raw.column_id,
     value: raw.value ?? '',
     text_align: ta === 'left' || ta === 'center' || ta === 'right' ? ta : null,
+    bg_color: typeof raw.bg_color === 'string' && raw.bg_color.length > 0 ? raw.bg_color : null,
   };
 }
 
