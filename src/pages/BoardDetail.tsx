@@ -1450,17 +1450,27 @@ function GroupSection({
               if (geom?.hidden) return null;
               const selected = isCellSelected(row.id, col.id);
               const isMergedAnchor = !!geom?.span;
+              const bgToken = getCellBgColor(row.id, col.id);
+              const bgHex = cellColorToHex(bgToken);
+              const fgHex = readableTextColor(bgToken);
               return (
                 <td
                   key={col.id}
                   rowSpan={geom?.span?.rowSpan}
                   colSpan={geom?.span?.colSpan}
-                  style={{ width: w, minWidth: w, maxWidth: w }}
+                  style={{
+                    width: w,
+                    minWidth: w,
+                    maxWidth: w,
+                    ...(bgHex ? { backgroundColor: bgHex } : {}),
+                    ...(fgHex ? { color: fgHex } : {}),
+                  }}
                   className={cn(
                     'border-r border-b border-border p-0 align-top relative cursor-cell',
-                    idx === 0 && 'sticky left-16 bg-muted z-10',
+                    idx === 0 && !bgHex && 'sticky left-16 bg-muted z-10',
+                    idx === 0 && bgHex && 'sticky left-16 z-10',
                     selected && 'ring-2 ring-primary ring-inset',
-                    isMergedAnchor && 'bg-accent/30'
+                    !bgHex && isMergedAnchor && 'bg-accent/30'
                   )}
                   onMouseDown={(e) => {
                     // Only handle left-click; ignore clicks on interactive controls
