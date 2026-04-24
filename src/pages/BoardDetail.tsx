@@ -986,6 +986,11 @@ export default function BoardDetail() {
                       setDragOverColId(null);
                     }}
                   >
+                    <div className="flex items-center gap-1 px-1 pt-0.5 text-[10px] font-mono text-muted-foreground/70 select-none">
+                      <span title={`Column ${indexToColumnLetters(idx)} — use in formulas like =${indexToColumnLetters(idx)}1`}>
+                        {indexToColumnLetters(idx)}
+                      </span>
+                    </div>
                     <ColumnHeader
                       column={col}
                       onRename={(name) => renameColumn(col.id, name)}
