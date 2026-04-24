@@ -6,6 +6,7 @@ import type { BoardMerge } from '@/hooks/useBoardMerges';
 import { savePdfBlob } from '@/lib/pdfSave';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
+import { isFormula, evaluateFormula, formatFormulaResult, type FormulaContext } from '@/lib/boardFormula';
 
 interface GroupBlock {
   label: string | null;
@@ -29,7 +30,8 @@ interface GenerateOpts {
 function renderCell(
   col: BoardColumn,
   raw: string,
-  files: BoardCellFile[]
+  files: BoardCellFile[],
+  formulaContext?: FormulaContext
 ): string {
   if (col.type === 'files') {
     if (files.length === 0) return '';
@@ -67,6 +69,10 @@ function renderCell(
     return raw;
   }
 
+  // Text / default — evaluate formulas to their computed value (matches on-screen).
+  if (formulaContext && isFormula(raw)) {
+    return formatFormulaResult(evaluateFormula(raw, formulaContext));
+  }
   return raw || '';
 }
 
@@ -109,6 +115,20 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
 
   const head: RowInput[] = [columns.map((c) => c.name || '')];
   const colIds = columns.map((c) => c.id);
+
+  // Build a formula context that mirrors the on-screen rendering order so
+  // refs like A1, B2 resolve to the same cells as in the UI.
+  const allRowIds: string[] = groups.flatMap((g) => g.rows.map((r) => r.id));
+  const formulaContext: FormulaContext = {
+    colCount: colIds.length,
+    rowCount: allRowIds.length,
+    getValueAt: (col, row) => {
+      const colId = colIds[col];
+      const rowId = allRowIds[row];
+      if (!colId || !rowId) return '';
+      return getCellValue(rowId, colId);
+    },
+  };
 
   // Map column index -> column for the cell hook (so we can color status pills)
   const columnByIdx = new Map<number, BoardColumn>();
@@ -162,7 +182,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
 
         const raw = getCellValue(row.id, col.id);
         const files = col.type === 'files' ? getFiles(row.id, col.id) : [];
-        const text = renderCell(col, raw, files);
+        const text = renderCell(col, raw, files, formulaContext);
 
         if (col.type === 'status' && raw) {
           const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
