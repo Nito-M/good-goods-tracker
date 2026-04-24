@@ -1486,6 +1486,12 @@ function GroupSection({
               }}
             >
               <div className="flex items-center justify-center gap-0.5">
+                {row.frozen && (
+                  <Pin
+                    className="h-3 w-3 text-primary shrink-0"
+                    aria-label="Frozen row"
+                  />
+                )}
                 {(() => {
                   const rowNum = renderedRowIds.indexOf(row.id) + 1;
                   return rowNum > 0 ? (
