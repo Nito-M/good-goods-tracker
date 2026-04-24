@@ -932,6 +932,85 @@ export function Assemblies() {
         </div>
       </div>
 
+      {/* Sub-type picker (shown on entry to a Type) */}
+      <Dialog
+        open={subTypePickerOpen}
+        onOpenChange={(open) => {
+          // Allow dismissing only after a sub-type is chosen, OR if the type has no sub-types defined
+          if (!open) {
+            if (selectedSubType !== null || assemblyModels.length === 0) {
+              setSubTypePickerOpen(false);
+            }
+          } else {
+            setSubTypePickerOpen(true);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => { if (selectedSubType === null && assemblyModels.length > 0) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (selectedSubType === null && assemblyModels.length > 0) e.preventDefault(); }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Tag className="h-4 w-4" /> Choose a sub-type in "{activeType}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {assemblyModels.length === 0 ? (
+              <div className="text-sm text-muted-foreground space-y-3">
+                <p>No sub-types defined for "{activeType}" yet. You can add some from the sidebar (⚙️ Manage sub-types) or just continue without one.</p>
+                <Button
+                  className="w-full"
+                  onClick={() => { setSelectedSubType('__unassigned__'); setSubTypePickerOpen(false); }}
+                >
+                  Continue without a sub-type
+                </Button>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">Pick a sub-type to focus the list, or view everything in this type.</p>
+                <div className="grid grid-cols-1 gap-1.5 max-h-80 overflow-auto">
+                  <button
+                    onClick={() => { setSelectedSubType(null); setSelectedId(null); setSubTypePickerOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border bg-card hover:bg-accent text-sm transition-colors"
+                  >
+                    <span className="flex items-center gap-2"><Layers className="h-3.5 w-3.5" /> All assemblies</span>
+                    <span className="text-xs text-muted-foreground">{typeAssemblies.length}</span>
+                  </button>
+                  {assemblyModels.map((m) => {
+                    const count = typeAssemblies.filter(a => a.model === m.name).length;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => { setSelectedSubType(m.name); setSelectedId(null); setSubTypePickerOpen(false); }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border bg-card hover:bg-accent text-sm transition-colors"
+                      >
+                        <span className="flex items-center gap-2"><Tag className="h-3.5 w-3.5" /> {m.name}</span>
+                        <span className="text-xs text-muted-foreground">{count}</span>
+                      </button>
+                    );
+                  })}
+                  {typeAssemblies.some(a => !a.model) && (
+                    <button
+                      onClick={() => { setSelectedSubType('__unassigned__'); setSelectedId(null); setSubTypePickerOpen(false); }}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border border-dashed bg-card hover:bg-accent text-sm transition-colors text-muted-foreground"
+                    >
+                      <span className="flex items-center gap-2"><Tag className="h-3.5 w-3.5" /> No sub-type</span>
+                      <span className="text-xs">{typeAssemblies.filter(a => !a.model).length}</span>
+                    </button>
+                  )}
+                </div>
+                <div className="border-t pt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => { setSubTypePickerOpen(false); setManageModelsOpen(true); }}
+                  >
+                    <Settings2 className="h-3 w-3 mr-1.5" /> Manage sub-types…
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>New Assembly in "{activeType}"</DialogTitle></DialogHeader>
