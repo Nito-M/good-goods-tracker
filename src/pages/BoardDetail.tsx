@@ -1049,13 +1049,23 @@ export default function BoardDetail() {
               </th>
               {visibleColumns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
+                const headerHex = cellColorToHex(col.header_bg_color);
+                const headerFg = readableTextColor(col.header_bg_color);
                 return (
                   <th
                     key={col.id}
-                    style={{ width: w, minWidth: w, maxWidth: w }}
+                    style={{
+                      width: w,
+                      minWidth: w,
+                      maxWidth: w,
+                      ...(headerHex ? { backgroundColor: headerHex } : {}),
+                      ...(headerFg ? { color: headerFg } : {}),
+                    }}
                     className={cn(
-                      'border-r border-border text-left relative transition-colors sticky top-0 bg-muted z-20',
+                      'border-r border-border text-left relative transition-colors sticky top-0 z-20',
+                      !headerHex && 'bg-muted',
                       idx === 0 && 'left-16 z-30',
+                      headerRowSelected && 'ring-2 ring-primary ring-inset',
                       dragOverColId === col.id && draggedColId !== col.id && 'bg-primary/10',
                       draggedColId === col.id && 'opacity-40'
                     )}
