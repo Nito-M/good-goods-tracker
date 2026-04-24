@@ -1083,6 +1083,7 @@ export default function BoardDetail() {
                 setCellValue={setCellValueLogged}
                 getCellTextAlign={getCellTextAlign}
                 setCellTextAlign={setCellTextAlign}
+                getCellBgColor={getCellBgColor}
                 deleteRow={deleteRow}
                 getFiles={getFiles}
                 uploadFile={uploadFile}
