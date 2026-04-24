@@ -106,7 +106,7 @@ export function useBoard(boardId: string | undefined) {
     }
     setBoard(boardRes.data);
     setColumns((colRes.data || []).map(normalizeColumn));
-    setRows(rowRes.data || []);
+    setRows((rowRes.data || []).map((r: any) => ({ ...r, frozen: !!r.frozen })));
 
     const rowIds = (rowRes.data || []).map((r) => r.id);
     if (rowIds.length > 0) {
