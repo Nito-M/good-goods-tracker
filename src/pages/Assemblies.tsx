@@ -728,6 +728,8 @@ export function Assemblies() {
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [editingModelName, setEditingModelName] = useState('');
   const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set());
+  const [selectedSubType, setSelectedSubType] = useState<string | null>(null);
+  const [subTypePickerOpen, setSubTypePickerOpen] = useState(false);
 
   const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
