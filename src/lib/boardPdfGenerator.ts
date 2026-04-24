@@ -93,7 +93,7 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 };
 
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
-  const { boardName, columns, groups, getCellValue, getCellTextAlign, getFiles, merges = [] } = opts;
+  const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [] } = opts;
 
   // Portrait A4 — fit all columns to upright page width
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
