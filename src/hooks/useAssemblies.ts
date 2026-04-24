@@ -116,7 +116,8 @@ export function useAssemblies() {
         status: source.status,
         status_notes: source.status_notes,
         type: source.type,
-      })
+        model: source.model,
+      } as any)
       .select()
       .single();
     if (error || !newAssembly) {
