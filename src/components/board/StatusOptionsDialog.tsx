@@ -13,6 +13,7 @@ export interface StatusOption {
 }
 
 export const STATUS_COLORS: { key: string; bg: string; text: string }[] = [
+  { key: 'none', bg: 'bg-transparent', text: 'text-foreground' },
   { key: 'gray', bg: 'bg-muted', text: 'text-foreground' },
   { key: 'red', bg: 'bg-red-500/20', text: 'text-red-700 dark:text-red-300' },
   { key: 'orange', bg: 'bg-orange-500/20', text: 'text-orange-700 dark:text-orange-300' },
