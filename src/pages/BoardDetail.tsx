@@ -280,6 +280,7 @@ export default function BoardDetail() {
     setColumnNotes,
     setColumnPerRowOptions,
     setColumnTextAlign,
+    setColumnHeaderBgColor,
     deleteColumn,
     reorderColumns,
     addRow,
