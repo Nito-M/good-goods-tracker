@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy, Tag, Settings2, ChevronDown, ChevronRight } from 'lucide-react';
 import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
 import { FullScreenSubAssemblyPicker } from '@/components/FullScreenSubAssemblyPicker';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
@@ -12,6 +12,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
 import { usePartsAssemblies, PartsAssembly } from '@/hooks/usePartsAssemblies';
+import { useAssemblyModels } from '@/hooks/useAssemblyModels';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Assembly } from '@/hooks/useAssemblies';
 
