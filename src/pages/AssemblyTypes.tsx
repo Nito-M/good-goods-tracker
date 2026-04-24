@@ -223,7 +223,7 @@ export function AssemblyTypes() {
                             </Button>
                           </div>
                         ) : (
-                          <h3 className="font-semibold text-base truncate">{type}</h3>
+                          <h3 className="font-semibold text-base truncate" title={type}>{type}</h3>
                         )}
                       </div>
                       {!isEditing && (
