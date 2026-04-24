@@ -1078,6 +1078,7 @@ export default function BoardDetail() {
                   setDraggedRowId(null);
                   setDragOverRowId(null);
                 }}
+                formulaContext={formulaContext}
               />
             ))}
 
