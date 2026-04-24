@@ -492,19 +492,25 @@ export default function BoardDetail() {
 
   const filteredRows = useMemo(() => {
     const q = rowSearch.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((row) => {
-      const rowCells = cellsByRow.get(row.id) || {};
-      return visibleColumns.some((col) => {
-        const raw = rowCells[col.id];
-        if (!raw) return false;
-        if (col.type === 'status') {
-          const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
-          return (option?.label || '').toLowerCase().includes(q);
-        }
-        // For text/date/link/checkbox/connect (json arrays) — plain substring works
-        return raw.toLowerCase().includes(q);
-      });
+    const base = !q
+      ? rows
+      : rows.filter((row) => {
+          const rowCells = cellsByRow.get(row.id) || {};
+          return visibleColumns.some((col) => {
+            const raw = rowCells[col.id];
+            if (!raw) return false;
+            if (col.type === 'status') {
+              const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
+              return (option?.label || '').toLowerCase().includes(q);
+            }
+            // For text/date/link/checkbox/connect (json arrays) — plain substring works
+            return raw.toLowerCase().includes(q);
+          });
+        });
+    // Frozen rows always render first, preserving their relative position.
+    return [...base].sort((a, b) => {
+      if (a.frozen === b.frozen) return 0;
+      return a.frozen ? -1 : 1;
     });
   }, [rows, visibleColumns, cellsByRow, rowSearch]);
 
