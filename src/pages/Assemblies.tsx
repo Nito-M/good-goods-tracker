@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Assembly } from '@/hooks/useAssemblies';
 
@@ -696,6 +697,293 @@ function AssemblyDetail({
   );
 }
 
+function SubTypePickerPage({
+  activeType,
+  assemblyModels,
+  typeAssemblies,
+  summaries,
+  subTypeSearch,
+  setSubTypeSearch,
+  onPick,
+  onCreateClick,
+  editingSubTypeId,
+  editSubTypeName,
+  setEditingSubTypeId,
+  setEditSubTypeName,
+  savingSubTypeEdit,
+  onRename,
+  onDeleteClick,
+}: {
+  activeType: string;
+  assemblyModels: { id: string; name: string }[];
+  typeAssemblies: Assembly[];
+  summaries: Map<string, AssemblySummary>;
+  subTypeSearch: string;
+  setSubTypeSearch: (v: string) => void;
+  onPick: (key: string) => void;
+  onCreateClick: () => void;
+  editingSubTypeId: string | null;
+  editSubTypeName: string;
+  setEditingSubTypeId: (id: string | null) => void;
+  setEditSubTypeName: (v: string) => void;
+  savingSubTypeEdit: boolean;
+  onRename: (id: string) => Promise<void> | void;
+  onDeleteClick: (id: string) => void;
+}) {
+  const q = subTypeSearch.toLowerCase().trim();
+
+  const subTypeStats = useMemo(() => {
+    const stats = new Map<string, { count: number; finished: number; totalCost: number }>();
+    for (const m of assemblyModels) stats.set(m.name, { count: 0, finished: 0, totalCost: 0 });
+    stats.set('__unassigned__', { count: 0, finished: 0, totalCost: 0 });
+    for (const a of typeAssemblies) {
+      const key = a.model || '__unassigned__';
+      const s = stats.get(key) || { count: 0, finished: 0, totalCost: 0 };
+      s.count += 1;
+      if (a.status === 'finished') s.finished += 1;
+      const sum = summaries.get(a.id);
+      if (sum) s.totalCost += sum.totalCost;
+      stats.set(key, s);
+    }
+    return stats;
+  }, [assemblyModels, typeAssemblies, summaries]);
+
+  const allCount = typeAssemblies.length;
+  const allFinished = typeAssemblies.filter(a => a.status === 'finished').length;
+  const allFinishedAll = allCount > 0 && allCount === allFinished;
+  const allProgress = allCount > 0 ? (allFinished / allCount) * 100 : 0;
+
+  const visibleModels = assemblyModels.filter(m => !q || m.name.toLowerCase().includes(q));
+  const showUnassigned = (subTypeStats.get('__unassigned__')?.count ?? 0) > 0 && (!q || 'no sub-type'.includes(q));
+  const showAll = !q || 'all assemblies'.includes(q);
+
+  const isEmpty = visibleModels.length === 0 && !showUnassigned && !showAll;
+
+  return (
+    <div className="flex-1 overflow-auto bg-background">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-20 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Tag className="h-6 w-6 text-primary" />
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-card-foreground">{activeType} · Sub-types</h1>
+                <p className="text-xs text-muted-foreground">Choose a sub-type to view its assemblies</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={onCreateClick} className="gap-2">
+                <Plus className="h-4 w-4" /> New Sub-type
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        {(assemblyModels.length > 0 || typeAssemblies.length > 0) && (
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search sub-types..."
+              value={subTypeSearch}
+              onChange={(e) => setSubTypeSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        )}
+
+        {isEmpty ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+              <Tag className="h-16 w-16 text-muted-foreground mb-4 opacity-30" />
+              {q ? (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">No matching sub-types</h3>
+                  <p className="text-muted-foreground mb-6">Try a different search term.</p>
+                  <Button variant="outline" onClick={() => setSubTypeSearch('')}>Clear Search</Button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">No sub-types yet</h3>
+                  <p className="text-muted-foreground mb-6">Create a sub-type to start organizing assemblies in "{activeType}".</p>
+                  <Button onClick={onCreateClick} className="gap-2">
+                    <Plus className="h-4 w-4" /> New Sub-type
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {showAll && (
+              <Card
+                key="__all__"
+                className="group relative cursor-pointer hover:shadow-md transition-shadow border-border"
+                onClick={() => onPick('__all__')}
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <h3 className="font-semibold text-base truncate flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-muted-foreground" /> All assemblies
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <Badge variant="secondary" className="text-xs">{allCount} assembl{allCount !== 1 ? 'ies' : 'y'}</Badge>
+                    {allFinishedAll ? (
+                      <span className="flex items-center gap-1 text-xs text-primary font-medium">
+                        <CheckCircle2 className="h-3 w-3" /> All finished
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" /> {allFinished}/{allCount} finished
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-3">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${allProgress}%` }} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">View all</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {visibleModels.map((m) => {
+              const stats = subTypeStats.get(m.name) || { count: 0, finished: 0, totalCost: 0 };
+              const isEditing = editingSubTypeId === m.id;
+              const allFinishedHere = stats.count > 0 && stats.finished === stats.count;
+              const progress = stats.count > 0 ? (stats.finished / stats.count) * 100 : 0;
+              return (
+                <Card
+                  key={m.id}
+                  className="group relative cursor-pointer hover:shadow-md transition-shadow border-border"
+                  onClick={() => !isEditing && onPick(m.name)}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex-1 min-w-0">
+                        {isEditing ? (
+                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              value={editSubTypeName}
+                              onChange={(e) => setEditSubTypeName(e.target.value)}
+                              className="h-7 text-sm"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') onRename(m.id);
+                                if (e.key === 'Escape') setEditingSubTypeId(null);
+                              }}
+                            />
+                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => onRename(m.id)} disabled={savingSubTypeEdit}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingSubTypeId(null)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <h3 className="font-semibold text-base truncate flex items-center gap-2">
+                            <Tag className="h-4 w-4 text-muted-foreground" /> {m.name}
+                          </h3>
+                        )}
+                      </div>
+                      {!isEditing && (
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => { setEditingSubTypeId(m.id); setEditSubTypeName(m.name); }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => onDeleteClick(m.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 mb-3">
+                      <Badge variant="secondary" className="text-xs">{stats.count} assembl{stats.count !== 1 ? 'ies' : 'y'}</Badge>
+                      {allFinishedHere ? (
+                        <span className="flex items-center gap-1 text-xs text-primary font-medium">
+                          <CheckCircle2 className="h-3 w-3" /> All finished
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" /> {stats.finished}/{stats.count} finished
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-3">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">View assemblies</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {showUnassigned && (() => {
+              const stats = subTypeStats.get('__unassigned__') || { count: 0, finished: 0, totalCost: 0 };
+              const allFinishedHere = stats.count > 0 && stats.finished === stats.count;
+              const progress = stats.count > 0 ? (stats.finished / stats.count) * 100 : 0;
+              return (
+                <Card
+                  key="__unassigned__"
+                  className="group relative cursor-pointer hover:shadow-md transition-shadow border-dashed border-border"
+                  onClick={() => onPick('__unassigned__')}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <h3 className="font-semibold text-base truncate flex items-center gap-2 text-muted-foreground">
+                        <Tag className="h-4 w-4" /> No sub-type
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Badge variant="secondary" className="text-xs">{stats.count} assembl{stats.count !== 1 ? 'ies' : 'y'}</Badge>
+                      {allFinishedHere ? (
+                        <span className="flex items-center gap-1 text-xs text-primary font-medium">
+                          <CheckCircle2 className="h-3 w-3" /> All finished
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" /> {stats.finished}/{stats.count} finished
+                        </span>
+                      )}
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-3">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">View assemblies</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
 export function Assemblies() {
   const { type: typeParam } = useParams<{ type: string }>();
   const navigate = useNavigate();
@@ -729,7 +1017,17 @@ export function Assemblies() {
   const [editingModelName, setEditingModelName] = useState('');
   const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set());
   const [selectedSubType, setSelectedSubType] = useState<string | null>(null);
-  const [subTypePickerOpen, setSubTypePickerOpen] = useState(false);
+
+  // Sub-type picker page state (mirrors AssemblyTypes look & feel)
+  const [createSubTypeOpen, setCreateSubTypeOpen] = useState(false);
+  const [newSubTypeName, setNewSubTypeName] = useState('');
+  const [creatingSubType, setCreatingSubType] = useState(false);
+  const [editingSubTypeId, setEditingSubTypeId] = useState<string | null>(null);
+  const [editSubTypeName, setEditSubTypeName] = useState('');
+  const [savingSubTypeEdit, setSavingSubTypeEdit] = useState(false);
+  const [deleteSubTypeId, setDeleteSubTypeId] = useState<string | null>(null);
+  const [deletingSubType, setDeletingSubType] = useState(false);
+  const [subTypeSearch, setSubTypeSearch] = useState('');
 
   const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
@@ -740,14 +1038,14 @@ export function Assemblies() {
     }
   }, []); // Only run once on mount
 
-  // Reset sub-type selection when switching Types, then prompt picker on entry
+  // Reset sub-type selection when switching Types
   useEffect(() => {
     setSelectedSubType(null);
-    setSubTypePickerOpen(true);
+    setSubTypeSearch('');
   }, [activeType]);
 
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
-  const subTypeFiltered = selectedSubType === null
+  const subTypeFiltered = selectedSubType === null || selectedSubType === '__all__'
     ? typeAssemblies
     : selectedSubType === '__unassigned__'
       ? typeAssemblies.filter(a => !a.model)
@@ -827,12 +1125,12 @@ export function Assemblies() {
           <>
             <span className="text-muted-foreground text-sm">/</span>
             <button
-              onClick={() => setSubTypePickerOpen(true)}
+              onClick={() => { setSelectedSubType(null); setSelectedId(null); }}
               className="inline-flex items-center gap-1 text-sm font-semibold px-2 py-0.5 rounded hover:bg-muted transition-colors"
               title="Change sub-type"
             >
               <Tag className="h-3 w-3" />
-              {selectedSubType === '__unassigned__' ? 'No sub-type' : selectedSubType}
+              {selectedSubType === '__unassigned__' ? 'No sub-type' : selectedSubType === '__all__' ? 'All assemblies' : selectedSubType}
               <Pencil className="h-3 w-3 opacity-50" />
             </button>
           </>
@@ -840,6 +1138,33 @@ export function Assemblies() {
         <span className="text-xs text-muted-foreground">({subTypeFiltered.length})</span>
       </div>
 
+      {selectedSubType === null ? (
+        <SubTypePickerPage
+          activeType={activeType}
+          assemblyModels={assemblyModels}
+          typeAssemblies={typeAssemblies}
+          summaries={summaries}
+          subTypeSearch={subTypeSearch}
+          setSubTypeSearch={setSubTypeSearch}
+          onPick={(key) => { setSelectedSubType(key); setSelectedId(null); }}
+          onCreateClick={() => setCreateSubTypeOpen(true)}
+          editingSubTypeId={editingSubTypeId}
+          editSubTypeName={editSubTypeName}
+          setEditingSubTypeId={setEditingSubTypeId}
+          setEditSubTypeName={setEditSubTypeName}
+          savingSubTypeEdit={savingSubTypeEdit}
+          onRename={async (id) => {
+            const trimmed = editSubTypeName.trim();
+            const old = assemblyModels.find(m => m.id === id);
+            if (!trimmed || !old || trimmed === old.name) { setEditingSubTypeId(null); return; }
+            setSavingSubTypeEdit(true);
+            await renameModel(id, trimmed);
+            setSavingSubTypeEdit(false);
+            setEditingSubTypeId(null);
+          }}
+          onDeleteClick={(id) => setDeleteSubTypeId(id)}
+        />
+      ) : (
       <div className="flex flex-1 overflow-hidden min-h-0">
         {sidebarOpen ? (
         <div className="w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden transition-all min-h-0">
@@ -849,7 +1174,7 @@ export function Assemblies() {
               <div className="flex items-center gap-1">
                 <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
                 <Button size="icon" variant="ghost" className="h-8 w-8" title="Manage sub-types" onClick={() => setManageModelsOpen(true)}><Settings2 className="h-4 w-4" /></Button>
-                <Button size="sm" onClick={() => { setNewModel(selectedSubType && selectedSubType !== '__unassigned__' ? selectedSubType : ''); setCreateOpen(true); }} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
+                <Button size="sm" onClick={() => { setNewModel(selectedSubType && selectedSubType !== '__unassigned__' && selectedSubType !== '__all__' ? selectedSubType : ''); setCreateOpen(true); }} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(false)}><PanelLeftClose className="h-4 w-4" /></Button>
               </div>
             </div>
@@ -931,85 +1256,86 @@ export function Assemblies() {
           )}
         </div>
       </div>
+      )}
 
-      {/* Sub-type picker (shown on entry to a Type) */}
-      <Dialog
-        open={subTypePickerOpen}
-        onOpenChange={(open) => {
-          // Allow dismissing only after a sub-type is chosen, OR if the type has no sub-types defined
-          if (!open) {
-            if (selectedSubType !== null || assemblyModels.length === 0) {
-              setSubTypePickerOpen(false);
-            }
-          } else {
-            setSubTypePickerOpen(true);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => { if (selectedSubType === null && assemblyModels.length > 0) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (selectedSubType === null && assemblyModels.length > 0) e.preventDefault(); }}>
+      {/* Create new sub-type dialog (matches AssemblyTypes "New Type" dialog) */}
+      <Dialog open={createSubTypeOpen} onOpenChange={setCreateSubTypeOpen}>
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Tag className="h-4 w-4" /> Choose a sub-type in "{activeType}"</DialogTitle>
+            <DialogTitle>New Sub-type in "{activeType}"</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            {assemblyModels.length === 0 ? (
-              <div className="text-sm text-muted-foreground space-y-3">
-                <p>No sub-types defined for "{activeType}" yet. You can add some from the sidebar (⚙️ Manage sub-types) or just continue without one.</p>
-                <Button
-                  className="w-full"
-                  onClick={() => { setSelectedSubType('__unassigned__'); setSubTypePickerOpen(false); }}
-                >
-                  Continue without a sub-type
-                </Button>
-              </div>
-            ) : (
-              <>
-                <p className="text-xs text-muted-foreground">Pick a sub-type to focus the list, or view everything in this type.</p>
-                <div className="grid grid-cols-1 gap-1.5 max-h-80 overflow-auto">
-                  <button
-                    onClick={() => { setSelectedSubType(null); setSelectedId(null); setSubTypePickerOpen(false); }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border bg-card hover:bg-accent text-sm transition-colors"
-                  >
-                    <span className="flex items-center gap-2"><Layers className="h-3.5 w-3.5" /> All assemblies</span>
-                    <span className="text-xs text-muted-foreground">{typeAssemblies.length}</span>
-                  </button>
-                  {assemblyModels.map((m) => {
-                    const count = typeAssemblies.filter(a => a.model === m.name).length;
-                    return (
-                      <button
-                        key={m.id}
-                        onClick={() => { setSelectedSubType(m.name); setSelectedId(null); setSubTypePickerOpen(false); }}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border bg-card hover:bg-accent text-sm transition-colors"
-                      >
-                        <span className="flex items-center gap-2"><Tag className="h-3.5 w-3.5" /> {m.name}</span>
-                        <span className="text-xs text-muted-foreground">{count}</span>
-                      </button>
-                    );
-                  })}
-                  {typeAssemblies.some(a => !a.model) && (
-                    <button
-                      onClick={() => { setSelectedSubType('__unassigned__'); setSelectedId(null); setSubTypePickerOpen(false); }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border border-dashed bg-card hover:bg-accent text-sm transition-colors text-muted-foreground"
-                    >
-                      <span className="flex items-center gap-2"><Tag className="h-3.5 w-3.5" /> No sub-type</span>
-                      <span className="text-xs">{typeAssemblies.filter(a => !a.model).length}</span>
-                    </button>
-                  )}
-                </div>
-                <div className="border-t pt-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start text-xs"
-                    onClick={() => { setSubTypePickerOpen(false); setManageModelsOpen(true); }}
-                  >
-                    <Settings2 className="h-3 w-3 mr-1.5" /> Manage sub-types…
-                  </Button>
-                </div>
-              </>
-            )}
+            <Label>Sub-type Name</Label>
+            <Input
+              value={newSubTypeName}
+              onChange={(e) => setNewSubTypeName(e.target.value)}
+              placeholder="e.g. Flatbed, Dump, Enclosed..."
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter' && newSubTypeName.trim() && !creatingSubType) {
+                  setCreatingSubType(true);
+                  const created = await addModel(newSubTypeName.trim());
+                  setCreatingSubType(false);
+                  if (created) {
+                    setCreateSubTypeOpen(false);
+                    setNewSubTypeName('');
+                    setSelectedSubType(created.name);
+                    setSelectedId(null);
+                  }
+                }
+              }}
+              autoFocus
+            />
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateSubTypeOpen(false)}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                if (!newSubTypeName.trim()) return;
+                setCreatingSubType(true);
+                const created = await addModel(newSubTypeName.trim());
+                setCreatingSubType(false);
+                if (created) {
+                  setCreateSubTypeOpen(false);
+                  setNewSubTypeName('');
+                  setSelectedSubType(created.name);
+                  setSelectedId(null);
+                }
+              }}
+              disabled={!newSubTypeName.trim() || creatingSubType}
+            >
+              {creatingSubType ? 'Creating...' : 'Create & Open'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete sub-type alert */}
+      <AlertDialog open={!!deleteSubTypeId} onOpenChange={() => setDeleteSubTypeId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete sub-type?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Assemblies in this sub-type will be unassigned (not deleted). This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!deleteSubTypeId) return;
+                setDeletingSubType(true);
+                await deleteModel(deleteSubTypeId);
+                setDeletingSubType(false);
+                setDeleteSubTypeId(null);
+              }}
+              disabled={deletingSubType}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingSubType ? 'Deleting...' : 'Delete Sub-type'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
