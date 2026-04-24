@@ -1284,6 +1284,7 @@ function GroupSection({
   setCellValue,
   getCellTextAlign,
   setCellTextAlign,
+  getCellBgColor,
   deleteRow,
   getFiles,
   uploadFile,
