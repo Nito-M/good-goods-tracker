@@ -270,6 +270,7 @@ export default function BoardDetail() {
     cells,
     loading,
     renameBoard,
+    setHeaderFrozen,
     setGroupBy,
     addColumn,
     renameColumn,
