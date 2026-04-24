@@ -116,6 +116,20 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const head: RowInput[] = [columns.map((c) => c.name || '')];
   const colIds = columns.map((c) => c.id);
 
+  // Build a formula context that mirrors the on-screen rendering order so
+  // refs like A1, B2 resolve to the same cells as in the UI.
+  const allRowIds: string[] = groups.flatMap((g) => g.rows.map((r) => r.id));
+  const formulaContext: FormulaContext = {
+    colCount: colIds.length,
+    rowCount: allRowIds.length,
+    getValueAt: (col, row) => {
+      const colId = colIds[col];
+      const rowId = allRowIds[row];
+      if (!colId || !rowId) return '';
+      return getCellValue(rowId, colId);
+    },
+  };
+
   // Map column index -> column for the cell hook (so we can color status pills)
   const columnByIdx = new Map<number, BoardColumn>();
   columns.forEach((c, i) => columnByIdx.set(i, c));
