@@ -824,7 +824,7 @@ function SubTypePickerPage({
               >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="font-semibold text-base truncate flex items-center gap-2">
+                    <h3 className="font-semibold text-base truncate flex items-center gap-2" title="All assemblies">
                       <Layers className="h-4 w-4 text-muted-foreground" /> All assemblies
                     </h3>
                   </div>
@@ -885,7 +885,7 @@ function SubTypePickerPage({
                             </Button>
                           </div>
                         ) : (
-                          <h3 className="font-semibold text-base truncate flex items-center gap-2">
+                          <h3 className="font-semibold text-base truncate flex items-center gap-2" title={m.name}>
                             <Tag className="h-4 w-4 text-muted-foreground" /> {m.name}
                           </h3>
                         )}
@@ -950,7 +950,7 @@ function SubTypePickerPage({
                 >
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-2 mb-3">
-                      <h3 className="font-semibold text-base truncate flex items-center gap-2 text-muted-foreground">
+                      <h3 className="font-semibold text-base truncate flex items-center gap-2 text-muted-foreground" title="No sub-type (unassigned)">
                         <Tag className="h-4 w-4" /> No sub-type
                       </h3>
                     </div>
@@ -1216,11 +1216,11 @@ export function Assemblies() {
                       return (
                         <button key={a.id} onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-muted/50 text-foreground')}>
                           <div className="flex items-center gap-1.5">
-                            <p className="font-medium truncate flex-1">{a.name}</p>
+                            <p className="font-medium truncate flex-1" title={a.name}>{a.name}</p>
                             {a.status === 'finished' ? <CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> : <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
                           </div>
-                          {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
-                          {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic">{a.status_notes}</p>}
+                            {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5" title={a.description}>{a.description}</p>}
+                            {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic" title={a.status_notes}>{a.status_notes}</p>}
                           {(s && s.itemCount > 0) || a.selling_price > 0 ? (
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
@@ -1442,7 +1442,7 @@ export function Assemblies() {
                         </>
                       ) : (
                         <>
-                          <span className="text-sm flex-1 truncate">{m.name}</span>
+                          <span className="text-sm flex-1 truncate" title={m.name}>{m.name}</span>
                           <Badge variant="secondary" className="text-[10px]">{count}</Badge>
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingModelId(m.id); setEditingModelName(m.name); }}>
                             <Pencil className="h-3 w-3" />
