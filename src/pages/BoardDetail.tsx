@@ -1005,20 +1005,46 @@ export default function BoardDetail() {
           <thead>
             <tr className="border-b border-border bg-muted">
               <th
-                className="sticky left-0 top-0 z-30 border-r border-b w-16 border-border shadow-none bg-muted cursor-pointer hover:bg-accent/40 group"
-                title="Select all cells — then change color or merge"
-                onMouseDown={(e) => {
-                  if (e.button !== 0) return;
-                  if (renderedRowIds.length === 0 || visibleColumnIds.length === 0) return;
-                  setSelectionAnchor({ rowId: renderedRowIds[0], colId: visibleColumnIds[0] });
-                  setSelectionFocus({
-                    rowId: renderedRowIds[renderedRowIds.length - 1],
-                    colId: visibleColumnIds[visibleColumnIds.length - 1],
-                  });
-                }}
+                className="sticky left-0 top-0 z-30 border-r border-b w-16 border-border shadow-none bg-muted p-0"
               >
-                <div className="flex items-center justify-center text-muted-foreground/50 group-hover:text-foreground text-[10px] font-mono select-none">
-                  ◢
+                <div className="flex flex-col h-full divide-y divide-border">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      if (e.button !== 0) return;
+                      e.preventDefault();
+                      setSelectionAnchor(null);
+                      setSelectionFocus(null);
+                      setHeaderRowSelected(true);
+                    }}
+                    title="Select header row — then change its color"
+                    className={cn(
+                      'flex items-center justify-center py-0.5 text-[9px] font-mono cursor-pointer hover:bg-accent/40 transition-colors',
+                      headerRowSelected
+                        ? 'bg-primary/20 text-foreground ring-1 ring-primary ring-inset'
+                        : 'text-muted-foreground/60 hover:text-foreground'
+                    )}
+                  >
+                    Hdr
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      if (e.button !== 0) return;
+                      e.preventDefault();
+                      if (renderedRowIds.length === 0 || visibleColumnIds.length === 0) return;
+                      setHeaderRowSelected(false);
+                      setSelectionAnchor({ rowId: renderedRowIds[0], colId: visibleColumnIds[0] });
+                      setSelectionFocus({
+                        rowId: renderedRowIds[renderedRowIds.length - 1],
+                        colId: visibleColumnIds[visibleColumnIds.length - 1],
+                      });
+                    }}
+                    title="Select all data cells"
+                    className="flex items-center justify-center py-0.5 text-[10px] font-mono text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors cursor-pointer"
+                  >
+                    All
+                  </button>
                 </div>
               </th>
               {visibleColumns.map((col, idx) => {
