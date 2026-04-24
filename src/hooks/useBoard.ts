@@ -17,6 +17,7 @@ export interface BoardColumn {
   connect_mirror_column_id: string | null;
   per_row_options: boolean;
   text_align: 'left' | 'center' | 'right';
+  header_bg_color: string | null;
 }
 
 export interface BoardRow {
