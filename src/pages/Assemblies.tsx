@@ -829,10 +829,124 @@ export function Assemblies() {
           <div className="space-y-4">
             <div className="space-y-1"><Label>Name *</Label><Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. 16ft Flatbed Trailer" onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
             <div className="space-y-1"><Label>Description</Label><Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Optional description..." rows={2} /></div>
+            <div className="space-y-1">
+              <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Model</Label>
+              {assemblyModels.length > 0 && (
+                <Select value={newModel || '__none__'} onValueChange={(v) => setNewModel(v === '__none__' ? '' : v)}>
+                  <SelectTrigger><SelectValue placeholder="Select a model" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No model</SelectItem>
+                    {assemblyModels.map(m => (
+                      <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="flex items-center gap-1">
+                <Input
+                  value={newModelInput}
+                  onChange={(e) => setNewModelInput(e.target.value)}
+                  placeholder={assemblyModels.length > 0 ? 'Or add a new model…' : 'Add a model (e.g. F-150, GT, 24ft)…'}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddModelInline(); } }}
+                  className="h-9 text-sm"
+                />
+                <Button type="button" size="sm" variant="outline" onClick={handleAddModelInline} disabled={!newModelInput.trim()}>
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {newModel && (
+                <p className="text-xs text-muted-foreground">Will be added to model: <Badge variant="secondary" className="ml-1">{newModel}</Badge></p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate} disabled={!newName.trim() || creating}>{creating ? 'Creating...' : 'Create Assembly'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={manageModelsOpen} onOpenChange={setManageModelsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Models in "{activeType}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={manageModelInput}
+                onChange={(e) => setManageModelInput(e.target.value)}
+                placeholder="New model name..."
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && manageModelInput.trim()) {
+                    e.preventDefault();
+                    await addModel(manageModelInput.trim());
+                    setManageModelInput('');
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                onClick={async () => {
+                  if (!manageModelInput.trim()) return;
+                  await addModel(manageModelInput.trim());
+                  setManageModelInput('');
+                }}
+                disabled={!manageModelInput.trim()}
+              >
+                <Plus className="h-3 w-3 mr-1" /> Add
+              </Button>
+            </div>
+            <div className="space-y-1 max-h-72 overflow-auto">
+              {assemblyModels.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">No models yet. Add one above.</p>
+              ) : (
+                assemblyModels.map((m) => {
+                  const count = typeAssemblies.filter(a => a.model === m.name).length;
+                  const isEditing = editingModelId === m.id;
+                  return (
+                    <div key={m.id} className="flex items-center gap-2 px-2 py-1.5 rounded border bg-card">
+                      <Tag className="h-3 w-3 text-muted-foreground shrink-0" />
+                      {isEditing ? (
+                        <>
+                          <Input
+                            value={editingModelName}
+                            onChange={(e) => setEditingModelName(e.target.value)}
+                            className="h-7 text-sm"
+                            autoFocus
+                            onKeyDown={async (e) => {
+                              if (e.key === 'Enter') { await renameModel(m.id, editingModelName); setEditingModelId(null); }
+                              if (e.key === 'Escape') setEditingModelId(null);
+                            }}
+                          />
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={async () => { await renameModel(m.id, editingModelName); setEditingModelId(null); }}>
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingModelId(null)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm flex-1 truncate">{m.name}</span>
+                          <Badge variant="secondary" className="text-[10px]">{count}</Badge>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingModelId(m.id); setEditingModelName(m.name); }}>
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteModel(m.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">Deleting a model unassigns it from any assemblies — they aren't deleted.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManageModelsOpen(false)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
