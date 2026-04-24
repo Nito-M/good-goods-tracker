@@ -890,18 +890,20 @@ export default function BoardDetail() {
               Drag across cells, or click a row/column header to select more — then Merge.
             </span>
           )}
-          {selectionAnchor && (
+          {(selectionAnchor || headerRowSelected) && (
             <CellColorPicker
               value={selectionAnchorColor}
               onChange={applyColorToSelection}
               hint={
-                selectedCellCount > 1
-                  ? `Apply to ${selectedCellCount} selected cells`
-                  : 'Apply to selected cell'
+                headerRowSelected
+                  ? `Apply to all ${visibleColumns.length} column headers`
+                  : selectedCellCount > 1
+                    ? `Apply to ${selectedCellCount} selected cells`
+                    : 'Apply to selected cell'
               }
             />
           )}
-          {(selectionAnchor || selectionFocus) && (
+          {(selectionAnchor || selectionFocus || headerRowSelected) && (
             <Button variant="ghost" size="sm" onClick={clearSelection}>
               <X className="h-4 w-4" />
               Clear
