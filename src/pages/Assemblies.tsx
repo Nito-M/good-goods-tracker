@@ -939,7 +939,7 @@ export function Assemblies() {
             <div className="space-y-1"><Label>Name *</Label><Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. 16ft Flatbed Trailer" onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
             <div className="space-y-1"><Label>Description</Label><Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Optional description..." rows={2} /></div>
             <div className="space-y-1">
-              <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Model</Label>
+              <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Sub-type</Label>
               {assemblyModels.length > 0 && (
                 <Select value={newModel || '__none__'} onValueChange={(v) => setNewModel(v === '__none__' ? '' : v)}>
                   <SelectTrigger><SelectValue placeholder="Select a model" /></SelectTrigger>
