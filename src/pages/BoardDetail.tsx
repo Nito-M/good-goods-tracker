@@ -1157,7 +1157,7 @@ export default function BoardDetail() {
                   </th>
                 );
               })}
-              <th className="w-12 px-2 sticky top-0 bg-muted z-20">
+              <th className={cn('w-12 px-2 bg-muted z-20', board.header_frozen && 'sticky top-0')}>
                 <AddColumnPopover onAdd={(name, type) => addColumn(name, type)} />
               </th>
             </tr>
