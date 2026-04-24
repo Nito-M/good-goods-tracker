@@ -979,7 +979,23 @@ export default function BoardDetail() {
         <table className="border-separate border-spacing-0" style={{ width: 'max-content', minWidth: '100%' }}>
           <thead>
             <tr className="border-b border-border bg-muted">
-              <th className="sticky left-0 top-0 z-30 border-r w-16 border-border shadow-none bg-muted"></th>
+              <th
+                className="sticky left-0 top-0 z-30 border-r border-b w-16 border-border shadow-none bg-muted cursor-pointer hover:bg-accent/40 group"
+                title="Select all cells — then change color or merge"
+                onMouseDown={(e) => {
+                  if (e.button !== 0) return;
+                  if (renderedRowIds.length === 0 || visibleColumnIds.length === 0) return;
+                  setSelectionAnchor({ rowId: renderedRowIds[0], colId: visibleColumnIds[0] });
+                  setSelectionFocus({
+                    rowId: renderedRowIds[renderedRowIds.length - 1],
+                    colId: visibleColumnIds[visibleColumnIds.length - 1],
+                  });
+                }}
+              >
+                <div className="flex items-center justify-center text-muted-foreground/50 group-hover:text-foreground text-[10px] font-mono select-none">
+                  ◢
+                </div>
+              </th>
               {visibleColumns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
                 return (
