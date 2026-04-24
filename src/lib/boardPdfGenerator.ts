@@ -198,6 +198,10 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         if (cellAlign) {
           cellAligns.set(`${gIdx}-${rIdx}-${cIdx}`, cellAlign);
         }
+        const bgToken = getCellBgColor?.(row.id, col.id) ?? null;
+        if (bgToken) {
+          colorFills.set(`${gIdx}-${rIdx}-${cIdx}`, bgToken);
+        }
 
         if (geo?.span) {
           rowCells.push({
