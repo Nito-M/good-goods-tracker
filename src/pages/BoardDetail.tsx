@@ -320,9 +320,13 @@ export default function BoardDetail() {
   } = useBoardRowNoteEntries(rowIds);
   const { getActivity, logActivity, userNames } = useBoardRowActivity(rowIds);
 
+  // Undo stack: keep last 5 cell changes for "undo" button
+  const undoStackRef = useRef<Array<{ row_id: string; column_id: string; oldValue: string }>>([]);
+  const [undoCount, setUndoCount] = useState(0);
+
   // Wrap cell setter to log changes to activity log + enforce view-only
   const setCellValueLogged = useCallback(
-    async (row_id: string, column_id: string, value: string) => {
+    async (row_id: string, column_id: string, value: string, _skipUndo = false) => {
       // Block writes on view-only / hidden columns
       const perm = currentUserColumnPerms(column_id);
       if (perm !== 'edit') {
@@ -332,6 +336,11 @@ export default function BoardDetail() {
       const oldValue = getCellValue(row_id, column_id);
       if (oldValue === value) return;
       await setCellValue(row_id, column_id, value);
+      if (!_skipUndo) {
+        undoStackRef.current.push({ row_id, column_id, oldValue });
+        if (undoStackRef.current.length > 5) undoStackRef.current.shift();
+        setUndoCount(undoStackRef.current.length);
+      }
       const col = columns.find((c) => c.id === column_id);
       // For status columns, log the human-readable label
       let displayOld = oldValue;
@@ -356,6 +365,17 @@ export default function BoardDetail() {
     },
     [getCellValue, setCellValue, columns, logActivity, currentUserColumnPerms]
   );
+
+  const handleUndo = useCallback(async () => {
+    const last = undoStackRef.current.pop();
+    setUndoCount(undoStackRef.current.length);
+    if (!last) {
+      toast.info('Nothing to undo');
+      return;
+    }
+    await setCellValueLogged(last.row_id, last.column_id, last.oldValue, true);
+    toast.success('Undone');
+  }, [setCellValueLogged]);
 
   // Wrap note operations to log them
   const addNoteEntry = useCallback(
@@ -850,13 +870,14 @@ export default function BoardDetail() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          onClick={() => navigate(-5)}
-          title="Go back 5 pages"
+          onClick={handleUndo}
+          disabled={undoCount === 0}
+          title="Undo last change (up to 5)"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Back 5
+          Undo {undoCount > 0 ? `(${undoCount})` : ''}
         </Button>
         {titleEditing ? (
           <Input
