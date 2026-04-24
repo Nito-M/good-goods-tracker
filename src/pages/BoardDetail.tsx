@@ -1227,6 +1227,7 @@ interface GroupSectionProps {
   onRowDrop: (rowId: string) => void;
   onRowDragEnd: () => void;
   formulaContext?: import('@/lib/boardFormula').FormulaContext;
+  renderedRowIds: string[];
 }
 
 function GroupSection({
