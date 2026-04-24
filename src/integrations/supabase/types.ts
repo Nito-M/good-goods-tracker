@@ -1026,6 +1026,7 @@ export type Database = {
         Row: {
           board_id: string
           created_at: string
+          frozen: boolean
           id: string
           position: number
           updated_at: string
@@ -1033,6 +1034,7 @@ export type Database = {
         Insert: {
           board_id: string
           created_at?: string
+          frozen?: boolean
           id?: string
           position?: number
           updated_at?: string
@@ -1040,6 +1042,7 @@ export type Database = {
         Update: {
           board_id?: string
           created_at?: string
+          frozen?: boolean
           id?: string
           position?: number
           updated_at?: string
