@@ -1130,7 +1130,7 @@ export function Assemblies() {
               title="Change sub-type"
             >
               <Tag className="h-3 w-3" />
-              {selectedSubType === '__unassigned__' ? 'No sub-type' : selectedSubType}
+              {selectedSubType === '__unassigned__' ? 'No sub-type' : selectedSubType === '__all__' ? 'All assemblies' : selectedSubType}
               <Pencil className="h-3 w-3 opacity-50" />
             </button>
           </>
