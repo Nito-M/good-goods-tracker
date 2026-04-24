@@ -258,6 +258,8 @@ export function useBoard(boardId: string | undefined) {
       await fetchAll();
     }
   };
+
+  const reorderColumns = async (sourceId: string, targetId: string) => {
     if (sourceId === targetId) return;
     const current = [...columns].sort((a, b) => a.position - b.position);
     const fromIdx = current.findIndex((c) => c.id === sourceId);
