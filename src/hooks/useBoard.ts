@@ -398,6 +398,38 @@ export function useBoard(boardId: string | undefined) {
     }
   };
 
+  const getCellBgColor = (row_id: string, column_id: string): string | null => {
+    return cells.find((c) => c.row_id === row_id && c.column_id === column_id)?.bg_color ?? null;
+  };
+
+  const setCellBgColor = async (
+    row_id: string,
+    column_id: string,
+    bg_color: string | null
+  ) => {
+    const existing = cells.find((c) => c.row_id === row_id && c.column_id === column_id);
+    if (existing) {
+      if (existing.bg_color === bg_color) return;
+      setCells((cs) => cs.map((c) => (c.id === existing.id ? { ...c, bg_color } : c)));
+      const { error } = await supabase
+        .from('board_cells')
+        .update({ bg_color } as any)
+        .eq('id', existing.id);
+      if (error) toast.error('Failed to set color');
+    } else {
+      const { data, error } = await supabase
+        .from('board_cells')
+        .insert({ row_id, column_id, value: '', bg_color } as any)
+        .select()
+        .single();
+      if (error || !data) {
+        toast.error('Failed to set color');
+        return;
+      }
+      setCells((cs) => [...cs, normalizeCell(data)]);
+    }
+  };
+
   return {
     board,
     columns,
@@ -424,6 +456,9 @@ export function useBoard(boardId: string | undefined) {
     getCellValue,
     getCellTextAlign,
     setCellTextAlign,
+    getCellBgColor,
+    setCellBgColor,
     refetch: fetchAll,
   };
 }
+
