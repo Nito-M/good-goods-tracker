@@ -1080,7 +1080,8 @@ export default function BoardDetail() {
                       ...(headerFg ? { color: headerFg } : {}),
                     }}
                     className={cn(
-                      'border-r border-border text-left relative transition-colors sticky top-0 z-20',
+                      'border-r border-border text-left relative transition-colors z-20',
+                      board.header_frozen && 'sticky top-0',
                       !headerHex && 'bg-muted',
                       idx === 0 && 'left-16 z-30',
                       headerRowSelected && 'ring-2 ring-primary ring-inset',
