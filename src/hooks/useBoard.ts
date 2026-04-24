@@ -304,7 +304,7 @@ export function useBoard(boardId: string | undefined) {
       toast.error('Failed to add row');
       return null;
     }
-    setRows((r) => [...r, data]);
+    setRows((r) => [...r, { ...data, frozen: !!(data as any).frozen }]);
 
     // Apply automatic status defaults for any status column with an isAutomatic option
     const autoCells = columns
