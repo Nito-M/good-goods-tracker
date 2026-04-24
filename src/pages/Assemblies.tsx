@@ -985,7 +985,7 @@ export function Assemblies() {
               <Input
                 value={manageModelInput}
                 onChange={(e) => setManageModelInput(e.target.value)}
-                placeholder="New model name..."
+                placeholder="New sub-type name..."
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter' && manageModelInput.trim()) {
                     e.preventDefault();
