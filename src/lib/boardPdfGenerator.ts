@@ -141,6 +141,8 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const statusFills = new Map<string, string>();
   // Per-cell alignment overrides. Key matches statusFills.
   const cellAligns = new Map<string, 'left' | 'center' | 'right'>();
+  // Per-cell custom background colors set by the user (token like "blue-300").
+  const colorFills = new Map<string, string>();
 
   let cursorY = 60;
 
