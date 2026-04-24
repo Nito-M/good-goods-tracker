@@ -511,6 +511,22 @@ export default function BoardDetail() {
   );
   const visibleColumnIds = useMemo(() => visibleColumns.map((c) => c.id), [visibleColumns]);
 
+  // Spreadsheet formula context: rows/cols are addressed by their visible position.
+  // A1 = first column, first row in the rendered grid.
+  const formulaContext = useMemo(
+    () => ({
+      colCount: visibleColumnIds.length,
+      rowCount: renderedRowIds.length,
+      getValueAt: (col: number, row: number) => {
+        const colId = visibleColumnIds[col];
+        const rowId = renderedRowIds[row];
+        if (!colId || !rowId) return '';
+        return getCellValue(rowId, colId);
+      },
+    }),
+    [visibleColumnIds, renderedRowIds, getCellValue, cells]
+  );
+
   const mergeRects = useMemo(
     () => computeMergeRects(merges, renderedRowIds, visibleColumnIds),
     [merges, renderedRowIds, visibleColumnIds]
@@ -1062,6 +1078,7 @@ export default function BoardDetail() {
                   setDraggedRowId(null);
                   setDragOverRowId(null);
                 }}
+                formulaContext={formulaContext}
               />
             ))}
 
@@ -1203,6 +1220,7 @@ interface GroupSectionProps {
   onRowDragLeave: (rowId: string) => void;
   onRowDrop: (rowId: string) => void;
   onRowDragEnd: () => void;
+  formulaContext?: import('@/lib/boardFormula').FormulaContext;
 }
 
 function GroupSection({
@@ -1238,6 +1256,7 @@ function GroupSection({
   onRowDragLeave,
   onRowDrop,
   onRowDragEnd,
+  formulaContext,
 }: GroupSectionProps) {
   // Long-press: hold ~400ms anywhere on a cell (even on inputs) to start a merge selection.
   const longPressRef = useRef<{
@@ -1427,6 +1446,7 @@ function GroupSection({
                     readOnly={currentUserColumnPerms(col.id) !== 'edit'}
                     cellAlign={getCellTextAlign(row.id, col.id)}
                     onChangeCellAlign={(a) => setCellTextAlign(row.id, col.id, a)}
+                    formulaContext={formulaContext}
                   />
                 </td>
               );
@@ -1451,6 +1471,7 @@ interface CellRendererProps {
   readOnly?: boolean;
   cellAlign?: 'left' | 'center' | 'right' | null;
   onChangeCellAlign?: (a: 'left' | 'center' | 'right' | null) => void;
+  formulaContext?: import('@/lib/boardFormula').FormulaContext;
 }
 
 function CellRenderer({
@@ -1465,6 +1486,7 @@ function CellRenderer({
   readOnly,
   cellAlign,
   onChangeCellAlign,
+  formulaContext,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
@@ -1515,6 +1537,7 @@ function CellRenderer({
           align={effectiveAlign}
           cellAlign={cellAlign ?? null}
           onChangeCellAlign={onChangeCellAlign}
+          formulaContext={formulaContext}
         />
       );
     }
