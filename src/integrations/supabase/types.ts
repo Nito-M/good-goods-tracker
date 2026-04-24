@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          model: string | null
           name: string
           selling_price: number
           status: string
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          model?: string | null
           name: string
           selling_price?: number
           status?: string
@@ -43,6 +45,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          model?: string | null
           name?: string
           selling_price?: number
           status?: string
@@ -201,6 +204,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      assembly_models: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       asset_documents: {
         Row: {
