@@ -1446,6 +1446,7 @@ function GroupSection({
                     readOnly={currentUserColumnPerms(col.id) !== 'edit'}
                     cellAlign={getCellTextAlign(row.id, col.id)}
                     onChangeCellAlign={(a) => setCellTextAlign(row.id, col.id, a)}
+                    formulaContext={formulaContext}
                   />
                 </td>
               );
