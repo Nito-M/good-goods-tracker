@@ -870,13 +870,14 @@ export default function BoardDetail() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          onClick={() => navigate(-5)}
-          title="Go back 5 pages"
+          onClick={handleUndo}
+          disabled={undoCount === 0}
+          title="Undo last change (up to 5)"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Back 5
+          Undo {undoCount > 0 ? `(${undoCount})` : ''}
         </Button>
         {titleEditing ? (
           <Input
