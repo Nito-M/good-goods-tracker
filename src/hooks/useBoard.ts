@@ -42,6 +42,7 @@ export interface BoardDetail {
   user_id: string;
   company_id: string | null;
   group_by_column_id: string | null;
+  header_frozen: boolean;
 }
 
 function normalizeColumn(raw: any): BoardColumn {
@@ -94,7 +95,7 @@ export function useBoard(boardId: string | undefined) {
     setLoading(true);
 
     const [boardRes, colRes, rowRes] = await Promise.all([
-      supabase.from('boards').select('id, name, user_id, company_id, group_by_column_id').eq('id', boardId).maybeSingle(),
+      supabase.from('boards').select('id, name, user_id, company_id, group_by_column_id, header_frozen').eq('id', boardId).maybeSingle(),
       supabase.from('board_columns').select('*').eq('board_id', boardId).order('position'),
       supabase.from('board_rows').select('*').eq('board_id', boardId).order('position'),
     ]);
@@ -104,7 +105,12 @@ export function useBoard(boardId: string | undefined) {
       setLoading(false);
       return;
     }
-    setBoard(boardRes.data);
+    const rawBoard: any = boardRes.data;
+    setBoard(
+      rawBoard
+        ? { ...rawBoard, header_frozen: rawBoard.header_frozen !== false }
+        : rawBoard
+    );
     setColumns((colRes.data || []).map(normalizeColumn));
     setRows((rowRes.data || []).map((r: any) => ({ ...r, frozen: !!r.frozen })));
 
@@ -132,6 +138,19 @@ export function useBoard(boardId: string | undefined) {
     setBoard((b) => (b ? { ...b, name } : b));
     const { error } = await supabase.from('boards').update({ name }).eq('id', boardId);
     if (error) toast.error('Failed to rename');
+  };
+
+  const setHeaderFrozen = async (frozen: boolean) => {
+    if (!boardId) return;
+    setBoard((b) => (b ? { ...b, header_frozen: frozen } : b));
+    const { error } = await supabase
+      .from('boards')
+      .update({ header_frozen: frozen } as any)
+      .eq('id', boardId);
+    if (error) {
+      toast.error('Failed to update header');
+      await fetchAll();
+    }
   };
 
   const setGroupBy = async (column_id: string | null) => {
@@ -464,6 +483,7 @@ export function useBoard(boardId: string | undefined) {
     cells,
     loading,
     renameBoard,
+    setHeaderFrozen,
     setGroupBy,
     addColumn,
     renameColumn,

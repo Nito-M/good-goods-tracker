@@ -1062,6 +1062,7 @@ export type Database = {
           company_id: string | null
           created_at: string
           group_by_column_id: string | null
+          header_frozen: boolean
           id: string
           name: string
           organization_id: string | null
@@ -1072,6 +1073,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           group_by_column_id?: string | null
+          header_frozen?: boolean
           id?: string
           name?: string
           organization_id?: string | null
@@ -1082,6 +1084,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           group_by_column_id?: string | null
+          header_frozen?: boolean
           id?: string
           name?: string
           organization_id?: string | null
