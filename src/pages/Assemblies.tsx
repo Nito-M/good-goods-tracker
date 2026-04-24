@@ -978,7 +978,7 @@ export function Assemblies() {
       <Dialog open={manageModelsOpen} onOpenChange={setManageModelsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Manage Models in "{activeType}"</DialogTitle>
+            <DialogTitle>Manage Sub-types in "{activeType}"</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
