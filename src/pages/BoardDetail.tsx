@@ -1220,6 +1220,7 @@ interface GroupSectionProps {
   onRowDragLeave: (rowId: string) => void;
   onRowDrop: (rowId: string) => void;
   onRowDragEnd: () => void;
+  formulaContext?: import('@/lib/boardFormula').FormulaContext;
 }
 
 function GroupSection({
