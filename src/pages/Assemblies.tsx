@@ -1174,7 +1174,7 @@ export function Assemblies() {
               <div className="flex items-center gap-1">
                 <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
                 <Button size="icon" variant="ghost" className="h-8 w-8" title="Manage sub-types" onClick={() => setManageModelsOpen(true)}><Settings2 className="h-4 w-4" /></Button>
-                <Button size="sm" onClick={() => { setNewModel(selectedSubType && selectedSubType !== '__unassigned__' ? selectedSubType : ''); setCreateOpen(true); }} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
+                <Button size="sm" onClick={() => { setNewModel(selectedSubType && selectedSubType !== '__unassigned__' && selectedSubType !== '__all__' ? selectedSubType : ''); setCreateOpen(true); }} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(false)}><PanelLeftClose className="h-4 w-4" /></Button>
               </div>
             </div>
