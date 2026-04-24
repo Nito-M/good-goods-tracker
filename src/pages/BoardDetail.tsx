@@ -1471,6 +1471,7 @@ interface CellRendererProps {
   readOnly?: boolean;
   cellAlign?: 'left' | 'center' | 'right' | null;
   onChangeCellAlign?: (a: 'left' | 'center' | 'right' | null) => void;
+  formulaContext?: import('@/lib/boardFormula').FormulaContext;
 }
 
 function CellRenderer({
@@ -1485,6 +1486,7 @@ function CellRenderer({
   readOnly,
   cellAlign,
   onChangeCellAlign,
+  formulaContext,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
