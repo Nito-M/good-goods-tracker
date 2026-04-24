@@ -20,6 +20,7 @@ interface GenerateOpts {
   groups: GroupBlock[];
   getCellValue: (rowId: string, columnId: string) => string;
   getCellTextAlign?: (rowId: string, columnId: string) => 'left' | 'center' | 'right' | null;
+  getCellBgColor?: (rowId: string, columnId: string) => string | null;
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
   merges?: BoardMerge[];
 }
