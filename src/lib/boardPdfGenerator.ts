@@ -182,7 +182,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
 
         const raw = getCellValue(row.id, col.id);
         const files = col.type === 'files' ? getFiles(row.id, col.id) : [];
-        const text = renderCell(col, raw, files);
+        const text = renderCell(col, raw, files, formulaContext);
 
         if (col.type === 'status' && raw) {
           const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
