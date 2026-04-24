@@ -1013,23 +1013,6 @@ export default function BoardDetail() {
           )}
         </div>
 
-        <span className="text-sm text-muted-foreground ml-auto">Group by:</span>
-        <Select
-          value={board.group_by_column_id || 'none'}
-          onValueChange={(v) => setGroupBy(v === 'none' ? null : v)}
-        >
-          <SelectTrigger className="w-[200px] h-9">
-            <SelectValue placeholder="None" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">(none)</SelectItem>
-            {groupableColumns.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="flex-1 min-h-0 border border-border rounded-lg overflow-auto bg-card">
