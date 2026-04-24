@@ -280,6 +280,7 @@ export default function BoardDetail() {
     setColumnNotes,
     setColumnPerRowOptions,
     setColumnTextAlign,
+    setColumnHeaderBgColor,
     deleteColumn,
     reorderColumns,
     addRow,
@@ -420,6 +421,9 @@ export default function BoardDetail() {
   const [selectionAnchor, setSelectionAnchor] = useState<{ rowId: string; colId: string } | null>(null);
   const [selectionFocus, setSelectionFocus] = useState<{ rowId: string; colId: string } | null>(null);
   const [isDragSelecting, setIsDragSelecting] = useState(false);
+  // When true, the column-header row itself is the selection target — applying
+  // a color writes to every visible column's header_bg_color.
+  const [headerRowSelected, setHeaderRowSelected] = useState(false);
   const [mergePromptOpen, setMergePromptOpen] = useState(false);
   const [pendingMergeContext, setPendingMergeContext] = useState<{
     nonEmptyCount: number;
@@ -640,6 +644,7 @@ export default function BoardDetail() {
     setSelectionAnchor(null);
     setSelectionFocus(null);
     setIsDragSelecting(false);
+    setHeaderRowSelected(false);
   }, []);
 
   // Keyboard: Esc clears selection. Cmd/Ctrl+M triggers merge prompt when applicable.
@@ -672,8 +677,14 @@ export default function BoardDetail() {
 
   // Apply (or clear) a background color across every cell in the current
   // selection. Falls back to the single anchor cell if no rectangle is active.
+  // When the column-header row is selected, writes to each visible column's
+  // header_bg_color instead of any data cells.
   const applyColorToSelection = useCallback(
     (token: string | null) => {
+      if (headerRowSelected) {
+        visibleColumns.forEach((c) => setColumnHeaderBgColor(c.id, token));
+        return;
+      }
       if (selectionRect) {
         for (let r = selectionRect.r1; r <= selectionRect.r2; r++) {
           for (let c = selectionRect.c1; c <= selectionRect.c2; c++) {
@@ -688,13 +699,25 @@ export default function BoardDetail() {
         setCellBgColor(selectionAnchor.rowId, selectionAnchor.colId, token);
       }
     },
-    [selectionRect, selectionAnchor, renderedRowIds, visibleColumnIds, setCellBgColor]
+    [
+      headerRowSelected,
+      visibleColumns,
+      setColumnHeaderBgColor,
+      selectionRect,
+      selectionAnchor,
+      renderedRowIds,
+      visibleColumnIds,
+      setCellBgColor,
+    ]
   );
 
-  // Color value to show in the trigger swatch — uses the anchor cell if any.
-  const selectionAnchorColor = selectionAnchor
-    ? getCellBgColor(selectionAnchor.rowId, selectionAnchor.colId)
-    : null;
+  // Color value to show in the trigger swatch — uses the anchor (or, for the
+  // header row, the first column's header color) so the picker reflects state.
+  const selectionAnchorColor = headerRowSelected
+    ? visibleColumns[0]?.header_bg_color ?? null
+    : selectionAnchor
+      ? getCellBgColor(selectionAnchor.rowId, selectionAnchor.colId)
+      : null;
 
   const confirmMerge = useCallback(
     async (mode: 'keep-top-left' | 'concatenate') => {
@@ -867,18 +890,20 @@ export default function BoardDetail() {
               Drag across cells, or click a row/column header to select more — then Merge.
             </span>
           )}
-          {selectionAnchor && (
+          {(selectionAnchor || headerRowSelected) && (
             <CellColorPicker
               value={selectionAnchorColor}
               onChange={applyColorToSelection}
               hint={
-                selectedCellCount > 1
-                  ? `Apply to ${selectedCellCount} selected cells`
-                  : 'Apply to selected cell'
+                headerRowSelected
+                  ? `Apply to all ${visibleColumns.length} column headers`
+                  : selectedCellCount > 1
+                    ? `Apply to ${selectedCellCount} selected cells`
+                    : 'Apply to selected cell'
               }
             />
           )}
-          {(selectionAnchor || selectionFocus) && (
+          {(selectionAnchor || selectionFocus || headerRowSelected) && (
             <Button variant="ghost" size="sm" onClick={clearSelection}>
               <X className="h-4 w-4" />
               Clear
@@ -980,31 +1005,67 @@ export default function BoardDetail() {
           <thead>
             <tr className="border-b border-border bg-muted">
               <th
-                className="sticky left-0 top-0 z-30 border-r border-b w-16 border-border shadow-none bg-muted cursor-pointer hover:bg-accent/40 group"
-                title="Select all cells — then change color or merge"
-                onMouseDown={(e) => {
-                  if (e.button !== 0) return;
-                  if (renderedRowIds.length === 0 || visibleColumnIds.length === 0) return;
-                  setSelectionAnchor({ rowId: renderedRowIds[0], colId: visibleColumnIds[0] });
-                  setSelectionFocus({
-                    rowId: renderedRowIds[renderedRowIds.length - 1],
-                    colId: visibleColumnIds[visibleColumnIds.length - 1],
-                  });
-                }}
+                className="sticky left-0 top-0 z-30 border-r border-b w-16 border-border shadow-none bg-muted p-0"
               >
-                <div className="flex items-center justify-center text-muted-foreground/50 group-hover:text-foreground text-[10px] font-mono select-none">
-                  ◢
+                <div className="flex flex-col h-full divide-y divide-border">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      if (e.button !== 0) return;
+                      e.preventDefault();
+                      setSelectionAnchor(null);
+                      setSelectionFocus(null);
+                      setHeaderRowSelected(true);
+                    }}
+                    title="Select header row — then change its color"
+                    className={cn(
+                      'flex items-center justify-center py-0.5 text-[9px] font-mono cursor-pointer hover:bg-accent/40 transition-colors',
+                      headerRowSelected
+                        ? 'bg-primary/20 text-foreground ring-1 ring-primary ring-inset'
+                        : 'text-muted-foreground/60 hover:text-foreground'
+                    )}
+                  >
+                    Hdr
+                  </button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      if (e.button !== 0) return;
+                      e.preventDefault();
+                      if (renderedRowIds.length === 0 || visibleColumnIds.length === 0) return;
+                      setHeaderRowSelected(false);
+                      setSelectionAnchor({ rowId: renderedRowIds[0], colId: visibleColumnIds[0] });
+                      setSelectionFocus({
+                        rowId: renderedRowIds[renderedRowIds.length - 1],
+                        colId: visibleColumnIds[visibleColumnIds.length - 1],
+                      });
+                    }}
+                    title="Select all data cells"
+                    className="flex items-center justify-center py-0.5 text-[10px] font-mono text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors cursor-pointer"
+                  >
+                    All
+                  </button>
                 </div>
               </th>
               {visibleColumns.map((col, idx) => {
                 const w = liveWidths[col.id] ?? col.width;
+                const headerHex = cellColorToHex(col.header_bg_color);
+                const headerFg = readableTextColor(col.header_bg_color);
                 return (
                   <th
                     key={col.id}
-                    style={{ width: w, minWidth: w, maxWidth: w }}
+                    style={{
+                      width: w,
+                      minWidth: w,
+                      maxWidth: w,
+                      ...(headerHex ? { backgroundColor: headerHex } : {}),
+                      ...(headerFg ? { color: headerFg } : {}),
+                    }}
                     className={cn(
-                      'border-r border-border text-left relative transition-colors sticky top-0 bg-muted z-20',
+                      'border-r border-border text-left relative transition-colors sticky top-0 z-20',
+                      !headerHex && 'bg-muted',
                       idx === 0 && 'left-16 z-30',
+                      headerRowSelected && 'ring-2 ring-primary ring-inset',
                       dragOverColId === col.id && draggedColId !== col.id && 'bg-primary/10',
                       draggedColId === col.id && 'opacity-40'
                     )}

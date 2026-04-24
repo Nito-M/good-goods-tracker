@@ -17,6 +17,7 @@ export interface BoardColumn {
   connect_mirror_column_id: string | null;
   per_row_options: boolean;
   text_align: 'left' | 'center' | 'right';
+  header_bg_color: string | null;
 }
 
 export interface BoardRow {
@@ -64,6 +65,7 @@ function normalizeColumn(raw: any): BoardColumn {
     connect_mirror_column_id,
     per_row_options: !!raw.per_row_options,
     text_align: (raw.text_align === 'center' || raw.text_align === 'right') ? raw.text_align : 'left',
+    header_bg_color: typeof raw.header_bg_color === 'string' && raw.header_bg_color.length > 0 ? raw.header_bg_color : null,
   };
 }
 
@@ -241,6 +243,18 @@ export function useBoard(boardId: string | undefined) {
       .eq('id', id);
     if (error) {
       toast.error('Failed to update column');
+      await fetchAll();
+    }
+  };
+
+  const setColumnHeaderBgColor = async (id: string, header_bg_color: string | null) => {
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, header_bg_color } : c)));
+    const { error } = await supabase
+      .from('board_columns')
+      .update({ header_bg_color } as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to color header');
       await fetchAll();
     }
   };
@@ -447,6 +461,7 @@ export function useBoard(boardId: string | undefined) {
     setColumnNotes,
     setColumnPerRowOptions,
     setColumnTextAlign,
+    setColumnHeaderBgColor,
     deleteColumn,
     reorderColumns,
     addRow,
