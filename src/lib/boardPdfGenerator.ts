@@ -247,6 +247,15 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         if (col) {
           data.cell.styles.halign = col.text_align || 'left';
         }
+        // Header row: paint the per-column header background color the user set.
+        if (data.section === 'head' && col?.header_bg_color) {
+          const rgb = cellColorToRgb(col.header_bg_color);
+          if (rgb) {
+            data.cell.styles.fillColor = rgb;
+            const text = readableTextColor(col.header_bg_color);
+            data.cell.styles.textColor = text === '#ffffff' ? [255, 255, 255] : [0, 0, 0];
+          }
+        }
         if (data.section !== 'body') return;
         const key = `${gIdx}-${data.row.index}-${data.column.index}`;
         const colorName = statusFills.get(key);
