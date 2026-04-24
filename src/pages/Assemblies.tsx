@@ -261,7 +261,14 @@ function AssemblyDetail({
         ) : (
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-semibold">{assembly.name}</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-semibold">{assembly.name}</h2>
+                {assembly.model && (
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                    <Tag className="h-3 w-3" /> {assembly.model}
+                  </span>
+                )}
+              </div>
               {assembly.description && <p className="text-sm text-muted-foreground mt-1">{assembly.description}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-4">
                 {summary && summary.itemCount > 0 && (
