@@ -105,12 +105,19 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
                         key={c.key}
                         onClick={() => updateOption(opt.id, { color: c.key })}
                         className={cn(
-                          'h-5 w-5 rounded-full border-2',
+                          'h-5 w-5 rounded-full border-2 relative overflow-hidden',
                           c.bg,
-                          opt.color === c.key ? 'border-foreground' : 'border-transparent'
+                          c.key === 'none' && 'border-dashed border-muted-foreground/50',
+                          opt.color === c.key ? 'border-foreground' : c.key !== 'none' && 'border-transparent'
                         )}
-                        title={c.key}
-                      />
+                        title={c.key === 'none' ? 'No color' : c.key}
+                      >
+                        {c.key === 'none' && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <span className="block h-px w-5 bg-muted-foreground rotate-45" />
+                          </span>
+                        )}
+                      </button>
                     ))}
                   </div>
                   <Input
