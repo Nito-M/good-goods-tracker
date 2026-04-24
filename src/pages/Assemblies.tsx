@@ -728,6 +728,8 @@ export function Assemblies() {
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [editingModelName, setEditingModelName] = useState('');
   const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set());
+  const [selectedSubType, setSelectedSubType] = useState<string | null>(null);
+  const [subTypePickerOpen, setSubTypePickerOpen] = useState(false);
 
   const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
@@ -738,10 +740,21 @@ export function Assemblies() {
     }
   }, []); // Only run once on mount
 
+  // Reset sub-type selection when switching Types, then prompt picker on entry
+  useEffect(() => {
+    setSelectedSubType(null);
+    setSubTypePickerOpen(true);
+  }, [activeType]);
+
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
-  const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
+  const subTypeFiltered = selectedSubType === null
+    ? typeAssemblies
+    : selectedSubType === '__unassigned__'
+      ? typeAssemblies.filter(a => !a.model)
+      : typeAssemblies.filter(a => a.model === selectedSubType);
+  const selectedAssembly = subTypeFiltered.find((a) => a.id === selectedId) || null;
   const searchTerm = search.toLowerCase().trim();
-  const filtered = typeAssemblies.filter((a) =>
+  const filtered = subTypeFiltered.filter((a) =>
     !searchTerm ||
     a.name.toLowerCase().includes(searchTerm) ||
     (a.description ?? '').toLowerCase().includes(searchTerm)
@@ -810,7 +823,21 @@ export function Assemblies() {
         </button>
         <span className="text-muted-foreground text-sm">/</span>
         <span className="font-semibold text-sm">{activeType}</span>
-        <span className="text-xs text-muted-foreground">({typeAssemblies.length})</span>
+        {selectedSubType !== null && (
+          <>
+            <span className="text-muted-foreground text-sm">/</span>
+            <button
+              onClick={() => setSubTypePickerOpen(true)}
+              className="inline-flex items-center gap-1 text-sm font-semibold px-2 py-0.5 rounded hover:bg-muted transition-colors"
+              title="Change sub-type"
+            >
+              <Tag className="h-3 w-3" />
+              {selectedSubType === '__unassigned__' ? 'No sub-type' : selectedSubType}
+              <Pencil className="h-3 w-3 opacity-50" />
+            </button>
+          </>
+        )}
+        <span className="text-xs text-muted-foreground">({subTypeFiltered.length})</span>
       </div>
 
       <div className="flex flex-1 overflow-hidden min-h-0">
@@ -821,8 +848,8 @@ export function Assemblies() {
               <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
               <div className="flex items-center gap-1">
                 <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
-                <Button size="icon" variant="ghost" className="h-8 w-8" title="Manage models" onClick={() => setManageModelsOpen(true)}><Settings2 className="h-4 w-4" /></Button>
-                <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" title="Manage sub-types" onClick={() => setManageModelsOpen(true)}><Settings2 className="h-4 w-4" /></Button>
+                <Button size="sm" onClick={() => { setNewModel(selectedSubType && selectedSubType !== '__unassigned__' ? selectedSubType : ''); setCreateOpen(true); }} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(false)}><PanelLeftClose className="h-4 w-4" /></Button>
               </div>
             </div>
@@ -843,7 +870,7 @@ export function Assemblies() {
               groupedFiltered.map(([modelKey, list]) => {
                 if (list.length === 0 && modelKey === '__unassigned__') return null;
                 const isUnassigned = modelKey === '__unassigned__';
-                const label = isUnassigned ? 'No model' : modelKey;
+                const label = isUnassigned ? 'No sub-type' : modelKey;
                 const collapsed = collapsedModels.has(modelKey);
                 return (
                   <div key={modelKey} className="space-y-1">
@@ -857,7 +884,7 @@ export function Assemblies() {
                       <span className="text-[10px] font-normal">{list.length}</span>
                     </button>
                     {!collapsed && list.length === 0 && (
-                      <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assemblies in this model yet.</p>
+                      <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assemblies in this sub-type yet.</p>
                     )}
                     {!collapsed && list.map((a) => {
                       const s = summaries.get(a.id);
@@ -905,6 +932,85 @@ export function Assemblies() {
         </div>
       </div>
 
+      {/* Sub-type picker (shown on entry to a Type) */}
+      <Dialog
+        open={subTypePickerOpen}
+        onOpenChange={(open) => {
+          // Allow dismissing only after a sub-type is chosen, OR if the type has no sub-types defined
+          if (!open) {
+            if (selectedSubType !== null || assemblyModels.length === 0) {
+              setSubTypePickerOpen(false);
+            }
+          } else {
+            setSubTypePickerOpen(true);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => { if (selectedSubType === null && assemblyModels.length > 0) e.preventDefault(); }} onEscapeKeyDown={(e) => { if (selectedSubType === null && assemblyModels.length > 0) e.preventDefault(); }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Tag className="h-4 w-4" /> Choose a sub-type in "{activeType}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {assemblyModels.length === 0 ? (
+              <div className="text-sm text-muted-foreground space-y-3">
+                <p>No sub-types defined for "{activeType}" yet. You can add some from the sidebar (⚙️ Manage sub-types) or just continue without one.</p>
+                <Button
+                  className="w-full"
+                  onClick={() => { setSelectedSubType('__unassigned__'); setSubTypePickerOpen(false); }}
+                >
+                  Continue without a sub-type
+                </Button>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">Pick a sub-type to focus the list, or view everything in this type.</p>
+                <div className="grid grid-cols-1 gap-1.5 max-h-80 overflow-auto">
+                  <button
+                    onClick={() => { setSelectedSubType(null); setSelectedId(null); setSubTypePickerOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border bg-card hover:bg-accent text-sm transition-colors"
+                  >
+                    <span className="flex items-center gap-2"><Layers className="h-3.5 w-3.5" /> All assemblies</span>
+                    <span className="text-xs text-muted-foreground">{typeAssemblies.length}</span>
+                  </button>
+                  {assemblyModels.map((m) => {
+                    const count = typeAssemblies.filter(a => a.model === m.name).length;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => { setSelectedSubType(m.name); setSelectedId(null); setSubTypePickerOpen(false); }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border bg-card hover:bg-accent text-sm transition-colors"
+                      >
+                        <span className="flex items-center gap-2"><Tag className="h-3.5 w-3.5" /> {m.name}</span>
+                        <span className="text-xs text-muted-foreground">{count}</span>
+                      </button>
+                    );
+                  })}
+                  {typeAssemblies.some(a => !a.model) && (
+                    <button
+                      onClick={() => { setSelectedSubType('__unassigned__'); setSelectedId(null); setSubTypePickerOpen(false); }}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-md border border-dashed bg-card hover:bg-accent text-sm transition-colors text-muted-foreground"
+                    >
+                      <span className="flex items-center gap-2"><Tag className="h-3.5 w-3.5" /> No sub-type</span>
+                      <span className="text-xs">{typeAssemblies.filter(a => !a.model).length}</span>
+                    </button>
+                  )}
+                </div>
+                <div className="border-t pt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs"
+                    onClick={() => { setSubTypePickerOpen(false); setManageModelsOpen(true); }}
+                  >
+                    <Settings2 className="h-3 w-3 mr-1.5" /> Manage sub-types…
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>New Assembly in "{activeType}"</DialogTitle></DialogHeader>
@@ -912,12 +1018,12 @@ export function Assemblies() {
             <div className="space-y-1"><Label>Name *</Label><Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. 16ft Flatbed Trailer" onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
             <div className="space-y-1"><Label>Description</Label><Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Optional description..." rows={2} /></div>
             <div className="space-y-1">
-              <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Model</Label>
+              <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Sub-type</Label>
               {assemblyModels.length > 0 && (
                 <Select value={newModel || '__none__'} onValueChange={(v) => setNewModel(v === '__none__' ? '' : v)}>
-                  <SelectTrigger><SelectValue placeholder="Select a model" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select a sub-type" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">No model</SelectItem>
+                    <SelectItem value="__none__">No sub-type</SelectItem>
                     {assemblyModels.map(m => (
                       <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
                     ))}
@@ -928,7 +1034,7 @@ export function Assemblies() {
                 <Input
                   value={newModelInput}
                   onChange={(e) => setNewModelInput(e.target.value)}
-                  placeholder={assemblyModels.length > 0 ? 'Or add a new model…' : 'Add a model (e.g. F-150, GT, 24ft)…'}
+                  placeholder={assemblyModels.length > 0 ? 'Or add a new sub-type…' : 'Add a sub-type (e.g. Flatbed, Dump, Enclosed)…'}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddModelInline(); } }}
                   className="h-9 text-sm"
                 />
@@ -937,7 +1043,7 @@ export function Assemblies() {
                 </Button>
               </div>
               {newModel && (
-                <p className="text-xs text-muted-foreground">Will be added to model: <Badge variant="secondary" className="ml-1">{newModel}</Badge></p>
+                <p className="text-xs text-muted-foreground">Will be added to sub-type: <Badge variant="secondary" className="ml-1">{newModel}</Badge></p>
               )}
             </div>
           </div>
@@ -951,14 +1057,14 @@ export function Assemblies() {
       <Dialog open={manageModelsOpen} onOpenChange={setManageModelsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Manage Models in "{activeType}"</DialogTitle>
+            <DialogTitle>Manage Sub-types in "{activeType}"</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Input
                 value={manageModelInput}
                 onChange={(e) => setManageModelInput(e.target.value)}
-                placeholder="New model name..."
+                placeholder="New sub-type name..."
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter' && manageModelInput.trim()) {
                     e.preventDefault();
@@ -981,7 +1087,7 @@ export function Assemblies() {
             </div>
             <div className="space-y-1 max-h-72 overflow-auto">
               {assemblyModels.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">No models yet. Add one above.</p>
+                <p className="text-sm text-muted-foreground text-center py-6">No sub-types yet. Add one above.</p>
               ) : (
                 assemblyModels.map((m) => {
                   const count = typeAssemblies.filter(a => a.model === m.name).length;
@@ -1025,7 +1131,7 @@ export function Assemblies() {
                 })
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Deleting a model unassigns it from any assemblies — they aren't deleted.</p>
+            <p className="text-xs text-muted-foreground">Deleting a sub-type unassigns it from any assemblies — they aren't deleted.</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setManageModelsOpen(false)}>Done</Button>
