@@ -823,7 +823,21 @@ export function Assemblies() {
         </button>
         <span className="text-muted-foreground text-sm">/</span>
         <span className="font-semibold text-sm">{activeType}</span>
-        <span className="text-xs text-muted-foreground">({typeAssemblies.length})</span>
+        {selectedSubType !== null && (
+          <>
+            <span className="text-muted-foreground text-sm">/</span>
+            <button
+              onClick={() => setSubTypePickerOpen(true)}
+              className="inline-flex items-center gap-1 text-sm font-semibold px-2 py-0.5 rounded hover:bg-muted transition-colors"
+              title="Change sub-type"
+            >
+              <Tag className="h-3 w-3" />
+              {selectedSubType === '__unassigned__' ? 'No sub-type' : selectedSubType}
+              <Pencil className="h-3 w-3 opacity-50" />
+            </button>
+          </>
+        )}
+        <span className="text-xs text-muted-foreground">({subTypeFiltered.length})</span>
       </div>
 
       <div className="flex flex-1 overflow-hidden min-h-0">
