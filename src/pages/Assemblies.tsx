@@ -731,6 +731,13 @@ export function Assemblies() {
 
   const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
+  // Collapse all model categories by default on initial load
+  useEffect(() => {
+    if (assemblyModels.length > 0) {
+      setCollapsedModels(new Set(assemblyModels.map(m => m.name).concat('__unassigned__')));
+    }
+  }, []); // Only run once on mount
+
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
   const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
   const searchTerm = search.toLowerCase().trim();
