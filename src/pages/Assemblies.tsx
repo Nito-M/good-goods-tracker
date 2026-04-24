@@ -739,6 +739,7 @@ export function Assemblies() {
               <h1 className="font-semibold text-base flex items-center gap-2"><Layers className="h-4 w-4" /> {activeType}</h1>
               <div className="flex items-center gap-1">
                 <AssemblyCsvImport onComplete={refetchSummaries} assemblyType={activeType} />
+                <Button size="icon" variant="ghost" className="h-8 w-8" title="Manage models" onClick={() => setManageModelsOpen(true)}><Settings2 className="h-4 w-4" /></Button>
                 <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1 h-8"><Plus className="h-3 w-3" /> New</Button>
                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setSidebarOpen(false)}><PanelLeftClose className="h-4 w-4" /></Button>
               </div>
@@ -748,7 +749,7 @@ export function Assemblies() {
               <Input placeholder="Search assemblies..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
             </div>
           </div>
-          <div className="flex-1 overflow-auto p-2 space-y-1">
+          <div className="flex-1 overflow-auto p-2 space-y-2">
             {loading ? (
               <p className="text-xs text-muted-foreground text-center py-6">Loading...</p>
             ) : filtered.length === 0 ? (
@@ -757,23 +758,45 @@ export function Assemblies() {
                 <p className="text-xs">No assemblies yet</p>
               </div>
             ) : (
-              filtered.map((a) => {
-                const s = summaries.get(a.id);
+              groupedFiltered.map(([modelKey, list]) => {
+                if (list.length === 0 && modelKey === '__unassigned__') return null;
+                const isUnassigned = modelKey === '__unassigned__';
+                const label = isUnassigned ? 'No model' : modelKey;
+                const collapsed = collapsedModels.has(modelKey);
                 return (
-                  <button key={a.id} onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-muted/50 text-foreground')}>
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-medium truncate flex-1">{a.name}</p>
-                      {a.status === 'finished' ? <CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> : <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
-                    </div>
-                    {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
-                    {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic">{a.status_notes}</p>}
-                    {(s && s.itemCount > 0) || a.selling_price > 0 ? (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
-                        {a.selling_price > 0 && <>{s && s.itemCount > 0 ? ' · ' : ''}Sell: <span className="font-medium text-primary">{formatCurrency(a.selling_price)}</span></>}
-                      </p>
-                    ) : null}
-                  </button>
+                  <div key={modelKey} className="space-y-1">
+                    <button
+                      onClick={() => toggleModelCollapse(modelKey)}
+                      className="w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-muted/50 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    >
+                      {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      <Tag className="h-3 w-3" />
+                      <span className="truncate flex-1 text-left">{label}</span>
+                      <span className="text-[10px] font-normal">{list.length}</span>
+                    </button>
+                    {!collapsed && list.length === 0 && (
+                      <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assemblies in this model yet.</p>
+                    )}
+                    {!collapsed && list.map((a) => {
+                      const s = summaries.get(a.id);
+                      return (
+                        <button key={a.id} onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-muted/50 text-foreground')}>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium truncate flex-1">{a.name}</p>
+                            {a.status === 'finished' ? <CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> : <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
+                          </div>
+                          {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
+                          {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic">{a.status_notes}</p>}
+                          {(s && s.itemCount > 0) || a.selling_price > 0 ? (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
+                              {a.selling_price > 0 && <>{s && s.itemCount > 0 ? ' · ' : ''}Sell: <span className="font-medium text-primary">{formatCurrency(a.selling_price)}</span></>}
+                            </p>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
                 );
               })
             )}
