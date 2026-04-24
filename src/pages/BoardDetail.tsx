@@ -285,6 +285,7 @@ export default function BoardDetail() {
     reorderColumns,
     addRow,
     deleteRow,
+    setRowFrozen,
     reorderRows,
     setCellValue,
     getCellValue,
