@@ -837,7 +837,7 @@ export function Assemblies() {
           <>
             <span className="text-muted-foreground text-sm">/</span>
             <button
-              onClick={() => setSubTypePickerOpen(true)}
+              onClick={() => { setSelectedSubType(null); setSelectedId(null); }}
               className="inline-flex items-center gap-1 text-sm font-semibold px-2 py-0.5 rounded hover:bg-muted transition-colors"
               title="Change sub-type"
             >
