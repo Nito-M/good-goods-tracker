@@ -849,6 +849,15 @@ export default function BoardDetail() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-5)}
+          title="Go back 5 pages"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back 5
+        </Button>
         {titleEditing ? (
           <Input
             autoFocus
