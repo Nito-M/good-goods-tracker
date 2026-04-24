@@ -653,6 +653,7 @@ export type Database = {
       }
       board_cells: {
         Row: {
+          bg_color: string | null
           column_id: string
           id: string
           row_id: string
@@ -661,6 +662,7 @@ export type Database = {
           value: string
         }
         Insert: {
+          bg_color?: string | null
           column_id: string
           id?: string
           row_id: string
@@ -669,6 +671,7 @@ export type Database = {
           value?: string
         }
         Update: {
+          bg_color?: string | null
           column_id?: string
           id?: string
           row_id?: string
