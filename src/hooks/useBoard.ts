@@ -338,6 +338,18 @@ export function useBoard(boardId: string | undefined) {
     }
   };
 
+  const setRowFrozen = async (id: string, frozen: boolean) => {
+    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, frozen } : r)));
+    const { error } = await supabase
+      .from('board_rows')
+      .update({ frozen } as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to update row');
+      await fetchAll();
+    }
+  };
+
   const reorderRows = async (sourceId: string, targetId: string) => {
     if (sourceId === targetId) return;
     const current = [...rows].sort((a, b) => a.position - b.position);
