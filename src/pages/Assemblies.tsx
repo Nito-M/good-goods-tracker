@@ -870,7 +870,7 @@ export function Assemblies() {
               groupedFiltered.map(([modelKey, list]) => {
                 if (list.length === 0 && modelKey === '__unassigned__') return null;
                 const isUnassigned = modelKey === '__unassigned__';
-                const label = isUnassigned ? 'No model' : modelKey;
+                const label = isUnassigned ? 'No sub-type' : modelKey;
                 const collapsed = collapsedModels.has(modelKey);
                 return (
                   <div key={modelKey} className="space-y-1">
@@ -884,7 +884,7 @@ export function Assemblies() {
                       <span className="text-[10px] font-normal">{list.length}</span>
                     </button>
                     {!collapsed && list.length === 0 && (
-                      <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assemblies in this model yet.</p>
+                      <p className="text-[11px] text-muted-foreground italic px-3 py-1">No assemblies in this sub-type yet.</p>
                     )}
                     {!collapsed && list.map((a) => {
                       const s = summaries.get(a.id);
