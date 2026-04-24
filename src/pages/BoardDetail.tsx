@@ -644,6 +644,7 @@ export default function BoardDetail() {
     setSelectionAnchor(null);
     setSelectionFocus(null);
     setIsDragSelecting(false);
+    setHeaderRowSelected(false);
   }, []);
 
   // Keyboard: Esc clears selection. Cmd/Ctrl+M triggers merge prompt when applicable.
