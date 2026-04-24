@@ -7,6 +7,7 @@ import { savePdfBlob } from '@/lib/pdfSave';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 import { isFormula, evaluateFormula, formatFormulaResult, type FormulaContext } from '@/lib/boardFormula';
+import { cellColorToRgb, readableTextColor } from '@/lib/boardCellColors';
 
 interface GroupBlock {
   label: string | null;
@@ -19,6 +20,7 @@ interface GenerateOpts {
   groups: GroupBlock[];
   getCellValue: (rowId: string, columnId: string) => string;
   getCellTextAlign?: (rowId: string, columnId: string) => 'left' | 'center' | 'right' | null;
+  getCellBgColor?: (rowId: string, columnId: string) => string | null;
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
   merges?: BoardMerge[];
 }
@@ -91,7 +93,7 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 };
 
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
-  const { boardName, columns, groups, getCellValue, getCellTextAlign, getFiles, merges = [] } = opts;
+  const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [] } = opts;
 
   // Portrait A4 — fit all columns to upright page width
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
@@ -139,6 +141,8 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const statusFills = new Map<string, string>();
   // Per-cell alignment overrides. Key matches statusFills.
   const cellAligns = new Map<string, 'left' | 'center' | 'right'>();
+  // Per-cell custom background colors set by the user (token like "blue-300").
+  const colorFills = new Map<string, string>();
 
   let cursorY = 60;
 
@@ -193,6 +197,10 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         const cellAlign = getCellTextAlign?.(row.id, col.id) ?? null;
         if (cellAlign) {
           cellAligns.set(`${gIdx}-${rIdx}-${cIdx}`, cellAlign);
+        }
+        const bgToken = getCellBgColor?.(row.id, col.id) ?? null;
+        if (bgToken) {
+          colorFills.set(`${gIdx}-${rIdx}-${cIdx}`, bgToken);
         }
 
         if (geo?.span) {
@@ -250,6 +258,21 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         const overrideAlign = cellAligns.get(key);
         if (overrideAlign) {
           data.cell.styles.halign = overrideAlign;
+        }
+        // User-set background colors override status pill colors so the PDF
+        // matches what the user sees on screen.
+        const bgToken = colorFills.get(key);
+        if (bgToken) {
+          const rgb = cellColorToRgb(bgToken);
+          if (rgb) {
+            data.cell.styles.fillColor = rgb;
+            const text = readableTextColor(bgToken);
+            if (text === '#ffffff') {
+              data.cell.styles.textColor = [255, 255, 255];
+            } else {
+              data.cell.styles.textColor = [0, 0, 0];
+            }
+          }
         }
       },
     });

@@ -50,6 +50,8 @@ import { toast } from 'sonner';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 import { indexToColumnLetters } from '@/lib/boardFormula';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
+import { CellColorPicker } from '@/components/board/CellColorPicker';
+import { cellColorToHex, readableTextColor } from '@/lib/boardCellColors';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
@@ -287,6 +289,8 @@ export default function BoardDetail() {
     getCellValue,
     getCellTextAlign,
     setCellTextAlign,
+    getCellBgColor,
+    setCellBgColor,
   } = useBoard(id);
 
   const { user } = useAuth();
@@ -666,6 +670,32 @@ export default function BoardDetail() {
     setMergePromptOpen(true);
   }, [selectionRect, selectedCellCount, renderedRowIds, visibleColumnIds, getCellValue]);
 
+  // Apply (or clear) a background color across every cell in the current
+  // selection. Falls back to the single anchor cell if no rectangle is active.
+  const applyColorToSelection = useCallback(
+    (token: string | null) => {
+      if (selectionRect) {
+        for (let r = selectionRect.r1; r <= selectionRect.r2; r++) {
+          for (let c = selectionRect.c1; c <= selectionRect.c2; c++) {
+            const rowId = renderedRowIds[r];
+            const colId = visibleColumnIds[c];
+            if (rowId && colId) setCellBgColor(rowId, colId, token);
+          }
+        }
+        return;
+      }
+      if (selectionAnchor) {
+        setCellBgColor(selectionAnchor.rowId, selectionAnchor.colId, token);
+      }
+    },
+    [selectionRect, selectionAnchor, renderedRowIds, visibleColumnIds, setCellBgColor]
+  );
+
+  // Color value to show in the trigger swatch — uses the anchor cell if any.
+  const selectionAnchorColor = selectionAnchor
+    ? getCellBgColor(selectionAnchor.rowId, selectionAnchor.colId)
+    : null;
+
   const confirmMerge = useCallback(
     async (mode: 'keep-top-left' | 'concatenate') => {
       if (!pendingMergeContext || !id) {
@@ -837,6 +867,17 @@ export default function BoardDetail() {
               Drag across cells, or click a row/column header to select more — then Merge.
             </span>
           )}
+          {selectionAnchor && (
+            <CellColorPicker
+              value={selectionAnchorColor}
+              onChange={applyColorToSelection}
+              hint={
+                selectedCellCount > 1
+                  ? `Apply to ${selectedCellCount} selected cells`
+                  : 'Apply to selected cell'
+              }
+            />
+          )}
           {(selectionAnchor || selectionFocus) && (
             <Button variant="ghost" size="sm" onClick={clearSelection}>
               <X className="h-4 w-4" />
@@ -854,6 +895,7 @@ export default function BoardDetail() {
                   groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
                   getCellValue,
                   getCellTextAlign,
+                  getCellBgColor,
                   getFiles,
                   merges,
                 });
@@ -1042,6 +1084,7 @@ export default function BoardDetail() {
                 setCellValue={setCellValueLogged}
                 getCellTextAlign={getCellTextAlign}
                 setCellTextAlign={setCellTextAlign}
+                getCellBgColor={getCellBgColor}
                 deleteRow={deleteRow}
                 getFiles={getFiles}
                 uploadFile={uploadFile}
@@ -1205,6 +1248,7 @@ interface GroupSectionProps {
   setCellValue: (row_id: string, column_id: string, value: string) => void;
   getCellTextAlign: (row_id: string, column_id: string) => 'left' | 'center' | 'right' | null;
   setCellTextAlign: (row_id: string, column_id: string, align: 'left' | 'center' | 'right' | null) => void;
+  getCellBgColor: (row_id: string, column_id: string) => string | null;
   deleteRow: (id: string) => void;
   getFiles: ReturnType<typeof useBoardCellFiles>['getFiles'];
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
@@ -1242,6 +1286,7 @@ function GroupSection({
   setCellValue,
   getCellTextAlign,
   setCellTextAlign,
+  getCellBgColor,
   deleteRow,
   getFiles,
   uploadFile,
@@ -1406,17 +1451,27 @@ function GroupSection({
               if (geom?.hidden) return null;
               const selected = isCellSelected(row.id, col.id);
               const isMergedAnchor = !!geom?.span;
+              const bgToken = getCellBgColor(row.id, col.id);
+              const bgHex = cellColorToHex(bgToken);
+              const fgHex = readableTextColor(bgToken);
               return (
                 <td
                   key={col.id}
                   rowSpan={geom?.span?.rowSpan}
                   colSpan={geom?.span?.colSpan}
-                  style={{ width: w, minWidth: w, maxWidth: w }}
+                  style={{
+                    width: w,
+                    minWidth: w,
+                    maxWidth: w,
+                    ...(bgHex ? { backgroundColor: bgHex } : {}),
+                    ...(fgHex ? { color: fgHex } : {}),
+                  }}
                   className={cn(
                     'border-r border-b border-border p-0 align-top relative cursor-cell',
-                    idx === 0 && 'sticky left-16 bg-muted z-10',
+                    idx === 0 && !bgHex && 'sticky left-16 bg-muted z-10',
+                    idx === 0 && bgHex && 'sticky left-16 z-10',
                     selected && 'ring-2 ring-primary ring-inset',
-                    isMergedAnchor && 'bg-accent/30'
+                    !bgHex && isMergedAnchor && 'bg-accent/30'
                   )}
                   onMouseDown={(e) => {
                     // Only handle left-click; ignore clicks on interactive controls
