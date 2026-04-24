@@ -479,6 +479,7 @@ export function useBoard(boardId: string | undefined) {
     reorderColumns,
     addRow,
     deleteRow,
+    setRowFrozen,
     reorderRows,
     setCellValue,
     getCellValue,
