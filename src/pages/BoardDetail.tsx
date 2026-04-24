@@ -939,54 +939,56 @@ export default function BoardDetail() {
               Clear
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={async () => {
-              try {
-                await generateBoardPdf({
-                  boardName: board.name,
-                  columns: visibleColumns,
-                  groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
-                  getCellValue,
-                  getCellTextAlign,
-                  getCellBgColor,
-                  getFiles,
-                  merges,
-                });
-              } catch (err) {
-                console.error('Board PDF export failed', err);
-                toast.error('Failed to export PDF');
-              }
-            }}
-          >
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
-          {canManageAccess && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAccessSheetOpen(true)}
-            >
-              <Shield className="h-4 w-4" />
-              Manage Access
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (!board) return;
-              copyToClipboard({ id: board.id, name: board.name, company_id: board.company_id });
-              toast.success('Board copied', {
-                description: 'Open another workspace and paste it from the Boards page.',
-              });
-            }}
-          >
-            <Copy className="h-4 w-4" />
-            Copy board
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4" />
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem
+                onClick={async () => {
+                  try {
+                    await generateBoardPdf({
+                      boardName: board.name,
+                      columns: visibleColumns,
+                      groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
+                      getCellValue,
+                      getCellTextAlign,
+                      getCellBgColor,
+                      getFiles,
+                      merges,
+                    });
+                  } catch (err) {
+                    console.error('Board PDF export failed', err);
+                    toast.error('Failed to export PDF');
+                  }
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </DropdownMenuItem>
+              {canManageAccess && (
+                <DropdownMenuItem onClick={() => setAccessSheetOpen(true)}>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Manage Access
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => {
+                  if (!board) return;
+                  copyToClipboard({ id: board.id, name: board.name, company_id: board.company_id });
+                  toast.success('Board copied', {
+                    description: 'Open another workspace and paste it from the Boards page.',
+                  });
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy board
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
