@@ -65,6 +65,7 @@ function normalizeColumn(raw: any): BoardColumn {
     connect_mirror_column_id,
     per_row_options: !!raw.per_row_options,
     text_align: (raw.text_align === 'center' || raw.text_align === 'right') ? raw.text_align : 'left',
+    header_bg_color: typeof raw.header_bg_color === 'string' && raw.header_bg_color.length > 0 ? raw.header_bg_color : null,
   };
 }
 
