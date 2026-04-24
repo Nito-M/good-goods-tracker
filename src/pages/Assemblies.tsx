@@ -754,7 +754,7 @@ export function Assemblies() {
       : typeAssemblies.filter(a => a.model === selectedSubType);
   const selectedAssembly = subTypeFiltered.find((a) => a.id === selectedId) || null;
   const searchTerm = search.toLowerCase().trim();
-  const filtered = typeAssemblies.filter((a) =>
+  const filtered = subTypeFiltered.filter((a) =>
     !searchTerm ||
     a.name.toLowerCase().includes(searchTerm) ||
     (a.description ?? '').toLowerCase().includes(searchTerm)
