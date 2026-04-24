@@ -1045,7 +1045,7 @@ export function Assemblies() {
   }, [activeType]);
 
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
-  const subTypeFiltered = selectedSubType === null
+  const subTypeFiltered = selectedSubType === null || selectedSubType === '__all__'
     ? typeAssemblies
     : selectedSubType === '__unassigned__'
       ? typeAssemblies.filter(a => !a.model)
