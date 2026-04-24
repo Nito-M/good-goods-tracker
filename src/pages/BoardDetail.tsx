@@ -287,6 +287,8 @@ export default function BoardDetail() {
     getCellValue,
     getCellTextAlign,
     setCellTextAlign,
+    getCellBgColor,
+    setCellBgColor,
   } = useBoard(id);
 
   const { user } = useAuth();
