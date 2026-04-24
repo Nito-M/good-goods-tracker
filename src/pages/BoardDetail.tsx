@@ -1536,6 +1536,10 @@ function GroupSection({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => setRowFrozen(row.id, !row.frozen)}>
+                      <Pin className="h-3 w-3" />
+                      {row.frozen ? 'Unfreeze row' : 'Freeze row'}
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => deleteRow(row.id)}
                       className="text-destructive"
