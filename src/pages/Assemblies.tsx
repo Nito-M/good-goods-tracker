@@ -851,6 +851,33 @@ export function Assemblies() {
         <span className="text-xs text-muted-foreground">({subTypeFiltered.length})</span>
       </div>
 
+      {selectedSubType === null ? (
+        <SubTypePickerPage
+          activeType={activeType}
+          assemblyModels={assemblyModels}
+          typeAssemblies={typeAssemblies}
+          summaries={summaries}
+          subTypeSearch={subTypeSearch}
+          setSubTypeSearch={setSubTypeSearch}
+          onPick={(key) => { setSelectedSubType(key); setSelectedId(null); }}
+          onCreateClick={() => setCreateSubTypeOpen(true)}
+          editingSubTypeId={editingSubTypeId}
+          editSubTypeName={editSubTypeName}
+          setEditingSubTypeId={setEditingSubTypeId}
+          setEditSubTypeName={setEditSubTypeName}
+          savingSubTypeEdit={savingSubTypeEdit}
+          onRename={async (id) => {
+            const trimmed = editSubTypeName.trim();
+            const old = assemblyModels.find(m => m.id === id);
+            if (!trimmed || !old || trimmed === old.name) { setEditingSubTypeId(null); return; }
+            setSavingSubTypeEdit(true);
+            await renameModel(id, trimmed);
+            setSavingSubTypeEdit(false);
+            setEditingSubTypeId(null);
+          }}
+          onDeleteClick={(id) => setDeleteSubTypeId(id)}
+        />
+      ) : (
       <div className="flex flex-1 overflow-hidden min-h-0">
         {sidebarOpen ? (
         <div className="w-96 shrink-0 border-r flex flex-col bg-sidebar overflow-hidden transition-all min-h-0">
@@ -942,6 +969,7 @@ export function Assemblies() {
           )}
         </div>
       </div>
+      )}
 
       {/* Sub-type picker (shown on entry to a Type) */}
       <Dialog
