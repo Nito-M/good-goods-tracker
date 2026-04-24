@@ -140,6 +140,19 @@ export function useBoard(boardId: string | undefined) {
     if (error) toast.error('Failed to rename');
   };
 
+  const setHeaderFrozen = async (frozen: boolean) => {
+    if (!boardId) return;
+    setBoard((b) => (b ? { ...b, header_frozen: frozen } : b));
+    const { error } = await supabase
+      .from('boards')
+      .update({ header_frozen: frozen } as any)
+      .eq('id', boardId);
+    if (error) {
+      toast.error('Failed to update header');
+      await fetchAll();
+    }
+  };
+
   const setGroupBy = async (column_id: string | null) => {
     if (!boardId) return;
     setBoard((b) => (b ? { ...b, group_by_column_id: column_id } : b));
