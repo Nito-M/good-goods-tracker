@@ -964,7 +964,7 @@ export function Assemblies() {
                 </Button>
               </div>
               {newModel && (
-                <p className="text-xs text-muted-foreground">Will be added to model: <Badge variant="secondary" className="ml-1">{newModel}</Badge></p>
+                <p className="text-xs text-muted-foreground">Will be added to sub-type: <Badge variant="secondary" className="ml-1">{newModel}</Badge></p>
               )}
             </div>
           </div>
