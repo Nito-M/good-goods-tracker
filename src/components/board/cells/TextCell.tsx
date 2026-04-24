@@ -26,8 +26,9 @@ export function TextCell({
   formulaContext,
 }: TextCellProps) {
   const [v, setV] = useState(value);
-  const [focused, setFocused] = useState(false);
+  const [editing, setEditing] = useState(false);
   const initial = useRef(value);
+  const inputRef = useRef<HTMLInputElement>(null);
   // While the toolbar is being clicked, ignore the input blur so the click
   // can register without the toolbar disappearing first.
   const suppressBlurRef = useRef(false);
@@ -36,6 +37,16 @@ export function TextCell({
     setV(value);
     initial.current = value;
   }, [value]);
+
+  // Auto-focus the input when entering edit mode
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      try {
+        inputRef.current.select();
+      } catch {}
+    }
+  }, [editing]);
 
   const commit = () => {
     if (v !== initial.current) {
@@ -52,19 +63,43 @@ export function TextCell({
   const computedDisplay = computed !== null ? formatFormulaResult(computed) : '';
   const isError = typeof computed === 'string' && computed.startsWith('#');
 
-  if (readOnly) {
+  // Read-only or non-editing display: render a static div so a single click
+  // bubbles up to the cell's selection handler instead of starting text edit.
+  if (readOnly || !editing) {
     const display = formulaActive ? computedDisplay : value;
     return (
       <div
+        onDoubleClick={() => {
+          if (readOnly) return;
+          if (formulaActive) setV(value);
+          setEditing(true);
+        }}
         className={cn(
-          'w-full px-3 py-2 text-sm truncate',
-          formulaActive ? 'text-foreground' : 'text-muted-foreground',
+          'w-full px-3 py-2 text-sm truncate select-none',
+          formulaActive ? 'text-foreground font-medium' : 'text-foreground',
           isError && 'text-destructive',
+          !readOnly && 'cursor-cell',
           alignClass
         )}
-        title={formulaActive ? `${value} → ${computedDisplay}` : value}
+        title={
+          readOnly
+            ? formulaActive
+              ? `${value} → ${computedDisplay}`
+              : value
+            : formulaActive
+              ? `${value} → ${computedDisplay} — double-click to edit`
+              : value
+                ? `${value} — double-click to edit`
+                : 'Double-click to edit'
+        }
       >
-        {display || <span className="opacity-50">—</span>}
+        {display || <span className="opacity-30">—</span>}
+        {formulaActive && (
+          <Sigma
+            className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 h-3 w-3 text-primary opacity-70"
+            aria-label="Formula"
+          />
+        )}
       </div>
     );
   }
@@ -75,26 +110,12 @@ export function TextCell({
     { key: 'right', Icon: AlignRight, label: 'Align right' },
   ];
 
-  // When a formula is set and the cell is NOT focused, show the computed result.
-  // While focused, show the raw formula text so the user can edit it.
-  const displayValue = focused || !formulaActive ? v : computedDisplay;
-
   return (
     <div className="relative w-full">
       <input
-        value={displayValue}
+        ref={inputRef}
+        value={v}
         onChange={(e) => setV(e.target.value)}
-        onFocus={(e) => {
-          setFocused(true);
-          // Ensure the raw formula text is shown the moment we focus
-          if (formulaActive) setV(value);
-          // Select all so it's easy to overwrite
-          requestAnimationFrame(() => {
-            try {
-              e.target.select();
-            } catch {}
-          });
-        }}
         onBlur={(e) => {
           if (suppressBlurRef.current) {
             // Re-focus so the toolbar interaction doesn't kill edit state.
@@ -102,8 +123,8 @@ export function TextCell({
             suppressBlurRef.current = false;
             return;
           }
-          setFocused(false);
           commit();
+          setEditing(false);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -113,20 +134,12 @@ export function TextCell({
           }
         }}
         className={cn(
-          'w-full bg-transparent border-0 outline-none px-3 py-2 text-sm focus:bg-accent/40 focus:ring-2 focus:ring-ring rounded-none',
+          'w-full bg-transparent border-0 outline-none px-3 py-2 text-sm bg-accent/40 ring-2 ring-ring rounded-none',
           alignClass,
-          formulaActive && !focused && 'font-medium',
-          isError && !focused && 'text-destructive'
+          isError && 'text-destructive'
         )}
-        title={formulaActive && !focused ? `${value} → ${computedDisplay}` : undefined}
       />
-      {formulaActive && !focused && (
-        <Sigma
-          className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 h-3 w-3 text-primary opacity-70"
-          aria-label="Formula"
-        />
-      )}
-      {focused && onChangeCellAlign && (
+      {onChangeCellAlign && (
         <div
           // Prevent the input from losing focus while the user clicks a toolbar button.
           onMouseDown={() => {
