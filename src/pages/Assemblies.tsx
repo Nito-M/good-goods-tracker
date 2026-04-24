@@ -266,11 +266,76 @@ function AssemblyDetail({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-semibold">{assembly.name}</h2>
-                {assembly.model && (
-                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                    <Tag className="h-3 w-3" /> {assembly.model}
-                  </span>
-                )}
+                <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    {assembly.model ? (
+                      <button className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors" title="Change model">
+                        <Tag className="h-3 w-3" /> {assembly.model}
+                      </button>
+                    ) : (
+                      <button className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-dashed text-muted-foreground hover:bg-secondary/50 transition-colors" title="Set model">
+                        <Tag className="h-3 w-3" /> Set model
+                      </button>
+                    )}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2" align="start">
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground px-1">Model</p>
+                      <div className="max-h-48 overflow-y-auto space-y-0.5">
+                        <button
+                          className={cn("w-full text-left text-sm px-2 py-1.5 rounded hover:bg-accent", !assembly.model && "bg-accent")}
+                          onClick={async () => { await onUpdate(assembly.id, { model: null }); setModelPopoverOpen(false); }}
+                        >
+                          <span className="text-muted-foreground italic">No model</span>
+                        </button>
+                        {detailModels.map((m) => (
+                          <button
+                            key={m.id}
+                            className={cn("w-full text-left text-sm px-2 py-1.5 rounded hover:bg-accent flex items-center justify-between", assembly.model === m.name && "bg-accent")}
+                            onClick={async () => { await onUpdate(assembly.id, { model: m.name }); setModelPopoverOpen(false); }}
+                          >
+                            <span>{m.name}</span>
+                            {assembly.model === m.name && <Check className="h-3 w-3" />}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="border-t pt-2 flex gap-1">
+                        <Input
+                          value={newModelInput}
+                          onChange={(e) => setNewModelInput(e.target.value)}
+                          placeholder="New model..."
+                          className="h-8 text-sm"
+                          onKeyDown={async (e) => {
+                            if (e.key === 'Enter' && newModelInput.trim()) {
+                              const created = await addDetailModel(newModelInput.trim());
+                              if (created) {
+                                await onUpdate(assembly.id, { model: created.name });
+                                setNewModelInput('');
+                                setModelPopoverOpen(false);
+                              }
+                            }
+                          }}
+                        />
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 shrink-0"
+                          disabled={!newModelInput.trim()}
+                          onClick={async () => {
+                            const created = await addDetailModel(newModelInput.trim());
+                            if (created) {
+                              await onUpdate(assembly.id, { model: created.name });
+                              setNewModelInput('');
+                              setModelPopoverOpen(false);
+                            }
+                          }}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               {assembly.description && <p className="text-sm text-muted-foreground mt-1">{assembly.description}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-4">
