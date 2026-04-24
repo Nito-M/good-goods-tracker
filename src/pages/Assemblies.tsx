@@ -99,6 +99,9 @@ function AssemblyDetail({
   const [savingStatus, setSavingStatus] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [hidePricesOnPdf, setHidePricesOnPdf] = useState(false);
+  const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
+  const [newModelInput, setNewModelInput] = useState('');
+  const { models: detailModels, addModel: addDetailModel } = useAssemblyModels(assembly.type);
 
   const isFinished = assembly.status === 'finished';
 
