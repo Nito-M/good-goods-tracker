@@ -50,6 +50,8 @@ import { toast } from 'sonner';
 import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 import { indexToColumnLetters } from '@/lib/boardFormula';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
+import { CellColorPicker } from '@/components/board/CellColorPicker';
+import { cellColorToHex, readableTextColor } from '@/lib/boardCellColors';
 
 interface ColumnHeaderProps {
   column: BoardColumn;
