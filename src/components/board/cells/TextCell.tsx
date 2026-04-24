@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { AlignLeft, AlignCenter, AlignRight, RotateCcw } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, RotateCcw, Sigma } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isFormula, evaluateFormula, formatFormulaResult, FormulaContext } from '@/lib/boardFormula';
 
 interface TextCellProps {
   value: string;
@@ -11,6 +12,8 @@ interface TextCellProps {
   /** Per-cell override (null = inherit from column). */
   cellAlign?: 'left' | 'center' | 'right' | null;
   onChangeCellAlign?: (a: 'left' | 'center' | 'right' | null) => void;
+  /** Optional spreadsheet formula context. When provided, values starting with "=" are evaluated. */
+  formulaContext?: FormulaContext;
 }
 
 export function TextCell({
@@ -20,6 +23,7 @@ export function TextCell({
   align = 'left',
   cellAlign,
   onChangeCellAlign,
+  formulaContext,
 }: TextCellProps) {
   const [v, setV] = useState(value);
   const [focused, setFocused] = useState(false);
@@ -43,10 +47,24 @@ export function TextCell({
   const alignClass =
     align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
 
+  const formulaActive = !!formulaContext && isFormula(value);
+  const computed = formulaActive ? evaluateFormula(value, formulaContext!) : null;
+  const computedDisplay = computed !== null ? formatFormulaResult(computed) : '';
+  const isError = typeof computed === 'string' && computed.startsWith('#');
+
   if (readOnly) {
+    const display = formulaActive ? computedDisplay : value;
     return (
-      <div className={cn('w-full px-3 py-2 text-sm truncate text-muted-foreground', alignClass)} title={value}>
-        {value || <span className="opacity-50">—</span>}
+      <div
+        className={cn(
+          'w-full px-3 py-2 text-sm truncate',
+          formulaActive ? 'text-foreground' : 'text-muted-foreground',
+          isError && 'text-destructive',
+          alignClass
+        )}
+        title={formulaActive ? `${value} → ${computedDisplay}` : value}
+      >
+        {display || <span className="opacity-50">—</span>}
       </div>
     );
   }
@@ -57,12 +75,26 @@ export function TextCell({
     { key: 'right', Icon: AlignRight, label: 'Align right' },
   ];
 
+  // When a formula is set and the cell is NOT focused, show the computed result.
+  // While focused, show the raw formula text so the user can edit it.
+  const displayValue = focused || !formulaActive ? v : computedDisplay;
+
   return (
     <div className="relative w-full">
       <input
-        value={v}
+        value={displayValue}
         onChange={(e) => setV(e.target.value)}
-        onFocus={() => setFocused(true)}
+        onFocus={(e) => {
+          setFocused(true);
+          // Ensure the raw formula text is shown the moment we focus
+          if (formulaActive) setV(value);
+          // Select all so it's easy to overwrite
+          requestAnimationFrame(() => {
+            try {
+              e.target.select();
+            } catch {}
+          });
+        }}
         onBlur={(e) => {
           if (suppressBlurRef.current) {
             // Re-focus so the toolbar interaction doesn't kill edit state.
@@ -82,9 +114,18 @@ export function TextCell({
         }}
         className={cn(
           'w-full bg-transparent border-0 outline-none px-3 py-2 text-sm focus:bg-accent/40 focus:ring-2 focus:ring-ring rounded-none',
-          alignClass
+          alignClass,
+          formulaActive && !focused && 'font-medium',
+          isError && !focused && 'text-destructive'
         )}
+        title={formulaActive && !focused ? `${value} → ${computedDisplay}` : undefined}
       />
+      {formulaActive && !focused && (
+        <Sigma
+          className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 h-3 w-3 text-primary opacity-70"
+          aria-label="Formula"
+        />
+      )}
       {focused && onChangeCellAlign && (
         <div
           // Prevent the input from losing focus while the user clicks a toolbar button.
