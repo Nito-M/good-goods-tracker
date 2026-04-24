@@ -247,7 +247,17 @@ export function useBoard(boardId: string | undefined) {
     }
   };
 
-  const reorderColumns = async (sourceId: string, targetId: string) => {
+  const setColumnHeaderBgColor = async (id: string, header_bg_color: string | null) => {
+    setColumns((cs) => cs.map((c) => (c.id === id ? { ...c, header_bg_color } : c)));
+    const { error } = await supabase
+      .from('board_columns')
+      .update({ header_bg_color } as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to color header');
+      await fetchAll();
+    }
+  };
     if (sourceId === targetId) return;
     const current = [...columns].sort((a, b) => a.position - b.position);
     const fromIdx = current.findIndex((c) => c.id === sourceId);
