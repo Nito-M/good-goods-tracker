@@ -1339,6 +1339,17 @@ function GroupSection({
               }}
             >
               <div className="flex items-center justify-center gap-0.5">
+                {(() => {
+                  const rowNum = renderedRowIds.indexOf(row.id) + 1;
+                  return rowNum > 0 ? (
+                    <span
+                      className="text-[10px] font-mono text-muted-foreground/70 select-none w-5 text-right tabular-nums group-hover:hidden"
+                      title={`Row ${rowNum} — use in formulas like =A${rowNum}`}
+                    >
+                      {rowNum}
+                    </span>
+                  ) : null;
+                })()}
                 <button
                   type="button"
                   draggable
