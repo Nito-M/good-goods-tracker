@@ -955,7 +955,7 @@ export function Assemblies() {
                 <Input
                   value={newModelInput}
                   onChange={(e) => setNewModelInput(e.target.value)}
-                  placeholder={assemblyModels.length > 0 ? 'Or add a new model…' : 'Add a model (e.g. F-150, GT, 24ft)…'}
+                  placeholder={assemblyModels.length > 0 ? 'Or add a new sub-type…' : 'Add a sub-type (e.g. Flatbed, Dump, Enclosed)…'}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddModelInline(); } }}
                   className="h-9 text-sm"
                 />
