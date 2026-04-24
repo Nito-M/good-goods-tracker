@@ -643,9 +643,18 @@ export function Assemblies() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [newModel, setNewModel] = useState<string>('');
+  const [newModelInput, setNewModelInput] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [manageModelsOpen, setManageModelsOpen] = useState(false);
+  const [manageModelInput, setManageModelInput] = useState('');
+  const [editingModelId, setEditingModelId] = useState<string | null>(null);
+  const [editingModelName, setEditingModelName] = useState('');
+  const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set());
+
+  const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
   const typeAssemblies = assemblies.filter(a => (a.type || 'General') === activeType);
   const selectedAssembly = typeAssemblies.find((a) => a.id === selectedId) || null;
@@ -664,9 +673,45 @@ export function Assemblies() {
   const handleCreate = async () => {
     if (!newName.trim()) return;
     setCreating(true);
-    const created = await createAssembly(newName.trim(), newDesc.trim() || undefined, activeType);
+    const created = await createAssembly(newName.trim(), newDesc.trim() || undefined, activeType, newModel || null);
     setCreating(false);
-    if (created) { setSelectedId(created.id); setCreateOpen(false); setNewName(''); setNewDesc(''); setTimeout(refetchSummaries, 300); }
+    if (created) { setSelectedId(created.id); setCreateOpen(false); setNewName(''); setNewDesc(''); setNewModel(''); setNewModelInput(''); setTimeout(refetchSummaries, 300); }
+  };
+
+  const handleAddModelInline = async () => {
+    const trimmed = newModelInput.trim();
+    if (!trimmed) return;
+    const m = await addModel(trimmed);
+    if (m) {
+      setNewModel(m.name);
+      setNewModelInput('');
+    }
+  };
+
+  // Group filtered assemblies by model
+  const groupedFiltered = useMemo(() => {
+    const groups = new Map<string, typeof filtered>();
+    // Seed with known models so empty groups show up
+    for (const m of assemblyModels) groups.set(m.name, [] as any);
+    for (const a of filtered) {
+      const key = a.model || '__unassigned__';
+      const arr = groups.get(key) || [];
+      arr.push(a);
+      groups.set(key, arr);
+    }
+    return Array.from(groups.entries()).sort(([a], [b]) => {
+      if (a === '__unassigned__') return 1;
+      if (b === '__unassigned__') return -1;
+      return a.localeCompare(b);
+    });
+  }, [filtered, assemblyModels]);
+
+  const toggleModelCollapse = (key: string) => {
+    setCollapsedModels(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
   };
 
   const handleDelete = async (id: string) => {
