@@ -727,7 +727,7 @@ export function Assemblies() {
   const [manageModelInput, setManageModelInput] = useState('');
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [editingModelName, setEditingModelName] = useState('');
-  const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set(assemblyModels.map(m => m.name).concat('__unassigned__')));
+  const [collapsedModels, setCollapsedModels] = useState<Set<string>>(new Set());
 
   const { models: assemblyModels, addModel, renameModel, deleteModel } = useAssemblyModels(activeType);
 
