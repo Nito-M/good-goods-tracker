@@ -677,8 +677,14 @@ export default function BoardDetail() {
 
   // Apply (or clear) a background color across every cell in the current
   // selection. Falls back to the single anchor cell if no rectangle is active.
+  // When the column-header row is selected, writes to each visible column's
+  // header_bg_color instead of any data cells.
   const applyColorToSelection = useCallback(
     (token: string | null) => {
+      if (headerRowSelected) {
+        visibleColumns.forEach((c) => setColumnHeaderBgColor(c.id, token));
+        return;
+      }
       if (selectionRect) {
         for (let r = selectionRect.r1; r <= selectionRect.r2; r++) {
           for (let c = selectionRect.c1; c <= selectionRect.c2; c++) {
@@ -693,13 +699,25 @@ export default function BoardDetail() {
         setCellBgColor(selectionAnchor.rowId, selectionAnchor.colId, token);
       }
     },
-    [selectionRect, selectionAnchor, renderedRowIds, visibleColumnIds, setCellBgColor]
+    [
+      headerRowSelected,
+      visibleColumns,
+      setColumnHeaderBgColor,
+      selectionRect,
+      selectionAnchor,
+      renderedRowIds,
+      visibleColumnIds,
+      setCellBgColor,
+    ]
   );
 
-  // Color value to show in the trigger swatch — uses the anchor cell if any.
-  const selectionAnchorColor = selectionAnchor
-    ? getCellBgColor(selectionAnchor.rowId, selectionAnchor.colId)
-    : null;
+  // Color value to show in the trigger swatch — uses the anchor (or, for the
+  // header row, the first column's header color) so the picker reflects state.
+  const selectionAnchorColor = headerRowSelected
+    ? visibleColumns[0]?.header_bg_color ?? null
+    : selectionAnchor
+      ? getCellBgColor(selectionAnchor.rowId, selectionAnchor.colId)
+      : null;
 
   const confirmMerge = useCallback(
     async (mode: 'keep-top-left' | 'concatenate') => {
