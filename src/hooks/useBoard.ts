@@ -24,6 +24,7 @@ export interface BoardRow {
   id: string;
   board_id: string;
   position: number;
+  frozen: boolean;
 }
 
 export interface BoardCell {
@@ -105,7 +106,7 @@ export function useBoard(boardId: string | undefined) {
     }
     setBoard(boardRes.data);
     setColumns((colRes.data || []).map(normalizeColumn));
-    setRows(rowRes.data || []);
+    setRows((rowRes.data || []).map((r: any) => ({ ...r, frozen: !!r.frozen })));
 
     const rowIds = (rowRes.data || []).map((r) => r.id);
     if (rowIds.length > 0) {
@@ -303,7 +304,7 @@ export function useBoard(boardId: string | undefined) {
       toast.error('Failed to add row');
       return null;
     }
-    setRows((r) => [...r, data]);
+    setRows((r) => [...r, { ...data, frozen: !!(data as any).frozen }]);
 
     // Apply automatic status defaults for any status column with an isAutomatic option
     const autoCells = columns
@@ -333,6 +334,18 @@ export function useBoard(boardId: string | undefined) {
     const { error } = await supabase.from('board_rows').delete().eq('id', id);
     if (error) {
       toast.error('Failed to delete row');
+      await fetchAll();
+    }
+  };
+
+  const setRowFrozen = async (id: string, frozen: boolean) => {
+    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, frozen } : r)));
+    const { error } = await supabase
+      .from('board_rows')
+      .update({ frozen } as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Failed to update row');
       await fetchAll();
     }
   };
@@ -466,6 +479,7 @@ export function useBoard(boardId: string | undefined) {
     reorderColumns,
     addRow,
     deleteRow,
+    setRowFrozen,
     reorderRows,
     setCellValue,
     getCellValue,

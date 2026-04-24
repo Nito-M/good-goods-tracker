@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split, GripVertical, Copy } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ChevronDown, ChevronRight, MoreVertical, StickyNote, FileText, Search, X, Shield, Download, Combine, Split, GripVertical, Copy, Pin } from 'lucide-react';
 import { generateBoardPdf } from '@/lib/boardPdfGenerator';
 import { useBoard, BoardRow, BoardColumn } from '@/hooks/useBoard';
 import { useBoardCellFiles } from '@/hooks/useBoardCellFiles';
@@ -285,6 +285,7 @@ export default function BoardDetail() {
     reorderColumns,
     addRow,
     deleteRow,
+    setRowFrozen,
     reorderRows,
     setCellValue,
     getCellValue,
@@ -492,19 +493,25 @@ export default function BoardDetail() {
 
   const filteredRows = useMemo(() => {
     const q = rowSearch.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((row) => {
-      const rowCells = cellsByRow.get(row.id) || {};
-      return visibleColumns.some((col) => {
-        const raw = rowCells[col.id];
-        if (!raw) return false;
-        if (col.type === 'status') {
-          const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
-          return (option?.label || '').toLowerCase().includes(q);
-        }
-        // For text/date/link/checkbox/connect (json arrays) — plain substring works
-        return raw.toLowerCase().includes(q);
-      });
+    const base = !q
+      ? rows
+      : rows.filter((row) => {
+          const rowCells = cellsByRow.get(row.id) || {};
+          return visibleColumns.some((col) => {
+            const raw = rowCells[col.id];
+            if (!raw) return false;
+            if (col.type === 'status') {
+              const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
+              return (option?.label || '').toLowerCase().includes(q);
+            }
+            // For text/date/link/checkbox/connect (json arrays) — plain substring works
+            return raw.toLowerCase().includes(q);
+          });
+        });
+    // Frozen rows always render first, preserving their relative position.
+    return [...base].sort((a, b) => {
+      if (a.frozen === b.frozen) return 0;
+      return a.frozen ? -1 : 1;
     });
   }, [rows, visibleColumns, cellsByRow, rowSearch]);
 
@@ -1178,6 +1185,7 @@ export default function BoardDetail() {
                 setCellTextAlign={setCellTextAlign}
                 getCellBgColor={getCellBgColor}
                 deleteRow={deleteRow}
+                setRowFrozen={setRowFrozen}
                 getFiles={getFiles}
                 uploadFile={uploadFile}
                 deleteFile={deleteFile}
@@ -1342,6 +1350,7 @@ interface GroupSectionProps {
   setCellTextAlign: (row_id: string, column_id: string, align: 'left' | 'center' | 'right' | null) => void;
   getCellBgColor: (row_id: string, column_id: string) => string | null;
   deleteRow: (id: string) => void;
+  setRowFrozen: (id: string, frozen: boolean) => void;
   getFiles: ReturnType<typeof useBoardCellFiles>['getFiles'];
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
@@ -1380,6 +1389,7 @@ function GroupSection({
   setCellTextAlign,
   getCellBgColor,
   deleteRow,
+  setRowFrozen,
   getFiles,
   uploadFile,
   deleteFile,
@@ -1476,6 +1486,12 @@ function GroupSection({
               }}
             >
               <div className="flex items-center justify-center gap-0.5">
+                {row.frozen && (
+                  <Pin
+                    className="h-3 w-3 text-primary shrink-0"
+                    aria-label="Frozen row"
+                  />
+                )}
                 {(() => {
                   const rowNum = renderedRowIds.indexOf(row.id) + 1;
                   return rowNum > 0 ? (
@@ -1526,6 +1542,10 @@ function GroupSection({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => setRowFrozen(row.id, !row.frozen)}>
+                      <Pin className="h-3 w-3" />
+                      {row.frozen ? 'Unfreeze row' : 'Freeze row'}
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => deleteRow(row.id)}
                       className="text-destructive"
