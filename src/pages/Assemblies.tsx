@@ -1008,7 +1008,7 @@ export function Assemblies() {
             </div>
             <div className="space-y-1 max-h-72 overflow-auto">
               {assemblyModels.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">No models yet. Add one above.</p>
+                <p className="text-sm text-muted-foreground text-center py-6">No sub-types yet. Add one above.</p>
               ) : (
                 assemblyModels.map((m) => {
                   const count = typeAssemblies.filter(a => a.model === m.name).length;
