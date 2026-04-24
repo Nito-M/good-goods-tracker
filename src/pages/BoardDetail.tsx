@@ -1349,6 +1349,7 @@ interface GroupSectionProps {
   setCellTextAlign: (row_id: string, column_id: string, align: 'left' | 'center' | 'right' | null) => void;
   getCellBgColor: (row_id: string, column_id: string) => string | null;
   deleteRow: (id: string) => void;
+  setRowFrozen: (id: string, frozen: boolean) => void;
   getFiles: ReturnType<typeof useBoardCellFiles>['getFiles'];
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
