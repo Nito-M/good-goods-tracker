@@ -942,9 +942,9 @@ export function Assemblies() {
               <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Sub-type</Label>
               {assemblyModels.length > 0 && (
                 <Select value={newModel || '__none__'} onValueChange={(v) => setNewModel(v === '__none__' ? '' : v)}>
-                  <SelectTrigger><SelectValue placeholder="Select a model" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select a sub-type" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">No model</SelectItem>
+                    <SelectItem value="__none__">No sub-type</SelectItem>
                     {assemblyModels.map(m => (
                       <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
                     ))}
