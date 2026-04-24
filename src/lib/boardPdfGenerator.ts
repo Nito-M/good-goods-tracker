@@ -190,7 +190,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
 
         if (col.type === 'status' && raw) {
           const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
-          if (option?.color) {
+          if (option?.color && option.color !== 'none') {
             statusFills.set(`${gIdx}-${rIdx}-${cIdx}`, option.color);
           }
         }
