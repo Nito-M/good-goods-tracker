@@ -30,7 +30,8 @@ interface GenerateOpts {
 function renderCell(
   col: BoardColumn,
   raw: string,
-  files: BoardCellFile[]
+  files: BoardCellFile[],
+  formulaContext?: FormulaContext
 ): string {
   if (col.type === 'files') {
     if (files.length === 0) return '';
@@ -68,6 +69,10 @@ function renderCell(
     return raw;
   }
 
+  // Text / default — evaluate formulas to their computed value (matches on-screen).
+  if (formulaContext && isFormula(raw)) {
+    return formatFormulaResult(evaluateFormula(raw, formulaContext));
+  }
   return raw || '';
 }
 
