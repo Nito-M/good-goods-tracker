@@ -691,9 +691,16 @@ export function Sales() {
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button variant="outline" role="combobox" className="flex-1 justify-between font-normal">
-                              {selectedVendorId
-                                ? vendors.find(v => v.id === selectedVendorId)?.name || 'Select...'
-                                : 'Search vendor or customer...'}
+                              {(() => {
+                                if (!selectedVendorId) return 'Search vendor or customer...';
+                                const v = vendors.find(v => v.id === selectedVendorId);
+                                if (!v) return 'Select...';
+                                const matchingCustomer = customers.find(c => c.name === v.name);
+                                if (matchingCustomer?.company) {
+                                  return `${matchingCustomer.company} — ${matchingCustomer.name}`;
+                                }
+                                return v.name;
+                              })()}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
