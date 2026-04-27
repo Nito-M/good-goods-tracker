@@ -137,12 +137,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                     })()}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="font-normal">
-                      {item.category}
-                      {item.subcategory ? ` > ${item.subcategory}` : ''}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </TableCell>
