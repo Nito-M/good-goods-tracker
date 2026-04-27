@@ -141,9 +141,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                     {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatCurrency(item.price)}</TableCell>
-                  <TableCell className="text-right tabular-nums font-medium">
-                    {formatCurrency(displayQty * item.price)}
-                  </TableCell>
                   <TableCell>
                     <Badge
                     className={cn(
