@@ -280,42 +280,6 @@ export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
-        {shops.length > 0 ? (
-          shops.map(shop => (
-            <SidebarMenuButton
-              key={shop.id}
-              asChild
-              tooltip={`View ${shop.name} Shop`}>
-              <a
-                href={`/shop/${shop.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-primary">
-                <Store className="h-4 w-4" />
-                <span className="flex items-center gap-1 truncate">
-                  {shops.length > 1 ? shop.name : 'View Shop'}
-                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                </span>
-              </a>
-            </SidebarMenuButton>
-          ))
-        ) : shopSlug && (
-          <SidebarMenuButton
-            asChild
-            tooltip="View Public Shop">
-            <a
-              href={`/shop/${shopSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 text-primary">
-              <Store className="h-4 w-4" />
-              <span className="flex items-center gap-1">
-                View Shop
-                <ExternalLink className="h-3 w-3" />
-              </span>
-            </a>
-          </SidebarMenuButton>
-        )}
         {isPageAllowed('settings') &&
         <SidebarMenuButton
           asChild
