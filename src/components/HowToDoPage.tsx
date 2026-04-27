@@ -715,7 +715,7 @@ export function HowToDoPage() {
 
       {/* View Card Dialog */}
       <Dialog open={!!viewingCard} onOpenChange={(open) => !open && setViewingCard(null)}>
-        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-none w-screen h-screen m-0 p-6 rounded-none flex flex-col">
           {viewingCard && (
             <>
               <DialogHeader>
