@@ -58,7 +58,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
           <TableRow className="bg-muted hover:bg-muted">
             <TableHead className="font-semibold text-card-foreground w-12"></TableHead>
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
-            <TableHead className="font-semibold text-card-foreground">Category</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Price</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Total Value</TableHead>
@@ -68,7 +67,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
         <TableBody>
           {items.length === 0 ?
           <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                 No items found.
               </TableCell>
             </TableRow> :
@@ -137,12 +136,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
 
                     })()}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="font-normal">
-                      {item.category}
-                      {item.subcategory ? ` > ${item.subcategory}` : ''}
-                    </Badge>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
