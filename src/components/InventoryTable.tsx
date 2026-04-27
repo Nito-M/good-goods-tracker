@@ -60,8 +60,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Price</TableHead>
-            
-            <TableHead className="font-semibold text-card-foreground">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
