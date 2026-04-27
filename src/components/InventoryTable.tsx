@@ -58,7 +58,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
           <TableRow className="bg-muted hover:bg-muted">
             <TableHead className="font-semibold text-card-foreground w-12"></TableHead>
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
-            <TableHead className="font-semibold text-card-foreground">Category</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Price</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Total Value</TableHead>
