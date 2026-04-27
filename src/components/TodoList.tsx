@@ -33,6 +33,11 @@ import {
   Link2,
 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export function TodoList() {
   const { todos, loading, addTodo, updateTodo, deleteTodo, reorderTodos } = useTodos();
