@@ -469,67 +469,120 @@ export function TodoList() {
         })}
       </div>
 
-      {/* Completed todos */}
-      {doneTodos.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground mt-4 mb-2">
-            Completed ({doneTodos.length})
-          </p>
-          {doneTodos.map((todo, idx) => {
-            const isExpanded = expandedId === todo.id;
-            const linkedBadges = getLinkedBadges(todo);
-            return (
-              <div
-                key={todo.id}
-                className="flex flex-col gap-2 p-2 rounded-md border bg-muted/30 group"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-muted-foreground w-5 text-center opacity-50">
-                    {idx + 1}.
-                  </span>
-                  <Checkbox
-                    checked={todo.isDone}
-                    onCheckedChange={(checked) =>
-                      updateTodo(todo.id, { isDone: !!checked })
-                    }
-                  />
-                  <span className="flex-1 text-sm line-through text-muted-foreground">
-                    {todo.title}
-                  </span>
-                  {linkedBadges}
-                  {getDueDateBadge(todo.dueDate)}
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {(todo.notes) && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => setExpandedId(isExpanded ? null : todo.id)}
-                        title={isExpanded ? "Hide notes" : "Show notes"}
-                      >
-                        {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      </Button>
-                    )}
+      {/* Completed todos grouped by year > month */}
+      {doneTodos.length > 0 && (() => {
+        // Group by year then month using updatedAt
+        const byYear = new Map<string, Map<string, Todo[]>>();
+        for (const t of doneTodos) {
+          const d = new Date(t.updatedAt);
+          const yearKey = format(d, "yyyy");
+          const monthKey = format(d, "yyyy-MM");
+          if (!byYear.has(yearKey)) byYear.set(yearKey, new Map());
+          const yearMap = byYear.get(yearKey)!;
+          if (!yearMap.has(monthKey)) yearMap.set(monthKey, []);
+          yearMap.get(monthKey)!.push(t);
+        }
+        const sortedYears = Array.from(byYear.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+        const currentYear = format(new Date(), "yyyy");
+        const currentMonth = format(new Date(), "yyyy-MM");
+
+        const renderTodo = (todo: Todo, idx: number) => {
+          const isExpanded = expandedId === todo.id;
+          const linkedBadges = getLinkedBadges(todo);
+          return (
+            <div
+              key={todo.id}
+              className="flex flex-col gap-2 p-2 rounded-md border bg-muted/30 group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground w-5 text-center opacity-50">
+                  {idx + 1}.
+                </span>
+                <Checkbox
+                  checked={todo.isDone}
+                  onCheckedChange={(checked) =>
+                    updateTodo(todo.id, { isDone: !!checked })
+                  }
+                />
+                <span className="flex-1 text-sm line-through text-muted-foreground">
+                  {todo.title}
+                </span>
+                {linkedBadges}
+                {getDueDateBadge(todo.dueDate)}
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {(todo.notes) && (
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => deleteTodo(todo.id)}
+                      className="h-7 w-7"
+                      onClick={() => setExpandedId(isExpanded ? null : todo.id)}
+                      title={isExpanded ? "Hide notes" : "Show notes"}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                     </Button>
-                  </div>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    onClick={() => deleteTodo(todo.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                {isExpanded && todo.notes && (
-                  <div className="ml-12 text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
-                    {todo.notes}
-                  </div>
-                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+              {isExpanded && todo.notes && (
+                <div className="ml-12 text-sm text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
+                  {todo.notes}
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        return (
+          <div className="space-y-2 mt-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2">
+              Completed ({doneTodos.length})
+            </p>
+            {sortedYears.map(([yearKey, monthMap]) => {
+              const yearCount = Array.from(monthMap.values()).reduce((s, arr) => s + arr.length, 0);
+              const sortedMonths = Array.from(monthMap.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+              return (
+                <Collapsible key={yearKey} defaultOpen={yearKey === currentYear}>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2 text-left hover:bg-muted transition-colors group">
+                    <span className="font-semibold text-sm">{yearKey}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        {yearCount}
+                      </span>
+                      <ChevronDownIcon className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 pt-2 pl-2">
+                    {sortedMonths.map(([monthKey, monthTodos]) => (
+                      <Collapsible key={monthKey} defaultOpen={monthKey === currentMonth}>
+                        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border border-border bg-card px-3 py-1.5 text-left hover:bg-accent transition-colors group">
+                          <span className="text-sm">{format(new Date(monthKey + "-01"), "MMMM")}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                              {monthTodos.length}
+                            </span>
+                            <ChevronDownIcon className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=closed]:-rotate-90" />
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-1 pt-1 pl-2">
+                          {monthTodos.map((t, i) => renderTodo(t, i))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
