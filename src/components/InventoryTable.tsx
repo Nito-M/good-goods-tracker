@@ -93,14 +93,18 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
 
                   <TableCell className="w-14 py-1">
                     {thumbnailMap.get(item.id) || item.imageUrl ?
-                  <img
-                    src={thumbnailMap.get(item.id) || item.imageUrl!}
-                    alt={item.name}
-                    className="w-12 h-12 object-contain rounded-md border border-border cursor-pointer transition-opacity opacity-100 shadow-none"
+                  <div
+                    className="w-12 h-12 rounded-md border border-border bg-muted/30 overflow-hidden cursor-pointer flex items-center justify-center"
                     onClick={(e) => {
                       e.stopPropagation();
                       setViewerImage({ url: thumbnailMap.get(item.id) || item.imageUrl!, alt: item.name });
-                    }} /> :
+                    }}>
+                    <img
+                      src={thumbnailMap.get(item.id) || item.imageUrl!}
+                      alt={item.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </div> :
 
 
                   <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center px-0">
