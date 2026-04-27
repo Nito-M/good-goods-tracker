@@ -67,7 +67,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
         <TableBody>
           {items.length === 0 ?
           <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                 No items found.
               </TableCell>
             </TableRow> :
