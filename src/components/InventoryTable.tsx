@@ -60,14 +60,12 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Price</TableHead>
-            
-            <TableHead className="font-semibold text-card-foreground">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.length === 0 ?
           <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                 No items found.
               </TableCell>
             </TableRow> :
@@ -141,18 +139,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                     {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatCurrency(item.price)}</TableCell>
-                  <TableCell>
-                    <Badge
-                    className={cn(
-                      'font-medium',
-                      isLowStock ?
-                      'bg-warning/10 text-warning hover:bg-warning/20' :
-                      'bg-success/10 text-success hover:bg-success/20'
-                    )}>
-
-                      {isLowStock ? 'Low Stock' : 'In Stock'}
-                    </Badge>
-                  </TableCell>
                 </TableRow>);
 
           })
