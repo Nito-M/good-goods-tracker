@@ -96,7 +96,7 @@ export function ModelNumberTab() {
               <div className="col-span-1">
                 <Badge variant="outline">#{slot.position}</Badge>
               </div>
-              <div className="col-span-4">
+              <div className="col-span-3">
                 <Select
                   value={slot.slot_kind}
                   onValueChange={(v) => updateSlot(slot.id, { slot_kind: v as SlotKind })}
@@ -109,7 +109,7 @@ export function ModelNumberTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-5">
+              <div className="col-span-4">
                 {slot.slot_kind === 'fixed' ? (
                   <Input
                     placeholder="Fixed text (e.g. X)"
@@ -127,6 +127,18 @@ export function ModelNumberTab() {
                     Uses each option's Model Code (override per slot if needed).
                   </span>
                 )}
+              </div>
+              <div className="col-span-2 flex items-center gap-2">
+                <input
+                  id={`sep-${slot.id}`}
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!slot.separator_after}
+                  onChange={(e) => updateSlot(slot.id, { separator_after: e.target.checked })}
+                />
+                <Label htmlFor={`sep-${slot.id}`} className="text-xs cursor-pointer">
+                  Separator after
+                </Label>
               </div>
               <div className="col-span-2 text-right">
                 {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && (
