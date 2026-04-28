@@ -269,10 +269,12 @@ export function ModelNumberTab() {
 
 function CodesDialog({
   slot,
+  mode = 'primary',
   onClose,
   onSaved,
 }: {
   slot: ModelNumberSlot;
+  mode?: 'primary' | 'secondary';
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
@@ -282,7 +284,9 @@ function CodesDialog({
   const { components } = useAssemblyComponents();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [overrides, setOverrides] = useState<Record<string, string>>(slot.override_codes || {});
+  const activeKind = mode === 'secondary' ? (slot.secondary_slot_kind as SlotKind) : slot.slot_kind;
+  const initialOverrides = mode === 'secondary' ? (slot.secondary_override_codes || {}) : (slot.override_codes || {});
+  const [overrides, setOverrides] = useState<Record<string, string>>(initialOverrides);
   const [axleNumbers] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8]);
 
   const items = useMemo(() => {
