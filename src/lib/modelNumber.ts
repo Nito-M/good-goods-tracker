@@ -94,9 +94,43 @@ const codeFor = (
   return fallbackCode(name);
 };
 
+function getCtxFieldId(ctx: BuildContext, field: ConditionField): string | null {
+  switch (field) {
+    case 'trailer_type': return ctx.trailerType?.id ?? null;
+    case 'trailer_subtype': return ctx.subtype?.id ?? null;
+    case 'trailer_length': return ctx.length?.id ?? null;
+    case 'axle_count': return ctx.axleCount != null ? String(ctx.axleCount) : null;
+    case 'front_end': return ctx.frontEnd?.id ?? null;
+    case 'front_end_tier2': return ctx.frontEndTier2?.id ?? null;
+    case 'back_end': return ctx.backEnd?.id ?? null;
+    case 'deck_type': return ctx.deckType?.id ?? null;
+    case 'under_carriage': return ctx.underCarriage?.id ?? null;
+    case 'under_carriage_tier2': return ctx.underCarriageTier2?.id ?? null;
+    case 'under_carriage_tier3': return ctx.underCarriageTier3?.id ?? null;
+  }
+}
+
+function evaluateConditionalRules(slot: ModelNumberSlot, ctx: BuildContext): string | null {
+  const rules = slot.conditional_rules;
+  if (!rules || rules.length === 0) return null;
+  for (const rule of rules) {
+    if (!rule.conditions || rule.conditions.length === 0) continue;
+    const allMatch = rule.conditions.every(c => getCtxFieldId(ctx, c.field) === c.value);
+    if (allMatch) return rule.code ?? '';
+  }
+  return null;
+}
+
 export function resolveSlot(slot: ModelNumberSlot, ctx: BuildContext): string {
+  // Conditional rules win over default codes for any slot kind.
+  const ruleHit = evaluateConditionalRules(slot, ctx);
+  if (ruleHit !== null) return ruleHit;
+
   switch (slot.slot_kind) {
     case 'empty':
+      return '';
+    case 'conditional':
+      // Pure conditional: only the rules produce output. No match → empty.
       return '';
     case 'fixed':
       return (slot.fixed_text || '').trim();
