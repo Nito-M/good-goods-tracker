@@ -184,7 +184,7 @@ export function usePrebuiltAssemblies() {
 
   useEffect(() => { fetchAssemblies(); }, [user]);
 
-  const save = async (config: { trailer_type_id: string; trailer_length_id?: string | null; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null; total_price: number; linked_assembly_id?: string | null }) => {
+  const save = async (config: { trailer_type_id: string; trailer_length_id?: string | null; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null; total_price: number; linked_assembly_id?: string | null; notes?: string | null }) => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('prebuilt_assemblies')
