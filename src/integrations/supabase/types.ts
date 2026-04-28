@@ -1969,33 +1969,143 @@ export type Database = {
         }
         Relationships: []
       }
+      note_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          note_id: string
+          size_bytes: number | null
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          note_id: string
+          size_bytes?: number | null
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          note_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_attachments_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      note_tag_assignments: {
+        Row: {
+          created_at: string
+          note_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          note_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          note_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_tag_assignments_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "note_tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "note_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      note_tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
+          archived: boolean
           color: string | null
           content: string
           created_at: string
+          deleted_at: string | null
           id: string
           is_pinned: boolean
+          is_template: boolean
+          reminder_at: string | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          archived?: boolean
           color?: string | null
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_pinned?: boolean
+          is_template?: boolean
+          reminder_at?: string | null
           title?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          archived?: boolean
           color?: string | null
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_pinned?: boolean
+          is_template?: boolean
+          reminder_at?: string | null
           title?: string
           updated_at?: string
           user_id?: string
