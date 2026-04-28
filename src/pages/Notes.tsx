@@ -1,6 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useNotes } from "@/hooks/useNotes";
-import { Note, NoteColor } from "@/types/note";
+import { useNoteTags } from "@/hooks/useNoteTags";
+import { useNoteAttachments } from "@/hooks/useNoteAttachments";
+import { useNotesAi } from "@/hooks/useNotesAi";
+import { Note, NoteColor, NoteView } from "@/types/note";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TodoList } from "@/components/TodoList";
@@ -10,311 +13,289 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
+  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group";
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
-  Plus,
-  StickyNote,
-  Pin,
-  PinOff,
-  Trash2,
-  MoreVertical,
-  Search,
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Quote,
-  Code,
-  Minus,
-  Palette,
-  ListTodo,
-  BookOpen,
+  Plus, StickyNote, Pin, PinOff, Trash2, MoreVertical, Search,
+  Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Code, Minus,
+  Palette, ListTodo, BookOpen, Tag, Archive, ArchiveRestore, Bell, BellOff,
+  ImagePlus, X, FileText, Sparkles, Wand2, RotateCcw, Filter, CheckSquare,
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
-const COLOR_OPTIONS: { value: NoteColor; label: string; bg: string; border: string }[] = [
-  { value: "default", label: "Default", bg: "bg-card", border: "border-border" },
-  { value: "red", label: "Red", bg: "bg-red-50 dark:bg-red-950/30", border: "border-red-200 dark:border-red-900" },
-  { value: "orange", label: "Orange", bg: "bg-orange-50 dark:bg-orange-950/30", border: "border-orange-200 dark:border-orange-900" },
-  { value: "yellow", label: "Yellow", bg: "bg-yellow-50 dark:bg-yellow-950/30", border: "border-yellow-200 dark:border-yellow-900" },
-  { value: "green", label: "Green", bg: "bg-green-50 dark:bg-green-950/30", border: "border-green-200 dark:border-green-900" },
-  { value: "blue", label: "Blue", bg: "bg-blue-50 dark:bg-blue-950/30", border: "border-blue-200 dark:border-blue-900" },
-  { value: "purple", label: "Purple", bg: "bg-purple-50 dark:bg-purple-950/30", border: "border-purple-200 dark:border-purple-900" },
-  { value: "pink", label: "Pink", bg: "bg-pink-50 dark:bg-pink-950/30", border: "border-pink-200 dark:border-pink-900" },
+const COLOR_OPTIONS: { value: NoteColor; label: string; bg: string; border: string; dot: string }[] = [
+  { value: "default", label: "Default", bg: "bg-card", border: "border-border", dot: "bg-muted-foreground" },
+  { value: "red", label: "Red", bg: "bg-red-50 dark:bg-red-950/30", border: "border-red-200 dark:border-red-900", dot: "bg-red-500" },
+  { value: "orange", label: "Orange", bg: "bg-orange-50 dark:bg-orange-950/30", border: "border-orange-200 dark:border-orange-900", dot: "bg-orange-500" },
+  { value: "yellow", label: "Yellow", bg: "bg-yellow-50 dark:bg-yellow-950/30", border: "border-yellow-200 dark:border-yellow-900", dot: "bg-yellow-500" },
+  { value: "green", label: "Green", bg: "bg-green-50 dark:bg-green-950/30", border: "border-green-200 dark:border-green-900", dot: "bg-green-500" },
+  { value: "blue", label: "Blue", bg: "bg-blue-50 dark:bg-blue-950/30", border: "border-blue-200 dark:border-blue-900", dot: "bg-blue-500" },
+  { value: "purple", label: "Purple", bg: "bg-purple-50 dark:bg-purple-950/30", border: "border-purple-200 dark:border-purple-900", dot: "bg-purple-500" },
+  { value: "pink", label: "Pink", bg: "bg-pink-50 dark:bg-pink-950/30", border: "border-pink-200 dark:border-pink-900", dot: "bg-pink-500" },
 ];
 
-const getColorClasses = (color: NoteColor) => {
-  return COLOR_OPTIONS.find((c) => c.value === color) || COLOR_OPTIONS[0];
-};
+const getColorClasses = (color: NoteColor) => COLOR_OPTIONS.find((c) => c.value === color) || COLOR_OPTIONS[0];
 
 export function Notes() {
-  const { notes, loading, addNote, updateNote, deleteNote, togglePin } = useNotes();
+  const {
+    notes, loading, addNote, updateNote, deleteNote, togglePin,
+    moveToTrash, restoreFromTrash, archive, unarchive, setNoteTags,
+    bulkUpdate, bulkDelete,
+  } = useNotes();
+  const { tags, addTag, deleteTag } = useNoteTags();
+  const { summarize, rewrite, loading: aiLoading } = useNotesAi();
+
   const [searchQuery, setSearchQuery] = useState("");
+  const [view, setView] = useState<NoteView>("active");
+  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newColor, setNewColor] = useState<NoteColor>("default");
+  const [newReminderAt, setNewReminderAt] = useState("");
+  const [newIsTemplate, setNewIsTemplate] = useState(false);
+  const [newTagIds, setNewTagIds] = useState<string[]>([]);
   const editContentRef = useRef<HTMLTextAreaElement>(null);
   const [activeTab, setActiveTab] = useState("notes");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [tagsManagerOpen, setTagsManagerOpen] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState<NoteColor>("default");
+  const [templateChooserOpen, setTemplateChooserOpen] = useState(false);
 
-  // Filter notes by search
-  const filteredNotes = notes.filter(
-    (note) =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredNotes = useMemo(() => {
+    return notes.filter((n) => {
+      if (view === "trash") {
+        if (!n.deletedAt) return false;
+      } else {
+        if (n.deletedAt) return false;
+      }
+      if (view === "archived" && !n.archived) return false;
+      if (view === "active" && (n.archived || n.isTemplate)) return false;
+      if (view === "templates" && !n.isTemplate) return false;
+      if (view === "reminders" && (!n.reminderAt || n.archived || n.isTemplate)) return false;
+      if (filterTagIds.length > 0 && !filterTagIds.every((tid) => n.tagIds.includes(tid))) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!n.title.toLowerCase().includes(q) && !n.content.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+  }, [notes, view, filterTagIds, searchQuery]);
 
   const pinnedNotes = filteredNotes.filter((n) => n.isPinned);
   const unpinnedNotes = filteredNotes.filter((n) => !n.isPinned);
+  const templates = notes.filter((n) => n.isTemplate && !n.deletedAt);
+
+  const resetCreate = () => {
+    setNewTitle(""); setNewContent(""); setNewColor("default");
+    setNewReminderAt(""); setNewIsTemplate(false); setNewTagIds([]);
+  };
 
   const handleCreateNote = async () => {
     if (!newTitle.trim() && !newContent.trim()) return;
-
-    await addNote({
+    const created = await addNote({
       title: newTitle.trim(),
       content: newContent.trim(),
       color: newColor,
+      isTemplate: newIsTemplate,
+      reminderAt: newReminderAt ? new Date(newReminderAt).toISOString() : null,
     });
-
-    setNewTitle("");
-    setNewContent("");
-    setNewColor("default");
+    if (created && newTagIds.length > 0) {
+      await setNoteTags(created.id, newTagIds);
+    }
+    resetCreate();
     setIsCreating(false);
   };
 
   const handleUpdateNote = async () => {
     if (!editingNote) return;
-
     await updateNote(editingNote.id, {
       title: editingNote.title,
       content: editingNote.content,
       color: editingNote.color,
+      reminderAt: editingNote.reminderAt,
+      isTemplate: editingNote.isTemplate,
     });
-
     setEditingNote(null);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Delete this note?")) {
-      await deleteNote(id);
+  const handleDelete = async (note: Note) => {
+    if (note.deletedAt) {
+      if (confirm("Permanently delete this note?")) {
+        await deleteNote(note.id);
+        setEditingNote(null);
+      }
+    } else {
+      await moveToTrash(note.id);
+      toast.success("Moved to trash");
       setEditingNote(null);
     }
   };
 
+  const useTemplate = (tpl: Note) => {
+    setNewTitle(tpl.title);
+    setNewContent(tpl.content);
+    setNewColor(tpl.color);
+    setNewTagIds(tpl.tagIds);
+    setNewIsTemplate(false);
+    setTemplateChooserOpen(false);
+    setIsCreating(true);
+  };
+
   const insertFormatting = (
-    format: string,
+    fmt: string,
     setter: React.Dispatch<React.SetStateAction<string>>,
     currentValue: string
   ) => {
     const formats: Record<string, string> = {
-      bold: "**bold text**",
-      italic: "*italic text*",
-      h1: "\n# Heading 1\n",
-      h2: "\n## Heading 2\n",
-      ul: "\n- List item\n- List item\n",
-      ol: "\n1. First item\n2. Second item\n",
-      quote: "\n> Quote\n",
-      code: "\n```\ncode block\n```\n",
-      hr: "\n---\n",
+      bold: "**bold text**", italic: "*italic text*",
+      h1: "\n# Heading 1\n", h2: "\n## Heading 2\n",
+      ul: "\n- List item\n- List item\n", ol: "\n1. First item\n2. Second item\n",
+      quote: "\n> Quote\n", code: "\n```\ncode block\n```\n", hr: "\n---\n",
+      checklist: "\n- [ ] Task one\n- [ ] Task two\n",
     };
-    setter(currentValue + formats[format]);
+    setter(currentValue + formats[fmt]);
   };
 
-  const FormatToolbar = ({
-    onFormat,
-    currentValue,
-    setter,
-  }: {
-    onFormat: (fmt: string) => void;
-    currentValue: string;
-    setter: React.Dispatch<React.SetStateAction<string>>;
-  }) => (
+  const FormatToolbar = ({ currentValue, setter }: { currentValue: string; setter: React.Dispatch<React.SetStateAction<string>>; }) => (
     <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("bold", setter, currentValue)}
-        title="Bold"
-      >
-        <Bold className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("italic", setter, currentValue)}
-        title="Italic"
-      >
-        <Italic className="h-4 w-4" />
-      </Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("bold", setter, currentValue)} title="Bold"><Bold className="h-4 w-4" /></Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("italic", setter, currentValue)} title="Italic"><Italic className="h-4 w-4" /></Button>
       <div className="w-px h-6 bg-border mx-1" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("h1", setter, currentValue)}
-        title="Heading 1"
-      >
-        <Heading1 className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("h2", setter, currentValue)}
-        title="Heading 2"
-      >
-        <Heading2 className="h-4 w-4" />
-      </Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("h1", setter, currentValue)} title="H1"><Heading1 className="h-4 w-4" /></Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("h2", setter, currentValue)} title="H2"><Heading2 className="h-4 w-4" /></Button>
       <div className="w-px h-6 bg-border mx-1" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("ul", setter, currentValue)}
-        title="Bullet List"
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("ol", setter, currentValue)}
-        title="Numbered List"
-      >
-        <ListOrdered className="h-4 w-4" />
-      </Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("ul", setter, currentValue)} title="Bullet list"><List className="h-4 w-4" /></Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("ol", setter, currentValue)} title="Numbered list"><ListOrdered className="h-4 w-4" /></Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("checklist", setter, currentValue)} title="Checklist"><CheckSquare className="h-4 w-4" /></Button>
       <div className="w-px h-6 bg-border mx-1" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("quote", setter, currentValue)}
-        title="Quote"
-      >
-        <Quote className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("code", setter, currentValue)}
-        title="Code Block"
-      >
-        <Code className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={() => insertFormatting("hr", setter, currentValue)}
-        title="Horizontal Rule"
-      >
-        <Minus className="h-4 w-4" />
-      </Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("quote", setter, currentValue)} title="Quote"><Quote className="h-4 w-4" /></Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("code", setter, currentValue)} title="Code"><Code className="h-4 w-4" /></Button>
+      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("hr", setter, currentValue)} title="Divider"><Minus className="h-4 w-4" /></Button>
     </div>
   );
 
-  const NoteCard = ({ note }: { note: Note }) => {
-    const colorClasses = getColorClasses(note.color);
+  const ColorPicker = ({ value, onChange }: { value: NoteColor; onChange: (c: NoteColor) => void }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2"><Palette className="h-4 w-4" /><span className={cn("h-3 w-3 rounded-full", getColorClasses(value).dot)} /></Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2"><div className="grid grid-cols-4 gap-1">
+        {COLOR_OPTIONS.map((c) => (
+          <button key={c.value} className={cn("h-8 w-8 rounded-full border-2", c.dot, value === c.value ? "border-foreground" : "border-transparent")} onClick={() => onChange(c.value)} title={c.label} />
+        ))}
+      </div></PopoverContent>
+    </Popover>
+  );
 
+  const TagPicker = ({ selected, onChange }: { selected: string[]; onChange: (ids: string[]) => void }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2"><Tag className="h-4 w-4" />{selected.length > 0 ? `${selected.length} tag${selected.length > 1 ? "s" : ""}` : "Tags"}</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56 max-h-72 overflow-y-auto">
+        <DropdownMenuLabel>Tags</DropdownMenuLabel>
+        {tags.length === 0 && <div className="px-2 py-3 text-xs text-muted-foreground text-center">No tags yet</div>}
+        {tags.map((t) => (
+          <DropdownMenuCheckboxItem key={t.id} checked={selected.includes(t.id)} onCheckedChange={(v) => { onChange(v ? [...selected, t.id] : selected.filter((x) => x !== t.id)); }} onSelect={(e) => e.preventDefault()}>
+            <span className={cn("h-2 w-2 rounded-full mr-2", getColorClasses(t.color).dot)} />{t.name}
+          </DropdownMenuCheckboxItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setTagsManagerOpen(true)}><Plus className="h-4 w-4 mr-2" />Manage tags</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const NoteCardEl = ({ note }: { note: Note }) => {
+    const colorClasses = getColorClasses(note.color);
+    const isSelected = selectedIds.has(note.id);
+    const noteTags = tags.filter((t) => note.tagIds.includes(t.id));
     return (
       <Card
         className={cn(
-          "cursor-pointer hover:shadow-md transition-shadow group",
-          colorClasses.bg,
-          colorClasses.border
+          "cursor-pointer hover:shadow-md transition-shadow group relative",
+          colorClasses.bg, colorClasses.border,
+          isSelected && "ring-2 ring-primary"
         )}
-        onClick={() => setEditingNote(note)}
+        onClick={() => {
+          if (selectedIds.size > 0) {
+            const next = new Set(selectedIds);
+            if (next.has(note.id)) next.delete(note.id); else next.add(note.id);
+            setSelectedIds(next);
+          } else {
+            setEditingNote(note);
+          }
+        }}
       >
-        <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0">
+        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={(e) => e.stopPropagation()}>
+          <Checkbox checked={isSelected} onCheckedChange={(v) => {
+            const next = new Set(selectedIds);
+            if (v) next.add(note.id); else next.delete(note.id);
+            setSelectedIds(next);
+          }} />
+        </div>
+        <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0 pl-9">
           <div className="flex-1 min-w-0">
-            {note.title ? (
-              <h3 className="font-semibold text-base truncate">{note.title}</h3>
-            ) : (
-              <h3 className="font-semibold text-base text-muted-foreground italic">
-                Untitled
-              </h3>
-            )}
+            {note.title ? <h3 className="font-semibold text-base truncate">{note.title}</h3>
+              : <h3 className="font-semibold text-base text-muted-foreground italic">Untitled</h3>}
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1">
             {note.isPinned && <Pin className="h-4 w-4 text-primary" />}
+            {note.reminderAt && <Bell className="h-4 w-4 text-amber-500" />}
+            {note.isTemplate && <FileText className="h-4 w-4 text-blue-500" />}
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePin(note.id);
-                  }}
-                >
-                  {note.isPinned ? (
-                    <>
-                      <PinOff className="h-4 w-4 mr-2" />
-                      Unpin
-                    </>
-                  ) : (
-                    <>
-                      <Pin className="h-4 w-4 mr-2" />
-                      Pin
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(note.id);
-                  }}
-                  className="text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {!note.deletedAt && (<>
+                  <DropdownMenuItem onClick={() => togglePin(note.id)}>
+                    {note.isPinned ? <><PinOff className="h-4 w-4 mr-2" />Unpin</> : <><Pin className="h-4 w-4 mr-2" />Pin</>}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => note.archived ? unarchive(note.id) : archive(note.id)}>
+                    {note.archived ? <><ArchiveRestore className="h-4 w-4 mr-2" />Unarchive</> : <><Archive className="h-4 w-4 mr-2" />Archive</>}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>)}
+                {note.deletedAt && (
+                  <DropdownMenuItem onClick={() => restoreFromTrash(note.id)}><RotateCcw className="h-4 w-4 mr-2" />Restore</DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => handleDelete(note)} className="text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />{note.deletedAt ? "Delete forever" : "Move to trash"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">
-            {note.content || "No content"}
-          </p>
+        <CardContent className="pt-0 pl-9">
+          <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">{note.content || "No content"}</p>
+          {noteTags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {noteTags.map((t) => (
+                <Badge key={t.id} variant="secondary" className="text-xs">
+                  <span className={cn("h-1.5 w-1.5 rounded-full mr-1", getColorClasses(t.color).dot)} />{t.name}
+                </Badge>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-muted-foreground mt-3">
+            {note.reminderAt && <span className="text-amber-600 dark:text-amber-400">Reminder {format(new Date(note.reminderAt), "MMM d, h:mm a")} · </span>}
             {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
           </p>
         </CardContent>
@@ -322,146 +303,161 @@ export function Notes() {
     );
   };
 
+  const selectedArr = Array.from(selectedIds);
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <StickyNote className="h-6 w-6" />
-            Notes
-          </h1>
-          <p className="text-muted-foreground">
-            Capture ideas, lists, and more
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><StickyNote className="h-6 w-6" />Notes</h1>
+          <p className="text-muted-foreground">Capture ideas, lists, reminders and more</p>
         </div>
       </div>
 
       <Tabs defaultValue="notes" className="w-full" onValueChange={(v) => setActiveTab(v)}>
         <div className="flex items-center justify-between gap-4">
           <TabsList>
-            <TabsTrigger value="notes" className="gap-2">
-              <StickyNote className="h-4 w-4" />
-              Notes
-            </TabsTrigger>
-            <TabsTrigger value="todos" className="gap-2">
-              <ListTodo className="h-4 w-4" />
-              To-Do
-            </TabsTrigger>
-            <TabsTrigger value="howto" className="gap-2">
-              <BookOpen className="h-4 w-4" />
-              How To Do
-            </TabsTrigger>
+            <TabsTrigger value="notes" className="gap-2"><StickyNote className="h-4 w-4" />Notes</TabsTrigger>
+            <TabsTrigger value="todos" className="gap-2"><ListTodo className="h-4 w-4" />To-Do</TabsTrigger>
+            <TabsTrigger value="howto" className="gap-2"><BookOpen className="h-4 w-4" />How To Do</TabsTrigger>
           </TabsList>
           {activeTab === "notes" && (
-            <Button onClick={() => setIsCreating(true)} className="shrink-0">
-              <Plus className="h-4 w-4 mr-2" />
-              New Note
-            </Button>
-          )}
-        </div>
-
-        <TabsContent value="todos" className="mt-4">
-          <TodoList />
-        </TabsContent>
-
-        <TabsContent value="howto" className="mt-4">
-          <HowToDoPage />
-        </TabsContent>
-
-        <TabsContent value="notes" className="mt-4">
-
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search notes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
-      </div>
-
-      {/* Notes Grid */}
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className="h-40" />
-          ))}
-        </div>
-      ) : filteredNotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <StickyNote className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold">No notes yet</h3>
-          <p className="text-muted-foreground">
-            {searchQuery ? "Try a different search" : "Create your first note to get started"}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {pinnedNotes.length > 0 && (
-            <div>
-              <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-                <Pin className="h-4 w-4" />
-                Pinned
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {pinnedNotes.map((note) => (
-                  <NoteCard key={note.id} note={note} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {unpinnedNotes.length > 0 && (
-            <div>
-              {pinnedNotes.length > 0 && (
-                <h2 className="text-sm font-medium text-muted-foreground mb-3">
-                  Others
-                </h2>
+            <div className="flex gap-2">
+              {templates.length > 0 && (
+                <Button variant="outline" onClick={() => setTemplateChooserOpen(true)}>
+                  <FileText className="h-4 w-4 mr-2" />Templates
+                </Button>
               )}
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {unpinnedNotes.map((note) => (
-                  <NoteCard key={note.id} note={note} />
-                ))}
-              </div>
+              <Button onClick={() => setIsCreating(true)} className="shrink-0"><Plus className="h-4 w-4 mr-2" />New Note</Button>
             </div>
           )}
         </div>
-      )}
+
+        <TabsContent value="todos" className="mt-4"><TodoList /></TabsContent>
+        <TabsContent value="howto" className="mt-4"><HowToDoPage /></TabsContent>
+
+        <TabsContent value="notes" className="mt-4 space-y-4">
+          {/* View tabs + filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Tabs value={view} onValueChange={(v) => { setView(v as NoteView); setSelectedIds(new Set()); }}>
+              <TabsList>
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="reminders" className="gap-1"><Bell className="h-3.5 w-3.5" />Reminders</TabsTrigger>
+                <TabsTrigger value="archived" className="gap-1"><Archive className="h-3.5 w-3.5" />Archive</TabsTrigger>
+                <TabsTrigger value="templates" className="gap-1"><FileText className="h-3.5 w-3.5" />Templates</TabsTrigger>
+                <TabsTrigger value="trash" className="gap-1"><Trash2 className="h-3.5 w-3.5" />Trash</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex-1" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2"><Filter className="h-4 w-4" />Tags{filterTagIds.length > 0 && ` (${filterTagIds.length})`}</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 max-h-72 overflow-y-auto">
+                <DropdownMenuLabel>Filter by tag</DropdownMenuLabel>
+                {tags.length === 0 && <div className="px-2 py-3 text-xs text-muted-foreground text-center">No tags yet</div>}
+                {tags.map((t) => (
+                  <DropdownMenuCheckboxItem key={t.id} checked={filterTagIds.includes(t.id)} onCheckedChange={(v) => setFilterTagIds(v ? [...filterTagIds, t.id] : filterTagIds.filter((x) => x !== t.id))} onSelect={(e) => e.preventDefault()}>
+                    <span className={cn("h-2 w-2 rounded-full mr-2", getColorClasses(t.color).dot)} />{t.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                {filterTagIds.length > 0 && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={() => setFilterTagIds([])}>Clear filters</DropdownMenuItem></>)}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setTagsManagerOpen(true)}><Plus className="h-4 w-4 mr-2" />Manage tags</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Bulk action bar */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/30 rounded-md">
+              <span className="text-sm font-medium">{selectedIds.size} selected</span>
+              <div className="flex-1" />
+              <Button size="sm" variant="outline" onClick={async () => { await bulkUpdate(selectedArr, { isPinned: true }); setSelectedIds(new Set()); }}><Pin className="h-4 w-4 mr-1" />Pin</Button>
+              <Button size="sm" variant="outline" onClick={async () => { await bulkUpdate(selectedArr, { archived: true }); setSelectedIds(new Set()); toast.success("Archived"); }}><Archive className="h-4 w-4 mr-1" />Archive</Button>
+              <Popover>
+                <PopoverTrigger asChild><Button size="sm" variant="outline"><Palette className="h-4 w-4 mr-1" />Color</Button></PopoverTrigger>
+                <PopoverContent className="w-auto p-2"><div className="grid grid-cols-4 gap-1">
+                  {COLOR_OPTIONS.map((c) => (
+                    <button key={c.value} className={cn("h-8 w-8 rounded-full border-2 border-transparent", c.dot)} onClick={async () => { await bulkUpdate(selectedArr, { color: c.value }); setSelectedIds(new Set()); }} />
+                  ))}
+                </div></PopoverContent>
+              </Popover>
+              {view === "trash" ? (
+                <Button size="sm" variant="destructive" onClick={async () => {
+                  if (confirm(`Permanently delete ${selectedIds.size} notes?`)) { await bulkDelete(selectedArr); setSelectedIds(new Set()); }
+                }}><Trash2 className="h-4 w-4 mr-1" />Delete forever</Button>
+              ) : (
+                <Button size="sm" variant="destructive" onClick={async () => { await bulkUpdate(selectedArr, { deletedAt: new Date().toISOString() }); setSelectedIds(new Set()); toast.success("Moved to trash"); }}><Trash2 className="h-4 w-4 mr-1" />Trash</Button>
+              )}
+              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}><X className="h-4 w-4" /></Button>
+            </div>
+          )}
+
+          {/* Search */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search notes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+          </div>
+
+          {/* Notes Grid */}
+          {loading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-40" />)}
+            </div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <StickyNote className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold">No notes here</h3>
+              <p className="text-muted-foreground">{searchQuery ? "Try a different search" : "Create your first note to get started"}</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {pinnedNotes.length > 0 && (
+                <div>
+                  <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2"><Pin className="h-4 w-4" />Pinned</h2>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {pinnedNotes.map((note) => <NoteCardEl key={note.id} note={note} />)}
+                  </div>
+                </div>
+              )}
+              {unpinnedNotes.length > 0 && (
+                <div>
+                  {pinnedNotes.length > 0 && <h2 className="text-sm font-medium text-muted-foreground mb-3">Others</h2>}
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {unpinnedNotes.map((note) => <NoteCardEl key={note.id} note={note} />)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
       {/* Create Note Dialog */}
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
+      <Dialog open={isCreating} onOpenChange={(o) => { if (!o) resetCreate(); setIsCreating(o); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>New Note</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>New Note</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <Input
-              placeholder="Title"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="text-lg font-semibold"
-            />
+            <Input placeholder="Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="text-lg font-semibold" />
             <div className="border rounded-md overflow-hidden">
-              <FormatToolbar
-                onFormat={(fmt) => insertFormatting(fmt, setNewContent, newContent)}
-                currentValue={newContent}
-                setter={setNewContent}
-              />
-              <Textarea
-                placeholder="Write your note..."
-                value={newContent}
-                onChange={(e) => setNewContent(e.target.value)}
-                className="min-h-[200px] border-0 focus-visible:ring-0 resize-none"
-              />
+              <FormatToolbar currentValue={newContent} setter={setNewContent} />
+              <Textarea placeholder="Write your note..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="min-h-[200px] border-0 focus-visible:ring-0 resize-none" />
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <ColorPicker value={newColor} onChange={setNewColor} />
+              <TagPicker selected={newTagIds} onChange={setNewTagIds} />
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-muted-foreground" />
+                <Input type="datetime-local" value={newReminderAt} onChange={(e) => setNewReminderAt(e.target.value)} className="w-auto" />
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox checked={newIsTemplate} onCheckedChange={(v) => setNewIsTemplate(!!v)} />
+                Save as template
+              </label>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreating(false)}>
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => { resetCreate(); setIsCreating(false); }}>Cancel</Button>
               <Button onClick={handleCreateNote}>Create Note</Button>
             </div>
           </div>
@@ -474,84 +470,162 @@ export function Notes() {
           e.preventDefault();
           setTimeout(() => editContentRef.current?.focus(), 0);
         }}>
-          <DialogHeader>
-            <DialogTitle>Edit Note</DialogTitle>
-          </DialogHeader>
-          {editingNote && (
-            <div className="flex flex-col flex-1 min-h-0 gap-4">
-              <Input
-                placeholder="Title"
-                value={editingNote.title}
-                onChange={(e) =>
-                  setEditingNote({ ...editingNote, title: e.target.value })
-                }
-                className="text-lg font-semibold"
-              />
-              <div className="border rounded-md overflow-hidden flex-1 flex flex-col min-h-0">
-                <FormatToolbar
-                  onFormat={(fmt) =>
-                    insertFormatting(
-                      fmt,
-                      (v) =>
-                        setEditingNote({
-                          ...editingNote,
-                          content: typeof v === "function" ? v(editingNote.content) : v,
-                        }),
-                      editingNote.content
-                    )
-                  }
-                  currentValue={editingNote.content}
-                  setter={(v) =>
-                    setEditingNote({
-                      ...editingNote,
-                      content: typeof v === "function" ? v(editingNote.content) : v,
-                    })
-                  }
-                />
-                <Textarea
-                  ref={editContentRef}
-                  placeholder="Write your note..."
-                  value={editingNote.content}
-                  onChange={(e) =>
-                    setEditingNote({ ...editingNote, content: e.target.value })
-                  }
-                  className="flex-1 min-h-0 border-0 focus-visible:ring-0 resize-none"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => togglePin(editingNote.id)}
-                >
-                  {editingNote.isPinned ? (
-                    <>
-                      <PinOff className="h-4 w-4 mr-2" />
-                      Unpin
-                    </>
-                  ) : (
-                    <>
-                      <Pin className="h-4 w-4 mr-2" />
-                      Pin
-                    </>
-                  )}
-                </Button>
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(editingNote.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                  <Button onClick={handleUpdateNote}>Save</Button>
-                </div>
-              </div>
-            </div>
-          )}
+          <DialogHeader><DialogTitle>Edit Note</DialogTitle></DialogHeader>
+          {editingNote && <EditNoteBody
+            note={editingNote}
+            onChange={setEditingNote}
+            onClose={handleUpdateNote}
+            onDelete={() => handleDelete(editingNote)}
+            onPin={() => togglePin(editingNote.id)}
+            onArchive={() => editingNote.archived ? unarchive(editingNote.id) : archive(editingNote.id)}
+            tags={tags}
+            setNoteTags={setNoteTags}
+            colorPicker={<ColorPicker value={editingNote.color} onChange={(c) => setEditingNote({ ...editingNote, color: c })} />}
+            tagPicker={<TagPicker selected={editingNote.tagIds} onChange={(ids) => { setEditingNote({ ...editingNote, tagIds: ids }); setNoteTags(editingNote.id, ids); }} />}
+            insertFormatting={insertFormatting}
+            FormatToolbar={FormatToolbar}
+            editContentRef={editContentRef}
+            summarize={summarize}
+            rewrite={rewrite}
+            aiLoading={aiLoading}
+          />}
         </DialogContent>
       </Dialog>
+
+      {/* Tags Manager */}
+      <Dialog open={tagsManagerOpen} onOpenChange={setTagsManagerOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Manage Tags</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input placeholder="New tag name" value={newTagName} onChange={(e) => setNewTagName(e.target.value)} onKeyDown={async (e) => {
+                if (e.key === "Enter" && newTagName.trim()) { await addTag(newTagName, newTagColor); setNewTagName(""); }
+              }} />
+              <ColorPicker value={newTagColor} onChange={setNewTagColor} />
+              <Button onClick={async () => { if (newTagName.trim()) { await addTag(newTagName, newTagColor); setNewTagName(""); } }}><Plus className="h-4 w-4" /></Button>
+            </div>
+            <div className="space-y-1 max-h-72 overflow-y-auto">
+              {tags.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No tags yet</p>}
+              {tags.map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-2 rounded hover:bg-muted">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("h-3 w-3 rounded-full", getColorClasses(t.color).dot)} />
+                    <span className="text-sm">{t.name}</span>
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={() => deleteTag(t.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter><Button onClick={() => setTagsManagerOpen(false)}>Done</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Chooser */}
+      <Dialog open={templateChooserOpen} onOpenChange={setTemplateChooserOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Choose Template</DialogTitle></DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {templates.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No templates yet. Save a note as a template to reuse it.</p>
+            ) : templates.map((t) => (
+              <button key={t.id} className="w-full text-left p-3 rounded border hover:bg-muted transition-colors" onClick={() => useTemplate(t)}>
+                <div className="font-medium">{t.title || "Untitled template"}</div>
+                <div className="text-xs text-muted-foreground line-clamp-2 mt-1">{t.content}</div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Separate component to keep editor logic isolated
+function EditNoteBody(props: any) {
+  const {
+    note, onChange, onClose, onDelete, onPin, onArchive,
+    colorPicker, tagPicker, FormatToolbar, editContentRef,
+    summarize, rewrite, aiLoading,
+  } = props;
+  const { attachments, uploadAttachment, deleteAttachment } = useNoteAttachments(note.id);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const wordCount = (note.content || "").trim().split(/\s+/).filter(Boolean).length;
+  const charCount = (note.content || "").length;
+
+  const reminderLocal = note.reminderAt ? new Date(note.reminderAt).toISOString().slice(0, 16) : "";
+
+  const onAi = async (kind: "summarize" | "rewrite") => {
+    const fn = kind === "summarize" ? summarize : rewrite;
+    const result = await fn(note.title, note.content);
+    if (result) {
+      if (kind === "summarize") {
+        onChange({ ...note, content: `## Summary\n\n${result}\n\n---\n\n${note.content}` });
+        toast.success("Summary added at top");
+      } else {
+        onChange({ ...note, content: result });
+        toast.success("Rewritten");
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col flex-1 min-h-0 gap-4">
+      <Input placeholder="Title" value={note.title} onChange={(e) => onChange({ ...note, title: e.target.value })} className="text-lg font-semibold" />
+
+      <div className="flex flex-wrap gap-2 items-center">
+        {colorPicker}
+        {tagPicker}
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-muted-foreground" />
+          <Input type="datetime-local" value={reminderLocal} onChange={(e) => onChange({ ...note, reminderAt: e.target.value ? new Date(e.target.value).toISOString() : null })} className="w-auto" />
+          {note.reminderAt && <Button size="icon" variant="ghost" onClick={() => onChange({ ...note, reminderAt: null })}><BellOff className="h-4 w-4" /></Button>}
+        </div>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox checked={note.isTemplate} onCheckedChange={(v) => onChange({ ...note, isTemplate: !!v })} />
+          Template
+        </label>
+        <div className="flex-1" />
+        <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}><ImagePlus className="h-4 w-4 mr-1" />Add image</Button>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
+          const f = e.target.files?.[0]; if (f) await uploadAttachment(f); if (fileInputRef.current) fileInputRef.current.value = "";
+        }} />
+        <Button size="sm" variant="outline" onClick={() => onAi("summarize")} disabled={aiLoading !== null}><Sparkles className="h-4 w-4 mr-1" />{aiLoading === "summarize" ? "..." : "Summarize"}</Button>
+        <Button size="sm" variant="outline" onClick={() => onAi("rewrite")} disabled={aiLoading !== null}><Wand2 className="h-4 w-4 mr-1" />{aiLoading === "rewrite" ? "..." : "Rewrite"}</Button>
+        <Button size="sm" variant="outline" onClick={onPin}>{note.isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}</Button>
+        <Button size="sm" variant="outline" onClick={onArchive}>{note.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</Button>
+        <Button size="sm" variant="outline" onClick={onDelete} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+      </div>
+
+      <div className="border rounded-md overflow-hidden flex-1 flex flex-col min-h-0">
+        <FormatToolbar currentValue={note.content} setter={(v: any) => onChange({ ...note, content: typeof v === "function" ? v(note.content) : v })} />
+        <Textarea
+          ref={editContentRef}
+          placeholder="Write your note..."
+          value={note.content}
+          onChange={(e) => onChange({ ...note, content: e.target.value })}
+          className="flex-1 border-0 focus-visible:ring-0 resize-none"
+        />
+      </div>
+
+      {attachments.length > 0 && (
+        <div className="border rounded-md p-3">
+          <h4 className="text-sm font-medium mb-2">Images ({attachments.length})</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            {attachments.map((a: any) => (
+              <div key={a.id} className="relative group aspect-square rounded overflow-hidden border bg-muted">
+                {a.signedUrl && <img src={a.signedUrl} alt={a.fileName} className="w-full h-full object-cover" />}
+                <button onClick={() => deleteAttachment(a.id)} className="absolute top-1 right-1 p-1 rounded bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-3 w-3" /></button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{wordCount} words · {charCount} characters</span>
+        <Button size="sm" onClick={onClose}>Done</Button>
+      </div>
     </div>
   );
 }
