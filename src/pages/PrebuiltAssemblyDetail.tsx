@@ -504,3 +504,44 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 }
 
 export default PrebuiltAssemblyDetail;
+
+function ModelNumberLine(props: {
+  trailerType: any;
+  lengthId: string | null;
+  frontEndId: string | null;
+  frontEndTier2Id: string | null;
+  backEndId: string | null;
+  deckTypeId: string | null;
+  underCarriageId: string | null;
+  underCarriageTier2Id: string | null;
+  underCarriageTier3Id: string | null;
+  axleCount: number | null;
+}) {
+  const { template, slots } = useModelNumberTemplate();
+  const { components } = useAssemblyComponents();
+  const { lengths } = useTrailerLengths();
+  const findComp = (id: string | null) => id ? components.find(c => c.id === id) : null;
+  const length = props.lengthId ? lengths.find(l => l.id === props.lengthId) : null;
+  const number = buildModelNumber(
+    template ? { separator: template.separator, slots } : null,
+    {
+      trailerType: props.trailerType,
+      length,
+      axleCount: props.axleCount,
+      frontEnd: findComp(props.frontEndId),
+      frontEndTier2: findComp(props.frontEndTier2Id),
+      backEnd: findComp(props.backEndId),
+      deckType: findComp(props.deckTypeId),
+      underCarriage: findComp(props.underCarriageId),
+      underCarriageTier2: findComp(props.underCarriageTier2Id),
+      underCarriageTier3: findComp(props.underCarriageTier3Id),
+    }
+  );
+  if (!number) return null;
+  return (
+    <p className="text-sm mt-1">
+      <span className="text-muted-foreground">Model #: </span>
+      <span className="font-mono font-semibold">{number}</span>
+    </p>
+  );
+}
