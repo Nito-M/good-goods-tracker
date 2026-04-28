@@ -61,7 +61,8 @@ export function ModelNumberTab() {
           <CardTitle>Model Number Builder</CardTitle>
           <p className="text-sm text-muted-foreground">
             Define 8 ordered positions. Each slot can map to a configurator step or fixed text.
-            The model number is built by joining each slot's code in order.
+            Toggle "Separator after" on a slot to insert the separator only at that position.
+            If no slot has it enabled, the separator is placed between every slot (legacy behavior).
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
