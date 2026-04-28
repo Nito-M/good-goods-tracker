@@ -57,6 +57,7 @@ import NotFound from "./pages/NotFound";
 import { ResetPassword } from "./pages/ResetPassword";
 import { TrailerConfigurator } from "./pages/TrailerConfigurator";
 import { TrailerConfigAdmin } from "./pages/TrailerConfigAdmin";
+import { PrebuiltAssemblyDetail } from "./pages/PrebuiltAssemblyDetail";
 import { TripPlanDetail } from "./pages/TripPlanDetail";
 import { VendorDetail } from "./pages/VendorDetail";
 import { AddVendor } from "./pages/AddVendor";
@@ -694,6 +695,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <TrailerConfigAdmin />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/trailer-configurator/admin/prebuilt/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PrebuiltAssemblyDetail />
               </AppLayout>
             </ProtectedRoute>
           }
