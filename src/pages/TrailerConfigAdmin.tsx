@@ -1477,6 +1477,29 @@ function PrebuiltTab({
                       <TableCell>{editingId === a.id ? (
                         <Input type="number" value={editTotalPrice} onChange={e => setEditTotalPrice(e.target.value)} className="h-8 w-24" />
                       ) : <span>${Number(a.total_price).toFixed(2)}</span>}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editLinkedAssemblyId} onValueChange={setEditLinkedAssemblyId}>
+                          <SelectTrigger className="h-8 w-44"><SelectValue placeholder="None" /></SelectTrigger>
+                          <SelectContent className="max-h-72">
+                            <SelectItem value="none">None</SelectItem>
+                            {sortedAssemblies.map(la => (
+                              <SelectItem key={la.id} value={la.id}>{la.type ? `[${la.type}] ` : ''}{la.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (() => {
+                        const linked = sortedAssemblies.find(la => la.id === aAny.linked_assembly_id);
+                        if (!linked) return <span className="text-muted-foreground">—</span>;
+                        return (
+                          <RouterLink
+                            to={`/assemblies/${encodeURIComponent(linked.type || '')}?id=${linked.id}`}
+                            className="text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            <Link className="h-3 w-3" />
+                            {linked.name}
+                          </RouterLink>
+                        );
+                      })()}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           {editingId === a.id ? (
