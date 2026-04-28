@@ -1,0 +1,1 @@
+ALTER TABLE public.model_number_slots ADD COLUMN IF NOT EXISTS separator_after boolean NOT NULL DEFAULT false;

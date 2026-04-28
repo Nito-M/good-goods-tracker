@@ -28,6 +28,7 @@ export interface ModelNumberSlot {
   slot_kind: SlotKind;
   fixed_text: string | null;
   override_codes: Record<string, string>;
+  separator_after?: boolean;
 }
 
 export interface ModelNumberTemplate {
@@ -114,10 +115,26 @@ export function buildModelNumber(
   if (!template) return '';
   const sep = template.separator ?? '-';
   const ordered = [...template.slots].sort((a, b) => a.position - b.position);
-  const parts = ordered
-    .map(s => resolveSlot(s, ctx))
-    .filter(p => p && p.length > 0);
-  return parts.join(sep);
+  const resolved = ordered.map(s => ({ slot: s, code: resolveSlot(s, ctx) }));
+
+  // If no slot has separator_after configured, fall back to joining with separator between every part.
+  const anyExplicit = resolved.some(r => r.slot.separator_after);
+  if (!anyExplicit) {
+    return resolved.map(r => r.code).filter(p => p && p.length > 0).join(sep);
+  }
+
+  let out = '';
+  for (let i = 0; i < resolved.length; i++) {
+    const { slot, code } = resolved[i];
+    if (!code) continue;
+    out += code;
+    if (slot.separator_after && i < resolved.length - 1) {
+      // only append separator if there is more non-empty content after
+      const hasMore = resolved.slice(i + 1).some(r => r.code && r.code.length > 0);
+      if (hasMore) out += sep;
+    }
+  }
+  return out;
 }
 
 export const SLOT_KIND_LABELS: Record<SlotKind, string> = {
