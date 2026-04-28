@@ -1114,6 +1114,7 @@ function PrebuiltTab({
   const [underCarriageTier3Id, setUnderCarriageTier3Id] = useState('');
   const [underCarriageAxleCount, setUnderCarriageAxleCount] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
+  const [linkedAssemblyId, setLinkedAssemblyId] = useState('');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTrailerLengthId, setEditTrailerLengthId] = useState('');
@@ -1126,6 +1127,14 @@ function PrebuiltTab({
   const [editUnderCarriageTier3Id, setEditUnderCarriageTier3Id] = useState('');
   const [editUnderCarriageAxleCount, setEditUnderCarriageAxleCount] = useState('');
   const [editTotalPrice, setEditTotalPrice] = useState('');
+  const [editLinkedAssemblyId, setEditLinkedAssemblyId] = useState('');
+
+  const sortedAssemblies = useMemo(() => {
+    return [...allAssemblies].sort((a, b) => {
+      const t = (a.type || '').localeCompare(b.type || '');
+      return t !== 0 ? t : a.name.localeCompare(b.name);
+    });
+  }, [allAssemblies]);
 
   // Helper to get components by category and tier
   const getByStep = (cat: string, step: number) => {
