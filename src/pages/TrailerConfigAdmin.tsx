@@ -1199,9 +1199,11 @@ function PrebuiltTab({
       under_carriage_tier3_id: underCarriageTier3Id && underCarriageTier3Id !== 'none' ? underCarriageTier3Id : null,
       under_carriage_axle_count: underCarriageAxleCount ? parseInt(underCarriageAxleCount) : null,
       total_price: parseFloat(totalPrice) || 0,
+      linked_assembly_id: linkedAssemblyId && linkedAssemblyId !== 'none' ? linkedAssemblyId : null,
     });
     setTrailerTypeId(''); setTrailerLengthId(''); setFrontEndId(''); setFrontEndTier2Id(''); setBackEndId(''); setDeckTypeId('');
     setUnderCarriageId(''); setUnderCarriageTier2Id(''); setUnderCarriageTier3Id(''); setUnderCarriageAxleCount(''); setTotalPrice('');
+    setLinkedAssemblyId('');
   };
 
   const startEdit = (a: typeof assemblies[0]) => {
@@ -1216,6 +1218,7 @@ function PrebuiltTab({
     setEditUnderCarriageTier3Id((a as any).under_carriage_tier3_id || 'none');
     setEditUnderCarriageAxleCount(String((a as any).under_carriage_axle_count || ''));
     setEditTotalPrice(String(a.total_price));
+    setEditLinkedAssemblyId((a as any).linked_assembly_id || 'none');
   };
 
   const saveEdit = async (id: string) => {
@@ -1230,6 +1233,7 @@ function PrebuiltTab({
       under_carriage_tier3_id: editUnderCarriageTier3Id && editUnderCarriageTier3Id !== 'none' ? editUnderCarriageTier3Id : null,
       under_carriage_axle_count: editUnderCarriageAxleCount ? parseInt(editUnderCarriageAxleCount) : null,
       total_price: parseFloat(editTotalPrice) || 0,
+      linked_assembly_id: editLinkedAssemblyId && editLinkedAssemblyId !== 'none' ? editLinkedAssemblyId : null,
     });
     setEditingId(null);
   };
