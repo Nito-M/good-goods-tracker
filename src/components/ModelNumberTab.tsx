@@ -104,71 +104,132 @@ export function ModelNumberTab() {
         </CardHeader>
         <CardContent className="space-y-2">
           {slots.map((slot) => (
-            <div key={slot.id} className="grid grid-cols-12 gap-2 items-center p-2 rounded-md border bg-card">
-              <div className="col-span-1">
-                <Badge variant="outline">#{slot.position}</Badge>
-              </div>
-              <div className="col-span-3">
-                <Select
-                  value={slot.slot_kind}
-                  onValueChange={(v) => updateSlot(slot.id, { slot_kind: v as SlotKind })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ALL_SLOT_KINDS.map(k => (
-                      <SelectItem key={k} value={k}>{SLOT_KIND_LABELS[k]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-3">
-                {slot.slot_kind === 'fixed' ? (
-                  <Input
-                    placeholder="Fixed text (e.g. X)"
-                    defaultValue={slot.fixed_text || ''}
-                    onBlur={(e) => {
-                      if (e.target.value !== (slot.fixed_text || '')) {
-                        updateSlot(slot.id, { fixed_text: e.target.value });
-                      }
-                    }}
+            <div key={slot.id} className="space-y-2 p-2 rounded-md border bg-card">
+              <div className="grid grid-cols-12 gap-2 items-center">
+                <div className="col-span-1">
+                  <Badge variant="outline">#{slot.position}</Badge>
+                </div>
+                <div className="col-span-3">
+                  <Select
+                    value={slot.slot_kind}
+                    onValueChange={(v) => updateSlot(slot.id, { slot_kind: v as SlotKind })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ALL_SLOT_KINDS.map(k => (
+                        <SelectItem key={k} value={k}>{SLOT_KIND_LABELS[k]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-3">
+                  {slot.slot_kind === 'fixed' ? (
+                    <Input
+                      placeholder="Fixed text (e.g. X)"
+                      defaultValue={slot.fixed_text || ''}
+                      onBlur={(e) => {
+                        if (e.target.value !== (slot.fixed_text || '')) {
+                          updateSlot(slot.id, { fixed_text: e.target.value });
+                        }
+                      }}
+                    />
+                  ) : slot.slot_kind === 'empty' ? (
+                    <span className="text-xs text-muted-foreground">Skipped</span>
+                  ) : slot.slot_kind === 'conditional' ? (
+                    <span className="text-xs text-muted-foreground">
+                      Output is determined by rules only.
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      Default code per option (rules can override).
+                    </span>
+                  )}
+                </div>
+                <div className="col-span-2 flex items-center gap-2">
+                  <input
+                    id={`sep-${slot.id}`}
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={!!slot.separator_after}
+                    onChange={(e) => updateSlot(slot.id, { separator_after: e.target.checked })}
                   />
-                ) : slot.slot_kind === 'empty' ? (
-                  <span className="text-xs text-muted-foreground">Skipped</span>
-                ) : slot.slot_kind === 'conditional' ? (
-                  <span className="text-xs text-muted-foreground">
-                    Output is determined by rules only.
-                  </span>
+                  <Label htmlFor={`sep-${slot.id}`} className="text-xs cursor-pointer">
+                    Separator after
+                  </Label>
+                </div>
+                <div className="col-span-3 flex items-center justify-end gap-2">
+                  {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && slot.slot_kind !== 'conditional' && (
+                    <Button variant="outline" size="sm" onClick={() => setEditing(slot)}>
+                      <Pencil className="h-3 w-3 mr-1" /> Codes
+                    </Button>
+                  )}
+                  {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && (
+                    <Button variant="outline" size="sm" onClick={() => setEditingRules(slot)}>
+                      <Wand2 className="h-3 w-3 mr-1" />
+                      Rules{slot.conditional_rules && slot.conditional_rules.length > 0 ? ` (${slot.conditional_rules.length})` : ''}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Secondary (override) row */}
+              {slot.slot_kind !== 'empty' && (
+                slot.secondary_slot_kind && slot.secondary_slot_kind !== 'empty' ? (
+                  <div className="grid grid-cols-12 gap-2 items-center pl-6 border-l-2 border-primary/40">
+                    <div className="col-span-1 text-xs text-muted-foreground text-right">↳ if</div>
+                    <div className="col-span-3">
+                      <Select
+                        value={slot.secondary_slot_kind}
+                        onValueChange={(v) => updateSlot(slot.id, { secondary_slot_kind: v as SlotKind })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ALL_SLOT_KINDS.filter(k => k !== 'empty' && k !== 'conditional').map(k => (
+                            <SelectItem key={k} value={k}>{SLOT_KIND_LABELS[k]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-5">
+                      {slot.secondary_slot_kind === 'fixed' ? (
+                        <Input
+                          placeholder="Fixed text"
+                          defaultValue={slot.secondary_fixed_text || ''}
+                          onBlur={(e) => {
+                            if (e.target.value !== (slot.secondary_fixed_text || '')) {
+                              updateSlot(slot.id, { secondary_fixed_text: e.target.value });
+                            }
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          is selected, use its code instead of the primary.
+                        </span>
+                      )}
+                    </div>
+                    <div className="col-span-3 flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => updateSlot(slot.id, { secondary_slot_kind: null, secondary_fixed_text: null })}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" /> Remove override
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
-                  <span className="text-xs text-muted-foreground">
-                    Default code per option (rules can override).
-                  </span>
-                )}
-              </div>
-              <div className="col-span-2 flex items-center gap-2">
-                <input
-                  id={`sep-${slot.id}`}
-                  type="checkbox"
-                  className="h-4 w-4"
-                  checked={!!slot.separator_after}
-                  onChange={(e) => updateSlot(slot.id, { separator_after: e.target.checked })}
-                />
-                <Label htmlFor={`sep-${slot.id}`} className="text-xs cursor-pointer">
-                  Separator after
-                </Label>
-              </div>
-              <div className="col-span-3 flex items-center justify-end gap-2">
-                {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && slot.slot_kind !== 'conditional' && (
-                  <Button variant="outline" size="sm" onClick={() => setEditing(slot)}>
-                    <Pencil className="h-3 w-3 mr-1" /> Codes
-                  </Button>
-                )}
-                {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && (
-                  <Button variant="outline" size="sm" onClick={() => setEditingRules(slot)}>
-                    <Wand2 className="h-3 w-3 mr-1" />
-                    Rules{slot.conditional_rules && slot.conditional_rules.length > 0 ? ` (${slot.conditional_rules.length})` : ''}
-                  </Button>
-                )}
-              </div>
+                  <div className="pl-6">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => updateSlot(slot.id, { secondary_slot_kind: 'trailer_subtype' })}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add override slot
+                    </Button>
+                  </div>
+                )
+              )}
             </div>
           ))}
         </CardContent>

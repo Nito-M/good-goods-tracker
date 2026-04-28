@@ -73,7 +73,7 @@ export function useModelNumberTemplate() {
     else setTemplate({ ...template, separator });
   };
 
-  const updateSlot = async (id: string, updates: Partial<Pick<ModelNumberSlot, 'slot_kind' | 'fixed_text' | 'override_codes' | 'separator_after' | 'conditional_rules'>>) => {
+  const updateSlot = async (id: string, updates: Partial<Pick<ModelNumberSlot, 'slot_kind' | 'fixed_text' | 'override_codes' | 'separator_after' | 'conditional_rules' | 'secondary_slot_kind' | 'secondary_fixed_text'>>) => {
     const { error } = await (supabase as any)
       .from('model_number_slots')
       .update(updates as any)
