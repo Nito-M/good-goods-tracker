@@ -355,7 +355,7 @@ function CodesDialog({
     }
   };
 
-  const isAxle = slot.slot_kind === 'axle_count';
+  const isAxle = activeKind === 'axle_count';
 
   return (
     <Dialog open onOpenChange={onClose}>
