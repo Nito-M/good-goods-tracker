@@ -16,8 +16,18 @@ import {
 } from '@/hooks/useTrailerConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ALL_SLOT_KINDS, SLOT_KIND_LABELS, buildModelNumber, type ModelNumberSlot, type SlotKind } from '@/lib/modelNumber';
-import { Loader2, Pencil } from 'lucide-react';
+import {
+  ALL_SLOT_KINDS,
+  SLOT_KIND_LABELS,
+  buildModelNumber,
+  CONDITION_FIELDS,
+  CONDITION_FIELD_LABELS,
+  type ModelNumberSlot,
+  type SlotKind,
+  type ConditionalRule,
+  type ConditionField,
+} from '@/lib/modelNumber';
+import { Loader2, Pencil, Plus, Trash2, Wand2 } from 'lucide-react';
 
 export function ModelNumberTab() {
   const { template, slots, loading, updateSeparator, updateSlot, refetch } = useModelNumberTemplate();
