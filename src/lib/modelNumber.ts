@@ -129,7 +129,12 @@ function resolveByKind(
   fixedText: string | null | undefined,
   slot: ModelNumberSlot,
   ctx: BuildContext,
+  overrideCodes?: Record<string, string>,
 ): string {
+  // Build a slot-like object with the chosen override map so codeFor uses the right codes.
+  const slotForCodes: ModelNumberSlot = overrideCodes
+    ? { ...slot, override_codes: overrideCodes }
+    : slot;
   switch (kind) {
     case 'empty':
       return '';
@@ -140,36 +145,36 @@ function resolveByKind(
       return (fixedText || '').trim();
     case 'trailer_type':
       return ctx.trailerType
-        ? codeFor(slot, ctx.trailerType.id, (ctx.trailerType as any).model_code, ctx.trailerType.name)
+        ? codeFor(slotForCodes, ctx.trailerType.id, (ctx.trailerType as any).model_code, ctx.trailerType.name)
         : '';
     case 'trailer_subtype':
       return ctx.subtype
-        ? codeFor(slot, ctx.subtype.id, (ctx.subtype as any).model_code, ctx.subtype.name)
+        ? codeFor(slotForCodes, ctx.subtype.id, (ctx.subtype as any).model_code, ctx.subtype.name)
         : '';
     case 'trailer_length':
       return ctx.length
-        ? codeFor(slot, ctx.length.id, (ctx.length as any).model_code, ctx.length.label)
+        ? codeFor(slotForCodes, ctx.length.id, (ctx.length as any).model_code, ctx.length.label)
         : '';
     case 'axle_count': {
       if (ctx.axleCount == null) return '';
       const key = String(ctx.axleCount);
-      if (slot.override_codes && slot.override_codes[key]) return slot.override_codes[key];
+      if (slotForCodes.override_codes && slotForCodes.override_codes[key]) return slotForCodes.override_codes[key];
       return key;
     }
     case 'front_end':
-      return ctx.frontEnd ? codeFor(slot, ctx.frontEnd.id, (ctx.frontEnd as any).model_code, ctx.frontEnd.name) : '';
+      return ctx.frontEnd ? codeFor(slotForCodes, ctx.frontEnd.id, (ctx.frontEnd as any).model_code, ctx.frontEnd.name) : '';
     case 'front_end_tier2':
-      return ctx.frontEndTier2 ? codeFor(slot, ctx.frontEndTier2.id, (ctx.frontEndTier2 as any).model_code, ctx.frontEndTier2.name) : '';
+      return ctx.frontEndTier2 ? codeFor(slotForCodes, ctx.frontEndTier2.id, (ctx.frontEndTier2 as any).model_code, ctx.frontEndTier2.name) : '';
     case 'back_end':
-      return ctx.backEnd ? codeFor(slot, ctx.backEnd.id, (ctx.backEnd as any).model_code, ctx.backEnd.name) : '';
+      return ctx.backEnd ? codeFor(slotForCodes, ctx.backEnd.id, (ctx.backEnd as any).model_code, ctx.backEnd.name) : '';
     case 'deck_type':
-      return ctx.deckType ? codeFor(slot, ctx.deckType.id, (ctx.deckType as any).model_code, ctx.deckType.name) : '';
+      return ctx.deckType ? codeFor(slotForCodes, ctx.deckType.id, (ctx.deckType as any).model_code, ctx.deckType.name) : '';
     case 'under_carriage':
-      return ctx.underCarriage ? codeFor(slot, ctx.underCarriage.id, (ctx.underCarriage as any).model_code, ctx.underCarriage.name) : '';
+      return ctx.underCarriage ? codeFor(slotForCodes, ctx.underCarriage.id, (ctx.underCarriage as any).model_code, ctx.underCarriage.name) : '';
     case 'under_carriage_tier2':
-      return ctx.underCarriageTier2 ? codeFor(slot, ctx.underCarriageTier2.id, (ctx.underCarriageTier2 as any).model_code, ctx.underCarriageTier2.name) : '';
+      return ctx.underCarriageTier2 ? codeFor(slotForCodes, ctx.underCarriageTier2.id, (ctx.underCarriageTier2 as any).model_code, ctx.underCarriageTier2.name) : '';
     case 'under_carriage_tier3':
-      return ctx.underCarriageTier3 ? codeFor(slot, ctx.underCarriageTier3.id, (ctx.underCarriageTier3 as any).model_code, ctx.underCarriageTier3.name) : '';
+      return ctx.underCarriageTier3 ? codeFor(slotForCodes, ctx.underCarriageTier3.id, (ctx.underCarriageTier3 as any).model_code, ctx.underCarriageTier3.name) : '';
     default:
       return '';
   }
