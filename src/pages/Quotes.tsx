@@ -900,7 +900,7 @@ export function Quotes() {
                         step={0.1}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Applies markup on item cost to calculate unit price
+                        Applies markup on item price to calculate unit price
                       </p>
                     </div>
 
