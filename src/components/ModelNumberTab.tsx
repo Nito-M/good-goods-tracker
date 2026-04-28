@@ -38,7 +38,7 @@ export function ModelNumberTab() {
   const { assemblies: prebuilt } = usePrebuiltAssemblies();
 
   const [sep, setSep] = useState<string>('');
-  const [editing, setEditing] = useState<ModelNumberSlot | null>(null);
+  const [editing, setEditing] = useState<{ slot: ModelNumberSlot; mode: 'primary' | 'secondary' } | null>(null);
   const [editingRules, setEditingRules] = useState<ModelNumberSlot | null>(null);
 
   // Live preview from latest prebuilt assembly
