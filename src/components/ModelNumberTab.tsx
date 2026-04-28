@@ -26,7 +26,6 @@ export function ModelNumberTab() {
   const { lengths, refetch: refetchLengths } = useTrailerLengths();
   const { components, refetch: refetchComponents } = useAssemblyComponents();
   const { assemblies: prebuilt } = usePrebuiltAssemblies();
-  const { toast } = useToast();
 
   const [sep, setSep] = useState<string>('');
   const [editing, setEditing] = useState<ModelNumberSlot | null>(null);
