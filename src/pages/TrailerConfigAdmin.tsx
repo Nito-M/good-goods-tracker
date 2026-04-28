@@ -1090,12 +1090,13 @@ function ComponentsTab({
 
 // --- Prebuilt Assemblies Tab ---
 function PrebuiltTab({
-  assemblies, types, components, lengths, loading, onSave, onUpdate, onRemove,
+  assemblies, types, components, lengths, allAssemblies, loading, onSave, onUpdate, onRemove,
 }: {
   assemblies: ReturnType<typeof usePrebuiltAssemblies>['assemblies'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   components: ReturnType<typeof useAssemblyComponents>['components'];
   lengths: ReturnType<typeof useTrailerLengths>['lengths'];
+  allAssemblies: ReturnType<typeof useAssemblies>['assemblies'];
   loading: boolean;
   onSave: (config: any) => Promise<any>;
   onUpdate: (id: string, updates: any) => Promise<void>;
