@@ -56,6 +56,7 @@ export function useModelNumberTemplate() {
     setSlots(((slotRows || []) as any[]).map(r => ({
       ...r,
       override_codes: r.override_codes || {},
+      conditional_rules: r.conditional_rules || [],
     })));
     setLoading(false);
   }, [user]);
@@ -72,7 +73,7 @@ export function useModelNumberTemplate() {
     else setTemplate({ ...template, separator });
   };
 
-  const updateSlot = async (id: string, updates: Partial<Pick<ModelNumberSlot, 'slot_kind' | 'fixed_text' | 'override_codes' | 'separator_after'>>) => {
+  const updateSlot = async (id: string, updates: Partial<Pick<ModelNumberSlot, 'slot_kind' | 'fixed_text' | 'override_codes' | 'separator_after' | 'conditional_rules'>>) => {
     const { error } = await (supabase as any)
       .from('model_number_slots')
       .update(updates as any)
@@ -81,7 +82,12 @@ export function useModelNumberTemplate() {
       toast({ title: 'Error', description: 'Failed to update slot.', variant: 'destructive' });
       return;
     }
-    setSlots(prev => prev.map(s => s.id === id ? { ...s, ...updates, override_codes: (updates.override_codes as any) ?? s.override_codes } as ModelNumberSlot : s));
+    setSlots(prev => prev.map(s => s.id === id ? {
+      ...s,
+      ...updates,
+      override_codes: (updates.override_codes as any) ?? s.override_codes,
+      conditional_rules: (updates.conditional_rules as any) ?? s.conditional_rules,
+    } as ModelNumberSlot : s));
   };
 
   return { template, slots, loading, updateSeparator, updateSlot, refetch: fetchAll };
