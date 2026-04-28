@@ -2900,6 +2900,7 @@ export type Database = {
           front_end_id: string | null
           front_end_tier2_id: string | null
           id: string
+          linked_assembly_id: string | null
           total_price: number
           trailer_length_id: string | null
           trailer_subtype_id: string | null
@@ -2918,6 +2919,7 @@ export type Database = {
           front_end_id?: string | null
           front_end_tier2_id?: string | null
           id?: string
+          linked_assembly_id?: string | null
           total_price?: number
           trailer_length_id?: string | null
           trailer_subtype_id?: string | null
@@ -2936,6 +2938,7 @@ export type Database = {
           front_end_id?: string | null
           front_end_tier2_id?: string | null
           id?: string
+          linked_assembly_id?: string | null
           total_price?: number
           trailer_length_id?: string | null
           trailer_subtype_id?: string | null
@@ -2974,6 +2977,13 @@ export type Database = {
             columns: ["front_end_tier2_id"]
             isOneToOne: false
             referencedRelation: "assembly_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prebuilt_assemblies_linked_assembly_id_fkey"
+            columns: ["linked_assembly_id"]
+            isOneToOne: false
+            referencedRelation: "assemblies"
             referencedColumns: ["id"]
           },
           {
