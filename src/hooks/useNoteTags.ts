@@ -34,7 +34,7 @@ export function useNoteTags() {
         user_id: user.id, name: name.trim(), color,
       }).select().single();
       if (error) throw error;
-      const t: NoteTag = { id: data.id, userId: data.user_id, name: data.name, color: data.color, createdAt: data.created_at };
+      const t: NoteTag = { id: data.id, userId: data.user_id, name: data.name, color: (data.color || 'default') as NoteColor, createdAt: data.created_at };
       setTags((prev) => [...prev, t].sort((a, b) => a.name.localeCompare(b.name)));
       return t;
     } catch (e: any) {
