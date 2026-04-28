@@ -29,7 +29,7 @@ export function PrebuiltAssemblyDetail() {
 
   const { assemblies, loading, update } = usePrebuiltAssemblies();
   const { types } = useTrailerTypes();
-  const { components } = useAssemblyComponents();
+  const { components, getByCategory } = useAssemblyComponents();
   const { lengths } = useTrailerLengths();
   const { assemblies: allAssemblies } = useAssemblies();
 
