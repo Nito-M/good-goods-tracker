@@ -29,7 +29,7 @@ export function PrebuiltAssemblyDetail() {
 
   const { assemblies, loading, update } = usePrebuiltAssemblies();
   const { types } = useTrailerTypes();
-  const { components } = useAssemblyComponents();
+  const { components, getByCategory } = useAssemblyComponents();
   const { lengths } = useTrailerLengths();
   const { assemblies: allAssemblies } = useAssemblies();
 
@@ -70,42 +70,43 @@ export function PrebuiltAssemblyDetail() {
     setInitialized(true);
   }, [prebuilt, initialized]);
 
+  const trailerTypeId = prebuilt?.trailer_type_id || undefined;
+
   // Component lookups
   const findComp = (cid: string | null | undefined) =>
     cid ? components.find(c => c.id === cid) : undefined;
 
-  const getByStep = (cat: string, step: number) => {
-    if (step === 1) return components.filter(c => c.category === cat && !c.parent_component_id);
-    if (step === 2) {
-      const roots = components.filter(c => c.category === cat && !c.parent_component_id);
-      return components.filter(c => c.category === cat && c.parent_component_id && roots.some(r => r.id === c.parent_component_id));
-    }
-    if (step === 3) {
-      const roots = components.filter(c => c.category === cat && !c.parent_component_id);
-      const tier2 = components.filter(c => c.category === cat && c.parent_component_id && roots.some(r => r.id === c.parent_component_id));
-      return components.filter(c => c.category === cat && c.parent_component_id && tier2.some(t => t.id === c.parent_component_id));
-    }
-    return [];
-  };
-
-  const frontEndStep1 = getByStep('front_end', 1);
+  // Mirror Trailer Configurator: filter by compatible_trailer_type_ids + parent tier
+  const frontEndStep1 = useMemo(
+    () => getByCategory('front_end', trailerTypeId, null),
+    [components, trailerTypeId],
+  );
   const frontEndStep2 = useMemo(() => {
-    const id = fromVal(frontEndId);
-    return id ? getByStep('front_end', 2).filter(c => c.parent_component_id === id) : [];
-  }, [components, frontEndId]);
+    const fid = fromVal(frontEndId);
+    return fid ? getByCategory('front_end', trailerTypeId, fid) : [];
+  }, [components, trailerTypeId, frontEndId]);
 
-  const ucStep1 = getByStep('under_carriage', 1);
+  const ucStep1 = useMemo(
+    () => getByCategory('under_carriage', trailerTypeId, null),
+    [components, trailerTypeId],
+  );
   const ucStep2 = useMemo(() => {
-    const id = fromVal(underCarriageId);
-    return id ? getByStep('under_carriage', 2).filter(c => c.parent_component_id === id) : [];
-  }, [components, underCarriageId]);
+    const uid = fromVal(underCarriageId);
+    return uid ? getByCategory('under_carriage', trailerTypeId, uid) : [];
+  }, [components, trailerTypeId, underCarriageId]);
   const ucStep3 = useMemo(() => {
-    const id = fromVal(underCarriageTier2Id);
-    return id ? getByStep('under_carriage', 3).filter(c => c.parent_component_id === id) : [];
-  }, [components, underCarriageTier2Id]);
+    const uid = fromVal(underCarriageTier2Id);
+    return uid ? getByCategory('under_carriage', trailerTypeId, uid) : [];
+  }, [components, trailerTypeId, underCarriageTier2Id]);
 
-  const backEnds = components.filter(c => c.category === 'back_end');
-  const deckTypes = components.filter(c => c.category === 'deck_type');
+  const backEnds = useMemo(
+    () => getByCategory('back_end', trailerTypeId),
+    [components, trailerTypeId],
+  );
+  const deckTypes = useMemo(
+    () => getByCategory('deck_type', trailerTypeId),
+    [components, trailerTypeId],
+  );
 
   const sortedAssemblies = useMemo(
     () => [...allAssemblies].sort((a, b) => {
@@ -204,6 +205,12 @@ export function PrebuiltAssemblyDetail() {
       l.compatible_trailer_type_ids.includes(prebuilt.trailer_type_id),
   );
 
+  // Mirror Trailer Configurator: axle options come from the selected length
+  const selectedLength = lengths.find(l => l.id === fromVal(trailerLengthId));
+  const allowedAxleCounts = (selectedLength?.allowed_axle_counts && selectedLength.allowed_axle_counts.length > 0)
+    ? selectedLength.allowed_axle_counts
+    : [2, 3];
+
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between gap-2">
@@ -260,8 +267,9 @@ export function PrebuiltAssemblyDetail() {
                 <SelectTrigger className="h-8 w-44"><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>—</SelectItem>
-                  <SelectItem value="2">2 Axles</SelectItem>
-                  <SelectItem value="3">3 Axles</SelectItem>
+                  {allowedAxleCounts.map(n => (
+                    <SelectItem key={n} value={String(n)}>{n} Axles</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </FieldRow>
