@@ -159,7 +159,7 @@ export function ModelNumberTab() {
                 </div>
                 <div className="col-span-3 flex items-center justify-end gap-2">
                   {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && slot.slot_kind !== 'conditional' && (
-                    <Button variant="outline" size="sm" onClick={() => setEditing(slot)}>
+                    <Button variant="outline" size="sm" onClick={() => setEditing({ slot, mode: 'primary' })}>
                       <Pencil className="h-3 w-3 mr-1" /> Codes
                     </Button>
                   )}
