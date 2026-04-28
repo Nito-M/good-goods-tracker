@@ -309,6 +309,7 @@ export function Quotes() {
   };
 
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartBasePrices, setCartBasePrices] = useState<Record<string, number>>({});
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
   const [contactPersonName, setContactPersonName] = useState<string>('');
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
@@ -337,28 +338,30 @@ export function Quotes() {
     return (baseInCents + markupAmountInCents) / 100;
   };
 
-  // Apply markup to all cart items when markup changes
+  // Keep a stable pre-markup unit price for every quote line, including custom items.
   useEffect(() => {
-    if (markupPercent === '') {
-      // Revert to original prices (skip excluded items)
-      setCart(prev => {
-        return prev.map(c => {
-          if (!c.inventoryItemId || c.excludeMarkup) return c;
-          const item = inventoryItems.find(i => i.id === c.inventoryItemId);
-          return item ? { ...c, unitPrice: item.price } : c;
-        });
-      });
-    } else {
-      setCart(prev => {
-        if (prev.length === 0) return prev;
-        return prev.map(c => {
-          if (!c.inventoryItemId || c.excludeMarkup) return c;
-          const item = inventoryItems.find(i => i.id === c.inventoryItemId);
-          return item ? { ...c, unitPrice: calculateMarkupPrice(item.price, markupPercent as number) } : c;
-        });
-      });
-    }
-  }, [markupPercent]);
+    setCartBasePrices(prevBase => {
+      let next = prevBase;
+      for (const item of cart) {
+        if (next[item.id] === undefined) {
+          if (next === prevBase) next = { ...prevBase };
+          next[item.id] = item.unitPrice;
+        }
+      }
+      return next;
+    });
+  }, [cart]);
+
+  // Apply markup to every cart item's current base unit price.
+  useEffect(() => {
+    setCart(prev => prev.map(c => {
+      const basePrice = cartBasePrices[c.id] ?? c.unitPrice;
+      const nextPrice = markupPercent === '' || c.excludeMarkup
+        ? basePrice
+        : calculateMarkupPrice(basePrice, markupPercent as number);
+      return c.unitPrice === nextPrice ? c : { ...c, unitPrice: nextPrice };
+    }));
+  }, [markupPercent, cartBasePrices]);
   const [searchQuery, setSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
