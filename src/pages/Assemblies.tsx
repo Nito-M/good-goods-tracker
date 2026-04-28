@@ -559,7 +559,7 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
-              {partsAssemblies && partsAssemblies.length > 0 && (
+              {((partsAssemblies && partsAssemblies.length > 0) || otherAssemblies.length > 0) && (
                 <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowSubAssemblyPicker(true)}>
                   <PackagePlus className="h-4 w-4" /> Sub Assembly
                 </Button>
@@ -573,7 +573,9 @@ function AssemblyDetail({
           onClose={() => setShowSubAssemblyPicker(false)}
           onConfirm={(selections) => handleAddSubAssemblies(selections)}
           subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          fullAssemblies={otherAssemblies.map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           label1={(() => { try { const s = localStorage.getItem('parts-landing-names'); const n = s ? JSON.parse(s) : {}; return n['parts-assemblies'] || 'Parts Assemblies'; } catch { return 'Parts Assemblies'; } })()}
+          labelFullAssemblies="Assemblies"
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {
             const ids: string[] = [];
@@ -588,6 +590,7 @@ function AssemblyDetail({
             }
             return ids;
           })()}
+          existingFullAssemblyIds={items.map(i => i.nested_assembly_id).filter((x): x is string => !!x)}
         />
 
         <FullScreenPartsPicker
