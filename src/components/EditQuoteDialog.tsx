@@ -115,23 +115,41 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
     }
   }, [quote, defaultCompany]);
 
-  // Apply markup on top of each item's snapshot base price
+  // Apply markup on top of each item's snapshot base price.
+  // Lazily captures base prices for items (including newly added custom items)
+  // that don't yet have one recorded.
   useEffect(() => {
-    if (Object.keys(basePrices).length === 0) return;
+    setBasePrices(prevBase => {
+      let next = prevBase;
+      for (const item of items) {
+        if (next[item.id] === undefined) {
+          if (next === prevBase) next = { ...prevBase };
+          next[item.id] = item.unitPrice;
+        }
+      }
+      return next;
+    });
+  }, [items]);
+
+  useEffect(() => {
     setItems(prev => prev.map(item => {
-      const base = basePrices[item.id];
-      if (base === undefined) return item;
+      const base = basePrices[item.id] ?? item.unitPrice;
       if (markupPercent === '' || markupPercent === 0) {
-        return { ...item, unitPrice: base };
+        return item.unitPrice === base ? item : { ...item, unitPrice: base };
       }
       const baseInCents = Math.round(base * 100);
       const markupAmt = Math.round(baseInCents * ((markupPercent as number) / 100));
-      return { ...item, unitPrice: (baseInCents + markupAmt) / 100 };
+      const newPrice = (baseInCents + markupAmt) / 100;
+      return item.unitPrice === newPrice ? item : { ...item, unitPrice: newPrice };
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markupPercent, basePrices]);
 
   const updateItem = (itemId: string, updates: Partial<EditableQuoteItem>) => {
+    // If user manually edits the unit price, treat the new value as the base.
+    if (updates.unitPrice !== undefined) {
+      setBasePrices(prev => ({ ...prev, [itemId]: updates.unitPrice as number }));
+    }
     setItems(prev => prev.map(item =>
       item.id === itemId ? { ...item, ...updates } : item
     ));
@@ -139,6 +157,11 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
 
   const removeItem = (itemId: string) => {
     setItems(prev => prev.filter(item => item.id !== itemId));
+    setBasePrices(prev => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
   };
 
   const addCustomItem = () => {
