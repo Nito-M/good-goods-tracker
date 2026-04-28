@@ -348,3 +348,207 @@ function CodesDialog({
     </Dialog>
   );
 }
+
+// ===== Conditional Rules Dialog =====
+function RulesDialog({
+  slot,
+  onClose,
+  onSaved,
+}: {
+  slot: ModelNumberSlot;
+  onClose: () => void;
+  onSaved: (rules: ConditionalRule[]) => Promise<void>;
+}) {
+  const { types } = useTrailerTypes();
+  const { subtypes } = useTrailerSubtypes();
+  const { lengths } = useTrailerLengths();
+  const { components } = useAssemblyComponents();
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [rules, setRules] = useState<ConditionalRule[]>(slot.conditional_rules || []);
+
+  const optionsForField = (field: ConditionField): { id: string; name: string }[] => {
+    switch (field) {
+      case 'trailer_type': return types.map(t => ({ id: t.id, name: t.name }));
+      case 'trailer_subtype': return subtypes.map(s => ({ id: s.id, name: s.name }));
+      case 'trailer_length': return lengths.map(l => ({ id: l.id, name: l.label }));
+      case 'axle_count': return [1,2,3,4,5,6,7,8].map(n => ({ id: String(n), name: `${n} Axle${n===1?'':'s'}` }));
+      case 'front_end': return components.filter(c => c.category === 'front_end' && !c.parent_component_id).map(c => ({ id: c.id, name: c.name }));
+      case 'front_end_tier2': return components.filter(c => c.category === 'front_end' && c.parent_component_id).map(c => ({ id: c.id, name: c.name }));
+      case 'back_end': return components.filter(c => c.category === 'back_end').map(c => ({ id: c.id, name: c.name }));
+      case 'deck_type': return components.filter(c => c.category === 'deck_type').map(c => ({ id: c.id, name: c.name }));
+      case 'under_carriage': return components.filter(c => c.category === 'under_carriage' && !c.parent_component_id).map(c => ({ id: c.id, name: c.name }));
+      case 'under_carriage_tier2': return components.filter(c => c.category === 'under_carriage' && c.parent_component_id).map(c => ({ id: c.id, name: c.name }));
+      case 'under_carriage_tier3': {
+        const tier2Ids = new Set(components.filter(c => c.category === 'under_carriage' && c.parent_component_id).map(c => c.id));
+        return components.filter(c => c.category === 'under_carriage' && c.parent_component_id && tier2Ids.has(c.parent_component_id)).map(c => ({ id: c.id, name: c.name }));
+      }
+    }
+  };
+
+  const addRule = () => {
+    setRules(prev => [...prev, {
+      id: crypto.randomUUID(),
+      conditions: [{ field: 'trailer_type', value: '' }],
+      code: '',
+    }]);
+  };
+
+  const updateRule = (id: string, patch: Partial<ConditionalRule>) => {
+    setRules(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
+  };
+
+  const removeRule = (id: string) => {
+    setRules(prev => prev.filter(r => r.id !== id));
+  };
+
+  const updateCondition = (ruleId: string, idx: number, patch: Partial<{ field: ConditionField; value: string }>) => {
+    setRules(prev => prev.map(r => {
+      if (r.id !== ruleId) return r;
+      const conds = r.conditions.map((c, i) => i === idx ? { ...c, ...patch, ...(patch.field ? { value: '' } : {}) } : c);
+      return { ...r, conditions: conds };
+    }));
+  };
+
+  const addCondition = (ruleId: string) => {
+    setRules(prev => prev.map(r => r.id === ruleId && r.conditions.length < 2
+      ? { ...r, conditions: [...r.conditions, { field: 'deck_type', value: '' }] }
+      : r));
+  };
+
+  const removeCondition = (ruleId: string, idx: number) => {
+    setRules(prev => prev.map(r => r.id === ruleId
+      ? { ...r, conditions: r.conditions.filter((_, i) => i !== idx) }
+      : r));
+  };
+
+  const handleSave = async () => {
+    // Strip incomplete conditions
+    const cleaned = rules
+      .map(r => ({ ...r, conditions: r.conditions.filter(c => c.field && c.value) }))
+      .filter(r => r.conditions.length > 0);
+    setSaving(true);
+    try {
+      await onSaved(cleaned);
+      toast({ title: 'Rules saved' });
+      onClose();
+    } catch (e) {
+      console.error(e);
+      toast({ title: 'Error', description: 'Failed to save rules.', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Conditional Rules — Slot #{slot.position}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Rules are evaluated top-to-bottom. The first rule whose conditions all match
+            wins, and its code is used for this slot. If no rule matches, the slot's
+            normal default code is used (or empty for "Conditional" slots).
+          </p>
+
+          {rules.length === 0 && (
+            <div className="text-sm text-muted-foreground py-4 text-center border rounded-md">
+              No rules yet. Click "Add rule" below.
+            </div>
+          )}
+
+          {rules.map((rule, ri) => (
+            <div key={rule.id} className="border rounded-md p-3 space-y-2 bg-card">
+              <div className="flex items-center justify-between">
+                <Badge variant="outline">Rule #{ri + 1}</Badge>
+                <Button variant="ghost" size="sm" onClick={() => removeRule(rule.id)}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+
+              {rule.conditions.map((cond, ci) => {
+                const opts = optionsForField(cond.field);
+                return (
+                  <div key={ci} className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-2 text-xs text-muted-foreground text-right">
+                      {ci === 0 ? 'When' : 'AND'}
+                    </div>
+                    <div className="col-span-4">
+                      <Select
+                        value={cond.field}
+                        onValueChange={(v) => updateCondition(rule.id, ci, { field: v as ConditionField })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {CONDITION_FIELDS.map(f => (
+                            <SelectItem key={f} value={f}>{CONDITION_FIELD_LABELS[f]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-1 text-xs text-muted-foreground text-center">is</div>
+                    <div className="col-span-4">
+                      <Select
+                        value={cond.value || undefined}
+                        onValueChange={(v) => updateCondition(rule.id, ci, { value: v })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Choose…" /></SelectTrigger>
+                        <SelectContent>
+                          {opts.length === 0 && <SelectItem value="__none__" disabled>(no options)</SelectItem>}
+                          {opts.map(o => (
+                            <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-1 text-right">
+                      {rule.conditions.length > 1 && (
+                        <Button variant="ghost" size="sm" onClick={() => removeCondition(rule.id, ci)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="flex items-center gap-2">
+                {rule.conditions.length < 2 && (
+                  <Button variant="outline" size="sm" onClick={() => addCondition(rule.id)}>
+                    <Plus className="h-3 w-3 mr-1" /> Add AND condition
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-12 gap-2 items-center pt-2 border-t">
+                <div className="col-span-2 text-xs text-muted-foreground text-right">Then code</div>
+                <div className="col-span-4">
+                  <Input
+                    value={rule.code}
+                    onChange={(e) => updateRule(rule.id, { code: e.target.value })}
+                    placeholder="e.g. N"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <Button variant="outline" size="sm" onClick={addRule}>
+            <Plus className="h-3 w-3 mr-1" /> Add rule
+          </Button>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
