@@ -1419,7 +1419,14 @@ function PrebuiltTab({
                   const aAny = a as any;
                   return (
                     <TableRow key={a.id}>
-                      <TableCell className="font-medium">{getName(a.trailer_type_id, types)}</TableCell>
+                      <TableCell className="font-medium">
+                        <RouterLink
+                          to={`/trailer-configurator/admin/prebuilt/${a.id}`}
+                          className="text-primary hover:underline"
+                        >
+                          {getName(a.trailer_type_id, types)}
+                        </RouterLink>
+                      </TableCell>
                       <TableCell>{editingId === a.id ? (
                         <Select value={editTrailerLengthId} onValueChange={setEditTrailerLengthId}>
                           <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
