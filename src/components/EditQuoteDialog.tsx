@@ -96,6 +96,11 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
         unitCost: item.unitCost,
         notes: item.notes || '',
       })));
+      // Snapshot the original prices so markup recalculates from a stable base
+      const baseMap: Record<string, number> = {};
+      quote.items.forEach(item => { baseMap[item.id] = item.unitPrice; });
+      setBasePrices(baseMap);
+      setMarkupPercent('');
       setVendorId(quote.vendorId || '');
       setQuoteNumber(quote.quoteNumber);
       setTaxRate(quote.taxRate || null);
