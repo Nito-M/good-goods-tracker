@@ -527,6 +527,68 @@ export function AssetDetail() {
             )}
           </TabsContent>
 
+          {/* AVAILABLE PARTS (catalog of parts that could be installed) */}
+          <TabsContent value="available">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold">Available Parts</h3>
+                <p className="text-xs text-muted-foreground">Reference catalog of parts available for this asset (not yet installed).</p>
+              </div>
+              <Button size="sm" onClick={() => { resetAvailPartForm(); setAvailPartOpen(true); }}>
+                <Plus className="h-4 w-4 mr-1" /> Add Available Part
+              </Button>
+            </div>
+            {availableParts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No available parts saved yet.</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {availableParts.map((p) => (
+                  <Card key={p.id} className="overflow-hidden">
+                    {p.image_url ? (
+                      <img
+                        src={p.image_url}
+                        alt={p.name}
+                        className="w-full h-36 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => handleImageClick(p.image_url!)}
+                      />
+                    ) : (
+                      <div className="w-full h-36 bg-muted flex items-center justify-center">
+                        <Package className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <CardContent className="pt-3 space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-semibold text-sm leading-tight">{p.name}</h4>
+                        <div className="flex gap-1 shrink-0">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditAvailPart(p)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeAvailablePart(p.id)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      {p.sku && <p className="text-xs text-muted-foreground">SKU: {p.sku}</p>}
+                      {p.price != null && <p className="text-sm font-medium">${Number(p.price).toFixed(2)}</p>}
+                      {p.vendor && (
+                        <p className="text-xs">
+                          <span className="text-muted-foreground">Vendor: </span>{p.vendor}
+                          {p.vendor_location ? <span className="text-muted-foreground"> · {p.vendor_location}</span> : null}
+                        </p>
+                      )}
+                      {p.link && (
+                        <a href={p.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                          <ExternalLink className="h-3 w-3" /> View link
+                        </a>
+                      )}
+                      {p.notes && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{p.notes}</p>}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           {/* MAINTENANCE */}
           <TabsContent value="maintenance">
             <div className="flex items-center justify-between mb-4">
