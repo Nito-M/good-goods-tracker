@@ -361,7 +361,7 @@ function CodesDialog({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit codes — Slot #{slot.position} · {SLOT_KIND_LABELS[slot.slot_kind]}</DialogTitle>
+          <DialogTitle>Edit codes — Slot #{slot.position} · {SLOT_KIND_LABELS[activeKind]}{mode === 'secondary' ? ' (override)' : ''}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
