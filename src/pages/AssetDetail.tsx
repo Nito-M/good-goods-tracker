@@ -39,6 +39,70 @@ export function AssetDetail() {
   const { images: assetImages, primaryImage: primaryAssetImage, addImage: addAssetImage, deleteImage: deleteAssetImage, setPrimaryImage: setPrimaryAssetImage } = useAssetImages(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
   const { notes: assetNotes, addNote, updateNote: updateAssetNote, deleteNote } = useAssetNotes(id);
+  const { parts: availableParts, addPart: addAvailablePart, updatePart: updateAvailablePart, removePart: removeAvailablePart, uploadImage: uploadAvailablePartImage } = useAssetAvailableParts(id);
+
+  // Available parts dialog state
+  const [availPartOpen, setAvailPartOpen] = useState(false);
+  const [editingAvailPart, setEditingAvailPart] = useState<AssetAvailablePart | null>(null);
+  const [apName, setApName] = useState('');
+  const [apSku, setApSku] = useState('');
+  const [apPrice, setApPrice] = useState('');
+  const [apLink, setApLink] = useState('');
+  const [apImageUrl, setApImageUrl] = useState('');
+  const [apVendor, setApVendor] = useState('');
+  const [apVendorLocation, setApVendorLocation] = useState('');
+  const [apNotes, setApNotes] = useState('');
+  const [apUploading, setApUploading] = useState(false);
+
+  const resetAvailPartForm = () => {
+    setEditingAvailPart(null);
+    setApName(''); setApSku(''); setApPrice(''); setApLink('');
+    setApImageUrl(''); setApVendor(''); setApVendorLocation(''); setApNotes('');
+  };
+
+  const openEditAvailPart = (p: AssetAvailablePart) => {
+    setEditingAvailPart(p);
+    setApName(p.name);
+    setApSku(p.sku || '');
+    setApPrice(p.price?.toString() || '');
+    setApLink(p.link || '');
+    setApImageUrl(p.image_url || '');
+    setApVendor(p.vendor || '');
+    setApVendorLocation(p.vendor_location || '');
+    setApNotes(p.notes || '');
+    setAvailPartOpen(true);
+  };
+
+  const handleSaveAvailPart = async () => {
+    if (!apName.trim()) return;
+    const payload = {
+      name: apName.trim(),
+      sku: apSku.trim() || null,
+      price: apPrice ? parseFloat(apPrice) : null,
+      link: apLink.trim() || null,
+      image_url: apImageUrl || null,
+      vendor: apVendor.trim() || null,
+      vendor_location: apVendorLocation.trim() || null,
+      notes: apNotes.trim() || null,
+    };
+    if (editingAvailPart) {
+      await updateAvailablePart(editingAvailPart.id, payload);
+    } else {
+      await addAvailablePart(payload);
+    }
+    setAvailPartOpen(false);
+    resetAvailPartForm();
+    toast({ title: editingAvailPart ? 'Part updated' : 'Part added' });
+  };
+
+  const handleAvailPartImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setApUploading(true);
+    const url = await uploadAvailablePartImage(file);
+    if (url) setApImageUrl(url);
+    setApUploading(false);
+  };
   const { allItems } = useInventory();
   const { vendors } = useVendors();
   const { warehouses } = useWarehouses();
