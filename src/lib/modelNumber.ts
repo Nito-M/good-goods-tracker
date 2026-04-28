@@ -8,6 +8,7 @@ import type {
 export type SlotKind =
   | 'empty'
   | 'fixed'
+  | 'conditional'
   | 'trailer_type'
   | 'trailer_subtype'
   | 'trailer_length'
@@ -20,6 +21,33 @@ export type SlotKind =
   | 'under_carriage_tier2'
   | 'under_carriage_tier3';
 
+// A field that a conditional rule can test
+export type ConditionField =
+  | 'trailer_type'
+  | 'trailer_subtype'
+  | 'trailer_length'
+  | 'axle_count'
+  | 'front_end'
+  | 'front_end_tier2'
+  | 'back_end'
+  | 'deck_type'
+  | 'under_carriage'
+  | 'under_carriage_tier2'
+  | 'under_carriage_tier3';
+
+export interface ConditionClause {
+  field: ConditionField;
+  // For id-based fields, value is the id; for axle_count, value is the number as string.
+  value: string;
+}
+
+export interface ConditionalRule {
+  id: string;
+  // 1-2 clauses; all must match (AND).
+  conditions: ConditionClause[];
+  code: string;
+}
+
 export interface ModelNumberSlot {
   id: string;
   template_id: string;
@@ -29,6 +57,7 @@ export interface ModelNumberSlot {
   fixed_text: string | null;
   override_codes: Record<string, string>;
   separator_after?: boolean;
+  conditional_rules?: ConditionalRule[];
 }
 
 export interface ModelNumberTemplate {
