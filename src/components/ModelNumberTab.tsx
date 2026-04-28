@@ -207,13 +207,22 @@ export function ModelNumberTab() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-3 flex justify-end">
+                    <div className="col-span-3 flex justify-end gap-2">
+                      {slot.secondary_slot_kind !== 'fixed' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditing({ slot, mode: 'secondary' })}
+                        >
+                          <Pencil className="h-3 w-3 mr-1" /> Codes
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => updateSlot(slot.id, { secondary_slot_kind: null, secondary_fixed_text: null })}
+                        onClick={() => updateSlot(slot.id, { secondary_slot_kind: null, secondary_fixed_text: null, secondary_override_codes: {} })}
                       >
-                        <Trash2 className="h-3 w-3 mr-1" /> Remove override
+                        <Trash2 className="h-3 w-3 mr-1" /> Remove
                       </Button>
                     </div>
                   </div>
