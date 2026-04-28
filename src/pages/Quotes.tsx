@@ -209,7 +209,7 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
                   const newExclude = !c.excludeMarkup;
                   const item = inventoryItems.find(i => i.id === c.inventoryItemId);
                   if (!item) return;
-                  const newPrice = newExclude ? item.price : calculateMarkupPrice(item.cost, markupPercent as number);
+                  const newPrice = newExclude ? item.price : calculateMarkupPrice(item.price, markupPercent as number);
                   updateCartItem(c.id, { excludeMarkup: newExclude, unitPrice: newPrice });
                 }}
               >
