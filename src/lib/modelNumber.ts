@@ -28,6 +28,7 @@ export interface ModelNumberSlot {
   slot_kind: SlotKind;
   fixed_text: string | null;
   override_codes: Record<string, string>;
+  separator_after?: boolean;
 }
 
 export interface ModelNumberTemplate {
