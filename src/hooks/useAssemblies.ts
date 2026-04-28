@@ -28,6 +28,7 @@ export interface AssemblyItem {
   notes: string | null;
   part_id: string | null;
   parts_assembly_id: string | null;
+  nested_assembly_id: string | null;
   created_at: string;
 }
 
