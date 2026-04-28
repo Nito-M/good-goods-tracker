@@ -15,7 +15,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X, ArrowLeft, Link, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
 const CATEGORY_LABELS: Record<string, string> = {
   front_end: 'Front End',
