@@ -246,7 +246,8 @@ export function ModelNumberTab() {
 
       {editing && (
         <CodesDialog
-          slot={editing}
+          slot={editing.slot}
+          mode={editing.mode}
           onClose={() => setEditing(null)}
           onSaved={async () => {
             await Promise.all([refetch(), refetchSubtypes(), refetchLengths(), refetchComponents()]);
