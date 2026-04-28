@@ -206,20 +206,51 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' | 'parts2' }[]) => {
+  const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' | 'parts2' | 'assembly' }[]) => {
     setAddingSubAssemblyId('batch');
     try {
-      for (const { id: partsAssemblyId, source } of selections) {
+      for (const { id: selectedId, source } of selections) {
+        if (source === 'assembly') {
+          const sub = allAssemblies.find(a => a.id === selectedId);
+          if (!sub || sub.id === assembly.id) continue;
+
+          // Compute total cost from the nested assembly's items
+          const { data: subItems } = await (await import('@/integrations/supabase/client')).supabase
+            .from('assembly_items')
+            .select('quantity, unit_cost')
+            .eq('assembly_id', selectedId);
+
+          let totalCost = 0;
+          if (subItems) {
+            for (const row of subItems as any[]) {
+              totalCost += (row.quantity || 0) * (row.unit_cost || 0);
+            }
+          }
+
+          const price = sub.selling_price > 0 ? sub.selling_price : totalCost;
+
+          await addItem({
+            inventory_item_id: null,
+            item_name: sub.name,
+            sku: '',
+            quantity: 1,
+            unit_cost: price,
+            notes: sub.description || undefined,
+            nested_assembly_id: sub.id,
+          });
+          continue;
+        }
+
         if (source !== 'parts1') continue;
         const list = partsAssemblies;
         if (!list) continue;
-        const pa = list.find(a => a.id === partsAssemblyId);
+        const pa = list.find(a => a.id === selectedId);
         if (!pa) continue;
 
         const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
           .from('parts_assembly_items' as any)
           .select(`quantity, part_id, inventory_item_id, parts ( price ), inventory_items ( cost )`)
-          .eq('assembly_id', partsAssemblyId);
+          .eq('assembly_id', selectedId);
 
         let totalCost = 0;
         if (paItems) {
@@ -238,7 +269,7 @@ function AssemblyDetail({
           quantity: 1,
           unit_cost: price,
           notes: pa.description || undefined,
-          parts_assembly_id: partsAssemblyId,
+          parts_assembly_id: pa.id,
         });
       }
       onItemsChanged?.();
