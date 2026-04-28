@@ -2040,6 +2040,7 @@ export type Database = {
       }
       model_number_slots: {
         Row: {
+          conditional_rules: Json
           created_at: string
           fixed_text: string | null
           id: string
@@ -2052,6 +2053,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          conditional_rules?: Json
           created_at?: string
           fixed_text?: string | null
           id?: string
@@ -2064,6 +2066,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          conditional_rules?: Json
           created_at?: string
           fixed_text?: string | null
           id?: string
