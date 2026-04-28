@@ -121,7 +121,7 @@ export function ModelNumberTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-4">
+              <div className="col-span-3">
                 {slot.slot_kind === 'fixed' ? (
                   <Input
                     placeholder="Fixed text (e.g. X)"
@@ -134,9 +134,13 @@ export function ModelNumberTab() {
                   />
                 ) : slot.slot_kind === 'empty' ? (
                   <span className="text-xs text-muted-foreground">Skipped</span>
+                ) : slot.slot_kind === 'conditional' ? (
+                  <span className="text-xs text-muted-foreground">
+                    Output is determined by rules only.
+                  </span>
                 ) : (
                   <span className="text-xs text-muted-foreground">
-                    Uses each option's Model Code (override per slot if needed).
+                    Default code per option (rules can override).
                   </span>
                 )}
               </div>
@@ -152,10 +156,16 @@ export function ModelNumberTab() {
                   Separator after
                 </Label>
               </div>
-              <div className="col-span-2 text-right">
-                {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && (
+              <div className="col-span-3 flex items-center justify-end gap-2">
+                {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && slot.slot_kind !== 'conditional' && (
                   <Button variant="outline" size="sm" onClick={() => setEditing(slot)}>
-                    <Pencil className="h-3 w-3 mr-1" /> Edit codes
+                    <Pencil className="h-3 w-3 mr-1" /> Codes
+                  </Button>
+                )}
+                {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && (
+                  <Button variant="outline" size="sm" onClick={() => setEditingRules(slot)}>
+                    <Wand2 className="h-3 w-3 mr-1" />
+                    Rules{slot.conditional_rules && slot.conditional_rules.length > 0 ? ` (${slot.conditional_rules.length})` : ''}
                   </Button>
                 )}
               </div>
@@ -170,6 +180,15 @@ export function ModelNumberTab() {
           onClose={() => setEditing(null)}
           onSaved={async () => {
             await Promise.all([refetch(), refetchSubtypes(), refetchLengths(), refetchComponents()]);
+          }}
+        />
+      )}
+      {editingRules && (
+        <RulesDialog
+          slot={editingRules}
+          onClose={() => setEditingRules(null)}
+          onSaved={async (rules) => {
+            await updateSlot(editingRules.id, { conditional_rules: rules });
           }}
         />
       )}
