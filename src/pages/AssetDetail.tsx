@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { useAssets, useAssetParts, useAssetMaintenance, useAssetDocuments, useAssetNotes } from '@/hooks/useAssets';
+import { useAssetAvailableParts, AssetAvailablePart } from '@/hooks/useAssetAvailableParts';
 import { useAssetImages } from '@/hooks/useAssetImages';
 import { useInventory } from '@/hooks/useInventory';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
