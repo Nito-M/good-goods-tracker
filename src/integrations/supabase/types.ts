@@ -2045,6 +2045,7 @@ export type Database = {
           id: string
           override_codes: Json
           position: number
+          separator_after: boolean
           slot_kind: string
           template_id: string
           updated_at: string
@@ -2056,6 +2057,7 @@ export type Database = {
           id?: string
           override_codes?: Json
           position: number
+          separator_after?: boolean
           slot_kind?: string
           template_id: string
           updated_at?: string
@@ -2067,6 +2069,7 @@ export type Database = {
           id?: string
           override_codes?: Json
           position?: number
+          separator_after?: boolean
           slot_kind?: string
           template_id?: string
           updated_at?: string
