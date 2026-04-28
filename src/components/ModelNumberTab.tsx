@@ -39,6 +39,7 @@ export function ModelNumberTab() {
 
   const [sep, setSep] = useState<string>('');
   const [editing, setEditing] = useState<ModelNumberSlot | null>(null);
+  const [editingRules, setEditingRules] = useState<ModelNumberSlot | null>(null);
 
   // Live preview from latest prebuilt assembly
   const preview = useMemo(() => {
