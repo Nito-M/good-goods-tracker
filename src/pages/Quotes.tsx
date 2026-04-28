@@ -385,7 +385,7 @@ export function Quotes() {
   }, [defaultCompany]);
 
   const handleEditQuote = (quote: Quote) => {
-    setCart(quote.items.map(item => ({
+    const quoteCartItems = quote.items.map(item => ({
       id: item.id,
       inventoryItemId: item.inventoryItemId,
       itemName: item.itemName,
@@ -395,7 +395,9 @@ export function Quotes() {
       unitPrice: item.unitPrice,
       unitCost: item.unitCost,
       notes: item.notes || '',
-    })));
+    }));
+    setCart(quoteCartItems);
+    setCartBasePrices(Object.fromEntries(quoteCartItems.map(item => [item.id, item.unitPrice])));
     setSelectedVendorId(quote.vendorId || '');
     setContactPersonName(quote.contactPersonName || '');
     setCustomQuoteNumber(quote.quoteNumber);
@@ -416,6 +418,7 @@ export function Quotes() {
 
   const resetForm = () => {
     setCart([]);
+    setCartBasePrices({});
     setSelectedVendorId('');
     setContactPersonName('');
     setCustomQuoteNumber('');
@@ -531,6 +534,9 @@ export function Quotes() {
   };
 
   const updateCartItem = (itemId: string, updates: Partial<CartItem>) => {
+    if (updates.unitPrice !== undefined) {
+      setCartBasePrices(prev => ({ ...prev, [itemId]: updates.unitPrice as number }));
+    }
     setCart((prev) =>
       prev.map((c) =>
         c.id === itemId
@@ -546,6 +552,11 @@ export function Quotes() {
 
   const removeFromCart = (itemId: string) => {
     setCart((prev) => prev.filter((c) => c.id !== itemId));
+    setCartBasePrices(prev => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
   };
 
   const subtotal = useMemo(
