@@ -316,7 +316,7 @@ function CodesDialog({
       default:
         return [];
     }
-  }, [slot.slot_kind, types, subtypes, lengths, components]);
+  }, [activeKind, types, subtypes, lengths, components]);
 
   const [defaultEdits, setDefaultEdits] = useState<Record<string, string>>({});
 
