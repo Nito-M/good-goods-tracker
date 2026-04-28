@@ -1370,6 +1370,21 @@ function PrebuiltTab({
             <Label>Total Price</Label>
             <Input type="number" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} placeholder="0.00" />
           </div>
+
+          <div className="space-y-1">
+            <Label>Linked Assembly <span className="text-sky-400 text-xs">(optional)</span></Label>
+            <Select value={linkedAssemblyId} onValueChange={setLinkedAssemblyId}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="none">None</SelectItem>
+                {sortedAssemblies.map(a => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.type ? `[${a.type}] ` : ''}{a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <Button onClick={handleAdd} disabled={!trailerTypeId}>
           <Plus className="h-4 w-4 mr-1" /> Add Prebuilt Assembly
