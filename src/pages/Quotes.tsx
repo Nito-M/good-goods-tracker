@@ -209,7 +209,7 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
                   const newExclude = !c.excludeMarkup;
                   const item = inventoryItems.find(i => i.id === c.inventoryItemId);
                   if (!item) return;
-                  const newPrice = newExclude ? item.price : calculateMarkupPrice(item.cost, markupPercent as number);
+                  const newPrice = newExclude ? item.price : calculateMarkupPrice(item.price, markupPercent as number);
                   updateCartItem(c.id, { excludeMarkup: newExclude, unitPrice: newPrice });
                 }}
               >
@@ -331,10 +331,10 @@ export function Quotes() {
     }
   }, [vendors, pendingCustomerName]);
 
-  const calculateMarkupPrice = (cost: number, markup: number): number => {
-    const costInCents = Math.round(cost * 100);
-    const markupAmountInCents = Math.round(costInCents * (markup / 100));
-    return (costInCents + markupAmountInCents) / 100;
+  const calculateMarkupPrice = (basePrice: number, markup: number): number => {
+    const baseInCents = Math.round(basePrice * 100);
+    const markupAmountInCents = Math.round(baseInCents * (markup / 100));
+    return (baseInCents + markupAmountInCents) / 100;
   };
 
   // Apply markup to all cart items when markup changes
@@ -354,7 +354,7 @@ export function Quotes() {
         return prev.map(c => {
           if (!c.inventoryItemId || c.excludeMarkup) return c;
           const item = inventoryItems.find(i => i.id === c.inventoryItemId);
-          return item ? { ...c, unitPrice: calculateMarkupPrice(item.cost, markupPercent as number) } : c;
+          return item ? { ...c, unitPrice: calculateMarkupPrice(item.price, markupPercent as number) } : c;
         });
       });
     }
@@ -489,7 +489,7 @@ export function Quotes() {
         sku: item.sku,
         quantity: null,
         quantityUnit: item.quantityUnit,
-        unitPrice: markupPercent !== '' ? calculateMarkupPrice(item.cost, markupPercent as number) : item.price,
+        unitPrice: markupPercent !== '' ? calculateMarkupPrice(item.price, markupPercent as number) : item.price,
         unitCost: item.cost,
         notes: '',
       }];
@@ -900,7 +900,7 @@ export function Quotes() {
                         step={0.1}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Applies markup on item cost to calculate unit price
+                        Applies markup on item price to calculate unit price
                       </p>
                     </div>
 
