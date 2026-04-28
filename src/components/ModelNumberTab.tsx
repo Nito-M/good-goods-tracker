@@ -290,7 +290,7 @@ function CodesDialog({
   const [axleNumbers] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8]);
 
   const items = useMemo(() => {
-    switch (slot.slot_kind) {
+    switch (activeKind) {
       case 'trailer_type':
         return types.map(t => ({ id: t.id, name: t.name, defaultCode: (t as any).model_code, table: 'trailer_types' as const }));
       case 'trailer_subtype':
