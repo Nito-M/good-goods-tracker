@@ -8,6 +8,7 @@ export interface TrailerType {
   user_id: string;
   name: string;
   image_url: string | null;
+  model_code: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +23,7 @@ export interface AssemblyComponent {
   compatible_trailer_type_ids: string[];
   assembly_id: string | null;
   parent_component_id: string | null;
+  model_code: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,7 +80,7 @@ export function useTrailerTypes() {
     return data as TrailerType;
   };
 
-  const update = async (id: string, updates: { name?: string; image_url?: string | null }) => {
+  const update = async (id: string, updates: { name?: string; image_url?: string | null; model_code?: string | null }) => {
     const { error } = await supabase.from('trailer_types').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchTypes();
@@ -134,7 +136,7 @@ export function useAssemblyComponents() {
     return data as AssemblyComponent;
   };
 
-  const update = async (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null; parent_component_id?: string | null }) => {
+  const update = async (id: string, updates: { name?: string; image_url?: string | null; price?: number; compatible_trailer_type_ids?: string[]; assembly_id?: string | null; parent_component_id?: string | null; model_code?: string | null }) => {
     const { error } = await supabase.from('assembly_components').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchComponents();
@@ -252,6 +254,7 @@ export interface TrailerLength {
   compatible_trailer_type_ids: string[];
   compatible_trailer_subtype_ids: string[];
   allowed_axle_counts: number[];
+  model_code: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -288,7 +291,7 @@ export function useTrailerLengths() {
     return data as TrailerLength;
   };
 
-  const update = async (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[]; allowed_axle_counts?: number[] }) => {
+  const update = async (id: string, updates: { label?: string; compatible_trailer_type_ids?: string[]; compatible_trailer_subtype_ids?: string[]; allowed_axle_counts?: number[]; model_code?: string | null }) => {
     const { error } = await supabase.from('trailer_lengths').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchLengths();
@@ -321,6 +324,7 @@ export interface TrailerSubtype {
   name: string;
   image_url: string | null;
   trailer_type_id: string;
+  model_code: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -357,7 +361,7 @@ export function useTrailerSubtypes() {
     return data as TrailerSubtype;
   };
 
-  const update = async (id: string, updates: { name?: string; image_url?: string | null; trailer_type_id?: string }) => {
+  const update = async (id: string, updates: { name?: string; image_url?: string | null; trailer_type_id?: string; model_code?: string | null }) => {
     const { error } = await supabase.from('trailer_subtypes').update(updates).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchSubtypes();

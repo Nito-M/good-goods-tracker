@@ -17,6 +17,8 @@ import {
   useTrailerLengths,
 } from '@/hooks/useTrailerConfig';
 import { useAssemblies } from '@/hooks/useAssemblies';
+import { useModelNumberTemplate } from '@/hooks/useModelNumberTemplate';
+import { buildModelNumber } from '@/lib/modelNumber';
 
 const NONE = 'none';
 const toVal = (v: string | null | undefined) => v || NONE;
@@ -232,6 +234,18 @@ export function PrebuiltAssemblyDetail() {
         <div>
           <h1 className="text-2xl font-bold">{trailerType?.name || 'Prebuilt Trailer'}</h1>
           <p className="text-muted-foreground text-sm">Edit any field — changes save automatically.</p>
+          <ModelNumberLine
+            trailerType={trailerType}
+            lengthId={fromVal(trailerLengthId)}
+            frontEndId={fromVal(frontEndId)}
+            frontEndTier2Id={fromVal(frontEndTier2Id)}
+            backEndId={fromVal(backEndId)}
+            deckTypeId={fromVal(deckTypeId)}
+            underCarriageId={fromVal(underCarriageId)}
+            underCarriageTier2Id={fromVal(underCarriageTier2Id)}
+            underCarriageTier3Id={fromVal(underCarriageTier3Id)}
+            axleCount={underCarriageAxleCount ? Number(underCarriageAxleCount) : null}
+          />
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground uppercase">Total Price</p>
@@ -490,3 +504,44 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
 }
 
 export default PrebuiltAssemblyDetail;
+
+function ModelNumberLine(props: {
+  trailerType: any;
+  lengthId: string | null;
+  frontEndId: string | null;
+  frontEndTier2Id: string | null;
+  backEndId: string | null;
+  deckTypeId: string | null;
+  underCarriageId: string | null;
+  underCarriageTier2Id: string | null;
+  underCarriageTier3Id: string | null;
+  axleCount: number | null;
+}) {
+  const { template, slots } = useModelNumberTemplate();
+  const { components } = useAssemblyComponents();
+  const { lengths } = useTrailerLengths();
+  const findComp = (id: string | null) => id ? components.find(c => c.id === id) : null;
+  const length = props.lengthId ? lengths.find(l => l.id === props.lengthId) : null;
+  const number = buildModelNumber(
+    template ? { separator: template.separator, slots } : null,
+    {
+      trailerType: props.trailerType,
+      length,
+      axleCount: props.axleCount,
+      frontEnd: findComp(props.frontEndId),
+      frontEndTier2: findComp(props.frontEndTier2Id),
+      backEnd: findComp(props.backEndId),
+      deckType: findComp(props.deckTypeId),
+      underCarriage: findComp(props.underCarriageId),
+      underCarriageTier2: findComp(props.underCarriageTier2Id),
+      underCarriageTier3: findComp(props.underCarriageTier3Id),
+    }
+  );
+  if (!number) return null;
+  return (
+    <p className="text-sm mt-1">
+      <span className="text-muted-foreground">Model #: </span>
+      <span className="font-mono font-semibold">{number}</span>
+    </p>
+  );
+}

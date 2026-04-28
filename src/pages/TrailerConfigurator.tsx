@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, useTrailerSubtypes, PrebuiltAssembly } from '@/hooks/useTrailerConfig';
+import { useModelNumberTemplate } from '@/hooks/useModelNumberTemplate';
+import { buildModelNumber } from '@/lib/modelNumber';
 import { ArrowLeft, ArrowRight, Check, Package, AlertCircle, Settings, Download, StickyNote, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -108,6 +110,25 @@ export function TrailerConfigurator() {
 
   const underCarriageTotal = (selectedUnderCarriage?.price || 0) + (selectedUnderCarriageSub?.price || 0) + (selectedUnderCarriageTier3?.price || 0);
   const totalPrice = (selectedFront?.price || 0) + (selectedFrontSub?.price || 0) + (selectedBack?.price || 0) + (selectedDeck?.price || 0) + underCarriageTotal;
+
+  // Model number — live computed from current selections
+  const { template: modelTemplate, slots: modelSlots } = useModelNumberTemplate();
+  const modelNumber = useMemo(() => buildModelNumber(
+    modelTemplate ? { separator: modelTemplate.separator, slots: modelSlots } : null,
+    {
+      trailerType: selectedTrailer,
+      subtype: selectedSubtype,
+      length: selectedLength,
+      axleCount: axleCount,
+      frontEnd: selectedFront,
+      frontEndTier2: selectedFrontSub,
+      backEnd: selectedBack,
+      deckType: selectedDeck,
+      underCarriage: selectedUnderCarriage,
+      underCarriageTier2: selectedUnderCarriageSub,
+      underCarriageTier3: selectedUnderCarriageTier3,
+    }
+  ), [modelTemplate, modelSlots, selectedTrailer, selectedSubtype, selectedLength, axleCount, selectedFront, selectedFrontSub, selectedBack, selectedDeck, selectedUnderCarriage, selectedUnderCarriageSub, selectedUnderCarriageTier3]);
 
   // Lookup prebuilt assembly when entering summary step (now step 7)
   useEffect(() => {
@@ -625,6 +646,12 @@ export function TrailerConfigurator() {
                           <SummaryRow label="Under Carriage" value="None" />
                         )}
                       </div>
+                      {modelNumber && (
+                        <div className="border-t pt-4 flex justify-between items-center">
+                          <span className="text-lg font-semibold">Model #</span>
+                          <span className="text-xl font-mono font-semibold">{modelNumber}</span>
+                        </div>
+                      )}
                       <div className="border-t pt-4 flex justify-between items-center">
                         <span className="text-lg font-semibold">Total Price</span>
                         <span className="text-2xl font-bold text-primary">

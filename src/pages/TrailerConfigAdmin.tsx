@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTrailerTypes, useAssemblyComponents, usePrebuiltAssemblies, useTrailerLengths, useTrailerSubtypes } from '@/hooks/useTrailerConfig';
+import { ModelNumberTab } from '@/components/ModelNumberTab';
 import { useTrailerImageUpload } from '@/hooks/useTrailerImageUpload';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { useInventory } from '@/hooks/useInventory';
@@ -163,12 +164,13 @@ export function TrailerConfigAdmin() {
       </div>
 
       <Tabs defaultValue="trailer_types">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="trailer_types">Trailer Types</TabsTrigger>
           <TabsTrigger value="trailer_subtypes">Subtypes</TabsTrigger>
           <TabsTrigger value="trailer_lengths">Trailer Lengths</TabsTrigger>
           <TabsTrigger value="components">Components</TabsTrigger>
           <TabsTrigger value="prebuilt">Prebuilt Assemblies</TabsTrigger>
+          <TabsTrigger value="model_number">Model Number</TabsTrigger>
         </TabsList>
 
         <TabsContent value="trailer_types" className="mt-4">
@@ -189,6 +191,10 @@ export function TrailerConfigAdmin() {
 
         <TabsContent value="prebuilt" className="mt-4">
           <PrebuiltTab assemblies={prebuiltAssemblies} types={types} components={components} lengths={lengths} allAssemblies={allAssemblies} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
+        </TabsContent>
+
+        <TabsContent value="model_number" className="mt-4">
+          <ModelNumberTab />
         </TabsContent>
       </Tabs>
     </div>
