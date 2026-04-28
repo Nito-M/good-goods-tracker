@@ -488,6 +488,7 @@ export function Quotes() {
             : c
         );
       }
+      setCartBasePrices(base => ({ ...base, [item.id]: item.price }));
       return [...prev, {
         id: item.id,
         inventoryItemId: item.id,
@@ -504,6 +505,7 @@ export function Quotes() {
 
   const addCustomItem = () => {
     const customId = `custom-${Date.now()}`;
+    setCartBasePrices(prev => ({ ...prev, [customId]: 0 }));
     setCart((prev) => [...prev, {
       id: customId,
       inventoryItemId: null,
@@ -519,6 +521,7 @@ export function Quotes() {
 
   const addAssemblyToCart = (assembly: { id: string; name: string; description: string | null; selling_price: number }) => {
     const cartId = `assembly-${assembly.id}-${Date.now()}`;
+    setCartBasePrices(prev => ({ ...prev, [cartId]: assembly.selling_price }));
     setCart((prev) => [...prev, {
       id: cartId,
       inventoryItemId: null,
@@ -534,7 +537,7 @@ export function Quotes() {
   };
 
   const updateCartItem = (itemId: string, updates: Partial<CartItem>) => {
-    if (updates.unitPrice !== undefined) {
+    if (updates.unitPrice !== undefined && updates.excludeMarkup === undefined) {
       setCartBasePrices(prev => ({ ...prev, [itemId]: updates.unitPrice as number }));
     }
     setCart((prev) =>
