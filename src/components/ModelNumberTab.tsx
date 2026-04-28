@@ -38,7 +38,7 @@ export function ModelNumberTab() {
   const { assemblies: prebuilt } = usePrebuiltAssemblies();
 
   const [sep, setSep] = useState<string>('');
-  const [editing, setEditing] = useState<ModelNumberSlot | null>(null);
+  const [editing, setEditing] = useState<{ slot: ModelNumberSlot; mode: 'primary' | 'secondary' } | null>(null);
   const [editingRules, setEditingRules] = useState<ModelNumberSlot | null>(null);
 
   // Live preview from latest prebuilt assembly
@@ -159,7 +159,7 @@ export function ModelNumberTab() {
                 </div>
                 <div className="col-span-3 flex items-center justify-end gap-2">
                   {slot.slot_kind !== 'empty' && slot.slot_kind !== 'fixed' && slot.slot_kind !== 'conditional' && (
-                    <Button variant="outline" size="sm" onClick={() => setEditing(slot)}>
+                    <Button variant="outline" size="sm" onClick={() => setEditing({ slot, mode: 'primary' })}>
                       <Pencil className="h-3 w-3 mr-1" /> Codes
                     </Button>
                   )}
@@ -207,13 +207,22 @@ export function ModelNumberTab() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-3 flex justify-end">
+                    <div className="col-span-3 flex justify-end gap-2">
+                      {slot.secondary_slot_kind !== 'fixed' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditing({ slot, mode: 'secondary' })}
+                        >
+                          <Pencil className="h-3 w-3 mr-1" /> Codes
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => updateSlot(slot.id, { secondary_slot_kind: null, secondary_fixed_text: null })}
+                        onClick={() => updateSlot(slot.id, { secondary_slot_kind: null, secondary_fixed_text: null, secondary_override_codes: {} })}
                       >
-                        <Trash2 className="h-3 w-3 mr-1" /> Remove override
+                        <Trash2 className="h-3 w-3 mr-1" /> Remove
                       </Button>
                     </div>
                   </div>
@@ -237,7 +246,8 @@ export function ModelNumberTab() {
 
       {editing && (
         <CodesDialog
-          slot={editing}
+          slot={editing.slot}
+          mode={editing.mode}
           onClose={() => setEditing(null)}
           onSaved={async () => {
             await Promise.all([refetch(), refetchSubtypes(), refetchLengths(), refetchComponents()]);
@@ -259,10 +269,12 @@ export function ModelNumberTab() {
 
 function CodesDialog({
   slot,
+  mode = 'primary',
   onClose,
   onSaved,
 }: {
   slot: ModelNumberSlot;
+  mode?: 'primary' | 'secondary';
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
@@ -272,11 +284,13 @@ function CodesDialog({
   const { components } = useAssemblyComponents();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [overrides, setOverrides] = useState<Record<string, string>>(slot.override_codes || {});
+  const activeKind = mode === 'secondary' ? (slot.secondary_slot_kind as SlotKind) : slot.slot_kind;
+  const initialOverrides = mode === 'secondary' ? (slot.secondary_override_codes || {}) : (slot.override_codes || {});
+  const [overrides, setOverrides] = useState<Record<string, string>>(initialOverrides);
   const [axleNumbers] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8]);
 
   const items = useMemo(() => {
-    switch (slot.slot_kind) {
+    switch (activeKind) {
       case 'trailer_type':
         return types.map(t => ({ id: t.id, name: t.name, defaultCode: (t as any).model_code, table: 'trailer_types' as const }));
       case 'trailer_subtype':
@@ -302,7 +316,7 @@ function CodesDialog({
       default:
         return [];
     }
-  }, [slot.slot_kind, types, subtypes, lengths, components]);
+  }, [activeKind, types, subtypes, lengths, components]);
 
   const [defaultEdits, setDefaultEdits] = useState<Record<string, string>>({});
 
@@ -322,9 +336,12 @@ function CodesDialog({
           await (supabase as any).from(table).update({ model_code: r.code || null }).eq('id', r.id);
         }
       }
+      const slotPatch = mode === 'secondary'
+        ? { secondary_override_codes: overrides }
+        : { override_codes: overrides };
       await supabase
         .from('model_number_slots')
-        .update({ override_codes: overrides } as any)
+        .update(slotPatch as any)
         .eq('id', slot.id);
 
       await onSaved();
@@ -338,13 +355,13 @@ function CodesDialog({
     }
   };
 
-  const isAxle = slot.slot_kind === 'axle_count';
+  const isAxle = activeKind === 'axle_count';
 
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit codes — Slot #{slot.position} · {SLOT_KIND_LABELS[slot.slot_kind]}</DialogTitle>
+          <DialogTitle>Edit codes — Slot #{slot.position} · {SLOT_KIND_LABELS[activeKind]}{mode === 'secondary' ? ' (override)' : ''}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">

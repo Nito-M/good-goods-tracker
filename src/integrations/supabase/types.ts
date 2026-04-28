@@ -2047,6 +2047,7 @@ export type Database = {
           override_codes: Json
           position: number
           secondary_fixed_text: string | null
+          secondary_override_codes: Json
           secondary_slot_kind: string | null
           separator_after: boolean
           slot_kind: string
@@ -2062,6 +2063,7 @@ export type Database = {
           override_codes?: Json
           position: number
           secondary_fixed_text?: string | null
+          secondary_override_codes?: Json
           secondary_slot_kind?: string | null
           separator_after?: boolean
           slot_kind?: string
@@ -2077,6 +2079,7 @@ export type Database = {
           override_codes?: Json
           position?: number
           secondary_fixed_text?: string | null
+          secondary_override_codes?: Json
           secondary_slot_kind?: string | null
           separator_after?: boolean
           slot_kind?: string

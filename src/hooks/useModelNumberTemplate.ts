@@ -57,6 +57,7 @@ export function useModelNumberTemplate() {
       ...r,
       override_codes: r.override_codes || {},
       conditional_rules: r.conditional_rules || [],
+      secondary_override_codes: r.secondary_override_codes || {},
     })));
     setLoading(false);
   }, [user]);
@@ -73,7 +74,7 @@ export function useModelNumberTemplate() {
     else setTemplate({ ...template, separator });
   };
 
-  const updateSlot = async (id: string, updates: Partial<Pick<ModelNumberSlot, 'slot_kind' | 'fixed_text' | 'override_codes' | 'separator_after' | 'conditional_rules' | 'secondary_slot_kind' | 'secondary_fixed_text'>>) => {
+  const updateSlot = async (id: string, updates: Partial<Pick<ModelNumberSlot, 'slot_kind' | 'fixed_text' | 'override_codes' | 'separator_after' | 'conditional_rules' | 'secondary_slot_kind' | 'secondary_fixed_text' | 'secondary_override_codes'>>) => {
     const { error } = await (supabase as any)
       .from('model_number_slots')
       .update(updates as any)
