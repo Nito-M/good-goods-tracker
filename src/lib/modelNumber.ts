@@ -187,7 +187,7 @@ export function resolveSlot(slot: ModelNumberSlot, ctx: BuildContext): string {
 
   // Secondary slot wins over primary if it produces a non-empty code.
   if (slot.secondary_slot_kind && slot.secondary_slot_kind !== 'empty') {
-    const secCode = resolveByKind(slot.secondary_slot_kind, slot.secondary_fixed_text, slot, ctx);
+    const secCode = resolveByKind(slot.secondary_slot_kind, slot.secondary_fixed_text, slot, ctx, slot.secondary_override_codes || {});
     if (secCode && secCode.length > 0) return secCode;
   }
 
