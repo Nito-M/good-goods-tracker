@@ -331,10 +331,10 @@ export function Quotes() {
     }
   }, [vendors, pendingCustomerName]);
 
-  const calculateMarkupPrice = (cost: number, markup: number): number => {
-    const costInCents = Math.round(cost * 100);
-    const markupAmountInCents = Math.round(costInCents * (markup / 100));
-    return (costInCents + markupAmountInCents) / 100;
+  const calculateMarkupPrice = (basePrice: number, markup: number): number => {
+    const baseInCents = Math.round(basePrice * 100);
+    const markupAmountInCents = Math.round(baseInCents * (markup / 100));
+    return (baseInCents + markupAmountInCents) / 100;
   };
 
   // Apply markup to all cart items when markup changes
@@ -354,7 +354,7 @@ export function Quotes() {
         return prev.map(c => {
           if (!c.inventoryItemId || c.excludeMarkup) return c;
           const item = inventoryItems.find(i => i.id === c.inventoryItemId);
-          return item ? { ...c, unitPrice: calculateMarkupPrice(item.cost, markupPercent as number) } : c;
+          return item ? { ...c, unitPrice: calculateMarkupPrice(item.price, markupPercent as number) } : c;
         });
       });
     }
