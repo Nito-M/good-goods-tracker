@@ -141,6 +141,7 @@ export function useAssemblies() {
         notes: item.notes,
         part_id: item.part_id,
         parts_assembly_id: item.parts_assembly_id,
+        nested_assembly_id: item.nested_assembly_id,
       }));
       await supabase.from('assembly_items').insert(itemsToInsert);
     }
