@@ -336,9 +336,12 @@ function CodesDialog({
           await (supabase as any).from(table).update({ model_code: r.code || null }).eq('id', r.id);
         }
       }
+      const slotPatch = mode === 'secondary'
+        ? { secondary_override_codes: overrides }
+        : { override_codes: overrides };
       await supabase
         .from('model_number_slots')
-        .update({ override_codes: overrides } as any)
+        .update(slotPatch as any)
         .eq('id', slot.id);
 
       await onSaved();
