@@ -60,6 +60,7 @@ export interface ModelNumberSlot {
   conditional_rules?: ConditionalRule[];
   secondary_slot_kind?: SlotKind | null;
   secondary_fixed_text?: string | null;
+  secondary_override_codes?: Record<string, string>;
 }
 
 export interface ModelNumberTemplate {
