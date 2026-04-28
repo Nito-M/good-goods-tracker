@@ -115,6 +115,22 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
     }
   }, [quote, defaultCompany]);
 
+  // Apply markup on top of each item's snapshot base price
+  useEffect(() => {
+    if (Object.keys(basePrices).length === 0) return;
+    setItems(prev => prev.map(item => {
+      const base = basePrices[item.id];
+      if (base === undefined) return item;
+      if (markupPercent === '' || markupPercent === 0) {
+        return { ...item, unitPrice: base };
+      }
+      const baseInCents = Math.round(base * 100);
+      const markupAmt = Math.round(baseInCents * ((markupPercent as number) / 100));
+      return { ...item, unitPrice: (baseInCents + markupAmt) / 100 };
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markupPercent, basePrices]);
+
   const updateItem = (itemId: string, updates: Partial<EditableQuoteItem>) => {
     setItems(prev => prev.map(item =>
       item.id === itemId ? { ...item, ...updates } : item
