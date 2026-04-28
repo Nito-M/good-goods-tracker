@@ -14,9 +14,11 @@ interface SubAssemblyRow {
   type: string;
 }
 
+export type SubAssemblySource = 'parts1' | 'parts2' | 'assembly';
+
 export interface SelectedSubAssembly {
   id: string;
-  source: 'parts1' | 'parts2';
+  source: SubAssemblySource;
 }
 
 interface FullScreenSubAssemblyPickerProps {
@@ -25,11 +27,14 @@ interface FullScreenSubAssemblyPickerProps {
   onConfirm: (selections: SelectedSubAssembly[]) => void;
   subAssemblies1: SubAssemblyRow[];
   subAssemblies2?: SubAssemblyRow[];
+  fullAssemblies?: SubAssemblyRow[];
   adding?: boolean;
   existingSubAssemblyIds?: string[];
   existingSubAssembly2Ids?: string[];
+  existingFullAssemblyIds?: string[];
   label1?: string;
   label2?: string;
+  labelFullAssemblies?: string;
 }
 
 export function FullScreenSubAssemblyPicker({
@@ -38,11 +43,14 @@ export function FullScreenSubAssemblyPicker({
   onConfirm,
   subAssemblies1,
   subAssemblies2 = [],
+  fullAssemblies = [],
   adding,
   existingSubAssemblyIds = [],
   existingSubAssembly2Ids = [],
+  existingFullAssemblyIds = [],
   label1 = 'Parts Assemblies',
   label2 = 'Parts Assemblies 2',
+  labelFullAssemblies = 'Assemblies',
 }: FullScreenSubAssemblyPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selections, setSelections] = useState<SelectedSubAssembly[]>([]);
@@ -64,7 +72,7 @@ export function FullScreenSubAssemblyPicker({
     return () => window.removeEventListener('popstate', handler);
   }, [open, onClose]);
 
-  const toggleSelection = (id: string, source: 'parts1' | 'parts2') => {
+  const toggleSelection = (id: string, source: SubAssemblySource) => {
     setSelections(prev => {
       const exists = prev.find(s => s.id === id && s.source === source);
       if (exists) return prev.filter(s => !(s.id === id && s.source === source));
@@ -72,30 +80,72 @@ export function FullScreenSubAssemblyPicker({
     });
   };
 
-  const isSelected = (id: string, source: 'parts1' | 'parts2') =>
+  const isSelected = (id: string, source: SubAssemblySource) =>
     selections.some(s => s.id === id && s.source === source);
 
-  const filtered1 = useMemo(() => {
+  const applyFilter = (rows: SubAssemblyRow[]) => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return subAssemblies1;
-    return subAssemblies1.filter(
+    if (!q) return rows;
+    return rows.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
         (a.description ?? '').toLowerCase().includes(q) ||
         a.type.toLowerCase().includes(q)
     );
-  }, [subAssemblies1, searchQuery]);
+  };
 
-  const filtered2 = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return subAssemblies2;
-    return subAssemblies2.filter(
-      (a) =>
-        a.name.toLowerCase().includes(q) ||
-        (a.description ?? '').toLowerCase().includes(q) ||
-        a.type.toLowerCase().includes(q)
+  const filtered1 = useMemo(() => applyFilter(subAssemblies1), [subAssemblies1, searchQuery]);
+  const filtered2 = useMemo(() => applyFilter(subAssemblies2), [subAssemblies2, searchQuery]);
+  const filteredFull = useMemo(() => applyFilter(fullAssemblies), [fullAssemblies, searchQuery]);
+
+  const renderSection = (
+    label: string,
+    rows: SubAssemblyRow[],
+    source: SubAssemblySource,
+    existingIds: string[]
+  ) => {
+    if (rows.length === 0) return null;
+    return (
+      <div className="space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        {rows.map((a) => {
+          const selected = isSelected(a.id, source);
+          const alreadyAdded = existingIds.includes(a.id);
+          return (
+            <button
+              key={`${source}-${a.id}`}
+              onClick={() => !alreadyAdded && toggleSelection(a.id, source)}
+              disabled={alreadyAdded}
+              className={`w-full text-left px-4 py-3 rounded-lg border transition-colors flex items-center justify-between gap-4 ${
+                alreadyAdded ? 'opacity-50 cursor-not-allowed bg-muted' :
+                selected ? 'border-primary bg-primary/10' : 'bg-card hover:bg-accent'
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className={`shrink-0 h-5 w-5 rounded border flex items-center justify-center ${
+                  alreadyAdded ? 'bg-muted-foreground/20 border-muted-foreground/30' :
+                  selected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                }`}>
+                  {(selected || alreadyAdded) && <Check className="h-3 w-3 text-primary-foreground" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm truncate">{a.name}</p>
+                  {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {a.type}
+                    {alreadyAdded && <span className="ml-2 text-primary">(already added)</span>}
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                {a.selling_price > 0 && <span className="text-sm font-medium text-primary">{formatCurrency(a.selling_price)}</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     );
-  }, [subAssemblies2, searchQuery]);
+  };
 
   if (!open) return null;
 
@@ -126,89 +176,11 @@ export function FullScreenSubAssemblyPicker({
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6 max-w-3xl mx-auto">
-          {filtered1.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label1}</p>
-              {filtered1.map((a) => {
-                const selected = isSelected(a.id, 'parts1');
-                const alreadyAdded = existingSubAssemblyIds.includes(a.id);
-                return (
-                  <button
-                    key={`parts1-${a.id}`}
-                    onClick={() => !alreadyAdded && toggleSelection(a.id, 'parts1')}
-                    disabled={alreadyAdded}
-                    className={`w-full text-left px-4 py-3 rounded-lg border transition-colors flex items-center justify-between gap-4 ${
-                      alreadyAdded ? 'opacity-50 cursor-not-allowed bg-muted' :
-                      selected ? 'border-primary bg-primary/10' : 'bg-card hover:bg-accent'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={`shrink-0 h-5 w-5 rounded border flex items-center justify-center ${
-                        alreadyAdded ? 'bg-muted-foreground/20 border-muted-foreground/30' :
-                        selected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
-                      }`}>
-                        {(selected || alreadyAdded) && <Check className="h-3 w-3 text-primary-foreground" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{a.name}</p>
-                        {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {a.type}
-                          {alreadyAdded && <span className="ml-2 text-primary">(already added)</span>}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      {a.selling_price > 0 && <span className="text-sm font-medium text-primary">{formatCurrency(a.selling_price)}</span>}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          {renderSection(labelFullAssemblies, filteredFull, 'assembly', existingFullAssemblyIds)}
+          {renderSection(label1, filtered1, 'parts1', existingSubAssemblyIds)}
+          {renderSection(label2, filtered2, 'parts2', existingSubAssembly2Ids)}
 
-          {filtered2.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label2}</p>
-              {filtered2.map((a) => {
-                const selected = isSelected(a.id, 'parts2');
-                const alreadyAdded = existingSubAssembly2Ids.includes(a.id);
-                return (
-                  <button
-                    key={`parts2-${a.id}`}
-                    onClick={() => !alreadyAdded && toggleSelection(a.id, 'parts2')}
-                    disabled={alreadyAdded}
-                    className={`w-full text-left px-4 py-3 rounded-lg border transition-colors flex items-center justify-between gap-4 ${
-                      alreadyAdded ? 'opacity-50 cursor-not-allowed bg-muted' :
-                      selected ? 'border-primary bg-primary/10' : 'bg-card hover:bg-accent'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={`shrink-0 h-5 w-5 rounded border flex items-center justify-center ${
-                        alreadyAdded ? 'bg-muted-foreground/20 border-muted-foreground/30' :
-                        selected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
-                      }`}>
-                        {(selected || alreadyAdded) && <Check className="h-3 w-3 text-primary-foreground" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{a.name}</p>
-                        {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {a.type}
-                          {alreadyAdded && <span className="ml-2 text-primary">(already added)</span>}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      {a.selling_price > 0 && <span className="text-sm font-medium text-primary">{formatCurrency(a.selling_price)}</span>}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {filtered1.length === 0 && filtered2.length === 0 && (
+          {filtered1.length === 0 && filtered2.length === 0 && filteredFull.length === 0 && (
             <div className="text-center py-16 text-muted-foreground">
               <PackagePlus className="h-12 w-12 mx-auto mb-3 opacity-30" />
               <p className="text-sm">No sub assemblies found.</p>

@@ -206,20 +206,51 @@ function AssemblyDetail({
     setShowFolderPicker(false);
   };
 
-  const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' | 'parts2' }[]) => {
+  const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' | 'parts2' | 'assembly' }[]) => {
     setAddingSubAssemblyId('batch');
     try {
-      for (const { id: partsAssemblyId, source } of selections) {
+      for (const { id: selectedId, source } of selections) {
+        if (source === 'assembly') {
+          const sub = allAssemblies.find(a => a.id === selectedId);
+          if (!sub || sub.id === assembly.id) continue;
+
+          // Compute total cost from the nested assembly's items
+          const { data: subItems } = await (await import('@/integrations/supabase/client')).supabase
+            .from('assembly_items')
+            .select('quantity, unit_cost')
+            .eq('assembly_id', selectedId);
+
+          let totalCost = 0;
+          if (subItems) {
+            for (const row of subItems as any[]) {
+              totalCost += (row.quantity || 0) * (row.unit_cost || 0);
+            }
+          }
+
+          const price = sub.selling_price > 0 ? sub.selling_price : totalCost;
+
+          await addItem({
+            inventory_item_id: null,
+            item_name: sub.name,
+            sku: '',
+            quantity: 1,
+            unit_cost: price,
+            notes: sub.description || undefined,
+            nested_assembly_id: sub.id,
+          });
+          continue;
+        }
+
         if (source !== 'parts1') continue;
         const list = partsAssemblies;
         if (!list) continue;
-        const pa = list.find(a => a.id === partsAssemblyId);
+        const pa = list.find(a => a.id === selectedId);
         if (!pa) continue;
 
         const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
           .from('parts_assembly_items' as any)
           .select(`quantity, part_id, inventory_item_id, parts ( price ), inventory_items ( cost )`)
-          .eq('assembly_id', partsAssemblyId);
+          .eq('assembly_id', selectedId);
 
         let totalCost = 0;
         if (paItems) {
@@ -238,7 +269,7 @@ function AssemblyDetail({
           quantity: 1,
           unit_cost: price,
           notes: pa.description || undefined,
-          parts_assembly_id: partsAssemblyId,
+          parts_assembly_id: pa.id,
         });
       }
       onItemsChanged?.();
@@ -528,7 +559,7 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               )}
-              {partsAssemblies && partsAssemblies.length > 0 && (
+              {((partsAssemblies && partsAssemblies.length > 0) || otherAssemblies.length > 0) && (
                 <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowSubAssemblyPicker(true)}>
                   <PackagePlus className="h-4 w-4" /> Sub Assembly
                 </Button>
@@ -542,7 +573,9 @@ function AssemblyDetail({
           onClose={() => setShowSubAssemblyPicker(false)}
           onConfirm={(selections) => handleAddSubAssemblies(selections)}
           subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          fullAssemblies={otherAssemblies.map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           label1={(() => { try { const s = localStorage.getItem('parts-landing-names'); const n = s ? JSON.parse(s) : {}; return n['parts-assemblies'] || 'Parts Assemblies'; } catch { return 'Parts Assemblies'; } })()}
+          labelFullAssemblies="Assemblies"
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {
             const ids: string[] = [];
@@ -557,6 +590,7 @@ function AssemblyDetail({
             }
             return ids;
           })()}
+          existingFullAssemblyIds={items.map(i => i.nested_assembly_id).filter((x): x is string => !!x)}
         />
 
         <FullScreenPartsPicker
@@ -612,13 +646,21 @@ function AssemblyDetail({
                       : !item.inventory_item_id
                         ? partsRaw?.find(p => p.sku === item.sku) ?? partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku)
                         : undefined;
-                    const assemblyMatch = !item.inventory_item_id && !partMatch && allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name);
+                    const nestedAssembly = item.nested_assembly_id ? allAssemblies.find(a => a.id === item.nested_assembly_id) : null;
+                    const assemblyMatch = nestedAssembly || (!item.inventory_item_id && !partMatch ? allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name) : null);
                     const partsAssemblyMatch = !item.inventory_item_id && !partMatch && !assemblyMatch && partsAssemblies?.find(pa => pa.name === item.item_name);
                     const linkTo = item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : partsAssemblyMatch ? `/parts/assemblies/${encodeURIComponent(partsAssemblyMatch.type)}?id=${partsAssemblyMatch.id}` : null;
-                    return linkTo ? (
-                      <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
-                    ) : (
-                      <p className="font-medium text-sm">{item.item_name}</p>
+                    return (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {linkTo ? (
+                          <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
+                        ) : (
+                          <p className="font-medium text-sm">{item.item_name}</p>
+                        )}
+                        {assemblyMatch && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-medium uppercase tracking-wide">Assembly</span>
+                        )}
+                      </div>
                     );
                   })()}
                   {editingNoteId === item.id ? (
