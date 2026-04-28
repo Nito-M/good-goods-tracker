@@ -646,6 +646,12 @@ export function TrailerConfigurator() {
                           <SummaryRow label="Under Carriage" value="None" />
                         )}
                       </div>
+                      {modelNumber && (
+                        <div className="border-t pt-4 flex justify-between items-center">
+                          <span className="text-lg font-semibold">Model #</span>
+                          <span className="text-xl font-mono font-semibold">{modelNumber}</span>
+                        </div>
+                      )}
                       <div className="border-t pt-4 flex justify-between items-center">
                         <span className="text-lg font-semibold">Total Price</span>
                         <span className="text-2xl font-bold text-primary">
