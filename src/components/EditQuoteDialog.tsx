@@ -79,6 +79,8 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const [contactPersonName, setContactPersonName] = useState<string>('');
   const [hidePrices, setHidePrices] = useState(false);
   const [showSku, setShowSku] = useState(true);
+  const [markupPercent, setMarkupPercent] = useState<number | ''>('');
+  const [basePrices, setBasePrices] = useState<Record<string, number>>({});
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
