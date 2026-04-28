@@ -203,6 +203,7 @@ export function buildModelNumber(
 export const SLOT_KIND_LABELS: Record<SlotKind, string> = {
   empty: 'Empty',
   fixed: 'Fixed text',
+  conditional: 'Conditional (rules only)',
   trailer_type: 'Trailer Type',
   trailer_subtype: 'Trailer Subtype',
   trailer_length: 'Trailer Length',
@@ -219,6 +220,7 @@ export const SLOT_KIND_LABELS: Record<SlotKind, string> = {
 export const ALL_SLOT_KINDS: SlotKind[] = [
   'empty',
   'fixed',
+  'conditional',
   'trailer_type',
   'trailer_subtype',
   'trailer_length',
@@ -231,3 +233,31 @@ export const ALL_SLOT_KINDS: SlotKind[] = [
   'under_carriage_tier2',
   'under_carriage_tier3',
 ];
+
+export const CONDITION_FIELDS: ConditionField[] = [
+  'trailer_type',
+  'trailer_subtype',
+  'trailer_length',
+  'axle_count',
+  'front_end',
+  'front_end_tier2',
+  'back_end',
+  'deck_type',
+  'under_carriage',
+  'under_carriage_tier2',
+  'under_carriage_tier3',
+];
+
+export const CONDITION_FIELD_LABELS: Record<ConditionField, string> = {
+  trailer_type: 'Trailer Type',
+  trailer_subtype: 'Trailer Subtype',
+  trailer_length: 'Trailer Length',
+  axle_count: 'Axle Count',
+  front_end: 'Front End',
+  front_end_tier2: 'Front End — Tier 2',
+  back_end: 'Back End',
+  deck_type: 'Add Ons / Deck Type',
+  under_carriage: 'Under Carriage',
+  under_carriage_tier2: 'Under Carriage — Tier 2',
+  under_carriage_tier3: 'Under Carriage — Tier 3',
+};
