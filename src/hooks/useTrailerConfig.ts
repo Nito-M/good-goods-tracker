@@ -41,6 +41,7 @@ export interface PrebuiltAssembly {
   under_carriage_axle_count: number | null;
   total_price: number;
   linked_assembly_id: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
