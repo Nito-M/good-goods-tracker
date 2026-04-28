@@ -15,7 +15,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { Plus, Trash2, Package, Upload, Loader2, Pencil, Check, X, ArrowLeft, Link, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
 const CATEGORY_LABELS: Record<string, string> = {
   front_end: 'Front End',
@@ -188,7 +188,7 @@ export function TrailerConfigAdmin() {
         </TabsContent>
 
         <TabsContent value="prebuilt" className="mt-4">
-          <PrebuiltTab assemblies={prebuiltAssemblies} types={types} components={components} lengths={lengths} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
+          <PrebuiltTab assemblies={prebuiltAssemblies} types={types} components={components} lengths={lengths} allAssemblies={allAssemblies} loading={assembliesLoading} onSave={saveAssembly} onUpdate={updateAssembly} onRemove={removeAssembly} />
         </TabsContent>
       </Tabs>
     </div>
@@ -1090,12 +1090,13 @@ function ComponentsTab({
 
 // --- Prebuilt Assemblies Tab ---
 function PrebuiltTab({
-  assemblies, types, components, lengths, loading, onSave, onUpdate, onRemove,
+  assemblies, types, components, lengths, allAssemblies, loading, onSave, onUpdate, onRemove,
 }: {
   assemblies: ReturnType<typeof usePrebuiltAssemblies>['assemblies'];
   types: ReturnType<typeof useTrailerTypes>['types'];
   components: ReturnType<typeof useAssemblyComponents>['components'];
   lengths: ReturnType<typeof useTrailerLengths>['lengths'];
+  allAssemblies: ReturnType<typeof useAssemblies>['assemblies'];
   loading: boolean;
   onSave: (config: any) => Promise<any>;
   onUpdate: (id: string, updates: any) => Promise<void>;
@@ -1113,6 +1114,7 @@ function PrebuiltTab({
   const [underCarriageTier3Id, setUnderCarriageTier3Id] = useState('');
   const [underCarriageAxleCount, setUnderCarriageAxleCount] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
+  const [linkedAssemblyId, setLinkedAssemblyId] = useState('');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTrailerLengthId, setEditTrailerLengthId] = useState('');
@@ -1125,6 +1127,14 @@ function PrebuiltTab({
   const [editUnderCarriageTier3Id, setEditUnderCarriageTier3Id] = useState('');
   const [editUnderCarriageAxleCount, setEditUnderCarriageAxleCount] = useState('');
   const [editTotalPrice, setEditTotalPrice] = useState('');
+  const [editLinkedAssemblyId, setEditLinkedAssemblyId] = useState('');
+
+  const sortedAssemblies = useMemo(() => {
+    return [...allAssemblies].sort((a, b) => {
+      const t = (a.type || '').localeCompare(b.type || '');
+      return t !== 0 ? t : a.name.localeCompare(b.name);
+    });
+  }, [allAssemblies]);
 
   // Helper to get components by category and tier
   const getByStep = (cat: string, step: number) => {
@@ -1189,9 +1199,11 @@ function PrebuiltTab({
       under_carriage_tier3_id: underCarriageTier3Id && underCarriageTier3Id !== 'none' ? underCarriageTier3Id : null,
       under_carriage_axle_count: underCarriageAxleCount ? parseInt(underCarriageAxleCount) : null,
       total_price: parseFloat(totalPrice) || 0,
+      linked_assembly_id: linkedAssemblyId && linkedAssemblyId !== 'none' ? linkedAssemblyId : null,
     });
     setTrailerTypeId(''); setTrailerLengthId(''); setFrontEndId(''); setFrontEndTier2Id(''); setBackEndId(''); setDeckTypeId('');
     setUnderCarriageId(''); setUnderCarriageTier2Id(''); setUnderCarriageTier3Id(''); setUnderCarriageAxleCount(''); setTotalPrice('');
+    setLinkedAssemblyId('');
   };
 
   const startEdit = (a: typeof assemblies[0]) => {
@@ -1206,6 +1218,7 @@ function PrebuiltTab({
     setEditUnderCarriageTier3Id((a as any).under_carriage_tier3_id || 'none');
     setEditUnderCarriageAxleCount(String((a as any).under_carriage_axle_count || ''));
     setEditTotalPrice(String(a.total_price));
+    setEditLinkedAssemblyId((a as any).linked_assembly_id || 'none');
   };
 
   const saveEdit = async (id: string) => {
@@ -1220,6 +1233,7 @@ function PrebuiltTab({
       under_carriage_tier3_id: editUnderCarriageTier3Id && editUnderCarriageTier3Id !== 'none' ? editUnderCarriageTier3Id : null,
       under_carriage_axle_count: editUnderCarriageAxleCount ? parseInt(editUnderCarriageAxleCount) : null,
       total_price: parseFloat(editTotalPrice) || 0,
+      linked_assembly_id: editLinkedAssemblyId && editLinkedAssemblyId !== 'none' ? editLinkedAssemblyId : null,
     });
     setEditingId(null);
   };
@@ -1356,6 +1370,21 @@ function PrebuiltTab({
             <Label>Total Price</Label>
             <Input type="number" value={totalPrice} onChange={e => setTotalPrice(e.target.value)} placeholder="0.00" />
           </div>
+
+          <div className="space-y-1">
+            <Label>Linked Assembly <span className="text-sky-400 text-xs">(optional)</span></Label>
+            <Select value={linkedAssemblyId} onValueChange={setLinkedAssemblyId}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="none">None</SelectItem>
+                {sortedAssemblies.map(a => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.type ? `[${a.type}] ` : ''}{a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <Button onClick={handleAdd} disabled={!trailerTypeId}>
           <Plus className="h-4 w-4 mr-1" /> Add Prebuilt Assembly
@@ -1381,6 +1410,7 @@ function PrebuiltTab({
                   <TableHead>UC Tier 2</TableHead>
                   <TableHead>UC Tier 3</TableHead>
                   <TableHead>Total Price</TableHead>
+                  <TableHead>Linked Assembly</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
@@ -1447,6 +1477,29 @@ function PrebuiltTab({
                       <TableCell>{editingId === a.id ? (
                         <Input type="number" value={editTotalPrice} onChange={e => setEditTotalPrice(e.target.value)} className="h-8 w-24" />
                       ) : <span>${Number(a.total_price).toFixed(2)}</span>}</TableCell>
+                      <TableCell>{editingId === a.id ? (
+                        <Select value={editLinkedAssemblyId} onValueChange={setEditLinkedAssemblyId}>
+                          <SelectTrigger className="h-8 w-44"><SelectValue placeholder="None" /></SelectTrigger>
+                          <SelectContent className="max-h-72">
+                            <SelectItem value="none">None</SelectItem>
+                            {sortedAssemblies.map(la => (
+                              <SelectItem key={la.id} value={la.id}>{la.type ? `[${la.type}] ` : ''}{la.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (() => {
+                        const linked = sortedAssemblies.find(la => la.id === aAny.linked_assembly_id);
+                        if (!linked) return <span className="text-muted-foreground">—</span>;
+                        return (
+                          <RouterLink
+                            to={`/assemblies/${encodeURIComponent(linked.type || '')}?id=${linked.id}`}
+                            className="text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            <Link className="h-3 w-3" />
+                            {linked.name}
+                          </RouterLink>
+                        );
+                      })()}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           {editingId === a.id ? (
