@@ -123,19 +123,20 @@ function evaluateConditionalRules(slot: ModelNumberSlot, ctx: BuildContext): str
   return null;
 }
 
-export function resolveSlot(slot: ModelNumberSlot, ctx: BuildContext): string {
-  // Conditional rules win over default codes for any slot kind.
-  const ruleHit = evaluateConditionalRules(slot, ctx);
-  if (ruleHit !== null) return ruleHit;
-
-  switch (slot.slot_kind) {
+function resolveByKind(
+  kind: SlotKind,
+  fixedText: string | null | undefined,
+  slot: ModelNumberSlot,
+  ctx: BuildContext,
+): string {
+  switch (kind) {
     case 'empty':
       return '';
     case 'conditional':
       // Pure conditional: only the rules produce output. No match → empty.
       return '';
     case 'fixed':
-      return (slot.fixed_text || '').trim();
+      return (fixedText || '').trim();
     case 'trailer_type':
       return ctx.trailerType
         ? codeFor(slot, ctx.trailerType.id, (ctx.trailerType as any).model_code, ctx.trailerType.name)
@@ -171,6 +172,20 @@ export function resolveSlot(slot: ModelNumberSlot, ctx: BuildContext): string {
     default:
       return '';
   }
+}
+
+export function resolveSlot(slot: ModelNumberSlot, ctx: BuildContext): string {
+  // Conditional rules win over default codes for any slot kind.
+  const ruleHit = evaluateConditionalRules(slot, ctx);
+  if (ruleHit !== null) return ruleHit;
+
+  // Secondary slot wins over primary if it produces a non-empty code.
+  if (slot.secondary_slot_kind && slot.secondary_slot_kind !== 'empty') {
+    const secCode = resolveByKind(slot.secondary_slot_kind, slot.secondary_fixed_text, slot, ctx);
+    if (secCode && secCode.length > 0) return secCode;
+  }
+
+  return resolveByKind(slot.slot_kind, slot.fixed_text, slot, ctx);
 }
 
 export function buildModelNumber(
