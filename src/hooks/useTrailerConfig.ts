@@ -197,7 +197,7 @@ export function usePrebuiltAssemblies() {
     return data as PrebuiltAssembly;
   };
 
-  const update = async (id: string, updates: { total_price?: number; trailer_length_id?: string | null; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null; linked_assembly_id?: string | null }) => {
+  const update = async (id: string, updates: { total_price?: number; trailer_length_id?: string | null; front_end_id?: string | null; front_end_tier2_id?: string | null; back_end_id?: string | null; deck_type_id?: string | null; under_carriage_id?: string | null; under_carriage_tier2_id?: string | null; under_carriage_tier3_id?: string | null; under_carriage_axle_count?: number | null; linked_assembly_id?: string | null; notes?: string | null }) => {
     const { error } = await supabase.from('prebuilt_assemblies').update(updates as any).eq('id', id);
     if (error) toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' });
     else await fetchAssemblies();
