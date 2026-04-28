@@ -79,6 +79,8 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
   const [contactPersonName, setContactPersonName] = useState<string>('');
   const [hidePrices, setHidePrices] = useState(false);
   const [showSku, setShowSku] = useState(true);
+  const [markupPercent, setMarkupPercent] = useState<number | ''>('');
+  const [basePrices, setBasePrices] = useState<Record<string, number>>({});
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
@@ -94,6 +96,11 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
         unitCost: item.unitCost,
         notes: item.notes || '',
       })));
+      // Snapshot the original prices so markup recalculates from a stable base
+      const baseMap: Record<string, number> = {};
+      quote.items.forEach(item => { baseMap[item.id] = item.unitPrice; });
+      setBasePrices(baseMap);
+      setMarkupPercent('');
       setVendorId(quote.vendorId || '');
       setQuoteNumber(quote.quoteNumber);
       setTaxRate(quote.taxRate || null);
@@ -107,6 +114,22 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       setShowSku(quote.showSku !== false);
     }
   }, [quote, defaultCompany]);
+
+  // Apply markup on top of each item's snapshot base price
+  useEffect(() => {
+    if (Object.keys(basePrices).length === 0) return;
+    setItems(prev => prev.map(item => {
+      const base = basePrices[item.id];
+      if (base === undefined) return item;
+      if (markupPercent === '' || markupPercent === 0) {
+        return { ...item, unitPrice: base };
+      }
+      const baseInCents = Math.round(base * 100);
+      const markupAmt = Math.round(baseInCents * ((markupPercent as number) / 100));
+      return { ...item, unitPrice: (baseInCents + markupAmt) / 100 };
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markupPercent, basePrices]);
 
   const updateItem = (itemId: string, updates: Partial<EditableQuoteItem>) => {
     setItems(prev => prev.map(item =>
@@ -423,6 +446,23 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
                 placeholder="0"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Markup % (applied to all item prices)</Label>
+            <Input
+              type="number"
+              step="0.1"
+              value={markupPercent}
+              onChange={(e) => {
+                const val = e.target.value;
+                setMarkupPercent(val === '' ? '' : parseFloat(val) || 0);
+              }}
+              placeholder="0"
+            />
+            <p className="text-xs text-muted-foreground">
+              Recalculates each item's unit price from its original price. Clear to revert.
+            </p>
           </div>
 
           {/* Hide Prices */}
