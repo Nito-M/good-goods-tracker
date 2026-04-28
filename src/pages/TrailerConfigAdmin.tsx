@@ -1410,6 +1410,7 @@ function PrebuiltTab({
                   <TableHead>UC Tier 2</TableHead>
                   <TableHead>UC Tier 3</TableHead>
                   <TableHead>Total Price</TableHead>
+                  <TableHead>Linked Assembly</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
