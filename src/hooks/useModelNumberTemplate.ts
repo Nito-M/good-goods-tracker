@@ -57,6 +57,7 @@ export function useModelNumberTemplate() {
       ...r,
       override_codes: r.override_codes || {},
       conditional_rules: r.conditional_rules || [],
+      secondary_override_codes: r.secondary_override_codes || {},
     })));
     setLoading(false);
   }, [user]);
