@@ -826,6 +826,42 @@ export function AssetDetail() {
         </DialogContent>
       </Dialog>
 
+      {/* Add/Edit Available Part Dialog */}
+      <Dialog open={availPartOpen} onOpenChange={(o) => { setAvailPartOpen(o); if (!o) resetAvailPartForm(); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingAvailPart ? 'Edit Available Part' : 'Add Available Part'}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Name *</Label><Input value={apName} onChange={(e) => setApName(e.target.value)} placeholder="Part name" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>SKU / Part #</Label><Input value={apSku} onChange={(e) => setApSku(e.target.value)} /></div>
+              <div><Label>Price</Label><Input type="number" step="0.01" value={apPrice} onChange={(e) => setApPrice(e.target.value)} placeholder="0.00" /></div>
+            </div>
+            <div><Label>Link</Label><Input value={apLink} onChange={(e) => setApLink(e.target.value)} placeholder="https://vendor.com/product..." /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Vendor</Label><Input value={apVendor} onChange={(e) => setApVendor(e.target.value)} placeholder="Vendor name" /></div>
+              <div><Label>Vendor Location</Label><Input value={apVendorLocation} onChange={(e) => setApVendorLocation(e.target.value)} placeholder="City, State / Address" /></div>
+            </div>
+            <div>
+              <Label>Picture</Label>
+              <Input type="file" accept="image/*" onChange={handleAvailPartImageUpload} disabled={apUploading} />
+              {apImageUrl && (
+                <div className="relative inline-block mt-2">
+                  <img src={apImageUrl} alt="Preview" className="h-24 w-24 rounded-md object-cover" />
+                  <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => setApImageUrl('')}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div><Label>Notes</Label><Textarea value={apNotes} onChange={(e) => setApNotes(e.target.value)} rows={2} placeholder="Optional notes..." /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAvailPartOpen(false); resetAvailPartForm(); }}>Cancel</Button>
+            <Button onClick={handleSaveAvailPart} disabled={!apName.trim() || apUploading}>{editingAvailPart ? 'Save Changes' : 'Add Part'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add Maintenance Dialog */}
       <Dialog open={addMaintenanceOpen} onOpenChange={setAddMaintenanceOpen}>
         <DialogContent>
