@@ -8,6 +8,7 @@ export interface TrailerType {
   user_id: string;
   name: string;
   image_url: string | null;
+  model_code: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +23,7 @@ export interface AssemblyComponent {
   compatible_trailer_type_ids: string[];
   assembly_id: string | null;
   parent_component_id: string | null;
+  model_code: string | null;
   created_at: string;
   updated_at: string;
 }
