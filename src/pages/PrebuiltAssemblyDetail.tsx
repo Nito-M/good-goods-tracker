@@ -205,6 +205,12 @@ export function PrebuiltAssemblyDetail() {
       l.compatible_trailer_type_ids.includes(prebuilt.trailer_type_id),
   );
 
+  // Mirror Trailer Configurator: axle options come from the selected length
+  const selectedLength = lengths.find(l => l.id === fromVal(trailerLengthId));
+  const allowedAxleCounts = (selectedLength?.allowed_axle_counts && selectedLength.allowed_axle_counts.length > 0)
+    ? selectedLength.allowed_axle_counts
+    : [2, 3];
+
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between gap-2">
