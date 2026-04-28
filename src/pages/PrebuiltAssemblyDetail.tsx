@@ -17,6 +17,8 @@ import {
   useTrailerLengths,
 } from '@/hooks/useTrailerConfig';
 import { useAssemblies } from '@/hooks/useAssemblies';
+import { useModelNumberTemplate } from '@/hooks/useModelNumberTemplate';
+import { buildModelNumber } from '@/lib/modelNumber';
 
 const NONE = 'none';
 const toVal = (v: string | null | undefined) => v || NONE;
@@ -232,6 +234,18 @@ export function PrebuiltAssemblyDetail() {
         <div>
           <h1 className="text-2xl font-bold">{trailerType?.name || 'Prebuilt Trailer'}</h1>
           <p className="text-muted-foreground text-sm">Edit any field — changes save automatically.</p>
+          <ModelNumberLine
+            trailerType={trailerType}
+            lengthId={fromVal(trailerLengthId)}
+            frontEndId={fromVal(frontEndId)}
+            frontEndTier2Id={fromVal(frontEndTier2Id)}
+            backEndId={fromVal(backEndId)}
+            deckTypeId={fromVal(deckTypeId)}
+            underCarriageId={fromVal(underCarriageId)}
+            underCarriageTier2Id={fromVal(underCarriageTier2Id)}
+            underCarriageTier3Id={fromVal(underCarriageTier3Id)}
+            axleCount={underCarriageAxleCount ? Number(underCarriageAxleCount) : null}
+          />
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground uppercase">Total Price</p>
