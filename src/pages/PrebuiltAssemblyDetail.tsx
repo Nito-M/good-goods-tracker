@@ -267,8 +267,9 @@ export function PrebuiltAssemblyDetail() {
                 <SelectTrigger className="h-8 w-44"><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>—</SelectItem>
-                  <SelectItem value="2">2 Axles</SelectItem>
-                  <SelectItem value="3">3 Axles</SelectItem>
+                  {allowedAxleCounts.map(n => (
+                    <SelectItem key={n} value={String(n)}>{n} Axles</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </FieldRow>
