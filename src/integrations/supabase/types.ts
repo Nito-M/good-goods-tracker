@@ -2901,6 +2901,7 @@ export type Database = {
           front_end_tier2_id: string | null
           id: string
           linked_assembly_id: string | null
+          notes: string | null
           total_price: number
           trailer_length_id: string | null
           trailer_subtype_id: string | null
@@ -2920,6 +2921,7 @@ export type Database = {
           front_end_tier2_id?: string | null
           id?: string
           linked_assembly_id?: string | null
+          notes?: string | null
           total_price?: number
           trailer_length_id?: string | null
           trailer_subtype_id?: string | null
@@ -2939,6 +2941,7 @@ export type Database = {
           front_end_tier2_id?: string | null
           id?: string
           linked_assembly_id?: string | null
+          notes?: string | null
           total_price?: number
           trailer_length_id?: string | null
           trailer_subtype_id?: string | null
