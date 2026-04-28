@@ -1,93 +1,80 @@
-# Model Number Builder for Trailer Configurator
 
-Add a new "Model Number" tab in the Trailer Config Admin page that defines an 8-slot template. Each slot maps to one configurator step (or a fixed text separator), and each option in those steps gets a short code. The system concatenates the codes — in slot order — using a configurable separator to produce a model number, displayed live in the customer Trailer Configurator and on Prebuilt Assembly detail/list pages.
+# Secondary Slot Kind (Override) for Model Number Slots
 
-## Data model (new tables + columns)
+Let each of the 8 model number positions optionally define a **secondary slot kind**. In the customer Trailer Configurator, if the user has a selection for the secondary kind, its code is emitted at that position instead of the primary's code. If the secondary has no selection, the primary's code is used as today.
 
-**New table: `model_number_template`** (singleton per user/org)
-- `id uuid pk`, `user_id uuid`, `separator text default '-'`, `created_at`, `updated_at`
+## Example
 
-**New table: `model_number_slots`** — the 8 ordered positions
-- `id uuid pk`, `template_id uuid fk`, `position int (1-8)`
-- `slot_kind text` — one of:
-  - `trailer_type`, `trailer_subtype`, `trailer_length`, `axle_count`
-  - `front_end`, `front_end_tier2`
-  - `back_end`, `deck_type`
-  - `under_carriage`, `under_carriage_tier2`, `under_carriage_tier3`
-  - `fixed` (literal text)
-  - `empty` (skip)
-- `fixed_text text` (used when slot_kind = 'fixed')
-- `override_codes jsonb` — optional `{ "<item_id>": "X" }` per-slot overrides
+- Slot #4: Primary = **Trailer Length**, Secondary = **Trailer Subtype**
+- Customer picks Length = "20 ft" only → slot #4 emits Length code (e.g. `20`)
+- Customer also picks Subtype = "Tilt Deck" → slot #4 emits Subtype code (e.g. `T`), overriding the length
 
-**New columns: model code on each option source**
-- `trailer_types.model_code text`
-- `trailer_subtypes.model_code text`
-- `trailer_lengths.model_code text`
-- `assembly_components.model_code text` (covers all 4 categories + tiers)
-- Axle count code lives in `model_number_slots.override_codes` keyed by the number (e.g. `{"2":"A","3":"B"}`).
+## Database
 
-Defaults: when a code is missing, fall back to first character of the name (uppercased) so model numbers always render.
+Add two nullable columns to `public.model_number_slots`:
 
-## UI: new "Model Number" tab in `TrailerConfigAdmin.tsx`
+- `secondary_slot_kind text` — same enum as `slot_kind`, nullable. `null` / `'empty'` = no secondary.
+- `secondary_fixed_text text` — used only if `secondary_slot_kind = 'fixed'`.
 
-Sits as the 6th tab next to Prebuilt Assemblies. Layout:
+The existing `override_codes jsonb` and `conditional_rules jsonb` stay shared for the slot (per the user's choice: "Share the slot's rules, separate codes"). Per-item default `model_code` already lives on the source items themselves, so secondary picks up its own item's default code automatically. Slot-level `override_codes` apply to whichever item id ends up resolved (primary or secondary), since item ids are globally unique across each kind.
+
+## Logic — `src/lib/modelNumber.ts`
+
+Update `ModelNumberSlot` interface to include the two new fields.
+
+In `resolveSlot(slot, ctx)`:
+
+1. Evaluate `conditional_rules` first (unchanged) — rules still win over everything.
+2. If `secondary_slot_kind` is set and not `'empty'`, build a temporary "secondary slot" object that reuses the same `override_codes` and `conditional_rules` but with `slot_kind = secondary_slot_kind` and `fixed_text = secondary_fixed_text`. Resolve it (without re-running rules — pass a flag, or inline the switch). If it produces a non-empty code, **return that code**.
+3. Otherwise fall through to the primary `slot_kind` switch (unchanged).
+
+Refactor the body of the current switch into a helper `resolveByKind(kind, fixedText, slot, ctx)` so primary and secondary both call it. Rules evaluation stays in the outer `resolveSlot`.
+
+## Hook — `src/hooks/useModelNumberTemplate.ts`
+
+- Add `secondary_slot_kind` and `secondary_fixed_text` to the `Pick<>` allowed in `updateSlot`.
+- Pass them through in the local `setSlots` patch.
+
+## Admin UI — `src/components/ModelNumberTab.tsx`
+
+For each slot row, add a small **"+ Add secondary"** button next to the primary `Select` (only shown when no secondary is configured and primary kind is not `empty`). When clicked, it sets `secondary_slot_kind = 'trailer_type'` (placeholder default) so the controls appear.
+
+When a secondary exists, render a second compact row beneath the primary, indented and labeled "Overrides with":
 
 ```text
-[Separator: "-"]   [Live preview: A-2-B-X-3]
-
-Slot 1  [ Front End ▾ ]                  [Edit codes]
-Slot 2  [ Front End Tier 2 ▾ ]           [Edit codes]
-Slot 3  [ Fixed text ▾ ] [ "X" input ]
-Slot 4  [ Trailer Length ▾ ]             [Edit codes]
-Slot 5  [ Back End ▾ ]                   [Edit codes]
-Slot 6  [ Axle Count ▾ ]                 [Edit codes]
-Slot 7  [ Deck Type ▾ ]                  [Edit codes]
-Slot 8  [ Empty ▾ ]
+#4 [ Trailer Length ▾ ] [ Default code per option ] [☐ Sep after] [Codes][Rules]
+   ↳ Overrides with: [ Trailer Subtype ▾ ] [ (fixed input if 'fixed') ] [✕ Remove secondary]
 ```
 
-- Each slot row: a `Select` for `slot_kind`, plus an "Edit codes" button that opens a dialog listing all items of that kind with an inline code `Input` (saves to that item's `model_code`, or to `override_codes` for axle counts).
-- Item edit forms (Trailer Types, Subtypes, Lengths, Components on the existing tabs) also gain a small `Model Code` field — answering "Both" for code source.
-- Live preview at top uses the currently-saved Prebuilt Assembly with the most recent `updated_at` so admins can see a real example, or shows placeholders if none.
+- Secondary `Select` reuses `ALL_SLOT_KINDS`.
+- If secondary kind is `'fixed'`, show a small fixed-text Input with onBlur save (mirrors primary fixed-text behavior).
+- Remove button sets `secondary_slot_kind: null` and `secondary_fixed_text: null`.
+- The existing **Codes** dialog stays tied to the primary kind (since codes/overrides for the secondary's items live on those items' own `model_code` and the shared `override_codes` map). Add a one-line hint inside the dialog when a secondary is set: *"This slot also resolves '[Secondary Kind]' — manage its codes via that section's tab."*
 
-## Live model number computation
+The "Rules" dialog continues to govern the slot regardless (rules still win over both primary and secondary), per the answered preference.
 
-Add a shared helper `src/lib/modelNumber.ts`:
+## Live preview & configurator
 
-```ts
-export function buildModelNumber(
-  template: { separator: string; slots: ModelNumberSlot[] },
-  ctx: {
-    trailerType?: TrailerType | null;
-    subtype?: TrailerSubtype | null;
-    length?: TrailerLength | null;
-    axleCount?: number | null;
-    frontEnd?: AssemblyComponent | null;
-    frontEndTier2?: AssemblyComponent | null;
-    backEnd?: AssemblyComponent | null;
-    deckType?: AssemblyComponent | null;
-    underCarriage?: AssemblyComponent | null;
-    underCarriageTier2?: AssemblyComponent | null;
-    underCarriageTier3?: AssemblyComponent | null;
-  }
-): string
+No changes needed to call sites — `TrailerConfigurator.tsx` and `PrebuiltAssemblyDetail.tsx` already pass the full `BuildContext`, and the resolver does the rest. The admin Live Preview block updates automatically.
+
+## Migration
+
+Single migration:
+
+```sql
+ALTER TABLE public.model_number_slots
+  ADD COLUMN secondary_slot_kind text,
+  ADD COLUMN secondary_fixed_text text;
 ```
 
-Returns the joined string. Empty/missing slots are skipped (no consecutive separators).
+No backfill (NULL = no secondary, identical to today's behavior). RLS unaffected.
 
-Add `useModelNumberTemplate()` hook in `src/hooks/useTrailerConfig.ts` that loads the template + slots and exposes them.
+## Types
 
-## Display the number
-
-- **`src/pages/TrailerConfigurator.tsx`** — sticky header / summary bar shows the current model number, recomputed on each step change. Already has all selection state in scope.
-- **`src/pages/PrebuiltAssemblyDetail.tsx`** — show "Model #: …" in the page header, alongside the existing fields.
-- **`src/pages/TrailerConfigAdmin.tsx`** Prebuilt Assemblies tab (list) — add a "Model #" column to the table.
-
-## Migrations
-
-Single migration creates the two new tables (with RLS scoped to `users_share_org`), adds the `model_code` columns, and seeds one empty template per existing user with 8 `empty` slots so the page works on first load.
+Regenerate `src/integrations/supabase/types.ts` will pick up new columns automatically; no manual edit required.
 
 ## Out of scope
 
-- No changes to how prebuilt assemblies match configurations (lookup logic untouched).
-- No PDF / quote integration of the model number in this pass — display only.
-- Storefront does not show the model number (admin/configurator only).
+- No per-secondary `override_codes` / `conditional_rules` (shared with primary by design).
+- No third-tier slot.
+- No changes to PDF/Quote rendering of the model number.
