@@ -85,6 +85,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          model_code: string | null
           name: string
           parent_component_id: string | null
           price: number
@@ -98,6 +99,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          model_code?: string | null
           name: string
           parent_component_id?: string | null
           price?: number
@@ -111,6 +113,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          model_code?: string | null
           name?: string
           parent_component_id?: string | null
           price?: number
@@ -2030,6 +2033,74 @@ export type Database = {
           job_number?: string | null
           status?: string
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      model_number_slots: {
+        Row: {
+          created_at: string
+          fixed_text: string | null
+          id: string
+          override_codes: Json
+          position: number
+          slot_kind: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fixed_text?: string | null
+          id?: string
+          override_codes?: Json
+          position: number
+          slot_kind?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fixed_text?: string | null
+          id?: string
+          override_codes?: Json
+          position?: number
+          slot_kind?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_number_slots_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "model_number_template"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_number_template: {
+        Row: {
+          created_at: string
+          id: string
+          separator: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          separator?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          separator?: string
           updated_at?: string
           user_id?: string
         }
@@ -4243,6 +4314,7 @@ export type Database = {
           created_at: string
           id: string
           label: string
+          model_code: string | null
           updated_at: string
           user_id: string
         }
@@ -4253,6 +4325,7 @@ export type Database = {
           created_at?: string
           id?: string
           label: string
+          model_code?: string | null
           updated_at?: string
           user_id: string
         }
@@ -4263,6 +4336,7 @@ export type Database = {
           created_at?: string
           id?: string
           label?: string
+          model_code?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -4273,6 +4347,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          model_code: string | null
           name: string
           trailer_type_id: string
           updated_at: string
@@ -4282,6 +4357,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          model_code?: string | null
           name: string
           trailer_type_id: string
           updated_at?: string
@@ -4291,6 +4367,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          model_code?: string | null
           name?: string
           trailer_type_id?: string
           updated_at?: string
@@ -4311,6 +4388,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          model_code: string | null
           name: string
           updated_at: string
           user_id: string
@@ -4319,6 +4397,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          model_code?: string | null
           name: string
           updated_at?: string
           user_id: string
@@ -4327,6 +4406,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          model_code?: string | null
           name?: string
           updated_at?: string
           user_id?: string
