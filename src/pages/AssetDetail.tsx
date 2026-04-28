@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { useAssets, useAssetParts, useAssetMaintenance, useAssetDocuments, useAssetNotes } from '@/hooks/useAssets';
+import { useAssetAvailableParts, AssetAvailablePart } from '@/hooks/useAssetAvailableParts';
 import { useAssetImages } from '@/hooks/useAssetImages';
 import { useInventory } from '@/hooks/useInventory';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
@@ -38,6 +39,70 @@ export function AssetDetail() {
   const { images: assetImages, primaryImage: primaryAssetImage, addImage: addAssetImage, deleteImage: deleteAssetImage, setPrimaryImage: setPrimaryAssetImage } = useAssetImages(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
   const { notes: assetNotes, addNote, updateNote: updateAssetNote, deleteNote } = useAssetNotes(id);
+  const { parts: availableParts, addPart: addAvailablePart, updatePart: updateAvailablePart, removePart: removeAvailablePart, uploadImage: uploadAvailablePartImage } = useAssetAvailableParts(id);
+
+  // Available parts dialog state
+  const [availPartOpen, setAvailPartOpen] = useState(false);
+  const [editingAvailPart, setEditingAvailPart] = useState<AssetAvailablePart | null>(null);
+  const [apName, setApName] = useState('');
+  const [apSku, setApSku] = useState('');
+  const [apPrice, setApPrice] = useState('');
+  const [apLink, setApLink] = useState('');
+  const [apImageUrl, setApImageUrl] = useState('');
+  const [apVendor, setApVendor] = useState('');
+  const [apVendorLocation, setApVendorLocation] = useState('');
+  const [apNotes, setApNotes] = useState('');
+  const [apUploading, setApUploading] = useState(false);
+
+  const resetAvailPartForm = () => {
+    setEditingAvailPart(null);
+    setApName(''); setApSku(''); setApPrice(''); setApLink('');
+    setApImageUrl(''); setApVendor(''); setApVendorLocation(''); setApNotes('');
+  };
+
+  const openEditAvailPart = (p: AssetAvailablePart) => {
+    setEditingAvailPart(p);
+    setApName(p.name);
+    setApSku(p.sku || '');
+    setApPrice(p.price?.toString() || '');
+    setApLink(p.link || '');
+    setApImageUrl(p.image_url || '');
+    setApVendor(p.vendor || '');
+    setApVendorLocation(p.vendor_location || '');
+    setApNotes(p.notes || '');
+    setAvailPartOpen(true);
+  };
+
+  const handleSaveAvailPart = async () => {
+    if (!apName.trim()) return;
+    const payload = {
+      name: apName.trim(),
+      sku: apSku.trim() || null,
+      price: apPrice ? parseFloat(apPrice) : null,
+      link: apLink.trim() || null,
+      image_url: apImageUrl || null,
+      vendor: apVendor.trim() || null,
+      vendor_location: apVendorLocation.trim() || null,
+      notes: apNotes.trim() || null,
+    };
+    if (editingAvailPart) {
+      await updateAvailablePart(editingAvailPart.id, payload);
+    } else {
+      await addAvailablePart(payload);
+    }
+    setAvailPartOpen(false);
+    resetAvailPartForm();
+    toast({ title: editingAvailPart ? 'Part updated' : 'Part added' });
+  };
+
+  const handleAvailPartImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setApUploading(true);
+    const url = await uploadAvailablePartImage(file);
+    if (url) setApImageUrl(url);
+    setApUploading(false);
+  };
   const { allItems } = useInventory();
   const { vendors } = useVendors();
   const { warehouses } = useWarehouses();
@@ -226,6 +291,7 @@ export function AssetDetail() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="parts">Parts Installed</TabsTrigger>
+            <TabsTrigger value="available">Available Parts</TabsTrigger>
             <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -458,6 +524,68 @@ export function AssetDetail() {
                   })}
                 </TableBody>
               </Table>
+            )}
+          </TabsContent>
+
+          {/* AVAILABLE PARTS (catalog of parts that could be installed) */}
+          <TabsContent value="available">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold">Available Parts</h3>
+                <p className="text-xs text-muted-foreground">Reference catalog of parts available for this asset (not yet installed).</p>
+              </div>
+              <Button size="sm" onClick={() => { resetAvailPartForm(); setAvailPartOpen(true); }}>
+                <Plus className="h-4 w-4 mr-1" /> Add Available Part
+              </Button>
+            </div>
+            {availableParts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No available parts saved yet.</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {availableParts.map((p) => (
+                  <Card key={p.id} className="overflow-hidden">
+                    {p.image_url ? (
+                      <img
+                        src={p.image_url}
+                        alt={p.name}
+                        className="w-full h-36 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => handleImageClick(p.image_url!)}
+                      />
+                    ) : (
+                      <div className="w-full h-36 bg-muted flex items-center justify-center">
+                        <Package className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <CardContent className="pt-3 space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-semibold text-sm leading-tight">{p.name}</h4>
+                        <div className="flex gap-1 shrink-0">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditAvailPart(p)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeAvailablePart(p.id)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      {p.sku && <p className="text-xs text-muted-foreground">SKU: {p.sku}</p>}
+                      {p.price != null && <p className="text-sm font-medium">${Number(p.price).toFixed(2)}</p>}
+                      {p.vendor && (
+                        <p className="text-xs">
+                          <span className="text-muted-foreground">Vendor: </span>{p.vendor}
+                          {p.vendor_location ? <span className="text-muted-foreground"> · {p.vendor_location}</span> : null}
+                        </p>
+                      )}
+                      {p.link && (
+                        <a href={p.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+                          <ExternalLink className="h-3 w-3" /> View link
+                        </a>
+                      )}
+                      {p.notes && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{p.notes}</p>}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </TabsContent>
 
@@ -694,6 +822,42 @@ export function AssetDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddPartOpen(false)}>Cancel</Button>
             <Button onClick={handleAddPart} disabled={partMode === 'inventory' ? !selectedItemName : !customItemName.trim()}>Add Part</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Available Part Dialog */}
+      <Dialog open={availPartOpen} onOpenChange={(o) => { setAvailPartOpen(o); if (!o) resetAvailPartForm(); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingAvailPart ? 'Edit Available Part' : 'Add Available Part'}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Name *</Label><Input value={apName} onChange={(e) => setApName(e.target.value)} placeholder="Part name" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>SKU / Part #</Label><Input value={apSku} onChange={(e) => setApSku(e.target.value)} /></div>
+              <div><Label>Price</Label><Input type="number" step="0.01" value={apPrice} onChange={(e) => setApPrice(e.target.value)} placeholder="0.00" /></div>
+            </div>
+            <div><Label>Link</Label><Input value={apLink} onChange={(e) => setApLink(e.target.value)} placeholder="https://vendor.com/product..." /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Vendor</Label><Input value={apVendor} onChange={(e) => setApVendor(e.target.value)} placeholder="Vendor name" /></div>
+              <div><Label>Vendor Location</Label><Input value={apVendorLocation} onChange={(e) => setApVendorLocation(e.target.value)} placeholder="City, State / Address" /></div>
+            </div>
+            <div>
+              <Label>Picture</Label>
+              <Input type="file" accept="image/*" onChange={handleAvailPartImageUpload} disabled={apUploading} />
+              {apImageUrl && (
+                <div className="relative inline-block mt-2">
+                  <img src={apImageUrl} alt="Preview" className="h-24 w-24 rounded-md object-cover" />
+                  <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => setApImageUrl('')}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <div><Label>Notes</Label><Textarea value={apNotes} onChange={(e) => setApNotes(e.target.value)} rows={2} placeholder="Optional notes..." /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAvailPartOpen(false); resetAvailPartForm(); }}>Cancel</Button>
+            <Button onClick={handleSaveAvailPart} disabled={!apName.trim() || apUploading}>{editingAvailPart ? 'Save Changes' : 'Add Part'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

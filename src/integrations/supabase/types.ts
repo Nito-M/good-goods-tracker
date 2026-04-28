@@ -229,6 +229,62 @@ export type Database = {
         }
         Relationships: []
       }
+      asset_available_parts: {
+        Row: {
+          asset_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          link: string | null
+          name: string
+          notes: string | null
+          price: number | null
+          sku: string | null
+          updated_at: string
+          user_id: string
+          vendor: string | null
+          vendor_location: string | null
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link?: string | null
+          name: string
+          notes?: string | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+          user_id: string
+          vendor?: string | null
+          vendor_location?: string | null
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link?: string | null
+          name?: string
+          notes?: string | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+          user_id?: string
+          vendor?: string | null
+          vendor_location?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_available_parts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_documents: {
         Row: {
           asset_id: string
