@@ -699,6 +699,16 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/trailer-configurator/admin/prebuilt/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PrebuiltAssemblyDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
         {/* Public shop routes - no auth required, wrapped in CartProvider */}
         <Route path="/shop/:slug" element={<CartProvider><PublicShop /></CartProvider>} />
         <Route path="/shop/:slug/category/:category" element={<CartProvider><PublicShopCategory /></CartProvider>} />
