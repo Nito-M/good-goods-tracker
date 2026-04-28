@@ -1,56 +1,85 @@
+# Plan: Expand Notes with Standard Notes-App Features
 
-# Plan: Copy/Paste board between orgs via clipboard
+The current Notes page (`src/pages/Notes.tsx`) supports: title + markdown content, 8 colors, pinning, search, edit/delete. Below are the standard features popular notes apps (Google Keep, Apple Notes, Evernote, Notion, OneNote, Bear, Notesnook) offer that we can add. You pick which ones you want — I'll then implement.
 
-## Goal
-Instead of picking a target company in a dialog, let you **Copy** a board from one place and **Paste** it into another org/board list — like a real clipboard.
+## Organization
+1. **Labels / Tags** — multiple per note, filter sidebar by tag (Keep, Evernote, Bear).
+2. **Notebooks / Folders** — group notes into folders, optional nesting (Evernote, Notion, Bear).
+3. **Archive** — hide without deleting (Keep, Apple Notes).
+4. **Trash / Recycle bin** — soft delete with 30-day restore (Keep, Apple Notes).
+5. **Favorites / Starred** — separate from pinned (Notion, Bear).
+6. **Sort options** — by title, date created, date modified, manual drag-to-reorder.
+7. **View toggle** — grid vs. list view (Keep).
 
-## How it works for the user
+## Content types
+8. **Checklists / To-do inside a note** — interactive checkboxes (Keep, Apple Notes).
+9. **Image attachments** — upload images embedded in note (all major apps).
+10. **File attachments** — PDFs, docs (Evernote, OneNote).
+11. **Voice memos / audio recording** (Keep, Apple Notes).
+12. **Drawings / handwriting / sketch** (Apple Notes, OneNote).
+13. **Tables** inside notes (Notion, Apple Notes).
+14. **Code blocks with syntax highlighting** (Bear, Notion).
+15. **Rich text WYSIWYG editor** instead of markdown shortcuts (Apple Notes, Notion).
+16. **Live markdown preview** side-by-side (Bear, Obsidian).
 
-1. **Copy a board**
-   - On `/boards` (each board card): a **Copy** icon → puts the board on the clipboard.
-   - On `/boards/:id` (header): a **Copy board** button → same thing.
-   - Toast: *"Board copied. Open another org and paste."*
+## Reminders & dates
+17. **Reminders / due dates** with notifications (Keep, Apple Notes).
+18. **Recurring reminders** (Keep).
+19. **Location-based reminders** (Keep, Apple Notes).
 
-2. **Switch org** using the existing org switcher (top nav / sidebar). The clipboard persists across navigation and reloads.
+## Collaboration & sharing
+20. **Share note with another org member** — view or edit (Keep, Notion).
+21. **Public share link** — read-only URL (Notion, Bear).
+22. **Real-time co-editing** (Notion, Google Docs-style).
+23. **Comments / mentions** on notes (Notion, Evernote).
+24. **Activity / version history** — see edits over time (Notion, Evernote).
 
-3. **Paste**
-   - A **Paste board** button appears at the top of `/boards` whenever the clipboard has a board (and only then).
-   - Clicking it opens a small dialog: pick a **target company** in the current org + confirm/edit the new name (defaults to `"<Original> (Copy)"`).
-   - Confirm → board is duplicated into that company, you're navigated to the new board, clipboard is cleared.
-   - A small **×** on the Paste button discards the clipboard without pasting.
+## Discovery
+25. **Full-text search across content** (already partial — could add highlighting + filters by color/tag/date).
+26. **Recently viewed / recently edited** section.
+27. **Backlinks / linked notes** — `[[note title]]` references (Obsidian, Bear, Notion).
+28. **Tags autocomplete** while typing `#tag` in body (Bear).
 
-## Clipboard storage
+## Security & privacy
+29. **Lock individual notes** with PIN/password (Apple Notes, Bear, Notesnook).
+30. **End-to-end encryption** for sensitive notes (Notesnook, Standard Notes).
 
-Stored in `localStorage` under `boardClipboard`:
-```ts
-{ sourceBoardId: string, sourceBoardName: string, sourceCompanyId: string | null, copiedAt: string }
-```
-- Survives reloads and org switches (same browser).
-- One slot — copying a new board overwrites it.
-- Cleared after a successful paste or via the × button.
+## Productivity
+31. **Templates** — reusable note skeletons (Notion, Evernote).
+32. **Pin to top of OS** / floating widget (Keep) — out of scope for web.
+33. **Quick-capture floating button** from anywhere in the app.
+34. **Keyboard shortcuts** (new note, search, save, navigate).
+35. **Word/character count** in editor.
+36. **Focus / distraction-free mode** (Bear).
+37. **Export note** as Markdown / PDF / plain text.
+38. **Import** from .md / .txt / Evernote .enex.
+39. **Bulk actions** — multi-select to pin/color/delete/archive several at once.
 
-On paste, we re-fetch the source board fresh from the DB (so any edits made between copy & paste are included). If the source board no longer exists or you've lost access, the paste fails with a clear toast and the clipboard is cleared.
+## Display & customization
+40. **Dark mode tinted note colors** (already done — could refine).
+41. **Custom note backgrounds / cover images** (Notion).
+42. **Custom emoji icon per note** (Notion).
+43. **Card size toggle** — small / medium / large.
 
-## Reusing existing work
+## AI features (using built-in Lovable AI, no API key needed)
+44. **AI summarize** a long note.
+45. **AI rewrite / improve writing**.
+46. **AI translate** a note.
+47. **AI generate to-do list** from a note's content.
+48. **AI ask questions** across all your notes (semantic search).
+49. **Auto-tag** suggestions from AI.
 
-The deep-copy engine (`src/lib/copyBoard.ts`) and the `copyBoard` mutation in `useBoards` already do exactly the right thing — column/row/cell/merge/note remapping, org resolution, access grant. No changes there.
+---
 
-What changes:
-- **Replace** the current "open dialog immediately" flow on the Copy button with "put on clipboard" behavior.
-- **Add** a Paste flow on `/boards`.
+## Recommended starter pack (if you want a balanced set without going overboard)
+- Tags (#1)
+- Archive + Trash (#3, #4)
+- Checklists inside notes (#8)
+- Image attachments (#9)
+- Reminders with due dates (#17)
+- Share with org members (#20)
+- Templates (#31)
+- Bulk actions (#39)
+- AI summarize + rewrite (#44, #45)
 
-## Technical changes
-
-- **New `src/hooks/useBoardClipboard.ts`** — small hook around `localStorage` with a storage-event listener so multiple tabs stay in sync. Exposes `{ clipboard, copyToClipboard(board), clear() }`.
-- **New `src/components/board/PasteBoardDialog.tsx`** — target company picker (scoped to current org's companies) + name input. Calls existing `copyBoard(...)` from `useBoards`. On success: clears clipboard, navigates to the new board.
-- **`src/pages/Boards.tsx`** — 
-  - Copy icon on each card now calls `copyToClipboard(board)` (no dialog).
-  - Renders a **Paste board** pill near the page header when `clipboard` is set, with × to discard.
-- **`src/pages/BoardDetail.tsx`** — header **Copy board** button now calls `copyToClipboard(board)` instead of opening the dialog.
-- **Delete** `src/components/board/CopyBoardDialog.tsx` (replaced by `PasteBoardDialog`).
-
-## Edge cases handled
-- Paste button only shows when clipboard is non-empty.
-- If the source board was deleted or access revoked: toast error, clear clipboard.
-- Pasting into the same org/company is allowed (just creates a duplicate there).
-- Clipboard is per-browser; doesn't sync across devices (out of scope).
+Tell me which numbers you want and I'll build them.
