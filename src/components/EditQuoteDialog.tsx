@@ -448,6 +448,23 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>Markup % (applied to all item prices)</Label>
+            <Input
+              type="number"
+              step="0.1"
+              value={markupPercent}
+              onChange={(e) => {
+                const val = e.target.value;
+                setMarkupPercent(val === '' ? '' : parseFloat(val) || 0);
+              }}
+              placeholder="0"
+            />
+            <p className="text-xs text-muted-foreground">
+              Recalculates each item's unit price from its original price. Clear to revert.
+            </p>
+          </div>
+
           {/* Hide Prices */}
           <div className="flex items-center space-x-2">
             <Checkbox
