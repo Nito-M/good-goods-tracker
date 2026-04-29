@@ -1450,7 +1450,7 @@ export function Settings() {
 
       {/* Customer Dialog */}
       <Dialog open={customerDialogOpen} onOpenChange={setCustomerDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
           </DialogHeader>
@@ -1505,6 +1505,26 @@ export function Settings() {
                 rows={2}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-notes">Notes</Label>
+              <Textarea
+                id="customer-notes"
+                value={customerNotes}
+                onChange={(e) => setCustomerNotes(e.target.value)}
+                placeholder="Any notes about this customer"
+                rows={4}
+              />
+            </div>
+            {editingCustomer ? (
+              <div className="space-y-2">
+                <Label>Files & Images</Label>
+                <CustomerFilesSection customerId={editingCustomer.id} />
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Save the customer first to attach files or images.
+              </p>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCustomerDialogOpen(false)}>
                 Cancel
