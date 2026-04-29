@@ -449,8 +449,6 @@ export function Notes() {
             setNoteTags={setNoteTags}
             colorPicker={<ColorPicker value={editingNote.color} onChange={(c) => setEditingNote({ ...editingNote, color: c })} />}
             tagPicker={<TagPicker selected={editingNote.tagIds} onChange={(ids) => { setEditingNote({ ...editingNote, tagIds: ids }); setNoteTags(editingNote.id, ids); }} />}
-            insertFormatting={insertFormatting}
-            FormatToolbar={FormatToolbar}
             editContentRef={editContentRef}
             summarize={summarize}
             rewrite={rewrite}
