@@ -261,6 +261,7 @@ export function Settings() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
+  const [customerNotes, setCustomerNotes] = useState('');
   const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
   // Filtered vendors
   const filteredVendors = vendors.filter((vendor) => {
