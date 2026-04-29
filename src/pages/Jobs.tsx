@@ -592,11 +592,10 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                     <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
                                     
                                     <TableCell>
-                                      <div className="flex items-center gap-1">
-                                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: Math.max(0.01, item.quantity - 1) })}><Minus className="h-3 w-3" /></Button>
-                                        <Input type="number" className="w-14 text-center h-7" value={item.quantity} onChange={e => updateItem(item.id, { quantity: Math.max(0.01, parseFloat(e.target.value) || 0.01) })} min={0.01} step="0.01" />
-                                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
-                                      </div>
+                                      <QtyInput
+                                        value={item.quantity}
+                                        onCommit={(q) => updateItem(item.id, { quantity: q })}
+                                      />
                                     </TableCell>
                                     
                                     <TableCell>
