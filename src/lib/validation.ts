@@ -28,6 +28,7 @@ export const customerSchema = z.object({
   phone: optionalPhone,
   email: optionalEmail,
   address: optionalAddress,
+  notes: z.string().max(5000, 'Notes must be less than 5000 characters').optional().nullable(),
 });
 
 export type CustomerInput = z.infer<typeof customerSchema>;

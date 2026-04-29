@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCustomers, Customer } from '@/hooks/useCustomers';
+import { CustomerFilesSection } from '@/components/CustomerFilesSection';
 import { useCategories } from '@/hooks/useCategories';
 import { useAssemblyCategories } from '@/hooks/useAssemblyCategories';
 import { useSubcategories } from '@/hooks/useSubcategories';
@@ -261,6 +262,7 @@ export function Settings() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
+  const [customerNotes, setCustomerNotes] = useState('');
   const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
   // Filtered vendors
   const filteredVendors = vendors.filter((vendor) => {
@@ -305,6 +307,7 @@ export function Settings() {
       setCustomerPhone(customer.phone || '');
       setCustomerEmail(customer.email || '');
       setCustomerAddress(customer.address || '');
+      setCustomerNotes(customer.notes || '');
     } else {
       setEditingCustomer(null);
       setCustomerName('');
@@ -312,6 +315,7 @@ export function Settings() {
       setCustomerPhone('');
       setCustomerEmail('');
       setCustomerAddress('');
+      setCustomerNotes('');
     }
     setCustomerDialogOpen(true);
   };
@@ -324,6 +328,7 @@ export function Settings() {
       phone: customerPhone || null,
       email: customerEmail || null,
       address: customerAddress || null,
+      notes: customerNotes || null,
     };
 
     if (editingCustomer) {
@@ -1445,7 +1450,7 @@ export function Settings() {
 
       {/* Customer Dialog */}
       <Dialog open={customerDialogOpen} onOpenChange={setCustomerDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
           </DialogHeader>
@@ -1500,6 +1505,26 @@ export function Settings() {
                 rows={2}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-notes">Notes</Label>
+              <Textarea
+                id="customer-notes"
+                value={customerNotes}
+                onChange={(e) => setCustomerNotes(e.target.value)}
+                placeholder="Any notes about this customer"
+                rows={4}
+              />
+            </div>
+            {editingCustomer ? (
+              <div className="space-y-2">
+                <Label>Files & Images</Label>
+                <CustomerFilesSection customerId={editingCustomer.id} />
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Save the customer first to attach files or images.
+              </p>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCustomerDialogOpen(false)}>
                 Cancel

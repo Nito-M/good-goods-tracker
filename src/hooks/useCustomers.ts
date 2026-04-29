@@ -11,6 +11,7 @@ export interface Customer {
   phone: string | null;
   email: string | null;
   address: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +72,7 @@ export function useCustomers() {
       phone: validation.data.phone ?? null,
       email: validation.data.email ?? null,
       address: validation.data.address ?? null,
+      notes: validation.data.notes ?? null,
       user_id: user.id,
     }]);
 
