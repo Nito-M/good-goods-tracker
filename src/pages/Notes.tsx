@@ -158,38 +158,7 @@ export function Notes() {
     setIsCreating(true);
   };
 
-  const insertFormatting = (
-    fmt: string,
-    setter: React.Dispatch<React.SetStateAction<string>>,
-    currentValue: string
-  ) => {
-    const formats: Record<string, string> = {
-      bold: "**bold text**", italic: "*italic text*",
-      h1: "\n# Heading 1\n", h2: "\n## Heading 2\n",
-      ul: "\n- List item\n- List item\n", ol: "\n1. First item\n2. Second item\n",
-      quote: "\n> Quote\n", code: "\n```\ncode block\n```\n", hr: "\n---\n",
-      checklist: "\n- [ ] Task one\n- [ ] Task two\n",
-    };
-    setter(currentValue + formats[fmt]);
-  };
-
-  const FormatToolbar = ({ currentValue, setter }: { currentValue: string; setter: React.Dispatch<React.SetStateAction<string>>; }) => (
-    <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("bold", setter, currentValue)} title="Bold"><Bold className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("italic", setter, currentValue)} title="Italic"><Italic className="h-4 w-4" /></Button>
-      <div className="w-px h-6 bg-border mx-1" />
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("h1", setter, currentValue)} title="H1"><Heading1 className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("h2", setter, currentValue)} title="H2"><Heading2 className="h-4 w-4" /></Button>
-      <div className="w-px h-6 bg-border mx-1" />
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("ul", setter, currentValue)} title="Bullet list"><List className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("ol", setter, currentValue)} title="Numbered list"><ListOrdered className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("checklist", setter, currentValue)} title="Checklist"><CheckSquare className="h-4 w-4" /></Button>
-      <div className="w-px h-6 bg-border mx-1" />
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("quote", setter, currentValue)} title="Quote"><Quote className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("code", setter, currentValue)} title="Code"><Code className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("hr", setter, currentValue)} title="Divider"><Minus className="h-4 w-4" /></Button>
-    </div>
-  );
+  // (markdown editor lives in MarkdownEditor component below)
 
   const ColorPicker = ({ value, onChange }: { value: NoteColor; onChange: (c: NoteColor) => void }) => (
     <Popover>
