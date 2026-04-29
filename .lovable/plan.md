@@ -1,80 +1,77 @@
+## Goal
 
-# Secondary Slot Kind (Override) for Model Number Slots
+Make the formatting buttons in the Notes editor (Bold, Italic, H1, H2, lists, quote, code, etc.) act as **toggleable modes**: press once to turn ON (button highlights), and any text you type from then on is wrapped in that formatting. Press again to turn OFF.
 
-Let each of the 8 model number positions optionally define a **secondary slot kind**. In the customer Trailer Configurator, if the user has a selection for the secondary kind, its code is emitted at that position instead of the primary's code. If the secondary has no selection, the primary's code is used as today.
+## Current Behavior
 
-## Example
+The editor in `src/pages/Notes.tsx` is a plain `<Textarea>`. The toolbar buttons just append placeholder snippets like `**bold text**` to the end of the content. There's no caret tracking and no "active mode" state, so formatting can't persist across keystrokes.
 
-- Slot #4: Primary = **Trailer Length**, Secondary = **Trailer Subtype**
-- Customer picks Length = "20 ft" only → slot #4 emits Length code (e.g. `20`)
-- Customer also picks Subtype = "Tilt Deck" → slot #4 emits Subtype code (e.g. `T`), overriding the length
+## Proposed Behavior
 
-## Database
+Two parts to "stays bold until I press the button again":
 
-Add two nullable columns to `public.model_number_slots`:
+1. **Visual toggle state** — clicking Bold highlights the button (active style) and clicking again deselects it. Multiple inline modes (bold + italic) can be active at the same time. Block modes (H1, H2, quote, code block, list, checklist) are mutually exclusive — picking one replaces any other active block mode.
 
-- `secondary_slot_kind text` — same enum as `slot_kind`, nullable. `null` / `'empty'` = no secondary.
-- `secondary_fixed_text text` — used only if `secondary_slot_kind = 'fixed'`.
+2. **Typing behavior** — while a mode is active:
+   - **Inline modes (Bold, Italic)**: as you type, characters are wrapped live. E.g. with Bold on, typing `hello` produces `**hello**` and the caret stays inside the `**…**`. Toggling Bold off closes the wrapper and the caret moves outside it. Toggling on with text already selected wraps the selection immediately.
+   - **Block modes (H1, H2, Quote, Code, Bullet list, Numbered list, Checklist)**: pressing the button inserts the prefix on the current line (`# `, `## `, `> `, `- `, `1. `, `- [ ] `) and applies the same prefix to each new line you create with Enter. Toggling off stops adding the prefix on subsequent lines.
+   - **Divider (`---`)**: stays as a one-shot insert (no toggle state); pressing it just drops a divider where the caret is.
 
-The existing `override_codes jsonb` and `conditional_rules jsonb` stay shared for the slot (per the user's choice: "Share the slot's rules, separate codes"). Per-item default `model_code` already lives on the source items themselves, so secondary picks up its own item's default code automatically. Slot-level `override_codes` apply to whichever item id ends up resolved (primary or secondary), since item ids are globally unique across each kind.
+## Technical Plan
 
-## Logic — `src/lib/modelNumber.ts`
+All changes contained in `src/pages/Notes.tsx`. No new dependencies, no DB changes.
 
-Update `ModelNumberSlot` interface to include the two new fields.
+### 1. Refactor `FormatToolbar` and the editors into a controlled component
 
-In `resolveSlot(slot, ctx)`:
+Replace the current `FormatToolbar` + raw `<Textarea>` pairs (used in the Create dialog and the `EditNoteBody` component) with a single new component `MarkdownEditor` that owns:
 
-1. Evaluate `conditional_rules` first (unchanged) — rules still win over everything.
-2. If `secondary_slot_kind` is set and not `'empty'`, build a temporary "secondary slot" object that reuses the same `override_codes` and `conditional_rules` but with `slot_kind = secondary_slot_kind` and `fixed_text = secondary_fixed_text`. Resolve it (without re-running rules — pass a flag, or inline the switch). If it produces a non-empty code, **return that code**.
-3. Otherwise fall through to the primary `slot_kind` switch (unchanged).
+- A `ref` to the textarea (for caret/selection access).
+- `activeInline: Set<'bold' | 'italic'>` state.
+- `activeBlock: 'h1' | 'h2' | 'quote' | 'code' | 'ul' | 'ol' | 'checklist' | null` state.
+- The textarea `value` / `onChange` passed in from the parent (so existing save logic is untouched).
 
-Refactor the body of the current switch into a helper `resolveByKind(kind, fixedText, slot, ctx)` so primary and secondary both call it. Rules evaluation stays in the outer `resolveSlot`.
+### 2. Toolbar button styling
 
-## Hook — `src/hooks/useModelNumberTemplate.ts`
+Each button receives an `active` boolean. When active, render with the `secondary` variant (or `bg-accent text-accent-foreground`) so it visibly looks "pressed". Use the existing `Toggle` component from `src/components/ui/toggle.tsx` if it fits — it already provides pressed/unpressed visuals via `data-state=on`.
 
-- Add `secondary_slot_kind` and `secondary_fixed_text` to the `Pick<>` allowed in `updateSlot`.
-- Pass them through in the local `setSlots` patch.
+### 3. Inline toggle logic (Bold / Italic)
 
-## Admin UI — `src/components/ModelNumberTab.tsx`
+On click:
+- If text is selected: wrap/unwrap the selection with `**…**` (bold) or `*…*` (italic) immediately, no mode change.
+- If no selection: flip the mode in `activeInline`. Insert the opening marker at the caret if turning on, or move the caret past the closing marker if turning off.
 
-For each slot row, add a small **"+ Add secondary"** button next to the primary `Select` (only shown when no secondary is configured and primary kind is not `empty`). When clicked, it sets `secondary_slot_kind = 'trailer_type'` (placeholder default) so the controls appear.
+While a mode is on, intercept `onChange`:
+- Detect the diff (single char inserted at caret). Re-insert the char inside the wrapper so the closing `**` stays to the right of the caret. Implementation: maintain "open wrapper position" while mode is on; on every keystroke ensure the closing marker sits exactly `caret` characters after the opening marker.
 
-When a secondary exists, render a second compact row beneath the primary, indented and labeled "Overrides with":
+### 4. Block toggle logic (H1, H2, Quote, Code, lists, checklist)
 
-```text
-#4 [ Trailer Length ▾ ] [ Default code per option ] [☐ Sep after] [Codes][Rules]
-   ↳ Overrides with: [ Trailer Subtype ▾ ] [ (fixed input if 'fixed') ] [✕ Remove secondary]
-```
+On click:
+- Apply the prefix to the current line (replace any existing block prefix on that line first, since block modes are mutually exclusive).
+- Set `activeBlock` to the chosen mode (or `null` if clicking the same active one again).
 
-- Secondary `Select` reuses `ALL_SLOT_KINDS`.
-- If secondary kind is `'fixed'`, show a small fixed-text Input with onBlur save (mirrors primary fixed-text behavior).
-- Remove button sets `secondary_slot_kind: null` and `secondary_fixed_text: null`.
-- The existing **Codes** dialog stays tied to the primary kind (since codes/overrides for the secondary's items live on those items' own `model_code` and the shared `override_codes` map). Add a one-line hint inside the dialog when a secondary is set: *"This slot also resolves '[Secondary Kind]' — manage its codes via that section's tab."*
+While `activeBlock` is set, intercept `onKeyDown` for `Enter`:
+- Insert `\n` followed by the active prefix (`# `, `- `, `- [ ] `, `1. ` with auto-incrementing number for `ol`).
+- For `ol`, track the next number per editor instance.
+- Pressing Enter on an empty prefixed line clears the prefix and turns the block mode off (standard markdown editor behavior).
 
-The "Rules" dialog continues to govern the slot regardless (rules still win over both primary and secondary), per the answered preference.
+Code block (` ``` `) is handled as a one-shot insert of the fenced block, since multi-line code mode would require closing-fence tracking; toggling it just inserts the fenced template at the caret.
 
-## Live preview & configurator
+### 5. Divider
 
-No changes needed to call sites — `TrailerConfigurator.tsx` and `PrebuiltAssemblyDetail.tsx` already pass the full `BuildContext`, and the resolver does the rest. The admin Live Preview block updates automatically.
+Keep current behavior: insert `\n---\n` at caret, no toggle state.
 
-## Migration
+### 6. Usage sites
 
-Single migration:
+Replace the two existing `<FormatToolbar … /> <Textarea …/>` blocks (one in the create dialog around line 443+, one in `EditNoteBody` around line 614+) with `<MarkdownEditor value={…} onChange={…} placeholder="…" />`. The save flow, autosave, download, and print logic all keep working unchanged because they still read the same string.
 
-```sql
-ALTER TABLE public.model_number_slots
-  ADD COLUMN secondary_slot_kind text,
-  ADD COLUMN secondary_fixed_text text;
-```
+### 7. Edge cases handled
 
-No backfill (NULL = no secondary, identical to today's behavior). RLS unaffected.
+- Switching focus away from the textarea clears `activeInline` / `activeBlock` (so the modes don't silently apply when you come back).
+- Clicking inside the textarea at a new position also clears modes (mode is tied to the current typing run, like Word's "B" button).
+- Selecting text while a mode is active and clicking the button wraps the selection and exits mode.
 
-## Types
+## Out of Scope
 
-Regenerate `src/integrations/supabase/types.ts` will pick up new columns automatically; no manual edit required.
-
-## Out of scope
-
-- No per-secondary `override_codes` / `conditional_rules` (shared with primary by design).
-- No third-tier slot.
-- No changes to PDF/Quote rendering of the model number.
+- Switching to a true rich-text editor (TipTap, Lexical, etc.). The notes are stored as markdown strings and rendered as markdown elsewhere; keeping that pipeline intact.
+- Changing how notes are rendered/previewed.
+- Toolbar behavior in any other page (this is Notes-only).
