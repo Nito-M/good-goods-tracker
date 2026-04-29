@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useVendors, Vendor } from '@/hooks/useVendors';
 import { useCustomers, Customer } from '@/hooks/useCustomers';
+import { CustomerFilesSection } from '@/components/CustomerFilesSection';
 import { useCategories } from '@/hooks/useCategories';
 import { useAssemblyCategories } from '@/hooks/useAssemblyCategories';
 import { useSubcategories } from '@/hooks/useSubcategories';
