@@ -306,6 +306,7 @@ export function Settings() {
       setCustomerPhone(customer.phone || '');
       setCustomerEmail(customer.email || '');
       setCustomerAddress(customer.address || '');
+      setCustomerNotes(customer.notes || '');
     } else {
       setEditingCustomer(null);
       setCustomerName('');
@@ -313,6 +314,7 @@ export function Settings() {
       setCustomerPhone('');
       setCustomerEmail('');
       setCustomerAddress('');
+      setCustomerNotes('');
     }
     setCustomerDialogOpen(true);
   };
@@ -325,6 +327,7 @@ export function Settings() {
       phone: customerPhone || null,
       email: customerEmail || null,
       address: customerAddress || null,
+      notes: customerNotes || null,
     };
 
     if (editingCustomer) {
