@@ -92,7 +92,8 @@ export function Notes() {
       if (filterTagIds.length > 0 && !filterTagIds.every((tid) => n.tagIds.includes(tid))) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        if (!n.title.toLowerCase().includes(q) && !n.content.toLowerCase().includes(q)) return false;
+        const contentText = isHtmlContent(n.content) ? htmlToPlainText(n.content) : n.content;
+        if (!n.title.toLowerCase().includes(q) && !contentText.toLowerCase().includes(q)) return false;
       }
       return true;
     });
