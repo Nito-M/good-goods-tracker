@@ -603,16 +603,13 @@ function EditNoteBody(props: any) {
         <Button size="sm" variant="outline" onClick={onDelete} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
       </div>
 
-      <div className="border rounded-md overflow-hidden flex-1 flex flex-col min-h-0">
-        <FormatToolbar currentValue={note.content} setter={(v: any) => onChange({ ...note, content: typeof v === "function" ? v(note.content) : v })} />
-        <Textarea
-          ref={editContentRef}
-          placeholder="Write your note..."
-          value={note.content}
-          onChange={(e) => onChange({ ...note, content: e.target.value })}
-          className="flex-1 border-0 focus-visible:ring-0 resize-none"
-        />
-      </div>
+      <MarkdownEditor
+        value={note.content}
+        onChange={(v) => onChange({ ...note, content: v })}
+        placeholder="Write your note..."
+        textareaRef={editContentRef}
+        className="flex-1 min-h-0"
+      />
 
       {attachments.length > 0 && (
         <div className="border rounded-md p-3">
