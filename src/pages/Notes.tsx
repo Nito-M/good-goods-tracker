@@ -567,8 +567,9 @@ function EditNoteBody(props: any) {
   } = props;
   const { attachments, uploadAttachment, deleteAttachment } = useNoteAttachments(note.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const wordCount = (note.content || "").trim().split(/\s+/).filter(Boolean).length;
-  const charCount = (note.content || "").length;
+  const plainContentForCount = htmlToPlainText(note.content || "");
+  const wordCount = plainContentForCount.trim().split(/\s+/).filter(Boolean).length;
+  const charCount = plainContentForCount.length;
 
   const reminderLocal = note.reminderAt ? new Date(note.reminderAt).toISOString().slice(0, 16) : "";
 
