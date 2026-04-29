@@ -4767,6 +4767,98 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          user_id: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          user_id: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          user_id?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_files_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workers: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          hourly_rate: number | null
+          id: string
+          job_title: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          photo_url: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          hourly_rate?: number | null
+          id?: string
+          job_title?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          hourly_rate?: number | null
+          id?: string
+          job_title?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
