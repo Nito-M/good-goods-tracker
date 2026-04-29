@@ -549,7 +549,7 @@ function printNote(note: Note) {
 function EditNoteBody(props: any) {
   const {
     note, onChange, onClose, onDelete, onPin, onArchive,
-    colorPicker, tagPicker, FormatToolbar, editContentRef,
+    colorPicker, tagPicker, editContentRef,
     summarize, rewrite, aiLoading,
   } = props;
   const { attachments, uploadAttachment, deleteAttachment } = useNoteAttachments(note.id);
