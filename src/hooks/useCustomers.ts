@@ -72,6 +72,7 @@ export function useCustomers() {
       phone: validation.data.phone ?? null,
       email: validation.data.email ?? null,
       address: validation.data.address ?? null,
+      notes: validation.data.notes ?? null,
       user_id: user.id,
     }]);
 
