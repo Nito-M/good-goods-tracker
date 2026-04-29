@@ -607,7 +607,6 @@ function EditNoteBody(props: any) {
         value={note.content}
         onChange={(v) => onChange({ ...note, content: v })}
         placeholder="Write your note..."
-        textareaRef={editContentRef}
         className="flex-1 min-h-0"
       />
 
