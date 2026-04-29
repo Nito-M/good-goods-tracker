@@ -593,6 +593,8 @@ function EditNoteBody(props: any) {
         }} />
         <Button size="sm" variant="outline" onClick={() => onAi("summarize")} disabled={aiLoading !== null}><Sparkles className="h-4 w-4 mr-1" />{aiLoading === "summarize" ? "..." : "Summarize"}</Button>
         <Button size="sm" variant="outline" onClick={() => onAi("rewrite")} disabled={aiLoading !== null}><Wand2 className="h-4 w-4 mr-1" />{aiLoading === "rewrite" ? "..." : "Rewrite"}</Button>
+        <Button size="sm" variant="outline" onClick={() => downloadNote(note)}><Download className="h-4 w-4 mr-1" />Download</Button>
+        <Button size="sm" variant="outline" onClick={() => printNote(note)}><Printer className="h-4 w-4 mr-1" />Print</Button>
         <Button size="sm" variant="outline" onClick={onPin}>{note.isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}</Button>
         <Button size="sm" variant="outline" onClick={onArchive}>{note.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</Button>
         <Button size="sm" variant="outline" onClick={onDelete} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
