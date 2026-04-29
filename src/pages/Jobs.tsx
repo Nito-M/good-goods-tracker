@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon, ChevronDown, Package, Undo2 } from 'lucide-react';
+import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon, ChevronDown, Package, Undo2, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,51 @@ const STATUS_OPTIONS = [
   { value: 'on-hold', label: 'On Hold' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
+
+interface QtyInputProps {
+  value: number;
+  onCommit: (value: number) => void;
+}
+function QtyInput({ value, onCommit }: QtyInputProps) {
+  const [draft, setDraft] = useState<string>(String(value));
+  useEffect(() => { setDraft(String(value)); }, [value]);
+  const dirty = draft !== String(value) && draft.trim() !== '';
+  const commit = () => {
+    const parsed = parseFloat(draft);
+    if (!isNaN(parsed) && parsed > 0) {
+      onCommit(parsed);
+    } else {
+      setDraft(String(value));
+    }
+  };
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        type="number"
+        className="w-20 text-center h-7"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); (e.target as HTMLInputElement).blur(); }
+          else if (e.key === 'Escape') { setDraft(String(value)); (e.target as HTMLInputElement).blur(); }
+        }}
+        min={0.01}
+        step="0.01"
+      />
+      {dirty && (
+        <Button
+          size="icon"
+          variant="default"
+          className="h-7 w-7"
+          onClick={commit}
+          title="Confirm quantity"
+        >
+          <Check className="h-3.5 w-3.5" />
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export function Jobs() {
   const { signOut } = useAuth();
@@ -547,11 +592,10 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                     <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
                                     
                                     <TableCell>
-                                      <div className="flex items-center gap-1">
-                                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: Math.max(0.01, item.quantity - 1) })}><Minus className="h-3 w-3" /></Button>
-                                        <Input type="number" className="w-14 text-center h-7" value={item.quantity} onChange={e => updateItem(item.id, { quantity: Math.max(0.01, parseFloat(e.target.value) || 0.01) })} min={0.01} step="0.01" />
-                                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateItem(item.id, { quantity: item.quantity + 1 })}><Plus className="h-3 w-3" /></Button>
-                                      </div>
+                                      <QtyInput
+                                        value={item.quantity}
+                                        onCommit={(q) => updateItem(item.id, { quantity: q })}
+                                      />
                                     </TableCell>
                                     
                                     <TableCell>
