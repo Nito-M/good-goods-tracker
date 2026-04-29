@@ -90,6 +90,7 @@ function QtyInput({ value, onCommit }: QtyInputProps) {
   );
 }
 
+export function Jobs() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
