@@ -634,203 +634,117 @@ function EditNoteBody(props: any) {
 }
 
 // ============================================================
-// MarkdownEditor — toolbar buttons act as toggleable modes.
-// Bold/Italic insert markers and place caret between them so subsequent
-// typing lands inside the formatting. Block modes (H1/H2/Quote/lists/checklist)
-// prefix the current line and auto-prefix new lines on Enter until toggled off.
+// RichTextEditor — true WYSIWYG editor (contentEditable + execCommand).
+// Bold/Italic/etc actually format the text visually. Stored as HTML.
+// Backward compatible: plain-text/markdown content is auto-displayed as text.
 // ============================================================
-type InlineMode = "bold" | "italic";
-type BlockMode = "h1" | "h2" | "quote" | "ul" | "ol" | "checklist" | null;
 
-const BLOCK_PREFIX: Record<Exclude<BlockMode, null>, string> = {
-  h1: "# ",
-  h2: "## ",
-  quote: "> ",
-  ul: "- ",
-  ol: "1. ",
-  checklist: "- [ ] ",
-};
+// Detect whether a stored note value is HTML (from this editor) or legacy plain text.
+function isHtmlContent(s: string): boolean {
+  if (!s) return false;
+  return /<\/?(p|div|br|span|strong|em|u|h[1-6]|ul|ol|li|blockquote|pre|code|hr)\b/i.test(s);
+}
+
+// Convert legacy plain text (with optional markdown markers) to safe HTML for the editor.
+function plainTextToHtml(s: string): string {
+  if (!s) return "";
+  const escaped = s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped
+    .split(/\n{2,}/)
+    .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
+// Strip HTML tags to get plain text (for previews, downloads, search).
+function htmlToPlainText(s: string): string {
+  if (!s) return "";
+  if (!isHtmlContent(s)) return s;
+  const tmp = document.createElement("div");
+  tmp.innerHTML = s;
+  return tmp.innerText || tmp.textContent || "";
+}
 
 function MarkdownEditor({
   value,
   onChange,
   placeholder,
   className,
-  textareaRef: externalRef,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   className?: string;
-  textareaRef?: React.RefObject<HTMLTextAreaElement>;
 }) {
-  const internalRef = useRef<HTMLTextAreaElement>(null);
-  const ref = externalRef || internalRef;
-  const [activeInline, setActiveInline] = useState<Set<InlineMode>>(new Set());
-  const [activeBlock, setActiveBlock] = useState<BlockMode>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const lastValueRef = useRef<string>("");
+  const [, forceUpdate] = useState(0);
 
-  const focusAndSetCaret = (pos: number, end?: number) => {
-    requestAnimationFrame(() => {
-      const el = ref.current;
-      if (!el) return;
-      el.focus();
-      el.setSelectionRange(pos, end ?? pos);
-    });
-  };
-
-  const getSelection = () => {
-    const el = ref.current;
-    if (!el) return { start: value.length, end: value.length };
-    return { start: el.selectionStart ?? value.length, end: el.selectionEnd ?? value.length };
-  };
-
-  const replaceRange = (start: number, end: number, insert: string, caretStart: number, caretEnd?: number) => {
-    const next = value.slice(0, start) + insert + value.slice(end);
-    onChange(next);
-    focusAndSetCaret(caretStart, caretEnd);
-  };
-
-  // ---------- Inline toggles ----------
-  const toggleInline = (mode: InlineMode) => {
-    const marker = mode === "bold" ? "**" : "*";
-    const { start, end } = getSelection();
-
-    // If text selected, wrap/unwrap immediately and don't change mode.
-    if (start !== end) {
-      const selected = value.slice(start, end);
-      const before = value.slice(start - marker.length, start);
-      const after = value.slice(end, end + marker.length);
-      if (before === marker && after === marker) {
-        // Unwrap
-        const next = value.slice(0, start - marker.length) + selected + value.slice(end + marker.length);
-        onChange(next);
-        focusAndSetCaret(start - marker.length, end - marker.length);
-      } else {
-        const next = value.slice(0, start) + marker + selected + marker + value.slice(end);
-        onChange(next);
-        focusAndSetCaret(start + marker.length, end + marker.length);
-      }
-      return;
+  // Initialize / sync external value into the contentEditable only when it
+  // differs from what we last emitted (avoids caret jumps while typing).
+  useMemo(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    if (value !== lastValueRef.current) {
+      const html = isHtmlContent(value) ? value : plainTextToHtml(value);
+      if (el.innerHTML !== html) el.innerHTML = html;
+      lastValueRef.current = value;
     }
+  }, [value]);
 
-    // No selection — flip mode and insert/skip markers.
-    const isOn = activeInline.has(mode);
-    const nextSet = new Set(activeInline);
-    if (isOn) {
-      nextSet.delete(mode);
-      setActiveInline(nextSet);
-      // Move caret past the closing marker if it's right after caret.
-      const after = value.slice(start, start + marker.length);
-      if (after === marker) {
-        focusAndSetCaret(start + marker.length);
-      } else {
-        focusAndSetCaret(start);
-      }
-    } else {
-      nextSet.add(mode);
-      setActiveInline(nextSet);
-      // Insert empty wrapper "**" + "**" and put caret between.
-      const insert = marker + marker;
-      const next = value.slice(0, start) + insert + value.slice(start);
-      onChange(next);
-      focusAndSetCaret(start + marker.length);
+  // After mount, populate initial HTML.
+  const setRef = (el: HTMLDivElement | null) => {
+    editorRef.current = el;
+    if (el && el.innerHTML === "") {
+      const html = isHtmlContent(value) ? value : plainTextToHtml(value);
+      el.innerHTML = html;
+      lastValueRef.current = value;
     }
   };
 
-  // ---------- Block toggles ----------
-  const lineBoundsAt = (pos: number) => {
-    const before = value.lastIndexOf("\n", pos - 1);
-    const lineStart = before === -1 ? 0 : before + 1;
-    const nextNl = value.indexOf("\n", pos);
-    const lineEnd = nextNl === -1 ? value.length : nextNl;
-    return { lineStart, lineEnd };
+  const emit = () => {
+    const el = editorRef.current;
+    if (!el) return;
+    const html = el.innerHTML;
+    lastValueRef.current = html;
+    onChange(html);
   };
 
-  const stripBlockPrefix = (line: string): string => {
-    return line
-      .replace(/^#{1,6}\s+/, "")
-      .replace(/^>\s+/, "")
-      .replace(/^-\s\[\s?\]\s+/, "")
-      .replace(/^-\s+/, "")
-      .replace(/^\d+\.\s+/, "");
+  const exec = (command: string, arg?: string) => {
+    const el = editorRef.current;
+    if (!el) return;
+    el.focus();
+    // execCommand is deprecated but still universally supported and is the
+    // simplest way to get true WYSIWYG formatting in a contentEditable.
+    document.execCommand(command, false, arg);
+    emit();
+    forceUpdate((n) => n + 1); // refresh active button states
   };
 
-  const toggleBlock = (mode: Exclude<BlockMode, null>) => {
-    const { start } = getSelection();
-    const { lineStart, lineEnd } = lineBoundsAt(start);
-    const line = value.slice(lineStart, lineEnd);
-    const stripped = stripBlockPrefix(line);
-
-    if (activeBlock === mode) {
-      // Toggle OFF — remove prefix from current line.
-      const next = value.slice(0, lineStart) + stripped + value.slice(lineEnd);
-      onChange(next);
-      setActiveBlock(null);
-      const newCaret = Math.max(lineStart, start - (line.length - stripped.length));
-      focusAndSetCaret(newCaret);
-      return;
-    }
-
-    const prefix = BLOCK_PREFIX[mode];
-    const newLine = prefix + stripped;
-    const next = value.slice(0, lineStart) + newLine + value.slice(lineEnd);
-    onChange(next);
-    setActiveBlock(mode);
-    const delta = newLine.length - line.length;
-    focusAndSetCaret(Math.max(lineStart + prefix.length, start + delta));
-  };
-
-  // ---------- One-shot inserts ----------
-  const insertAtCaret = (text: string) => {
-    const { start, end } = getSelection();
-    replaceRange(start, end, text, start + text.length);
-  };
-
-  const insertCodeBlock = () => insertAtCaret("\n```\ncode block\n```\n");
-  const insertDivider = () => insertAtCaret("\n---\n");
-
-  // ---------- Key handling for block modes ----------
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && activeBlock) {
-      e.preventDefault();
-      const { start } = getSelection();
-      const { lineStart } = lineBoundsAt(start);
-      const currentLine = value.slice(lineStart, start);
-      const prefix = BLOCK_PREFIX[activeBlock];
-      // Empty prefixed line -> exit mode and clear prefix.
-      if (currentLine === prefix) {
-        const next = value.slice(0, lineStart) + value.slice(start);
-        onChange(next);
-        setActiveBlock(null);
-        focusAndSetCaret(lineStart);
-        return;
-      }
-      let nextPrefix = prefix;
-      if (activeBlock === "ol") {
-        // Auto-increment number based on previous line.
-        const m = currentLine.match(/^(\d+)\.\s/);
-        if (m) nextPrefix = `${parseInt(m[1], 10) + 1}. `;
-      }
-      const insert = "\n" + nextPrefix;
-      const next = value.slice(0, start) + insert + value.slice(start);
-      onChange(next);
-      focusAndSetCaret(start + insert.length);
+  const isActive = (command: string): boolean => {
+    try {
+      return document.queryCommandState(command);
+    } catch {
+      return false;
     }
   };
 
-  // ---------- Reset modes when caret moves or focus is lost ----------
-  const handleSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
-    // If user clicks/keyboard-navigates to a different caret position,
-    // clear modes so they don't silently apply later.
-    if (activeInline.size > 0 || activeBlock) {
-      // Heuristic: clear on any explicit selection change driven by mouse / arrow keys.
-      // (Typing also fires onSelect, but by then the wrapper is already growing correctly.)
+  const isBlock = (tag: string): boolean => {
+    try {
+      return document.queryCommandValue("formatBlock").toLowerCase() === tag.toLowerCase();
+    } catch {
+      return false;
     }
   };
 
-  const handleBlur = () => {
-    setActiveInline(new Set());
-    setActiveBlock(null);
+  const handlePaste = (e: React.ClipboardEvent) => {
+    // Paste as plain text to avoid pulling in foreign styles/images.
+    e.preventDefault();
+    const text = e.clipboardData.getData("text/plain");
+    document.execCommand("insertText", false, text);
+    emit();
   };
 
   const ToolBtn = ({
@@ -855,29 +769,40 @@ function MarkdownEditor({
   return (
     <div className={cn("border rounded-md overflow-hidden flex flex-col", className)}>
       <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
-        <ToolBtn active={activeInline.has("bold")} onClick={() => toggleInline("bold")} title="Bold (toggle)"><Bold className="h-4 w-4" /></ToolBtn>
-        <ToolBtn active={activeInline.has("italic")} onClick={() => toggleInline("italic")} title="Italic (toggle)"><Italic className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isActive("bold")} onClick={() => exec("bold")} title="Bold"><Bold className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isActive("italic")} onClick={() => exec("italic")} title="Italic"><Italic className="h-4 w-4" /></ToolBtn>
         <div className="w-px h-6 bg-border mx-1" />
-        <ToolBtn active={activeBlock === "h1"} onClick={() => toggleBlock("h1")} title="Heading 1 (toggle)"><Heading1 className="h-4 w-4" /></ToolBtn>
-        <ToolBtn active={activeBlock === "h2"} onClick={() => toggleBlock("h2")} title="Heading 2 (toggle)"><Heading2 className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isBlock("h1")} onClick={() => exec("formatBlock", "H1")} title="Heading 1"><Heading1 className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isBlock("h2")} onClick={() => exec("formatBlock", "H2")} title="Heading 2"><Heading2 className="h-4 w-4" /></ToolBtn>
         <div className="w-px h-6 bg-border mx-1" />
-        <ToolBtn active={activeBlock === "ul"} onClick={() => toggleBlock("ul")} title="Bullet list (toggle)"><List className="h-4 w-4" /></ToolBtn>
-        <ToolBtn active={activeBlock === "ol"} onClick={() => toggleBlock("ol")} title="Numbered list (toggle)"><ListOrdered className="h-4 w-4" /></ToolBtn>
-        <ToolBtn active={activeBlock === "checklist"} onClick={() => toggleBlock("checklist")} title="Checklist (toggle)"><CheckSquare className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isActive("insertUnorderedList")} onClick={() => exec("insertUnorderedList")} title="Bullet list"><List className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isActive("insertOrderedList")} onClick={() => exec("insertOrderedList")} title="Numbered list"><ListOrdered className="h-4 w-4" /></ToolBtn>
         <div className="w-px h-6 bg-border mx-1" />
-        <ToolBtn active={activeBlock === "quote"} onClick={() => toggleBlock("quote")} title="Quote (toggle)"><Quote className="h-4 w-4" /></ToolBtn>
-        <ToolBtn onClick={insertCodeBlock} title="Code block"><Code className="h-4 w-4" /></ToolBtn>
-        <ToolBtn onClick={insertDivider} title="Divider"><Minus className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isBlock("blockquote")} onClick={() => exec("formatBlock", "BLOCKQUOTE")} title="Quote"><Quote className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={isBlock("pre")} onClick={() => exec("formatBlock", "PRE")} title="Code block"><Code className="h-4 w-4" /></ToolBtn>
+        <ToolBtn onClick={() => exec("insertHorizontalRule")} title="Divider"><Minus className="h-4 w-4" /></ToolBtn>
       </div>
-      <Textarea
-        ref={ref}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onSelect={handleSelect}
-        onBlur={handleBlur}
-        className="flex-1 border-0 focus-visible:ring-0 resize-none rounded-none"
+      <div
+        ref={setRef}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={emit}
+        onPaste={handlePaste}
+        onKeyUp={() => forceUpdate((n) => n + 1)}
+        onMouseUp={() => forceUpdate((n) => n + 1)}
+        data-placeholder={placeholder}
+        className={cn(
+          "flex-1 px-3 py-2 outline-none overflow-auto text-sm",
+          "prose prose-sm dark:prose-invert max-w-none",
+          "[&[data-placeholder]:empty]:before:content-[attr(data-placeholder)]",
+          "[&:empty]:before:text-muted-foreground [&:empty]:before:pointer-events-none",
+          "[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:my-2",
+          "[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:my-2",
+          "[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6",
+          "[&_blockquote]:border-l-4 [&_blockquote]:border-muted [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground",
+          "[&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_pre]:font-mono [&_pre]:text-xs",
+          "[&_hr]:my-3 [&_hr]:border-border"
+        )}
       />
     </div>
   );
