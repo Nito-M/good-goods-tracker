@@ -32,6 +32,7 @@ import {
   Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Code, Minus,
   Palette, ListTodo, BookOpen, Tag, Archive, ArchiveRestore, Bell, BellOff,
   ImagePlus, X, FileText, Sparkles, Wand2, RotateCcw, Filter, CheckSquare,
+  Download, Printer,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -541,6 +542,45 @@ export function Notes() {
   );
 }
 
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+function downloadNote(note: Note) {
+  const safeTitle = (note.title || 'note').replace(/[^a-z0-9-_ ]/gi, '_').slice(0, 80) || 'note';
+  const body = `${note.title || 'Untitled'}\n${'='.repeat((note.title || 'Untitled').length)}\n\n${note.content || ''}\n`;
+  const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${safeTitle}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function printNote(note: Note) {
+  const w = window.open('', '_blank', 'width=800,height=900');
+  if (!w) {
+    toast.error('Pop-up blocked. Allow pop-ups to print.');
+    return;
+  }
+  const title = escapeHtml(note.title || 'Untitled');
+  const content = escapeHtml(note.content || '');
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 32px; color: #111; max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 24px; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
+  pre { white-space: pre-wrap; word-wrap: break-word; font-family: inherit; font-size: 14px; line-height: 1.6; }
+  @media print { body { padding: 0; } }
+</style></head><body><h1>${title}</h1><pre>${content}</pre>
+<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 100); };</script>
+</body></html>`);
+  w.document.close();
+}
+
 // Separate component to keep editor logic isolated
 function EditNoteBody(props: any) {
   const {
@@ -592,6 +632,8 @@ function EditNoteBody(props: any) {
         }} />
         <Button size="sm" variant="outline" onClick={() => onAi("summarize")} disabled={aiLoading !== null}><Sparkles className="h-4 w-4 mr-1" />{aiLoading === "summarize" ? "..." : "Summarize"}</Button>
         <Button size="sm" variant="outline" onClick={() => onAi("rewrite")} disabled={aiLoading !== null}><Wand2 className="h-4 w-4 mr-1" />{aiLoading === "rewrite" ? "..." : "Rewrite"}</Button>
+        <Button size="sm" variant="outline" onClick={() => downloadNote(note)}><Download className="h-4 w-4 mr-1" />Download</Button>
+        <Button size="sm" variant="outline" onClick={() => printNote(note)}><Printer className="h-4 w-4 mr-1" />Print</Button>
         <Button size="sm" variant="outline" onClick={onPin}>{note.isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}</Button>
         <Button size="sm" variant="outline" onClick={onArchive}>{note.archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}</Button>
         <Button size="sm" variant="outline" onClick={onDelete} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
