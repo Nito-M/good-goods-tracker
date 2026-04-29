@@ -45,7 +45,51 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
-export function Jobs() {
+interface QtyInputProps {
+  value: number;
+  onCommit: (value: number) => void;
+}
+function QtyInput({ value, onCommit }: QtyInputProps) {
+  const [draft, setDraft] = useState<string>(String(value));
+  useEffect(() => { setDraft(String(value)); }, [value]);
+  const dirty = draft !== String(value) && draft.trim() !== '';
+  const commit = () => {
+    const parsed = parseFloat(draft);
+    if (!isNaN(parsed) && parsed > 0) {
+      onCommit(parsed);
+    } else {
+      setDraft(String(value));
+    }
+  };
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        type="number"
+        className="w-20 text-center h-7"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); (e.target as HTMLInputElement).blur(); }
+          else if (e.key === 'Escape') { setDraft(String(value)); (e.target as HTMLInputElement).blur(); }
+        }}
+        min={0.01}
+        step="0.01"
+      />
+      {dirty && (
+        <Button
+          size="icon"
+          variant="default"
+          className="h-7 w-7"
+          onClick={commit}
+          title="Confirm quantity"
+        >
+          <Check className="h-3.5 w-3.5" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
