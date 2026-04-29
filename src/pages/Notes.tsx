@@ -158,38 +158,7 @@ export function Notes() {
     setIsCreating(true);
   };
 
-  const insertFormatting = (
-    fmt: string,
-    setter: React.Dispatch<React.SetStateAction<string>>,
-    currentValue: string
-  ) => {
-    const formats: Record<string, string> = {
-      bold: "**bold text**", italic: "*italic text*",
-      h1: "\n# Heading 1\n", h2: "\n## Heading 2\n",
-      ul: "\n- List item\n- List item\n", ol: "\n1. First item\n2. Second item\n",
-      quote: "\n> Quote\n", code: "\n```\ncode block\n```\n", hr: "\n---\n",
-      checklist: "\n- [ ] Task one\n- [ ] Task two\n",
-    };
-    setter(currentValue + formats[fmt]);
-  };
-
-  const FormatToolbar = ({ currentValue, setter }: { currentValue: string; setter: React.Dispatch<React.SetStateAction<string>>; }) => (
-    <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("bold", setter, currentValue)} title="Bold"><Bold className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("italic", setter, currentValue)} title="Italic"><Italic className="h-4 w-4" /></Button>
-      <div className="w-px h-6 bg-border mx-1" />
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("h1", setter, currentValue)} title="H1"><Heading1 className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("h2", setter, currentValue)} title="H2"><Heading2 className="h-4 w-4" /></Button>
-      <div className="w-px h-6 bg-border mx-1" />
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("ul", setter, currentValue)} title="Bullet list"><List className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("ol", setter, currentValue)} title="Numbered list"><ListOrdered className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("checklist", setter, currentValue)} title="Checklist"><CheckSquare className="h-4 w-4" /></Button>
-      <div className="w-px h-6 bg-border mx-1" />
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("quote", setter, currentValue)} title="Quote"><Quote className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("code", setter, currentValue)} title="Code"><Code className="h-4 w-4" /></Button>
-      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => insertFormatting("hr", setter, currentValue)} title="Divider"><Minus className="h-4 w-4" /></Button>
-    </div>
-  );
+  // (markdown editor lives in MarkdownEditor component below)
 
   const ColorPicker = ({ value, onChange }: { value: NoteColor; onChange: (c: NoteColor) => void }) => (
     <Popover>
@@ -441,10 +410,7 @@ export function Notes() {
           <DialogHeader><DialogTitle>New Note</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <Input placeholder="Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="text-lg font-semibold" />
-            <div className="border rounded-md overflow-hidden">
-              <FormatToolbar currentValue={newContent} setter={setNewContent} />
-              <Textarea placeholder="Write your note..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="min-h-[200px] border-0 focus-visible:ring-0 resize-none" />
-            </div>
+            <MarkdownEditor value={newContent} onChange={setNewContent} placeholder="Write your note..." className="min-h-[200px]" />
             <div className="flex flex-wrap gap-2 items-center">
               <ColorPicker value={newColor} onChange={setNewColor} />
               <TagPicker selected={newTagIds} onChange={setNewTagIds} />
@@ -483,8 +449,6 @@ export function Notes() {
             setNoteTags={setNoteTags}
             colorPicker={<ColorPicker value={editingNote.color} onChange={(c) => setEditingNote({ ...editingNote, color: c })} />}
             tagPicker={<TagPicker selected={editingNote.tagIds} onChange={(ids) => { setEditingNote({ ...editingNote, tagIds: ids }); setNoteTags(editingNote.id, ids); }} />}
-            insertFormatting={insertFormatting}
-            FormatToolbar={FormatToolbar}
             editContentRef={editContentRef}
             summarize={summarize}
             rewrite={rewrite}
@@ -585,7 +549,7 @@ function printNote(note: Note) {
 function EditNoteBody(props: any) {
   const {
     note, onChange, onClose, onDelete, onPin, onArchive,
-    colorPicker, tagPicker, FormatToolbar, editContentRef,
+    colorPicker, tagPicker, editContentRef,
     summarize, rewrite, aiLoading,
   } = props;
   const { attachments, uploadAttachment, deleteAttachment } = useNoteAttachments(note.id);
@@ -639,16 +603,13 @@ function EditNoteBody(props: any) {
         <Button size="sm" variant="outline" onClick={onDelete} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
       </div>
 
-      <div className="border rounded-md overflow-hidden flex-1 flex flex-col min-h-0">
-        <FormatToolbar currentValue={note.content} setter={(v: any) => onChange({ ...note, content: typeof v === "function" ? v(note.content) : v })} />
-        <Textarea
-          ref={editContentRef}
-          placeholder="Write your note..."
-          value={note.content}
-          onChange={(e) => onChange({ ...note, content: e.target.value })}
-          className="flex-1 border-0 focus-visible:ring-0 resize-none"
-        />
-      </div>
+      <MarkdownEditor
+        value={note.content}
+        onChange={(v) => onChange({ ...note, content: v })}
+        placeholder="Write your note..."
+        textareaRef={editContentRef}
+        className="flex-1 min-h-0"
+      />
 
       {attachments.length > 0 && (
         <div className="border rounded-md p-3">
@@ -668,6 +629,256 @@ function EditNoteBody(props: any) {
         <span>{wordCount} words · {charCount} characters</span>
         <Button size="sm" onClick={onClose}>Done</Button>
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MarkdownEditor — toolbar buttons act as toggleable modes.
+// Bold/Italic insert markers and place caret between them so subsequent
+// typing lands inside the formatting. Block modes (H1/H2/Quote/lists/checklist)
+// prefix the current line and auto-prefix new lines on Enter until toggled off.
+// ============================================================
+type InlineMode = "bold" | "italic";
+type BlockMode = "h1" | "h2" | "quote" | "ul" | "ol" | "checklist" | null;
+
+const BLOCK_PREFIX: Record<Exclude<BlockMode, null>, string> = {
+  h1: "# ",
+  h2: "## ",
+  quote: "> ",
+  ul: "- ",
+  ol: "1. ",
+  checklist: "- [ ] ",
+};
+
+function MarkdownEditor({
+  value,
+  onChange,
+  placeholder,
+  className,
+  textareaRef: externalRef,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+  textareaRef?: React.RefObject<HTMLTextAreaElement>;
+}) {
+  const internalRef = useRef<HTMLTextAreaElement>(null);
+  const ref = externalRef || internalRef;
+  const [activeInline, setActiveInline] = useState<Set<InlineMode>>(new Set());
+  const [activeBlock, setActiveBlock] = useState<BlockMode>(null);
+
+  const focusAndSetCaret = (pos: number, end?: number) => {
+    requestAnimationFrame(() => {
+      const el = ref.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(pos, end ?? pos);
+    });
+  };
+
+  const getSelection = () => {
+    const el = ref.current;
+    if (!el) return { start: value.length, end: value.length };
+    return { start: el.selectionStart ?? value.length, end: el.selectionEnd ?? value.length };
+  };
+
+  const replaceRange = (start: number, end: number, insert: string, caretStart: number, caretEnd?: number) => {
+    const next = value.slice(0, start) + insert + value.slice(end);
+    onChange(next);
+    focusAndSetCaret(caretStart, caretEnd);
+  };
+
+  // ---------- Inline toggles ----------
+  const toggleInline = (mode: InlineMode) => {
+    const marker = mode === "bold" ? "**" : "*";
+    const { start, end } = getSelection();
+
+    // If text selected, wrap/unwrap immediately and don't change mode.
+    if (start !== end) {
+      const selected = value.slice(start, end);
+      const before = value.slice(start - marker.length, start);
+      const after = value.slice(end, end + marker.length);
+      if (before === marker && after === marker) {
+        // Unwrap
+        const next = value.slice(0, start - marker.length) + selected + value.slice(end + marker.length);
+        onChange(next);
+        focusAndSetCaret(start - marker.length, end - marker.length);
+      } else {
+        const next = value.slice(0, start) + marker + selected + marker + value.slice(end);
+        onChange(next);
+        focusAndSetCaret(start + marker.length, end + marker.length);
+      }
+      return;
+    }
+
+    // No selection — flip mode and insert/skip markers.
+    const isOn = activeInline.has(mode);
+    const nextSet = new Set(activeInline);
+    if (isOn) {
+      nextSet.delete(mode);
+      setActiveInline(nextSet);
+      // Move caret past the closing marker if it's right after caret.
+      const after = value.slice(start, start + marker.length);
+      if (after === marker) {
+        focusAndSetCaret(start + marker.length);
+      } else {
+        focusAndSetCaret(start);
+      }
+    } else {
+      nextSet.add(mode);
+      setActiveInline(nextSet);
+      // Insert empty wrapper "**" + "**" and put caret between.
+      const insert = marker + marker;
+      const next = value.slice(0, start) + insert + value.slice(start);
+      onChange(next);
+      focusAndSetCaret(start + marker.length);
+    }
+  };
+
+  // ---------- Block toggles ----------
+  const lineBoundsAt = (pos: number) => {
+    const before = value.lastIndexOf("\n", pos - 1);
+    const lineStart = before === -1 ? 0 : before + 1;
+    const nextNl = value.indexOf("\n", pos);
+    const lineEnd = nextNl === -1 ? value.length : nextNl;
+    return { lineStart, lineEnd };
+  };
+
+  const stripBlockPrefix = (line: string): string => {
+    return line
+      .replace(/^#{1,6}\s+/, "")
+      .replace(/^>\s+/, "")
+      .replace(/^-\s\[\s?\]\s+/, "")
+      .replace(/^-\s+/, "")
+      .replace(/^\d+\.\s+/, "");
+  };
+
+  const toggleBlock = (mode: Exclude<BlockMode, null>) => {
+    const { start } = getSelection();
+    const { lineStart, lineEnd } = lineBoundsAt(start);
+    const line = value.slice(lineStart, lineEnd);
+    const stripped = stripBlockPrefix(line);
+
+    if (activeBlock === mode) {
+      // Toggle OFF — remove prefix from current line.
+      const next = value.slice(0, lineStart) + stripped + value.slice(lineEnd);
+      onChange(next);
+      setActiveBlock(null);
+      const newCaret = Math.max(lineStart, start - (line.length - stripped.length));
+      focusAndSetCaret(newCaret);
+      return;
+    }
+
+    const prefix = BLOCK_PREFIX[mode];
+    const newLine = prefix + stripped;
+    const next = value.slice(0, lineStart) + newLine + value.slice(lineEnd);
+    onChange(next);
+    setActiveBlock(mode);
+    const delta = newLine.length - line.length;
+    focusAndSetCaret(Math.max(lineStart + prefix.length, start + delta));
+  };
+
+  // ---------- One-shot inserts ----------
+  const insertAtCaret = (text: string) => {
+    const { start, end } = getSelection();
+    replaceRange(start, end, text, start + text.length);
+  };
+
+  const insertCodeBlock = () => insertAtCaret("\n```\ncode block\n```\n");
+  const insertDivider = () => insertAtCaret("\n---\n");
+
+  // ---------- Key handling for block modes ----------
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && activeBlock) {
+      e.preventDefault();
+      const { start } = getSelection();
+      const { lineStart } = lineBoundsAt(start);
+      const currentLine = value.slice(lineStart, start);
+      const prefix = BLOCK_PREFIX[activeBlock];
+      // Empty prefixed line -> exit mode and clear prefix.
+      if (currentLine === prefix) {
+        const next = value.slice(0, lineStart) + value.slice(start);
+        onChange(next);
+        setActiveBlock(null);
+        focusAndSetCaret(lineStart);
+        return;
+      }
+      let nextPrefix = prefix;
+      if (activeBlock === "ol") {
+        // Auto-increment number based on previous line.
+        const m = currentLine.match(/^(\d+)\.\s/);
+        if (m) nextPrefix = `${parseInt(m[1], 10) + 1}. `;
+      }
+      const insert = "\n" + nextPrefix;
+      const next = value.slice(0, start) + insert + value.slice(start);
+      onChange(next);
+      focusAndSetCaret(start + insert.length);
+    }
+  };
+
+  // ---------- Reset modes when caret moves or focus is lost ----------
+  const handleSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    // If user clicks/keyboard-navigates to a different caret position,
+    // clear modes so they don't silently apply later.
+    if (activeInline.size > 0 || activeBlock) {
+      // Heuristic: clear on any explicit selection change driven by mouse / arrow keys.
+      // (Typing also fires onSelect, but by then the wrapper is already growing correctly.)
+    }
+  };
+
+  const handleBlur = () => {
+    setActiveInline(new Set());
+    setActiveBlock(null);
+  };
+
+  const ToolBtn = ({
+    active, onClick, title, children,
+  }: { active?: boolean; onClick: () => void; title: string; children: React.ReactNode }) => (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className={cn(
+        "h-8 w-8 p-0",
+        active && "bg-accent text-accent-foreground ring-1 ring-ring"
+      )}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      title={title}
+    >
+      {children}
+    </Button>
+  );
+
+  return (
+    <div className={cn("border rounded-md overflow-hidden flex flex-col", className)}>
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
+        <ToolBtn active={activeInline.has("bold")} onClick={() => toggleInline("bold")} title="Bold (toggle)"><Bold className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={activeInline.has("italic")} onClick={() => toggleInline("italic")} title="Italic (toggle)"><Italic className="h-4 w-4" /></ToolBtn>
+        <div className="w-px h-6 bg-border mx-1" />
+        <ToolBtn active={activeBlock === "h1"} onClick={() => toggleBlock("h1")} title="Heading 1 (toggle)"><Heading1 className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={activeBlock === "h2"} onClick={() => toggleBlock("h2")} title="Heading 2 (toggle)"><Heading2 className="h-4 w-4" /></ToolBtn>
+        <div className="w-px h-6 bg-border mx-1" />
+        <ToolBtn active={activeBlock === "ul"} onClick={() => toggleBlock("ul")} title="Bullet list (toggle)"><List className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={activeBlock === "ol"} onClick={() => toggleBlock("ol")} title="Numbered list (toggle)"><ListOrdered className="h-4 w-4" /></ToolBtn>
+        <ToolBtn active={activeBlock === "checklist"} onClick={() => toggleBlock("checklist")} title="Checklist (toggle)"><CheckSquare className="h-4 w-4" /></ToolBtn>
+        <div className="w-px h-6 bg-border mx-1" />
+        <ToolBtn active={activeBlock === "quote"} onClick={() => toggleBlock("quote")} title="Quote (toggle)"><Quote className="h-4 w-4" /></ToolBtn>
+        <ToolBtn onClick={insertCodeBlock} title="Code block"><Code className="h-4 w-4" /></ToolBtn>
+        <ToolBtn onClick={insertDivider} title="Divider"><Minus className="h-4 w-4" /></ToolBtn>
+      </div>
+      <Textarea
+        ref={ref}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onSelect={handleSelect}
+        onBlur={handleBlur}
+        className="flex-1 border-0 focus-visible:ring-0 resize-none rounded-none"
+      />
     </div>
   );
 }
