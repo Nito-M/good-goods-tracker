@@ -410,10 +410,7 @@ export function Notes() {
           <DialogHeader><DialogTitle>New Note</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <Input placeholder="Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="text-lg font-semibold" />
-            <div className="border rounded-md overflow-hidden">
-              <FormatToolbar currentValue={newContent} setter={setNewContent} />
-              <Textarea placeholder="Write your note..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="min-h-[200px] border-0 focus-visible:ring-0 resize-none" />
-            </div>
+            <MarkdownEditor value={newContent} onChange={setNewContent} placeholder="Write your note..." className="min-h-[200px]" />
             <div className="flex flex-wrap gap-2 items-center">
               <ColorPicker value={newColor} onChange={setNewColor} />
               <TagPicker selected={newTagIds} onChange={setNewTagIds} />
