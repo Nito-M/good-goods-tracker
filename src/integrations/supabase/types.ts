@@ -1312,6 +1312,47 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_files: {
+        Row: {
+          created_at: string
+          customer_id: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_files_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -1320,6 +1361,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
+          notes: string | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -1331,6 +1373,7 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
+          notes?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -1342,6 +1385,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
+          notes?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
