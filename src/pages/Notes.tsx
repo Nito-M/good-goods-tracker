@@ -254,7 +254,7 @@ export function Notes() {
           </div>
         </CardHeader>
         <CardContent className="pt-0 pl-9">
-          <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">{note.content || "No content"}</p>
+          <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">{htmlToPlainText(note.content) || "No content"}</p>
           {noteTags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {noteTags.map((t) => (
