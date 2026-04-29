@@ -513,7 +513,8 @@ function escapeHtml(s: string) {
 
 function downloadNote(note: Note) {
   const safeTitle = (note.title || 'note').replace(/[^a-z0-9-_ ]/gi, '_').slice(0, 80) || 'note';
-  const body = `${note.title || 'Untitled'}\n${'='.repeat((note.title || 'Untitled').length)}\n\n${note.content || ''}\n`;
+  const plainContent = isHtmlContent(note.content || '') ? htmlToPlainText(note.content || '') : (note.content || '');
+  const body = `${note.title || 'Untitled'}\n${'='.repeat((note.title || 'Untitled').length)}\n\n${plainContent}\n`;
   const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -532,14 +533,26 @@ function printNote(note: Note) {
     return;
   }
   const title = escapeHtml(note.title || 'Untitled');
-  const content = escapeHtml(note.content || '');
+  const rawContent = note.content || '';
+  // If the content is HTML (from the rich editor) render it directly; otherwise
+  // fall back to the legacy plain-text <pre> rendering.
+  const contentBlock = isHtmlContent(rawContent)
+    ? `<div class="content">${rawContent}</div>`
+    : `<pre>${escapeHtml(rawContent)}</pre>`;
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 32px; color: #111; max-width: 720px; margin: 0 auto; }
   h1 { font-size: 24px; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 16px; }
   pre { white-space: pre-wrap; word-wrap: break-word; font-family: inherit; font-size: 14px; line-height: 1.6; }
+  .content { font-size: 14px; line-height: 1.6; }
+  .content h1 { font-size: 22px; border: 0; padding: 0; margin: 12px 0 6px; }
+  .content h2 { font-size: 18px; margin: 10px 0 6px; }
+  .content ul, .content ol { padding-left: 24px; }
+  .content blockquote { border-left: 4px solid #ddd; padding-left: 10px; color: #555; font-style: italic; margin: 8px 0; }
+  .content pre { background: #f4f4f4; padding: 8px; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 12px; }
+  .content hr { border: 0; border-top: 1px solid #ddd; margin: 12px 0; }
   @media print { body { padding: 0; } }
-</style></head><body><h1>${title}</h1><pre>${content}</pre>
+</style></head><body><h1>${title}</h1>${contentBlock}
 <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 100); };</script>
 </body></html>`);
   w.document.close();
