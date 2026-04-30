@@ -72,6 +72,7 @@ interface CartItem {
   quantity: number;
   customPrice?: number; // Custom price after markup
   excludeMarkup?: boolean;
+  isCustom?: boolean;
 }
 
 function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFromCart, markupPercent, calculateMarkupPrice, setCart, getItemPrice }: {
