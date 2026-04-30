@@ -418,6 +418,37 @@ export function Sales() {
     });
   };
 
+  const addCustomItem = () => {
+    const customId = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const customInventoryItem: InventoryItem = {
+      id: customId,
+      name: '',
+      sku: '',
+      price: 0,
+      cost: 0,
+      quantity: 0,
+      quantityUnit: 'pcs',
+      category: '',
+      minStock: 0,
+      weight: 0,
+      weightUnit: 'kg',
+      dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
+      colors: [],
+      description: '',
+      boxAmount: 0,
+      bundleAmount: 0,
+      palletAmount: 0,
+      pieceLength: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setCart((prev) => [
+      ...prev,
+      { inventoryItem: customInventoryItem, quantity: 1, customPrice: 0, isCustom: true, excludeMarkup: true },
+    ]);
+    setShowItemPicker(false);
+  };
+
   const updateCartQuantity = (itemId: string, quantity: number | null) => {
     setCart((prev) =>
       prev.map((c) =>
