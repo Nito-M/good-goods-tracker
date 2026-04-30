@@ -72,6 +72,7 @@ interface CartItem {
   quantity: number;
   customPrice?: number; // Custom price after markup
   excludeMarkup?: boolean;
+  isCustom?: boolean;
 }
 
 function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFromCart, markupPercent, calculateMarkupPrice, setCart, getItemPrice }: {
@@ -95,7 +96,24 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
         </button>
       </TableCell>
       <TableCell className="font-medium">
-        {c.inventoryItem.name}
+        {c.isCustom ? (
+          <Input
+            type="text"
+            placeholder="Custom item name"
+            className="w-full min-w-[180px]"
+            value={c.inventoryItem.name}
+            onChange={(e) => {
+              const newName = e.target.value;
+              setCart(prev => prev.map(item =>
+                item.inventoryItem.id === c.inventoryItem.id
+                  ? { ...item, inventoryItem: { ...item.inventoryItem, name: newName } }
+                  : item
+              ));
+            }}
+          />
+        ) : (
+          c.inventoryItem.name
+        )}
       </TableCell>
       <TableCell>
         <Input
@@ -340,6 +358,7 @@ export function Sales() {
         inventoryItem: invItem || fallbackItem,
         quantity: item.quantity,
         customPrice: item.unitPrice,
+        isCustom: !item.inventoryItemId,
       };
     });
 
@@ -400,6 +419,37 @@ export function Sales() {
     });
   };
 
+  const addCustomItem = () => {
+    const customId = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const customInventoryItem: InventoryItem = {
+      id: customId,
+      name: '',
+      sku: '',
+      price: 0,
+      cost: 0,
+      quantity: 0,
+      quantityUnit: 'pcs',
+      category: '',
+      minStock: 0,
+      weight: 0,
+      weightUnit: 'kg',
+      dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
+      colors: [],
+      description: '',
+      boxAmount: 0,
+      bundleAmount: 0,
+      palletAmount: 0,
+      pieceLength: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setCart((prev) => [
+      ...prev,
+      { inventoryItem: customInventoryItem, quantity: 1, customPrice: 0, isCustom: true, excludeMarkup: true },
+    ]);
+    setShowItemPicker(false);
+  };
+
   const updateCartQuantity = (itemId: string, quantity: number | null) => {
     setCart((prev) =>
       prev.map((c) =>
@@ -453,7 +503,7 @@ export function Sales() {
         invoiceNumber: customInvoiceNumber.trim() || '',
         items: cart.map((c) => ({
           id: `updated-${c.inventoryItem.id}-${Date.now()}`,
-          inventoryItemId: c.inventoryItem.id,
+        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
           itemName: c.inventoryItem.name,
           sku: c.inventoryItem.sku,
           quantity: c.quantity,
@@ -475,7 +525,7 @@ export function Sales() {
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || null,
         items: cart.map((c) => ({
-          inventoryItemId: c.inventoryItem.id,
+        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
           itemName: c.inventoryItem.name,
           sku: c.inventoryItem.sku,
           quantity: c.quantity,
@@ -1071,7 +1121,7 @@ export function Sales() {
         inventoryItems={inventoryItems}
         cart={pickerCart}
         onAddItem={addToCart}
-        onAddCustomItem={() => {}}
+        onAddCustomItem={addCustomItem}
         onUpdateQuantity={(itemId, qty) => updateCartQuantity(itemId, qty)}
         onRemoveItem={removeFromCart}
         documentType="Invoice"
