@@ -358,6 +358,7 @@ export function Sales() {
         inventoryItem: invItem || fallbackItem,
         quantity: item.quantity,
         customPrice: item.unitPrice,
+        isCustom: !item.inventoryItemId,
       };
     });
 
