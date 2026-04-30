@@ -502,7 +502,7 @@ export function Sales() {
         invoiceNumber: customInvoiceNumber.trim() || '',
         items: cart.map((c) => ({
           id: `updated-${c.inventoryItem.id}-${Date.now()}`,
-          inventoryItemId: c.inventoryItem.id,
+        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
           itemName: c.inventoryItem.name,
           sku: c.inventoryItem.sku,
           quantity: c.quantity,
@@ -524,7 +524,7 @@ export function Sales() {
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || null,
         items: cart.map((c) => ({
-          inventoryItemId: c.inventoryItem.id,
+        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
           itemName: c.inventoryItem.name,
           sku: c.inventoryItem.sku,
           quantity: c.quantity,
@@ -1120,7 +1120,7 @@ export function Sales() {
         inventoryItems={inventoryItems}
         cart={pickerCart}
         onAddItem={addToCart}
-        onAddCustomItem={() => {}}
+        onAddCustomItem={addCustomItem}
         onUpdateQuantity={(itemId, qty) => updateCartQuantity(itemId, qty)}
         onRemoveItem={removeFromCart}
         documentType="Invoice"
