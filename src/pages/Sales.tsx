@@ -96,7 +96,24 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
         </button>
       </TableCell>
       <TableCell className="font-medium">
-        {c.inventoryItem.name}
+        {c.isCustom ? (
+          <Input
+            type="text"
+            placeholder="Custom item name"
+            className="w-full min-w-[180px]"
+            value={c.inventoryItem.name}
+            onChange={(e) => {
+              const newName = e.target.value;
+              setCart(prev => prev.map(item =>
+                item.inventoryItem.id === c.inventoryItem.id
+                  ? { ...item, inventoryItem: { ...item.inventoryItem, name: newName } }
+                  : item
+              ));
+            }}
+          />
+        ) : (
+          c.inventoryItem.name
+        )}
       </TableCell>
       <TableCell>
         <Input
