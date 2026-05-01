@@ -27,7 +27,11 @@ export interface LocationItemEntry {
 interface ReceiveLocationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (locationItems: LocationItemEntry[], isPartial: boolean) => void;
+  onConfirm: (
+    locationItems: LocationItemEntry[],
+    isPartial: boolean,
+    prevReceivedOverrides?: Record<string, number>,
+  ) => void;
   warehouses: Warehouse[];
   poItems: PurchaseOrderItem[];
   loading?: boolean;
