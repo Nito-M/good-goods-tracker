@@ -27,7 +27,11 @@ export interface LocationItemEntry {
 interface ReceiveLocationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (locationItems: LocationItemEntry[], isPartial: boolean) => void;
+  onConfirm: (
+    locationItems: LocationItemEntry[],
+    isPartial: boolean,
+    prevReceivedOverrides?: Record<string, number>,
+  ) => void;
   warehouses: Warehouse[];
   poItems: PurchaseOrderItem[];
   loading?: boolean;
@@ -53,6 +57,7 @@ export function ReceiveLocationDialog({
   loading,
 }: ReceiveLocationDialogProps) {
   const [locations, setLocations] = useState<LocationRow[]>([]);
+  const [prevOverrides, setPrevOverrides] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (open && warehouses.length > 0) {
@@ -60,7 +65,21 @@ export function ReceiveLocationDialog({
     } else if (open) {
       setLocations([]);
     }
+    if (open) {
+      const init: Record<number, string> = {};
+      poItems.forEach((it, i) => {
+        init[i] = String(it.receivedQuantity ?? 0);
+      });
+      setPrevOverrides(init);
+    }
   }, [open, poItems, warehouses.length]);
+
+  const getPrev = (idx: number): number => {
+    const raw = prevOverrides[idx];
+    const n = parseFloat(raw ?? '');
+    return isNaN(n) ? 0 : n;
+  };
+
 
   const usedWarehouseIds = locations.map((l) => l.warehouseId).filter(Boolean);
 
@@ -89,7 +108,7 @@ export function ReceiveLocationDialog({
   const addItemToLocation = (locIndex: number, poItemIndex: number) => {
     const item = poItems[poItemIndex];
     // Calculate remaining for this item (accounting for previously received)
-    const prevReceived = item.receivedQuantity || 0;
+    const prevReceived = getPrev(poItemIndex);
     const alreadyAssigned = locations.reduce((sum, loc, li) => {
       if (li === locIndex) return sum;
       const found = loc.items.find((it) => it.poItemIndex === poItemIndex);
@@ -138,7 +157,7 @@ export function ReceiveLocationDialog({
         if (i !== locIndex) return l;
         const newItems: LocationItemRow[] = [];
         poItems.forEach((item, poIdx) => {
-          const prevReceived = item.receivedQuantity || 0;
+          const prevReceived = getPrev(poIdx);
           // Skip fully received items
           if (prevReceived >= item.quantity) return;
           const alreadyInThisLoc = l.items.find((it) => it.poItemIndex === poIdx);
@@ -161,7 +180,7 @@ export function ReceiveLocationDialog({
 
   // Per-item assignment summary
   const itemAssignments = poItems.map((item, itemIdx) => {
-    const prevReceived = item.receivedQuantity || 0;
+    const prevReceived = getPrev(itemIdx);
     const remainingToReceive = item.quantity - prevReceived;
     const fullyReceived = prevReceived >= item.quantity;
     const assigned = locations.reduce((sum, loc) => {
@@ -204,7 +223,11 @@ export function ReceiveLocationDialog({
       }))
       .filter((e) => e.items.length > 0);
 
-    onConfirm(entries, !allComplete);
+    const overrides: Record<string, number> = {};
+    poItems.forEach((it, i) => {
+      overrides[it.sku] = getPrev(i);
+    });
+    onConfirm(entries, !allComplete, overrides);
   };
 
   const noWarehouses = warehouses.length === 0;
@@ -231,9 +254,12 @@ export function ReceiveLocationDialog({
             {/* Per-item assignment summary */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Item Distribution Summary</Label>
+              <p className="text-xs text-muted-foreground">
+                Edit "Already received" to correct the previously-received quantity for any item.
+              </p>
               <div className="rounded-md border p-3 space-y-1.5">
                 {itemAssignments.map((a, idx) => (
-                  <div key={idx} className={`flex items-center gap-2 text-sm ${a.fullyReceived ? 'opacity-50' : ''}`}>
+                  <div key={idx} className={`flex items-center gap-2 text-sm ${a.fullyReceived ? 'opacity-60' : ''}`}>
                     {a.fullyReceived ? (
                       <Check className="h-4 w-4 text-muted-foreground shrink-0" />
                     ) : a.isComplete ? (
@@ -244,16 +270,29 @@ export function ReceiveLocationDialog({
                     <span className="flex-1 truncate">
                       {a.itemName}
                       {a.sku && <span className="text-muted-foreground ml-1">({a.sku})</span>}
-                      {a.fullyReceived && <span className="text-muted-foreground ml-1 italic">— Already received</span>}
                     </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Already:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max={poItems[idx].quantity}
+                        step="0.01"
+                        value={prevOverrides[idx] ?? '0'}
+                        onChange={(e) =>
+                          setPrevOverrides((prev) => ({ ...prev, [idx]: e.target.value }))
+                        }
+                        className="w-20 h-7 text-xs"
+                      />
+                      <span className="text-xs text-muted-foreground">/ {poItems[idx].quantity}</span>
+                    </div>
                     {a.fullyReceived ? (
-                      <span className="tabular-nums text-muted-foreground">
-                        {a.prevReceived} / {poItems[idx].quantity} ✓
+                      <span className="tabular-nums text-muted-foreground text-xs w-24 text-right">
+                        Fully received ✓
                       </span>
                     ) : (
-                      <span className={`tabular-nums ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
-                        {a.assigned} / {a.needed}
-                        {a.prevReceived > 0 && <span className="text-xs text-muted-foreground ml-1">({a.prevReceived} prev)</span>}
+                      <span className={`tabular-nums text-xs w-24 text-right ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        +{a.assigned} / {a.needed} now
                       </span>
                     )}
                   </div>
@@ -269,7 +308,7 @@ export function ReceiveLocationDialog({
               const assignedPoIndices = loc.items.map((it) => it.poItemIndex);
               const unassignedPoItems = poItems
                 .map((item, idx) => ({ item, idx }))
-                .filter(({ item }) => !(item.receivedQuantity && item.receivedQuantity >= item.quantity))
+                .filter(({ item, idx }) => getPrev(idx) < item.quantity)
                 .filter(({ idx }) => !assignedPoIndices.includes(idx))
                 .filter(({ idx }) => !itemAssignments[idx]?.isComplete);
 
