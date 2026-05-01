@@ -57,6 +57,7 @@ export function ReceiveLocationDialog({
   loading,
 }: ReceiveLocationDialogProps) {
   const [locations, setLocations] = useState<LocationRow[]>([]);
+  const [prevOverrides, setPrevOverrides] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (open && warehouses.length > 0) {
@@ -64,7 +65,21 @@ export function ReceiveLocationDialog({
     } else if (open) {
       setLocations([]);
     }
+    if (open) {
+      const init: Record<number, string> = {};
+      poItems.forEach((it, i) => {
+        init[i] = String(it.receivedQuantity ?? 0);
+      });
+      setPrevOverrides(init);
+    }
   }, [open, poItems, warehouses.length]);
+
+  const getPrev = (idx: number): number => {
+    const raw = prevOverrides[idx];
+    const n = parseFloat(raw ?? '');
+    return isNaN(n) ? 0 : n;
+  };
+
 
   const usedWarehouseIds = locations.map((l) => l.warehouseId).filter(Boolean);
 
