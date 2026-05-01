@@ -223,7 +223,11 @@ export function ReceiveLocationDialog({
       }))
       .filter((e) => e.items.length > 0);
 
-    onConfirm(entries, !allComplete);
+    const overrides: Record<string, number> = {};
+    poItems.forEach((it, i) => {
+      overrides[it.sku] = getPrev(i);
+    });
+    onConfirm(entries, !allComplete, overrides);
   };
 
   const noWarehouses = warehouses.length === 0;
