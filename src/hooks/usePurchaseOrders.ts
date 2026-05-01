@@ -371,7 +371,12 @@ export function usePurchaseOrders() {
     fetchOrders();
   };
 
-  const markAsReceived = async (orderId: string, locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number }[] }[], partial?: boolean) => {
+  const markAsReceived = async (
+    orderId: string,
+    locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number }[] }[],
+    partial?: boolean,
+    prevReceivedOverrides?: Record<string, number>,
+  ) => {
     // Get the order to access its items and costs
     const order = orders.find((o) => o.id === orderId);
     if (!order) {
@@ -404,9 +409,11 @@ export function usePurchaseOrders() {
       }
     }
     
-    // Build updated items with receivedQuantity tracking
+    // Build updated items with receivedQuantity tracking.
+    // If the dialog provided a prev-received override, use it as the new baseline.
     const updatedItems = order.items.map(item => {
-      const prevReceived = item.receivedQuantity || 0;
+      const overridePrev = prevReceivedOverrides?.[item.sku];
+      const prevReceived = overridePrev !== undefined ? overridePrev : (item.receivedQuantity || 0);
       const newlyReceived = itemTotalMap.get(item.sku) || 0;
       return {
         ...item,
