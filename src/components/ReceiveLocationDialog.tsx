@@ -254,9 +254,12 @@ export function ReceiveLocationDialog({
             {/* Per-item assignment summary */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Item Distribution Summary</Label>
+              <p className="text-xs text-muted-foreground">
+                Edit "Already received" to correct the previously-received quantity for any item.
+              </p>
               <div className="rounded-md border p-3 space-y-1.5">
                 {itemAssignments.map((a, idx) => (
-                  <div key={idx} className={`flex items-center gap-2 text-sm ${a.fullyReceived ? 'opacity-50' : ''}`}>
+                  <div key={idx} className={`flex items-center gap-2 text-sm ${a.fullyReceived ? 'opacity-60' : ''}`}>
                     {a.fullyReceived ? (
                       <Check className="h-4 w-4 text-muted-foreground shrink-0" />
                     ) : a.isComplete ? (
@@ -267,16 +270,29 @@ export function ReceiveLocationDialog({
                     <span className="flex-1 truncate">
                       {a.itemName}
                       {a.sku && <span className="text-muted-foreground ml-1">({a.sku})</span>}
-                      {a.fullyReceived && <span className="text-muted-foreground ml-1 italic">— Already received</span>}
                     </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Already:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max={poItems[idx].quantity}
+                        step="0.01"
+                        value={prevOverrides[idx] ?? '0'}
+                        onChange={(e) =>
+                          setPrevOverrides((prev) => ({ ...prev, [idx]: e.target.value }))
+                        }
+                        className="w-20 h-7 text-xs"
+                      />
+                      <span className="text-xs text-muted-foreground">/ {poItems[idx].quantity}</span>
+                    </div>
                     {a.fullyReceived ? (
-                      <span className="tabular-nums text-muted-foreground">
-                        {a.prevReceived} / {poItems[idx].quantity} ✓
+                      <span className="tabular-nums text-muted-foreground text-xs w-24 text-right">
+                        Fully received ✓
                       </span>
                     ) : (
-                      <span className={`tabular-nums ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
-                        {a.assigned} / {a.needed}
-                        {a.prevReceived > 0 && <span className="text-xs text-muted-foreground ml-1">({a.prevReceived} prev)</span>}
+                      <span className={`tabular-nums text-xs w-24 text-right ${a.isComplete ? 'text-primary' : a.isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        +{a.assigned} / {a.needed} now
                       </span>
                     )}
                   </div>
