@@ -288,7 +288,7 @@ export function ReceiveLocationDialog({
               const assignedPoIndices = loc.items.map((it) => it.poItemIndex);
               const unassignedPoItems = poItems
                 .map((item, idx) => ({ item, idx }))
-                .filter(({ item }) => !(item.receivedQuantity && item.receivedQuantity >= item.quantity))
+                .filter(({ item, idx }) => getPrev(idx) < item.quantity)
                 .filter(({ idx }) => !assignedPoIndices.includes(idx))
                 .filter(({ idx }) => !itemAssignments[idx]?.isComplete);
 
