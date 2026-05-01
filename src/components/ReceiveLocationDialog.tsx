@@ -157,7 +157,7 @@ export function ReceiveLocationDialog({
         if (i !== locIndex) return l;
         const newItems: LocationItemRow[] = [];
         poItems.forEach((item, poIdx) => {
-          const prevReceived = item.receivedQuantity || 0;
+          const prevReceived = getPrev(poIdx);
           // Skip fully received items
           if (prevReceived >= item.quantity) return;
           const alreadyInThisLoc = l.items.find((it) => it.poItemIndex === poIdx);
