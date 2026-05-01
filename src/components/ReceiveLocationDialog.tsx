@@ -180,7 +180,7 @@ export function ReceiveLocationDialog({
 
   // Per-item assignment summary
   const itemAssignments = poItems.map((item, itemIdx) => {
-    const prevReceived = item.receivedQuantity || 0;
+    const prevReceived = getPrev(itemIdx);
     const remainingToReceive = item.quantity - prevReceived;
     const fullyReceived = prevReceived >= item.quantity;
     const assigned = locations.reduce((sum, loc) => {
