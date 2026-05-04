@@ -109,7 +109,7 @@ export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;
 
 // Sale item validation
 export const saleItemSchema = z.object({
-  inventoryItemId: z.string().uuid('Invalid inventory item'),
+  inventoryItemId: z.string().uuid('Invalid inventory item').nullable(),
   itemName: z.string().min(1).max(500),
   sku: z.string().min(1).max(100),
   quantity: z.number().min(1, 'Quantity must be at least 1'),
