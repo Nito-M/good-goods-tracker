@@ -452,6 +452,37 @@ export function Sales() {
     setShowItemPicker(false);
   };
 
+  const addAssemblyToCart = (assembly: { id: string; name: string; description: string | null; selling_price: number }) => {
+    const cartId = `assembly-${assembly.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const assemblyInventoryItem: InventoryItem = {
+      id: cartId,
+      name: assembly.name,
+      sku: 'ASSEMBLY',
+      price: assembly.selling_price,
+      cost: 0,
+      quantity: 0,
+      quantityUnit: 'pcs',
+      category: '',
+      minStock: 0,
+      weight: 0,
+      weightUnit: 'kg',
+      dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
+      colors: [],
+      description: assembly.description || '',
+      boxAmount: 0,
+      bundleAmount: 0,
+      palletAmount: 0,
+      pieceLength: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setCart((prev) => [
+      ...prev,
+      { inventoryItem: assemblyInventoryItem, quantity: 1, customPrice: assembly.selling_price, isCustom: true, excludeMarkup: true },
+    ]);
+    setShowItemPicker(false);
+  };
+
   const updateCartQuantity = (itemId: string, quantity: number | null) => {
     setCart((prev) =>
       prev.map((c) =>
