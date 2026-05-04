@@ -1155,6 +1155,8 @@ export function Sales() {
         cart={pickerCart}
         onAddItem={addToCart}
         onAddCustomItem={addCustomItem}
+        onAddAssembly={addAssemblyToCart}
+        assemblies={assemblies}
         onUpdateQuantity={(itemId, qty) => updateCartQuantity(itemId, qty)}
         onRemoveItem={removeFromCart}
         documentType="Invoice"
