@@ -209,6 +209,7 @@ export function Sales() {
   const { profile } = useProfile();
   const { addSaleRevenue } = useBank();
   const { companies } = useCompanies();
+  const { assemblies } = useAssemblies();
 
   // Build invoice settings from profile (fallback)
   const invoiceSettings: InvoiceSettings = useMemo(() => ({
