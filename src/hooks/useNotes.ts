@@ -64,6 +64,7 @@ export function useNotes() {
           color: input.color || 'default',
           is_pinned: input.isPinned || false,
           is_template: input.isTemplate || false,
+          is_private: input.isPrivate || false,
           reminder_at: input.reminderAt || null,
         })
         .select()
