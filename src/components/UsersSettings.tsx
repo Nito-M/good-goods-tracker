@@ -534,6 +534,15 @@ export function UsersSettings() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setEditNameUser(u); setEditName(u.displayName || ''); }}
+                      className="gap-1"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => openEditPermissions(u)} className="gap-1">
                       <Shield className="h-3 w-3" />
                       Permissions
