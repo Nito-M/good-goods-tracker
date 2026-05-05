@@ -15,6 +15,7 @@ const mapNote = (n: any, tagIds: string[] = []): Note => ({
   deletedAt: n.deleted_at ?? null,
   reminderAt: n.reminder_at ?? null,
   isTemplate: n.is_template ?? false,
+  isPrivate: n.is_private ?? false,
   createdAt: n.created_at,
   updatedAt: n.updated_at,
   tagIds,
