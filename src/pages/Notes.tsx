@@ -6,7 +6,7 @@ import { useNotesAi } from "@/hooks/useNotesAi";
 import { useOrgUserNames } from "@/hooks/useOrgUserNames";
 import { useAuth } from "@/contexts/AuthContext";
 import { Note, NoteColor, NoteView } from "@/types/note";
-import { User } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TodoList } from "@/components/TodoList";
