@@ -35,7 +35,7 @@ import {
   Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Code, Minus,
   Palette, ListTodo, BookOpen, Tag, Archive, ArchiveRestore, Bell, BellOff,
   ImagePlus, X, FileText, Sparkles, Wand2, RotateCcw, Filter, CheckSquare,
-  Download, Printer,
+  Download, Printer, User,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
