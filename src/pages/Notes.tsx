@@ -75,6 +75,7 @@ export function Notes() {
   const [newColor, setNewColor] = useState<NoteColor>("default");
   const [newReminderAt, setNewReminderAt] = useState("");
   const [newIsTemplate, setNewIsTemplate] = useState(false);
+  const [newIsPrivate, setNewIsPrivate] = useState(false);
   const [newTagIds, setNewTagIds] = useState<string[]>([]);
   const editContentRef = useRef<HTMLTextAreaElement>(null);
   const [activeTab, setActiveTab] = useState("notes");
