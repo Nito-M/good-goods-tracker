@@ -473,9 +473,20 @@ export function Notes() {
           e.preventDefault();
           setTimeout(() => editContentRef.current?.focus(), 0);
         }}>
-          <DialogHeader><DialogTitle>Edit Note</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {editingNote && editingNote.userId !== user?.id ? "View Note" : "Edit Note"}
+              {editingNote && (
+                <Badge variant="outline" className="text-xs gap-1 font-normal">
+                  <User className="h-3 w-3" />
+                  {editingNote.userId === user?.id ? "You" : (userNames[editingNote.userId] || "Unknown")}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
           {editingNote && <EditNoteBody
             note={editingNote}
+            readOnly={editingNote.userId !== user?.id}
             onChange={setEditingNote}
             onClose={handleUpdateNote}
             onDelete={() => handleDelete(editingNote)}
