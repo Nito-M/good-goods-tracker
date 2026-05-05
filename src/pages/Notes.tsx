@@ -136,6 +136,11 @@ export function Notes() {
 
   const handleUpdateNote = async () => {
     if (!editingNote) return;
+    // Only owner can save edits.
+    if (editingNote.userId !== user?.id) {
+      setEditingNote(null);
+      return;
+    }
     await updateNote(editingNote.id, {
       title: editingNote.title,
       content: editingNote.content,
