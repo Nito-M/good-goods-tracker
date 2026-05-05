@@ -374,6 +374,26 @@ export function UsersSettings() {
     }
   };
 
+  const handleSaveName = async () => {
+    if (!editNameUser || !editName.trim()) return;
+    setSavingName(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ display_name: editName.trim() })
+        .eq('user_id', editNameUser.userId);
+      if (error) throw error;
+      toast({ title: 'User updated' });
+      setEditNameUser(null);
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      toast({ title: 'Error', description: 'Failed to update user.', variant: 'destructive' });
+    } finally {
+      setSavingName(false);
+    }
+  };
+
   const togglePage = (pageKey: string, list: string[], setList: (v: string[]) => void) => {
     if (list.includes(pageKey)) {
       setList(list.filter(p => p !== pageKey));
