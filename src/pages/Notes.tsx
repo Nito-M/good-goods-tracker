@@ -462,6 +462,11 @@ export function Notes() {
                 <Checkbox checked={newIsTemplate} onCheckedChange={(v) => setNewIsTemplate(!!v)} />
                 Save as template
               </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox checked={newIsPrivate} onCheckedChange={(v) => setNewIsPrivate(!!v)} />
+                <Lock className="h-3.5 w-3.5" />
+                Private (only you)
+              </label>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => { resetCreate(); setIsCreating(false); }}>Cancel</Button>
