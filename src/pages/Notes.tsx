@@ -35,7 +35,7 @@ import {
   Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Code, Minus,
   Palette, ListTodo, BookOpen, Tag, Archive, ArchiveRestore, Bell, BellOff,
   ImagePlus, X, FileText, Sparkles, Wand2, RotateCcw, Filter, CheckSquare,
-  Download, Printer, User,
+  Download, Printer, User, Lock,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -75,6 +75,7 @@ export function Notes() {
   const [newColor, setNewColor] = useState<NoteColor>("default");
   const [newReminderAt, setNewReminderAt] = useState("");
   const [newIsTemplate, setNewIsTemplate] = useState(false);
+  const [newIsPrivate, setNewIsPrivate] = useState(false);
   const [newTagIds, setNewTagIds] = useState<string[]>([]);
   const editContentRef = useRef<HTMLTextAreaElement>(null);
   const [activeTab, setActiveTab] = useState("notes");
@@ -115,7 +116,7 @@ export function Notes() {
 
   const resetCreate = () => {
     setNewTitle(""); setNewContent(""); setNewColor("default");
-    setNewReminderAt(""); setNewIsTemplate(false); setNewTagIds([]);
+    setNewReminderAt(""); setNewIsTemplate(false); setNewIsPrivate(false); setNewTagIds([]);
   };
 
   const handleCreateNote = async () => {
@@ -125,6 +126,7 @@ export function Notes() {
       content: newContent.trim(),
       color: newColor,
       isTemplate: newIsTemplate,
+      isPrivate: newIsPrivate,
       reminderAt: newReminderAt ? new Date(newReminderAt).toISOString() : null,
     });
     if (created && newTagIds.length > 0) {
@@ -147,6 +149,7 @@ export function Notes() {
       color: editingNote.color,
       reminderAt: editingNote.reminderAt,
       isTemplate: editingNote.isTemplate,
+      isPrivate: editingNote.isPrivate,
     });
     setEditingNote(null);
   };
@@ -249,6 +252,7 @@ export function Notes() {
             {note.isPinned && <Pin className="h-4 w-4 text-primary" />}
             {note.reminderAt && <Bell className="h-4 w-4 text-amber-500" />}
             {note.isTemplate && <FileText className="h-4 w-4 text-blue-500" />}
+            {note.isPrivate && <Lock className="h-4 w-4 text-muted-foreground" />}
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -457,6 +461,11 @@ export function Notes() {
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <Checkbox checked={newIsTemplate} onCheckedChange={(v) => setNewIsTemplate(!!v)} />
                 Save as template
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox checked={newIsPrivate} onCheckedChange={(v) => setNewIsPrivate(!!v)} />
+                <Lock className="h-3.5 w-3.5" />
+                Private (only you)
               </label>
             </div>
             <div className="flex justify-end gap-2">
@@ -676,6 +685,11 @@ function EditNoteBody(props: any) {
         <label className="flex items-center gap-2 text-sm cursor-pointer">
           <Checkbox checked={note.isTemplate} onCheckedChange={(v) => onChange({ ...note, isTemplate: !!v })} />
           Template
+        </label>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox checked={!!note.isPrivate} onCheckedChange={(v) => onChange({ ...note, isPrivate: !!v })} />
+          <Lock className="h-3.5 w-3.5" />
+          Private
         </label>
         <div className="flex-1" />
         <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}><ImagePlus className="h-4 w-4 mr-1" />Add image</Button>

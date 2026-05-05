@@ -31,6 +31,7 @@ export interface Note {
   deletedAt: string | null;
   reminderAt: string | null;
   isTemplate: boolean;
+  isPrivate: boolean;
   createdAt: string;
   updatedAt: string;
   tagIds: string[];
@@ -45,6 +46,7 @@ export interface CreateNoteInput {
   deletedAt?: string | null;
   reminderAt?: string | null;
   isTemplate?: boolean;
+  isPrivate?: boolean;
 }
 
 export type NoteView = 'active' | 'archived' | 'trash' | 'reminders' | 'templates';

@@ -15,6 +15,7 @@ const mapNote = (n: any, tagIds: string[] = []): Note => ({
   deletedAt: n.deleted_at ?? null,
   reminderAt: n.reminder_at ?? null,
   isTemplate: n.is_template ?? false,
+  isPrivate: n.is_private ?? false,
   createdAt: n.created_at,
   updatedAt: n.updated_at,
   tagIds,
@@ -63,6 +64,7 @@ export function useNotes() {
           color: input.color || 'default',
           is_pinned: input.isPinned || false,
           is_template: input.isTemplate || false,
+          is_private: input.isPrivate || false,
           reminder_at: input.reminderAt || null,
         })
         .select()
@@ -89,6 +91,7 @@ export function useNotes() {
       if (updates.deletedAt !== undefined) dbUpdates.deleted_at = updates.deletedAt;
       if (updates.reminderAt !== undefined) dbUpdates.reminder_at = updates.reminderAt;
       if (updates.isTemplate !== undefined) dbUpdates.is_template = updates.isTemplate;
+      if (updates.isPrivate !== undefined) dbUpdates.is_private = updates.isPrivate;
 
       const { error } = await supabase.from("notes").update(dbUpdates).eq("id", id);
       if (error) throw error;
