@@ -86,6 +86,10 @@ export function Notes() {
 
   const filteredNotes = useMemo(() => {
     return notes.filter((n) => {
+      // Ownership filter (mine vs team)
+      if (ownership === "mine" && n.userId !== user?.id) return false;
+      if (ownership === "team" && n.userId === user?.id) return false;
+
       if (view === "trash") {
         if (!n.deletedAt) return false;
       } else {
@@ -103,11 +107,11 @@ export function Notes() {
       }
       return true;
     });
-  }, [notes, view, filterTagIds, searchQuery]);
+  }, [notes, view, filterTagIds, searchQuery, ownership, user?.id]);
 
   const pinnedNotes = filteredNotes.filter((n) => n.isPinned);
   const unpinnedNotes = filteredNotes.filter((n) => !n.isPinned);
-  const templates = notes.filter((n) => n.isTemplate && !n.deletedAt);
+  const templates = notes.filter((n) => n.isTemplate && !n.deletedAt && n.userId === user?.id);
 
   const resetCreate = () => {
     setNewTitle(""); setNewContent(""); setNewColor("default");
