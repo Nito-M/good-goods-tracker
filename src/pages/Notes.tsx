@@ -61,9 +61,12 @@ export function Notes() {
   } = useNotes();
   const { tags, addTag, deleteTag } = useNoteTags();
   const { summarize, rewrite, loading: aiLoading } = useNotesAi();
+  const { userNames } = useOrgUserNames();
+  const { user } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [view, setView] = useState<NoteView>("active");
+  const [ownership, setOwnership] = useState<"mine" | "team">("mine");
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [isCreating, setIsCreating] = useState(false);
