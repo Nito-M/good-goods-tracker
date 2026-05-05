@@ -116,7 +116,7 @@ export function Notes() {
 
   const resetCreate = () => {
     setNewTitle(""); setNewContent(""); setNewColor("default");
-    setNewReminderAt(""); setNewIsTemplate(false); setNewTagIds([]);
+    setNewReminderAt(""); setNewIsTemplate(false); setNewIsPrivate(false); setNewTagIds([]);
   };
 
   const handleCreateNote = async () => {
@@ -126,6 +126,7 @@ export function Notes() {
       content: newContent.trim(),
       color: newColor,
       isTemplate: newIsTemplate,
+      isPrivate: newIsPrivate,
       reminderAt: newReminderAt ? new Date(newReminderAt).toISOString() : null,
     });
     if (created && newTagIds.length > 0) {
@@ -148,6 +149,7 @@ export function Notes() {
       color: editingNote.color,
       reminderAt: editingNote.reminderAt,
       isTemplate: editingNote.isTemplate,
+      isPrivate: editingNote.isPrivate,
     });
     setEditingNote(null);
   };
