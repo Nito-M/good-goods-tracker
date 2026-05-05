@@ -91,6 +91,7 @@ export function useNotes() {
       if (updates.deletedAt !== undefined) dbUpdates.deleted_at = updates.deletedAt;
       if (updates.reminderAt !== undefined) dbUpdates.reminder_at = updates.reminderAt;
       if (updates.isTemplate !== undefined) dbUpdates.is_template = updates.isTemplate;
+      if (updates.isPrivate !== undefined) dbUpdates.is_private = updates.isPrivate;
 
       const { error } = await supabase.from("notes").update(dbUpdates).eq("id", id);
       if (error) throw error;
