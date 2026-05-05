@@ -2272,6 +2272,7 @@ export type Database = {
           deleted_at: string | null
           id: string
           is_pinned: boolean
+          is_private: boolean
           is_template: boolean
           reminder_at: string | null
           title: string
@@ -2286,6 +2287,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           is_pinned?: boolean
+          is_private?: boolean
           is_template?: boolean
           reminder_at?: string | null
           title?: string
@@ -2300,6 +2302,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           is_pinned?: boolean
+          is_private?: boolean
           is_template?: boolean
           reminder_at?: string | null
           title?: string
