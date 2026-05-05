@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Users, UserPlus, Shield, Link2 } from 'lucide-react';
+import { Plus, Trash2, Users, UserPlus, Shield, Link2, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -94,6 +94,11 @@ export function UsersSettings() {
 
   // Delete confirmation
   const [deleteUser, setDeleteUser] = useState<OrgUser | null>(null);
+
+  // Edit user (display name)
+  const [editNameUser, setEditNameUser] = useState<OrgUser | null>(null);
+  const [editName, setEditName] = useState('');
+  const [savingName, setSavingName] = useState(false);
 
   // Orgs the current user can manage
   const [managedOrgs, setManagedOrgs] = useState<{ id: string; name: string }[]>([]);
@@ -369,6 +374,26 @@ export function UsersSettings() {
     }
   };
 
+  const handleSaveName = async () => {
+    if (!editNameUser || !editName.trim()) return;
+    setSavingName(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ display_name: editName.trim() })
+        .eq('user_id', editNameUser.userId);
+      if (error) throw error;
+      toast({ title: 'User updated' });
+      setEditNameUser(null);
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      toast({ title: 'Error', description: 'Failed to update user.', variant: 'destructive' });
+    } finally {
+      setSavingName(false);
+    }
+  };
+
   const togglePage = (pageKey: string, list: string[], setList: (v: string[]) => void) => {
     if (list.includes(pageKey)) {
       setList(list.filter(p => p !== pageKey));
@@ -509,6 +534,15 @@ export function UsersSettings() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setEditNameUser(u); setEditName(u.displayName || ''); }}
+                      className="gap-1"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => openEditPermissions(u)} className="gap-1">
                       <Shield className="h-3 w-3" />
                       Permissions
@@ -651,7 +685,36 @@ export function UsersSettings() {
         </DialogContent>
       </Dialog>
 
-      {/* Remove User Confirmation */}
+      {/* Edit User Name Dialog */}
+      <Dialog open={!!editNameUser} onOpenChange={(open) => !open && setEditNameUser(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-user-name">Display Name</Label>
+              <Input
+                id="edit-user-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="User's display name"
+              />
+            </div>
+            {editNameUser?.email && (
+              <p className="text-sm text-muted-foreground">{editNameUser.email}</p>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditNameUser(null)}>Cancel</Button>
+              <Button onClick={handleSaveName} disabled={savingName || !editName.trim()}>
+                {savingName ? 'Saving...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       <AlertDialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
