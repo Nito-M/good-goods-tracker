@@ -330,6 +330,14 @@ export function Notes() {
         <TabsContent value="howto" className="mt-4"><HowToDoPage /></TabsContent>
 
         <TabsContent value="notes" className="mt-4 space-y-4">
+          {/* Mine vs Team */}
+          <Tabs value={ownership} onValueChange={(v) => { setOwnership(v as "mine" | "team"); setSelectedIds(new Set()); }}>
+            <TabsList>
+              <TabsTrigger value="mine" className="gap-1"><User className="h-3.5 w-3.5" />My Notes</TabsTrigger>
+              <TabsTrigger value="team" className="gap-1"><User className="h-3.5 w-3.5" />Team Notes</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           {/* View tabs + filters */}
           <div className="flex flex-wrap items-center gap-2">
             <Tabs value={view} onValueChange={(v) => { setView(v as NoteView); setSelectedIds(new Set()); }}>
