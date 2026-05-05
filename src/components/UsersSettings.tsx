@@ -95,6 +95,11 @@ export function UsersSettings() {
   // Delete confirmation
   const [deleteUser, setDeleteUser] = useState<OrgUser | null>(null);
 
+  // Edit user (display name)
+  const [editNameUser, setEditNameUser] = useState<OrgUser | null>(null);
+  const [editName, setEditName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+
   // Orgs the current user can manage
   const [managedOrgs, setManagedOrgs] = useState<{ id: string; name: string }[]>([]);
 
