@@ -610,7 +610,7 @@ function EditNoteBody(props: any) {
   const {
     note, onChange, onClose, onDelete, onPin, onArchive,
     colorPicker, tagPicker, editContentRef,
-    summarize, rewrite, aiLoading,
+    summarize, rewrite, aiLoading, readOnly,
   } = props;
   const { attachments, uploadAttachment, deleteAttachment } = useNoteAttachments(note.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -633,6 +633,33 @@ function EditNoteBody(props: any) {
       }
     }
   };
+
+  if (readOnly) {
+    const html = isHtmlContent(note.content || "") ? note.content : plainTextToHtml(note.content || "");
+    return (
+      <div className="flex flex-col flex-1 min-h-0 gap-4">
+        <h2 className="text-2xl font-semibold">{note.title || "Untitled"}</h2>
+        <div className="flex-1 min-h-0 overflow-y-auto border rounded-md p-4 prose prose-sm dark:prose-invert max-w-none"
+             dangerouslySetInnerHTML={{ __html: html }} />
+        {attachments.length > 0 && (
+          <div className="border rounded-md p-3">
+            <h4 className="text-sm font-medium mb-2">Images ({attachments.length})</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {attachments.map((a: any) => (
+                <div key={a.id} className="relative aspect-square rounded overflow-hidden border bg-muted">
+                  {a.signedUrl && <img src={a.signedUrl} alt={a.fileName} className="w-full h-full object-cover" />}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{wordCount} words · {charCount} characters · Read-only (created by another user)</span>
+          <Button size="sm" onClick={onClose}>Close</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-4">
