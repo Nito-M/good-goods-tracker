@@ -685,7 +685,36 @@ export function UsersSettings() {
         </DialogContent>
       </Dialog>
 
-      {/* Remove User Confirmation */}
+      {/* Edit User Name Dialog */}
+      <Dialog open={!!editNameUser} onOpenChange={(open) => !open && setEditNameUser(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-user-name">Display Name</Label>
+              <Input
+                id="edit-user-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="User's display name"
+              />
+            </div>
+            {editNameUser?.email && (
+              <p className="text-sm text-muted-foreground">{editNameUser.email}</p>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditNameUser(null)}>Cancel</Button>
+              <Button onClick={handleSaveName} disabled={savingName || !editName.trim()}>
+                {savingName ? 'Saving...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       <AlertDialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
