@@ -207,6 +207,8 @@ export function Notes() {
     const colorClasses = getColorClasses(note.color);
     const isSelected = selectedIds.has(note.id);
     const noteTags = tags.filter((t) => note.tagIds.includes(t.id));
+    const isOwner = note.userId === user?.id;
+    const ownerName = userNames[note.userId] || "Unknown";
     return (
       <Card
         className={cn(
@@ -215,7 +217,7 @@ export function Notes() {
           isSelected && "ring-2 ring-primary"
         )}
         onClick={() => {
-          if (selectedIds.size > 0) {
+          if (isOwner && selectedIds.size > 0) {
             const next = new Set(selectedIds);
             if (next.has(note.id)) next.delete(note.id); else next.add(note.id);
             setSelectedIds(next);
@@ -224,14 +226,16 @@ export function Notes() {
           }
         }}
       >
-        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={(e) => e.stopPropagation()}>
-          <Checkbox checked={isSelected} onCheckedChange={(v) => {
-            const next = new Set(selectedIds);
-            if (v) next.add(note.id); else next.delete(note.id);
-            setSelectedIds(next);
-          }} />
-        </div>
-        <CardHeader className="pb-2 flex flex-row items-start justify-between space-y-0 pl-9">
+        {isOwner && (
+          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={(e) => e.stopPropagation()}>
+            <Checkbox checked={isSelected} onCheckedChange={(v) => {
+              const next = new Set(selectedIds);
+              if (v) next.add(note.id); else next.delete(note.id);
+              setSelectedIds(next);
+            }} />
+          </div>
+        )}
+        <CardHeader className={cn("pb-2 flex flex-row items-start justify-between space-y-0", isOwner ? "pl-9" : "pl-4")}>
           <div className="flex-1 min-w-0">
             {note.title ? <h3 className="font-semibold text-base truncate">{note.title}</h3>
               : <h3 className="font-semibold text-base text-muted-foreground italic">Untitled</h3>}
@@ -240,31 +244,33 @@ export function Notes() {
             {note.isPinned && <Pin className="h-4 w-4 text-primary" />}
             {note.reminderAt && <Bell className="h-4 w-4 text-amber-500" />}
             {note.isTemplate && <FileText className="h-4 w-4 text-blue-500" />}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                {!note.deletedAt && (<>
-                  <DropdownMenuItem onClick={() => togglePin(note.id)}>
-                    {note.isPinned ? <><PinOff className="h-4 w-4 mr-2" />Unpin</> : <><Pin className="h-4 w-4 mr-2" />Pin</>}
+            {isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100"><MoreVertical className="h-4 w-4" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  {!note.deletedAt && (<>
+                    <DropdownMenuItem onClick={() => togglePin(note.id)}>
+                      {note.isPinned ? <><PinOff className="h-4 w-4 mr-2" />Unpin</> : <><Pin className="h-4 w-4 mr-2" />Pin</>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => note.archived ? unarchive(note.id) : archive(note.id)}>
+                      {note.archived ? <><ArchiveRestore className="h-4 w-4 mr-2" />Unarchive</> : <><Archive className="h-4 w-4 mr-2" />Archive</>}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>)}
+                  {note.deletedAt && (
+                    <DropdownMenuItem onClick={() => restoreFromTrash(note.id)}><RotateCcw className="h-4 w-4 mr-2" />Restore</DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => handleDelete(note)} className="text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />{note.deletedAt ? "Delete forever" : "Move to trash"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => note.archived ? unarchive(note.id) : archive(note.id)}>
-                    {note.archived ? <><ArchiveRestore className="h-4 w-4 mr-2" />Unarchive</> : <><Archive className="h-4 w-4 mr-2" />Archive</>}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>)}
-                {note.deletedAt && (
-                  <DropdownMenuItem onClick={() => restoreFromTrash(note.id)}><RotateCcw className="h-4 w-4 mr-2" />Restore</DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => handleDelete(note)} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />{note.deletedAt ? "Delete forever" : "Move to trash"}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </CardHeader>
-        <CardContent className="pt-0 pl-9">
+        <CardContent className={cn("pt-0", isOwner ? "pl-9" : "pl-4")}>
           <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">{htmlToPlainText(note.content) || "No content"}</p>
           {noteTags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
@@ -275,10 +281,16 @@ export function Notes() {
               ))}
             </div>
           )}
-          <p className="text-xs text-muted-foreground mt-3">
-            {note.reminderAt && <span className="text-amber-600 dark:text-amber-400">Reminder {format(new Date(note.reminderAt), "MMM d, h:mm a")} · </span>}
-            {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
-          </p>
+          <div className="flex items-center justify-between mt-3 gap-2">
+            <p className="text-xs text-muted-foreground">
+              {note.reminderAt && <span className="text-amber-600 dark:text-amber-400">Reminder {format(new Date(note.reminderAt), "MMM d, h:mm a")} · </span>}
+              {format(new Date(note.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+            </p>
+            <Badge variant="outline" className="text-xs gap-1 shrink-0">
+              <User className="h-3 w-3" />
+              {isOwner ? "You" : ownerName}
+            </Badge>
+          </div>
         </CardContent>
       </Card>
     );
