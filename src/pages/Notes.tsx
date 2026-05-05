@@ -686,6 +686,11 @@ function EditNoteBody(props: any) {
           <Checkbox checked={note.isTemplate} onCheckedChange={(v) => onChange({ ...note, isTemplate: !!v })} />
           Template
         </label>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox checked={!!note.isPrivate} onCheckedChange={(v) => onChange({ ...note, isPrivate: !!v })} />
+          <Lock className="h-3.5 w-3.5" />
+          Private
+        </label>
         <div className="flex-1" />
         <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}><ImagePlus className="h-4 w-4 mr-1" />Add image</Button>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
