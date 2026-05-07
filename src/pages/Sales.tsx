@@ -576,6 +576,8 @@ export function Sales() {
 
       if (sale) {
         resetForm();
+        setActiveTab('history');
+        setPreviewSale(sale);
       }
     }
 

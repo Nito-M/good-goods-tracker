@@ -613,17 +613,19 @@ export function Quotes() {
     };
 
     let success = false;
+    let createdQuote: Quote | null = null;
     if (editingQuoteId) {
       await updateQuote(editingQuoteId, quoteData);
       success = true;
     } else {
-      const quote = await createQuote(quoteData);
-      success = !!quote;
+      createdQuote = await createQuote(quoteData);
+      success = !!createdQuote;
     }
 
     if (success) {
       resetForm();
       setActiveTab('history');
+      if (createdQuote) setPreviewQuote(createdQuote);
     }
 
     setIsProcessing(false);
