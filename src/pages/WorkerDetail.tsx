@@ -297,7 +297,10 @@ export function WorkerDetail() {
                     </div>
                   );
                 })}
-              </div>
+                    </div>
+                  );
+                })()}
+              </>
             )}
           </CardContent>
         </Card>
