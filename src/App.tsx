@@ -40,6 +40,7 @@ import { AssemblyTypes } from "./pages/AssemblyTypes";
 
 import { Assets } from "./pages/Assets";
 import { AssetDetail } from "./pages/AssetDetail";
+import { WorkerDetail } from "./pages/WorkerDetail";
 import { PartsLibrary } from "./pages/PartsLibrary";
 import { PartsLanding } from "./pages/PartsLanding";
 import { PartsAssemblies } from "./pages/PartsAssemblies";
@@ -541,6 +542,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <AssetDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workers/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <WorkerDetail />
               </AppLayout>
             </ProtectedRoute>
           }
