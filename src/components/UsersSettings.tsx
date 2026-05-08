@@ -662,6 +662,19 @@ export function UsersSettings() {
               </label>
               <label className="flex items-center gap-2 cursor-pointer pt-1">
                 <Checkbox
+                  checked={editFeatures.includes('view_all_workers')}
+                  onCheckedChange={() => {
+                    setEditFeatures(prev =>
+                      prev.includes('view_all_workers')
+                        ? prev.filter(f => f !== 'view_all_workers')
+                        : [...prev, 'view_all_workers']
+                    );
+                  }}
+                />
+                <span className="text-sm">View All Workers & Vendor Accounts</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <Checkbox
                   checked={editFeatures.includes('parts_prefer_dxf')}
                   onCheckedChange={() => {
                     setEditFeatures(prev =>
