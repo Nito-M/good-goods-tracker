@@ -514,6 +514,11 @@ export function UsersSettings() {
                           View All Requests
                         </span>
                       )}
+                      {u.featurePermissions.includes('view_all_workers') && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          View All Workers
+                        </span>
+                      )}
                     </div>
                     {/* Requester linking */}
                     <div className="flex items-center gap-2 pt-1">
@@ -659,6 +664,19 @@ export function UsersSettings() {
                   }}
                 />
                 <span className="text-sm">View All Requests</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer pt-1">
+                <Checkbox
+                  checked={editFeatures.includes('view_all_workers')}
+                  onCheckedChange={() => {
+                    setEditFeatures(prev =>
+                      prev.includes('view_all_workers')
+                        ? prev.filter(f => f !== 'view_all_workers')
+                        : [...prev, 'view_all_workers']
+                    );
+                  }}
+                />
+                <span className="text-sm">View All Workers & Vendor Accounts</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer pt-1">
                 <Checkbox
