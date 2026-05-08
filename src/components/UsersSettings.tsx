@@ -684,110 +684,124 @@ export function UsersSettings() {
 
       {/* Edit Permissions Dialog */}
       <Dialog open={!!editUser} onOpenChange={() => setEditUser(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="max-w-none w-screen h-screen sm:rounded-none p-0 flex flex-col gap-0">
+          <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
             <DialogTitle>Edit Permissions — {editUser?.displayName || 'User'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Page Access</Label>
-              <p className="text-sm text-muted-foreground">Select which pages this user can access</p>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                {PAGE_KEYS.map(page => (
-                  <label key={page.key} className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={editPages.includes(page.key)}
-                      onCheckedChange={() => togglePage(page.key, editPages, setEditPages)}
-                    />
-                    <span className="text-sm">{page.label}</span>
-                  </label>
-                ))}
+
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="mx-auto max-w-5xl space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Toggle which pages this user can access. Some pages have additional permissions you can configure below the page name.
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {PAGE_KEYS.map(page => {
+                  const enabled = editPages.includes(page.key);
+                  const pageExtras: { key: string; label: string; description?: string }[] = [];
+                  if (page.key === 'requests') {
+                    pageExtras.push({ key: 'view_all_requests', label: 'View All Requests', description: 'See requests created by other members.' });
+                  }
+                  if (page.key === 'assets') {
+                    pageExtras.push({ key: 'view_all_workers', label: 'View All Workers & Vendor Accounts', description: 'See every worker in the organization, not just ones they created.' });
+                  }
+                  if (page.key === 'parts') {
+                    pageExtras.push({ key: 'parts_prefer_dxf', label: 'Show DXF Drawing Instead of Image', description: 'Use the DXF preview as the default visual.' });
+                  }
+
+                  const showWorkerAccess = page.key === 'assets';
+
+                  return (
+                    <div
+                      key={page.key}
+                      className="rounded-lg border border-border bg-card p-4 space-y-3"
+                    >
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={enabled}
+                          onCheckedChange={() => togglePage(page.key, editPages, setEditPages)}
+                        />
+                        <span className="text-base font-semibold text-foreground">{page.label}</span>
+                      </label>
+
+                      {(pageExtras.length > 0 || showWorkerAccess) && (
+                        <div className="pl-6 space-y-3 border-l-2 border-border">
+                          {pageExtras.map(extra => (
+                            <label key={extra.key} className="flex items-start gap-2 cursor-pointer">
+                              <Checkbox
+                                className="mt-0.5"
+                                checked={editFeatures.includes(extra.key)}
+                                onCheckedChange={() => {
+                                  setEditFeatures(prev =>
+                                    prev.includes(extra.key)
+                                      ? prev.filter(f => f !== extra.key)
+                                      : [...prev, extra.key]
+                                  );
+                                }}
+                              />
+                              <div className="space-y-0.5">
+                                <span className="text-sm text-foreground">{extra.label}</span>
+                                {extra.description && (
+                                  <p className="text-xs text-muted-foreground">{extra.description}</p>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+
+                          {showWorkerAccess && (
+                            <div className="space-y-2">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">Worker Access</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Pick specific workers this user can view and edit (in addition to ones they create themselves).
+                                </p>
+                              </div>
+                              {orgWorkers.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">No other workers in this organization yet.</p>
+                              ) : (
+                                <>
+                                  <Input
+                                    placeholder="Search workers..."
+                                    value={workerSearch}
+                                    onChange={(e) => setWorkerSearch(e.target.value)}
+                                    className="h-8"
+                                  />
+                                  <div className="max-h-56 overflow-y-auto border border-border rounded-md p-2 space-y-1 bg-muted/20">
+                                    {orgWorkers
+                                      .filter(w => !workerSearch.trim() || w.name.toLowerCase().includes(workerSearch.trim().toLowerCase()))
+                                      .map(w => (
+                                        <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
+                                          <Checkbox
+                                            checked={editWorkerIds.includes(w.id)}
+                                            onCheckedChange={(c) => {
+                                              setEditWorkerIds(prev =>
+                                                c ? [...prev, w.id] : prev.filter(id => id !== w.id)
+                                              );
+                                            }}
+                                          />
+                                          <span className="text-sm">{w.name}</span>
+                                        </label>
+                                      ))}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Special Permissions</Label>
-              <p className="text-sm text-muted-foreground">Grant additional capabilities</p>
-              <label className="flex items-center gap-2 cursor-pointer pt-1">
-                <Checkbox
-                  checked={editFeatures.includes('view_all_requests')}
-                  onCheckedChange={() => {
-                    setEditFeatures(prev =>
-                      prev.includes('view_all_requests')
-                        ? prev.filter(f => f !== 'view_all_requests')
-                        : [...prev, 'view_all_requests']
-                    );
-                  }}
-                />
-                <span className="text-sm">View All Requests</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer pt-1">
-                <Checkbox
-                  checked={editFeatures.includes('view_all_workers')}
-                  onCheckedChange={() => {
-                    setEditFeatures(prev =>
-                      prev.includes('view_all_workers')
-                        ? prev.filter(f => f !== 'view_all_workers')
-                        : [...prev, 'view_all_workers']
-                    );
-                  }}
-                />
-                <span className="text-sm">View All Workers & Vendor Accounts</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer pt-1">
-                <Checkbox
-                  checked={editFeatures.includes('parts_prefer_dxf')}
-                  onCheckedChange={() => {
-                    setEditFeatures(prev =>
-                      prev.includes('parts_prefer_dxf')
-                        ? prev.filter(f => f !== 'parts_prefer_dxf')
-                        : [...prev, 'parts_prefer_dxf']
-                    );
-                  }}
-                />
-                <span className="text-sm">Show DXF Drawing Instead of Image (Parts Library)</span>
-              </label>
-            </div>
-            <div className="space-y-2">
-              <Label>Worker Access</Label>
-              <p className="text-sm text-muted-foreground">
-                Pick specific workers this user can view and edit (in addition to ones they create themselves).
-              </p>
-              {orgWorkers.length === 0 ? (
-                <p className="text-xs text-muted-foreground pt-1">No other workers in this organization yet.</p>
-              ) : (
-                <>
-                  <Input
-                    placeholder="Search workers..."
-                    value={workerSearch}
-                    onChange={(e) => setWorkerSearch(e.target.value)}
-                    className="h-8"
-                  />
-                  <div className="max-h-48 overflow-y-auto border border-border rounded-md p-2 space-y-1">
-                    {orgWorkers
-                      .filter(w => !workerSearch.trim() || w.name.toLowerCase().includes(workerSearch.trim().toLowerCase()))
-                      .map(w => (
-                        <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
-                          <Checkbox
-                            checked={editWorkerIds.includes(w.id)}
-                            onCheckedChange={(c) => {
-                              setEditWorkerIds(prev =>
-                                c ? [...prev, w.id] : prev.filter(id => id !== w.id)
-                              );
-                            }}
-                          />
-                          <span className="text-sm">{w.name}</span>
-                        </label>
-                      ))}
-                  </div>
-                </>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditUser(null)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSavePermissions} disabled={saving}>
-                {saving ? 'Saving...' : 'Save Permissions'}
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t border-border shrink-0">
+            <Button variant="outline" onClick={() => setEditUser(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSavePermissions} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Permissions'}
               </Button>
             </DialogFooter>
           </div>
