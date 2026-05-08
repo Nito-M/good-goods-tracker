@@ -134,7 +134,7 @@ export function Assets() {
                   <div
                     key={worker.id}
                     className="border border-border rounded-lg bg-card p-4 cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => { setEditWorker(worker); setWorkerDialog(true); }}
+                    onClick={() => navigate(`/workers/${worker.id}`)}
                   >
                     <div className="flex gap-3">
                       {worker.photo_url ? (
