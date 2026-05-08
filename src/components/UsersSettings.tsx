@@ -747,6 +747,41 @@ export function UsersSettings() {
                 <span className="text-sm">Show DXF Drawing Instead of Image (Parts Library)</span>
               </label>
             </div>
+            <div className="space-y-2">
+              <Label>Worker Access</Label>
+              <p className="text-sm text-muted-foreground">
+                Pick specific workers this user can view and edit (in addition to ones they create themselves).
+              </p>
+              {orgWorkers.length === 0 ? (
+                <p className="text-xs text-muted-foreground pt-1">No other workers in this organization yet.</p>
+              ) : (
+                <>
+                  <Input
+                    placeholder="Search workers..."
+                    value={workerSearch}
+                    onChange={(e) => setWorkerSearch(e.target.value)}
+                    className="h-8"
+                  />
+                  <div className="max-h-48 overflow-y-auto border border-border rounded-md p-2 space-y-1">
+                    {orgWorkers
+                      .filter(w => !workerSearch.trim() || w.name.toLowerCase().includes(workerSearch.trim().toLowerCase()))
+                      .map(w => (
+                        <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
+                          <Checkbox
+                            checked={editWorkerIds.includes(w.id)}
+                            onCheckedChange={(c) => {
+                              setEditWorkerIds(prev =>
+                                c ? [...prev, w.id] : prev.filter(id => id !== w.id)
+                              );
+                            }}
+                          />
+                          <span className="text-sm">{w.name}</span>
+                        </label>
+                      ))}
+                  </div>
+                </>
+              )}
+            </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditUser(null)}>
                 Cancel
