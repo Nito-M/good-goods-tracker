@@ -255,6 +255,7 @@ export function WorkerDetail() {
                         )}
                         {v.vendor_password && (
                           <div className="flex items-center gap-2 text-foreground min-w-0">
+                            <span className="text-xs text-muted-foreground shrink-0">Password:</span>
                             <span className="font-mono text-xs truncate">
                               {showPwd ? v.vendor_password : '••••••••'}
                             </span>
