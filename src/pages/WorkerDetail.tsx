@@ -34,6 +34,7 @@ export function WorkerDetail() {
   const [editingVendor, setEditingVendor] = useState<WorkerVendor | null>(null);
   const [showPasswordIds, setShowPasswordIds] = useState<Record<string, boolean>>({});
   const [showDialogPassword, setShowDialogPassword] = useState(false);
+  const [vendorSearch, setVendorSearch] = useState('');
   const [vName, setVName] = useState('');
   const [vUsername, setVUsername] = useState('');
   const [vEmail, setVEmail] = useState('');
@@ -208,8 +209,28 @@ export function WorkerDetail() {
             {vendors.length === 0 ? (
               <p className="text-sm text-muted-foreground">No vendor accounts yet.</p>
             ) : (
-              <div className="space-y-3">
-                {vendors.map((v) => {
+              <>
+                <div className="mb-3">
+                  <Input
+                    placeholder="Search vendors..."
+                    value={vendorSearch}
+                    onChange={(e) => setVendorSearch(e.target.value)}
+                  />
+                </div>
+                {(() => {
+                  const q = vendorSearch.trim().toLowerCase();
+                  const filtered = q
+                    ? vendors.filter((v) =>
+                        [v.vendor_name, v.vendor_username, v.vendor_email, v.vendor_link, v.vendor_notes]
+                          .some((f) => (f || '').toLowerCase().includes(q))
+                      )
+                    : vendors;
+                  if (filtered.length === 0) {
+                    return <p className="text-sm text-muted-foreground">No vendors match "{vendorSearch}".</p>;
+                  }
+                  return (
+                    <div className="space-y-3">
+                      {filtered.map((v) => {
                   const showPwd = !!showPasswordIds[v.id];
                   return (
                     <div key={v.id} className="rounded-lg border border-border bg-muted/20 p-4">
@@ -276,7 +297,10 @@ export function WorkerDetail() {
                     </div>
                   );
                 })}
-              </div>
+                    </div>
+                  );
+                })()}
+              </>
             )}
           </CardContent>
         </Card>
