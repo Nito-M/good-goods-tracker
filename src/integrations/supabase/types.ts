@@ -4827,6 +4827,11 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          vendor_email: string | null
+          vendor_link: string | null
+          vendor_name: string | null
+          vendor_notes: string | null
+          vendor_password: string | null
         }
         Insert: {
           address?: string | null
@@ -4843,6 +4848,11 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          vendor_email?: string | null
+          vendor_link?: string | null
+          vendor_name?: string | null
+          vendor_notes?: string | null
+          vendor_password?: string | null
         }
         Update: {
           address?: string | null
@@ -4859,6 +4869,11 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          vendor_email?: string | null
+          vendor_link?: string | null
+          vendor_name?: string | null
+          vendor_notes?: string | null
+          vendor_password?: string | null
         }
         Relationships: []
       }
