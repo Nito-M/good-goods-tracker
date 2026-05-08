@@ -100,7 +100,7 @@ export function usePagePermissions() {
 
   const getFirstAllowedRoute = (): string => {
     if (allowedPages === null) return '/';
-    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'boards', 'bank', 'jobs', 'assemblies', 'trailer-config', 'settings'];
+    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'boards', 'bank', 'jobs', 'assemblies', 'assets', 'parts', 'tax-documents', 'trailer-config', 'settings'];
     for (const key of orderedKeys) {
       if (allowedPages.includes(key)) {
         return PAGE_KEY_TO_ROUTES[key]?.[0] || '/';
