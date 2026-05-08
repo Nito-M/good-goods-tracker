@@ -91,6 +91,9 @@ export function UsersSettings() {
   const [editUser, setEditUser] = useState<OrgUser | null>(null);
   const [editPages, setEditPages] = useState<string[]>([]);
   const [editFeatures, setEditFeatures] = useState<string[]>([]);
+  const [editWorkerIds, setEditWorkerIds] = useState<string[]>([]);
+  const [orgWorkers, setOrgWorkers] = useState<{ id: string; name: string }[]>([]);
+  const [workerSearch, setWorkerSearch] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Delete confirmation
