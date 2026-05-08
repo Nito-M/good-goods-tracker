@@ -4811,6 +4811,59 @@ export type Database = {
           },
         ]
       }
+      worker_vendors: {
+        Row: {
+          created_at: string
+          id: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+          vendor_email: string | null
+          vendor_link: string | null
+          vendor_name: string | null
+          vendor_notes: string | null
+          vendor_password: string | null
+          vendor_username: string | null
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+          vendor_email?: string | null
+          vendor_link?: string | null
+          vendor_name?: string | null
+          vendor_notes?: string | null
+          vendor_password?: string | null
+          vendor_username?: string | null
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+          vendor_email?: string | null
+          vendor_link?: string | null
+          vendor_name?: string | null
+          vendor_notes?: string | null
+          vendor_password?: string | null
+          vendor_username?: string | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_vendors_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workers: {
         Row: {
           address: string | null
