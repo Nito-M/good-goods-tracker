@@ -28,7 +28,14 @@ export function WorkerDetail() {
   const { workers, loading, updateWorker, deleteWorker, uploadWorkerPhoto } = useWorkers();
   const workerFiles = useWorkerFiles(id || null);
   const [editOpen, setEditOpen] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showDialogPassword, setShowDialogPassword] = useState(false);
+  const [vName, setVName] = useState('');
+  const [vEmail, setVEmail] = useState('');
+  const [vPassword, setVPassword] = useState('');
+  const [vLink, setVLink] = useState('');
+  const [vNotes, setVNotes] = useState('');
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
