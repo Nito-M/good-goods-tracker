@@ -180,12 +180,17 @@ export function WorkerDetail() {
           </Card>
         )}
 
-        {(worker.vendor_name || worker.vendor_email || worker.vendor_password || worker.vendor_link || worker.vendor_notes) && (
+        {(worker.vendor_name || worker.vendor_email || worker.vendor_password || worker.vendor_link || worker.vendor_notes) ? (
           <Card>
             <CardContent className="p-6">
-              <h3 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
-                <Building2 className="h-4 w-4" /> Vendor Account
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Vendor Account
+                </h3>
+                <Button size="sm" variant="outline" onClick={openVendorDialog}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Edit Vendor
+                </Button>
+              </div>
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                 {worker.vendor_name && (
                   <div className="flex items-center gap-2 text-foreground">
@@ -228,6 +233,17 @@ export function WorkerDetail() {
                   {worker.vendor_notes}
                 </p>
               )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-6 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Building2 className="h-4 w-4" /> No vendor account linked
+              </div>
+              <Button size="sm" onClick={openVendorDialog}>
+                <Plus className="h-4 w-4 mr-1" /> Add Vendor
+              </Button>
             </CardContent>
           </Card>
         )}
