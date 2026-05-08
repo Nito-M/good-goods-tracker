@@ -140,6 +140,35 @@ export function AddWorkerDialog({ open, onOpenChange, onSave, uploadPhoto, initi
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Anything important about this worker..." />
           </div>
 
+          <div className="border-t border-border pt-3 space-y-3">
+            <h4 className="text-sm font-semibold text-foreground">Vendor Account</h4>
+            <div><Label>Vendor Name</Label><Input value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="e.g. Acme Supplies" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Vendor Email</Label><Input type="email" value={vendorEmail} onChange={(e) => setVendorEmail(e.target.value)} /></div>
+              <div>
+                <Label>Vendor Password</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={vendorPassword}
+                    onChange={(e) => setVendorPassword(e.target.value)}
+                    className="pr-9"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div><Label>Website Link</Label><Input type="url" value={vendorLink} onChange={(e) => setVendorLink(e.target.value)} placeholder="https://..." /></div>
+            <div><Label>Vendor Notes</Label><Textarea value={vendorNotes} onChange={(e) => setVendorNotes(e.target.value)} rows={2} /></div>
+          </div>
+
           {initial && (
             <div className="border-t border-border pt-3">
               <div className="flex items-center justify-between mb-2">
