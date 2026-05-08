@@ -237,6 +237,7 @@ export function WorkerDetail() {
                         {v.vendor_username && (
                           <div className="flex items-center gap-2 text-foreground min-w-0">
                             <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="text-xs text-muted-foreground shrink-0">Username:</span>
                             <span className="truncate">{v.vendor_username}</span>
                             <button onClick={() => copy(v.vendor_username!, 'Username')} className="text-muted-foreground hover:text-foreground">
                               <Copy className="h-3.5 w-3.5" />
