@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2, Plus } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Mail, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2, Plus, User as UserIcon, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useWorkers, useWorkerFiles } from '@/hooks/useWorkers';
+import { useWorkerVendors, type WorkerVendor } from '@/hooks/useWorkerVendors';
 import { AddWorkerDialog } from '@/components/AddWorkerDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
