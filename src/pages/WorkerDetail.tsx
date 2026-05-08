@@ -20,9 +20,16 @@ const STATUS_COLORS: Record<string, string> = {
 export function WorkerDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { workers, loading, updateWorker, deleteWorker, uploadWorkerPhoto } = useWorkers();
   const workerFiles = useWorkerFiles(id || null);
   const [editOpen, setEditOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const copy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: `${label} copied` });
+  };
 
   const worker = useMemo(() => workers.find((w) => w.id === id), [workers, id]);
 
