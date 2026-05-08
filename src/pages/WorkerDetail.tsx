@@ -325,13 +325,17 @@ export function WorkerDetail() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {worker.vendor_name || worker.vendor_email ? 'Edit Vendor Account' : 'Add Vendor Account'}
+              {editingVendor ? 'Edit Vendor Account' : 'Add Vendor Account'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="v-name">Vendor name</Label>
               <Input id="v-name" value={vName} onChange={(e) => setVName(e.target.value)} placeholder="Vendor company name" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-username">Username</Label>
+              <Input id="v-username" value={vUsername} onChange={(e) => setVUsername(e.target.value)} placeholder="login username" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="v-email">Email</Label>
