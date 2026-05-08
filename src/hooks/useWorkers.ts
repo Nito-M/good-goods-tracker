@@ -16,6 +16,11 @@ export interface Worker {
   status: string;
   notes: string | null;
   photo_url: string | null;
+  vendor_name: string | null;
+  vendor_email: string | null;
+  vendor_password: string | null;
+  vendor_link: string | null;
+  vendor_notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -76,6 +81,11 @@ export function useWorkers() {
         status: data.status || 'active',
         notes: data.notes || null,
         photo_url: data.photo_url || null,
+        vendor_name: data.vendor_name || null,
+        vendor_email: data.vendor_email || null,
+        vendor_password: data.vendor_password || null,
+        vendor_link: data.vendor_link || null,
+        vendor_notes: data.vendor_notes || null,
       })
       .select()
       .single();
@@ -90,7 +100,7 @@ export function useWorkers() {
 
   const updateWorker = async (id: string, data: Partial<Worker>) => {
     const update: Record<string, unknown> = {};
-    for (const k of ['name','email','phone','job_title','address','start_date','hourly_rate','status','notes','photo_url'] as const) {
+    for (const k of ['name','email','phone','job_title','address','start_date','hourly_rate','status','notes','photo_url','vendor_name','vendor_email','vendor_password','vendor_link','vendor_notes'] as const) {
       if (data[k] !== undefined) update[k] = data[k];
     }
     const { error } = await supabase.from('workers').update(update).eq('id', id);
