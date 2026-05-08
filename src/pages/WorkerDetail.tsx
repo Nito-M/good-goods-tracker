@@ -34,6 +34,7 @@ export function WorkerDetail() {
   const [editingVendor, setEditingVendor] = useState<WorkerVendor | null>(null);
   const [showPasswordIds, setShowPasswordIds] = useState<Record<string, boolean>>({});
   const [showDialogPassword, setShowDialogPassword] = useState(false);
+  const [vendorSearch, setVendorSearch] = useState('');
   const [vName, setVName] = useState('');
   const [vUsername, setVUsername] = useState('');
   const [vEmail, setVEmail] = useState('');
