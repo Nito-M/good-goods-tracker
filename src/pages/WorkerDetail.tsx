@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2, Plus } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Mail, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2, Plus, User as UserIcon, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useWorkers, useWorkerFiles } from '@/hooks/useWorkers';
+import { useWorkerVendors, type WorkerVendor } from '@/hooks/useWorkerVendors';
 import { AddWorkerDialog } from '@/components/AddWorkerDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -27,11 +28,14 @@ export function WorkerDetail() {
   const { toast } = useToast();
   const { workers, loading, updateWorker, deleteWorker, uploadWorkerPhoto } = useWorkers();
   const workerFiles = useWorkerFiles(id || null);
+  const { vendors, addVendor, updateVendor, deleteVendor } = useWorkerVendors(id || null);
   const [editOpen, setEditOpen] = useState(false);
   const [vendorOpen, setVendorOpen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<WorkerVendor | null>(null);
+  const [showPasswordIds, setShowPasswordIds] = useState<Record<string, boolean>>({});
   const [showDialogPassword, setShowDialogPassword] = useState(false);
   const [vName, setVName] = useState('');
+  const [vUsername, setVUsername] = useState('');
   const [vEmail, setVEmail] = useState('');
   const [vPassword, setVPassword] = useState('');
   const [vLink, setVLink] = useState('');
@@ -44,25 +48,32 @@ export function WorkerDetail() {
 
   const worker = useMemo(() => workers.find((w) => w.id === id), [workers, id]);
 
-  const openVendorDialog = () => {
-    setVName(worker?.vendor_name || '');
-    setVEmail(worker?.vendor_email || '');
-    setVPassword(worker?.vendor_password || '');
-    setVLink(worker?.vendor_link || '');
-    setVNotes(worker?.vendor_notes || '');
+  const openVendorDialog = (existing?: WorkerVendor) => {
+    setEditingVendor(existing || null);
+    setVName(existing?.vendor_name || '');
+    setVUsername(existing?.vendor_username || '');
+    setVEmail(existing?.vendor_email || '');
+    setVPassword(existing?.vendor_password || '');
+    setVLink(existing?.vendor_link || '');
+    setVNotes(existing?.vendor_notes || '');
     setShowDialogPassword(false);
     setVendorOpen(true);
   };
 
   const saveVendor = async () => {
-    if (!worker) return;
-    await updateWorker(worker.id, {
+    const payload = {
       vendor_name: vName || null,
+      vendor_username: vUsername || null,
       vendor_email: vEmail || null,
       vendor_password: vPassword || null,
       vendor_link: vLink || null,
       vendor_notes: vNotes || null,
-    });
+    };
+    if (editingVendor) {
+      await updateVendor(editingVendor.id, payload);
+    } else {
+      await addVendor(payload);
+    }
     setVendorOpen(false);
   };
 
@@ -180,73 +191,94 @@ export function WorkerDetail() {
           </Card>
         )}
 
-        {(worker.vendor_name || worker.vendor_email || worker.vendor_password || worker.vendor_link || worker.vendor_notes) ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Building2 className="h-4 w-4" /> Vendor Account
-                </h3>
-                <Button size="sm" variant="outline" onClick={openVendorDialog}>
-                  <Pencil className="h-3.5 w-3.5 mr-1" /> Edit Vendor
-                </Button>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                {worker.vendor_name && (
-                  <div className="flex items-center gap-2 text-foreground">
-                    <Building2 className="h-4 w-4 text-muted-foreground" /> {worker.vendor_name}
-                  </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Building2 className="h-4 w-4" /> Vendor Accounts
+                {vendors.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">{vendors.length}</Badge>
                 )}
-                {worker.vendor_email && (
-                  <div className="flex items-center gap-2 text-foreground">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a href={`mailto:${worker.vendor_email}`} className="hover:underline truncate">{worker.vendor_email}</a>
-                    <button onClick={() => copy(worker.vendor_email!, 'Email')} className="text-muted-foreground hover:text-foreground">
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-                {worker.vendor_password && (
-                  <div className="flex items-center gap-2 text-foreground">
-                    <span className="font-mono text-xs">
-                      {showPassword ? worker.vendor_password : '••••••••'}
-                    </span>
-                    <button onClick={() => setShowPassword((s) => !s)} className="text-muted-foreground hover:text-foreground">
-                      {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                    </button>
-                    <button onClick={() => copy(worker.vendor_password!, 'Password')} className="text-muted-foreground hover:text-foreground">
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-                {worker.vendor_link && (
-                  <div className="flex items-center gap-2 text-foreground sm:col-span-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <a href={worker.vendor_link} target="_blank" rel="noreferrer" className="hover:underline truncate text-primary">
-                      {worker.vendor_link}
-                    </a>
-                  </div>
-                )}
-              </div>
-              {worker.vendor_notes && (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-3 pt-3 border-t border-border">
-                  {worker.vendor_notes}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-6 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Building2 className="h-4 w-4" /> No vendor account linked
-              </div>
-              <Button size="sm" onClick={openVendorDialog}>
+              </h3>
+              <Button size="sm" onClick={() => openVendorDialog()}>
                 <Plus className="h-4 w-4 mr-1" /> Add Vendor
               </Button>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+
+            {vendors.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No vendor accounts yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {vendors.map((v) => {
+                  const showPwd = !!showPasswordIds[v.id];
+                  return (
+                    <div key={v.id} className="rounded-lg border border-border bg-muted/20 p-4">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-xl font-bold text-primary truncate">
+                            {v.vendor_name || 'Untitled vendor'}
+                          </h4>
+                          {v.vendor_link && (
+                            <a href={v.vendor_link} target="_blank" rel="noreferrer" className="text-xs text-primary/80 hover:underline inline-flex items-center gap-1 mt-0.5">
+                              <Globe className="h-3 w-3" /> {v.vendor_link}
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button size="sm" variant="ghost" onClick={() => openVendorDialog(v)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => deleteVendor(v.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                        {v.vendor_username && (
+                          <div className="flex items-center gap-2 text-foreground min-w-0">
+                            <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="truncate">{v.vendor_username}</span>
+                            <button onClick={() => copy(v.vendor_username!, 'Username')} className="text-muted-foreground hover:text-foreground">
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                        {v.vendor_email && (
+                          <div className="flex items-center gap-2 text-foreground min-w-0">
+                            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <a href={`mailto:${v.vendor_email}`} className="hover:underline truncate">{v.vendor_email}</a>
+                            <button onClick={() => copy(v.vendor_email!, 'Email')} className="text-muted-foreground hover:text-foreground">
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                        {v.vendor_password && (
+                          <div className="flex items-center gap-2 text-foreground min-w-0">
+                            <span className="font-mono text-xs truncate">
+                              {showPwd ? v.vendor_password : '••••••••'}
+                            </span>
+                            <button onClick={() => setShowPasswordIds((s) => ({ ...s, [v.id]: !s[v.id] }))} className="text-muted-foreground hover:text-foreground">
+                              {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                            <button onClick={() => copy(v.vendor_password!, 'Password')} className="text-muted-foreground hover:text-foreground">
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {v.vendor_notes && (
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-3 pt-3 border-t border-border">
+                          {v.vendor_notes}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
 
         <Card>
           <CardContent className="p-6">
@@ -293,13 +325,17 @@ export function WorkerDetail() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {worker.vendor_name || worker.vendor_email ? 'Edit Vendor Account' : 'Add Vendor Account'}
+              {editingVendor ? 'Edit Vendor Account' : 'Add Vendor Account'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="v-name">Vendor name</Label>
               <Input id="v-name" value={vName} onChange={(e) => setVName(e.target.value)} placeholder="Vendor company name" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-username">Username</Label>
+              <Input id="v-username" value={vUsername} onChange={(e) => setVUsername(e.target.value)} placeholder="login username" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="v-email">Email</Label>
