@@ -369,6 +369,32 @@ export function UsersSettings() {
         await supabase.from('user_feature_permissions' as any).insert(featureRows as any);
       }
 
+      // Sync worker access grants: diff against existing
+      const { data: existingGrants } = await supabase
+        .from('worker_access_grants')
+        .select('worker_id')
+        .eq('user_id', editUser.userId);
+      const existingIds = new Set((existingGrants || []).map((g: any) => g.worker_id));
+      const desiredIds = new Set(editWorkerIds);
+      const toAdd = [...desiredIds].filter(id => !existingIds.has(id));
+      const toRemove = [...existingIds].filter(id => !desiredIds.has(id));
+      if (toAdd.length > 0) {
+        await supabase.from('worker_access_grants').insert(
+          toAdd.map(workerId => ({
+            worker_id: workerId,
+            user_id: editUser.userId,
+            granted_by: user?.id,
+          }))
+        );
+      }
+      if (toRemove.length > 0) {
+        await supabase
+          .from('worker_access_grants')
+          .delete()
+          .eq('user_id', editUser.userId)
+          .in('worker_id', toRemove);
+      }
+
       toast({ title: 'Permissions updated' });
       setEditUser(null);
       await fetchData();
