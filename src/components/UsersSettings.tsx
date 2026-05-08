@@ -43,6 +43,7 @@ const PAGE_KEYS = [
   { key: 'bank', label: 'Bank' },
   { key: 'jobs', label: 'Jobs' },
   { key: 'assemblies', label: 'Assemblies' },
+  { key: 'assets', label: 'Business Info' },
   { key: 'parts', label: 'Parts Library' },
   { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'trailer-config', label: 'Trailer Configurator' },
