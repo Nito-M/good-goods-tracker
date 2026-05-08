@@ -48,16 +48,28 @@ export function usePagePermissions() {
         return;
       }
 
-      const { data } = await supabase
-        .from('user_page_permissions')
-        .select('page_key')
-        .eq('user_id', user.id);
+      const [{ data }, { data: workerGrants }] = await Promise.all([
+        supabase
+          .from('user_page_permissions')
+          .select('page_key')
+          .eq('user_id', user.id),
+        supabase
+          .from('worker_access_grants')
+          .select('worker_id')
+          .eq('user_id', user.id)
+          .limit(1),
+      ]);
 
       if (!data || data.length === 0) {
         // No permission rows = all access
         setAllowedPages(null);
       } else {
-        setAllowedPages(data.map(d => d.page_key));
+        const keys = data.map(d => d.page_key);
+        // If user has any per-worker access grants, also allow Business Info page
+        if (workerGrants && workerGrants.length > 0 && !keys.includes('assets')) {
+          keys.push('assets');
+        }
+        setAllowedPages(keys);
       }
       setLoading(false);
     };
@@ -88,7 +100,7 @@ export function usePagePermissions() {
 
   const getFirstAllowedRoute = (): string => {
     if (allowedPages === null) return '/';
-    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'boards', 'bank', 'jobs', 'assemblies', 'trailer-config', 'settings'];
+    const orderedKeys = ['dashboard', 'items', 'sales', 'quotes', 'sales-orders', 'purchase-orders', 'requests', 'calendar', 'notes', 'boards', 'bank', 'jobs', 'assemblies', 'assets', 'parts', 'tax-documents', 'trailer-config', 'settings'];
     for (const key of orderedKeys) {
       if (allowedPages.includes(key)) {
         return PAGE_KEY_TO_ROUTES[key]?.[0] || '/';
