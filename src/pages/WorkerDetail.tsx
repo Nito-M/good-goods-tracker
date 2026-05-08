@@ -191,73 +191,94 @@ export function WorkerDetail() {
           </Card>
         )}
 
-        {(worker.vendor_name || worker.vendor_email || worker.vendor_password || worker.vendor_link || worker.vendor_notes) ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Building2 className="h-4 w-4" /> Vendor Account
-                </h3>
-                <Button size="sm" variant="outline" onClick={openVendorDialog}>
-                  <Pencil className="h-3.5 w-3.5 mr-1" /> Edit Vendor
-                </Button>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                {worker.vendor_name && (
-                  <div className="flex items-center gap-2 text-foreground">
-                    <Building2 className="h-4 w-4 text-muted-foreground" /> {worker.vendor_name}
-                  </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Building2 className="h-4 w-4" /> Vendor Accounts
+                {vendors.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">{vendors.length}</Badge>
                 )}
-                {worker.vendor_email && (
-                  <div className="flex items-center gap-2 text-foreground">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a href={`mailto:${worker.vendor_email}`} className="hover:underline truncate">{worker.vendor_email}</a>
-                    <button onClick={() => copy(worker.vendor_email!, 'Email')} className="text-muted-foreground hover:text-foreground">
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-                {worker.vendor_password && (
-                  <div className="flex items-center gap-2 text-foreground">
-                    <span className="font-mono text-xs">
-                      {showPassword ? worker.vendor_password : '••••••••'}
-                    </span>
-                    <button onClick={() => setShowPassword((s) => !s)} className="text-muted-foreground hover:text-foreground">
-                      {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                    </button>
-                    <button onClick={() => copy(worker.vendor_password!, 'Password')} className="text-muted-foreground hover:text-foreground">
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-                {worker.vendor_link && (
-                  <div className="flex items-center gap-2 text-foreground sm:col-span-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <a href={worker.vendor_link} target="_blank" rel="noreferrer" className="hover:underline truncate text-primary">
-                      {worker.vendor_link}
-                    </a>
-                  </div>
-                )}
-              </div>
-              {worker.vendor_notes && (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-3 pt-3 border-t border-border">
-                  {worker.vendor_notes}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-6 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Building2 className="h-4 w-4" /> No vendor account linked
-              </div>
-              <Button size="sm" onClick={openVendorDialog}>
+              </h3>
+              <Button size="sm" onClick={() => openVendorDialog()}>
                 <Plus className="h-4 w-4 mr-1" /> Add Vendor
               </Button>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+
+            {vendors.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No vendor accounts yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {vendors.map((v) => {
+                  const showPwd = !!showPasswordIds[v.id];
+                  return (
+                    <div key={v.id} className="rounded-lg border border-border bg-muted/20 p-4">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-xl font-bold text-primary truncate">
+                            {v.vendor_name || 'Untitled vendor'}
+                          </h4>
+                          {v.vendor_link && (
+                            <a href={v.vendor_link} target="_blank" rel="noreferrer" className="text-xs text-primary/80 hover:underline inline-flex items-center gap-1 mt-0.5">
+                              <Globe className="h-3 w-3" /> {v.vendor_link}
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button size="sm" variant="ghost" onClick={() => openVendorDialog(v)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => deleteVendor(v.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                        {v.vendor_username && (
+                          <div className="flex items-center gap-2 text-foreground min-w-0">
+                            <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="truncate">{v.vendor_username}</span>
+                            <button onClick={() => copy(v.vendor_username!, 'Username')} className="text-muted-foreground hover:text-foreground">
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                        {v.vendor_email && (
+                          <div className="flex items-center gap-2 text-foreground min-w-0">
+                            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <a href={`mailto:${v.vendor_email}`} className="hover:underline truncate">{v.vendor_email}</a>
+                            <button onClick={() => copy(v.vendor_email!, 'Email')} className="text-muted-foreground hover:text-foreground">
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                        {v.vendor_password && (
+                          <div className="flex items-center gap-2 text-foreground min-w-0">
+                            <span className="font-mono text-xs truncate">
+                              {showPwd ? v.vendor_password : '••••••••'}
+                            </span>
+                            <button onClick={() => setShowPasswordIds((s) => ({ ...s, [v.id]: !s[v.id] }))} className="text-muted-foreground hover:text-foreground">
+                              {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                            <button onClick={() => copy(v.vendor_password!, 'Password')} className="text-muted-foreground hover:text-foreground">
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {v.vendor_notes && (
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-3 pt-3 border-t border-border">
+                          {v.vendor_notes}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
 
         <Card>
           <CardContent className="p-6">
