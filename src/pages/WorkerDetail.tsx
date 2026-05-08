@@ -1,10 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2 } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useWorkers, useWorkerFiles } from '@/hooks/useWorkers';
 import { AddWorkerDialog } from '@/components/AddWorkerDialog';
 import {
@@ -24,7 +28,14 @@ export function WorkerDetail() {
   const { workers, loading, updateWorker, deleteWorker, uploadWorkerPhoto } = useWorkers();
   const workerFiles = useWorkerFiles(id || null);
   const [editOpen, setEditOpen] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showDialogPassword, setShowDialogPassword] = useState(false);
+  const [vName, setVName] = useState('');
+  const [vEmail, setVEmail] = useState('');
+  const [vPassword, setVPassword] = useState('');
+  const [vLink, setVLink] = useState('');
+  const [vNotes, setVNotes] = useState('');
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -32,6 +43,28 @@ export function WorkerDetail() {
   };
 
   const worker = useMemo(() => workers.find((w) => w.id === id), [workers, id]);
+
+  const openVendorDialog = () => {
+    setVName(worker?.vendor_name || '');
+    setVEmail(worker?.vendor_email || '');
+    setVPassword(worker?.vendor_password || '');
+    setVLink(worker?.vendor_link || '');
+    setVNotes(worker?.vendor_notes || '');
+    setShowDialogPassword(false);
+    setVendorOpen(true);
+  };
+
+  const saveVendor = async () => {
+    if (!worker) return;
+    await updateWorker(worker.id, {
+      vendor_name: vName || null,
+      vendor_email: vEmail || null,
+      vendor_password: vPassword || null,
+      vendor_link: vLink || null,
+      vendor_notes: vNotes || null,
+    });
+    setVendorOpen(false);
+  };
 
   const handleFilesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -147,12 +180,17 @@ export function WorkerDetail() {
           </Card>
         )}
 
-        {(worker.vendor_name || worker.vendor_email || worker.vendor_password || worker.vendor_link || worker.vendor_notes) && (
+        {(worker.vendor_name || worker.vendor_email || worker.vendor_password || worker.vendor_link || worker.vendor_notes) ? (
           <Card>
             <CardContent className="p-6">
-              <h3 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
-                <Building2 className="h-4 w-4" /> Vendor Account
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Building2 className="h-4 w-4" /> Vendor Account
+                </h3>
+                <Button size="sm" variant="outline" onClick={openVendorDialog}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Edit Vendor
+                </Button>
+              </div>
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                 {worker.vendor_name && (
                   <div className="flex items-center gap-2 text-foreground">
@@ -197,6 +235,17 @@ export function WorkerDetail() {
               )}
             </CardContent>
           </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-6 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Building2 className="h-4 w-4" /> No vendor account linked
+              </div>
+              <Button size="sm" onClick={openVendorDialog}>
+                <Plus className="h-4 w-4 mr-1" /> Add Vendor
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         <Card>
@@ -239,6 +288,58 @@ export function WorkerDetail() {
           return worker;
         }}
       />
+
+      <Dialog open={vendorOpen} onOpenChange={setVendorOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {worker.vendor_name || worker.vendor_email ? 'Edit Vendor Account' : 'Add Vendor Account'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="v-name">Vendor name</Label>
+              <Input id="v-name" value={vName} onChange={(e) => setVName(e.target.value)} placeholder="Vendor company name" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-email">Email</Label>
+              <Input id="v-email" type="email" value={vEmail} onChange={(e) => setVEmail(e.target.value)} placeholder="account@vendor.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="v-password"
+                  type={showDialogPassword ? 'text' : 'password'}
+                  value={vPassword}
+                  onChange={(e) => setVPassword(e.target.value)}
+                  placeholder="Account password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDialogPassword((s) => !s)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showDialogPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-link">Website link</Label>
+              <Input id="v-link" type="url" value={vLink} onChange={(e) => setVLink(e.target.value)} placeholder="https://vendor.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-notes">Notes</Label>
+              <Textarea id="v-notes" value={vNotes} onChange={(e) => setVNotes(e.target.value)} rows={3} placeholder="Additional details..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVendorOpen(false)}>Cancel</Button>
+            <Button onClick={saveVendor}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
