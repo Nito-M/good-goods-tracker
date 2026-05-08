@@ -219,12 +219,15 @@ export function WorkerDetail() {
                 </div>
                 {(() => {
                   const q = vendorSearch.trim().toLowerCase();
+                  const sorted = [...vendors].sort((a, b) =>
+                    (a.vendor_name || '').localeCompare(b.vendor_name || '', undefined, { sensitivity: 'base' })
+                  );
                   const filtered = q
-                    ? vendors.filter((v) =>
+                    ? sorted.filter((v) =>
                         [v.vendor_name, v.vendor_username, v.vendor_email, v.vendor_link, v.vendor_notes]
                           .some((f) => (f || '').toLowerCase().includes(q))
                       )
-                    : vendors;
+                    : sorted;
                   if (filtered.length === 0) {
                     return <p className="text-sm text-muted-foreground">No vendors match "{vendorSearch}".</p>;
                   }
