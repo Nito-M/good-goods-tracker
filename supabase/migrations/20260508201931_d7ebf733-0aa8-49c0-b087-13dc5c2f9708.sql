@@ -1,0 +1,6 @@
+ALTER TABLE public.workers
+  ADD COLUMN IF NOT EXISTS vendor_name TEXT,
+  ADD COLUMN IF NOT EXISTS vendor_email TEXT,
+  ADD COLUMN IF NOT EXISTS vendor_password TEXT,
+  ADD COLUMN IF NOT EXISTS vendor_link TEXT,
+  ADD COLUMN IF NOT EXISTS vendor_notes TEXT;

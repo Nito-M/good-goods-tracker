@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,9 +20,16 @@ const STATUS_COLORS: Record<string, string> = {
 export function WorkerDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { workers, loading, updateWorker, deleteWorker, uploadWorkerPhoto } = useWorkers();
   const workerFiles = useWorkerFiles(id || null);
   const [editOpen, setEditOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const copy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: `${label} copied` });
+  };
 
   const worker = useMemo(() => workers.find((w) => w.id === id), [workers, id]);
 
@@ -135,6 +143,58 @@ export function WorkerDetail() {
             <CardContent className="p-6">
               <h3 className="text-sm font-semibold mb-2 text-foreground">Notes</h3>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{worker.notes}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {(worker.vendor_name || worker.vendor_email || worker.vendor_password || worker.vendor_link || worker.vendor_notes) && (
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
+                <Building2 className="h-4 w-4" /> Vendor Account
+              </h3>
+              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                {worker.vendor_name && (
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Building2 className="h-4 w-4 text-muted-foreground" /> {worker.vendor_name}
+                  </div>
+                )}
+                {worker.vendor_email && (
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${worker.vendor_email}`} className="hover:underline truncate">{worker.vendor_email}</a>
+                    <button onClick={() => copy(worker.vendor_email!, 'Email')} className="text-muted-foreground hover:text-foreground">
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+                {worker.vendor_password && (
+                  <div className="flex items-center gap-2 text-foreground">
+                    <span className="font-mono text-xs">
+                      {showPassword ? worker.vendor_password : '••••••••'}
+                    </span>
+                    <button onClick={() => setShowPassword((s) => !s)} className="text-muted-foreground hover:text-foreground">
+                      {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                    <button onClick={() => copy(worker.vendor_password!, 'Password')} className="text-muted-foreground hover:text-foreground">
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+                {worker.vendor_link && (
+                  <div className="flex items-center gap-2 text-foreground sm:col-span-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <a href={worker.vendor_link} target="_blank" rel="noreferrer" className="hover:underline truncate text-primary">
+                      {worker.vendor_link}
+                    </a>
+                  </div>
+                )}
+              </div>
+              {worker.vendor_notes && (
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-3 pt-3 border-t border-border">
+                  {worker.vendor_notes}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
