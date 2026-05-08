@@ -302,10 +302,36 @@ export function UsersSettings() {
     }
   };
 
-  const openEditPermissions = (u: OrgUser) => {
+  const openEditPermissions = async (u: OrgUser) => {
     setEditUser(u);
     setEditPages(u.permissions.length > 0 ? [...u.permissions] : [...PAGE_KEYS.map(p => p.key)]);
     setEditFeatures([...u.featurePermissions]);
+    setWorkerSearch('');
+
+    // Load workers owned by other members of the same org (workers this user could be granted access to)
+    const { data: orgMembers } = await supabase
+      .from('organization_members')
+      .select('user_id')
+      .eq('organization_id', u.orgId);
+    const otherUserIds = (orgMembers || [])
+      .map((m: any) => m.user_id)
+      .filter((uid: string) => uid !== u.userId);
+    let workers: { id: string; name: string }[] = [];
+    if (otherUserIds.length > 0) {
+      const { data } = await supabase
+        .from('workers')
+        .select('id, name')
+        .in('user_id', otherUserIds)
+        .order('name');
+      workers = (data || []) as any;
+    }
+    setOrgWorkers(workers);
+
+    const { data: grants } = await supabase
+      .from('worker_access_grants')
+      .select('worker_id')
+      .eq('user_id', u.userId);
+    setEditWorkerIds((grants || []).map((g: any) => g.worker_id));
   };
 
   const handleSavePermissions = async () => {
