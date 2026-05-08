@@ -309,6 +309,7 @@ export function WorkerDetail() {
           </CardContent>
         </Card>
 
+        <WorkerAccessCard workerId={worker.id} workerOwnerId={worker.user_id} />
 
         <Card>
           <CardContent className="p-6">
