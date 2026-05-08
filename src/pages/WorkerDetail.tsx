@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { useWorkers, useWorkerFiles } from '@/hooks/useWorkers';
 import { useWorkerVendors, type WorkerVendor } from '@/hooks/useWorkerVendors';
 import { AddWorkerDialog } from '@/components/AddWorkerDialog';
+import { WorkerAccessCard } from '@/components/WorkerAccessCard';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -308,6 +309,7 @@ export function WorkerDetail() {
           </CardContent>
         </Card>
 
+        <WorkerAccessCard workerId={worker.id} workerOwnerId={worker.user_id} />
 
         <Card>
           <CardContent className="p-6">

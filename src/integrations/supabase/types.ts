@@ -4770,6 +4770,38 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_access_grants: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          user_id: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_access_grants_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       worker_files: {
         Row: {
           created_at: string
@@ -4948,6 +4980,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_worker_access: {
+        Args: { _user_id: string; _worker_id: string }
         Returns: boolean
       }
       is_board_manager: {

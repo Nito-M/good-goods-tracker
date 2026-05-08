@@ -91,6 +91,9 @@ export function UsersSettings() {
   const [editUser, setEditUser] = useState<OrgUser | null>(null);
   const [editPages, setEditPages] = useState<string[]>([]);
   const [editFeatures, setEditFeatures] = useState<string[]>([]);
+  const [editWorkerIds, setEditWorkerIds] = useState<string[]>([]);
+  const [orgWorkers, setOrgWorkers] = useState<{ id: string; name: string }[]>([]);
+  const [workerSearch, setWorkerSearch] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Delete confirmation
@@ -299,10 +302,36 @@ export function UsersSettings() {
     }
   };
 
-  const openEditPermissions = (u: OrgUser) => {
+  const openEditPermissions = async (u: OrgUser) => {
     setEditUser(u);
     setEditPages(u.permissions.length > 0 ? [...u.permissions] : [...PAGE_KEYS.map(p => p.key)]);
     setEditFeatures([...u.featurePermissions]);
+    setWorkerSearch('');
+
+    // Load workers owned by other members of the same org (workers this user could be granted access to)
+    const { data: orgMembers } = await supabase
+      .from('organization_members')
+      .select('user_id')
+      .eq('organization_id', u.orgId);
+    const otherUserIds = (orgMembers || [])
+      .map((m: any) => m.user_id)
+      .filter((uid: string) => uid !== u.userId);
+    let workers: { id: string; name: string }[] = [];
+    if (otherUserIds.length > 0) {
+      const { data } = await supabase
+        .from('workers')
+        .select('id, name')
+        .in('user_id', otherUserIds)
+        .order('name');
+      workers = (data || []) as any;
+    }
+    setOrgWorkers(workers);
+
+    const { data: grants } = await supabase
+      .from('worker_access_grants')
+      .select('worker_id')
+      .eq('user_id', u.userId);
+    setEditWorkerIds((grants || []).map((g: any) => g.worker_id));
   };
 
   const handleSavePermissions = async () => {
@@ -338,6 +367,32 @@ export function UsersSettings() {
           feature_key: featureKey,
         }));
         await supabase.from('user_feature_permissions' as any).insert(featureRows as any);
+      }
+
+      // Sync worker access grants: diff against existing
+      const { data: existingGrants } = await supabase
+        .from('worker_access_grants')
+        .select('worker_id')
+        .eq('user_id', editUser.userId);
+      const existingIds = new Set((existingGrants || []).map((g: any) => g.worker_id));
+      const desiredIds = new Set(editWorkerIds);
+      const toAdd = [...desiredIds].filter(id => !existingIds.has(id));
+      const toRemove = [...existingIds].filter(id => !desiredIds.has(id));
+      if (toAdd.length > 0) {
+        await supabase.from('worker_access_grants').insert(
+          toAdd.map(workerId => ({
+            worker_id: workerId,
+            user_id: editUser.userId,
+            granted_by: user?.id,
+          }))
+        );
+      }
+      if (toRemove.length > 0) {
+        await supabase
+          .from('worker_access_grants')
+          .delete()
+          .eq('user_id', editUser.userId)
+          .in('worker_id', toRemove);
       }
 
       toast({ title: 'Permissions updated' });
@@ -691,6 +746,41 @@ export function UsersSettings() {
                 />
                 <span className="text-sm">Show DXF Drawing Instead of Image (Parts Library)</span>
               </label>
+            </div>
+            <div className="space-y-2">
+              <Label>Worker Access</Label>
+              <p className="text-sm text-muted-foreground">
+                Pick specific workers this user can view and edit (in addition to ones they create themselves).
+              </p>
+              {orgWorkers.length === 0 ? (
+                <p className="text-xs text-muted-foreground pt-1">No other workers in this organization yet.</p>
+              ) : (
+                <>
+                  <Input
+                    placeholder="Search workers..."
+                    value={workerSearch}
+                    onChange={(e) => setWorkerSearch(e.target.value)}
+                    className="h-8"
+                  />
+                  <div className="max-h-48 overflow-y-auto border border-border rounded-md p-2 space-y-1">
+                    {orgWorkers
+                      .filter(w => !workerSearch.trim() || w.name.toLowerCase().includes(workerSearch.trim().toLowerCase()))
+                      .map(w => (
+                        <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
+                          <Checkbox
+                            checked={editWorkerIds.includes(w.id)}
+                            onCheckedChange={(c) => {
+                              setEditWorkerIds(prev =>
+                                c ? [...prev, w.id] : prev.filter(id => id !== w.id)
+                              );
+                            }}
+                          />
+                          <span className="text-sm">{w.name}</span>
+                        </label>
+                      ))}
+                  </div>
+                </>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditUser(null)}>
