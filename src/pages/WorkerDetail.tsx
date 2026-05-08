@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Mail, Phone, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
