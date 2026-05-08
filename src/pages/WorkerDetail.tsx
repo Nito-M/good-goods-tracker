@@ -288,6 +288,58 @@ export function WorkerDetail() {
           return worker;
         }}
       />
+
+      <Dialog open={vendorOpen} onOpenChange={setVendorOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {worker.vendor_name || worker.vendor_email ? 'Edit Vendor Account' : 'Add Vendor Account'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="v-name">Vendor name</Label>
+              <Input id="v-name" value={vName} onChange={(e) => setVName(e.target.value)} placeholder="Vendor company name" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-email">Email</Label>
+              <Input id="v-email" type="email" value={vEmail} onChange={(e) => setVEmail(e.target.value)} placeholder="account@vendor.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="v-password"
+                  type={showDialogPassword ? 'text' : 'password'}
+                  value={vPassword}
+                  onChange={(e) => setVPassword(e.target.value)}
+                  placeholder="Account password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDialogPassword((s) => !s)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showDialogPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-link">Website link</Label>
+              <Input id="v-link" type="url" value={vLink} onChange={(e) => setVLink(e.target.value)} placeholder="https://vendor.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="v-notes">Notes</Label>
+              <Textarea id="v-notes" value={vNotes} onChange={(e) => setVNotes(e.target.value)} rows={3} placeholder="Additional details..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVendorOpen(false)}>Cancel</Button>
+            <Button onClick={saveVendor}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
