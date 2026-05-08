@@ -802,9 +802,8 @@ export function UsersSettings() {
             </Button>
             <Button onClick={handleSavePermissions} disabled={saving}>
               {saving ? 'Saving...' : 'Save Permissions'}
-              </Button>
-            </DialogFooter>
-          </div>
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
