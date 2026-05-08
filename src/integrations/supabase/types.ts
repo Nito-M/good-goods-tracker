@@ -5002,6 +5002,10 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_worker_org_admin: {
+        Args: { _user_id: string; _worker_id: string }
+        Returns: boolean
+      }
       users_share_org: {
         Args: { _user_id_a: string; _user_id_b: string }
         Returns: boolean
