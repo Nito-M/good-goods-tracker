@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Worker, useWorkerFiles } from '@/hooks/useWorkers';
-import { Trash2, Upload, FileText, Image as ImageIcon, Download } from 'lucide-react';
+import { Trash2, Upload, FileText, Image as ImageIcon, Download, Eye, EyeOff } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -27,6 +27,12 @@ export function AddWorkerDialog({ open, onOpenChange, onSave, uploadPhoto, initi
   const [status, setStatus] = useState('active');
   const [notes, setNotes] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [vendorName, setVendorName] = useState('');
+  const [vendorEmail, setVendorEmail] = useState('');
+  const [vendorPassword, setVendorPassword] = useState('');
+  const [vendorLink, setVendorLink] = useState('');
+  const [vendorNotes, setVendorNotes] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const workerFiles = useWorkerFiles(initial?.id || null);
@@ -43,6 +49,12 @@ export function AddWorkerDialog({ open, onOpenChange, onSave, uploadPhoto, initi
       setStatus(initial?.status || 'active');
       setNotes(initial?.notes || '');
       setPhotoUrl(initial?.photo_url || '');
+      setVendorName(initial?.vendor_name || '');
+      setVendorEmail(initial?.vendor_email || '');
+      setVendorPassword(initial?.vendor_password || '');
+      setVendorLink(initial?.vendor_link || '');
+      setVendorNotes(initial?.vendor_notes || '');
+      setShowPassword(false);
     }
   }, [open, initial]);
 
@@ -75,6 +87,11 @@ export function AddWorkerDialog({ open, onOpenChange, onSave, uploadPhoto, initi
       status,
       notes: notes || null,
       photo_url: photoUrl || null,
+      vendor_name: vendorName || null,
+      vendor_email: vendorEmail || null,
+      vendor_password: vendorPassword || null,
+      vendor_link: vendorLink || null,
+      vendor_notes: vendorNotes || null,
     });
     setSaving(false);
     onOpenChange(false);
