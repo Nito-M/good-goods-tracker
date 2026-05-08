@@ -28,11 +28,14 @@ export function WorkerDetail() {
   const { toast } = useToast();
   const { workers, loading, updateWorker, deleteWorker, uploadWorkerPhoto } = useWorkers();
   const workerFiles = useWorkerFiles(id || null);
+  const { vendors, addVendor, updateVendor, deleteVendor } = useWorkerVendors(id || null);
   const [editOpen, setEditOpen] = useState(false);
   const [vendorOpen, setVendorOpen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<WorkerVendor | null>(null);
+  const [showPasswordIds, setShowPasswordIds] = useState<Record<string, boolean>>({});
   const [showDialogPassword, setShowDialogPassword] = useState(false);
   const [vName, setVName] = useState('');
+  const [vUsername, setVUsername] = useState('');
   const [vEmail, setVEmail] = useState('');
   const [vPassword, setVPassword] = useState('');
   const [vLink, setVLink] = useState('');
@@ -45,25 +48,32 @@ export function WorkerDetail() {
 
   const worker = useMemo(() => workers.find((w) => w.id === id), [workers, id]);
 
-  const openVendorDialog = () => {
-    setVName(worker?.vendor_name || '');
-    setVEmail(worker?.vendor_email || '');
-    setVPassword(worker?.vendor_password || '');
-    setVLink(worker?.vendor_link || '');
-    setVNotes(worker?.vendor_notes || '');
+  const openVendorDialog = (existing?: WorkerVendor) => {
+    setEditingVendor(existing || null);
+    setVName(existing?.vendor_name || '');
+    setVUsername(existing?.vendor_username || '');
+    setVEmail(existing?.vendor_email || '');
+    setVPassword(existing?.vendor_password || '');
+    setVLink(existing?.vendor_link || '');
+    setVNotes(existing?.vendor_notes || '');
     setShowDialogPassword(false);
     setVendorOpen(true);
   };
 
   const saveVendor = async () => {
-    if (!worker) return;
-    await updateWorker(worker.id, {
+    const payload = {
       vendor_name: vName || null,
+      vendor_username: vUsername || null,
       vendor_email: vEmail || null,
       vendor_password: vPassword || null,
       vendor_link: vLink || null,
       vendor_notes: vNotes || null,
-    });
+    };
+    if (editingVendor) {
+      await updateVendor(editingVendor.id, payload);
+    } else {
+      await addVendor(payload);
+    }
     setVendorOpen(false);
   };
 
