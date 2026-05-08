@@ -44,6 +44,28 @@ export function WorkerDetail() {
 
   const worker = useMemo(() => workers.find((w) => w.id === id), [workers, id]);
 
+  const openVendorDialog = () => {
+    setVName(worker?.vendor_name || '');
+    setVEmail(worker?.vendor_email || '');
+    setVPassword(worker?.vendor_password || '');
+    setVLink(worker?.vendor_link || '');
+    setVNotes(worker?.vendor_notes || '');
+    setShowDialogPassword(false);
+    setVendorOpen(true);
+  };
+
+  const saveVendor = async () => {
+    if (!worker) return;
+    await updateWorker(worker.id, {
+      vendor_name: vName || null,
+      vendor_email: vEmail || null,
+      vendor_password: vPassword || null,
+      vendor_link: vLink || null,
+      vendor_notes: vNotes || null,
+    });
+    setVendorOpen(false);
+  };
+
   const handleFilesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     for (const f of files) await workerFiles.uploadFile(f);
