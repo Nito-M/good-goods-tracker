@@ -18,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useCustomers } from '@/hooks/useCustomers';
-import { useJobs as useJobsHook } from '@/hooks/useJobs';
+
 import { Job } from '@/types/job';
 import { formatCurrency } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
