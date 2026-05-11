@@ -422,6 +422,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const [fDueDate, setFDueDate] = useState(job.dueDate ? job.dueDate.split('T')[0] : '');
   const [fVin, setFVin] = useState(job.vin || '');
   const [fStockNumber, setFStockNumber] = useState(job.stockNumber || '');
+  const [fQuoteNumber, setFQuoteNumber] = useState(job.quoteNumber || '');
+  const [fSalesOrderNumber, setFSalesOrderNumber] = useState(job.salesOrderNumber || '');
+  const [fInvoiceNumber, setFInvoiceNumber] = useState(job.invoiceNumber || '');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
