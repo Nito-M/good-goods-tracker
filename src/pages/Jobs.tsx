@@ -439,6 +439,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     setFDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
     setFVin(job.vin || '');
     setFStockNumber(job.stockNumber || '');
+    setFQuoteNumber(job.quoteNumber || '');
+    setFSalesOrderNumber(job.salesOrderNumber || '');
+    setFInvoiceNumber(job.invoiceNumber || '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
