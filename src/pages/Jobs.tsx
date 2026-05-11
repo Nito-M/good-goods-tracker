@@ -392,7 +392,7 @@ interface JobDetailProps {
 function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatCurrency }: JobDetailProps) {
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem, reserveItem, unreserveItem } = useJobItems(job.id);
-  const { updateJob } = useJobsHook();
+  const { updateJob } = useJobs();
   const { customers } = useCustomers();
 
   // Settings tab form state
