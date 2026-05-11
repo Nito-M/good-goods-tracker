@@ -348,7 +348,10 @@ export function SalesOrderDetail() {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-foreground">{quote.quoteNumber}</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                {quote.salesOrderNumber || '—'}
+                <span className="ml-2 text-sm font-normal text-muted-foreground">({quote.quoteNumber})</span>
+              </h1>
               {Object.keys(itemLinks).length > 0 && (
                 <Link
                   to="/jobs"

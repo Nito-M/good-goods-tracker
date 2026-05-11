@@ -69,7 +69,8 @@ export function SalesOrders() {
     return accepted.filter((q) => {
       const vendorName = q.vendorName?.toLowerCase() || '';
       const quoteNumber = q.quoteNumber.toLowerCase();
-      return vendorName.includes(query) || quoteNumber.includes(query);
+      const soNumber = (q.salesOrderNumber || '').toLowerCase();
+      return vendorName.includes(query) || quoteNumber.includes(query) || soNumber.includes(query);
     });
   }, [quotes, searchQuery]);
 
@@ -111,6 +112,7 @@ export function SalesOrders() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>SO Number</TableHead>
                 <TableHead>Quote Number</TableHead>
                 <TableHead>Customer Name</TableHead>
                 <TableHead className="text-right">Total Amount</TableHead>
@@ -125,9 +127,10 @@ export function SalesOrders() {
                   <TableRow key={quote.id}>
                     <TableCell className="font-medium">
                       <Link to={`/sales-orders/${quote.id}`} className="text-primary hover:underline">
-                        {quote.quoteNumber}
+                        {quote.salesOrderNumber || '—'}
                       </Link>
                     </TableCell>
+                    <TableCell className="text-muted-foreground">{quote.quoteNumber}</TableCell>
                     <TableCell>{quote.vendorName || '—'}</TableCell>
                     <TableCell className="text-right">
                       ${quote.total.toFixed(2)}

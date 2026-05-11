@@ -31,6 +31,7 @@ export interface Quote {
   vendorAddress?: string;
   contactPersonName?: string | null;
   quoteNumber: string;
+  salesOrderNumber: string | null;
   status: QuoteStatus;
   subtotal: number;
   taxRate: number;
