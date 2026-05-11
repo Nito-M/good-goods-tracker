@@ -69,7 +69,8 @@ export function SalesOrders() {
     return accepted.filter((q) => {
       const vendorName = q.vendorName?.toLowerCase() || '';
       const quoteNumber = q.quoteNumber.toLowerCase();
-      return vendorName.includes(query) || quoteNumber.includes(query);
+      const soNumber = (q.salesOrderNumber || '').toLowerCase();
+      return vendorName.includes(query) || quoteNumber.includes(query) || soNumber.includes(query);
     });
   }, [quotes, searchQuery]);
 
