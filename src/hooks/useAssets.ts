@@ -88,9 +88,29 @@ export function useAssets() {
       .order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching assets:', error);
-    } else {
-      setAssets((data as unknown as Asset[]) || []);
+      setLoading(false);
+      return;
     }
+    const assetRows = (data as unknown as Asset[]) || [];
+    const assetIds = assetRows.map((a) => a.id);
+    let primaryByAsset: Record<string, string> = {};
+    if (assetIds.length > 0) {
+      const { data: imgs } = await supabase
+        .from('asset_images' as any)
+        .select('asset_id, image_url, is_primary, display_order')
+        .in('asset_id', assetIds)
+        .order('is_primary', { ascending: false })
+        .order('display_order', { ascending: true });
+      const rows = (imgs as any as { asset_id: string; image_url: string; is_primary: boolean }[]) || [];
+      for (const row of rows) {
+        if (!primaryByAsset[row.asset_id]) primaryByAsset[row.asset_id] = row.image_url;
+      }
+    }
+    const merged = assetRows.map((a) => ({
+      ...a,
+      image_url: primaryByAsset[a.id] || a.image_url,
+    }));
+    setAssets(merged);
     setLoading(false);
   }, [user]);
 
