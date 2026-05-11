@@ -195,6 +195,7 @@ export function Jobs() {
         onDuplicate={() => handleDuplicate(selectedJob)}
         onUpdateStatus={async (status: string) => { await updateJob(selectedJob.id, { status }); }}
         onDelete={async () => { await deleteJob(selectedJob.id); closeJob(); }}
+        updateJob={updateJob}
         formatCurrency={formatCurrency}
       />
     );
@@ -400,13 +401,13 @@ interface JobDetailProps {
   onDuplicate: () => void;
   onUpdateStatus: (status: string) => Promise<void>;
   onDelete: () => Promise<void>;
+  updateJob: ReturnType<typeof useJobs>['updateJob'];
   formatCurrency: (v: number) => string;
 }
 
-function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatCurrency }: JobDetailProps) {
+function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJob, formatCurrency }: JobDetailProps) {
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem, reserveItem, unreserveItem } = useJobItems(job.id);
-  const { updateJob } = useJobs();
   const { customers } = useCustomers();
 
   // Settings tab form state
