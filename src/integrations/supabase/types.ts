@@ -3503,6 +3503,7 @@ export type Database = {
           notes: string | null
           payment_terms: string | null
           quote_number: string
+          sales_order_number: string | null
           show_payment_terms: boolean
           show_sku: boolean
           status: string
@@ -3531,6 +3532,7 @@ export type Database = {
           notes?: string | null
           payment_terms?: string | null
           quote_number: string
+          sales_order_number?: string | null
           show_payment_terms?: boolean
           show_sku?: boolean
           status?: string
@@ -3559,6 +3561,7 @@ export type Database = {
           notes?: string | null
           payment_terms?: string | null
           quote_number?: string
+          sales_order_number?: string | null
           show_payment_terms?: boolean
           show_sku?: boolean
           status?: string
