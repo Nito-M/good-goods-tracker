@@ -270,7 +270,7 @@ export function Jobs() {
                   onDragLeave={() => setDragOverJobId(null)}
                   onDrop={() => handleDrop(job.id)}
                   onDragEnd={handleDragEnd}
-                  onClick={() => setSelectedJobId(job.id)}
+                  onClick={() => openJob(job.id)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
@@ -329,7 +329,7 @@ export function Jobs() {
                       onDragLeave={() => setDragOverJobId(null)}
                       onDrop={() => handleDrop(job.id)}
                       onDragEnd={handleDragEnd}
-                      onClick={() => setSelectedJobId(job.id)}
+                      onClick={() => openJob(job.id)}
                     >
                       <TableCell className="w-10">
                         {!searchQuery && <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />}
