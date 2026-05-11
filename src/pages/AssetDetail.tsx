@@ -368,22 +368,6 @@ export function AssetDetail() {
                                 <Star className="absolute top-0.5 left-0.5 h-3 w-3 text-primary fill-primary" />
                               )}
                               <div className="absolute -top-1.5 -right-1.5 flex gap-0.5">
-                                {assetImages.length > 0 && (
-                                  <Button
-                                    variant="secondary"
-                                    size="icon"
-                                    className="h-5 w-5 rounded-full shadow"
-                                    title="Set as main photo"
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      const url = asset.image_url!;
-                                      await addAssetImageByUrl(url, true);
-                                      await updateAsset(asset.id, { image_url: null });
-                                    }}
-                                  >
-                                    <Star className="h-3 w-3" />
-                                  </Button>
-                                )}
                                 <Button
                                   variant="destructive"
                                   size="icon"
