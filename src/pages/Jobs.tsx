@@ -108,6 +108,20 @@ export function Jobs() {
 
   const [deletingLinkId, setDeletingLinkId] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(urlJobId || null);
+
+  // Keep selectedJobId in sync with the URL so the browser/mouse Back button works.
+  useEffect(() => {
+    setSelectedJobId(urlJobId || null);
+  }, [urlJobId]);
+
+  const openJob = useCallback((id: string) => {
+    navigate(`/jobs/${id}`);
+  }, [navigate]);
+
+  const closeJob = useCallback(() => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/jobs');
+  }, [navigate]);
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverJobId, setDragOverJobId] = useState<string | null>(null);
@@ -170,17 +184,17 @@ export function Jobs() {
 
   const handleDuplicate = async (job: Job) => {
     const newJob = await duplicateJob(job);
-    if (newJob) setSelectedJobId(newJob.id);
+    if (newJob) openJob(newJob.id);
   };
 
   if (selectedJob) {
     return (
       <JobDetail
         job={selectedJob}
-        onBack={() => setSelectedJobId(null)}
+        onBack={closeJob}
         onDuplicate={() => handleDuplicate(selectedJob)}
         onUpdateStatus={async (status: string) => { await updateJob(selectedJob.id, { status }); }}
-        onDelete={async () => { await deleteJob(selectedJob.id); setSelectedJobId(null); }}
+        onDelete={async () => { await deleteJob(selectedJob.id); closeJob(); }}
         formatCurrency={formatCurrency}
       />
     );
@@ -256,7 +270,7 @@ export function Jobs() {
                   onDragLeave={() => setDragOverJobId(null)}
                   onDrop={() => handleDrop(job.id)}
                   onDragEnd={handleDragEnd}
-                  onClick={() => setSelectedJobId(job.id)}
+                  onClick={() => openJob(job.id)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
@@ -315,7 +329,7 @@ export function Jobs() {
                       onDragLeave={() => setDragOverJobId(null)}
                       onDrop={() => handleDrop(job.id)}
                       onDragEnd={handleDragEnd}
-                      onClick={() => setSelectedJobId(job.id)}
+                      onClick={() => openJob(job.id)}
                     >
                       <TableCell className="w-10">
                         {!searchQuery && <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />}
