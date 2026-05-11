@@ -184,7 +184,7 @@ export function Jobs() {
 
   const handleDuplicate = async (job: Job) => {
     const newJob = await duplicateJob(job);
-    if (newJob) setSelectedJobId(newJob.id);
+    if (newJob) openJob(newJob.id);
   };
 
   if (selectedJob) {
