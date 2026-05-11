@@ -313,7 +313,7 @@ export function AssetDetail() {
                         onClick={() => handleImageClick(primaryAssetImage ? primaryAssetImage.image_url : asset.image_url!)}
                       />
                       {/* Thumbnail strip */}
-                      {(assetImages.length > 1 || (assetImages.length > 0 && asset.image_url)) && (
+                      {(assetImages.length > 1 || (assetImages.length >= 1 && asset.image_url) || (assetImages.length === 0 && asset.image_url)) && (
                         <div className="flex gap-2 flex-wrap">
                           {assetImages.map((img) => (
                             <div key={img.id} className="relative group">
@@ -355,30 +355,49 @@ export function AssetDetail() {
                               </div>
                             </div>
                           ))}
-                        </div>
-                      )}
-                      {/* Single image delete when only legacy image_url */}
-                      {assetImages.length === 0 && asset.image_url && (
-                        <div className="flex gap-2 flex-wrap">
-                          <div className="relative group">
-                            <img
-                              src={asset.image_url}
-                              alt=""
-                              className="h-14 w-14 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity border border-border"
-                              onClick={() => handleImageClick(asset.image_url!)}
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                await updateAsset(asset.id, { image_url: null });
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
+                          {/* Legacy single image - starrable */}
+                          {asset.image_url && (
+                            <div className="relative group">
+                              <img
+                                src={asset.image_url}
+                                alt=""
+                                className={`h-14 w-14 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity border-2 ${assetImages.length === 0 ? 'border-primary ring-2 ring-primary/20' : 'border-border'}`}
+                                onClick={() => handleImageClick(asset.image_url!)}
+                              />
+                              {assetImages.length === 0 && (
+                                <Star className="absolute top-0.5 left-0.5 h-3 w-3 text-primary fill-primary" />
+                              )}
+                              <div className="absolute -top-1.5 -right-1.5 flex gap-0.5">
+                                {assetImages.length > 0 && (
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-5 w-5 rounded-full shadow"
+                                    title="Set as main photo"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      const url = asset.image_url!;
+                                      await addAssetImageByUrl(url, true);
+                                      await updateAsset(asset.id, { image_url: null });
+                                    }}
+                                  >
+                                    <Star className="h-3 w-3" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  className="h-5 w-5 rounded-full shadow"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    await updateAsset(asset.id, { image_url: null });
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
