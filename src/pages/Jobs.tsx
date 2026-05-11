@@ -598,6 +598,18 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                     <span className="text-muted-foreground">Job Number</span>
                     <span className="font-mono">{job.jobNumber}</span>
                   </div>
+                  {job.vin && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">VIN</span>
+                      <span className="font-mono">{job.vin}</span>
+                    </div>
+                  )}
+                  {job.stockNumber && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Stock #</span>
+                      <span className="font-mono">{job.stockNumber}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Items</span>
                     <span>{items.length}</span>
