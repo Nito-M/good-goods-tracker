@@ -195,6 +195,7 @@ export function Jobs() {
         onDuplicate={() => handleDuplicate(selectedJob)}
         onUpdateStatus={async (status: string) => { await updateJob(selectedJob.id, { status }); }}
         onDelete={async () => { await deleteJob(selectedJob.id); closeJob(); }}
+        updateJob={updateJob}
         formatCurrency={formatCurrency}
       />
     );
