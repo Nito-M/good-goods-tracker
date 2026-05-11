@@ -191,10 +191,10 @@ export function Jobs() {
     return (
       <JobDetail
         job={selectedJob}
-        onBack={() => setSelectedJobId(null)}
+        onBack={closeJob}
         onDuplicate={() => handleDuplicate(selectedJob)}
         onUpdateStatus={async (status: string) => { await updateJob(selectedJob.id, { status }); }}
-        onDelete={async () => { await deleteJob(selectedJob.id); setSelectedJobId(null); }}
+        onDelete={async () => { await deleteJob(selectedJob.id); closeJob(); }}
         formatCurrency={formatCurrency}
       />
     );
