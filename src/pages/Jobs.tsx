@@ -446,6 +446,8 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
       customer_phone: fCustomerPhone.trim() || null,
       customer_address: fCustomerAddress.trim() || null,
       due_date: fDueDate ? (() => { const [y, m, d] = fDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
+      vin: fVin.trim() || null,
+      stock_number: fStockNumber.trim() || null,
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
