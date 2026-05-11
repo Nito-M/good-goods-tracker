@@ -326,12 +326,12 @@ export function AssetDetail() {
                               {img.is_primary && (
                                 <Star className="absolute top-0.5 left-0.5 h-3 w-3 text-primary fill-primary" />
                               )}
-                              <div className="absolute -top-1.5 -right-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute -top-1.5 -right-1.5 flex gap-0.5">
                                 {!img.is_primary && (
                                   <Button
                                     variant="secondary"
                                     size="icon"
-                                    className="h-5 w-5 rounded-full"
+                                    className="h-5 w-5 rounded-full shadow"
                                     title="Set as main photo"
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -344,7 +344,7 @@ export function AssetDetail() {
                                 <Button
                                   variant="destructive"
                                   size="icon"
-                                  className="h-5 w-5 rounded-full"
+                                  className="h-5 w-5 rounded-full shadow"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     deleteAssetImage(img.id);
