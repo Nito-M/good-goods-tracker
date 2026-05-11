@@ -405,6 +405,8 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
   const [fCustomerPhone, setFCustomerPhone] = useState(job.customerPhone || '');
   const [fCustomerAddress, setFCustomerAddress] = useState(job.customerAddress || '');
   const [fDueDate, setFDueDate] = useState(job.dueDate ? job.dueDate.split('T')[0] : '');
+  const [fVin, setFVin] = useState(job.vin || '');
+  const [fStockNumber, setFStockNumber] = useState(job.stockNumber || '');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
