@@ -2044,9 +2044,11 @@ export type Database = {
           id: string
           job_number: string | null
           status: string
+          stock_number: string | null
           title: string
           updated_at: string
           user_id: string
+          vin: string | null
         }
         Insert: {
           created_at?: string
@@ -2060,9 +2062,11 @@ export type Database = {
           id?: string
           job_number?: string | null
           status?: string
+          stock_number?: string | null
           title: string
           updated_at?: string
           user_id: string
+          vin?: string | null
         }
         Update: {
           created_at?: string
@@ -2076,9 +2080,11 @@ export type Database = {
           id?: string
           job_number?: string | null
           status?: string
+          stock_number?: string | null
           title?: string
           updated_at?: string
           user_id?: string
+          vin?: string | null
         }
         Relationships: []
       }
