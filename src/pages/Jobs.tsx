@@ -654,8 +654,6 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                 </CardContent>
               </Card>
 
-              {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) ? (
-                <Card>
               {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress || job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) ? (
                 <Card>
                   <CardHeader><CardTitle>Customer</CardTitle></CardHeader>
