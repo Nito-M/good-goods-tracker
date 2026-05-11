@@ -102,8 +102,8 @@ export function Assets() {
                     onClick={() => navigate(`/assets/${asset.id}`)}
                   >
                     <div className="flex gap-3">
-                      {asset.image_url ? (
-                        <img src={asset.image_url} alt={asset.name} className="h-16 w-16 rounded-md object-cover shrink-0" />
+                      {asset.display_image_url ? (
+                        <img src={asset.display_image_url} alt={asset.name} className="h-16 w-16 rounded-md object-cover shrink-0" />
                       ) : (
                         <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center shrink-0">
                           <Truck className="h-6 w-6 text-muted-foreground" />
