@@ -85,6 +85,7 @@ export function useQuotes() {
             vendorAddress: quote.vendors?.address,
             contactPersonName: (quote as any).contact_person_name || null,
             quoteNumber: quote.quote_number,
+            salesOrderNumber: (quote as any).sales_order_number ?? null,
             status: quote.status as Quote['status'],
             subtotal: Number(quote.subtotal),
             taxRate: Number(quote.tax_rate),
