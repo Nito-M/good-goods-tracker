@@ -920,6 +920,20 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                   <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Address</Label>
                   <Textarea value={fCustomerAddress} onChange={e => setFCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} />
                 </div>
+                <div className="grid gap-3 md:grid-cols-3 border-t pt-4">
+                  <div>
+                    <Label>Quote Number</Label>
+                    <Input value={fQuoteNumber} onChange={e => setFQuoteNumber(e.target.value)} placeholder="e.g. QUO-0001" />
+                  </div>
+                  <div>
+                    <Label>Sales Order Number</Label>
+                    <Input value={fSalesOrderNumber} onChange={e => setFSalesOrderNumber(e.target.value)} placeholder="e.g. SO-0001" />
+                  </div>
+                  <div>
+                    <Label>Invoice Number</Label>
+                    <Input value={fInvoiceNumber} onChange={e => setFInvoiceNumber(e.target.value)} placeholder="e.g. INV-0001" />
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
