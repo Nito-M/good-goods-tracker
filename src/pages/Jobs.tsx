@@ -422,6 +422,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const [fDueDate, setFDueDate] = useState(job.dueDate ? job.dueDate.split('T')[0] : '');
   const [fVin, setFVin] = useState(job.vin || '');
   const [fStockNumber, setFStockNumber] = useState(job.stockNumber || '');
+  const [fQuoteNumber, setFQuoteNumber] = useState(job.quoteNumber || '');
+  const [fSalesOrderNumber, setFSalesOrderNumber] = useState(job.salesOrderNumber || '');
+  const [fInvoiceNumber, setFInvoiceNumber] = useState(job.invoiceNumber || '');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -436,6 +439,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     setFDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
     setFVin(job.vin || '');
     setFStockNumber(job.stockNumber || '');
+    setFQuoteNumber(job.quoteNumber || '');
+    setFSalesOrderNumber(job.salesOrderNumber || '');
+    setFInvoiceNumber(job.invoiceNumber || '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
@@ -463,6 +469,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
       due_date: fDueDate ? (() => { const [y, m, d] = fDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
       vin: fVin.trim() || null,
       stock_number: fStockNumber.trim() || null,
+      quote_number: fQuoteNumber.trim() || null,
+      sales_order_number: fSalesOrderNumber.trim() || null,
+      invoice_number: fInvoiceNumber.trim() || null,
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
@@ -645,7 +654,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                 </CardContent>
               </Card>
 
-              {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) ? (
+              {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress || job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) ? (
                 <Card>
                   <CardHeader><CardTitle>Customer</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
@@ -671,6 +680,22 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                       <div className="flex items-start gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                         <span className="whitespace-pre-line">{job.customerAddress}</span>
+                      </div>
+                    )}
+                    {(job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) && (
+                      <div className="border-t pt-3 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Quote #</span>
+                          <span className="font-mono">{job.quoteNumber || <span className="text-muted-foreground italic font-sans">—</span>}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Sales Order #</span>
+                          <span className="font-mono">{job.salesOrderNumber || <span className="text-muted-foreground italic font-sans">—</span>}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Invoice #</span>
+                          <span className="font-mono">{job.invoiceNumber || <span className="text-muted-foreground italic font-sans">—</span>}</span>
+                        </div>
                       </div>
                     )}
                   </CardContent>
@@ -894,6 +919,20 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                 <div>
                   <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Address</Label>
                   <Textarea value={fCustomerAddress} onChange={e => setFCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} />
+                </div>
+                <div className="grid gap-3 md:grid-cols-3 border-t pt-4">
+                  <div>
+                    <Label>Quote Number</Label>
+                    <Input value={fQuoteNumber} onChange={e => setFQuoteNumber(e.target.value)} placeholder="e.g. QUO-0001" />
+                  </div>
+                  <div>
+                    <Label>Sales Order Number</Label>
+                    <Input value={fSalesOrderNumber} onChange={e => setFSalesOrderNumber(e.target.value)} placeholder="e.g. SO-0001" />
+                  </div>
+                  <div>
+                    <Label>Invoice Number</Label>
+                    <Input value={fInvoiceNumber} onChange={e => setFInvoiceNumber(e.target.value)} placeholder="e.g. INV-0001" />
+                  </div>
                 </div>
               </CardContent>
             </Card>

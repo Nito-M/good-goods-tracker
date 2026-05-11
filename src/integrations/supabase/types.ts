@@ -2042,7 +2042,10 @@ export type Database = {
           display_order: number
           due_date: string | null
           id: string
+          invoice_number: string | null
           job_number: string | null
+          quote_number: string | null
+          sales_order_number: string | null
           status: string
           stock_number: string | null
           title: string
@@ -2060,7 +2063,10 @@ export type Database = {
           display_order?: number
           due_date?: string | null
           id?: string
+          invoice_number?: string | null
           job_number?: string | null
+          quote_number?: string | null
+          sales_order_number?: string | null
           status?: string
           stock_number?: string | null
           title: string
@@ -2078,7 +2084,10 @@ export type Database = {
           display_order?: number
           due_date?: string | null
           id?: string
+          invoice_number?: string | null
           job_number?: string | null
+          quote_number?: string | null
+          sales_order_number?: string | null
           status?: string
           stock_number?: string | null
           title?: string

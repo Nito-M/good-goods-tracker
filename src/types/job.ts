@@ -12,6 +12,9 @@ export interface Job {
   dueDate: string | null;
   vin: string | null;
   stockNumber: string | null;
+  quoteNumber: string | null;
+  salesOrderNumber: string | null;
+  invoiceNumber: string | null;
   createdAt: string;
   updatedAt: string;
 }
