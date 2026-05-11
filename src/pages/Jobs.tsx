@@ -656,6 +656,8 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
 
               {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) ? (
                 <Card>
+              {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress || job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) ? (
+                <Card>
                   <CardHeader><CardTitle>Customer</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
                     {job.customerName && (
@@ -680,6 +682,22 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                       <div className="flex items-start gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                         <span className="whitespace-pre-line">{job.customerAddress}</span>
+                      </div>
+                    )}
+                    {(job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) && (
+                      <div className="border-t pt-3 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Quote #</span>
+                          <span className="font-mono">{job.quoteNumber || <span className="text-muted-foreground italic font-sans">—</span>}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Sales Order #</span>
+                          <span className="font-mono">{job.salesOrderNumber || <span className="text-muted-foreground italic font-sans">—</span>}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Invoice #</span>
+                          <span className="font-mono">{job.invoiceNumber || <span className="text-muted-foreground italic font-sans">—</span>}</span>
+                        </div>
                       </div>
                     )}
                   </CardContent>
