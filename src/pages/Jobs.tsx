@@ -392,6 +392,63 @@ interface JobDetailProps {
 function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatCurrency }: JobDetailProps) {
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem, reserveItem, unreserveItem } = useJobItems(job.id);
+  const { updateJob } = useJobsHook();
+  const { customers } = useCustomers();
+
+  // Settings tab form state
+  const [tab, setTab] = useState<'information' | 'parts' | 'settings'>('information');
+  const [fTitle, setFTitle] = useState(job.title);
+  const [fDescription, setFDescription] = useState(job.description || '');
+  const [fJobNumber, setFJobNumber] = useState(job.jobNumber || '');
+  const [fCustomerName, setFCustomerName] = useState(job.customerName || '');
+  const [fCustomerEmail, setFCustomerEmail] = useState(job.customerEmail || '');
+  const [fCustomerPhone, setFCustomerPhone] = useState(job.customerPhone || '');
+  const [fCustomerAddress, setFCustomerAddress] = useState(job.customerAddress || '');
+  const [fDueDate, setFDueDate] = useState(job.dueDate ? job.dueDate.split('T')[0] : '');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  useEffect(() => {
+    setFTitle(job.title);
+    setFDescription(job.description || '');
+    setFJobNumber(job.jobNumber || '');
+    setFCustomerName(job.customerName || '');
+    setFCustomerEmail(job.customerEmail || '');
+    setFCustomerPhone(job.customerPhone || '');
+    setFCustomerAddress(job.customerAddress || '');
+    setFDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
+  }, [job.id]);
+
+  const handleCustomerSelect = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    if (customerId === 'none' || !customerId) return;
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setFCustomerName(customer.name || '');
+      setFCustomerEmail(customer.email || '');
+      setFCustomerPhone(customer.phone || '');
+      setFCustomerAddress(customer.address || '');
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!fTitle.trim()) return;
+    setSavingSettings(true);
+    const updates: Record<string, string | null | undefined> = {
+      title: fTitle.trim(),
+      description: fDescription.trim() || undefined,
+      customer_name: fCustomerName.trim() || null,
+      customer_email: fCustomerEmail.trim() || null,
+      customer_phone: fCustomerPhone.trim() || null,
+      customer_address: fCustomerAddress.trim() || null,
+      due_date: fDueDate ? (() => { const [y, m, d] = fDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
+    };
+    if (fJobNumber.trim() !== (job.jobNumber || '')) {
+      updates.job_number = fJobNumber.trim() || undefined;
+    }
+    await updateJob(job.id, updates);
+    setSavingSettings(false);
+  };
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
