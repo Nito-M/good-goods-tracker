@@ -313,7 +313,7 @@ export function AssetDetail() {
                         onClick={() => handleImageClick(primaryAssetImage ? primaryAssetImage.image_url : asset.image_url!)}
                       />
                       {/* Thumbnail strip */}
-                      {(assetImages.length > 1 || (assetImages.length >= 1 && asset.image_url) || (assetImages.length === 0 && asset.image_url)) && (
+                      {(assetImages.length > 0 || asset.image_url) && (
                         <div className="flex gap-2 flex-wrap">
                           {assetImages.map((img) => (
                             <div key={img.id} className="relative group">
