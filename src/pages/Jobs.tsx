@@ -108,6 +108,20 @@ export function Jobs() {
 
   const [deletingLinkId, setDeletingLinkId] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(urlJobId || null);
+
+  // Keep selectedJobId in sync with the URL so the browser/mouse Back button works.
+  useEffect(() => {
+    setSelectedJobId(urlJobId || null);
+  }, [urlJobId]);
+
+  const openJob = useCallback((id: string) => {
+    navigate(`/jobs/${id}`);
+  }, [navigate]);
+
+  const closeJob = useCallback(() => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/jobs');
+  }, [navigate]);
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverJobId, setDragOverJobId] = useState<string | null>(null);
