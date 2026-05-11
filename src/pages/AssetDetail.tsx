@@ -36,7 +36,7 @@ export function AssetDetail() {
   const { assets, loading, updateAsset, deleteAsset, uploadAssetImage } = useAssets();
   const { parts, addPart, removePart, updatePart } = useAssetParts(id);
   const { records, addRecord, deleteRecord } = useAssetMaintenance(id);
-  const { images: assetImages, primaryImage: primaryAssetImage, addImage: addAssetImage, deleteImage: deleteAssetImage, setPrimaryImage: setPrimaryAssetImage } = useAssetImages(id);
+  const { images: assetImages, primaryImage: primaryAssetImage, addImage: addAssetImage, addImageByUrl: addAssetImageByUrl, deleteImage: deleteAssetImage, setPrimaryImage: setPrimaryAssetImage } = useAssetImages(id);
   const { documents, uploadDocument, deleteDocument } = useAssetDocuments(id);
   const { notes: assetNotes, addNote, updateNote: updateAssetNote, deleteNote } = useAssetNotes(id);
   const { parts: availableParts, addPart: addAvailablePart, updatePart: updateAvailablePart, removePart: removeAvailablePart, uploadImage: uploadAvailablePartImage } = useAssetAvailableParts(id);
