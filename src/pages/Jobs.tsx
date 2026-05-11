@@ -405,6 +405,8 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
   const [fCustomerPhone, setFCustomerPhone] = useState(job.customerPhone || '');
   const [fCustomerAddress, setFCustomerAddress] = useState(job.customerAddress || '');
   const [fDueDate, setFDueDate] = useState(job.dueDate ? job.dueDate.split('T')[0] : '');
+  const [fVin, setFVin] = useState(job.vin || '');
+  const [fStockNumber, setFStockNumber] = useState(job.stockNumber || '');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -417,6 +419,8 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
     setFCustomerPhone(job.customerPhone || '');
     setFCustomerAddress(job.customerAddress || '');
     setFDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
+    setFVin(job.vin || '');
+    setFStockNumber(job.stockNumber || '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
@@ -442,6 +446,8 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
       customer_phone: fCustomerPhone.trim() || null,
       customer_address: fCustomerAddress.trim() || null,
       due_date: fDueDate ? (() => { const [y, m, d] = fDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
+      vin: fVin.trim() || null,
+      stock_number: fStockNumber.trim() || null,
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
@@ -592,6 +598,18 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                     <span className="text-muted-foreground">Job Number</span>
                     <span className="font-mono">{job.jobNumber}</span>
                   </div>
+                  {job.vin && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">VIN</span>
+                      <span className="font-mono">{job.vin}</span>
+                    </div>
+                  )}
+                  {job.stockNumber && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Stock #</span>
+                      <span className="font-mono">{job.stockNumber}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Items</span>
                     <span>{items.length}</span>
@@ -817,6 +835,16 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                 <div>
                   <Label>Due Date</Label>
                   <Input type="date" value={fDueDate} onChange={e => setFDueDate(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>VIN</Label>
+                    <Input value={fVin} onChange={e => setFVin(e.target.value)} placeholder="Vehicle Identification Number" />
+                  </div>
+                  <div>
+                    <Label>Stock Number</Label>
+                    <Input value={fStockNumber} onChange={e => setFStockNumber(e.target.value)} placeholder="Stock #" />
+                  </div>
                 </div>
               </CardContent>
             </Card>

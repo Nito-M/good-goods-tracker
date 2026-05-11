@@ -10,6 +10,8 @@ export interface Job {
   customerPhone: string | null;
   customerAddress: string | null;
   dueDate: string | null;
+  vin: string | null;
+  stockNumber: string | null;
   createdAt: string;
   updatedAt: string;
 }

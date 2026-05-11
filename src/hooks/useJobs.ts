@@ -32,6 +32,8 @@ export function useJobs() {
         customerPhone: d.customer_phone,
         customerAddress: d.customer_address,
         dueDate: d.due_date,
+        vin: (d as any).vin ?? null,
+        stockNumber: (d as any).stock_number ?? null,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
       })));
@@ -90,7 +92,7 @@ export function useJobs() {
       .eq('consumed', true);
   };
 
-  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null; due_date?: string | null }) => {
+  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null; due_date?: string | null; vin?: string | null; stock_number?: string | null }) => {
     // If status is changing to finished, consume reserved items
     if (updates.status === 'finished') {
       await consumeReservedItems(id);
