@@ -469,6 +469,9 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
       due_date: fDueDate ? (() => { const [y, m, d] = fDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
       vin: fVin.trim() || null,
       stock_number: fStockNumber.trim() || null,
+      quote_number: fQuoteNumber.trim() || null,
+      sales_order_number: fSalesOrderNumber.trim() || null,
+      invoice_number: fInvoiceNumber.trim() || null,
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
