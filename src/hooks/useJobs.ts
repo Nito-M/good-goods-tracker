@@ -34,6 +34,9 @@ export function useJobs() {
         dueDate: d.due_date,
         vin: (d as any).vin ?? null,
         stockNumber: (d as any).stock_number ?? null,
+        quoteNumber: (d as any).quote_number ?? null,
+        salesOrderNumber: (d as any).sales_order_number ?? null,
+        invoiceNumber: (d as any).invoice_number ?? null,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
       })));
