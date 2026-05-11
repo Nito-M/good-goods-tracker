@@ -836,6 +836,16 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                   <Label>Due Date</Label>
                   <Input type="date" value={fDueDate} onChange={e => setFDueDate(e.target.value)} />
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>VIN</Label>
+                    <Input value={fVin} onChange={e => setFVin(e.target.value)} placeholder="Vehicle Identification Number" />
+                  </div>
+                  <div>
+                    <Label>Stock Number</Label>
+                    <Input value={fStockNumber} onChange={e => setFStockNumber(e.target.value)} placeholder="Stock #" />
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
