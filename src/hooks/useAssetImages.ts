@@ -85,7 +85,28 @@ export function useAssetImages(assetId: string | undefined) {
     toast({ title: 'Primary photo updated' });
   };
 
+  const addImageByUrl = async (imageUrl: string, makePrimary: boolean = true) => {
+    if (!user || !assetId) return null;
+    const currentCount = images.length;
+    if (makePrimary && currentCount > 0) {
+      await supabase.from('asset_images' as any).update({ is_primary: false } as any).eq('asset_id', assetId);
+    }
+    const { data, error } = await supabase.from('asset_images' as any).insert({
+      asset_id: assetId,
+      user_id: user.id,
+      image_url: imageUrl,
+      display_order: currentCount,
+      is_primary: makePrimary || currentCount === 0,
+    } as any).select().single();
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return null;
+    }
+    await fetchImages();
+    return data;
+  };
+
   const primaryImage = images.find(img => img.is_primary) || images[0];
 
-  return { images, loading, primaryImage, addImage, deleteImage, setPrimaryImage, refetch: fetchImages };
+  return { images, loading, primaryImage, addImage, addImageByUrl, deleteImage, setPrimaryImage, refetch: fetchImages };
 }
