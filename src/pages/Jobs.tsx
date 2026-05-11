@@ -419,6 +419,8 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
     setFCustomerPhone(job.customerPhone || '');
     setFCustomerAddress(job.customerAddress || '');
     setFDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
+    setFVin(job.vin || '');
+    setFStockNumber(job.stockNumber || '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
