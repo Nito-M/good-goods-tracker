@@ -15,6 +15,7 @@ export interface Asset {
   vin: string | null;
   motor_type: string | null;
   image_url: string | null;
+  display_image_url?: string | null;
   external_link: string | null;
   current_location: string;
   assigned_shop: string;
@@ -108,7 +109,7 @@ export function useAssets() {
     }
     const merged = assetRows.map((a) => ({
       ...a,
-      image_url: primaryByAsset[a.id] || a.image_url,
+      display_image_url: primaryByAsset[a.id] || a.image_url,
     }));
     setAssets(merged);
     setLoading(false);
