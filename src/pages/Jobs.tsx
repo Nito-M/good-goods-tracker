@@ -559,22 +559,111 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                 <p className="text-sm text-muted-foreground">{job.title}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => navigate(`/jobs/${job.id}/add-items`)}>
-                <PackagePlus className="h-4 w-4 mr-2" />Add Items
-              </Button>
-              <Button variant="outline" onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" />Duplicate</Button>
-              <Button variant="outline" onClick={() => navigate(`/jobs/${job.id}/edit`)}><Edit className="h-4 w-4 mr-2" />Edit Job</Button>
-              <Button variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>
-            </div>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
-          {/* Job Items */}
-          <div>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="information">Information</TabsTrigger>
+            <TabsTrigger value="parts">Parts ({items.length})</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+
+          {/* INFORMATION TAB */}
+          <TabsContent value="information" className="space-y-6">
+            <Card>
+              <CardHeader><CardTitle>Description</CardTitle></CardHeader>
+              <CardContent>
+                {job.description ? (
+                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{job.description}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No description provided.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader><CardTitle>Job Summary</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Job Number</span>
+                    <span className="font-mono">{job.jobNumber}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Items</span>
+                    <span>{items.length}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Total Qty</span>
+                    <span>{items.reduce((s, i) => s + i.quantity, 0)}</span>
+                  </div>
+                  <div className="border-t pt-4 flex justify-between font-semibold">
+                    <span>Total Value</span>
+                    <span>{formatCurrency(totalValue)}</span>
+                  </div>
+                  {job.dueDate && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Due Date</span>
+                      <span>{(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}</span>
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
+                    Created {new Date(job.createdAt).toLocaleDateString()}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) ? (
+                <Card>
+                  <CardHeader><CardTitle>Customer</CardTitle></CardHeader>
+                  <CardContent className="space-y-3">
+                    {job.customerName && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span>{job.customerName}</span>
+                      </div>
+                    )}
+                    {job.customerEmail && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <a href={`mailto:${job.customerEmail}`} className="text-primary hover:underline">{job.customerEmail}</a>
+                      </div>
+                    )}
+                    {job.customerPhone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <a href={`tel:${job.customerPhone}`} className="text-primary hover:underline">{job.customerPhone}</a>
+                      </div>
+                    )}
+                    {job.customerAddress && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <span className="whitespace-pre-line">{job.customerAddress}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader><CardTitle>Customer</CardTitle></CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground italic">No customer details. Add them in Settings.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* PARTS TAB */}
+          <TabsContent value="parts">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => navigate(`/jobs/${job.id}/add-items`)}>
+                <PackagePlus className="h-4 w-4 mr-2" />Add Items
+              </Button>
+            </div>
             <Card>
               <CardHeader>
                 <CardTitle>Job Items ({items.length})</CardTitle>
@@ -650,14 +739,14 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                                       )}
                                     </TableCell>
                                     <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
-                                    
+
                                     <TableCell>
                                       <QtyInput
                                         value={item.quantity}
                                         onCommit={(q) => updateItem(item.id, { quantity: q })}
                                       />
                                     </TableCell>
-                                    
+
                                     <TableCell>
                                       <div className="flex items-center gap-1 flex-wrap">
                                         {item.consumed ? (
@@ -706,97 +795,81 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, formatC
                 )}
               </CardContent>
             </Card>
-          </div>
+          </TabsContent>
 
-          {/* Summary */}
-          <div>
-            <Card className="sticky top-8">
-              <CardHeader>
-                <CardTitle>Job Summary</CardTitle>
-              </CardHeader>
+          {/* SETTINGS TAB */}
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader><CardTitle>Job Details</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Job Number</span>
-                  <button onClick={() => navigate(`/jobs/${job.id}/description`)} className="font-mono hover:underline cursor-pointer">{job.jobNumber}</button>
+                <div>
+                  <Label>Title *</Label>
+                  <Input value={fTitle} onChange={e => setFTitle(e.target.value)} placeholder="Job title" />
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Status</span>
-                  <Select value={job.status} onValueChange={onUpdateStatus}>
-                    <SelectTrigger className="w-[160px] h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map(s => (
-                        <SelectItem key={s.value} value={s.value}>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-block w-2 h-2 rounded-full ${statusColors[s.value]?.split(' ')[0] || 'bg-muted'}`} />
-                            {s.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div>
+                  <Label>Job Number</Label>
+                  <Input value={fJobNumber} onChange={e => setFJobNumber(e.target.value)} placeholder="e.g. JOB-0001" />
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Items</span>
-                  <span>{items.length}</span>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea value={fDescription} onChange={e => setFDescription(e.target.value)} placeholder="Job description" rows={4} />
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total Qty</span>
-                  <span>{items.reduce((s, i) => s + i.quantity, 0)}</span>
-                </div>
-                <div className="border-t pt-4 flex justify-between font-semibold">
-                  <span>Total Value</span>
-                  <span>{formatCurrency(totalValue)}</span>
-                </div>
-                {job.dueDate && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Due Date</span>
-                    <span>{(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}</span>
-                  </div>
-                )}
-                <div className="text-xs text-muted-foreground">
-                  Created {new Date(job.createdAt).toLocaleDateString()}
+                <div>
+                  <Label>Due Date</Label>
+                  <Input type="date" value={fDueDate} onChange={e => setFDueDate(e.target.value)} />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Customer Info Card */}
-            {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) && (
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="text-base">Customer</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {job.customerName && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span>{job.customerName}</span>
-                    </div>
-                  )}
-                  {job.customerEmail && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <a href={`mailto:${job.customerEmail}`} className="text-primary hover:underline">{job.customerEmail}</a>
-                    </div>
-                  )}
-                  {job.customerPhone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <a href={`tel:${job.customerPhone}`} className="text-primary hover:underline">{job.customerPhone}</a>
-                    </div>
-                  )}
-                  {job.customerAddress && (
-                    <div className="flex items-start gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span className="whitespace-pre-line">{job.customerAddress}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><User className="h-5 w-5" />Customer Details</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                {customers.length > 0 && (
+                  <div>
+                    <Label>Select Customer</Label>
+                    <Select value={selectedCustomerId} onValueChange={handleCustomerSelect}>
+                      <SelectTrigger><SelectValue placeholder="Choose a saved customer..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— None —</SelectItem>
+                        {customers.map(c => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}{c.company ? ` (${c.company})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div>
+                  <Label className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" />Customer Name</Label>
+                  <Input value={fCustomerName} onChange={e => setFCustomerName(e.target.value)} placeholder="Customer name" />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />Email</Label>
+                  <Input type="email" value={fCustomerEmail} onChange={e => setFCustomerEmail(e.target.value)} placeholder="customer@example.com" />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" />Phone</Label>
+                  <Input value={fCustomerPhone} onChange={e => setFCustomerPhone(e.target.value)} placeholder="Phone number" />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Address</Label>
+                  <Textarea value={fCustomerAddress} onChange={e => setFCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" />Duplicate Job</Button>
+                <Button variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="h-4 w-4 mr-2" />Delete Job</Button>
+              </div>
+              <Button onClick={handleSaveSettings} disabled={!fTitle.trim() || savingSettings}>
+                {savingSettings ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Delete Confirmation */}
