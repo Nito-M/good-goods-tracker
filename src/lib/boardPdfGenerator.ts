@@ -81,6 +81,7 @@ function renderCell(
       /* fall through */
     }
     return '';
+  }
 
   // Text / Price / default — evaluate formulas to their computed value (matches on-screen).
   if (col.type === 'price') {
