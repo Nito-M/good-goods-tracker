@@ -42,6 +42,10 @@ import { StatusCell } from '@/components/board/cells/StatusCell';
 import { FilesCell } from '@/components/board/cells/FilesCell';
 import { LinkCell } from '@/components/board/cells/LinkCell';
 import { ConnectBoardCell } from '@/components/board/cells/ConnectBoardCell';
+import { ItemCell } from '@/components/board/cells/ItemCell';
+import { parseItemCellValue } from '@/components/board/BoardItemPickerDialog';
+import { useInventory } from '@/hooks/useInventory';
+import { useParts } from '@/hooks/useParts';
 import { ConnectBoardSetupDialog } from '@/components/board/ConnectBoardSetupDialog';
 import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
 import { useBoardClipboard } from '@/hooks/useBoardClipboard';
@@ -81,6 +85,8 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
 
   const types: { type: BoardColumnType; label: string }[] = [
     { type: 'text', label: 'Text' },
+    { type: 'price', label: 'Price' },
+    { type: 'item', label: 'Item / Part' },
     { type: 'date', label: 'Date' },
     { type: 'checkbox', label: 'Checkbox' },
     { type: 'status', label: 'Status' },
