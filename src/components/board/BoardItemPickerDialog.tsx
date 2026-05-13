@@ -1,12 +1,20 @@
-import { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Search, X, Package, Wrench, Link2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search, Package, Wrench } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useInventory } from '@/hooks/useInventory';
 import { useParts } from '@/hooks/useParts';
 import { formatCurrency } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 export interface BoardLinkedItem {
   k: 'i' | 'p'; // inventory | part
@@ -25,128 +33,301 @@ interface Props {
 export function BoardItemPickerDialog({ open, onOpenChange, onPick, currentValue }: Props) {
   const { allItems, loading: invLoading } = useInventory();
   const { parts, loading: partsLoading } = useParts();
-  const [q, setQ] = useState('');
-  const [tab, setTab] = useState<'inventory' | 'parts'>(currentValue?.k === 'p' ? 'parts' : 'inventory');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [tab, setTab] = useState<'i' | 'p'>(currentValue?.k === 'p' ? 'p' : 'i');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const ql = q.trim().toLowerCase();
+  // History push (mirror FullScreenItemPicker behavior)
+  const closedByBackRef = useRef(false);
+  const historyPushedRef = useRef(false);
+  const closingFromActionRef = useRef(false);
 
-  const inventoryRows = useMemo(() => {
-    if (!ql) return allItems.slice(0, 200);
-    return allItems.filter(
-      (i) =>
-        i.name.toLowerCase().includes(ql) ||
-        (i.sku || '').toLowerCase().includes(ql) ||
-        (i.internalPartNumber || '').toLowerCase().includes(ql)
-    );
-  }, [allItems, ql]);
+  useEffect(() => {
+    if (open) {
+      setSelectedIndex(0);
+      closedByBackRef.current = false;
+      if (!historyPushedRef.current) {
+        historyPushedRef.current = true;
+        window.history.pushState({ picker: 'board-item' }, '');
+      }
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      historyPushedRef.current = false;
+      closingFromActionRef.current = false;
+    }
+  }, [open]);
 
-  const partRows = useMemo(() => {
-    if (!ql) return parts.slice(0, 200);
-    return parts.filter(
-      (p) => p.name.toLowerCase().includes(ql) || (p.sku || '').toLowerCase().includes(ql)
-    );
-  }, [parts, ql]);
+  useEffect(() => {
+    if (!open) return;
+    const onPop = () => {
+      if (closingFromActionRef.current) {
+        closingFromActionRef.current = false;
+        return;
+      }
+      if (historyPushedRef.current) {
+        historyPushedRef.current = false;
+        closedByBackRef.current = true;
+        onOpenChange(false);
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [open, onOpenChange]);
+
+  const handleClose = () => {
+    if (closedByBackRef.current) {
+      onOpenChange(false);
+      return;
+    }
+    closingFromActionRef.current = true;
+    onOpenChange(false);
+    if (historyPushedRef.current) window.history.back();
+  };
+
+  const filteredInventory = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return allItems;
+    const tokens = q.split(/\s+/).filter(Boolean);
+    return allItems.filter((i) => {
+      const hay = `${i.name} ${i.sku || ''} ${i.internalPartNumber || ''}`.toLowerCase();
+      return tokens.every((t) => hay.includes(t));
+    });
+  }, [allItems, searchQuery]);
+
+  const filteredParts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return parts;
+    const tokens = q.split(/\s+/).filter(Boolean);
+    return parts.filter((p) => {
+      const hay = `${p.name} ${p.sku || ''}`.toLowerCase();
+      return tokens.every((t) => hay.includes(t));
+    });
+  }, [parts, searchQuery]);
+
+  const activeList = tab === 'i' ? filteredInventory : filteredParts;
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchQuery, tab]);
 
   const handlePick = (item: BoardLinkedItem) => {
     onPick(item);
-    onOpenChange(false);
+    handleClose();
   };
 
+  const handleClear = () => {
+    onPick({ k: tab, id: '', n: '', s: '' });
+    handleClose();
+  };
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((p) => Math.min(p + 1, activeList.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((p) => Math.max(p - 1, 0));
+      } else if (e.key === 'Enter' && activeList.length > 0) {
+        e.preventDefault();
+        const sel = activeList[selectedIndex];
+        if (!sel) return;
+        if (tab === 'i') {
+          handlePick({ k: 'i', id: sel.id, n: sel.name, s: (sel as any).sku || '' });
+        } else {
+          handlePick({ k: 'p', id: sel.id, n: sel.name, s: (sel as any).sku || '' });
+        }
+      } else if (e.key === 'Escape') {
+        handleClose();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeList, selectedIndex, tab]
+  );
+
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Link an item</DialogTitle>
-        </DialogHeader>
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            autoFocus
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by name or part number…"
-            className="pl-9"
-          />
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      {/* Header */}
+      <div className="border-b border-border bg-card px-4 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-bold text-card-foreground">Link an Item</h2>
+          {currentValue && (
+            <Badge variant="secondary" className="text-sm gap-1">
+              <Link2 className="h-3 w-3" />
+              {currentValue.n}
+            </Badge>
+          )}
         </div>
-
-        <Tabs value={tab} onValueChange={(v) => setTab(v as 'inventory' | 'parts')}>
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="inventory">
-              <Package className="h-4 w-4 mr-2" /> Inventory ({inventoryRows.length})
-            </TabsTrigger>
-            <TabsTrigger value="parts">
-              <Wrench className="h-4 w-4 mr-2" /> Parts ({partRows.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="inventory" className="mt-2">
-            <div className="max-h-[50vh] overflow-y-auto border rounded-md divide-y">
-              {invLoading && <div className="p-4 text-sm text-muted-foreground">Loading…</div>}
-              {!invLoading && inventoryRows.length === 0 && (
-                <div className="p-4 text-sm text-muted-foreground">No items found.</div>
-              )}
-              {inventoryRows.map((i) => (
-                <button
-                  key={i.id}
-                  onClick={() => handlePick({ k: 'i', id: i.id, n: i.name, s: i.sku || '' })}
-                  className="w-full text-left p-3 hover:bg-accent flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{i.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {i.sku || '—'}
-                      {i.internalPartNumber ? ` · ${i.internalPartNumber}` : ''}
-                    </div>
-                  </div>
-                  <div className="text-sm tabular-nums shrink-0">{formatCurrency(i.price || 0)}</div>
-                </button>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="parts" className="mt-2">
-            <div className="max-h-[50vh] overflow-y-auto border rounded-md divide-y">
-              {partsLoading && <div className="p-4 text-sm text-muted-foreground">Loading…</div>}
-              {!partsLoading && partRows.length === 0 && (
-                <div className="p-4 text-sm text-muted-foreground">No parts found.</div>
-              )}
-              {partRows.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => handlePick({ k: 'p', id: p.id, n: p.name, s: p.sku || '' })}
-                  className="w-full text-left p-3 hover:bg-accent flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{p.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{p.sku || '—'}</div>
-                  </div>
-                  <div className="text-sm tabular-nums shrink-0">{formatCurrency(p.price || 0)}</div>
-                </button>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {currentValue && (
-          <div className="flex justify-between items-center pt-2 border-t">
-            <div className="text-xs text-muted-foreground">
-              Linked: <span className="font-medium text-foreground">{currentValue.n}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onPick({ k: currentValue.k, id: '', n: '', s: '' });
-                onOpenChange(false);
-              }}
-            >
+        <div className="flex items-center gap-2">
+          {currentValue && (
+            <Button variant="outline" size="sm" onClick={handleClear}>
               Clear link
             </Button>
+          )}
+          <Button onClick={handleClose} size="lg" className="ml-2">
+            Done
+          </Button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Search + Tabs */}
+        <div className="p-4 border-b border-border shrink-0 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search by name, SKU, or part number..."
+              className="pl-12 h-12 text-base"
+              autoFocus
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={tab === 'i' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTab('i')}
+              className="gap-1.5"
+            >
+              <Package className="h-4 w-4" />
+              Inventory ({filteredInventory.length})
+            </Button>
+            <Button
+              variant={tab === 'p' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setTab('p')}
+              className="gap-1.5"
+            >
+              <Wrench className="h-4 w-4" />
+              Parts ({filteredParts.length})
+            </Button>
+          </div>
+        </div>
+
+        {/* Results */}
+        <ScrollArea className="flex-1">
+          {tab === 'i' ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item Name</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead className="text-right">Stock</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                      Loading…
+                    </TableCell>
+                  </TableRow>
+                ) : filteredInventory.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                      {searchQuery ? 'No items match your search' : 'No inventory items'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredInventory.map((item, index) => (
+                    <TableRow
+                      key={item.id}
+                      className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
+                      onClick={() =>
+                        handlePick({ k: 'i', id: item.id, n: item.name, s: item.sku || '' })
+                      }
+                    >
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell>
+                        {item.sku ? <Badge variant="secondary">{item.sku}</Badge> : '—'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={
+                            item.quantity <= item.minStock ? 'text-destructive font-medium' : ''
+                          }
+                        >
+                          {item.quantity}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(item.price || 0)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Part Name</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {partsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground py-12">
+                      Loading…
+                    </TableCell>
+                  </TableRow>
+                ) : filteredParts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground py-12">
+                      {searchQuery ? 'No parts match your search' : 'No parts'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredParts.map((p, index) => (
+                    <TableRow
+                      key={p.id}
+                      className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
+                      onClick={() => handlePick({ k: 'p', id: p.id, n: p.name, s: p.sku || '' })}
+                    >
+                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell>
+                        {p.sku ? <Badge variant="secondary">{p.sku}</Badge> : '—'}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(p.price || 0)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </ScrollArea>
+
+        {/* Footer */}
+        <div className="border-t border-border px-4 py-2 text-sm text-muted-foreground shrink-0">
+          {tab === 'i' ? `${filteredInventory.length} items` : `${filteredParts.length} parts`}
+          {searchQuery && ` matching "${searchQuery}"`}
+          <span className="ml-4 text-xs">↑↓ Navigate · Enter to pick · Esc to close</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
