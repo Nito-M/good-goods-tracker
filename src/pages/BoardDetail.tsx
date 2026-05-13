@@ -1746,6 +1746,15 @@ function CellRenderer({
           formulaContext={formulaContext}
         />
       );
+    case 'item':
+      return (
+        <ItemCell
+          value={value}
+          onSave={onSave}
+          readOnly={readOnly}
+          align={cellAlign ?? column.text_align}
+        />
+      );
     case 'connect':
       return (
         <ConnectBoardCell
