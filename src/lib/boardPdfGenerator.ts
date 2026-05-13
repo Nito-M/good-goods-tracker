@@ -72,6 +72,17 @@ function renderCell(
     return raw;
   }
 
+  if (col.type === 'item') {
+    if (!raw) return '';
+    try {
+      const j = JSON.parse(raw);
+      if (j && j.n) return j.s ? `${j.n} (${j.s})` : j.n;
+    } catch {
+      /* fall through */
+    }
+    return '';
+  }
+
   // Text / Price / default — evaluate formulas to their computed value (matches on-screen).
   if (col.type === 'price') {
     if (!raw) return '';

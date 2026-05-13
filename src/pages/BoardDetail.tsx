@@ -42,6 +42,10 @@ import { StatusCell } from '@/components/board/cells/StatusCell';
 import { FilesCell } from '@/components/board/cells/FilesCell';
 import { LinkCell } from '@/components/board/cells/LinkCell';
 import { ConnectBoardCell } from '@/components/board/cells/ConnectBoardCell';
+import { ItemCell } from '@/components/board/cells/ItemCell';
+import { parseItemCellValue } from '@/components/board/BoardItemPickerDialog';
+import { useInventory } from '@/hooks/useInventory';
+import { useParts } from '@/hooks/useParts';
 import { ConnectBoardSetupDialog } from '@/components/board/ConnectBoardSetupDialog';
 import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
 import { useBoardClipboard } from '@/hooks/useBoardClipboard';
@@ -81,6 +85,8 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
 
   const types: { type: BoardColumnType; label: string }[] = [
     { type: 'text', label: 'Text' },
+    { type: 'price', label: 'Price' },
+    { type: 'item', label: 'Item / Part' },
     { type: 'date', label: 'Date' },
     { type: 'checkbox', label: 'Checkbox' },
     { type: 'status', label: 'Status' },
@@ -549,8 +555,30 @@ export default function BoardDetail() {
   );
   const visibleColumnIds = useMemo(() => visibleColumns.map((c) => c.id), [visibleColumns]);
 
+  // Live price lookup for "item" columns: { "i:<id>" | "p:<id>" -> price }
+  const { allItems: invItems } = useInventory();
+  const { parts: partsList } = useParts();
+  const itemPriceLookup = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const i of invItems) m.set(`i:${i.id}`, Number(i.price) || 0);
+    for (const p of partsList) m.set(`p:${p.id}`, Number(p.price) || 0);
+    return m;
+  }, [invItems, partsList]);
+
+  const getItemLivePrice = useCallback(
+    (rowId: string, colId: string): number | null => {
+      const raw = getCellValue(rowId, colId);
+      const linked = parseItemCellValue(raw);
+      if (!linked) return null;
+      return itemPriceLookup.get(`${linked.k}:${linked.id}`) ?? null;
+    },
+    [getCellValue, itemPriceLookup]
+  );
+
   // Spreadsheet formula context: rows/cols are addressed by their visible position.
-  // A1 = first column, first row in the rendered grid.
+  // A1 = first column, first row in the rendered grid. For "item" columns, the
+  // resolved value is the linked item's current price so =A1 in a Price column
+  // pulls live pricing from inventory/parts.
   const formulaContext = useMemo(
     () => ({
       colCount: visibleColumnIds.length,
@@ -559,10 +587,18 @@ export default function BoardDetail() {
         const colId = visibleColumnIds[col];
         const rowId = renderedRowIds[row];
         if (!colId || !rowId) return '';
+        const column = visibleColumns.find((c) => c.id === colId);
+        if (column?.type === 'item') {
+          const raw = getCellValue(rowId, colId);
+          const linked = parseItemCellValue(raw);
+          if (!linked) return '';
+          const price = itemPriceLookup.get(`${linked.k}:${linked.id}`);
+          return price != null ? String(price) : '';
+        }
         return getCellValue(rowId, colId);
       },
     }),
-    [visibleColumnIds, renderedRowIds, getCellValue, cells]
+    [visibleColumnIds, renderedRowIds, getCellValue, cells, visibleColumns, itemPriceLookup]
   );
 
   const mergeRects = useMemo(
@@ -1708,6 +1744,15 @@ function CellRenderer({
           readOnly={readOnly}
           align={cellAlign ?? column.text_align}
           formulaContext={formulaContext}
+        />
+      );
+    case 'item':
+      return (
+        <ItemCell
+          value={value}
+          onSave={onSave}
+          readOnly={readOnly}
+          align={cellAlign ?? column.text_align}
         />
       );
     case 'connect':

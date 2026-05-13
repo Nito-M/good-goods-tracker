@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Plus, Type, Calendar as CalIcon, CheckSquare, Tag, Paperclip, Link as LinkIcon, Link2, DollarSign } from 'lucide-react';
+import { Plus, Type, Calendar as CalIcon, CheckSquare, Tag, Paperclip, Link as LinkIcon, Link2, DollarSign, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 
-export type BoardColumnType = 'text' | 'date' | 'checkbox' | 'status' | 'files' | 'link' | 'connect' | 'price';
+export type BoardColumnType = 'text' | 'date' | 'checkbox' | 'status' | 'files' | 'link' | 'connect' | 'price' | 'item';
 
 interface AddColumnPopoverProps {
   onAdd: (name: string, type: BoardColumnType) => void;
@@ -13,6 +13,7 @@ interface AddColumnPopoverProps {
 const TYPES: { type: BoardColumnType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { type: 'text', label: 'Text', icon: Type },
   { type: 'price', label: 'Price', icon: DollarSign },
+  { type: 'item', label: 'Item / Part', icon: Package },
   { type: 'date', label: 'Date', icon: CalIcon },
   { type: 'checkbox', label: 'Checkbox', icon: CheckSquare },
   { type: 'status', label: 'Status', icon: Tag },
@@ -79,6 +80,7 @@ function defaultNameForType(type: BoardColumnType): string {
     link: 'Link',
     connect: 'Connect board',
     price: 'Price',
+    item: 'Item',
   };
   return map[type];
 }
