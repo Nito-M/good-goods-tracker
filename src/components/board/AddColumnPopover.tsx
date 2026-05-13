@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Type, Calendar as CalIcon, CheckSquare, Tag, Paperclip, Link as LinkIcon, Link2 } from 'lucide-react';
+import { Plus, Type, Calendar as CalIcon, CheckSquare, Tag, Paperclip, Link as LinkIcon, Link2, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
