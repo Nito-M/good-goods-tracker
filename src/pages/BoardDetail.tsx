@@ -1700,6 +1700,16 @@ function CellRenderer({
       );
     case 'link':
       return <LinkCell value={value} onSave={onSave} readOnly={readOnly} />;
+    case 'price':
+      return (
+        <PriceCell
+          value={value}
+          onSave={onSave}
+          readOnly={readOnly}
+          align={cellAlign ?? column.text_align}
+          formulaContext={formulaContext}
+        />
+      );
     case 'connect':
       return (
         <ConnectBoardCell
