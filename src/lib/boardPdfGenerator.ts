@@ -256,7 +256,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       didParseCell: (data: CellHookData) => {
         const col = columnByIdx.get(data.column.index);
         if (col) {
-          data.cell.styles.halign = col.text_align || 'left';
+          data.cell.styles.halign = col.text_align || (col.type === 'price' ? 'right' : 'left');
         }
         // Header row: paint the per-column header background color the user set.
         if (data.section === 'head' && col?.header_bg_color) {
