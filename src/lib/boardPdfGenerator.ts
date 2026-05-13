@@ -8,6 +8,7 @@ import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 import { isFormula, evaluateFormula, formatFormulaResult, type FormulaContext } from '@/lib/boardFormula';
 import { cellColorToRgb, readableTextColor } from '@/lib/boardCellColors';
+import { formatCurrencyPdf } from '@/lib/utils';
 
 interface GroupBlock {
   label: string | null;
