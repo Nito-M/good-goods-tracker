@@ -71,7 +71,17 @@ function renderCell(
     return raw;
   }
 
-  // Text / default — evaluate formulas to their computed value (matches on-screen).
+  // Text / Price / default — evaluate formulas to their computed value (matches on-screen).
+  if (col.type === 'price') {
+    if (!raw) return '';
+    if (formulaContext && isFormula(raw)) {
+      const result = evaluateFormula(raw, formulaContext);
+      if (typeof result === 'number') return formatCurrencyPdf(result);
+      return formatFormulaResult(result);
+    }
+    const n = Number(raw);
+    return Number.isFinite(n) ? formatCurrencyPdf(n) : raw;
+  }
   if (formulaContext && isFormula(raw)) {
     return formatFormulaResult(evaluateFormula(raw, formulaContext));
   }
