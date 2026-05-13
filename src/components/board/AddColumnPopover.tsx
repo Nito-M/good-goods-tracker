@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 
-export type BoardColumnType = 'text' | 'date' | 'checkbox' | 'status' | 'files' | 'link' | 'connect';
+export type BoardColumnType = 'text' | 'date' | 'checkbox' | 'status' | 'files' | 'link' | 'connect' | 'price';
 
 interface AddColumnPopoverProps {
   onAdd: (name: string, type: BoardColumnType) => void;
@@ -12,6 +12,7 @@ interface AddColumnPopoverProps {
 
 const TYPES: { type: BoardColumnType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { type: 'text', label: 'Text', icon: Type },
+  { type: 'price', label: 'Price', icon: DollarSign },
   { type: 'date', label: 'Date', icon: CalIcon },
   { type: 'checkbox', label: 'Checkbox', icon: CheckSquare },
   { type: 'status', label: 'Status', icon: Tag },
