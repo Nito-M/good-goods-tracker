@@ -78,6 +78,7 @@ function defaultNameForType(type: BoardColumnType): string {
     files: 'Files',
     link: 'Link',
     connect: 'Connect board',
+    price: 'Price',
   };
   return map[type];
 }
