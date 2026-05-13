@@ -555,8 +555,30 @@ export default function BoardDetail() {
   );
   const visibleColumnIds = useMemo(() => visibleColumns.map((c) => c.id), [visibleColumns]);
 
+  // Live price lookup for "item" columns: { "i:<id>" | "p:<id>" -> price }
+  const { allItems: invItems } = useInventory();
+  const { parts: partsList } = useParts();
+  const itemPriceLookup = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const i of invItems) m.set(`i:${i.id}`, Number(i.price) || 0);
+    for (const p of partsList) m.set(`p:${p.id}`, Number(p.price) || 0);
+    return m;
+  }, [invItems, partsList]);
+
+  const getItemLivePrice = useCallback(
+    (rowId: string, colId: string): number | null => {
+      const raw = getCellValue(rowId, colId);
+      const linked = parseItemCellValue(raw);
+      if (!linked) return null;
+      return itemPriceLookup.get(`${linked.k}:${linked.id}`) ?? null;
+    },
+    [getCellValue, itemPriceLookup]
+  );
+
   // Spreadsheet formula context: rows/cols are addressed by their visible position.
-  // A1 = first column, first row in the rendered grid.
+  // A1 = first column, first row in the rendered grid. For "item" columns, the
+  // resolved value is the linked item's current price so =A1 in a Price column
+  // pulls live pricing from inventory/parts.
   const formulaContext = useMemo(
     () => ({
       colCount: visibleColumnIds.length,
@@ -565,10 +587,18 @@ export default function BoardDetail() {
         const colId = visibleColumnIds[col];
         const rowId = renderedRowIds[row];
         if (!colId || !rowId) return '';
+        const column = visibleColumns.find((c) => c.id === colId);
+        if (column?.type === 'item') {
+          const raw = getCellValue(rowId, colId);
+          const linked = parseItemCellValue(raw);
+          if (!linked) return '';
+          const price = itemPriceLookup.get(`${linked.k}:${linked.id}`);
+          return price != null ? String(price) : '';
+        }
         return getCellValue(rowId, colId);
       },
     }),
-    [visibleColumnIds, renderedRowIds, getCellValue, cells]
+    [visibleColumnIds, renderedRowIds, getCellValue, cells, visibleColumns, itemPriceLookup]
   );
 
   const mergeRects = useMemo(
