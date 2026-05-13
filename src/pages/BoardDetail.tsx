@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { AddColumnPopover, BoardColumnType } from '@/components/board/AddColumnPopover';
 import { StatusOptionsDialog, getStatusColorClasses } from '@/components/board/StatusOptionsDialog';
 import { TextCell } from '@/components/board/cells/TextCell';
+import { PriceCell } from '@/components/board/cells/PriceCell';
 import { DateCell } from '@/components/board/cells/DateCell';
 import { CheckboxCell } from '@/components/board/cells/CheckboxCell';
 import { StatusCell } from '@/components/board/cells/StatusCell';
@@ -1699,6 +1700,16 @@ function CellRenderer({
       );
     case 'link':
       return <LinkCell value={value} onSave={onSave} readOnly={readOnly} />;
+    case 'price':
+      return (
+        <PriceCell
+          value={value}
+          onSave={onSave}
+          readOnly={readOnly}
+          align={cellAlign ?? column.text_align}
+          formulaContext={formulaContext}
+        />
+      );
     case 'connect':
       return (
         <ConnectBoardCell

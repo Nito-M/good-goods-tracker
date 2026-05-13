@@ -8,6 +8,7 @@ import { resolveSelectedStatus } from '@/lib/boardStatusValue';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 import { isFormula, evaluateFormula, formatFormulaResult, type FormulaContext } from '@/lib/boardFormula';
 import { cellColorToRgb, readableTextColor } from '@/lib/boardCellColors';
+import { formatCurrencyPdf } from '@/lib/utils';
 
 interface GroupBlock {
   label: string | null;
@@ -71,7 +72,17 @@ function renderCell(
     return raw;
   }
 
-  // Text / default — evaluate formulas to their computed value (matches on-screen).
+  // Text / Price / default — evaluate formulas to their computed value (matches on-screen).
+  if (col.type === 'price') {
+    if (!raw) return '';
+    if (formulaContext && isFormula(raw)) {
+      const result = evaluateFormula(raw, formulaContext);
+      if (typeof result === 'number') return formatCurrencyPdf(result);
+      return formatFormulaResult(result);
+    }
+    const n = Number(raw);
+    return Number.isFinite(n) ? formatCurrencyPdf(n) : raw;
+  }
   if (formulaContext && isFormula(raw)) {
     return formatFormulaResult(evaluateFormula(raw, formulaContext));
   }
@@ -245,7 +256,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       didParseCell: (data: CellHookData) => {
         const col = columnByIdx.get(data.column.index);
         if (col) {
-          data.cell.styles.halign = col.text_align || 'left';
+          data.cell.styles.halign = col.text_align || (col.type === 'price' ? 'right' : 'left');
         }
         // Header row: paint the per-column header background color the user set.
         if (data.section === 'head' && col?.header_bg_color) {

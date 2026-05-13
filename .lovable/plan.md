@@ -1,36 +1,30 @@
-## Goal
+## Add a Price column type to Boards
 
-When opening a job, show **Information** first, with tabs at the top to switch between **Information**, **Parts**, and **Settings**.
+Add a new `price` column type to boards alongside the existing Text/Date/Checkbox/Status/Files/Link/Connect types. It stores a numeric value and renders it as currency (e.g. `$1,234.56`).
 
-## Tabs
+### Changes
 
-1. **Information** (default)
-   - Job title, number, status, due date, created date
-   - Description (from `JobDescription.tsx`)
-   - Customer block (name, email, phone, address)
-   - Job summary stats (item count, total qty, total value)
+1. **`src/components/board/AddColumnPopover.tsx`**
+   - Add `'price'` to the `BoardColumnType` union and to the `TYPES` list (DollarSign icon, label "Price", default name "Price").
 
-2. **Parts**
-   - Current grouped-by-category items table (thumbnails, qty, stock, reserve/consumed badges, ordered badge, delete)
-   - "Add Items" button stays in the tab
+2. **New cell component `src/components/board/cells/PriceCell.tsx`**
+   - Edit mode: numeric input (step 0.01).
+   - Display mode: `formatCurrency(value)` from `@/lib/utils`, right-aligned by default, tabular-nums.
+   - Empty value renders as blank (not `$0.00`).
+   - Supports formulas (`=A1+B2`, `SUM`, `AVG`) the same way TextCell does, formatted as currency when the result is numeric.
+   - Honors `cellAlign` / `onChangeCellAlign` like TextCell.
 
-3. **Settings**
-   - The form fields currently in `EditJob.tsx` (title, job number, description, status, due date, customer details, save/cancel)
-   - Plus the destructive "Delete Job" action and "Duplicate Job" action moved here from the header
+3. **`src/pages/BoardDetail.tsx`**
+   - Add a `case 'price':` in the cell renderer switch returning `<PriceCell …>`.
+   - No DB schema change — `type` is a free-form text column, existing `update column type` flow already supports new values.
 
-## Changes
+4. **`src/lib/boardPdfGenerator.ts`**
+   - In `renderCell`, handle `col.type === 'price'`: evaluate formulas if present, then format with `formatCurrency`. Default halign right for price columns in `didParseCell`.
 
-- `src/pages/Jobs.tsx` → `JobDetail` component:
-  - Wrap content in `<Tabs defaultValue="information">` with a `TabsList` directly under the page header
-  - Move existing items grid into `<TabsContent value="parts">`
-  - Build `<TabsContent value="information">` from the description/customer/summary blocks (reusing the existing summary/customer cards that currently sit in the right sidebar)
-  - Build `<TabsContent value="settings">` containing an inline edit form (extracted from `EditJob.tsx`) plus Duplicate + Delete actions
-  - Header keeps Back, title, status badge — remove the Add Items / Duplicate / Edit / Delete buttons (Add Items moves into Parts tab; Duplicate + Delete move into Settings tab; Edit is replaced by the Settings tab itself)
+5. **Status column quick-change menu** (`BoardDetail.tsx` ~line 157)
+   - Already maps over the same `TYPES` array from `AddColumnPopover`, so Price will automatically appear in the "change column type" dropdown.
 
-- Optional: keep `/jobs/:jobId/description` and `/jobs/:jobId/edit` routes working for backwards compatibility (they still render the existing standalone pages), but the in-app links from `JobDetail` no longer use them.
-
-## Out of scope
-
-- No DB/schema changes
-- No changes to `Jobs` list page, `JobAddItems`, or job hooks
-- No styling overhaul beyond the tab layout
+### Out of scope
+- No new DB migration (column `type` is text).
+- No currency-symbol customization — uses the project's existing `formatCurrency` helper for consistency with the rest of the app.
+- No changes to grouping/sorting beyond what text-type columns already do.
