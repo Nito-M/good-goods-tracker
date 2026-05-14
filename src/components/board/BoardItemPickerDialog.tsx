@@ -21,6 +21,7 @@ export interface BoardLinkedItem {
   id: string;
   n: string; // name
   s: string; // sku
+  m?: number; // multiplier (default 1)
 }
 
 interface Props {
