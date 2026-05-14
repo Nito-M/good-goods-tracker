@@ -36,6 +36,9 @@ export interface Sale {
   discountAmount: number;
   total: number;
   notes: string | null;
+  internalNotes: string | null;
+  sentAt: string | null;
+  paidAt: string | null;
   paymentTerms: string;
   dueDate: string | null;
   items: SaleItem[];
