@@ -33,8 +33,10 @@ export interface PurchaseOrder {
   status: 'draft' | 'ordered' | 'partially_received' | 'received';
   orderedAt: Date;
   receivedAt: Date | null;
+  partiallyReceivedAt: Date | null;
   paidAt: Date | null;
   notes: string | null;
+  internalNotes: string | null;
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   discountAmount: number;
@@ -93,8 +95,10 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     status: db.status as 'draft' | 'ordered' | 'partially_received' | 'received',
     orderedAt: new Date(db.ordered_at),
     receivedAt: db.received_at ? new Date(db.received_at) : null,
+    partiallyReceivedAt: (db as any).partially_received_at ? new Date((db as any).partially_received_at) : null,
     paidAt: db.paid_at ? new Date(db.paid_at) : null,
     notes: db.notes,
+    internalNotes: (db as any).internal_notes ?? null,
     discountType: (db.discount_type as 'percentage' | 'fixed') || 'percentage',
     discountValue: db.discount_value || 0,
     discountAmount: db.discount_amount || 0,
