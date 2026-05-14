@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
-  LogOut,
   ArrowLeft,
   FileText,
   Trash2,
@@ -246,7 +245,7 @@ import { useAssemblies } from '@/hooks/useAssemblies';
 import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
 
 export function Quotes() {
-  const { signOut } = useAuth();
+  // signOut moved to sidebar
   const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder, revertInvoiceLink } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
   const { vendors, addVendor } = useVendors();
@@ -374,7 +373,7 @@ export function Quotes() {
    const [showAssemblyPicker, setShowAssemblyPicker] = useState(false);
   const [hidePrices, setHidePrices] = useState(false);
   const [showSku, setShowSku] = useState(true);
-  const [activeTab, setActiveTab] = useState('new-quote');
+  const [activeTab, setActiveTab] = useState('history');
   const [showItemPicker, setShowItemPicker] = useState(false);
 
   const { defaultCompany } = useCompanies();
@@ -699,12 +698,13 @@ export function Quotes() {
             </div>
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="icon"
-                onClick={signOut}
-                title="Sign out"
+                onClick={() => {
+                  resetForm();
+                  setActiveTab('new-quote');
+                }}
               >
-                <LogOut className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-2" />
+                New Quote
               </Button>
             </div>
           </div>
