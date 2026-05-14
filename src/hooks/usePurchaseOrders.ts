@@ -1109,7 +1109,7 @@ export function usePurchaseOrders() {
   const markAsPartiallyReceived = async (orderId: string) => {
     const { error } = await supabase
       .from('purchase_orders')
-      .update({ status: 'partially_received' })
+      .update({ status: 'partially_received', partially_received_at: new Date().toISOString() })
       .eq('id', orderId);
 
     if (error) {
@@ -1119,6 +1119,19 @@ export function usePurchaseOrders() {
 
     toast({ title: 'Order marked as partially received' });
     fetchOrders();
+    return true;
+  };
+
+  const updateInternalNotes = async (orderId: string, notes: string | null) => {
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ internal_notes: notes })
+      .eq('id', orderId);
+    if (error) {
+      toast({ title: 'Error saving notes', variant: 'destructive' });
+      return false;
+    }
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, internalNotes: notes } : o));
     return true;
   };
 
@@ -1193,6 +1206,7 @@ export function usePurchaseOrders() {
     deletePdfForOrder,
     addAttachment,
     deleteAttachment,
+    updateInternalNotes,
     refetch: fetchOrders,
   };
 }
