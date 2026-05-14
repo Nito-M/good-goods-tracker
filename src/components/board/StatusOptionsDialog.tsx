@@ -73,7 +73,11 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
 
   const handleSave = () => {
     const cleaned = options
-      .map((o) => ({ ...o, label: o.label.trim() }))
+      .map((o) => ({
+        ...o,
+        label: o.label.trim(),
+        price: typeof o.price === 'number' && Number.isFinite(o.price) ? o.price : null,
+      }))
       .filter((o) => o.label.length > 0);
     onSave(cleaned);
     onOpenChange(false);
