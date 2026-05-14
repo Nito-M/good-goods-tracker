@@ -1697,6 +1697,7 @@ interface CellRendererProps {
   cellAlign?: 'left' | 'center' | 'right' | null;
   onChangeCellAlign?: (a: 'left' | 'center' | 'right' | null) => void;
   formulaContext?: import('@/lib/boardFormula').FormulaContext;
+  itemLivePrice?: number | null;
 }
 
 function CellRenderer({
@@ -1712,6 +1713,7 @@ function CellRenderer({
   cellAlign,
   onChangeCellAlign,
   formulaContext,
+  itemLivePrice,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
