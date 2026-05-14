@@ -130,6 +130,17 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
                     onChange={(e) => updateOption(opt.id, { label: e.target.value })}
                     className={cn('h-8 flex-1', color.bg, color.text)}
                   />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={opt.price == null ? '' : String(opt.price)}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      updateOption(opt.id, { price: v === '' ? null : parseFloat(v) });
+                    }}
+                    placeholder="Price"
+                    className="h-8 w-24 tabular-nums"
+                  />
                   <Button
                     variant="ghost"
                     size="icon"
