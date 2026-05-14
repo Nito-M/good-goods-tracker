@@ -781,6 +781,26 @@ export function useSales() {
     }
   };
 
+  const updateInternalNotes = async (saleId: string, internalNotes: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .update({ internal_notes: internalNotes } as any)
+        .eq('id', saleId);
+      if (error) throw error;
+      setSales((prev) => prev.map((s) => (s.id === saleId ? { ...s, internalNotes } : s)));
+      return true;
+    } catch (error) {
+      console.error('Error updating internal notes:', error);
+      toast({
+        title: 'Error saving notes',
+        description: 'Unable to save internal notes.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     sales,
     loading,
@@ -790,6 +810,7 @@ export function useSales() {
     togglePickedUp,
     deleteSale,
     revertSale,
+    updateInternalNotes,
     refetch: fetchSales,
   };
 }
