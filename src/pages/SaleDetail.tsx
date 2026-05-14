@@ -314,8 +314,9 @@ export default function SaleDetail() {
         open={editOpen}
         onOpenChange={setEditOpen}
         sale={sale}
-        onSave={async (input) => {
-          const ok = await updateSale(sale.id, input as any);
+        vendors={vendors.map((v) => ({ id: v.id, name: v.name }))}
+        onSave={async (saleId, data) => {
+          const ok = await updateSale(saleId, data as any);
           if (ok) setEditOpen(false);
         }}
       />
