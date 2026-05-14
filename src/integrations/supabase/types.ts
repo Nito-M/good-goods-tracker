@@ -3294,11 +3294,13 @@ export type Database = {
           discount_value: number
           id: string
           image_url: string | null
+          internal_notes: string | null
           item_name: string
           items: Json | null
           notes: string | null
           ordered_at: string
           paid_at: string | null
+          partially_received_at: string | null
           pdf_url: string | null
           po_number: string | null
           quantity: number
@@ -3320,11 +3322,13 @@ export type Database = {
           discount_value?: number
           id?: string
           image_url?: string | null
+          internal_notes?: string | null
           item_name: string
           items?: Json | null
           notes?: string | null
           ordered_at?: string
           paid_at?: string | null
+          partially_received_at?: string | null
           pdf_url?: string | null
           po_number?: string | null
           quantity?: number
@@ -3346,11 +3350,13 @@ export type Database = {
           discount_value?: number
           id?: string
           image_url?: string | null
+          internal_notes?: string | null
           item_name?: string
           items?: Json | null
           notes?: string | null
           ordered_at?: string
           paid_at?: string | null
+          partially_received_at?: string | null
           pdf_url?: string | null
           po_number?: string | null
           quantity?: number
