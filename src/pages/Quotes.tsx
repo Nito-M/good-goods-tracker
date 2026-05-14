@@ -245,7 +245,7 @@ import { useAssemblies } from '@/hooks/useAssemblies';
 import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
 
 export function Quotes() {
-  const { signOut } = useAuth();
+  // signOut moved to sidebar
   const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder, revertInvoiceLink } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
   const { vendors, addVendor } = useVendors();
