@@ -91,7 +91,10 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
   };
 
   return (
-    <Card>
+    <Card
+      onClick={() => navigate(`/sales/${sale.id}`)}
+      className="cursor-pointer transition-colors hover:border-primary/50"
+    >
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -111,7 +114,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
             )}
           </CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onClick={stop}>
           {/* Picked Up Checkbox - only allow checking, not unchecking */}
           {onTogglePickedUp && sale.status !== 'cancelled' && !isPickedUp && (
             <div className="flex items-center gap-2 px-2 py-1 rounded-md border bg-muted/50">
