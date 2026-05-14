@@ -2,9 +2,17 @@ import { useState } from 'react';
 import { ChevronDown, Settings2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { StatusOption, StatusOptionsDialog, getStatusColorClasses } from '../StatusOptionsDialog';
 import { parseStatusValue } from '@/lib/boardStatusValue';
+
+function labelWithPrice(opt: StatusOption | undefined): string {
+  if (!opt) return '—';
+  if (typeof opt.price === 'number' && Number.isFinite(opt.price)) {
+    return `${opt.label} · ${formatCurrency(opt.price)}`;
+  }
+  return opt.label;
+}
 
 interface StatusCellProps {
   value: string;
