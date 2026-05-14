@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
-  LogOut,
   ArrowLeft,
   ShoppingCart,
   Trash2,
@@ -201,7 +200,6 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
 }
 
 export function Sales() {
-  const { signOut } = useAuth();
   const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { vendors, addVendor } = useVendors();
@@ -260,7 +258,7 @@ export function Sales() {
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [showItemPicker, setShowItemPicker] = useState(false);
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('new-sale');
+  const [activeTab, setActiveTab] = useState('history');
 
   // Default to default company
   const { defaultCompany } = useCompanies();
@@ -627,12 +625,13 @@ export function Sales() {
             </div>
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="icon"
-                onClick={signOut}
-                title="Sign out"
+                onClick={() => {
+                  resetForm();
+                  setActiveTab('new-sale');
+                }}
               >
-                <LogOut className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-2" />
+                New Sale
               </Button>
             </div>
           </div>
