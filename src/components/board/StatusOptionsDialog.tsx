@@ -10,6 +10,7 @@ export interface StatusOption {
   label: string;
   color: string; // palette key
   isAutomatic?: boolean;
+  price?: number | null;
 }
 
 export const STATUS_COLORS: { key: string; bg: string; text: string }[] = [
