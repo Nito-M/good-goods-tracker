@@ -1,58 +1,58 @@
 ## Goal
 
-Make each invoice on the Sales page clickable to open a full detail page showing dates, items, and editable internal notes that never appear on the PDF.
+Make each purchase order on the Purchase Orders page clickable to open a full detail page showing dates, items, attachments, and editable internal notes that never appear on the PDF.
 
-## New page: `/sales/:id` (SaleDetail)
+## New page: `/purchase-orders/:id` (PurchaseOrderDetail)
 
 Header
-- Invoice number, status badges (Picked Up / Paid / etc.)
+- PO number, vendor, status badges (Draft / Ordered / Partial / Received / Paid)
 - Buttons: Back, Edit, Preview PDF, Download PDF
 
 Timeline section
 - Created date (always)
-- Sent date (when status moved to `sent`)
-- Picked-up date (existing `picked_up_at`)
-- Paid date (when status moved to `paid`)
-- Due date
+- Ordered date (`ordered_at`)
+- Partially received date (when status moved to `partially_received`)
+- Received date (`received_at`)
+- Paid date (`paid_at`)
 
-Customer / billing block
-- Vendor name, contact, address, payment terms
+Vendor / company block
+- Vendor name, contact person, company, bank card used
+- Linked request (REQ-#) and linked jobs (JOB-#)
 
 Items table (separate from PDF rendering)
-- Name, Part #, Qty, Unit price, Total
-- Cost / Profit columns when picked up
-- Totals (subtotal, discount, tax, total)
+- Part #, Item name, Qty ordered, Qty received, Unit cost, Line total
+- Totals (subtotal, discount, total)
+
+Attachments section
+- All `po_attachments` (images + PDFs) listed with filename and open link
 
 Two notes blocks
-- "Invoice Notes (visible on PDF)" — existing `notes` field
+- "PO Notes (visible on PDF)" — existing `notes` field
 - "Internal Notes (not on PDF)" — new field, autosave on blur
 
-## Sales list change
+## Purchase Orders list change
 
-- Wrap each `SaleCard` in a `Link to={/sales/${sale.id}}`, or make the card body clickable while keeping action buttons working (stop propagation on buttons).
+- Make each `PurchaseOrderCard` body clickable to navigate to `/purchase-orders/:id`, with `stopPropagation` on existing action buttons (mirrors what was done on `SaleCard`).
 
 ## Database changes
 
-Add to `public.sales`:
+Add to `public.purchase_orders`:
 - `internal_notes text` — private notes, never sent to PDF
-- `sent_at timestamptz` — set automatically when status transitions to `sent`
-- `paid_at timestamptz` — set automatically when status transitions to `paid`
+- `partially_received_at timestamptz` — set automatically when status transitions to `partially_received`
 
-Backfill: leave NULL for old rows; UI shows "—" when missing.
-
-The existing status-change handler in `useSales` will be updated to stamp `sent_at` / `paid_at` on transition (and clear them on revert).
+Existing `ordered_at`, `received_at`, `paid_at` already cover the rest of the timeline.
 
 ## Code changes
 
-- `supabase/migrations/...` — add 3 columns
-- `src/types/sale.ts` — add `internalNotes`, `sentAt`, `paidAt`
-- `src/hooks/useSales.ts` — map new fields; stamp timestamps on status change; add `updateInternalNotes`
-- `src/pages/SaleDetail.tsx` — new page (timeline, items, two notes blocks)
-- `src/App.tsx` — add `/sales/:id` route
-- `src/components/SaleCard.tsx` — make card clickable (Link wrapper around header/content, stop propagation on action buttons)
-- `src/lib/invoiceGenerator.ts` — unchanged; confirm it only reads `sale.notes`, never `internal_notes`
+- `supabase/migrations/...` — add 2 columns
+- `src/types/purchaseOrder.ts` — add `internalNotes`, `partiallyReceivedAt`
+- `src/hooks/usePurchaseOrders.ts` — map new fields; stamp `partially_received_at` in `markAsPartiallyReceived`; add `updateInternalNotes`
+- `src/pages/PurchaseOrderDetail.tsx` — new page (timeline, items, attachments, two notes blocks)
+- `src/App.tsx` — add `/purchase-orders/:id` route
+- `src/components/PurchaseOrderCard.tsx` — make card body clickable, stopPropagation on action buttons
+- `src/lib/purchaseOrderGenerator.ts` — unchanged; only reads `order.notes`, never `internal_notes`
 
 ## Out of scope
 
 - No change to PDF layout
-- No change to invoice creation flow
+- No change to PO creation/edit flow

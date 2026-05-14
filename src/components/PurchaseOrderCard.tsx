@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,6 +37,7 @@ import {
   X,
   Plus,
   Undo2,
+  ExternalLink,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { downloadFileFromUrl, getFileNameFromUrl } from '@/lib/fileDownload';
@@ -222,6 +224,14 @@ export function PurchaseOrderCard({
                         <ImageIcon className="h-4 w-4" />
                       </button>
                     )}
+                    <Link
+                      to={`/purchase-orders/${order.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      title="Open details"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
