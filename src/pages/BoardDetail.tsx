@@ -1263,6 +1263,7 @@ export default function BoardDetail() {
                 }}
                 formulaContext={formulaContext}
                 renderedRowIds={renderedRowIds}
+                getItemLivePrice={getItemLivePrice}
               />
             ))}
 
