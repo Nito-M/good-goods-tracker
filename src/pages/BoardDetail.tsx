@@ -1408,6 +1408,7 @@ interface GroupSectionProps {
   onRowDragEnd: () => void;
   formulaContext?: import('@/lib/boardFormula').FormulaContext;
   renderedRowIds: string[];
+  getItemLivePrice: (rowId: string, colId: string) => number | null;
 }
 
 function GroupSection({
