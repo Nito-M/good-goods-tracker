@@ -1,4 +1,5 @@
 import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil, Eye, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -50,6 +51,8 @@ const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; va
 };
 
 export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp }: SaleCardProps) {
+  const navigate = useNavigate();
+  const stop = (e: React.MouseEvent | React.PointerEvent) => e.stopPropagation();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -88,7 +91,10 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
   };
 
   return (
-    <Card>
+    <Card
+      onClick={() => navigate(`/sales/${sale.id}`)}
+      className="cursor-pointer transition-colors hover:border-primary/50"
+    >
       <CardHeader className="flex flex-row items-start justify-between space-y-0">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -108,7 +114,7 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
             )}
           </CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onClick={stop}>
           {/* Picked Up Checkbox - only allow checking, not unchecking */}
           {onTogglePickedUp && sale.status !== 'cancelled' && !isPickedUp && (
             <div className="flex items-center gap-2 px-2 py-1 rounded-md border bg-muted/50">

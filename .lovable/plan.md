@@ -1,30 +1,58 @@
-## Add a Price column type to Boards
+## Goal
 
-Add a new `price` column type to boards alongside the existing Text/Date/Checkbox/Status/Files/Link/Connect types. It stores a numeric value and renders it as currency (e.g. `$1,234.56`).
+Make each invoice on the Sales page clickable to open a full detail page showing dates, items, and editable internal notes that never appear on the PDF.
 
-### Changes
+## New page: `/sales/:id` (SaleDetail)
 
-1. **`src/components/board/AddColumnPopover.tsx`**
-   - Add `'price'` to the `BoardColumnType` union and to the `TYPES` list (DollarSign icon, label "Price", default name "Price").
+Header
+- Invoice number, status badges (Picked Up / Paid / etc.)
+- Buttons: Back, Edit, Preview PDF, Download PDF
 
-2. **New cell component `src/components/board/cells/PriceCell.tsx`**
-   - Edit mode: numeric input (step 0.01).
-   - Display mode: `formatCurrency(value)` from `@/lib/utils`, right-aligned by default, tabular-nums.
-   - Empty value renders as blank (not `$0.00`).
-   - Supports formulas (`=A1+B2`, `SUM`, `AVG`) the same way TextCell does, formatted as currency when the result is numeric.
-   - Honors `cellAlign` / `onChangeCellAlign` like TextCell.
+Timeline section
+- Created date (always)
+- Sent date (when status moved to `sent`)
+- Picked-up date (existing `picked_up_at`)
+- Paid date (when status moved to `paid`)
+- Due date
 
-3. **`src/pages/BoardDetail.tsx`**
-   - Add a `case 'price':` in the cell renderer switch returning `<PriceCell …>`.
-   - No DB schema change — `type` is a free-form text column, existing `update column type` flow already supports new values.
+Customer / billing block
+- Vendor name, contact, address, payment terms
 
-4. **`src/lib/boardPdfGenerator.ts`**
-   - In `renderCell`, handle `col.type === 'price'`: evaluate formulas if present, then format with `formatCurrency`. Default halign right for price columns in `didParseCell`.
+Items table (separate from PDF rendering)
+- Name, Part #, Qty, Unit price, Total
+- Cost / Profit columns when picked up
+- Totals (subtotal, discount, tax, total)
 
-5. **Status column quick-change menu** (`BoardDetail.tsx` ~line 157)
-   - Already maps over the same `TYPES` array from `AddColumnPopover`, so Price will automatically appear in the "change column type" dropdown.
+Two notes blocks
+- "Invoice Notes (visible on PDF)" — existing `notes` field
+- "Internal Notes (not on PDF)" — new field, autosave on blur
 
-### Out of scope
-- No new DB migration (column `type` is text).
-- No currency-symbol customization — uses the project's existing `formatCurrency` helper for consistency with the rest of the app.
-- No changes to grouping/sorting beyond what text-type columns already do.
+## Sales list change
+
+- Wrap each `SaleCard` in a `Link to={/sales/${sale.id}}`, or make the card body clickable while keeping action buttons working (stop propagation on buttons).
+
+## Database changes
+
+Add to `public.sales`:
+- `internal_notes text` — private notes, never sent to PDF
+- `sent_at timestamptz` — set automatically when status transitions to `sent`
+- `paid_at timestamptz` — set automatically when status transitions to `paid`
+
+Backfill: leave NULL for old rows; UI shows "—" when missing.
+
+The existing status-change handler in `useSales` will be updated to stamp `sent_at` / `paid_at` on transition (and clear them on revert).
+
+## Code changes
+
+- `supabase/migrations/...` — add 3 columns
+- `src/types/sale.ts` — add `internalNotes`, `sentAt`, `paidAt`
+- `src/hooks/useSales.ts` — map new fields; stamp timestamps on status change; add `updateInternalNotes`
+- `src/pages/SaleDetail.tsx` — new page (timeline, items, two notes blocks)
+- `src/App.tsx` — add `/sales/:id` route
+- `src/components/SaleCard.tsx` — make card clickable (Link wrapper around header/content, stop propagation on action buttons)
+- `src/lib/invoiceGenerator.ts` — unchanged; confirm it only reads `sale.notes`, never `internal_notes`
+
+## Out of scope
+
+- No change to PDF layout
+- No change to invoice creation flow

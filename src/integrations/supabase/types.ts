@@ -3868,10 +3868,13 @@ export type Database = {
           discount_rate: number
           due_date: string | null
           id: string
+          internal_notes: string | null
           invoice_number: string
           notes: string | null
+          paid_at: string | null
           payment_terms: string | null
           picked_up_at: string | null
+          sent_at: string | null
           status: string
           subtotal: number
           tax_amount: number
@@ -3889,10 +3892,13 @@ export type Database = {
           discount_rate?: number
           due_date?: string | null
           id?: string
+          internal_notes?: string | null
           invoice_number: string
           notes?: string | null
+          paid_at?: string | null
           payment_terms?: string | null
           picked_up_at?: string | null
+          sent_at?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -3910,10 +3916,13 @@ export type Database = {
           discount_rate?: number
           due_date?: string | null
           id?: string
+          internal_notes?: string | null
           invoice_number?: string
           notes?: string | null
+          paid_at?: string | null
           payment_terms?: string | null
           picked_up_at?: string | null
+          sent_at?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number

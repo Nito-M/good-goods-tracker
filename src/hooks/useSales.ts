@@ -75,6 +75,9 @@ export function useSales() {
             discountAmount: Number(sale.discount_amount),
             total: Number(sale.total),
             notes: sale.notes,
+            internalNotes: (sale as any).internal_notes ?? null,
+            sentAt: (sale as any).sent_at ?? null,
+            paidAt: (sale as any).paid_at ?? null,
             paymentTerms: sale.payment_terms,
             dueDate: sale.due_date,
             items: mappedItems,
@@ -728,9 +731,17 @@ export function useSales() {
         return;
       }
 
+      const updateFields: Record<string, unknown> = { status };
+      if (status === 'sent' && !sale.sentAt) {
+        updateFields.sent_at = new Date().toISOString();
+      }
+      if (status === 'paid' && !sale.paidAt) {
+        updateFields.paid_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('sales')
-        .update({ status })
+        .update(updateFields)
         .eq('id', saleId);
 
       if (error) throw error;
@@ -750,7 +761,14 @@ export function useSales() {
       // Update local state
       setSales((prev) =>
         prev.map((s) =>
-          s.id === saleId ? { ...s, status } : s
+          s.id === saleId
+            ? {
+                ...s,
+                status,
+                sentAt: updateFields.sent_at ? (updateFields.sent_at as string) : s.sentAt,
+                paidAt: updateFields.paid_at ? (updateFields.paid_at as string) : s.paidAt,
+              }
+            : s
         )
       );
     } catch (error: unknown) {
@@ -763,6 +781,26 @@ export function useSales() {
     }
   };
 
+  const updateInternalNotes = async (saleId: string, internalNotes: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .update({ internal_notes: internalNotes } as any)
+        .eq('id', saleId);
+      if (error) throw error;
+      setSales((prev) => prev.map((s) => (s.id === saleId ? { ...s, internalNotes } : s)));
+      return true;
+    } catch (error) {
+      console.error('Error updating internal notes:', error);
+      toast({
+        title: 'Error saving notes',
+        description: 'Unable to save internal notes.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
     sales,
     loading,
@@ -772,6 +810,7 @@ export function useSales() {
     togglePickedUp,
     deleteSale,
     revertSale,
+    updateInternalNotes,
     refetch: fetchSales,
   };
 }

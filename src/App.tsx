@@ -15,6 +15,7 @@ import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
 import { AddPurchaseOrder } from "./pages/AddPurchaseOrder";
 import { Sales } from "./pages/Sales";
+import SaleDetail from "./pages/SaleDetail";
 import { Quotes } from "./pages/Quotes";
 import { SalesOrders } from "./pages/SalesOrders";
 import { SalesOrderDetail } from "./pages/SalesOrderDetail";
@@ -254,6 +255,16 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Sales />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sales/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SaleDetail />
               </AppLayout>
             </ProtectedRoute>
           }
