@@ -200,7 +200,6 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
 }
 
 export function Sales() {
-  const { signOut } = useAuth();
   const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { vendors, addVendor } = useVendors();
