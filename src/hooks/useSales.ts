@@ -731,9 +731,17 @@ export function useSales() {
         return;
       }
 
+      const updateFields: Record<string, unknown> = { status };
+      if (status === 'sent' && !sale.sentAt) {
+        updateFields.sent_at = new Date().toISOString();
+      }
+      if (status === 'paid' && !sale.paidAt) {
+        updateFields.paid_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('sales')
-        .update({ status })
+        .update(updateFields)
         .eq('id', saleId);
 
       if (error) throw error;
@@ -753,7 +761,14 @@ export function useSales() {
       // Update local state
       setSales((prev) =>
         prev.map((s) =>
-          s.id === saleId ? { ...s, status } : s
+          s.id === saleId
+            ? {
+                ...s,
+                status,
+                sentAt: updateFields.sent_at ? (updateFields.sent_at as string) : s.sentAt,
+                paidAt: updateFields.paid_at ? (updateFields.paid_at as string) : s.paidAt,
+              }
+            : s
         )
       );
     } catch (error: unknown) {
