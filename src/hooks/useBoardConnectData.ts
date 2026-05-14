@@ -55,8 +55,9 @@ async function loadBoardData(boardId: string, mirrorColId: string | null) {
     });
   }
 
-  // Also fetch mirror column meta to handle status options
+  // Also fetch mirror column meta to handle status options / item type
   let mirrorOptions: any[] = [];
+  let mirrorType: string | null = null;
   if (mirrorColId) {
     const { data } = await supabase
       .from('board_columns')
@@ -64,7 +65,38 @@ async function loadBoardData(boardId: string, mirrorColId: string | null) {
       .eq('id', mirrorColId)
       .maybeSingle();
     if (data && Array.isArray(data.options)) mirrorOptions = data.options as any[];
+    if (data) mirrorType = (data as any).type ?? null;
   }
+
+  // For item columns, batch-fetch live prices from inventory_items / parts
+  const itemPriceMap = new Map<string, number>();
+  if (mirrorType === 'item' && mirrorColId) {
+    const invIds = new Set<string>();
+    const partIds = new Set<string>();
+    for (const r of rows) {
+      const raw = cellMap[r.id]?.[mirrorColId];
+      if (!raw) continue;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.id && (parsed.k === 'i' || parsed.k === 'p')) {
+          (parsed.k === 'i' ? invIds : partIds).add(parsed.id);
+        }
+      } catch {}
+    }
+    const [invRes, partRes] = await Promise.all([
+      invIds.size
+        ? supabase.from('inventory_items').select('id, price').in('id', Array.from(invIds))
+        : Promise.resolve({ data: [] as any[] }),
+      partIds.size
+        ? supabase.from('parts').select('id, price').in('id', Array.from(partIds))
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    (invRes.data || []).forEach((i: any) => itemPriceMap.set(`i:${i.id}`, Number(i.price) || 0));
+    (partRes.data || []).forEach((p: any) => itemPriceMap.set(`p:${p.id}`, Number(p.price) || 0));
+  }
+
+  const formatPrice = (n: number) =>
+    `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const result: ConnectBoardRowMirror[] = rows.map((r) => {
     const primary = primaryColId ? cellMap[r.id]?.[primaryColId] || '' : '';
@@ -73,6 +105,16 @@ async function loadBoardData(boardId: string, mirrorColId: string | null) {
     if (mirrorRaw && mirrorOptions.length) {
       const opt = mirrorOptions.find((o: any) => o.id === mirrorRaw);
       if (opt) mirrorRaw = opt.label;
+    }
+    // Translate item cell JSON into a price label
+    if (mirrorType === 'item' && mirrorRaw) {
+      try {
+        const parsed = JSON.parse(mirrorRaw);
+        if (parsed && parsed.id && (parsed.k === 'i' || parsed.k === 'p')) {
+          const price = itemPriceMap.get(`${parsed.k}:${parsed.id}`);
+          mirrorRaw = price != null ? formatPrice(price) : (parsed.n || '—');
+        }
+      } catch {}
     }
     return { row_id: r.id, primary_value: primary, mirror_value: mirrorRaw };
   });
