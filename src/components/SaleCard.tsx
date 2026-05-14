@@ -51,6 +51,8 @@ const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; va
 };
 
 export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp }: SaleCardProps) {
+  const navigate = useNavigate();
+  const stop = (e: React.MouseEvent | React.PointerEvent) => e.stopPropagation();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
