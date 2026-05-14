@@ -10,6 +10,7 @@ export interface StatusOption {
   label: string;
   color: string; // palette key
   isAutomatic?: boolean;
+  price?: number | null;
 }
 
 export const STATUS_COLORS: { key: string; bg: string; text: string }[] = [
@@ -72,7 +73,11 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
 
   const handleSave = () => {
     const cleaned = options
-      .map((o) => ({ ...o, label: o.label.trim() }))
+      .map((o) => ({
+        ...o,
+        label: o.label.trim(),
+        price: typeof o.price === 'number' && Number.isFinite(o.price) ? o.price : null,
+      }))
       .filter((o) => o.label.length > 0);
     onSave(cleaned);
     onOpenChange(false);
@@ -124,6 +129,17 @@ export function StatusOptionsDialog({ open, onOpenChange, initialOptions, onSave
                     value={opt.label}
                     onChange={(e) => updateOption(opt.id, { label: e.target.value })}
                     className={cn('h-8 flex-1', color.bg, color.text)}
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={opt.price == null ? '' : String(opt.price)}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      updateOption(opt.id, { price: v === '' ? null : parseFloat(v) });
+                    }}
+                    placeholder="Price"
+                    className="h-8 w-24 tabular-nums"
                   />
                   <Button
                     variant="ghost"

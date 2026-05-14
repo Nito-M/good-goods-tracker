@@ -52,7 +52,8 @@ import { useBoardClipboard } from '@/hooks/useBoardClipboard';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { resolveSelectedStatus } from '@/lib/boardStatusValue';
+import { resolveSelectedStatus, parseStatusValue } from '@/lib/boardStatusValue';
+import { getConnectCacheEntry } from '@/hooks/useBoardConnectData';
 import { indexToColumnLetters } from '@/lib/boardFormula';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 import { CellColorPicker } from '@/components/board/CellColorPicker';
@@ -594,6 +595,44 @@ export default function BoardDetail() {
           if (!linked) return '';
           const price = itemPriceLookup.get(`${linked.k}:${linked.id}`);
           return price != null ? String(price) : '';
+        }
+        if (column?.type === 'status') {
+          const raw = getCellValue(rowId, colId);
+          const state = parseStatusValue(raw, !!column.per_row_options);
+          const opts = column.per_row_options ? state.rowOptions : column.options;
+          const opt = opts.find((o: any) => o.id === state.selectedId);
+          if (opt && typeof opt.price === 'number' && Number.isFinite(opt.price)) {
+            return String(opt.price);
+          }
+          return '';
+        }
+        if (column?.type === 'connect') {
+          const raw = getCellValue(rowId, colId);
+          if (!raw) return '';
+          let ids: string[] = [];
+          try {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) ids = arr.filter((x) => typeof x === 'string');
+          } catch {}
+          if (!ids.length) return '';
+          const entry = getConnectCacheEntry(
+            (column as any).connect_board_id,
+            (column as any).connect_mirror_column_id
+          );
+          if (!entry) return '';
+          let sum = 0;
+          let any = false;
+          for (const id of ids) {
+            const r = entry.rows.find((x) => x.row_id === id);
+            if (!r) continue;
+            const cleaned = String(r.mirror_value).replace(/[$,]/g, '').trim();
+            const n = parseFloat(cleaned);
+            if (Number.isFinite(n)) {
+              sum += n;
+              any = true;
+            }
+          }
+          return any ? String(sum) : '';
         }
         return getCellValue(rowId, colId);
       },

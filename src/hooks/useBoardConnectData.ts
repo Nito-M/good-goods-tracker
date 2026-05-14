@@ -15,6 +15,10 @@ interface CacheEntry {
 const cache = new Map<string, CacheEntry>();
 const subscribers = new Map<string, Set<(e: CacheEntry) => void>>();
 
+export function getConnectCacheEntry(boardId: string, mirrorColId: string | null): CacheEntry | undefined {
+  return cache.get(cacheKey(boardId, mirrorColId));
+}
+
 function cacheKey(boardId: string, mirrorColId: string | null) {
   return `${boardId}::${mirrorColId || ''}`;
 }

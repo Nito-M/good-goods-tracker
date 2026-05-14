@@ -2,9 +2,17 @@ import { useState } from 'react';
 import { ChevronDown, Settings2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { StatusOption, StatusOptionsDialog, getStatusColorClasses } from '../StatusOptionsDialog';
 import { parseStatusValue } from '@/lib/boardStatusValue';
+
+function labelWithPrice(opt: StatusOption | undefined): string {
+  if (!opt) return '—';
+  if (typeof opt.price === 'number' && Number.isFinite(opt.price)) {
+    return `${opt.label} · ${formatCurrency(opt.price)}`;
+  }
+  return opt.label;
+}
 
 interface StatusCellProps {
   value: string;
@@ -62,7 +70,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
             color ? cn(color.bg, color.text) : 'text-muted-foreground'
           )}
         >
-          {selected?.label || '—'}
+          {labelWithPrice(selected)}
         </div>
       </div>
     );
@@ -78,7 +86,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
               color ? cn(color.bg, color.text) : 'text-muted-foreground hover:bg-accent/40'
             )}
           >
-            <span className="truncate">{selected?.label || '—'}</span>
+            <span className="truncate">{labelWithPrice(selected)}</span>
             <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
           </button>
         </PopoverTrigger>
@@ -108,7 +116,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
                     selectedId === opt.id && 'ring-2 ring-ring'
                   )}
                 >
-                  {opt.label}
+                  {labelWithPrice(opt)}
                 </button>
               );
             })}
