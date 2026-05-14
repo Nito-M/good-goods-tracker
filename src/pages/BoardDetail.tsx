@@ -606,7 +606,7 @@ export default function BoardDetail() {
           }
           return '';
         }
-        if (column?.type === 'connect_board') {
+        if (column?.type === 'connect') {
           const raw = getCellValue(rowId, colId);
           if (!raw) return '';
           let ids: string[] = [];
