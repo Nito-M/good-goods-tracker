@@ -258,7 +258,7 @@ export function Sales() {
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
   const [showItemPicker, setShowItemPicker] = useState(false);
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('new-sale');
+  const [activeTab, setActiveTab] = useState('history');
 
   // Default to default company
   const { defaultCompany } = useCompanies();
