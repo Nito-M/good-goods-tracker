@@ -1753,6 +1753,7 @@ function CellRenderer({
           onSave={onSave}
           readOnly={readOnly}
           align={cellAlign ?? column.text_align}
+          livePrice={itemLivePrice}
         />
       );
     case 'connect':
