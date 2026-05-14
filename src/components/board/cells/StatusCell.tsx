@@ -116,7 +116,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
                     selectedId === opt.id && 'ring-2 ring-ring'
                   )}
                 >
-                  {opt.label}
+                  {labelWithPrice(opt)}
                 </button>
               );
             })}
