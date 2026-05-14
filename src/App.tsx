@@ -14,6 +14,7 @@ import { AddItemPage } from "./pages/AddItem";
 import { Auth } from "./pages/Auth";
 import { PurchaseOrders } from "./pages/PurchaseOrders";
 import { AddPurchaseOrder } from "./pages/AddPurchaseOrder";
+import PurchaseOrderDetail from "./pages/PurchaseOrderDetail";
 import { Sales } from "./pages/Sales";
 import SaleDetail from "./pages/SaleDetail";
 import { Quotes } from "./pages/Quotes";
@@ -246,6 +247,16 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AddPurchaseOrder />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/purchase-orders/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PurchaseOrderDetail />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
