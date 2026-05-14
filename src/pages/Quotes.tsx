@@ -698,12 +698,13 @@ export function Quotes() {
             </div>
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="icon"
-                onClick={signOut}
-                title="Sign out"
+                onClick={() => {
+                  resetForm();
+                  setActiveTab('new-quote');
+                }}
               >
-                <LogOut className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-2" />
+                New Quote
               </Button>
             </div>
           </div>
