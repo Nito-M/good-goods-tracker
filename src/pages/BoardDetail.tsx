@@ -1263,6 +1263,7 @@ export default function BoardDetail() {
                 }}
                 formulaContext={formulaContext}
                 renderedRowIds={renderedRowIds}
+                getItemLivePrice={getItemLivePrice}
               />
             ))}
 
@@ -1408,6 +1409,7 @@ interface GroupSectionProps {
   onRowDragEnd: () => void;
   formulaContext?: import('@/lib/boardFormula').FormulaContext;
   renderedRowIds: string[];
+  getItemLivePrice: (rowId: string, colId: string) => number | null;
 }
 
 function GroupSection({
@@ -1447,6 +1449,7 @@ function GroupSection({
   onRowDragEnd,
   formulaContext,
   renderedRowIds,
+  getItemLivePrice,
 }: GroupSectionProps) {
   // Long-press: hold ~400ms anywhere on a cell (even on inputs) to start a merge selection.
   const longPressRef = useRef<{
@@ -1668,6 +1671,7 @@ function GroupSection({
                     cellAlign={getCellTextAlign(row.id, col.id)}
                     onChangeCellAlign={(a) => setCellTextAlign(row.id, col.id, a)}
                     formulaContext={formulaContext}
+                    itemLivePrice={col.type === 'item' ? getItemLivePrice(row.id, col.id) : null}
                   />
                 </td>
               );
@@ -1693,6 +1697,7 @@ interface CellRendererProps {
   cellAlign?: 'left' | 'center' | 'right' | null;
   onChangeCellAlign?: (a: 'left' | 'center' | 'right' | null) => void;
   formulaContext?: import('@/lib/boardFormula').FormulaContext;
+  itemLivePrice?: number | null;
 }
 
 function CellRenderer({
@@ -1708,6 +1713,7 @@ function CellRenderer({
   cellAlign,
   onChangeCellAlign,
   formulaContext,
+  itemLivePrice,
 }: CellRendererProps) {
   switch (column.type) {
     case 'date':
@@ -1753,6 +1759,7 @@ function CellRenderer({
           onSave={onSave}
           readOnly={readOnly}
           align={cellAlign ?? column.text_align}
+          livePrice={itemLivePrice}
         />
       );
     case 'connect':

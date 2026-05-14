@@ -1,17 +1,23 @@
-## Sales page: history-first + New Sale button
+## Item column display change
 
-### Changes to `src/pages/Sales.tsx`
+Update `src/components/board/cells/ItemCell.tsx` so that when an item is linked, the cell shows **only the live price** (e.g. `$12.50`) instead of the icon + name + sku + price layout.
 
-1. **Default landing tab** — change initial `activeTab` state from `'new-sale'` to `'history'` so opening `/sales` shows the invoice history list immediately.
+### Behavior
 
-2. **Replace the logout button in the header** (currently top-right of the Sales header, next to the "Next: INV-XXXX" badge) with a primary **New Sale** button:
-   - Icon: `Plus` (already imported)
-   - Label: "New Sale"
-   - On click: `setActiveTab('new-sale')` and call existing `resetForm()` so the picker opens with a clean cart
-   - Remove the `LogOut` icon import and the `signOut` destructure from `useAuth()` on this page (logout remains available in the sidebar).
+- **Linked + price available** → show only the formatted price, right-aligned by default (respects column/cell `align` prop).
+- **Linked + no price yet** (inventory/parts still loading, or item has no price) → show a subtle `—` placeholder so the cell isn't empty.
+- **Not linked** → unchanged: shows the "Link item…" hint with the link icon.
+- **Hover tooltip** → on hover, show a tooltip with the linked item's name, SKU (if any), and a small icon indicating Inventory vs Part. Uses the existing shadcn `Tooltip` component for consistency with the rest of the app.
+- Clicking the cell still opens `BoardItemPickerDialog` to change/clear the link (unchanged).
 
-3. **Keep everything else identical** — the `new-sale` tab content, `FullScreenItemPicker`, cart, markup, vendor selector, invoice number, and sale-creation flow are unchanged. Tab navigation between history and new sale still works the same way; only the default landing view and header action change.
+### Technical details
 
-### Out of scope
-- No changes to data, hooks, item picker, PDF generation, or routing.
-- Sidebar logout button is untouched.
+- Wrap the linked-state button in `<Tooltip><TooltipTrigger asChild>…</TooltipTrigger><TooltipContent>…</TooltipContent></Tooltip>`.
+- Drop the inline name/sku spans from the visible cell content; keep the `Package`/`Wrench` icon only inside the tooltip (not in the cell).
+- Continue using the `livePrice` prop already passed in (no changes to `BoardDetail.tsx` wiring needed beyond confirming `livePrice` is forwarded — currently the `case 'item'` render does **not** pass `livePrice`, so I'll add `livePrice={getItemLivePrice(rowId, colId)}` to that render call).
+- No DB or hook changes.
+
+### Files touched
+
+- `src/components/board/cells/ItemCell.tsx` — render only price + tooltip with item info.
+- `src/pages/BoardDetail.tsx` — pass `livePrice` into `<ItemCell>` (one-line addition in the `case 'item'` branch).
