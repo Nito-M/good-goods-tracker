@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
-  LogOut,
   ArrowLeft,
   FileText,
   Trash2,
