@@ -1668,6 +1668,7 @@ function GroupSection({
                     cellAlign={getCellTextAlign(row.id, col.id)}
                     onChangeCellAlign={(a) => setCellTextAlign(row.id, col.id, a)}
                     formulaContext={formulaContext}
+                    itemLivePrice={col.type === 'item' ? getItemLivePrice(row.id, col.id) : null}
                   />
                 </td>
               );
