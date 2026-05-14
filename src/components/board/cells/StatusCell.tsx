@@ -86,7 +86,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
               color ? cn(color.bg, color.text) : 'text-muted-foreground hover:bg-accent/40'
             )}
           >
-            <span className="truncate">{selected?.label || '—'}</span>
+            <span className="truncate">{labelWithPrice(selected)}</span>
             <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
           </button>
         </PopoverTrigger>
