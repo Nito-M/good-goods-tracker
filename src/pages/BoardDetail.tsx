@@ -571,7 +571,10 @@ export default function BoardDetail() {
       const raw = getCellValue(rowId, colId);
       const linked = parseItemCellValue(raw);
       if (!linked) return null;
-      return itemPriceLookup.get(`${linked.k}:${linked.id}`) ?? null;
+      const base = itemPriceLookup.get(`${linked.k}:${linked.id}`);
+      if (base == null) return null;
+      const m = typeof linked.m === 'number' && Number.isFinite(linked.m) ? linked.m : 1;
+      return base * m;
     },
     [getCellValue, itemPriceLookup]
   );
@@ -594,7 +597,9 @@ export default function BoardDetail() {
           const linked = parseItemCellValue(raw);
           if (!linked) return '';
           const price = itemPriceLookup.get(`${linked.k}:${linked.id}`);
-          return price != null ? String(price) : '';
+          if (price == null) return '';
+          const m = typeof linked.m === 'number' && Number.isFinite(linked.m) ? linked.m : 1;
+          return String(price * m);
         }
         if (column?.type === 'status') {
           const raw = getCellValue(rowId, colId);

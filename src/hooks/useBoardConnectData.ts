@@ -110,13 +110,15 @@ async function loadBoardData(boardId: string, mirrorColId: string | null) {
       const opt = mirrorOptions.find((o: any) => o.id === mirrorRaw);
       if (opt) mirrorRaw = opt.label;
     }
-    // Translate item cell JSON into a price label
+    // Translate item cell JSON into a price label (price × multiplier)
     if (mirrorType === 'item' && mirrorRaw) {
       try {
         const parsed = JSON.parse(mirrorRaw);
         if (parsed && parsed.id && (parsed.k === 'i' || parsed.k === 'p')) {
           const price = itemPriceMap.get(`${parsed.k}:${parsed.id}`);
-          mirrorRaw = price != null ? formatPrice(price) : (parsed.n || '—');
+          const m =
+            typeof parsed.m === 'number' && Number.isFinite(parsed.m) ? parsed.m : 1;
+          mirrorRaw = price != null ? formatPrice(price * m) : (parsed.n || '—');
         }
       } catch {}
     }

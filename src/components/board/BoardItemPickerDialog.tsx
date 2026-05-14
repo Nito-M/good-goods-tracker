@@ -21,6 +21,7 @@ export interface BoardLinkedItem {
   id: string;
   n: string; // name
   s: string; // sku
+  m?: number; // multiplier (default 1)
 }
 
 interface Props {
@@ -336,7 +337,8 @@ export function parseItemCellValue(raw: string): BoardLinkedItem | null {
   try {
     const j = JSON.parse(raw);
     if (j && (j.k === 'i' || j.k === 'p') && typeof j.id === 'string' && j.id) {
-      return { k: j.k, id: j.id, n: j.n || '', s: j.s || '' };
+      const m = typeof j.m === 'number' && Number.isFinite(j.m) ? j.m : undefined;
+      return { k: j.k, id: j.id, n: j.n || '', s: j.s || '', m };
     }
   } catch {
     /* not JSON */
@@ -346,5 +348,9 @@ export function parseItemCellValue(raw: string): BoardLinkedItem | null {
 
 export function serializeItemCellValue(item: BoardLinkedItem | null): string {
   if (!item || !item.id) return '';
-  return JSON.stringify({ k: item.k, id: item.id, n: item.n, s: item.s });
+  const out: any = { k: item.k, id: item.id, n: item.n, s: item.s };
+  if (typeof item.m === 'number' && Number.isFinite(item.m) && item.m !== 1) {
+    out.m = item.m;
+  }
+  return JSON.stringify(out);
 }
