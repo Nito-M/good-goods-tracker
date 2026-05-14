@@ -260,6 +260,16 @@ function AppContent() {
           }
         />
         <Route
+          path="/sales/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SaleDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/quotes"
           element={
             <ProtectedRoute>
