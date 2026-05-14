@@ -70,7 +70,7 @@ export function StatusCell({ value, options, onSave, readOnly, perRowOptions }: 
             color ? cn(color.bg, color.text) : 'text-muted-foreground'
           )}
         >
-          {selected?.label || '—'}
+          {labelWithPrice(selected)}
         </div>
       </div>
     );
