@@ -17,22 +17,43 @@ export type Database = {
       app_welcome_settings: {
         Row: {
           background_image_url: string | null
+          bg_animate_with_greeting: boolean
+          font_size_rem: number
           greeting_text: string
           id: number
+          letter_stagger_ms: number
+          position_x_pct: number
+          position_y_pct: number
+          start_delay_ms: number
+          text_align: string
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           background_image_url?: string | null
+          bg_animate_with_greeting?: boolean
+          font_size_rem?: number
           greeting_text?: string
           id?: number
+          letter_stagger_ms?: number
+          position_x_pct?: number
+          position_y_pct?: number
+          start_delay_ms?: number
+          text_align?: string
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           background_image_url?: string | null
+          bg_animate_with_greeting?: boolean
+          font_size_rem?: number
           greeting_text?: string
           id?: number
+          letter_stagger_ms?: number
+          position_x_pct?: number
+          position_y_pct?: number
+          start_delay_ms?: number
+          text_align?: string
           updated_at?: string
           updated_by?: string | null
         }
