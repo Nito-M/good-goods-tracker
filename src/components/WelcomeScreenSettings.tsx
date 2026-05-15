@@ -43,6 +43,7 @@ const DEFAULTS: S = {
   bg_dim_pct: 40,
   video_loop: true,
   video_muted: true,
+  greeting_color: '#ffffff',
 };
 
 export function WelcomeScreenSettings() {
