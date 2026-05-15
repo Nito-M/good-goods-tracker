@@ -123,12 +123,12 @@ export function WelcomeScreenSettings() {
     if (ok) toast({ title: 'Welcome screen saved' });
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadImage = (mobile: boolean) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     const ext = file.name.split('.').pop() || 'jpg';
-    const path = `bg-${Date.now()}.${ext}`;
+    const path = `bg${mobile ? '-mobile' : ''}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from('welcome-images')
       .upload(path, file, { upsert: true, contentType: file.type });
@@ -139,24 +139,26 @@ export function WelcomeScreenSettings() {
     }
     const { data: pub } = supabase.storage.from('welcome-images').getPublicUrl(path);
     const url = pub.publicUrl;
-    const ok = await persist({ background_image_url: url });
+    const field = mobile ? 'background_image_url_mobile' : 'background_image_url';
+    const ok = await persist({ [field]: url } as any);
     if (ok) {
-      update({ background_image_url: url });
-      toast({ title: 'Background updated' });
+      update({ [field]: url } as any);
+      toast({ title: mobile ? 'Mobile background updated' : 'Background updated' });
     }
     setUploading(false);
     e.target.value = '';
   };
 
-  const handleRemoveBg = async () => {
-    const ok = await persist({ background_image_url: null });
+  const removeImage = (mobile: boolean) => async () => {
+    const field = mobile ? 'background_image_url_mobile' : 'background_image_url';
+    const ok = await persist({ [field]: null } as any);
     if (ok) {
-      update({ background_image_url: null });
+      update({ [field]: null } as any);
       toast({ title: 'Background removed' });
     }
   };
 
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadVideo = (mobile: boolean) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
@@ -165,7 +167,6 @@ export function WelcomeScreenSettings() {
       return;
     }
     setUploading(true);
-    // Probe duration client-side
     const dur = await new Promise<number>((resolve) => {
       const v = document.createElement('video');
       v.preload = 'metadata';
@@ -180,7 +181,7 @@ export function WelcomeScreenSettings() {
       return;
     }
     const ext = file.name.split('.').pop() || 'mp4';
-    const path = `vid-${Date.now()}.${ext}`;
+    const path = `vid${mobile ? '-mobile' : ''}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from('welcome-images')
       .upload(path, file, { upsert: true, contentType: file.type });
@@ -191,22 +192,29 @@ export function WelcomeScreenSettings() {
     }
     const { data: pub } = supabase.storage.from('welcome-images').getPublicUrl(path);
     const url = pub.publicUrl;
-    const ok = await persist({ background_video_url: url } as any);
+    const field = mobile ? 'background_video_url_mobile' : 'background_video_url';
+    const ok = await persist({ [field]: url } as any);
     if (ok) {
-      update({ background_video_url: url });
-      toast({ title: 'Background video updated' });
+      update({ [field]: url } as any);
+      toast({ title: mobile ? 'Mobile background video updated' : 'Background video updated' });
     }
     setUploading(false);
     e.target.value = '';
   };
 
-  const handleRemoveVideo = async () => {
-    const ok = await persist({ background_video_url: null } as any);
+  const removeVideo = (mobile: boolean) => async () => {
+    const field = mobile ? 'background_video_url_mobile' : 'background_video_url';
+    const ok = await persist({ [field]: null } as any);
     if (ok) {
-      update({ background_video_url: null });
+      update({ [field]: null } as any);
       toast({ title: 'Background video removed' });
     }
   };
+
+  const handleUpload = uploadImage(false);
+  const handleRemoveBg = removeImage(false);
+  const handleVideoUpload = uploadVideo(false);
+  const handleRemoveVideo = removeVideo(false);
 
   if (loading) return null;
 
