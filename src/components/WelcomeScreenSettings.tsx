@@ -106,6 +106,8 @@ export function WelcomeScreenSettings() {
       text_align: s.text_align,
       bg_dim_pct: s.bg_dim_pct,
       background_video_url: s.background_video_url,
+      video_loop: s.video_loop,
+      video_muted: s.video_muted,
     } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
