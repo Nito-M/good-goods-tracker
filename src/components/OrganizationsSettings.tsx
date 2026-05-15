@@ -369,7 +369,87 @@ export function OrganizationsSettings() {
     }
   };
 
-  if (loading) {
+  const handleSaveMaxUsers = async (orgId: string) => {
+    const n = parseInt(editMaxValue, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      toast({ title: 'Invalid number', description: 'Enter a number of at least 1.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ max_users: n })
+        .eq('id', orgId);
+      if (error) throw error;
+      toast({ title: 'User limit updated' });
+      setEditingMaxOrgId(null);
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error updating max users:', error);
+      toast({ title: 'Error', description: 'Failed to update user limit.', variant: 'destructive' });
+    }
+  };
+
+  const handleToggleOrgPagePermission = async (orgId: string, pageKey: string, allowed: boolean) => {
+    setSavingPermsOrgId(orgId);
+    try {
+      const current = orgPagePerms[orgId] || [];
+      const isCurrentlyRestricted = current.length > 0;
+
+      if (allowed) {
+        // If unrestricted, switching from "all" to "checked subset" means we must seed all OTHER pages first as restrictions removed = all the ones we want kept.
+        // Simpler model: we treat presence of any rows as "only these are allowed". So flipping ON when unrestricted = no-op (still allowed).
+        if (!isCurrentlyRestricted) {
+          setSavingPermsOrgId(null);
+          return;
+        }
+        const { error } = await supabase
+          .from('organization_page_permissions')
+          .insert({ organization_id: orgId, page_key: pageKey });
+        if (error) throw error;
+      } else {
+        if (!isCurrentlyRestricted) {
+          // Need to seed: insert all pages EXCEPT the one being unchecked
+          const rows = ORG_PAGE_KEYS
+            .filter(p => p.key !== pageKey)
+            .map(p => ({ organization_id: orgId, page_key: p.key }));
+          const { error } = await supabase
+            .from('organization_page_permissions')
+            .insert(rows);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('organization_page_permissions')
+            .delete()
+            .eq('organization_id', orgId)
+            .eq('page_key', pageKey);
+          if (error) throw error;
+        }
+      }
+
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error updating org page permission:', error);
+      toast({ title: 'Error', description: 'Failed to update page access.', variant: 'destructive' });
+    } finally {
+      setSavingPermsOrgId(null);
+    }
+  };
+
+  const handleResetOrgPagePermissions = async (orgId: string) => {
+    try {
+      const { error } = await supabase
+        .from('organization_page_permissions')
+        .delete()
+        .eq('organization_id', orgId);
+      if (error) throw error;
+      toast({ title: 'Page access reset', description: 'Organization now has access to all pages.' });
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error resetting org page permissions:', error);
+      toast({ title: 'Error', description: 'Failed to reset page access.', variant: 'destructive' });
+    }
+  };
     return <div className="text-muted-foreground py-8 text-center">Loading organizations...</div>;
   }
 
