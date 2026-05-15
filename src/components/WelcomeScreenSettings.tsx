@@ -274,6 +274,26 @@ export function WelcomeScreenSettings() {
           </p>
         </div>
 
+        {/* Greeting color */}
+        <div className="space-y-2">
+          <Label htmlFor="welcome-color">Greeting text color</Label>
+          <div className="flex items-center gap-2">
+            <input
+              id="welcome-color"
+              type="color"
+              value={s.greeting_color}
+              onChange={(e) => update({ greeting_color: e.target.value })}
+              className="h-10 w-14 rounded border bg-transparent cursor-pointer"
+            />
+            <Input
+              value={s.greeting_color}
+              onChange={(e) => update({ greeting_color: e.target.value })}
+              placeholder="#ffffff"
+              className="w-32 font-mono"
+            />
+          </div>
+        </div>
+
         {/* Background image */}
         <div className="space-y-2">
           <Label>Background image</Label>
