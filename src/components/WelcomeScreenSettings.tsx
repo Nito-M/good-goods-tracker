@@ -15,6 +15,8 @@ type Align = 'left' | 'center' | 'right';
 interface S {
   background_image_url: string | null;
   background_video_url: string | null;
+  background_image_url_mobile: string | null;
+  background_video_url_mobile: string | null;
   greeting_text: string;
   start_delay_ms: number;
   letter_stagger_ms: number;
