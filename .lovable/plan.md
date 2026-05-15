@@ -1,23 +1,39 @@
-## Item column display change
+# Why no email is arriving
 
-Update `src/components/board/cells/ItemCell.tsx` so that when an item is linked, the cell shows **only the live price** (e.g. `$12.50`) instead of the icon + name + sku + price layout.
+Your `send-password-reset` edge function is wired correctly and `RESEND_API_KEY` exists, but the function is sending **from `noreply@zumy.app`**. Unless `zumy.app` is verified in the Resend account that owns the API key, Resend silently rejects the send (and our function still returns `success: true` to the browser to avoid leaking whether an account exists). That matches what you're seeing: the UI says "check your email," but nothing arrives.
 
-### Behavior
+There are two ways to fix it. Pick one.
 
-- **Linked + price available** → show only the formatted price, right-aligned by default (respects column/cell `align` prop).
-- **Linked + no price yet** (inventory/parts still loading, or item has no price) → show a subtle `—` placeholder so the cell isn't empty.
-- **Not linked** → unchanged: shows the "Link item…" hint with the link icon.
-- **Hover tooltip** → on hover, show a tooltip with the linked item's name, SKU (if any), and a small icon indicating Inventory vs Part. Uses the existing shadcn `Tooltip` component for consistency with the rest of the app.
-- Clicking the cell still opens `BoardItemPickerDialog` to change/clear the link (unchanged).
+---
 
-### Technical details
+## Option A — Switch to Lovable Emails (recommended)
 
-- Wrap the linked-state button in `<Tooltip><TooltipTrigger asChild>…</TooltipTrigger><TooltipContent>…</TooltipContent></Tooltip>`.
-- Drop the inline name/sku spans from the visible cell content; keep the `Package`/`Wrench` icon only inside the tooltip (not in the cell).
-- Continue using the `livePrice` prop already passed in (no changes to `BoardDetail.tsx` wiring needed beyond confirming `livePrice` is forwarded — currently the `case 'item'` render does **not** pass `livePrice`, so I'll add `livePrice={getItemLivePrice(rowId, colId)}` to that render call).
-- No DB or hook changes.
+Lovable's built-in email system handles the sender domain, DNS, queueing, retries, and templates for you. No Resend account, no API key juggling. Once your domain is verified, password-reset emails (and any other auth emails — verification, magic link, etc.) just work.
 
-### Files touched
+Steps I'll take:
+1. Set up an email sender domain for your project (you'll go through a short dialog to add a subdomain like `notify.northernoutline.ca` and a couple of NS records at your registrar).
+2. Scaffold branded auth email templates (password reset, verification, magic link, etc.) styled to match your app.
+3. Switch the password-reset flow over to Supabase's built-in `resetPasswordForEmail` so it goes through the new auth email pipeline.
+4. Remove the custom `send-password-reset` / `complete-password-reset` edge functions and the `password_reset_tokens` table since they'll no longer be needed.
 
-- `src/components/board/cells/ItemCell.tsx` — render only price + tooltip with item info.
-- `src/pages/BoardDetail.tsx` — pass `livePrice` into `<ItemCell>` (one-line addition in the `case 'item'` branch).
+After DNS verifies (usually minutes to a few hours), reset emails will arrive from your own domain.
+
+---
+
+## Option B — Keep Resend, verify the sender domain
+
+If you'd rather stay on Resend:
+1. In your Resend dashboard, go to **Domains** and add `zumy.app` (or whichever domain you actually want to send from — likely `northernoutline.ca`).
+2. Add the DNS records Resend gives you (SPF, DKIM, MX) at your domain registrar and wait for verification.
+3. If you switch domains away from `zumy.app`, I'll update the `from` address in `supabase/functions/send-password-reset/index.ts` to match.
+4. (Optional but recommended) I'll change the function so that real Resend errors are logged and surface a real failure to the UI instead of always returning success — that way future issues are visible.
+
+Quick sanity test before doing DNS work: temporarily change the `from` to `onboarding@resend.dev` and send a reset to the email address that owns the Resend account. If that one arrives, the only thing missing is domain verification.
+
+---
+
+## Recommendation
+
+Go with **Option A**. It's less moving parts, gives you branded auth emails for free, and removes ~150 lines of custom token/edge-function code we're currently maintaining.
+
+Which direction do you want?
