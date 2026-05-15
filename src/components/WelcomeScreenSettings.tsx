@@ -64,6 +64,7 @@ export function WelcomeScreenSettings() {
           position_x_pct: data.position_x_pct ?? 50,
           position_y_pct: data.position_y_pct ?? 50,
           text_align: (data.text_align ?? 'center') as Align,
+          bg_dim_pct: (data as any).bg_dim_pct ?? 40,
         });
       }
       setLoading(false);
