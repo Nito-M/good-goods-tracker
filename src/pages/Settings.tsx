@@ -732,6 +732,8 @@ export function Settings() {
               </CardContent>
             </Card>
 
+            {isAdmin && <WelcomeScreenSettings />}
+
           </TabsContent>
 
           {/* Vendors Tab */}
