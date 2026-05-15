@@ -57,7 +57,13 @@ export function ItemCell({ value, onSave, readOnly, align = 'right', livePrice }
   const button = (
     <button
       type="button"
-      onClick={() => !readOnly && setOpen(true)}
+      onClick={() => {
+        if (readOnly) return;
+        // While editing a formula in another cell, suppress the picker so this
+        // cell can be inserted as a formula reference instead.
+        if (isFormulaPickActive()) return;
+        setOpen(true);
+      }}
       disabled={readOnly}
       className={cn(
         'flex-1 px-2 py-2 text-sm flex items-center gap-1 truncate tabular-nums',
