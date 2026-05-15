@@ -1130,8 +1130,12 @@ export default function BoardDetail() {
                 >
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
+                      setHeaderRowSelected(false);
+                      setSelectionAnchor(null);
+                      setSelectionFocus(null);
                       setHeaderFrozen(!board.header_frozen);
                     }}
                     title={board.header_frozen ? 'Unfreeze header row' : 'Freeze header row'}
