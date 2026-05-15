@@ -450,6 +450,8 @@ export function OrganizationsSettings() {
       toast({ title: 'Error', description: 'Failed to reset page access.', variant: 'destructive' });
     }
   };
+
+  if (loading) {
     return <div className="text-muted-foreground py-8 text-center">Loading organizations...</div>;
   }
 
