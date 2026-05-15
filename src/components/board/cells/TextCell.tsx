@@ -49,6 +49,33 @@ export function TextCell({
     }
   }, [editing]);
 
+  // While editing a formula, register as the active editor so clicking another
+  // cell in the grid inserts that cell's address (e.g. "B3") at the cursor.
+  const editingFormula = editing && typeof v === 'string' && v.trim().startsWith('=');
+  useEffect(() => {
+    if (!editingFormula) return;
+    const dispose = setActiveFormulaEditor((ref: string) => {
+      const el = inputRef.current;
+      if (!el) return;
+      const start = el.selectionStart ?? v.length;
+      const end = el.selectionEnd ?? v.length;
+      const next = v.slice(0, start) + ref + v.slice(end);
+      setV(next);
+      // Restore caret after the inserted ref on the next frame so React can
+      // flush the value first.
+      requestAnimationFrame(() => {
+        const e2 = inputRef.current;
+        if (!e2) return;
+        e2.focus();
+        const pos = start + ref.length;
+        try {
+          e2.setSelectionRange(pos, pos);
+        } catch {}
+      });
+    });
+    return dispose;
+  }, [editingFormula, v]);
+
   const commit = () => {
     if (v !== initial.current) {
       onSave(v);
