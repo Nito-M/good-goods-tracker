@@ -520,6 +520,8 @@ export function OrganizationsSettings() {
                           size="sm"
                           onClick={() => openAddAdminDialog(org.id)}
                           className="gap-1"
+                          disabled={(orgMembers[org.id]?.length || 0) >= org.max_users && !isSuperAdmin}
+                          title={(orgMembers[org.id]?.length || 0) >= org.max_users ? `User limit (${org.max_users}) reached` : undefined}
                         >
                           <UserPlus className="h-4 w-4" />
                           Add Admin
@@ -534,6 +536,53 @@ export function OrganizationsSettings() {
                         </Button>
                       </div>
                     </div>
+
+                    {/* Restrictions row: user limit + members count */}
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted">
+                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Users:</span>
+                        <span className="font-medium">{orgMembers[org.id]?.length || 0}</span>
+                        <span className="text-muted-foreground">/</span>
+                        {editingMaxOrgId === org.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              min={1}
+                              value={editMaxValue}
+                              onChange={e => setEditMaxValue(e.target.value)}
+                              className="h-6 w-16 text-sm"
+                              autoFocus
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleSaveMaxUsers(org.id);
+                                if (e.key === 'Escape') setEditingMaxOrgId(null);
+                              }}
+                            />
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleSaveMaxUsers(org.id)}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingMaxOrgId(null)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="font-medium">{org.max_users}</span>
+                            {isSuperAdmin && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-5 w-5"
+                                onClick={() => { setEditingMaxOrgId(org.id); setEditMaxValue(String(org.max_users)); }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
                   </CardHeader>
                   <CardContent>
                     {(orgMembers[org.id] || []).length === 0 ? (
