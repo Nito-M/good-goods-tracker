@@ -26,6 +26,7 @@ interface S {
   bg_dim_pct: number;
   video_loop: boolean;
   video_muted: boolean;
+  greeting_color: string;
 }
 
 const DEFAULTS: S = {
