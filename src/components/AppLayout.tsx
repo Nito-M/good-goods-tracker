@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 interface OrgShop {
   id: string;
@@ -86,7 +87,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <SidebarTrigger className="h-9 w-9">
                 <Menu className="h-5 w-5" />
               </SidebarTrigger>
-              <span className="ml-3 font-semibold text-foreground">Zumy</span>
+              <button type="button" onClick={() => navigate('/welcome')} className="ml-3 font-semibold text-foreground hover:opacity-80 transition-opacity">Zumy</button>
               {orgName && (
                 <span className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
                   <Building2 className="h-3 w-3" />
