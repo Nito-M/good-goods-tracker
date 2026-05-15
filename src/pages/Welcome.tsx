@@ -123,7 +123,7 @@ export function Welcome() {
         />
       )}
 
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
 
       <h1
         className="absolute z-10 font-black text-white uppercase tracking-tighter drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] px-6"
