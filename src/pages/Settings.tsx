@@ -3,6 +3,7 @@ import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monit
 import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
+import { usePagePermissions } from '@/hooks/usePagePermissions';
 import { OrganizationsSettings } from '@/components/OrganizationsSettings';
 import { UsersSettings } from '@/components/UsersSettings';
 import { TagsSettings } from '@/components/TagsSettings';
@@ -59,7 +60,9 @@ export function Settings() {
   const { signOut, user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { isOrgAdmin } = useIsOrgAdmin();
+  const { isPageAllowed } = usePagePermissions();
   const showUsersTab = isAdmin || isOrgAdmin;
+  const showStorefrontTab = isPageAllowed('settings-storefront');
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, borderColor, setBorderColor } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
@@ -446,10 +449,12 @@ export function Settings() {
               <Briefcase className="h-4 w-4 hidden sm:inline" />
               Companies
             </TabsTrigger>
-            <TabsTrigger value="storefront" className="gap-2 shrink-0">
-              <Store className="h-4 w-4 hidden sm:inline" />
-              Storefront
-            </TabsTrigger>
+            {showStorefrontTab && (
+              <TabsTrigger value="storefront" className="gap-2 shrink-0">
+                <Store className="h-4 w-4 hidden sm:inline" />
+                Storefront
+              </TabsTrigger>
+            )}
             <TabsTrigger value="vendors" className="gap-2 shrink-0">
               <Building2 className="h-4 w-4 hidden sm:inline" />
               Vendors
@@ -486,9 +491,11 @@ export function Settings() {
           </TabsContent>
 
           {/* Storefront Tab */}
-          <TabsContent value="storefront" className="mt-6">
-            <StorefrontSettings />
-          </TabsContent>
+          {showStorefrontTab && (
+            <TabsContent value="storefront" className="mt-6">
+              <StorefrontSettings />
+            </TabsContent>
+          )}
 
           {/* General Tab */}
           <TabsContent value="general" className="mt-6">
