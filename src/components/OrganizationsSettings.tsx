@@ -51,6 +51,7 @@ interface Organization {
   id: string;
   name: string;
   created_at: string;
+  max_users: number;
 }
 
 interface OrgMember {
