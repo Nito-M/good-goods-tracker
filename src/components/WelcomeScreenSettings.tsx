@@ -15,6 +15,8 @@ type Align = 'left' | 'center' | 'right';
 interface S {
   background_image_url: string | null;
   background_video_url: string | null;
+  background_image_url_mobile: string | null;
+  background_video_url_mobile: string | null;
   greeting_text: string;
   start_delay_ms: number;
   letter_stagger_ms: number;
@@ -32,6 +34,8 @@ interface S {
 const DEFAULTS: S = {
   background_image_url: null,
   background_video_url: null,
+  background_image_url_mobile: null,
+  background_video_url_mobile: null,
   greeting_text: 'Welcome',
   start_delay_ms: 500,
   letter_stagger_ms: 50,
@@ -65,6 +69,8 @@ export function WelcomeScreenSettings() {
         setS({
           background_image_url: data.background_image_url,
           background_video_url: (data as any).background_video_url ?? null,
+          background_image_url_mobile: (data as any).background_image_url_mobile ?? null,
+          background_video_url_mobile: (data as any).background_video_url_mobile ?? null,
           greeting_text: data.greeting_text || 'Welcome',
           start_delay_ms: data.start_delay_ms ?? 500,
           letter_stagger_ms: data.letter_stagger_ms ?? 50,
@@ -117,12 +123,12 @@ export function WelcomeScreenSettings() {
     if (ok) toast({ title: 'Welcome screen saved' });
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadImage = (mobile: boolean) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     const ext = file.name.split('.').pop() || 'jpg';
-    const path = `bg-${Date.now()}.${ext}`;
+    const path = `bg${mobile ? '-mobile' : ''}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from('welcome-images')
       .upload(path, file, { upsert: true, contentType: file.type });
@@ -133,24 +139,26 @@ export function WelcomeScreenSettings() {
     }
     const { data: pub } = supabase.storage.from('welcome-images').getPublicUrl(path);
     const url = pub.publicUrl;
-    const ok = await persist({ background_image_url: url });
+    const field = mobile ? 'background_image_url_mobile' : 'background_image_url';
+    const ok = await persist({ [field]: url } as any);
     if (ok) {
-      update({ background_image_url: url });
-      toast({ title: 'Background updated' });
+      update({ [field]: url } as any);
+      toast({ title: mobile ? 'Mobile background updated' : 'Background updated' });
     }
     setUploading(false);
     e.target.value = '';
   };
 
-  const handleRemoveBg = async () => {
-    const ok = await persist({ background_image_url: null });
+  const removeImage = (mobile: boolean) => async () => {
+    const field = mobile ? 'background_image_url_mobile' : 'background_image_url';
+    const ok = await persist({ [field]: null } as any);
     if (ok) {
-      update({ background_image_url: null });
+      update({ [field]: null } as any);
       toast({ title: 'Background removed' });
     }
   };
 
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadVideo = (mobile: boolean) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
@@ -159,7 +167,6 @@ export function WelcomeScreenSettings() {
       return;
     }
     setUploading(true);
-    // Probe duration client-side
     const dur = await new Promise<number>((resolve) => {
       const v = document.createElement('video');
       v.preload = 'metadata';
@@ -174,7 +181,7 @@ export function WelcomeScreenSettings() {
       return;
     }
     const ext = file.name.split('.').pop() || 'mp4';
-    const path = `vid-${Date.now()}.${ext}`;
+    const path = `vid${mobile ? '-mobile' : ''}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from('welcome-images')
       .upload(path, file, { upsert: true, contentType: file.type });
@@ -185,22 +192,29 @@ export function WelcomeScreenSettings() {
     }
     const { data: pub } = supabase.storage.from('welcome-images').getPublicUrl(path);
     const url = pub.publicUrl;
-    const ok = await persist({ background_video_url: url } as any);
+    const field = mobile ? 'background_video_url_mobile' : 'background_video_url';
+    const ok = await persist({ [field]: url } as any);
     if (ok) {
-      update({ background_video_url: url });
-      toast({ title: 'Background video updated' });
+      update({ [field]: url } as any);
+      toast({ title: mobile ? 'Mobile background video updated' : 'Background video updated' });
     }
     setUploading(false);
     e.target.value = '';
   };
 
-  const handleRemoveVideo = async () => {
-    const ok = await persist({ background_video_url: null } as any);
+  const removeVideo = (mobile: boolean) => async () => {
+    const field = mobile ? 'background_video_url_mobile' : 'background_video_url';
+    const ok = await persist({ [field]: null } as any);
     if (ok) {
-      update({ background_video_url: null });
+      update({ [field]: null } as any);
       toast({ title: 'Background video removed' });
     }
   };
+
+  const handleUpload = uploadImage(false);
+  const handleRemoveBg = removeImage(false);
+  const handleVideoUpload = uploadVideo(false);
+  const handleRemoveVideo = removeVideo(false);
 
   if (loading) return null;
 
@@ -339,6 +353,42 @@ export function WelcomeScreenSettings() {
               <p className="text-xs text-muted-foreground">Browsers may block autoplay with sound until the user interacts.</p>
             </div>
             <Switch checked={!s.video_muted} onCheckedChange={(v) => update({ video_muted: !v })} />
+          </div>
+        </div>
+
+        {/* Mobile background overrides */}
+        <div className="space-y-2 rounded-lg border p-3">
+          <Label className="text-sm font-semibold">Mobile background (optional)</Label>
+          <p className="text-xs text-muted-foreground">
+            Used on phones in place of the desktop image/video. Portrait orientation works best.
+          </p>
+
+          <div className="space-y-2 mt-2">
+            <Label className="text-xs">Mobile image</Label>
+            <div className="flex items-center gap-2">
+              <Input type="file" accept="image/*" onChange={uploadImage(true)} disabled={uploading} className="flex-1" />
+              {s.background_image_url_mobile && (
+                <Button variant="outline" size="icon" onClick={removeImage(true)} title="Remove mobile image">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </div>
+            {s.background_image_url_mobile && (
+              <img src={s.background_image_url_mobile} alt="Mobile background" className="h-32 rounded border object-cover" />
+            )}
+          </div>
+
+          <div className="space-y-2 mt-3">
+            <Label className="text-xs flex items-center gap-2"><Video className="h-3 w-3" /> Mobile video (max ~10s)</Label>
+            <div className="flex items-center gap-2">
+              <Input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={uploadVideo(true)} disabled={uploading} className="flex-1" />
+              {s.background_video_url_mobile && (
+                <Button variant="outline" size="icon" onClick={removeVideo(true)} title="Remove mobile video">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">When set, replaces the mobile image on phones.</p>
           </div>
         </div>
 

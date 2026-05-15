@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProfile } from '@/hooks/useProfile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WelcomeSettings {
   background_image_url: string | null;
   background_video_url: string | null;
+  background_image_url_mobile: string | null;
+  background_video_url_mobile: string | null;
   greeting_text: string;
   start_delay_ms: number;
   letter_stagger_ms: number;
@@ -22,6 +25,8 @@ interface WelcomeSettings {
 const DEFAULTS: WelcomeSettings = {
   background_image_url: null,
   background_video_url: null,
+  background_image_url_mobile: null,
+  background_video_url_mobile: null,
   greeting_text: 'Welcome',
   start_delay_ms: 500,
   letter_stagger_ms: 50,
@@ -55,6 +60,7 @@ function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: n
 
 export function Welcome() {
   const { profile } = useProfile();
+  const isMobile = useIsMobile();
   const [s, setS] = useState<WelcomeSettings>(DEFAULTS);
   const [bgAnimating, setBgAnimating] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
@@ -71,6 +77,8 @@ export function Welcome() {
       setS({
         background_image_url: data.background_image_url,
         background_video_url: (data as any).background_video_url ?? null,
+        background_image_url_mobile: (data as any).background_image_url_mobile ?? null,
+        background_video_url_mobile: (data as any).background_video_url_mobile ?? null,
         greeting_text: data.greeting_text || 'Welcome',
         start_delay_ms: data.start_delay_ms ?? 500,
         letter_stagger_ms: data.letter_stagger_ms ?? 50,
@@ -129,28 +137,37 @@ export function Welcome() {
         }
       `}</style>
 
-      {s.background_video_url ? (
-        <video
-          key={`${s.background_video_url}-${s.video_loop}-${s.video_muted}`}
-          src={s.background_video_url}
-          autoPlay
-          muted={s.video_muted}
-          loop={s.video_loop}
-          playsInline
-          onEnded={(e) => {
-            setVideoEnded(true);
-            const v = e.currentTarget;
-            // Freeze on the last frame
-            try { v.pause(); } catch {}
-          }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : s.background_image_url && (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${s.background_image_url})` }}
-        />
-      )}
+      {(() => {
+        const videoUrl = (isMobile && s.background_video_url_mobile) ? s.background_video_url_mobile : s.background_video_url;
+        const imageUrl = (isMobile && s.background_image_url_mobile) ? s.background_image_url_mobile : s.background_image_url;
+        if (videoUrl) {
+          return (
+            <video
+              key={`${videoUrl}-${s.video_loop}-${s.video_muted}`}
+              src={videoUrl}
+              autoPlay
+              muted={s.video_muted}
+              loop={s.video_loop}
+              playsInline
+              onEnded={(e) => {
+                setVideoEnded(true);
+                const v = e.currentTarget;
+                try { v.pause(); } catch {}
+              }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          );
+        }
+        if (imageUrl) {
+          return (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${imageUrl})` }}
+            />
+          );
+        }
+        return null;
+      })()}
 
       <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
 

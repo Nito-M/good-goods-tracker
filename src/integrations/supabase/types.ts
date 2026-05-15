@@ -17,7 +17,9 @@ export type Database = {
       app_welcome_settings: {
         Row: {
           background_image_url: string | null
+          background_image_url_mobile: string | null
           background_video_url: string | null
+          background_video_url_mobile: string | null
           bg_animate_with_greeting: boolean
           bg_dim_pct: number
           font_size_rem: number
@@ -36,7 +38,9 @@ export type Database = {
         }
         Insert: {
           background_image_url?: string | null
+          background_image_url_mobile?: string | null
           background_video_url?: string | null
+          background_video_url_mobile?: string | null
           bg_animate_with_greeting?: boolean
           bg_dim_pct?: number
           font_size_rem?: number
@@ -55,7 +59,9 @@ export type Database = {
         }
         Update: {
           background_image_url?: string | null
+          background_image_url_mobile?: string | null
           background_video_url?: string | null
+          background_video_url_mobile?: string | null
           bg_animate_with_greeting?: boolean
           bg_dim_pct?: number
           font_size_rem?: number
