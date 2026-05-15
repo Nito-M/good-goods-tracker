@@ -246,13 +246,14 @@ export function WelcomeScreenSettings() {
           )}
           <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
           <div
-            className="absolute text-white font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
+            className="absolute font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
             style={{
               left: `${s.position_x_pct}%`,
               top: `${s.position_y_pct}%`,
               transform: 'translate(-50%, -50%)',
               fontSize: `${Math.max(0.6, s.font_size_rem * 0.22)}rem`,
               textAlign: s.text_align,
+              color: s.greeting_color,
             }}
           >
             {s.greeting_text} <span className="opacity-80">Name</span>
