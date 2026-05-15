@@ -154,10 +154,6 @@ export function Settings() {
   const [quoteValidityDays, setQuoteValidityDays] = useState<number | null>(null);
   const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
 
-  // Requester settings state
-  const [requesterName, setRequesterName] = useState('');
-  const [requesterNames, setRequesterNames] = useState<string[]>([]);
-  const [newRequesterName, setNewRequesterName] = useState('');
   // Load profile data into form
   useEffect(() => {
     if (profile) {
