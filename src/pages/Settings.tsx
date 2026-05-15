@@ -491,9 +491,11 @@ export function Settings() {
           </TabsContent>
 
           {/* Storefront Tab */}
-          <TabsContent value="storefront" className="mt-6">
-            <StorefrontSettings />
-          </TabsContent>
+          {showStorefrontTab && (
+            <TabsContent value="storefront" className="mt-6">
+              <StorefrontSettings />
+            </TabsContent>
+          )}
 
           {/* General Tab */}
           <TabsContent value="general" className="mt-6">
