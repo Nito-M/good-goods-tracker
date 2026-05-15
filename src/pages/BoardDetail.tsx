@@ -1670,11 +1670,32 @@ function GroupSection({
                     // Only handle left-click; ignore clicks on interactive controls
                     if (e.button !== 0) return;
                     const target = e.target as HTMLElement;
+                    // Spreadsheet-style formula picking: if a formula editor is
+                    // active in another cell, clicking this cell inserts its
+                    // A1-style ref (e.g. "B3") into that formula.
+                    if (
+                      isFormulaPickActive() &&
+                      !target.closest('input, textarea, select')
+                    ) {
+                      const cIdx = visibleColumnIds.indexOf(col.id);
+                      const rIdx = renderedRowIds.indexOf(row.id);
+                      if (cIdx >= 0 && rIdx >= 0) {
+                        const ref = `${indexToColumnLetters(cIdx)}${rIdx + 1}`;
+                        if (pickCellRef(ref)) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          return;
+                        }
+                      }
+                    }
                     if (target.closest('button, input, textarea, select, a, [role="button"]')) return;
                     onCellMouseDown(row.id, col.id, e.shiftKey);
                   }}
                   onPointerDown={(e) => {
                     if (e.button !== 0) return;
+                    // Don't start a long-press merge selection while picking a
+                    // formula reference — that interaction should be silent.
+                    if (isFormulaPickActive()) return;
                     // Long-press starts merge selection from anywhere on the cell,
                     // including over inputs/buttons. Triggers after 400ms.
                     cancelLongPress();
