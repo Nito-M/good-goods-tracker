@@ -301,6 +301,23 @@ export function OrganizationsSettings() {
     }
   };
 
+  const handleRenameOrg = async (orgId: string) => {
+    if (!editOrgNameValue.trim()) { setEditingOrgId(null); return; }
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ name: editOrgNameValue.trim() })
+        .eq('id', orgId);
+      if (error) throw error;
+      toast({ title: 'Organization renamed' });
+      setEditingOrgId(null);
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error renaming organization:', error);
+      toast({ title: 'Error', description: 'Failed to rename organization.', variant: 'destructive' });
+    }
+  };
+
   if (loading) {
     return <div className="text-muted-foreground py-8 text-center">Loading organizations...</div>;
   }
