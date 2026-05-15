@@ -14,6 +14,8 @@ interface WelcomeSettings {
   position_y_pct: number;
   text_align: 'left' | 'center' | 'right';
   bg_dim_pct: number;
+  video_loop: boolean;
+  video_muted: boolean;
 }
 
 const DEFAULTS: WelcomeSettings = {
@@ -28,6 +30,8 @@ const DEFAULTS: WelcomeSettings = {
   position_y_pct: 50,
   text_align: 'center',
   bg_dim_pct: 40,
+  video_loop: true,
+  video_muted: true,
 };
 
 function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: number; stagger: number }) {
@@ -73,6 +77,8 @@ export function Welcome() {
         position_y_pct: data.position_y_pct ?? 50,
         text_align: (data.text_align ?? 'center') as 'left' | 'center' | 'right',
         bg_dim_pct: (data as any).bg_dim_pct ?? 40,
+        video_loop: (data as any).video_loop ?? true,
+        video_muted: (data as any).video_muted ?? true,
       });
     })();
     return () => { cancelled = true; };
@@ -121,9 +127,12 @@ export function Welcome() {
 
       {s.background_video_url ? (
         <video
-          key={s.background_video_url}
+          key={`${s.background_video_url}-${s.video_loop}-${s.video_muted}`}
           src={s.background_video_url}
-          autoPlay muted loop playsInline
+          autoPlay
+          muted={s.video_muted}
+          loop={s.video_loop}
+          playsInline
           className={`absolute inset-0 w-full h-full object-cover ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
         />
       ) : s.background_image_url && (

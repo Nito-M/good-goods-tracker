@@ -30,6 +30,8 @@ export type Database = {
           text_align: string
           updated_at: string
           updated_by: string | null
+          video_loop: boolean
+          video_muted: boolean
         }
         Insert: {
           background_image_url?: string | null
@@ -46,6 +48,8 @@ export type Database = {
           text_align?: string
           updated_at?: string
           updated_by?: string | null
+          video_loop?: boolean
+          video_muted?: boolean
         }
         Update: {
           background_image_url?: string | null
@@ -62,6 +66,8 @@ export type Database = {
           text_align?: string
           updated_at?: string
           updated_by?: string | null
+          video_loop?: boolean
+          video_muted?: boolean
         }
         Relationships: []
       }

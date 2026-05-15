@@ -24,6 +24,8 @@ interface S {
   position_y_pct: number;
   text_align: Align;
   bg_dim_pct: number;
+  video_loop: boolean;
+  video_muted: boolean;
 }
 
 const DEFAULTS: S = {
@@ -38,6 +40,8 @@ const DEFAULTS: S = {
   position_y_pct: 50,
   text_align: 'center',
   bg_dim_pct: 40,
+  video_loop: true,
+  video_muted: true,
 };
 
 export function WelcomeScreenSettings() {
@@ -68,6 +72,8 @@ export function WelcomeScreenSettings() {
           position_y_pct: data.position_y_pct ?? 50,
           text_align: (data.text_align ?? 'center') as Align,
           bg_dim_pct: (data as any).bg_dim_pct ?? 40,
+          video_loop: (data as any).video_loop ?? true,
+          video_muted: (data as any).video_muted ?? true,
         });
       }
       setLoading(false);
@@ -100,6 +106,8 @@ export function WelcomeScreenSettings() {
       text_align: s.text_align,
       bg_dim_pct: s.bg_dim_pct,
       background_video_url: s.background_video_url,
+      video_loop: s.video_loop,
+      video_muted: s.video_muted,
     } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
@@ -291,8 +299,22 @@ export function WelcomeScreenSettings() {
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            When set, the video plays muted on loop and replaces the background image.
+            When set, the video replaces the background image.
           </p>
+          <div className="flex items-center justify-between rounded-md border p-3 mt-2">
+            <div>
+              <Label>Loop video</Label>
+              <p className="text-xs text-muted-foreground">Off = play once and stop on the last frame.</p>
+            </div>
+            <Switch checked={s.video_loop} onCheckedChange={(v) => update({ video_loop: v })} />
+          </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <Label>Play with sound</Label>
+              <p className="text-xs text-muted-foreground">Browsers may block autoplay with sound until the user interacts.</p>
+            </div>
+            <Switch checked={!s.video_muted} onCheckedChange={(v) => update({ video_muted: !v })} />
+          </div>
         </div>
 
         <div className="space-y-4">
