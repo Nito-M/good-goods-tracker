@@ -648,6 +648,47 @@ export function OrganizationsSettings() {
                         ))}
                       </div>
                     )}
+
+                    {isSuperAdmin && (
+                      <div className="mt-4 pt-4 border-t">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-muted-foreground" />
+                            <p className="text-sm font-medium">Page Access</p>
+                            <span className="text-xs text-muted-foreground">
+                              {(orgPagePerms[org.id]?.length || 0) === 0
+                                ? '(All pages allowed)'
+                                : `(${orgPagePerms[org.id].length} of ${ORG_PAGE_KEYS.length} allowed)`}
+                            </span>
+                          </div>
+                          {(orgPagePerms[org.id]?.length || 0) > 0 && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleResetOrgPagePermissions(org.id)}
+                            >
+                              Allow all
+                            </Button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {ORG_PAGE_KEYS.map(page => {
+                            const restricted = (orgPagePerms[org.id]?.length || 0) > 0;
+                            const checked = !restricted || orgPagePerms[org.id].includes(page.key);
+                            return (
+                              <label key={page.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                                <Checkbox
+                                  checked={checked}
+                                  disabled={savingPermsOrgId === org.id}
+                                  onCheckedChange={(v) => handleToggleOrgPagePermission(org.id, page.key, !!v)}
+                                />
+                                <span>{page.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
