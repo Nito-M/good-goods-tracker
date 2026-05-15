@@ -64,6 +64,8 @@ export function OrganizationsSettings() {
   // Inline name editing
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
+  const [editingOrgId, setEditingOrgId] = useState<string | null>(null);
+  const [editOrgNameValue, setEditOrgNameValue] = useState('');
 
   // Members per org
   const [orgMembers, setOrgMembers] = useState<Record<string, OrgMember[]>>({});
@@ -299,6 +301,23 @@ export function OrganizationsSettings() {
     }
   };
 
+  const handleRenameOrg = async (orgId: string) => {
+    if (!editOrgNameValue.trim()) { setEditingOrgId(null); return; }
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ name: editOrgNameValue.trim() })
+        .eq('id', orgId);
+      if (error) throw error;
+      toast({ title: 'Organization renamed' });
+      setEditingOrgId(null);
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error renaming organization:', error);
+      toast({ title: 'Error', description: 'Failed to rename organization.', variant: 'destructive' });
+    }
+  };
+
   if (loading) {
     return <div className="text-muted-foreground py-8 text-center">Loading organizations...</div>;
   }
@@ -330,7 +349,38 @@ export function OrganizationsSettings() {
                 <Card key={org.id} className="border">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{org.name}</CardTitle>
+                      {editingOrgId === org.id ? (
+                        <div className="flex items-center gap-1.5 flex-1">
+                          <Input
+                            value={editOrgNameValue}
+                            onChange={e => setEditOrgNameValue(e.target.value)}
+                            className="h-8 text-base w-64"
+                            autoFocus
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleRenameOrg(org.id);
+                              if (e.key === 'Escape') setEditingOrgId(null);
+                            }}
+                          />
+                          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => handleRenameOrg(org.id)}>
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEditingOrgId(null)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{org.name}</CardTitle>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => { setEditingOrgId(org.id); setEditOrgNameValue(org.name); }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
