@@ -60,7 +60,9 @@ export function Settings() {
   const { signOut, user } = useAuth();
   const { isAdmin } = useIsAdmin();
   const { isOrgAdmin } = useIsOrgAdmin();
+  const { isPageAllowed } = usePagePermissions();
   const showUsersTab = isAdmin || isOrgAdmin;
+  const showStorefrontTab = isPageAllowed('settings-storefront');
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, borderColor, setBorderColor } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
