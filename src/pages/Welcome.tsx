@@ -77,6 +77,8 @@ export function Welcome() {
         position_y_pct: data.position_y_pct ?? 50,
         text_align: (data.text_align ?? 'center') as 'left' | 'center' | 'right',
         bg_dim_pct: (data as any).bg_dim_pct ?? 40,
+        video_loop: (data as any).video_loop ?? true,
+        video_muted: (data as any).video_muted ?? true,
       });
     })();
     return () => { cancelled = true; };
