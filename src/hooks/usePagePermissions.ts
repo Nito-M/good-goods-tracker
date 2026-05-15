@@ -26,20 +26,30 @@ const PAGE_KEY_TO_ROUTES: Record<string, string[]> = {
 };
 
 export function usePagePermissions() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { isOrgAdmin, loading: orgAdminLoading } = useIsOrgAdmin();
   const [allowedPages, setAllowedPages] = useState<string[] | null>(null); // null = all access
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetch = async () => {
-      if (adminLoading || orgAdminLoading) return;
+      // Always wait for auth + role checks to finish before resolving permissions.
+      // Otherwise we can briefly resolve as "all pages allowed" and let the UI
+      // render unrestricted before the real restrictions load.
+      if (authLoading || adminLoading || orgAdminLoading) {
+        setLoading(true);
+        return;
+      }
 
       if (!user) {
+        setAllowedPages(null);
         setLoading(false);
         return;
       }
+
+      setLoading(true);
 
       // Super admins bypass all permissions
       if (isAdmin) {
@@ -109,11 +119,15 @@ export function usePagePermissions() {
         if (!finalAllowed.includes('settings')) finalAllowed.push('settings');
       }
 
+      if (cancelled) return;
       setAllowedPages(finalAllowed);
       setLoading(false);
     };
     fetch();
-  }, [user, isAdmin, isOrgAdmin, adminLoading, orgAdminLoading]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isAdmin, isOrgAdmin, adminLoading, orgAdminLoading, authLoading]);
 
   const isPageAllowed = (pageKey: string): boolean => {
     if (loading) return false; // Hide everything until permissions resolve
