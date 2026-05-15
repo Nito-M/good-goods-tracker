@@ -171,9 +171,6 @@ export function Settings() {
       setQuoteThankYouNote(profile.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(profile.quoteValidityDays || null);
       setQuoteLayout(profile.quoteLayout || profile.invoiceLayout || defaultInvoiceLayout);
-      // Requester settings
-      setRequesterName(profile.requesterName || '');
-      setRequesterNames(profile.requesterNames || []);
     }
   }, [profile]);
 
