@@ -3,7 +3,7 @@ import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight,
 import { useBoards } from "@/hooks/useBoards";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useJobSidebarLinks } from "@/hooks/useJobSidebarLinks";
 import { usePagePermissions } from "@/hooks/usePagePermissions";
 
@@ -55,6 +55,7 @@ export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut } = useAuth();
   const { links, addLink } = useJobSidebarLinks();
   const { isPageAllowed } = usePagePermissions();
