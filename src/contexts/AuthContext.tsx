@@ -26,14 +26,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
+      // Don't apply remember-me sign-out on the password recovery route —
+      // doing so would destroy the recovery session from the email link.
+      const isRecoveryRoute = window.location.pathname === '/reset-password'
+        || window.location.hash.includes('type=recovery');
+
       if (session) {
-        // Check if user wanted to be remembered
-        // sessionStorage clears when browser closes, so if marker is gone but session exists,
-        // user didn't want to be remembered and browser was restarted
         const sessionMarker = sessionStorage.getItem(SESSION_ACTIVE_KEY);
         const rememberMe = localStorage.getItem('remember_me');
-        
-        if (!sessionMarker && rememberMe === 'false') {
+
+        if (!isRecoveryRoute && !sessionMarker && rememberMe === 'false') {
           // Browser was closed and user didn't want to be remembered - sign out
           await supabase.auth.signOut();
           localStorage.removeItem('remember_me');
