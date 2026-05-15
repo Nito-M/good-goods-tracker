@@ -55,6 +55,7 @@ import { toast } from 'sonner';
 import { resolveSelectedStatus, parseStatusValue } from '@/lib/boardStatusValue';
 import { getConnectCacheEntry } from '@/hooks/useBoardConnectData';
 import { indexToColumnLetters } from '@/lib/boardFormula';
+import { isFormulaPickActive, pickCellRef } from '@/lib/boardFormulaPicker';
 import { computeMergeRects, buildCellGeometryMap } from '@/lib/boardMergeGeometry';
 import { CellColorPicker } from '@/components/board/CellColorPicker';
 import { cellColorToHex, readableTextColor } from '@/lib/boardCellColors';
