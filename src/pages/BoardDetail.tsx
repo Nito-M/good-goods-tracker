@@ -1664,6 +1664,9 @@ function GroupSection({
                     'border-r border-b border-border p-0 align-top relative cursor-cell',
                     idx === 0 && !bgHex && 'sticky left-16 bg-muted z-10',
                     idx === 0 && bgHex && 'sticky left-16 z-10',
+                    row.frozen && !bgHex && 'sticky top-[52px] bg-card',
+                    row.frozen && bgHex && 'sticky top-[52px]',
+                    row.frozen && idx === 0 && 'z-20',
                     selected && 'ring-2 ring-primary ring-inset',
                     !bgHex && isMergedAnchor && 'bg-accent/30'
                   )}
