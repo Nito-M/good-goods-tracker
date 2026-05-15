@@ -137,28 +137,37 @@ export function Welcome() {
         }
       `}</style>
 
-      {s.background_video_url ? (
-        <video
-          key={`${s.background_video_url}-${s.video_loop}-${s.video_muted}`}
-          src={s.background_video_url}
-          autoPlay
-          muted={s.video_muted}
-          loop={s.video_loop}
-          playsInline
-          onEnded={(e) => {
-            setVideoEnded(true);
-            const v = e.currentTarget;
-            // Freeze on the last frame
-            try { v.pause(); } catch {}
-          }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : s.background_image_url && (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${s.background_image_url})` }}
-        />
-      )}
+      {(() => {
+        const videoUrl = (isMobile && s.background_video_url_mobile) ? s.background_video_url_mobile : s.background_video_url;
+        const imageUrl = (isMobile && s.background_image_url_mobile) ? s.background_image_url_mobile : s.background_image_url;
+        if (videoUrl) {
+          return (
+            <video
+              key={`${videoUrl}-${s.video_loop}-${s.video_muted}`}
+              src={videoUrl}
+              autoPlay
+              muted={s.video_muted}
+              loop={s.video_loop}
+              playsInline
+              onEnded={(e) => {
+                setVideoEnded(true);
+                const v = e.currentTarget;
+                try { v.pause(); } catch {}
+              }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          );
+        }
+        if (imageUrl) {
+          return (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${imageUrl})` }}
+            />
+          );
+        }
+        return null;
+      })()}
 
       <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
 
