@@ -572,10 +572,7 @@ export default function BoardDetail() {
       const raw = getCellValue(rowId, colId);
       const linked = parseItemCellValue(raw);
       if (!linked) return null;
-      const base = itemPriceLookup.get(`${linked.k}:${linked.id}`);
-      if (base == null) return null;
-      const m = typeof linked.m === 'number' && Number.isFinite(linked.m) ? linked.m : 1;
-      return base * m;
+      return itemPriceLookup.get(`${linked.k}:${linked.id}`) ?? null;
     },
     [getCellValue, itemPriceLookup]
   );
