@@ -21,6 +21,7 @@ export type Database = {
           bg_animate_with_greeting: boolean
           bg_dim_pct: number
           font_size_rem: number
+          greeting_color: string
           greeting_text: string
           id: number
           letter_stagger_ms: number
@@ -39,6 +40,7 @@ export type Database = {
           bg_animate_with_greeting?: boolean
           bg_dim_pct?: number
           font_size_rem?: number
+          greeting_color?: string
           greeting_text?: string
           id?: number
           letter_stagger_ms?: number
@@ -57,6 +59,7 @@ export type Database = {
           bg_animate_with_greeting?: boolean
           bg_dim_pct?: number
           font_size_rem?: number
+          greeting_color?: string
           greeting_text?: string
           id?: number
           letter_stagger_ms?: number

@@ -26,6 +26,7 @@ interface S {
   bg_dim_pct: number;
   video_loop: boolean;
   video_muted: boolean;
+  greeting_color: string;
 }
 
 const DEFAULTS: S = {
@@ -42,6 +43,7 @@ const DEFAULTS: S = {
   bg_dim_pct: 40,
   video_loop: true,
   video_muted: true,
+  greeting_color: '#ffffff',
 };
 
 export function WelcomeScreenSettings() {
@@ -74,6 +76,7 @@ export function WelcomeScreenSettings() {
           bg_dim_pct: (data as any).bg_dim_pct ?? 40,
           video_loop: (data as any).video_loop ?? true,
           video_muted: (data as any).video_muted ?? true,
+          greeting_color: (data as any).greeting_color ?? '#ffffff',
         });
       }
       setLoading(false);
@@ -108,6 +111,7 @@ export function WelcomeScreenSettings() {
       background_video_url: s.background_video_url,
       video_loop: s.video_loop,
       video_muted: s.video_muted,
+      greeting_color: s.greeting_color,
     } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
@@ -242,13 +246,14 @@ export function WelcomeScreenSettings() {
           )}
           <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
           <div
-            className="absolute text-white font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
+            className="absolute font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
             style={{
               left: `${s.position_x_pct}%`,
               top: `${s.position_y_pct}%`,
               transform: 'translate(-50%, -50%)',
               fontSize: `${Math.max(0.6, s.font_size_rem * 0.22)}rem`,
               textAlign: s.text_align,
+              color: s.greeting_color,
             }}
           >
             {s.greeting_text} <span className="opacity-80">Name</span>
@@ -267,6 +272,26 @@ export function WelcomeScreenSettings() {
           <p className="text-xs text-muted-foreground">
             The user's name is appended automatically.
           </p>
+        </div>
+
+        {/* Greeting color */}
+        <div className="space-y-2">
+          <Label htmlFor="welcome-color">Greeting text color</Label>
+          <div className="flex items-center gap-2">
+            <input
+              id="welcome-color"
+              type="color"
+              value={s.greeting_color}
+              onChange={(e) => update({ greeting_color: e.target.value })}
+              className="h-10 w-14 rounded border bg-transparent cursor-pointer"
+            />
+            <Input
+              value={s.greeting_color}
+              onChange={(e) => update({ greeting_color: e.target.value })}
+              placeholder="#ffffff"
+              className="w-32 font-mono"
+            />
+          </div>
         </div>
 
         {/* Background image */}

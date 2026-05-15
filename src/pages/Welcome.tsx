@@ -16,6 +16,7 @@ interface WelcomeSettings {
   bg_dim_pct: number;
   video_loop: boolean;
   video_muted: boolean;
+  greeting_color: string;
 }
 
 const DEFAULTS: WelcomeSettings = {
@@ -32,6 +33,7 @@ const DEFAULTS: WelcomeSettings = {
   bg_dim_pct: 40,
   video_loop: true,
   video_muted: true,
+  greeting_color: '#ffffff',
 };
 
 function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: number; stagger: number }) {
@@ -80,6 +82,7 @@ export function Welcome() {
         bg_dim_pct: (data as any).bg_dim_pct ?? 40,
         video_loop: (data as any).video_loop ?? true,
         video_muted: (data as any).video_muted ?? true,
+        greeting_color: (data as any).greeting_color ?? '#ffffff',
       });
     })();
     return () => { cancelled = true; };
@@ -152,13 +155,14 @@ export function Welcome() {
       <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
 
       <h1
-        className="absolute z-10 font-black text-white uppercase tracking-tighter drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] px-6"
+        className="absolute z-10 font-black uppercase tracking-tighter drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] px-6"
         style={{
           left: `${s.position_x_pct}%`,
           top: `${s.position_y_pct}%`,
           transform: 'translate(-50%, -50%)',
           fontSize: `clamp(2rem, ${s.font_size_rem}vw, ${s.font_size_rem}rem)`,
           textAlign: s.text_align,
+          color: s.greeting_color,
           fontFamily: "'Inter', system-ui, sans-serif",
           display: 'flex',
           flexWrap: 'wrap',
