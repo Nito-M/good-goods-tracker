@@ -1677,7 +1677,7 @@ function GroupSection({
                       isFormulaPickActive() &&
                       !target.closest('input, textarea, select')
                     ) {
-                      const cIdx = visibleColumnIds.indexOf(col.id);
+                      const cIdx = idx;
                       const rIdx = renderedRowIds.indexOf(row.id);
                       if (cIdx >= 0 && rIdx >= 0) {
                         const ref = `${indexToColumnLetters(cIdx)}${rIdx + 1}`;
