@@ -2477,10 +2477,40 @@ export type Database = {
           },
         ]
       }
+      organization_page_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          page_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          page_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          page_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_page_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
           id: string
+          max_users: number
           name: string
           requester_names: string[] | null
           slug: string | null
@@ -2490,6 +2520,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          max_users?: number
           name: string
           requester_names?: string[] | null
           slug?: string | null
@@ -2499,6 +2530,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          max_users?: number
           name?: string
           requester_names?: string[] | null
           slug?: string | null
