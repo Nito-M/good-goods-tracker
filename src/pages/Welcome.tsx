@@ -140,11 +140,11 @@ export function Welcome() {
             // Freeze on the last frame
             try { v.pause(); } catch {}
           }}
-          className={`absolute inset-0 w-full h-full object-cover ${bgAnimating && !videoEnded ? 'welcome-bg-zoom' : ''}`}
+          className="absolute inset-0 w-full h-full object-cover"
         />
       ) : s.background_image_url && (
         <div
-          className={`absolute inset-0 bg-cover bg-center ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
+          className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${s.background_image_url})` }}
         />
       )}
