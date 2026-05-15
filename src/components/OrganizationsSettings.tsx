@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Building2, UserPlus, Pencil, Check, X } from 'lucide-react';
+import { Plus, Trash2, Building2, UserPlus, Pencil, Check, X, Users, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -24,6 +26,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+
+const ORG_PAGE_KEYS = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'items', label: 'Items' },
+  { key: 'sales', label: 'Sales' },
+  { key: 'quotes', label: 'Quotes' },
+  { key: 'sales-orders', label: 'Sales Orders' },
+  { key: 'purchase-orders', label: 'Purchase Orders' },
+  { key: 'requests', label: 'Requests' },
+  { key: 'calendar', label: 'Calendar' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'boards', label: 'Boards' },
+  { key: 'bank', label: 'Bank' },
+  { key: 'jobs', label: 'Jobs' },
+  { key: 'assemblies', label: 'Assemblies' },
+  { key: 'assets', label: 'Business Info' },
+  { key: 'parts', label: 'Parts Library' },
+  { key: 'tax-documents', label: 'Tax Documents' },
+  { key: 'trailer-config', label: 'Trailer Configurator' },
+];
 
 interface Organization {
   id: string;
