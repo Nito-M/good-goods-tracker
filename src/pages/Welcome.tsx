@@ -12,6 +12,7 @@ interface WelcomeSettings {
   position_x_pct: number;
   position_y_pct: number;
   text_align: 'left' | 'center' | 'right';
+  bg_dim_pct: number;
 }
 
 const DEFAULTS: WelcomeSettings = {
