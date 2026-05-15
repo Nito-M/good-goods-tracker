@@ -65,6 +65,7 @@ interface OrgMember {
 
 export function OrganizationsSettings() {
   const { user } = useAuth();
+  const { isAdmin: isSuperAdmin } = useIsAdmin();
   const { toast } = useToast();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
