@@ -27,6 +27,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [orgName, setOrgName] = useState<string | null>(null);
   const [shops, setShops] = useState<OrgShop[]>([]);
 
