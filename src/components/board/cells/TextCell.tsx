@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AlignLeft, AlignCenter, AlignRight, RotateCcw, Sigma } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isFormula, evaluateFormula, formatFormulaResult, FormulaContext } from '@/lib/boardFormula';
+import { setActiveFormulaEditor } from '@/lib/boardFormulaPicker';
 
 interface TextCellProps {
   value: string;
