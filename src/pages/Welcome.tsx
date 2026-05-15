@@ -4,6 +4,7 @@ import { useProfile } from '@/hooks/useProfile';
 
 interface WelcomeSettings {
   background_image_url: string | null;
+  background_video_url: string | null;
   greeting_text: string;
   start_delay_ms: number;
   letter_stagger_ms: number;
@@ -17,6 +18,7 @@ interface WelcomeSettings {
 
 const DEFAULTS: WelcomeSettings = {
   background_image_url: null,
+  background_video_url: null,
   greeting_text: 'Welcome',
   start_delay_ms: 500,
   letter_stagger_ms: 50,
@@ -61,6 +63,7 @@ export function Welcome() {
       if (cancelled || !data) return;
       setS({
         background_image_url: data.background_image_url,
+        background_video_url: (data as any).background_video_url ?? null,
         greeting_text: data.greeting_text || 'Welcome',
         start_delay_ms: data.start_delay_ms ?? 500,
         letter_stagger_ms: data.letter_stagger_ms ?? 50,
@@ -116,7 +119,14 @@ export function Welcome() {
         }
       `}</style>
 
-      {s.background_image_url && (
+      {s.background_video_url ? (
+        <video
+          key={s.background_video_url}
+          src={s.background_video_url}
+          autoPlay muted loop playsInline
+          className={`absolute inset-0 w-full h-full object-cover ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
+        />
+      ) : s.background_image_url && (
         <div
           className={`absolute inset-0 bg-cover bg-center ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
           style={{ backgroundImage: `url(${s.background_image_url})` }}

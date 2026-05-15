@@ -8,12 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Image as ImageIcon, Loader2, Trash2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Trash2, AlignLeft, AlignCenter, AlignRight, Video } from 'lucide-react';
 
 type Align = 'left' | 'center' | 'right';
 
 interface S {
   background_image_url: string | null;
+  background_video_url: string | null;
   greeting_text: string;
   start_delay_ms: number;
   letter_stagger_ms: number;
@@ -27,6 +28,7 @@ interface S {
 
 const DEFAULTS: S = {
   background_image_url: null,
+  background_video_url: null,
   greeting_text: 'Welcome',
   start_delay_ms: 500,
   letter_stagger_ms: 50,
@@ -56,6 +58,7 @@ export function WelcomeScreenSettings() {
       if (data) {
         setS({
           background_image_url: data.background_image_url,
+          background_video_url: (data as any).background_video_url ?? null,
           greeting_text: data.greeting_text || 'Welcome',
           start_delay_ms: data.start_delay_ms ?? 500,
           letter_stagger_ms: data.letter_stagger_ms ?? 50,
@@ -96,6 +99,7 @@ export function WelcomeScreenSettings() {
       position_y_pct: s.position_y_pct,
       text_align: s.text_align,
       bg_dim_pct: s.bg_dim_pct,
+      background_video_url: s.background_video_url,
     } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
@@ -134,6 +138,58 @@ export function WelcomeScreenSettings() {
     }
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: 'Video too large', description: 'Max 50MB. Keep clips short (~10s).', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+    setUploading(true);
+    // Probe duration client-side
+    const dur = await new Promise<number>((resolve) => {
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      v.onloadedmetadata = () => resolve(v.duration || 0);
+      v.onerror = () => resolve(0);
+      v.src = URL.createObjectURL(file);
+    });
+    if (dur > 12) {
+      toast({ title: 'Video too long', description: `Max ~10 seconds (got ${dur.toFixed(1)}s).`, variant: 'destructive' });
+      setUploading(false);
+      e.target.value = '';
+      return;
+    }
+    const ext = file.name.split('.').pop() || 'mp4';
+    const path = `vid-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from('welcome-images')
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' });
+      setUploading(false);
+      return;
+    }
+    const { data: pub } = supabase.storage.from('welcome-images').getPublicUrl(path);
+    const url = pub.publicUrl;
+    const ok = await persist({ background_video_url: url } as any);
+    if (ok) {
+      update({ background_video_url: url });
+      toast({ title: 'Background video updated' });
+    }
+    setUploading(false);
+    e.target.value = '';
+  };
+
+  const handleRemoveVideo = async () => {
+    const ok = await persist({ background_video_url: null } as any);
+    if (ok) {
+      update({ background_video_url: null });
+      toast({ title: 'Background video removed' });
+    }
+  };
+
   if (loading) return null;
 
   const alignBtn = (val: Align, Icon: typeof AlignLeft) => (
@@ -164,11 +220,18 @@ export function WelcomeScreenSettings() {
         <div
           className="relative w-full h-56 rounded-lg overflow-hidden border bg-black"
           style={
-            s.background_image_url
+            !s.background_video_url && s.background_image_url
               ? { backgroundImage: `url(${s.background_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
               : undefined
           }
         >
+          {s.background_video_url && (
+            <video
+              src={s.background_video_url}
+              autoPlay muted loop playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
           <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
           <div
             className="absolute text-white font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
@@ -180,7 +243,7 @@ export function WelcomeScreenSettings() {
               textAlign: s.text_align,
             }}
           >
-            {s.greeting_text} {/* preview name placeholder */}<span className="opacity-80">Name</span>
+            {s.greeting_text} <span className="opacity-80">Name</span>
           </div>
         </div>
 
@@ -216,7 +279,22 @@ export function WelcomeScreenSettings() {
           )}
         </div>
 
-        {/* Timing */}
+        {/* Background video */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><Video className="h-4 w-4" /> Background video (max ~10s)</Label>
+          <div className="flex items-center gap-2">
+            <Input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoUpload} disabled={uploading} className="flex-1" />
+            {s.background_video_url && (
+              <Button variant="outline" size="icon" onClick={handleRemoveVideo} title="Remove video">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            When set, the video plays muted on loop and replaces the background image.
+          </p>
+        </div>
+
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between">
