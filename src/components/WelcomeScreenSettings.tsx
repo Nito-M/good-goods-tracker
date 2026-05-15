@@ -250,6 +250,17 @@ export function WelcomeScreenSettings() {
               onCheckedChange={(v) => update({ bg_animate_with_greeting: v })}
             />
           </div>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <Label>Background dim</Label>
+              <span className="text-xs text-muted-foreground">{s.bg_dim_pct}%</span>
+            </div>
+            <Slider
+              min={0} max={100} step={1}
+              value={[s.bg_dim_pct]}
+              onValueChange={([v]) => update({ bg_dim_pct: v })}
+            />
+          </div>
         </div>
 
         {/* Size */}
