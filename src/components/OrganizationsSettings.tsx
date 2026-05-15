@@ -64,6 +64,8 @@ export function OrganizationsSettings() {
   // Inline name editing
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editNameValue, setEditNameValue] = useState('');
+  const [editingOrgId, setEditingOrgId] = useState<string | null>(null);
+  const [editOrgNameValue, setEditOrgNameValue] = useState('');
 
   // Members per org
   const [orgMembers, setOrgMembers] = useState<Record<string, OrgMember[]>>({});
