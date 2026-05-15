@@ -35,6 +35,7 @@ const DEFAULTS: S = {
   position_x_pct: 50,
   position_y_pct: 50,
   text_align: 'center',
+  bg_dim_pct: 40,
 };
 
 export function WelcomeScreenSettings() {
