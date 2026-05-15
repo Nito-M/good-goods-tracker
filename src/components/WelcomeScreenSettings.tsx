@@ -34,6 +34,8 @@ interface S {
 const DEFAULTS: S = {
   background_image_url: null,
   background_video_url: null,
+  background_image_url_mobile: null,
+  background_video_url_mobile: null,
   greeting_text: 'Welcome',
   start_delay_ms: 500,
   letter_stagger_ms: 50,
