@@ -41,14 +41,21 @@ export function usePagePermissions() {
         return;
       }
 
-      // Admins and org admins bypass permissions
-      if (isAdmin || isOrgAdmin) {
+      // Super admins bypass all permissions
+      if (isAdmin) {
         setAllowedPages(null);
         setLoading(false);
         return;
       }
 
-      const [{ data }, { data: workerGrants }] = await Promise.all([
+      // Get the user's organizations to look up org-level page restrictions
+      const { data: memberships } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id);
+      const orgIds = (memberships || []).map(m => m.organization_id);
+
+      const [{ data: userPerms }, { data: workerGrants }, orgPermsRes] = await Promise.all([
         supabase
           .from('user_page_permissions')
           .select('page_key')
@@ -58,19 +65,51 @@ export function usePagePermissions() {
           .select('worker_id')
           .eq('user_id', user.id)
           .limit(1),
+        orgIds.length > 0
+          ? supabase
+              .from('organization_page_permissions')
+              .select('organization_id, page_key')
+              .in('organization_id', orgIds)
+          : Promise.resolve({ data: [] as { organization_id: string; page_key: string }[] }),
       ]);
 
-      if (!data || data.length === 0) {
-        // No permission rows = all access
-        setAllowedPages(null);
-      } else {
-        const keys = data.map(d => d.page_key);
-        // If user has any per-worker access grants, also allow Business Info page
-        if (workerGrants && workerGrants.length > 0 && !keys.includes('assets')) {
-          keys.push('assets');
-        }
-        setAllowedPages(keys);
+      // Compute the org-allowed page set: union across all the user's orgs.
+      // An org with NO rows = unrestricted (don't constrain via that org).
+      const orgPerms = (orgPermsRes.data || []) as { organization_id: string; page_key: string }[];
+      const orgsWithRestrictions = new Set(orgPerms.map(p => p.organization_id));
+      const hasUnrestrictedOrg = orgIds.some(id => !orgsWithRestrictions.has(id));
+      let orgAllowed: string[] | null = null; // null = unrestricted
+      if (!hasUnrestrictedOrg && orgsWithRestrictions.size > 0) {
+        orgAllowed = Array.from(new Set(orgPerms.map(p => p.page_key)));
+        // Settings always accessible
+        if (!orgAllowed.includes('settings')) orgAllowed.push('settings');
       }
+
+      // Org admins bypass per-user permissions but still respect org-level restrictions
+      let userAllowed: string[] | null;
+      if (isOrgAdmin || !userPerms || userPerms.length === 0) {
+        userAllowed = null;
+      } else {
+        userAllowed = userPerms.map(d => d.page_key);
+        if (workerGrants && workerGrants.length > 0 && !userAllowed.includes('assets')) {
+          userAllowed.push('assets');
+        }
+      }
+
+      // Intersect user-level and org-level restrictions
+      let finalAllowed: string[] | null;
+      if (userAllowed === null && orgAllowed === null) {
+        finalAllowed = null;
+      } else if (userAllowed === null) {
+        finalAllowed = orgAllowed;
+      } else if (orgAllowed === null) {
+        finalAllowed = userAllowed;
+      } else {
+        finalAllowed = userAllowed.filter(k => orgAllowed!.includes(k));
+        if (!finalAllowed.includes('settings')) finalAllowed.push('settings');
+      }
+
+      setAllowedPages(finalAllowed);
       setLoading(false);
     };
     fetch();

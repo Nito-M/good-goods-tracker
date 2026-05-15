@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Building2, UserPlus, Pencil, Check, X } from 'lucide-react';
+import { Plus, Trash2, Building2, UserPlus, Pencil, Check, X, Users, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -25,10 +27,31 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+const ORG_PAGE_KEYS = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'items', label: 'Items' },
+  { key: 'sales', label: 'Sales' },
+  { key: 'quotes', label: 'Quotes' },
+  { key: 'sales-orders', label: 'Sales Orders' },
+  { key: 'purchase-orders', label: 'Purchase Orders' },
+  { key: 'requests', label: 'Requests' },
+  { key: 'calendar', label: 'Calendar' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'boards', label: 'Boards' },
+  { key: 'bank', label: 'Bank' },
+  { key: 'jobs', label: 'Jobs' },
+  { key: 'assemblies', label: 'Assemblies' },
+  { key: 'assets', label: 'Business Info' },
+  { key: 'parts', label: 'Parts Library' },
+  { key: 'tax-documents', label: 'Tax Documents' },
+  { key: 'trailer-config', label: 'Trailer Configurator' },
+];
+
 interface Organization {
   id: string;
   name: string;
   created_at: string;
+  max_users: number;
 }
 
 interface OrgMember {
@@ -42,6 +65,7 @@ interface OrgMember {
 
 export function OrganizationsSettings() {
   const { user } = useAuth();
+  const { isAdmin: isSuperAdmin } = useIsAdmin();
   const { toast } = useToast();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +93,12 @@ export function OrganizationsSettings() {
 
   // Members per org
   const [orgMembers, setOrgMembers] = useState<Record<string, OrgMember[]>>({});
+
+  // Page permissions per org (org_id -> Set of allowed page_keys; empty Set = all allowed)
+  const [orgPagePerms, setOrgPagePerms] = useState<Record<string, string[]>>({});
+  const [editingMaxOrgId, setEditingMaxOrgId] = useState<string | null>(null);
+  const [editMaxValue, setEditMaxValue] = useState<string>('');
+  const [savingPermsOrgId, setSavingPermsOrgId] = useState<string | null>(null);
 
   const fetchOrganizations = async () => {
     const { data, error } = await supabase
@@ -124,6 +154,20 @@ export function OrganizationsSettings() {
         }
       }
       setOrgMembers(membersMap);
+
+      // Fetch all org page permissions in one query
+      const orgIds = data.map(o => o.id);
+      const { data: permRows } = await supabase
+        .from('organization_page_permissions')
+        .select('organization_id, page_key')
+        .in('organization_id', orgIds);
+      const permsMap: Record<string, string[]> = {};
+      orgIds.forEach(id => { permsMap[id] = []; });
+      (permRows || []).forEach(r => {
+        if (!permsMap[r.organization_id]) permsMap[r.organization_id] = [];
+        permsMap[r.organization_id].push(r.page_key);
+      });
+      setOrgPagePerms(permsMap);
     }
     setLoading(false);
   };
@@ -325,6 +369,88 @@ export function OrganizationsSettings() {
     }
   };
 
+  const handleSaveMaxUsers = async (orgId: string) => {
+    const n = parseInt(editMaxValue, 10);
+    if (!Number.isFinite(n) || n < 1) {
+      toast({ title: 'Invalid number', description: 'Enter a number of at least 1.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ max_users: n })
+        .eq('id', orgId);
+      if (error) throw error;
+      toast({ title: 'User limit updated' });
+      setEditingMaxOrgId(null);
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error updating max users:', error);
+      toast({ title: 'Error', description: 'Failed to update user limit.', variant: 'destructive' });
+    }
+  };
+
+  const handleToggleOrgPagePermission = async (orgId: string, pageKey: string, allowed: boolean) => {
+    setSavingPermsOrgId(orgId);
+    try {
+      const current = orgPagePerms[orgId] || [];
+      const isCurrentlyRestricted = current.length > 0;
+
+      if (allowed) {
+        // If unrestricted, switching from "all" to "checked subset" means we must seed all OTHER pages first as restrictions removed = all the ones we want kept.
+        // Simpler model: we treat presence of any rows as "only these are allowed". So flipping ON when unrestricted = no-op (still allowed).
+        if (!isCurrentlyRestricted) {
+          setSavingPermsOrgId(null);
+          return;
+        }
+        const { error } = await supabase
+          .from('organization_page_permissions')
+          .insert({ organization_id: orgId, page_key: pageKey });
+        if (error) throw error;
+      } else {
+        if (!isCurrentlyRestricted) {
+          // Need to seed: insert all pages EXCEPT the one being unchecked
+          const rows = ORG_PAGE_KEYS
+            .filter(p => p.key !== pageKey)
+            .map(p => ({ organization_id: orgId, page_key: p.key }));
+          const { error } = await supabase
+            .from('organization_page_permissions')
+            .insert(rows);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('organization_page_permissions')
+            .delete()
+            .eq('organization_id', orgId)
+            .eq('page_key', pageKey);
+          if (error) throw error;
+        }
+      }
+
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error updating org page permission:', error);
+      toast({ title: 'Error', description: 'Failed to update page access.', variant: 'destructive' });
+    } finally {
+      setSavingPermsOrgId(null);
+    }
+  };
+
+  const handleResetOrgPagePermissions = async (orgId: string) => {
+    try {
+      const { error } = await supabase
+        .from('organization_page_permissions')
+        .delete()
+        .eq('organization_id', orgId);
+      if (error) throw error;
+      toast({ title: 'Page access reset', description: 'Organization now has access to all pages.' });
+      await fetchOrganizations();
+    } catch (error: any) {
+      console.error('Error resetting org page permissions:', error);
+      toast({ title: 'Error', description: 'Failed to reset page access.', variant: 'destructive' });
+    }
+  };
+
   if (loading) {
     return <div className="text-muted-foreground py-8 text-center">Loading organizations...</div>;
   }
@@ -394,6 +520,8 @@ export function OrganizationsSettings() {
                           size="sm"
                           onClick={() => openAddAdminDialog(org.id)}
                           className="gap-1"
+                          disabled={(orgMembers[org.id]?.length || 0) >= org.max_users && !isSuperAdmin}
+                          title={(orgMembers[org.id]?.length || 0) >= org.max_users ? `User limit (${org.max_users}) reached` : undefined}
                         >
                           <UserPlus className="h-4 w-4" />
                           Add Admin
@@ -408,6 +536,53 @@ export function OrganizationsSettings() {
                         </Button>
                       </div>
                     </div>
+
+                    {/* Restrictions row: user limit + members count */}
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted">
+                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Users:</span>
+                        <span className="font-medium">{orgMembers[org.id]?.length || 0}</span>
+                        <span className="text-muted-foreground">/</span>
+                        {editingMaxOrgId === org.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              min={1}
+                              value={editMaxValue}
+                              onChange={e => setEditMaxValue(e.target.value)}
+                              className="h-6 w-16 text-sm"
+                              autoFocus
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleSaveMaxUsers(org.id);
+                                if (e.key === 'Escape') setEditingMaxOrgId(null);
+                              }}
+                            />
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleSaveMaxUsers(org.id)}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingMaxOrgId(null)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="font-medium">{org.max_users}</span>
+                            {isSuperAdmin && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-5 w-5"
+                                onClick={() => { setEditingMaxOrgId(org.id); setEditMaxValue(String(org.max_users)); }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
                   </CardHeader>
                   <CardContent>
                     {(orgMembers[org.id] || []).length === 0 ? (
@@ -471,6 +646,47 @@ export function OrganizationsSettings() {
                             </Button>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {isSuperAdmin && (
+                      <div className="mt-4 pt-4 border-t">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-muted-foreground" />
+                            <p className="text-sm font-medium">Page Access</p>
+                            <span className="text-xs text-muted-foreground">
+                              {(orgPagePerms[org.id]?.length || 0) === 0
+                                ? '(All pages allowed)'
+                                : `(${orgPagePerms[org.id].length} of ${ORG_PAGE_KEYS.length} allowed)`}
+                            </span>
+                          </div>
+                          {(orgPagePerms[org.id]?.length || 0) > 0 && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleResetOrgPagePermissions(org.id)}
+                            >
+                              Allow all
+                            </Button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {ORG_PAGE_KEYS.map(page => {
+                            const restricted = (orgPagePerms[org.id]?.length || 0) > 0;
+                            const checked = !restricted || orgPagePerms[org.id].includes(page.key);
+                            return (
+                              <label key={page.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                                <Checkbox
+                                  checked={checked}
+                                  disabled={savingPermsOrgId === org.id}
+                                  onCheckedChange={(v) => handleToggleOrgPagePermission(org.id, page.key, !!v)}
+                                />
+                                <span>{page.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </CardContent>
