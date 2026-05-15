@@ -58,6 +58,7 @@ export function WelcomeScreenSettings() {
       if (data) {
         setS({
           background_image_url: data.background_image_url,
+          background_video_url: (data as any).background_video_url ?? null,
           greeting_text: data.greeting_text || 'Welcome',
           start_delay_ms: data.start_delay_ms ?? 500,
           letter_stagger_ms: data.letter_stagger_ms ?? 50,
