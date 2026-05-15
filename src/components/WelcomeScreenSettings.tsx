@@ -28,6 +28,7 @@ interface S {
 
 const DEFAULTS: S = {
   background_image_url: null,
+  background_video_url: null,
   greeting_text: 'Welcome',
   start_delay_ms: 500,
   letter_stagger_ms: 50,
