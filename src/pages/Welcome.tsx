@@ -14,6 +14,8 @@ interface WelcomeSettings {
   position_y_pct: number;
   text_align: 'left' | 'center' | 'right';
   bg_dim_pct: number;
+  video_loop: boolean;
+  video_muted: boolean;
 }
 
 const DEFAULTS: WelcomeSettings = {
@@ -28,6 +30,8 @@ const DEFAULTS: WelcomeSettings = {
   position_y_pct: 50,
   text_align: 'center',
   bg_dim_pct: 40,
+  video_loop: true,
+  video_muted: true,
 };
 
 function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: number; stagger: number }) {
