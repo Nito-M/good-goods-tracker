@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Mail, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2, Plus, User as UserIcon, Phone } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Mail, MapPin, Calendar, DollarSign, Briefcase, Users, FileText, Image as ImageIcon, Download, Upload, Globe, Eye, EyeOff, Copy, Building2, Plus, User as UserIcon, Phone, KeyRound } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +43,30 @@ export function WorkerDetail() {
   const [vPassword, setVPassword] = useState('');
   const [vLink, setVLink] = useState('');
   const [vNotes, setVNotes] = useState('');
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const handleSendPasswordReset = async () => {
+    if (!worker?.email) {
+      toast({ title: 'No email on file', description: 'Add an email address to this profile first.', variant: 'destructive' });
+      return;
+    }
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(worker.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({
+        title: 'Password reset email sent',
+        description: `If an account exists for ${worker.email}, a reset link has been sent.`,
+      });
+    } catch (err) {
+      console.error('Password reset error:', err);
+      toast({ title: 'Reset failed', description: 'Unable to send reset email. Please try again.', variant: 'destructive' });
+    } finally {
+      setSendingReset(false);
+    }
+  };
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -115,6 +140,27 @@ export function WorkerDetail() {
               <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
                 <Pencil className="h-4 w-4 mr-1" /> Edit
               </Button>
+              {worker.email && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" disabled={sendingReset}>
+                      <KeyRound className="h-4 w-4 mr-1" /> {sendingReset ? 'Sending…' : 'Change Password'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Send password reset email?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        A password reset link will be emailed to <strong>{worker.email}</strong>. They can use it to set a new password.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSendPasswordReset}>Send reset email</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="destructive"><Trash2 className="h-4 w-4" /></Button>
