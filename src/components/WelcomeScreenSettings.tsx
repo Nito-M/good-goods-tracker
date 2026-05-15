@@ -299,8 +299,22 @@ export function WelcomeScreenSettings() {
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            When set, the video plays muted on loop and replaces the background image.
+            When set, the video replaces the background image.
           </p>
+          <div className="flex items-center justify-between rounded-md border p-3 mt-2">
+            <div>
+              <Label>Loop video</Label>
+              <p className="text-xs text-muted-foreground">Off = play once and stop on the last frame.</p>
+            </div>
+            <Switch checked={s.video_loop} onCheckedChange={(v) => update({ video_loop: v })} />
+          </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <Label>Play with sound</Label>
+              <p className="text-xs text-muted-foreground">Browsers may block autoplay with sound until the user interacts.</p>
+            </div>
+            <Switch checked={!s.video_muted} onCheckedChange={(v) => update({ video_muted: !v })} />
+          </div>
         </div>
 
         <div className="space-y-4">
