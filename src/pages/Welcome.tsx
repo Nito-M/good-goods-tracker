@@ -60,6 +60,7 @@ function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: n
 
 export function Welcome() {
   const { profile } = useProfile();
+  const isMobile = useIsMobile();
   const [s, setS] = useState<WelcomeSettings>(DEFAULTS);
   const [bgAnimating, setBgAnimating] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
