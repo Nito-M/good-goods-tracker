@@ -154,10 +154,6 @@ export function Settings() {
   const [quoteValidityDays, setQuoteValidityDays] = useState<number | null>(null);
   const [quoteLayout, setQuoteLayout] = useState<InvoiceLayout>(defaultInvoiceLayout);
 
-  // Requester settings state
-  const [requesterName, setRequesterName] = useState('');
-  const [requesterNames, setRequesterNames] = useState<string[]>([]);
-  const [newRequesterName, setNewRequesterName] = useState('');
   // Load profile data into form
   useEffect(() => {
     if (profile) {
@@ -175,9 +171,6 @@ export function Settings() {
       setQuoteThankYouNote(profile.quoteThankYouNote || 'Thank you for considering our services!');
       setQuoteValidityDays(profile.quoteValidityDays || null);
       setQuoteLayout(profile.quoteLayout || profile.invoiceLayout || defaultInvoiceLayout);
-      // Requester settings
-      setRequesterName(profile.requesterName || '');
-      setRequesterNames(profile.requesterNames || []);
     }
   }, [profile]);
 
@@ -739,70 +732,6 @@ export function Settings() {
               </CardContent>
             </Card>
 
-            {/* Requests Settings */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Requesters
-                </CardTitle>
-                <CardDescription>Manage the list of people who can be selected as requesters</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Add new requester */}
-                <form onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!newRequesterName.trim()) return;
-                  const updated = [...requesterNames, newRequesterName.trim()];
-                  const success = await updateProfile({ requesterNames: updated });
-                  if (success) {
-                    setRequesterNames(updated);
-                    setNewRequesterName('');
-                  }
-                }} className="flex gap-2">
-                  <Input
-                    placeholder="Enter requester name"
-                    value={newRequesterName}
-                    onChange={(e) => setNewRequesterName(e.target.value)}
-                  />
-                  <Button type="submit" disabled={!newRequesterName.trim()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
-                </form>
-
-                {/* List of requesters */}
-                {requesterNames.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">
-                    No requesters added yet. Add names above to allow selection when creating requests.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {requesterNames.map((name, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                      >
-                        <span className="font-medium">{name}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={async () => {
-                            const updated = requesterNames.filter((_, i) => i !== index);
-                            const success = await updateProfile({ requesterNames: updated });
-                            if (success) {
-                              setRequesterNames(updated);
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Vendors Tab */}
