@@ -99,6 +99,7 @@ export function WelcomeScreenSettings() {
       position_y_pct: s.position_y_pct,
       text_align: s.text_align,
       bg_dim_pct: s.bg_dim_pct,
+      background_video_url: s.background_video_url,
     } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
