@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           background_image_url: string | null
           bg_animate_with_greeting: boolean
+          bg_dim_pct: number
           font_size_rem: number
           greeting_text: string
           id: number
@@ -32,6 +33,7 @@ export type Database = {
         Insert: {
           background_image_url?: string | null
           bg_animate_with_greeting?: boolean
+          bg_dim_pct?: number
           font_size_rem?: number
           greeting_text?: string
           id?: number
@@ -46,6 +48,7 @@ export type Database = {
         Update: {
           background_image_url?: string | null
           bg_animate_with_greeting?: boolean
+          bg_dim_pct?: number
           font_size_rem?: number
           greeting_text?: string
           id?: number
