@@ -127,9 +127,12 @@ export function Welcome() {
 
       {s.background_video_url ? (
         <video
-          key={s.background_video_url}
+          key={`${s.background_video_url}-${s.video_loop}-${s.video_muted}`}
           src={s.background_video_url}
-          autoPlay muted loop playsInline
+          autoPlay
+          muted={s.video_muted}
+          loop={s.video_loop}
+          playsInline
           className={`absolute inset-0 w-full h-full object-cover ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
         />
       ) : s.background_image_url && (
