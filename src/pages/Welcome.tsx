@@ -12,6 +12,7 @@ interface WelcomeSettings {
   position_x_pct: number;
   position_y_pct: number;
   text_align: 'left' | 'center' | 'right';
+  bg_dim_pct: number;
 }
 
 const DEFAULTS: WelcomeSettings = {
@@ -24,6 +25,7 @@ const DEFAULTS: WelcomeSettings = {
   position_x_pct: 50,
   position_y_pct: 50,
   text_align: 'center',
+  bg_dim_pct: 40,
 };
 
 function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: number; stagger: number }) {
@@ -67,6 +69,7 @@ export function Welcome() {
         position_x_pct: data.position_x_pct ?? 50,
         position_y_pct: data.position_y_pct ?? 50,
         text_align: (data.text_align ?? 'center') as 'left' | 'center' | 'right',
+        bg_dim_pct: (data as any).bg_dim_pct ?? 40,
       });
     })();
     return () => { cancelled = true; };
@@ -120,7 +123,7 @@ export function Welcome() {
         />
       )}
 
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
 
       <h1
         className="absolute z-10 font-black text-white uppercase tracking-tighter drop-shadow-[0_20px_30px_rgba(0,0,0,0.8)] px-6"

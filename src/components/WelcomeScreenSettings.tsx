@@ -22,6 +22,7 @@ interface S {
   position_x_pct: number;
   position_y_pct: number;
   text_align: Align;
+  bg_dim_pct: number;
 }
 
 const DEFAULTS: S = {
@@ -34,6 +35,7 @@ const DEFAULTS: S = {
   position_x_pct: 50,
   position_y_pct: 50,
   text_align: 'center',
+  bg_dim_pct: 40,
 };
 
 export function WelcomeScreenSettings() {
@@ -62,6 +64,7 @@ export function WelcomeScreenSettings() {
           position_x_pct: data.position_x_pct ?? 50,
           position_y_pct: data.position_y_pct ?? 50,
           text_align: (data.text_align ?? 'center') as Align,
+          bg_dim_pct: (data as any).bg_dim_pct ?? 40,
         });
       }
       setLoading(false);
@@ -92,7 +95,8 @@ export function WelcomeScreenSettings() {
       position_x_pct: s.position_x_pct,
       position_y_pct: s.position_y_pct,
       text_align: s.text_align,
-    });
+      bg_dim_pct: s.bg_dim_pct,
+    } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
   };
@@ -165,7 +169,7 @@ export function WelcomeScreenSettings() {
               : undefined
           }
         >
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
           <div
             className="absolute text-white font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
             style={{
@@ -244,6 +248,17 @@ export function WelcomeScreenSettings() {
             <Switch
               checked={s.bg_animate_with_greeting}
               onCheckedChange={(v) => update({ bg_animate_with_greeting: v })}
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <Label>Background dim</Label>
+              <span className="text-xs text-muted-foreground">{s.bg_dim_pct}%</span>
+            </div>
+            <Slider
+              min={0} max={100} step={1}
+              value={[s.bg_dim_pct]}
+              onValueChange={([v]) => update({ bg_dim_pct: v })}
             />
           </div>
         </div>
