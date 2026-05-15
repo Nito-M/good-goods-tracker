@@ -220,11 +220,18 @@ export function WelcomeScreenSettings() {
         <div
           className="relative w-full h-56 rounded-lg overflow-hidden border bg-black"
           style={
-            s.background_image_url
+            !s.background_video_url && s.background_image_url
               ? { backgroundImage: `url(${s.background_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
               : undefined
           }
         >
+          {s.background_video_url && (
+            <video
+              src={s.background_video_url}
+              autoPlay muted loop playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
           <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
           <div
             className="absolute text-white font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
@@ -236,7 +243,7 @@ export function WelcomeScreenSettings() {
               textAlign: s.text_align,
             }}
           >
-            {s.greeting_text} {/* preview name placeholder */}<span className="opacity-80">Name</span>
+            {s.greeting_text} <span className="opacity-80">Name</span>
           </div>
         </div>
 
