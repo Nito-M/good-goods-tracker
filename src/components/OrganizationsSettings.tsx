@@ -45,6 +45,7 @@ const ORG_PAGE_KEYS = [
   { key: 'parts', label: 'Parts Library' },
   { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'trailer-config', label: 'Trailer Configurator' },
+  { key: 'settings-storefront', label: 'Settings → Storefront' },
 ];
 
 interface Organization {
