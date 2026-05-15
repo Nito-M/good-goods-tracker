@@ -3,6 +3,7 @@ import { ArrowLeft, Plus, Trash2, Building2, Tags, Tag, LogOut, Sun, Moon, Monit
 import { Switch } from '@/components/ui/switch';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsOrgAdmin } from '@/hooks/useIsOrgAdmin';
+import { usePagePermissions } from '@/hooks/usePagePermissions';
 import { OrganizationsSettings } from '@/components/OrganizationsSettings';
 import { UsersSettings } from '@/components/UsersSettings';
 import { TagsSettings } from '@/components/TagsSettings';
