@@ -119,7 +119,14 @@ export function Welcome() {
         }
       `}</style>
 
-      {s.background_image_url && (
+      {s.background_video_url ? (
+        <video
+          key={s.background_video_url}
+          src={s.background_video_url}
+          autoPlay muted loop playsInline
+          className={`absolute inset-0 w-full h-full object-cover ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
+        />
+      ) : s.background_image_url && (
         <div
           className={`absolute inset-0 bg-cover bg-center ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
           style={{ backgroundImage: `url(${s.background_image_url})` }}
