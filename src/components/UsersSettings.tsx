@@ -288,6 +288,26 @@ export function UsersSettings() {
         if (permError) throw permError;
       }
 
+      // Auto-create a Staff Directory (workers) entry for this user, if one doesn't already exist
+      try {
+        const { data: existingWorker } = await supabase
+          .from('workers')
+          .select('id')
+          .eq('email', newUserEmail.trim())
+          .maybeSingle();
+
+        if (!existingWorker) {
+          await supabase.from('workers').insert({
+            user_id: user!.id,
+            name: newUserName.trim(),
+            email: newUserEmail.trim(),
+            status: 'active',
+          });
+        }
+      } catch (workerErr) {
+        console.error('Error creating staff directory entry:', workerErr);
+      }
+
       toast({ title: 'User added', description: `${newUserName.trim()} has been added.` });
       setAddDialogOpen(false);
       setNewUserName('');
