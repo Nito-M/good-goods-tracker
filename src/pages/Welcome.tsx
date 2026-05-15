@@ -33,6 +33,7 @@ const DEFAULTS: WelcomeSettings = {
   bg_dim_pct: 40,
   video_loop: true,
   video_muted: true,
+  greeting_color: '#ffffff',
 };
 
 function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: number; stagger: number }) {
