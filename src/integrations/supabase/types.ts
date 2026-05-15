@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_welcome_settings: {
+        Row: {
+          background_image_url: string | null
+          greeting_text: string
+          id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          background_image_url?: string | null
+          greeting_text?: string
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          background_image_url?: string | null
+          greeting_text?: string
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       assemblies: {
         Row: {
           created_at: string
