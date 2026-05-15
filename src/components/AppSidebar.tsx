@@ -93,9 +93,13 @@ export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
         <div className="flex items-center gap-3">
           {!collapsed &&
           <div className="flex flex-col">
-              <h1 className="text-lg font-bold tracking-tight text-sidebar-foreground">
+              <button
+                type="button"
+                onClick={() => navigate('/welcome')}
+                className="text-left text-lg font-bold tracking-tight text-sidebar-foreground hover:opacity-80 transition-opacity"
+              >
                 Zumy
-              </h1>
+              </button>
               <p className="text-xs text-muted-foreground">
 
             </p>

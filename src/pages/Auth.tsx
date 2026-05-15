@@ -44,7 +44,7 @@ export function Auth() {
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/welcome" replace />;
   }
 
   const handleSignIn = async (e: React.FormEvent) => {
