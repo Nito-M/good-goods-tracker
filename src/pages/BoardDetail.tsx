@@ -1571,9 +1571,10 @@ function GroupSection({
                 {row.frozen && (
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
-                      setRowFrozen(row.id, false);
+                      setRowFrozen(row.id, !row.frozen);
                     }}
                     title="Unfreeze row"
                     className="h-4 w-4 inline-flex items-center justify-center rounded hover:bg-accent text-primary shrink-0"
