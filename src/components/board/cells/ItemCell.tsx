@@ -3,6 +3,7 @@ import { Package, Wrench, Link2 } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { isFormulaPickActive } from '@/lib/boardFormulaPicker';
 import { Input } from '@/components/ui/input';
 import {
   BoardItemPickerDialog,
