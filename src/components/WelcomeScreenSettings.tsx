@@ -40,6 +40,8 @@ const DEFAULTS: S = {
   position_y_pct: 50,
   text_align: 'center',
   bg_dim_pct: 40,
+  video_loop: true,
+  video_muted: true,
 };
 
 export function WelcomeScreenSettings() {
