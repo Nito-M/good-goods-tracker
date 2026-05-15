@@ -169,7 +169,7 @@ export function WelcomeScreenSettings() {
               : undefined
           }
         >
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-black" style={{ opacity: s.bg_dim_pct / 100 }} />
           <div
             className="absolute text-white font-black uppercase tracking-tighter drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)] whitespace-nowrap"
             style={{
