@@ -154,6 +154,20 @@ export function OrganizationsSettings() {
         }
       }
       setOrgMembers(membersMap);
+
+      // Fetch all org page permissions in one query
+      const orgIds = data.map(o => o.id);
+      const { data: permRows } = await supabase
+        .from('organization_page_permissions')
+        .select('organization_id, page_key')
+        .in('organization_id', orgIds);
+      const permsMap: Record<string, string[]> = {};
+      orgIds.forEach(id => { permsMap[id] = []; });
+      (permRows || []).forEach(r => {
+        if (!permsMap[r.organization_id]) permsMap[r.organization_id] = [];
+        permsMap[r.organization_id].push(r.page_key);
+      });
+      setOrgPagePerms(permsMap);
     }
     setLoading(false);
   };
