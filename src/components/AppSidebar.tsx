@@ -37,7 +37,7 @@ const menuItems = [
 { title: "Parts Library", url: "/parts", icon: Puzzle, pageKey: "parts" },
 { title: "Tax Documents", url: "/tax-documents", icon: FileText, pageKey: "tax-documents" },
 { title: "Storefront", url: "/storefront", icon: ShoppingCart, pageKey: "storefront" },
-{ title: "Trailer Config", url: "/trailer-configurator", icon: Wrench, pageKey: "trailer-config" }];
+{ title: "Configuration", url: "/trailer-configurator", icon: Wrench, pageKey: "trailer-config" }];
 
 
 interface OrgShop {
