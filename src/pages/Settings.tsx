@@ -28,6 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { InvoiceLayoutEditor } from '@/components/InvoiceLayoutEditor';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
+import { WelcomeScreenSettings } from '@/components/WelcomeScreenSettings';
 
 import { useColorTheme, ColorTheme, BackgroundTheme, CustomTextColor, BorderColor } from '@/hooks/useColorTheme';
 import {
@@ -731,6 +732,8 @@ export function Settings() {
                 )}
               </CardContent>
             </Card>
+
+            {isAdmin && <WelcomeScreenSettings />}
 
           </TabsContent>
 

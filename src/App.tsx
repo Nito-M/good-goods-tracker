@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
+import { Welcome } from "./pages/Welcome";
 import { Items } from "./pages/Items";
 import { ItemDetails } from "./pages/ItemDetails";
 import { AddItemPage } from "./pages/AddItem";
@@ -136,6 +137,16 @@ function AppContent() {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/welcome"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Welcome />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/"
           element={
