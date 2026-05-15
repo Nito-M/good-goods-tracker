@@ -454,11 +454,20 @@ export function UsersSettings() {
     if (!editNameUser || !editName.trim()) return;
     setSavingName(true);
     try {
-      const { error } = await supabase
+      // Try update first
+      const { data: updated, error } = await supabase
         .from('profiles')
         .update({ display_name: editName.trim() })
-        .eq('user_id', editNameUser.userId);
+        .eq('user_id', editNameUser.userId)
+        .select('id');
       if (error) throw error;
+      // If no profile row exists yet, create one
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ user_id: editNameUser.userId, display_name: editName.trim() });
+        if (insertError) throw insertError;
+      }
       toast({ title: 'User updated' });
       setEditNameUser(null);
       await fetchData();
