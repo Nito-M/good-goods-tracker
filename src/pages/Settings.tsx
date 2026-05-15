@@ -449,10 +449,12 @@ export function Settings() {
               <Briefcase className="h-4 w-4 hidden sm:inline" />
               Companies
             </TabsTrigger>
-            <TabsTrigger value="storefront" className="gap-2 shrink-0">
-              <Store className="h-4 w-4 hidden sm:inline" />
-              Storefront
-            </TabsTrigger>
+            {showStorefrontTab && (
+              <TabsTrigger value="storefront" className="gap-2 shrink-0">
+                <Store className="h-4 w-4 hidden sm:inline" />
+                Storefront
+              </TabsTrigger>
+            )}
             <TabsTrigger value="vendors" className="gap-2 shrink-0">
               <Building2 className="h-4 w-4 hidden sm:inline" />
               Vendors
