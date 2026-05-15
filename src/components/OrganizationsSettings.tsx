@@ -287,11 +287,18 @@ export function OrganizationsSettings() {
   const handleRenameMember = async (userId: string) => {
     if (!editNameValue.trim()) { setEditingMemberId(null); return; }
     try {
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('profiles')
         .update({ display_name: editNameValue.trim() })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select('id');
       if (error) throw error;
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ user_id: userId, display_name: editNameValue.trim() });
+        if (insertError) throw insertError;
+      }
       toast({ title: 'Name updated' });
       setEditingMemberId(null);
       await fetchOrganizations();
