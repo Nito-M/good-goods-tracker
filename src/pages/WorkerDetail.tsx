@@ -43,6 +43,30 @@ export function WorkerDetail() {
   const [vPassword, setVPassword] = useState('');
   const [vLink, setVLink] = useState('');
   const [vNotes, setVNotes] = useState('');
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const handleSendPasswordReset = async () => {
+    if (!worker?.email) {
+      toast({ title: 'No email on file', description: 'Add an email address to this profile first.', variant: 'destructive' });
+      return;
+    }
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(worker.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({
+        title: 'Password reset email sent',
+        description: `If an account exists for ${worker.email}, a reset link has been sent.`,
+      });
+    } catch (err) {
+      console.error('Password reset error:', err);
+      toast({ title: 'Reset failed', description: 'Unable to send reset email. Please try again.', variant: 'destructive' });
+    } finally {
+      setSendingReset(false);
+    }
+  };
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
