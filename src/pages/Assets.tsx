@@ -73,7 +73,7 @@ export function Assets() {
         <Tabs value={tab} onValueChange={(v) => setTab(v as 'assets' | 'workers')}>
           <TabsList className="mb-4">
             <TabsTrigger value="assets"><Truck className="h-4 w-4 mr-1.5" />Assets</TabsTrigger>
-            <TabsTrigger value="workers"><Users className="h-4 w-4 mr-1.5" />Workers</TabsTrigger>
+            <TabsTrigger value="workers"><Users className="h-4 w-4 mr-1.5" />Staff Directory</TabsTrigger>
           </TabsList>
 
           <div className="mb-4">
