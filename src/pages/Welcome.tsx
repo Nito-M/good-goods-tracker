@@ -4,6 +4,7 @@ import { useProfile } from '@/hooks/useProfile';
 
 interface WelcomeSettings {
   background_image_url: string | null;
+  background_video_url: string | null;
   greeting_text: string;
   start_delay_ms: number;
   letter_stagger_ms: number;
@@ -17,6 +18,7 @@ interface WelcomeSettings {
 
 const DEFAULTS: WelcomeSettings = {
   background_image_url: null,
+  background_video_url: null,
   greeting_text: 'Welcome',
   start_delay_ms: 500,
   letter_stagger_ms: 50,
