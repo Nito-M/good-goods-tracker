@@ -24,6 +24,8 @@ interface S {
   position_y_pct: number;
   text_align: Align;
   bg_dim_pct: number;
+  video_loop: boolean;
+  video_muted: boolean;
 }
 
 const DEFAULTS: S = {
