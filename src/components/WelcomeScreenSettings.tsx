@@ -279,7 +279,22 @@ export function WelcomeScreenSettings() {
           )}
         </div>
 
-        {/* Timing */}
+        {/* Background video */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><Video className="h-4 w-4" /> Background video (max ~10s)</Label>
+          <div className="flex items-center gap-2">
+            <Input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoUpload} disabled={uploading} className="flex-1" />
+            {s.background_video_url && (
+              <Button variant="outline" size="icon" onClick={handleRemoveVideo} title="Remove video">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            When set, the video plays muted on loop and replaces the background image.
+          </p>
+        </div>
+
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between">
