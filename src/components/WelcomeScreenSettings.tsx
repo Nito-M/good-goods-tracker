@@ -356,6 +356,42 @@ export function WelcomeScreenSettings() {
           </div>
         </div>
 
+        {/* Mobile background overrides */}
+        <div className="space-y-2 rounded-lg border p-3">
+          <Label className="text-sm font-semibold">Mobile background (optional)</Label>
+          <p className="text-xs text-muted-foreground">
+            Used on phones in place of the desktop image/video. Portrait orientation works best.
+          </p>
+
+          <div className="space-y-2 mt-2">
+            <Label className="text-xs">Mobile image</Label>
+            <div className="flex items-center gap-2">
+              <Input type="file" accept="image/*" onChange={uploadImage(true)} disabled={uploading} className="flex-1" />
+              {s.background_image_url_mobile && (
+                <Button variant="outline" size="icon" onClick={removeImage(true)} title="Remove mobile image">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </div>
+            {s.background_image_url_mobile && (
+              <img src={s.background_image_url_mobile} alt="Mobile background" className="h-32 rounded border object-cover" />
+            )}
+          </div>
+
+          <div className="space-y-2 mt-3">
+            <Label className="text-xs flex items-center gap-2"><Video className="h-3 w-3" /> Mobile video (max ~10s)</Label>
+            <div className="flex items-center gap-2">
+              <Input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={uploadVideo(true)} disabled={uploading} className="flex-1" />
+              {s.background_video_url_mobile && (
+                <Button variant="outline" size="icon" onClick={removeVideo(true)} title="Remove mobile video">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">When set, replaces the mobile image on phones.</p>
+          </div>
+        </div>
+
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between">
