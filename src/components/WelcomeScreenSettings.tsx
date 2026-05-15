@@ -8,12 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Image as ImageIcon, Loader2, Trash2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Trash2, AlignLeft, AlignCenter, AlignRight, Video } from 'lucide-react';
 
 type Align = 'left' | 'center' | 'right';
 
 interface S {
   background_image_url: string | null;
+  background_video_url: string | null;
   greeting_text: string;
   start_delay_ms: number;
   letter_stagger_ms: number;
