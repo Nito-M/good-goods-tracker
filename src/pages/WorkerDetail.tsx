@@ -140,6 +140,27 @@ export function WorkerDetail() {
               <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
                 <Pencil className="h-4 w-4 mr-1" /> Edit
               </Button>
+              {worker.email && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" disabled={sendingReset}>
+                      <KeyRound className="h-4 w-4 mr-1" /> {sendingReset ? 'Sending…' : 'Change Password'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Send password reset email?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        A password reset link will be emailed to <strong>{worker.email}</strong>. They can use it to set a new password.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSendPasswordReset}>Send reset email</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="destructive"><Trash2 className="h-4 w-4" /></Button>
