@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProfile } from '@/hooks/useProfile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WelcomeSettings {
   background_image_url: string | null;
