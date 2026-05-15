@@ -76,6 +76,7 @@ export function WelcomeScreenSettings() {
           bg_dim_pct: (data as any).bg_dim_pct ?? 40,
           video_loop: (data as any).video_loop ?? true,
           video_muted: (data as any).video_muted ?? true,
+          greeting_color: (data as any).greeting_color ?? '#ffffff',
         });
       }
       setLoading(false);
