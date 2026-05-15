@@ -134,7 +134,13 @@ export function Welcome() {
           muted={s.video_muted}
           loop={s.video_loop}
           playsInline
-          className={`absolute inset-0 w-full h-full object-cover ${bgAnimating ? 'welcome-bg-zoom' : ''}`}
+          onEnded={(e) => {
+            setVideoEnded(true);
+            const v = e.currentTarget;
+            // Freeze on the last frame
+            try { v.pause(); } catch {}
+          }}
+          className={`absolute inset-0 w-full h-full object-cover ${bgAnimating && !videoEnded ? 'welcome-bg-zoom' : ''}`}
         />
       ) : s.background_image_url && (
         <div
