@@ -136,25 +136,14 @@ export function Auth() {
     }
 
     setLoading(true);
-    
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            email: resetEmail,
-            redirectUrl: `${window.location.origin}/reset-password`,
-          }),
-        }
-      );
 
-      if (!response.ok) {
-        throw new Error('Failed to send reset email');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        throw error;
       }
 
       toast({
