@@ -22,6 +22,7 @@ interface S {
   position_x_pct: number;
   position_y_pct: number;
   text_align: Align;
+  bg_dim_pct: number;
 }
 
 const DEFAULTS: S = {
