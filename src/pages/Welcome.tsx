@@ -55,6 +55,7 @@ export function Welcome() {
   const { profile } = useProfile();
   const [s, setS] = useState<WelcomeSettings>(DEFAULTS);
   const [bgAnimating, setBgAnimating] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
