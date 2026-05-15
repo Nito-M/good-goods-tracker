@@ -138,6 +138,58 @@ export function WelcomeScreenSettings() {
     }
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: 'Video too large', description: 'Max 50MB. Keep clips short (~10s).', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+    setUploading(true);
+    // Probe duration client-side
+    const dur = await new Promise<number>((resolve) => {
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      v.onloadedmetadata = () => resolve(v.duration || 0);
+      v.onerror = () => resolve(0);
+      v.src = URL.createObjectURL(file);
+    });
+    if (dur > 12) {
+      toast({ title: 'Video too long', description: `Max ~10 seconds (got ${dur.toFixed(1)}s).`, variant: 'destructive' });
+      setUploading(false);
+      e.target.value = '';
+      return;
+    }
+    const ext = file.name.split('.').pop() || 'mp4';
+    const path = `vid-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from('welcome-images')
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) {
+      toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' });
+      setUploading(false);
+      return;
+    }
+    const { data: pub } = supabase.storage.from('welcome-images').getPublicUrl(path);
+    const url = pub.publicUrl;
+    const ok = await persist({ background_video_url: url } as any);
+    if (ok) {
+      update({ background_video_url: url });
+      toast({ title: 'Background video updated' });
+    }
+    setUploading(false);
+    e.target.value = '';
+  };
+
+  const handleRemoveVideo = async () => {
+    const ok = await persist({ background_video_url: null } as any);
+    if (ok) {
+      update({ background_video_url: null });
+      toast({ title: 'Background video removed' });
+    }
+  };
+
   if (loading) return null;
 
   const alignBtn = (val: Align, Icon: typeof AlignLeft) => (
