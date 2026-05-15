@@ -94,6 +94,12 @@ export function OrganizationsSettings() {
   // Members per org
   const [orgMembers, setOrgMembers] = useState<Record<string, OrgMember[]>>({});
 
+  // Page permissions per org (org_id -> Set of allowed page_keys; empty Set = all allowed)
+  const [orgPagePerms, setOrgPagePerms] = useState<Record<string, string[]>>({});
+  const [editingMaxOrgId, setEditingMaxOrgId] = useState<string | null>(null);
+  const [editMaxValue, setEditMaxValue] = useState<string>('');
+  const [savingPermsOrgId, setSavingPermsOrgId] = useState<string | null>(null);
+
   const fetchOrganizations = async () => {
     const { data, error } = await supabase
       .from('organizations')
