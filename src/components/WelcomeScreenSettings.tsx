@@ -29,6 +29,7 @@ interface S {
   video_loop: boolean;
   video_muted: boolean;
   greeting_color: string;
+  greeting_instant: boolean;
 }
 
 const DEFAULTS: S = {
@@ -48,6 +49,7 @@ const DEFAULTS: S = {
   video_loop: true,
   video_muted: true,
   greeting_color: '#ffffff',
+  greeting_instant: false,
 };
 
 export function WelcomeScreenSettings() {
@@ -83,6 +85,7 @@ export function WelcomeScreenSettings() {
           video_loop: (data as any).video_loop ?? true,
           video_muted: (data as any).video_muted ?? true,
           greeting_color: (data as any).greeting_color ?? '#ffffff',
+          greeting_instant: (data as any).greeting_instant ?? false,
         });
       }
       setLoading(false);
@@ -118,6 +121,7 @@ export function WelcomeScreenSettings() {
       video_loop: s.video_loop,
       video_muted: s.video_muted,
       greeting_color: s.greeting_color,
+      greeting_instant: s.greeting_instant,
     } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
@@ -393,6 +397,16 @@ export function WelcomeScreenSettings() {
         </div>
 
         <div className="space-y-4">
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <Label>Show greeting instantly</Label>
+              <p className="text-xs text-muted-foreground">Skips the per-letter animation and delay — all letters appear at once.</p>
+            </div>
+            <Switch
+              checked={s.greeting_instant}
+              onCheckedChange={(v) => update({ greeting_instant: v })}
+            />
+          </div>
           <div className="space-y-2">
             <div className="flex justify-between">
               <Label>Greeting start delay</Label>

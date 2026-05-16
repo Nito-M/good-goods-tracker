@@ -1,0 +1,1 @@
+ALTER TABLE public.app_welcome_settings ADD COLUMN IF NOT EXISTS greeting_instant boolean NOT NULL DEFAULT false;

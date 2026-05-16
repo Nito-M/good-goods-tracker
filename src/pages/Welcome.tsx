@@ -20,6 +20,7 @@ interface WelcomeSettings {
   video_loop: boolean;
   video_muted: boolean;
   greeting_color: string;
+  greeting_instant: boolean;
 }
 
 const DEFAULTS: WelcomeSettings = {
@@ -39,6 +40,7 @@ const DEFAULTS: WelcomeSettings = {
   video_loop: true,
   video_muted: true,
   greeting_color: '#ffffff',
+  greeting_instant: false,
 };
 
 function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: number; stagger: number }) {
@@ -91,6 +93,7 @@ export function Welcome() {
         video_loop: (data as any).video_loop ?? true,
         video_muted: (data as any).video_muted ?? true,
         greeting_color: (data as any).greeting_color ?? '#ffffff',
+        greeting_instant: (data as any).greeting_instant ?? false,
       });
     })();
     return () => { cancelled = true; };
@@ -188,8 +191,14 @@ export function Welcome() {
           maxWidth: '95vw',
         }}
       >
-        <AnimatedText text={s.greeting_text} baseDelay={greetingDelay} stagger={s.letter_stagger_ms} />
-        {name && <AnimatedText text={name} baseDelay={nameDelay} stagger={s.letter_stagger_ms} />}
+        {s.greeting_instant ? (
+          <span className="whitespace-nowrap">{s.greeting_text}{name ? ` ${name}` : ''}</span>
+        ) : (
+          <>
+            <AnimatedText text={s.greeting_text} baseDelay={greetingDelay} stagger={s.letter_stagger_ms} />
+            {name && <AnimatedText text={name} baseDelay={nameDelay} stagger={s.letter_stagger_ms} />}
+          </>
+        )}
       </h1>
 
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
