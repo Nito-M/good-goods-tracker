@@ -121,6 +121,7 @@ export function WelcomeScreenSettings() {
       video_loop: s.video_loop,
       video_muted: s.video_muted,
       greeting_color: s.greeting_color,
+      greeting_instant: s.greeting_instant,
     } as any);
     setSaving(false);
     if (ok) toast({ title: 'Welcome screen saved' });
