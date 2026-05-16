@@ -49,6 +49,7 @@ const DEFAULTS: S = {
   video_loop: true,
   video_muted: true,
   greeting_color: '#ffffff',
+  greeting_instant: false,
 };
 
 export function WelcomeScreenSettings() {
