@@ -20,6 +20,7 @@ interface WelcomeSettings {
   video_loop: boolean;
   video_muted: boolean;
   greeting_color: string;
+  greeting_instant: boolean;
 }
 
 const DEFAULTS: WelcomeSettings = {
