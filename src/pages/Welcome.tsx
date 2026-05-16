@@ -40,6 +40,7 @@ const DEFAULTS: WelcomeSettings = {
   video_loop: true,
   video_muted: true,
   greeting_color: '#ffffff',
+  greeting_instant: false,
 };
 
 function AnimatedText({ text, baseDelay, stagger }: { text: string; baseDelay: number; stagger: number }) {
