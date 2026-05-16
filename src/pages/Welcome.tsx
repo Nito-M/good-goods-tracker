@@ -93,6 +93,7 @@ export function Welcome() {
         video_loop: (data as any).video_loop ?? true,
         video_muted: (data as any).video_muted ?? true,
         greeting_color: (data as any).greeting_color ?? '#ffffff',
+        greeting_instant: (data as any).greeting_instant ?? false,
       });
     })();
     return () => { cancelled = true; };
