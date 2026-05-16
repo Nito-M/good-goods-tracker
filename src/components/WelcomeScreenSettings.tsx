@@ -397,6 +397,16 @@ export function WelcomeScreenSettings() {
         </div>
 
         <div className="space-y-4">
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <Label>Show greeting instantly</Label>
+              <p className="text-xs text-muted-foreground">Skips the per-letter animation and delay — all letters appear at once.</p>
+            </div>
+            <Switch
+              checked={s.greeting_instant}
+              onCheckedChange={(v) => update({ greeting_instant: v })}
+            />
+          </div>
           <div className="space-y-2">
             <div className="flex justify-between">
               <Label>Greeting start delay</Label>
