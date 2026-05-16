@@ -191,8 +191,14 @@ export function Welcome() {
           maxWidth: '95vw',
         }}
       >
-        <AnimatedText text={s.greeting_text} baseDelay={greetingDelay} stagger={s.letter_stagger_ms} />
-        {name && <AnimatedText text={name} baseDelay={nameDelay} stagger={s.letter_stagger_ms} />}
+        {s.greeting_instant ? (
+          <span className="whitespace-nowrap">{s.greeting_text}{name ? ` ${name}` : ''}</span>
+        ) : (
+          <>
+            <AnimatedText text={s.greeting_text} baseDelay={greetingDelay} stagger={s.letter_stagger_ms} />
+            {name && <AnimatedText text={name} baseDelay={nameDelay} stagger={s.letter_stagger_ms} />}
+          </>
+        )}
       </h1>
 
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
