@@ -651,6 +651,12 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                       <span>{(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}</span>
                     </div>
                   )}
+                  {job.weight != null && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Weight</span>
+                      <span>{job.weight} lbs</span>
+                    </div>
+                  )}
                   <div className="text-xs text-muted-foreground">
                     Created {new Date(job.createdAt).toLocaleDateString()}
                   </div>
