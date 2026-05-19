@@ -461,7 +461,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const handleSaveSettings = async () => {
     if (!fTitle.trim()) return;
     setSavingSettings(true);
-    const updates: Record<string, string | null | undefined> = {
+    const updates: Record<string, string | number | null | undefined> = {
       title: fTitle.trim(),
       description: fDescription.trim() || undefined,
       customer_name: fCustomerName.trim() || null,
@@ -474,6 +474,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
       quote_number: fQuoteNumber.trim() || null,
       sales_order_number: fSalesOrderNumber.trim() || null,
       invoice_number: fInvoiceNumber.trim() || null,
+      weight: fWeight.trim() === '' ? null : Number(fWeight),
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
