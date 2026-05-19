@@ -425,6 +425,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const [fQuoteNumber, setFQuoteNumber] = useState(job.quoteNumber || '');
   const [fSalesOrderNumber, setFSalesOrderNumber] = useState(job.salesOrderNumber || '');
   const [fInvoiceNumber, setFInvoiceNumber] = useState(job.invoiceNumber || '');
+  const [fWeight, setFWeight] = useState(job.weight != null ? String(job.weight) : '');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
