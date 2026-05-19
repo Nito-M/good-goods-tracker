@@ -40,6 +40,7 @@ export function EditJob() {
   const [formCustomerAddress, setFormCustomerAddress] = useState('');
   const [formDueDate, setFormDueDate] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [formWeight, setFormWeight] = useState('');
   const [saving, setSaving] = useState(false);
   const descRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,6 +63,7 @@ export function EditJob() {
       setFormCustomerPhone(job.customerPhone || '');
       setFormCustomerAddress(job.customerAddress || '');
       setFormDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
+      setFormWeight(job.weight != null ? String(job.weight) : '');
     }
   }, [job]);
 
@@ -80,7 +82,7 @@ export function EditJob() {
   const handleSave = async () => {
     if (!formTitle.trim() || !jobId) return;
     setSaving(true);
-    const updates: Record<string, string | null | undefined> = {
+    const updates: Record<string, string | number | null | undefined> = {
       title: formTitle.trim(),
       description: formDescription.trim() || undefined,
       status: formStatus,
@@ -89,6 +91,7 @@ export function EditJob() {
       customer_phone: formCustomerPhone.trim() || null,
       customer_address: formCustomerAddress.trim() || null,
       due_date: formDueDate ? (() => { const [y, m, d] = formDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
+      weight: formWeight.trim() === '' ? null : Number(formWeight),
     };
     if (formJobNumber.trim() !== (job?.jobNumber || '')) {
       updates.job_number = formJobNumber.trim() || undefined;
@@ -162,6 +165,17 @@ export function EditJob() {
             <div>
               <Label>Due Date</Label>
               <Input type="date" value={formDueDate} onChange={e => setFormDueDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Weight (lbs)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                value={formWeight}
+                onChange={e => setFormWeight(e.target.value)}
+                placeholder="e.g. 1250"
+              />
             </div>
           </CardContent>
         </Card>

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +56,12 @@ export function JobDescription() {
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarClock className="h-3 w-3" />
                     Due: {(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}
+                  </span>
+                )}
+                {job.weight != null && (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Weight className="h-3 w-3" />
+                    {job.weight} lbs
                   </span>
                 )}
               </div>

@@ -15,6 +15,7 @@ export interface Job {
   quoteNumber: string | null;
   salesOrderNumber: string | null;
   invoiceNumber: string | null;
+  weight: number | null;
   createdAt: string;
   updatedAt: string;
 }

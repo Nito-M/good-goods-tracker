@@ -2208,6 +2208,7 @@ export type Database = {
           updated_at: string
           user_id: string
           vin: string | null
+          weight: number | null
         }
         Insert: {
           created_at?: string
@@ -2229,6 +2230,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           vin?: string | null
+          weight?: number | null
         }
         Update: {
           created_at?: string
@@ -2250,6 +2252,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vin?: string | null
+          weight?: number | null
         }
         Relationships: []
       }
