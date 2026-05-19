@@ -479,7 +479,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
     }
-    await updateJob(job.id, updates);
+    await updateJob(job.id, updates as any);
     setSavingSettings(false);
   };
 
