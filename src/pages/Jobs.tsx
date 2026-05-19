@@ -425,6 +425,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const [fQuoteNumber, setFQuoteNumber] = useState(job.quoteNumber || '');
   const [fSalesOrderNumber, setFSalesOrderNumber] = useState(job.salesOrderNumber || '');
   const [fInvoiceNumber, setFInvoiceNumber] = useState(job.invoiceNumber || '');
+  const [fWeight, setFWeight] = useState(job.weight != null ? String(job.weight) : '');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -442,6 +443,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     setFQuoteNumber(job.quoteNumber || '');
     setFSalesOrderNumber(job.salesOrderNumber || '');
     setFInvoiceNumber(job.invoiceNumber || '');
+    setFWeight(job.weight != null ? String(job.weight) : '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
@@ -459,7 +461,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const handleSaveSettings = async () => {
     if (!fTitle.trim()) return;
     setSavingSettings(true);
-    const updates: Record<string, string | null | undefined> = {
+    const updates: Record<string, string | number | null | undefined> = {
       title: fTitle.trim(),
       description: fDescription.trim() || undefined,
       customer_name: fCustomerName.trim() || null,
@@ -472,11 +474,12 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
       quote_number: fQuoteNumber.trim() || null,
       sales_order_number: fSalesOrderNumber.trim() || null,
       invoice_number: fInvoiceNumber.trim() || null,
+      weight: fWeight.trim() === '' ? null : Number(fWeight),
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
     }
-    await updateJob(job.id, updates);
+    await updateJob(job.id, updates as any);
     setSavingSettings(false);
   };
 
@@ -646,6 +649,12 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Due Date</span>
                       <span>{(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}</span>
+                    </div>
+                  )}
+                  {job.weight != null && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Weight</span>
+                      <span>{job.weight} lbs</span>
                     </div>
                   )}
                   <div className="text-xs text-muted-foreground">
@@ -881,6 +890,17 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                     <Label>Stock Number</Label>
                     <Input value={fStockNumber} onChange={e => setFStockNumber(e.target.value)} placeholder="Stock #" />
                   </div>
+                </div>
+                <div>
+                  <Label>Weight (lbs)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={fWeight}
+                    onChange={e => setFWeight(e.target.value)}
+                    placeholder="e.g. 1500"
+                  />
                 </div>
               </CardContent>
             </Card>
