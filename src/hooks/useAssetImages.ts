@@ -27,7 +27,18 @@ export function useAssetImages(assetId: string | undefined) {
       .eq('asset_id', assetId)
       .order('display_order', { ascending: true });
     if (error) console.error(error);
-    else setImages((data as unknown as AssetImage[]) || []);
+    else {
+      const rows = (data as unknown as AssetImage[]) || [];
+      // Auto-heal: if multiple rows are flagged primary, keep only the first
+      const primaries = rows.filter(r => r.is_primary);
+      if (primaries.length > 1) {
+        const keepId = primaries[0].id;
+        const extraIds = primaries.slice(1).map(r => r.id);
+        await supabase.from('asset_images' as any).update({ is_primary: false } as any).in('id', extraIds);
+        rows.forEach(r => { if (r.is_primary && r.id !== keepId) r.is_primary = false; });
+      }
+      setImages(rows);
+    }
     setLoading(false);
   }, [user, assetId]);
 
