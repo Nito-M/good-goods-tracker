@@ -45,7 +45,11 @@ export function useAssetImages(assetId: string | undefined) {
     const { data: signed } = await supabase.storage.from('item-images').createSignedUrl(path, 60 * 60 * 24 * 365);
     if (!signed?.signedUrl) return null;
 
-    const currentCount = images.length;
+    const { count } = await supabase
+      .from('asset_images' as any)
+      .select('*', { count: 'exact', head: true })
+      .eq('asset_id', assetId);
+    const currentCount = count ?? 0;
     const { error } = await supabase.from('asset_images' as any).insert({
       asset_id: assetId,
       user_id: user.id,
