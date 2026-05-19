@@ -22,9 +22,22 @@ const statusColors: Record<string, string> = {
 export function JobDescription() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const { jobs, loading } = useJobs();
+  const { jobs, loading, updateJob } = useJobs();
 
   const job = jobs.find(j => j.id === jobId);
+  const [weightInput, setWeightInput] = useState('');
+  const [savingWeight, setSavingWeight] = useState(false);
+
+  useEffect(() => {
+    if (job) setWeightInput(job.weight != null ? String(job.weight) : '');
+  }, [job?.id, job?.weight]);
+
+  const handleSaveWeight = async () => {
+    if (!job) return;
+    setSavingWeight(true);
+    await updateJob(job.id, { weight: weightInput.trim() === '' ? null : Number(weightInput) });
+    setSavingWeight(false);
+  };
 
   if (loading) {
     return (
