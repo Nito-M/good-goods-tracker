@@ -443,6 +443,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     setFQuoteNumber(job.quoteNumber || '');
     setFSalesOrderNumber(job.salesOrderNumber || '');
     setFInvoiceNumber(job.invoiceNumber || '');
+    setFWeight(job.weight != null ? String(job.weight) : '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
