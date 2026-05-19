@@ -885,6 +885,17 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                     <Input value={fStockNumber} onChange={e => setFStockNumber(e.target.value)} placeholder="Stock #" />
                   </div>
                 </div>
+                <div>
+                  <Label>Weight (lbs)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={fWeight}
+                    onChange={e => setFWeight(e.target.value)}
+                    placeholder="e.g. 1500"
+                  />
+                </div>
               </CardContent>
             </Card>
 
