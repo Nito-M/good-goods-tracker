@@ -1,8 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useJobs } from '@/hooks/useJobs';
 
 const statusColors: Record<string, string> = {
@@ -19,9 +22,22 @@ const statusColors: Record<string, string> = {
 export function JobDescription() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const { jobs, loading } = useJobs();
+  const { jobs, loading, updateJob } = useJobs();
 
   const job = jobs.find(j => j.id === jobId);
+  const [weightInput, setWeightInput] = useState('');
+  const [savingWeight, setSavingWeight] = useState(false);
+
+  useEffect(() => {
+    if (job) setWeightInput(job.weight != null ? String(job.weight) : '');
+  }, [job?.id, job?.weight]);
+
+  const handleSaveWeight = async () => {
+    if (!job) return;
+    setSavingWeight(true);
+    await updateJob(job.id, { weight: weightInput.trim() === '' ? null : Number(weightInput) });
+    setSavingWeight(false);
+  };
 
   if (loading) {
     return (
@@ -81,6 +97,29 @@ export function JobDescription() {
             ) : (
               <p className="text-sm text-muted-foreground italic">No description provided.</p>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Weight className="h-4 w-4" /> Weight</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Label htmlFor="job-weight" className="text-xs text-muted-foreground">Weight (lbs)</Label>
+            <div className="flex gap-2 mt-1 max-w-sm">
+              <Input
+                id="job-weight"
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                placeholder="e.g. 1500"
+                value={weightInput}
+                onChange={e => setWeightInput(e.target.value)}
+              />
+              <Button onClick={handleSaveWeight} disabled={savingWeight}>
+                {savingWeight ? 'Saving…' : 'Save'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
