@@ -100,6 +100,29 @@ export function JobDescription() {
           </CardContent>
         </Card>
 
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Weight className="h-4 w-4" /> Weight</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Label htmlFor="job-weight" className="text-xs text-muted-foreground">Weight (lbs)</Label>
+            <div className="flex gap-2 mt-1 max-w-sm">
+              <Input
+                id="job-weight"
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                placeholder="e.g. 1500"
+                value={weightInput}
+                onChange={e => setWeightInput(e.target.value)}
+              />
+              <Button onClick={handleSaveWeight} disabled={savingWeight}>
+                {savingWeight ? 'Saving…' : 'Save'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) && (
           <Card className="mt-6">
             <CardHeader>
