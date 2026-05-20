@@ -159,8 +159,30 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
           </Button>
         </div>
       </TableCell>
+      <TableCell>
+        <Input
+          type="number"
+          step="0.1"
+          min={0}
+          max={100}
+          className="w-20"
+          value={c.discountRate ?? 0}
+          onChange={(e) => {
+            const rate = parseFloat(e.target.value) || 0;
+            setCart(prev => prev.map(item =>
+              item.inventoryItem.id === c.inventoryItem.id
+                ? { ...item, discountRate: rate }
+                : item
+            ));
+          }}
+        />
+      </TableCell>
       <TableCell className="text-right">
-        {formatCurrency(c.quantity * getItemPrice(c))}
+        {(() => {
+          const gross = c.quantity * getItemPrice(c);
+          const rate = c.discountRate || 0;
+          return formatCurrency(gross - gross * (rate / 100));
+        })()}
       </TableCell>
       {markupPercent !== '' && (
         <TableCell>
