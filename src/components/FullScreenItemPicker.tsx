@@ -26,6 +26,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import type { VendorPriceRow } from '@/hooks/useAllItemVendorPrices';
 
 // Generic cart item shape that both Quotes and Sales can use
 export interface PickerCartItem {
@@ -48,12 +56,20 @@ interface Assembly {
   type?: string;
 }
 
+export interface PickerAddOverride {
+  vendorPriceRowId: string;
+  vendorId: string;
+  vendorName: string;
+  price: number;
+  vendorSku: string | null;
+}
+
 interface FullScreenItemPickerProps {
   open: boolean;
   onClose: () => void;
   inventoryItems: InventoryItem[];
   cart: PickerCartItem[];
-  onAddItem: (item: InventoryItem) => void;
+  onAddItem: (item: InventoryItem, override?: PickerAddOverride) => void;
   onAddCustomItem: () => void;
   onAddAssembly?: (assembly: Assembly) => void;
   onUpdateQuantity: (itemId: string, quantity: number | null) => void;
@@ -64,6 +80,10 @@ interface FullScreenItemPickerProps {
   formatPrice?: (value: number) => string;
   vendorItemIds?: string[] | null;
   vendorName?: string;
+  /** All vendor-price rows visible. Used to prompt when an item has multiple rows. */
+  vendorPriceRows?: VendorPriceRow[];
+  /** When set (e.g. on POs), only rows for this vendor are considered. */
+  selectedVendorId?: string | null;
 }
 
 function CartItemRow({
@@ -192,6 +212,8 @@ export function FullScreenItemPicker({
   formatPrice = formatCurrency,
   vendorItemIds,
   vendorName,
+  vendorPriceRows,
+  selectedVendorId,
 }: FullScreenItemPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAssemblies, setShowAssemblies] = useState(false);
@@ -201,6 +223,44 @@ export function FullScreenItemPicker({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
   const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
+  const [chooserItem, setChooserItem] = useState<InventoryItem | null>(null);
+  const [chooserRows, setChooserRows] = useState<VendorPriceRow[]>([]);
+
+  // Index vendor price rows by item id for quick lookup
+  const rowsByItem = useMemo(() => {
+    const map = new Map<string, VendorPriceRow[]>();
+    (vendorPriceRows || []).forEach((r) => {
+      if (selectedVendorId && r.vendorId !== selectedVendorId) return;
+      const list = map.get(r.itemId) || [];
+      list.push(r);
+      map.set(r.itemId, list);
+    });
+    return map;
+  }, [vendorPriceRows, selectedVendorId]);
+
+  const handleItemClick = useCallback(
+    (item: InventoryItem) => {
+      const rows = rowsByItem.get(item.id) || [];
+      if (rows.length > 1) {
+        setChooserItem(item);
+        setChooserRows(rows);
+        return;
+      }
+      if (rows.length === 1 && selectedVendorId) {
+        const r = rows[0];
+        onAddItem(item, {
+          vendorPriceRowId: r.id,
+          vendorId: r.vendorId,
+          vendorName: r.vendorName,
+          price: r.price,
+          vendorSku: r.vendorSku,
+        });
+        return;
+      }
+      onAddItem(item);
+    },
+    [rowsByItem, selectedVendorId, onAddItem]
+  );
 
   const handleCreateNewItemClick = () => {
     if (documentType === 'Purchase Order') {
@@ -213,6 +273,25 @@ export function FullScreenItemPicker({
   const handleConfirmCreateNewItem = () => {
     setConfirmCreateOpen(false);
     navigate('/items/new');
+  };
+
+  const handleChooserPick = (row: VendorPriceRow) => {
+    if (!chooserItem) return;
+    onAddItem(chooserItem, {
+      vendorPriceRowId: row.id,
+      vendorId: row.vendorId,
+      vendorName: row.vendorName,
+      price: row.price,
+      vendorSku: row.vendorSku,
+    });
+    setChooserItem(null);
+    setChooserRows([]);
+  };
+
+  const handleChooserSkip = () => {
+    if (chooserItem) onAddItem(chooserItem);
+    setChooserItem(null);
+    setChooserRows([]);
   };
 
   const assemblyTypes = useMemo(() => {
@@ -324,12 +403,12 @@ export function FullScreenItemPicker({
         if (assembly && onAddAssembly) onAddAssembly(assembly);
       } else {
         const item = filteredItems[selectedIndex];
-        if (item) onAddItem(item);
+        if (item) handleItemClick(item);
       }
     } else if (e.key === 'Escape') {
       handleDone();
     }
-  }, [showAssemblies, filteredAssemblies, filteredItems, selectedIndex, onAddItem, onAddAssembly, onClose]);
+  }, [showAssemblies, filteredAssemblies, filteredItems, selectedIndex, handleItemClick, onAddAssembly, onClose]);
 
   // Reset selected index when results change
   useEffect(() => {
@@ -514,13 +593,25 @@ export function FullScreenItemPicker({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredItems.map((item, index) => (
+                    filteredItems.map((item, index) => {
+                      const itemRows = rowsByItem.get(item.id) || [];
+                      const hasMultiple = itemRows.length > 1;
+                      return (
                       <TableRow
                         key={item.id}
                         className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
-                        onClick={() => onAddItem(item)}
+                        onClick={() => handleItemClick(item)}
                       >
-                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <span>{item.name}</span>
+                            {hasMultiple && (
+                              <Badge variant="outline" className="text-[10px] h-5">
+                                {itemRows.length} vendor prices
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge variant="secondary">{item.sku}</Badge>
                         </TableCell>
@@ -536,13 +627,14 @@ export function FullScreenItemPicker({
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={(e) => { e.stopPropagation(); onAddItem(item); }}
+                            onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
@@ -626,6 +718,50 @@ export function FullScreenItemPicker({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={!!chooserItem}
+        onOpenChange={(o) => { if (!o) { setChooserItem(null); setChooserRows([]); } }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Choose a vendor price</DialogTitle>
+            <DialogDescription>
+              {chooserItem?.name} has multiple vendor price entries
+              {selectedVendorId ? ' for this vendor' : ''}. Pick which one to use.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {chooserRows.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => handleChooserPick(r)}
+                className="w-full text-left border border-border rounded-lg p-3 hover:bg-accent transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{r.vendorName}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.vendorSku ? `Part #: ${r.vendorSku}` : 'No vendor part #'}
+                      {r.leadTimeDays != null ? ` · Lead time: ${r.leadTimeDays}d` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-semibold">{formatPrice(r.price)}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          {!selectedVendorId && (
+            <div className="pt-2 border-t border-border">
+              <Button variant="ghost" size="sm" onClick={handleChooserSkip} className="w-full">
+                Skip — use item's default cost
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

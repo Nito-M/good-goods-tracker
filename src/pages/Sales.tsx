@@ -64,7 +64,8 @@ import { InvoiceSettings, Sale } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { useCompanies } from '@/hooks/useCompanies';
 import { CompanySelector } from '@/components/CompanySelector';
-import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
+import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
+import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
 import { useAssemblies } from '@/hooks/useAssemblies';
 
 interface CartItem {
@@ -237,6 +238,7 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
 export function Sales() {
   const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
+  const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors, addVendor } = useVendors();
   const { customers } = useCustomers();
   const { profile } = useProfile();
@@ -465,7 +467,7 @@ export function Sales() {
     );
   }, [inventoryItems, searchQuery]);
 
-  const addToCart = (item: InventoryItem) => {
+  const addToCart = (item: InventoryItem, override?: PickerAddOverride) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.inventoryItem.id === item.id);
       if (existing) {
@@ -475,11 +477,14 @@ export function Sales() {
             : c
         );
       }
+      const effectiveItem: InventoryItem = override
+        ? { ...item, cost: override.price }
+        : item;
       // Apply markup if set (use 0% markup as valid)
       const customPrice = markupPercent !== ''
-        ? calculateMarkupPrice(item.cost, markupPercent as number)
+        ? calculateMarkupPrice(effectiveItem.cost, markupPercent as number)
         : undefined;
-      return [...prev, { inventoryItem: item, quantity: 1, customPrice }];
+      return [...prev, { inventoryItem: effectiveItem, quantity: 1, customPrice }];
     });
   };
 
@@ -1311,6 +1316,7 @@ export function Sales() {
         onRemoveItem={removeFromCart}
         documentType="Invoice"
         formatPrice={formatCurrency}
+        vendorPriceRows={allVendorPriceRows}
       />
     </div>
   );

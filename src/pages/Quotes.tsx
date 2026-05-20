@@ -242,12 +242,14 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
 }
 import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
-import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
+import { FullScreenItemPicker, PickerAddOverride } from '@/components/FullScreenItemPicker';
+import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
 
 export function Quotes() {
   // signOut moved to sidebar
   const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder, revertInvoiceLink } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
+  const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors, addVendor } = useVendors();
   const { customers } = useCustomers();
   const { profile } = useProfile();
@@ -477,7 +479,7 @@ export function Quotes() {
     });
   }, [inventoryItems, searchQuery]);
 
-  const addToCart = (item: InventoryItem) => {
+  const addToCart = (item: InventoryItem, override?: PickerAddOverride) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.inventoryItemId === item.id);
       if (existing) {
@@ -487,16 +489,18 @@ export function Quotes() {
             : c
         );
       }
+      const effectiveCost = override ? override.price : item.cost;
+      const effectiveSku = override?.vendorSku || item.sku;
       setCartBasePrices(base => ({ ...base, [item.id]: item.price }));
       return [...prev, {
         id: item.id,
         inventoryItemId: item.id,
         itemName: item.name,
-        sku: item.sku,
+        sku: effectiveSku,
         quantity: null,
         quantityUnit: item.quantityUnit,
         unitPrice: markupPercent !== '' ? calculateMarkupPrice(item.price, markupPercent as number) : item.price,
-        unitCost: item.cost,
+        unitCost: effectiveCost,
         notes: '',
       }];
     });
@@ -1203,6 +1207,7 @@ export function Quotes() {
         assemblies={assemblies}
         documentType="Quote"
         formatPrice={formatCurrency}
+        vendorPriceRows={allVendorPriceRows}
       />
     </div>
   );
