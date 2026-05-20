@@ -76,6 +76,18 @@ interface CartItem {
   discountRate?: number; // Per-item discount %
 }
 
+const INVOICE_DRAFT_STORAGE_KEY = 'sales-invoice-draft-v1';
+
+const loadInvoiceDraft = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = window.localStorage.getItem(INVOICE_DRAFT_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
 function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFromCart, markupPercent, calculateMarkupPrice, setCart, getItemPrice }: {
   item: CartItem;
   formatCurrency: (v: number) => string;
@@ -231,6 +243,7 @@ export function Sales() {
   const { addSaleRevenue } = useBank();
   const { companies } = useCompanies();
   const { assemblies } = useAssemblies();
+  const initialDraft = useMemo(() => loadInvoiceDraft(), []);
 
   // Build invoice settings from profile (fallback)
   const invoiceSettings: InvoiceSettings = useMemo(() => ({
@@ -262,20 +275,20 @@ export function Sales() {
     return invoiceSettings;
   };
 
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedVendorId, setSelectedVendorId] = useState<string>('');
-  const [contactPersonName, setContactPersonName] = useState<string>('');
-  const [taxRate, setTaxRate] = useState(5);
-  const [discountRate, setDiscountRate] = useState(0);
-  const [markupPercent, setMarkupPercent] = useState<number | ''>('');
-  const [notes, setNotes] = useState('');
-  const [paymentTerms, setPaymentTerms] = useState('Due on receipt');
+  const [cart, setCart] = useState<CartItem[]>(initialDraft?.cart || []);
+  const [selectedVendorId, setSelectedVendorId] = useState<string>(initialDraft?.selectedVendorId || '');
+  const [contactPersonName, setContactPersonName] = useState<string>(initialDraft?.contactPersonName || '');
+  const [taxRate, setTaxRate] = useState(initialDraft?.taxRate ?? 5);
+  const [discountRate, setDiscountRate] = useState(initialDraft?.discountRate ?? 0);
+  const [markupPercent, setMarkupPercent] = useState<number | ''>(initialDraft?.markupPercent ?? '');
+  const [notes, setNotes] = useState(initialDraft?.notes || '');
+  const [paymentTerms, setPaymentTerms] = useState(initialDraft?.paymentTerms || 'Due on receipt');
   const [searchQuery, setSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [customInvoiceNumber, setCustomInvoiceNumber] = useState('');
+  const [customInvoiceNumber, setCustomInvoiceNumber] = useState(initialDraft?.customInvoiceNumber || '');
   const [previewSale, setPreviewSale] = useState<Sale | null>(null);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(initialDraft?.selectedCompanyId || '');
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [newVendorName, setNewVendorName] = useState('');
   const [pendingCustomerName, setPendingCustomerName] = useState<string | null>(null);
@@ -289,7 +302,24 @@ export function Sales() {
     if (defaultCompany && !selectedCompanyId) {
       setSelectedCompanyId(defaultCompany.id);
     }
-  }, [defaultCompany]);
+  }, [defaultCompany, selectedCompanyId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const draft = {
+      cart,
+      selectedVendorId,
+      contactPersonName,
+      taxRate,
+      discountRate,
+      markupPercent,
+      notes,
+      paymentTerms,
+      customInvoiceNumber,
+      selectedCompanyId,
+    };
+    window.localStorage.setItem(INVOICE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId]);
 
   // Auto-select vendor created from customer
   useEffect(() => {
@@ -349,6 +379,9 @@ export function Sales() {
     setSelectedCompanyId(defaultCompany?.id || '');
     setContactPersonName('');
     setEditingSaleId(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(INVOICE_DRAFT_STORAGE_KEY);
+    }
   };
 
   const handleEditSale = (sale: Sale) => {
@@ -411,11 +444,12 @@ export function Sales() {
 
   // Auto-populate invoice number when profile settings change
   useEffect(() => {
+    if (customInvoiceNumber || cart.length > 0 || editingSaleId) return;
     const prefix = profile?.invoicePrefix || 'INV';
     const nextNum = profile?.invoiceNextNumber || 1;
     const newNumber = `${prefix}-${String(nextNum).padStart(4, '0')}`;
     setCustomInvoiceNumber(newNumber);
-  }, [profile?.invoicePrefix, profile?.invoiceNextNumber]);
+  }, [profile?.invoicePrefix, profile?.invoiceNextNumber, customInvoiceNumber, cart.length, editingSaleId]);
 
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(
@@ -557,14 +591,14 @@ export function Sales() {
 
     if (editingSaleId) {
       // Update existing sale
-      await updateSale(editingSaleId, {
+      const updated = await updateSale(editingSaleId, {
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || '',
-        items: cart.map((c) => ({
+        items: cart.map((c, index) => ({
           id: `updated-${c.inventoryItem.id}-${Date.now()}`,
-        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
-          itemName: c.inventoryItem.name,
-          sku: c.inventoryItem.sku,
+          inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
+          itemName: c.inventoryItem.name.trim(),
+          sku: c.inventoryItem.sku.trim() || `CUSTOM-${index + 1}`,
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
@@ -578,16 +612,19 @@ export function Sales() {
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
       });
-      resetForm();
+      if (updated) {
+        resetForm();
+        setActiveTab('history');
+      }
     } else {
       // Create new sale
       const sale = await createSale({
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || null,
-        items: cart.map((c) => ({
-        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
-          itemName: c.inventoryItem.name,
-          sku: c.inventoryItem.sku,
+        items: cart.map((c, index) => ({
+          inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
+          itemName: c.inventoryItem.name.trim(),
+          sku: c.inventoryItem.sku.trim() || `CUSTOM-${index + 1}`,
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
