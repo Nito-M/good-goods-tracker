@@ -33,6 +33,7 @@ interface EditableSaleItem {
   quantity: number;
   unitPrice: number;
   unitCost: number;
+  discountRate: number;
 }
 
 interface EditSaleDialogProps {
