@@ -238,6 +238,7 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
 export function Sales() {
   const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
+  const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors, addVendor } = useVendors();
   const { customers } = useCustomers();
   const { profile } = useProfile();
