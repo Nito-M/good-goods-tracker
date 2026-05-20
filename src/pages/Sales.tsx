@@ -64,7 +64,8 @@ import { InvoiceSettings, Sale } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { useCompanies } from '@/hooks/useCompanies';
 import { CompanySelector } from '@/components/CompanySelector';
-import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
+import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
+import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
 import { useAssemblies } from '@/hooks/useAssemblies';
 
 interface CartItem {
