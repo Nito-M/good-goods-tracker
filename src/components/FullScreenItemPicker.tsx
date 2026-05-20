@@ -262,6 +262,38 @@ export function FullScreenItemPicker({
     [rowsByItem, selectedVendorId, onAddItem]
   );
 
+  const handleCreateNewItemClick = () => {
+    if (documentType === 'Purchase Order') {
+      setConfirmCreateOpen(true);
+    } else {
+      navigate('/items/new');
+    }
+  };
+
+  const handleConfirmCreateNewItem = () => {
+    setConfirmCreateOpen(false);
+    navigate('/items/new');
+  };
+
+  const handleChooserPick = (row: VendorPriceRow) => {
+    if (!chooserItem) return;
+    onAddItem(chooserItem, {
+      vendorPriceRowId: row.id,
+      vendorId: row.vendorId,
+      vendorName: row.vendorName,
+      price: row.price,
+      vendorSku: row.vendorSku,
+    });
+    setChooserItem(null);
+    setChooserRows([]);
+  };
+
+  const handleChooserSkip = () => {
+    if (chooserItem) onAddItem(chooserItem);
+    setChooserItem(null);
+    setChooserRows([]);
+  };
+
   const assemblyTypes = useMemo(() => {
     const typeMap = new Map<string, number>();
     assemblies.forEach(a => {
