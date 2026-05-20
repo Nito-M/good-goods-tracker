@@ -11,6 +11,14 @@ export function useSales() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const normalizeSaleItems = (items: CreateSaleInput['items']) =>
+    items.map((item, index) => ({
+      ...item,
+      itemName: item.itemName.trim(),
+      sku: item.sku?.trim() || `CUSTOM-${index + 1}`,
+      discountRate: item.discountRate || 0,
+    }));
+
   const fetchSales = async () => {
     if (!user) return;
 
@@ -176,11 +184,13 @@ export function useSales() {
   const createSale = async (input: CreateSaleInput): Promise<Sale | null> => {
     if (!user) return null;
 
+    const normalizedItems = normalizeSaleItems(input.items);
+
     // Validate input
     const validation = validateInput(createSaleSchema, {
       vendorId: input.vendorId,
       invoiceNumber: input.invoiceNumber,
-      items: input.items,
+      items: normalizedItems,
       taxRate: input.taxRate,
       discountRate: input.discountRate,
       notes: input.notes,
@@ -205,7 +215,7 @@ export function useSales() {
         weightedAvgCost: number;
       }> = [];
 
-      for (const item of input.items) {
+      for (const item of normalizedItems) {
         const availablePOs = await getAvailablePOItems(item.sku);
         const allocations: Array<{ poId: string; quantity: number; unitCost: number }> = [];
         let remainingQty = item.quantity;
@@ -240,7 +250,7 @@ export function useSales() {
       }
 
       // Calculate per-item discounts and totals
-      const itemLineTotals = input.items.map((item) => {
+      const itemLineTotals = normalizedItems.map((item) => {
         const gross = item.quantity * item.unitPrice;
         const rate = item.discountRate || 0;
         const discount = gross * (rate / 100);
