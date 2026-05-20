@@ -467,7 +467,7 @@ export function Sales() {
     );
   }, [inventoryItems, searchQuery]);
 
-  const addToCart = (item: InventoryItem) => {
+  const addToCart = (item: InventoryItem, override?: PickerAddOverride) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.inventoryItem.id === item.id);
       if (existing) {
@@ -477,11 +477,14 @@ export function Sales() {
             : c
         );
       }
+      const effectiveItem: InventoryItem = override
+        ? { ...item, cost: override.price }
+        : item;
       // Apply markup if set (use 0% markup as valid)
       const customPrice = markupPercent !== ''
-        ? calculateMarkupPrice(item.cost, markupPercent as number)
+        ? calculateMarkupPrice(effectiveItem.cost, markupPercent as number)
         : undefined;
-      return [...prev, { inventoryItem: item, quantity: 1, customPrice }];
+      return [...prev, { inventoryItem: effectiveItem, quantity: 1, customPrice }];
     });
   };
 
