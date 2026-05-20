@@ -59,6 +59,7 @@ export interface CreateSaleInput {
     quantity: number;
     unitPrice: number;
     unitCost: number;
+    discountRate?: number;
   }[];
   taxRate: number;
   discountRate: number;
