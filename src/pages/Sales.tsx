@@ -591,7 +591,7 @@ export function Sales() {
 
     if (editingSaleId) {
       // Update existing sale
-      await updateSale(editingSaleId, {
+      const updated = await updateSale(editingSaleId, {
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || '',
         items: cart.map((c, index) => ({
@@ -612,7 +612,10 @@ export function Sales() {
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
       });
-      resetForm();
+      if (updated) {
+        resetForm();
+        setActiveTab('history');
+      }
     } else {
       // Create new sale
       const sale = await createSale({
