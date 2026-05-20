@@ -880,6 +880,43 @@ export function AddPurchaseOrder() {
         vendorPriceRows={allVendorPriceRows}
         selectedVendorId={vendorId && vendorId !== 'none' ? vendorId : null}
       />
+
+      {/* Vendor-change multi-row chooser */}
+      <Dialog
+        open={vendorChangeChooser.length > 0}
+        onOpenChange={(o) => { if (!o) setVendorChangeChooser([]); }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Choose a vendor price</DialogTitle>
+            <DialogDescription>
+              {vendorChangeChooser[0]?.itemName} has multiple price entries for this vendor. Pick which one to use.
+              {vendorChangeChooser.length > 1 ? ` (${vendorChangeChooser.length - 1} more after this)` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {vendorChangeChooser[0]?.rows.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => handleVendorChangeChooserPick(vendorChangeChooser[0].cartId, r)}
+                className="w-full text-left border border-border rounded-lg p-3 hover:bg-accent transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.vendorSku ? `Part #: ${r.vendorSku}` : 'No vendor part #'}
+                      {r.leadTimeDays != null ? ` · Lead time: ${r.leadTimeDays}d` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-semibold">{formatCurrency(r.price)}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
