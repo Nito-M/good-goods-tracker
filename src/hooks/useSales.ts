@@ -277,9 +277,6 @@ export function useSales() {
       const taxAmount = afterDiscount * (input.taxRate / 100);
       const adjustmentsSum = (input.adjustments || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
       const total = afterDiscount + taxAmount + adjustmentsSum;
-      const afterDiscount = subtotal - discountAmount;
-      const taxAmount = afterDiscount * (input.taxRate / 100);
-      const total = afterDiscount + taxAmount;
 
       // Create sale with draft status by default
       const { data: sale, error: saleError } = await supabase
