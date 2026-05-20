@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useInventory } from '@/hooks/useInventory';
 import { useVendors } from '@/hooks/useVendors';
@@ -87,6 +88,11 @@ export function AddPurchaseOrder() {
   const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
   const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
+  const [vendorChangeChooser, setVendorChangeChooser] = useState<Array<{
+    cartId: string;
+    itemName: string;
+    rows: Array<{ id: string; price: number; vendorSku: string | null; leadTimeDays: number | null }>;
+  }>>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -165,27 +171,40 @@ export function AddPurchaseOrder() {
     }
     supabase
       .from('item_vendor_prices')
-      .select('id, item_id, price, vendor_sku')
+      .select('id, item_id, price, vendor_sku, lead_time_days')
       .eq('vendor_id', newVendorId)
       .then(({ data }) => {
         if (data) {
-          // Group by item_id; first matching row wins
-          const rowsByItem = new Map<string, { price: number; vendorSku: string | null }>();
-          data.forEach(d => {
-            if (!rowsByItem.has(d.item_id)) {
-              rowsByItem.set(d.item_id, { price: Number(d.price), vendorSku: d.vendor_sku });
-            }
+          // Group ALL rows per item (a vendor can have multiple price rows per item)
+          const rowsByItem = new Map<string, Array<{ id: string; price: number; vendorSku: string | null; leadTimeDays: number | null }>>();
+          data.forEach((d: any) => {
+            const list = rowsByItem.get(d.item_id) || [];
+            list.push({ id: d.id, price: Number(d.price), vendorSku: d.vendor_sku, leadTimeDays: d.lead_time_days ?? null });
+            rowsByItem.set(d.item_id, list);
           });
+          const newChooserQueue: Array<{ cartId: string; itemName: string; rows: any[] }> = [];
           setCart(prev => prev.map(c => {
             if (c.inventoryItemId) {
-              const row = rowsByItem.get(c.inventoryItemId);
+              const rows = rowsByItem.get(c.inventoryItemId) || [];
               const inv = inventoryItems.find(i => i.id === c.inventoryItemId);
-              if (row) {
+              if (rows.length === 1) {
+                const row = rows[0];
                 return {
                   ...c,
                   unitPrice: row.price,
                   unitCost: row.price,
                   sku: row.vendorSku || inv?.sku || c.sku,
+                };
+              }
+              if (rows.length > 1) {
+                // Defer to chooser; tentatively apply first row so UI isn't blank
+                const first = rows[0];
+                newChooserQueue.push({ cartId: c.id, itemName: c.itemName, rows });
+                return {
+                  ...c,
+                  unitPrice: first.price,
+                  unitCost: first.price,
+                  sku: first.vendorSku || inv?.sku || c.sku,
                 };
               }
               // No vendor row → revert to primary SKU
@@ -195,8 +214,26 @@ export function AddPurchaseOrder() {
             }
             return c;
           }));
+          if (newChooserQueue.length > 0) {
+            setVendorChangeChooser(newChooserQueue);
+          }
         }
       });
+  };
+
+  // Select a vendor-price row for a queued cart item (after vendor change)
+  const handleVendorChangeChooserPick = (cartId: string, row: { id: string; price: number; vendorSku: string | null }) => {
+    setCart(prev => prev.map(c => {
+      if (c.id !== cartId) return c;
+      const inv = inventoryItems.find(i => i.id === c.inventoryItemId);
+      return {
+        ...c,
+        unitPrice: row.price,
+        unitCost: row.price,
+        sku: row.vendorSku || inv?.sku || c.sku,
+      };
+    }));
+    setVendorChangeChooser(prev => prev.filter(q => q.cartId !== cartId));
   };
 
   // Picker callbacks
@@ -844,6 +881,43 @@ export function AddPurchaseOrder() {
         vendorPriceRows={allVendorPriceRows}
         selectedVendorId={vendorId && vendorId !== 'none' ? vendorId : null}
       />
+
+      {/* Vendor-change multi-row chooser */}
+      <Dialog
+        open={vendorChangeChooser.length > 0}
+        onOpenChange={(o) => { if (!o) setVendorChangeChooser([]); }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Choose a vendor price</DialogTitle>
+            <DialogDescription>
+              {vendorChangeChooser[0]?.itemName} has multiple price entries for this vendor. Pick which one to use.
+              {vendorChangeChooser.length > 1 ? ` (${vendorChangeChooser.length - 1} more after this)` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {vendorChangeChooser[0]?.rows.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => handleVendorChangeChooserPick(vendorChangeChooser[0].cartId, r)}
+                className="w-full text-left border border-border rounded-lg p-3 hover:bg-accent transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.vendorSku ? `Part #: ${r.vendorSku}` : 'No vendor part #'}
+                      {r.leadTimeDays != null ? ` · Lead time: ${r.leadTimeDays}d` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-semibold">{formatCurrency(r.price)}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
