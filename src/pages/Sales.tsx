@@ -594,11 +594,11 @@ export function Sales() {
       await updateSale(editingSaleId, {
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || '',
-        items: cart.map((c) => ({
+        items: cart.map((c, index) => ({
           id: `updated-${c.inventoryItem.id}-${Date.now()}`,
-        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
-          itemName: c.inventoryItem.name,
-          sku: c.inventoryItem.sku,
+          inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
+          itemName: c.inventoryItem.name.trim(),
+          sku: c.inventoryItem.sku.trim() || `CUSTOM-${index + 1}`,
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
@@ -618,10 +618,10 @@ export function Sales() {
       const sale = await createSale({
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || null,
-        items: cart.map((c) => ({
-        inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
-          itemName: c.inventoryItem.name,
-          sku: c.inventoryItem.sku,
+        items: cart.map((c, index) => ({
+          inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
+          itemName: c.inventoryItem.name.trim(),
+          sku: c.inventoryItem.sku.trim() || `CUSTOM-${index + 1}`,
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
