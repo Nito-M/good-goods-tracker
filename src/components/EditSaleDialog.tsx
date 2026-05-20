@@ -337,7 +337,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
           {/* Rates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Discount Rate (%)</Label>
+              <Label>Additional Invoice Discount (%)</Label>
               <Input
                 type="number"
                 step="0.1"
