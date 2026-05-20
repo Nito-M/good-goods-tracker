@@ -26,6 +26,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import type { VendorPriceRow } from '@/hooks/useAllItemVendorPrices';
 
 // Generic cart item shape that both Quotes and Sales can use
 export interface PickerCartItem {
@@ -48,12 +56,20 @@ interface Assembly {
   type?: string;
 }
 
+export interface PickerAddOverride {
+  vendorPriceRowId: string;
+  vendorId: string;
+  vendorName: string;
+  price: number;
+  vendorSku: string | null;
+}
+
 interface FullScreenItemPickerProps {
   open: boolean;
   onClose: () => void;
   inventoryItems: InventoryItem[];
   cart: PickerCartItem[];
-  onAddItem: (item: InventoryItem) => void;
+  onAddItem: (item: InventoryItem, override?: PickerAddOverride) => void;
   onAddCustomItem: () => void;
   onAddAssembly?: (assembly: Assembly) => void;
   onUpdateQuantity: (itemId: string, quantity: number | null) => void;
@@ -64,6 +80,10 @@ interface FullScreenItemPickerProps {
   formatPrice?: (value: number) => string;
   vendorItemIds?: string[] | null;
   vendorName?: string;
+  /** All vendor-price rows visible. Used to prompt when an item has multiple rows. */
+  vendorPriceRows?: VendorPriceRow[];
+  /** When set (e.g. on POs), only rows for this vendor are considered. */
+  selectedVendorId?: string | null;
 }
 
 function CartItemRow({
