@@ -403,12 +403,12 @@ export function FullScreenItemPicker({
         if (assembly && onAddAssembly) onAddAssembly(assembly);
       } else {
         const item = filteredItems[selectedIndex];
-        if (item) onAddItem(item);
+        if (item) handleItemClick(item);
       }
     } else if (e.key === 'Escape') {
       handleDone();
     }
-  }, [showAssemblies, filteredAssemblies, filteredItems, selectedIndex, onAddItem, onAddAssembly, onClose]);
+  }, [showAssemblies, filteredAssemblies, filteredItems, selectedIndex, handleItemClick, onAddAssembly, onClose]);
 
   // Reset selected index when results change
   useEffect(() => {
