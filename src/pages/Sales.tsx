@@ -382,6 +382,7 @@ export function Sales() {
         quantity: item.quantity,
         customPrice: item.unitPrice,
         isCustom: !item.inventoryItemId,
+        discountRate: item.discountRate || 0,
       };
     });
 
