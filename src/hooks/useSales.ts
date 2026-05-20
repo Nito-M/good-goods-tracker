@@ -340,6 +340,9 @@ export function useSales() {
           .from('sale_adjustments' as any)
           .insert(rows as any);
         if (adjError) throw adjError;
+      }
+
+
 
       // Get current invoice_next_number and increment it
       const { data: profileData } = await supabase
