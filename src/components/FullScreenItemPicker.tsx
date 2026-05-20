@@ -593,13 +593,25 @@ export function FullScreenItemPicker({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredItems.map((item, index) => (
+                    filteredItems.map((item, index) => {
+                      const itemRows = rowsByItem.get(item.id) || [];
+                      const hasMultiple = itemRows.length > 1;
+                      return (
                       <TableRow
                         key={item.id}
                         className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
-                        onClick={() => onAddItem(item)}
+                        onClick={() => handleItemClick(item)}
                       >
-                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <span>{item.name}</span>
+                            {hasMultiple && (
+                              <Badge variant="outline" className="text-[10px] h-5">
+                                {itemRows.length} vendor prices
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge variant="secondary">{item.sku}</Badge>
                         </TableCell>
@@ -615,13 +627,14 @@ export function FullScreenItemPicker({
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={(e) => { e.stopPropagation(); onAddItem(item); }}
+                            onClick={(e) => { e.stopPropagation(); handleItemClick(item); }}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
