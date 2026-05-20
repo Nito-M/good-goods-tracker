@@ -33,19 +33,26 @@ export function useSales() {
             .eq('sale_id', sale.id)
             .order('sort_order', { ascending: true });
 
-          const mappedItems = (items || []).map((item) => {
+          const mappedItems = (items || []).map((item: any) => {
             const unitCost = Number(item.unit_cost) || 0;
-            const totalCost = unitCost * item.quantity;
+            const quantity = Number(item.quantity) || 0;
+            const unitPrice = Number(item.unit_price) || 0;
+            const discountRate = Number(item.discount_rate) || 0;
+            const lineGross = quantity * unitPrice;
+            const discountAmount = Number(item.discount_amount) || (lineGross * discountRate / 100);
             const totalPrice = Number(item.total_price);
+            const totalCost = unitCost * quantity;
             return {
               id: item.id,
               saleId: item.sale_id,
               inventoryItemId: item.inventory_item_id,
               itemName: item.item_name,
               sku: item.sku,
-              quantity: item.quantity,
-              unitPrice: Number(item.unit_price),
+              quantity,
+              unitPrice,
               unitCost,
+              discountRate,
+              discountAmount,
               totalPrice,
               totalCost,
               profit: totalPrice - totalCost,
