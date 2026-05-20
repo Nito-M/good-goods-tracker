@@ -1,42 +1,21 @@
-## Goal
-Allow each invoice line item to have its own % discount, applied **in addition** to the existing invoice-wide discount.
+## Plan
 
-## How calculations will work
-For each line item:
-- `lineSubtotal = quantity * unitPrice`
-- `lineDiscount = lineSubtotal * (itemDiscountRate / 100)`
-- `lineTotal = lineSubtotal - lineDiscount`
+Fix the app-wide tab-return reload by stabilizing the global auth context instead of patching individual pages.
 
-Then invoice totals:
-- `subtotal = sum(lineTotal)` (after per-item discounts)
-- Invoice-wide discount % applies on top of that subtotal (unchanged behavior)
-- Tax applies after invoice-wide discount (unchanged)
+### What I’ll change
 
-## Database
-- Add `discount_rate NUMERIC DEFAULT 0` and `discount_amount NUMERIC DEFAULT 0` to `sale_items`.
+1. **Stabilize auth updates**
+   - Update `AuthContext` so token refresh events do not replace the `session` object or context value when the signed-in user has not changed.
+   - Keep the existing `user` stability fix, but extend it to the full context so every component using `useAuth()` does not rerender/refetch on tab focus.
 
-## Backend / hooks (`src/hooks/useSales.ts`)
-- Accept `discountRate` per item in create / update inputs.
-- Compute each line's discount and persist `discount_rate` + `discount_amount`.
-- Use post-item-discount totals when computing sale subtotal, profit, and totals.
-- Map new columns into `SaleItem`.
+2. **Memoize auth functions/context value**
+   - Wrap `signUp`, `signIn`, and `signOut` in stable callbacks.
+   - Memoize the provider value so consumers only update when `user`, `session`, or `loading` meaningfully changes.
 
-## Types (`src/types/sale.ts`)
-- Add `discountRate` and `discountAmount` to `SaleItem`.
-- Add `discountRate` to the item entry in `CreateSaleInput.items`.
+3. **Keep real auth changes working**
+   - Still update immediately on actual sign-in, sign-out, user change, or expired/missing session.
+   - Preserve the existing “Remember Me” behavior and password recovery exception.
 
-## UI — invoice editor (`src/pages/Sales.tsx` create form + `src/components/EditSaleDialog.tsx`)
-- Add a small `Disc %` input next to each line item's qty / unit price.
-- Show per-line discounted total in the row.
-- Keep the existing invoice-wide discount field; show it as "Additional discount".
-- Totals breakdown shows: Subtotal (after item discounts) → Additional discount → Tax → Total.
-
-## Display surfaces
-- `SaleCard.tsx`: no change required (only shows totals), but show "(incl. item discounts)" hint if any item has a discount — optional polish.
-- `SaleDetail.tsx`: in the line items list, show the discount % and discounted line total when > 0.
-- `invoiceGenerator.ts` (PDF): add a `Disc %` column (only when any item has a discount, to keep PDFs clean for users who don't use it), and show line totals as discounted values. Adjust column widths.
-
-## Out of scope
-- No changes to quotes, POs, sales orders, or storefront.
-- No change to the invoice-wide discount semantics.
-- No new RLS or auth changes.
+4. **Verify the trigger is removed**
+   - Confirm the only intentional hard reload remains the manual refresh button in `AppLayout`.
+   - Run a focused check so returning to the tab should no longer cause global page loading/spinner behavior.
