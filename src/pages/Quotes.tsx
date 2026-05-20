@@ -242,12 +242,14 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
 }
 import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
-import { FullScreenItemPicker } from '@/components/FullScreenItemPicker';
+import { FullScreenItemPicker, PickerAddOverride } from '@/components/FullScreenItemPicker';
+import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
 
 export function Quotes() {
   // signOut moved to sidebar
   const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertToPurchaseOrder, revertInvoiceLink } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
+  const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors, addVendor } = useVendors();
   const { customers } = useCustomers();
   const { profile } = useProfile();
