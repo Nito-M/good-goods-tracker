@@ -1207,6 +1207,7 @@ export function Quotes() {
         assemblies={assemblies}
         documentType="Quote"
         formatPrice={formatCurrency}
+        vendorPriceRows={allVendorPriceRows}
       />
     </div>
   );
