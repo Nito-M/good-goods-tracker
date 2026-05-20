@@ -200,10 +200,11 @@ export function AddPurchaseOrder() {
   };
 
   // Picker callbacks
-  const handleAddItem = (item: any) => {
+  const handleAddItem = (item: any, override?: PickerAddOverride) => {
     const vendorPrice = vendorPrices.find(vp => vp.itemId === item.id);
-    const cost = vendorPrice?.price ?? item.cost ?? 0;
-    const sku = (vendorId && vendorId !== 'none' && vendorPrice?.vendorSku) || item.sku;
+    const cost = override?.price ?? vendorPrice?.price ?? item.cost ?? 0;
+    const sku = override?.vendorSku
+      ?? ((vendorId && vendorId !== 'none' && vendorPrice?.vendorSku) || item.sku);
     const newItem: POCartItem = {
       id: crypto.randomUUID(),
       inventoryItemId: item.id,
