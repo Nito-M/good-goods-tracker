@@ -170,7 +170,7 @@ export function AddPurchaseOrder() {
     }
     supabase
       .from('item_vendor_prices')
-      .select('id, item_id, price, vendor_sku')
+      .select('id, item_id, price, vendor_sku, lead_time_days')
       .eq('vendor_id', newVendorId)
       .then(({ data }) => {
         if (data) {
