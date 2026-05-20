@@ -479,7 +479,7 @@ export function Quotes() {
     });
   }, [inventoryItems, searchQuery]);
 
-  const addToCart = (item: InventoryItem) => {
+  const addToCart = (item: InventoryItem, override?: PickerAddOverride) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.inventoryItemId === item.id);
       if (existing) {
@@ -489,16 +489,18 @@ export function Quotes() {
             : c
         );
       }
+      const effectiveCost = override ? override.price : item.cost;
+      const effectiveSku = override?.vendorSku || item.sku;
       setCartBasePrices(base => ({ ...base, [item.id]: item.price }));
       return [...prev, {
         id: item.id,
         inventoryItemId: item.id,
         itemName: item.name,
-        sku: item.sku,
+        sku: effectiveSku,
         quantity: null,
         quantityUnit: item.quantityUnit,
         unitPrice: markupPercent !== '' ? calculateMarkupPrice(item.price, markupPercent as number) : item.price,
-        unitCost: item.cost,
+        unitCost: effectiveCost,
         notes: '',
       }];
     });
