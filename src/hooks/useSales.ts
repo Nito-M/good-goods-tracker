@@ -328,6 +328,19 @@ export function useSales() {
         // Note: PO allocations and inventory reduction now happen when marked as "picked_up"
       }
 
+      // Insert post-tax adjustments
+      if (input.adjustments && input.adjustments.length > 0) {
+        const rows = input.adjustments.map((a, idx) => ({
+          sale_id: sale.id,
+          label: (a.label || '').trim(),
+          amount: Number(a.amount) || 0,
+          sort_order: idx,
+        }));
+        const { error: adjError } = await supabase
+          .from('sale_adjustments' as any)
+          .insert(rows as any);
+        if (adjError) throw adjError;
+
       // Get current invoice_next_number and increment it
       const { data: profileData } = await supabase
         .from('profiles')
