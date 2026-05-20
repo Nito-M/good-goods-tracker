@@ -79,6 +79,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         unitCost: item.unitCost,
+        discountRate: item.discountRate || 0,
       })));
       setVendorId(sale.vendorId || '');
       setInvoiceNumber(sale.invoiceNumber);
@@ -112,10 +113,15 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       quantity: 1,
       unitPrice: 0,
       unitCost: 0,
+      discountRate: 0,
     }]);
   };
 
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const lineTotal = (item: EditableSaleItem) => {
+    const gross = item.quantity * item.unitPrice;
+    return gross - gross * ((item.discountRate || 0) / 100);
+  };
+  const subtotal = items.reduce((sum, item) => sum + lineTotal(item), 0);
   const discountAmount = subtotal * (discountRate / 100);
   const afterDiscount = subtotal - discountAmount;
   const taxAmount = afterDiscount * (taxRate / 100);
