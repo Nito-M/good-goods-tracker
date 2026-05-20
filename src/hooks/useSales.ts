@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Sale, SaleItem, CreateSaleInput, SaleStatus } from '@/types/sale';
+import { Sale, SaleItem, SaleAdjustment, CreateSaleInput, SaleStatus } from '@/types/sale';
 import { createSaleSchema, validateInput } from '@/lib/validation';
 
 export function useSales() {
@@ -35,11 +35,18 @@ export function useSales() {
 
       const salesWithItems: Sale[] = await Promise.all(
         (salesData || []).map(async (sale) => {
-          const { data: items } = await supabase
-            .from('sale_items')
-            .select('*')
-            .eq('sale_id', sale.id)
-            .order('sort_order', { ascending: true });
+          const [{ data: items }, { data: adjustmentsData }] = await Promise.all([
+            supabase
+              .from('sale_items')
+              .select('*')
+              .eq('sale_id', sale.id)
+              .order('sort_order', { ascending: true }),
+            supabase
+              .from('sale_adjustments' as any)
+              .select('*')
+              .eq('sale_id', sale.id)
+              .order('sort_order', { ascending: true }),
+          ]);
 
           const mappedItems = (items || []).map((item: any) => {
             const unitCost = Number(item.unit_cost) || 0;
@@ -67,6 +74,13 @@ export function useSales() {
               createdAt: item.created_at,
             };
           });
+
+          const adjustments: SaleAdjustment[] = ((adjustmentsData as any[]) || []).map((a) => ({
+            id: a.id,
+            label: a.label || '',
+            amount: Number(a.amount) || 0,
+            sortOrder: a.sort_order || 0,
+          }));
 
           const totalCost = mappedItems.reduce((sum, item) => sum + item.totalCost, 0);
           const totalProfit = mappedItems.reduce((sum, item) => sum + item.profit, 0);
@@ -96,6 +110,7 @@ export function useSales() {
             paymentTerms: sale.payment_terms,
             dueDate: sale.due_date,
             items: mappedItems,
+            adjustments,
             createdAt: sale.created_at,
             updatedAt: sale.updated_at,
             companyId: (sale as any).company_id || null,
