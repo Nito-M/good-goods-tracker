@@ -378,6 +378,7 @@ export function Sales() {
     setCustomInvoiceNumber('');
     setTaxRate(0);
     setDiscountRate(0);
+    setAdjustments([]);
     setMarkupPercent('');
     setNotes('');
     setSelectedCompanyId(defaultCompany?.id || '');
@@ -428,6 +429,7 @@ export function Sales() {
     setCustomInvoiceNumber(sale.invoiceNumber);
     setTaxRate(sale.taxRate);
     setDiscountRate(sale.discountRate);
+    setAdjustments((sale.adjustments || []).map((a) => ({ label: a.label, amount: a.amount })));
     setNotes(sale.notes || '');
     setPaymentTerms(sale.paymentTerms || 'Due on receipt');
     setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
