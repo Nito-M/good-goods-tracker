@@ -46,6 +46,7 @@ export function AddPurchaseOrder() {
   const editingOrder = (location.state as { editingOrder?: PurchaseOrder })?.editingOrder ?? null;
   const { createOrder, updateOrder } = usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
+  const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors } = useVendors();
   const { requests } = useRequests();
   const { jobs } = useJobs();
