@@ -588,7 +588,8 @@ export function Sales() {
   const discountAmount = subtotal * (discountRate / 100);
   const afterDiscount = subtotal - discountAmount;
   const taxAmount = afterDiscount * (taxRate / 100);
-  const total = afterDiscount + taxAmount;
+  const adjustmentsSum = adjustments.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+  const total = afterDiscount + taxAmount + adjustmentsSum;
 
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
@@ -622,6 +623,7 @@ export function Sales() {
         dueDate: null,
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
+        adjustments,
       });
       if (updated) {
         resetForm();
@@ -640,6 +642,7 @@ export function Sales() {
         dueDate: null,
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
+        adjustments,
       });
 
       if (sale) {
