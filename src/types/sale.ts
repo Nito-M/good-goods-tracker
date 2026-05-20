@@ -53,7 +53,7 @@ export interface CreateSaleInput {
   contactPersonName?: string | null;
   invoiceNumber?: string | null;
   items: {
-    inventoryItemId: string;
+    inventoryItemId: string | null;
     itemName: string;
     sku: string;
     quantity: number;
