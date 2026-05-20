@@ -87,6 +87,11 @@ export function AddPurchaseOrder() {
   const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
   const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
+  const [vendorChangeChooser, setVendorChangeChooser] = useState<Array<{
+    cartId: string;
+    itemName: string;
+    rows: Array<{ id: string; price: number; vendorSku: string | null; leadTimeDays: number | null }>;
+  }>>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
