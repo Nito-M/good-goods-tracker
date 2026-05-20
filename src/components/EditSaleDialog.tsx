@@ -279,7 +279,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-5 gap-2">
                       <div className="space-y-1">
                         <Label className="text-xs">Quantity</Label>
                         <Input
@@ -309,10 +309,21 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                         />
                       </div>
                       <div className="space-y-1">
+                        <Label className="text-xs">Disc %</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min={0}
+                          max={100}
+                          value={item.discountRate}
+                          onChange={(e) => updateItem(item.id, { discountRate: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-1">
                         <Label className="text-xs">Total</Label>
                         <Input
                           readOnly
-                          value={formatCurrency(item.quantity * item.unitPrice)}
+                          value={formatCurrency(lineTotal(item))}
                           className="bg-muted"
                         />
                       </div>
