@@ -1013,6 +1013,71 @@ export function Sales() {
                       </div>
                     </div>
 
+                    {/* Post-tax adjustments */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label>Adjustments (after tax)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setAdjustments((prev) => [...prev, { label: '', amount: 0 }])
+                          }
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add line
+                        </Button>
+                      </div>
+                      {adjustments.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          Add a labeled line that appears below GST on the invoice (use a negative amount for credits/rebates).
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {adjustments.map((adj, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <Input
+                                placeholder="Label (e.g. Rebate)"
+                                value={adj.label}
+                                onChange={(e) =>
+                                  setAdjustments((prev) =>
+                                    prev.map((a, i) => (i === idx ? { ...a, label: e.target.value } : a))
+                                  )
+                                }
+                                className="flex-1"
+                              />
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={adj.amount}
+                                onChange={(e) =>
+                                  setAdjustments((prev) =>
+                                    prev.map((a, i) =>
+                                      i === idx ? { ...a, amount: parseFloat(e.target.value) || 0 } : a
+                                    )
+                                  )
+                                }
+                                className="w-32"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive"
+                                onClick={() =>
+                                  setAdjustments((prev) => prev.filter((_, i) => i !== idx))
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="space-y-2">
                       <Label>Payment Terms</Label>
                       <Select
@@ -1067,6 +1132,16 @@ export function Sales() {
                         <span>{formatCurrency(taxAmount)}</span>
                       </div>
                     )}
+                    {adjustments.map((adj, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {adj.label.trim() || `Adjustment ${idx + 1}`}
+                        </span>
+                        <span className={adj.amount < 0 ? 'text-green-600' : ''}>
+                          {adj.amount < 0 ? '-' : ''}{formatCurrency(Math.abs(adj.amount))}
+                        </span>
+                      </div>
+                    ))}
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
                       <span>{formatCurrency(total)}</span>
