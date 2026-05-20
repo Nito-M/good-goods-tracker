@@ -4002,6 +4002,8 @@ export type Database = {
       sale_items: {
         Row: {
           created_at: string
+          discount_amount: number
+          discount_rate: number
           id: string
           inventory_item_id: string | null
           item_name: string
@@ -4015,6 +4017,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_amount?: number
+          discount_rate?: number
           id?: string
           inventory_item_id?: string | null
           item_name: string
@@ -4028,6 +4032,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_amount?: number
+          discount_rate?: number
           id?: string
           inventory_item_id?: string | null
           item_name?: string

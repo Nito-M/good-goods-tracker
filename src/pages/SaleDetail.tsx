@@ -215,6 +215,7 @@ export default function SaleDetail() {
                 <TableHead>Part #</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead className="text-right">Unit Price</TableHead>
+                <TableHead className="text-right">Disc %</TableHead>
                 {isPickedUp && <TableHead className="text-right">Unit Cost</TableHead>}
                 <TableHead className="text-right">Total</TableHead>
                 {isPickedUp && <TableHead className="text-right">Profit</TableHead>}
@@ -227,6 +228,9 @@ export default function SaleDetail() {
                   <TableCell className="text-muted-foreground">{item.sku}</TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                  <TableCell className="text-right">
+                    {item.discountRate > 0 ? `${item.discountRate}%` : '—'}
+                  </TableCell>
                   {isPickedUp && <TableCell className="text-right">{formatCurrency(item.unitCost)}</TableCell>}
                   <TableCell className="text-right">{formatCurrency(item.totalPrice)}</TableCell>
                   {isPickedUp && (

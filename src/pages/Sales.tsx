@@ -73,6 +73,7 @@ interface CartItem {
   customPrice?: number; // Custom price after markup
   excludeMarkup?: boolean;
   isCustom?: boolean;
+  discountRate?: number; // Per-item discount %
 }
 
 function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFromCart, markupPercent, calculateMarkupPrice, setCart, getItemPrice }: {
@@ -158,8 +159,30 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
           </Button>
         </div>
       </TableCell>
+      <TableCell>
+        <Input
+          type="number"
+          step="0.1"
+          min={0}
+          max={100}
+          className="w-20"
+          value={c.discountRate ?? 0}
+          onChange={(e) => {
+            const rate = parseFloat(e.target.value) || 0;
+            setCart(prev => prev.map(item =>
+              item.inventoryItem.id === c.inventoryItem.id
+                ? { ...item, discountRate: rate }
+                : item
+            ));
+          }}
+        />
+      </TableCell>
       <TableCell className="text-right">
-        {formatCurrency(c.quantity * getItemPrice(c))}
+        {(() => {
+          const gross = c.quantity * getItemPrice(c);
+          const rate = c.discountRate || 0;
+          return formatCurrency(gross - gross * (rate / 100));
+        })()}
       </TableCell>
       {markupPercent !== '' && (
         <TableCell>
@@ -359,6 +382,7 @@ export function Sales() {
         quantity: item.quantity,
         customPrice: item.unitPrice,
         isCustom: !item.inventoryItemId,
+        discountRate: item.discountRate || 0,
       };
     });
 
@@ -513,7 +537,11 @@ export function Sales() {
 
   const subtotal = useMemo(
     () =>
-      cart.reduce((sum, c) => sum + c.quantity * getItemPrice(c), 0),
+      cart.reduce((sum, c) => {
+        const gross = c.quantity * getItemPrice(c);
+        const rate = c.discountRate || 0;
+        return sum + (gross - gross * (rate / 100));
+      }, 0),
     [cart]
   );
 
@@ -540,6 +568,7 @@ export function Sales() {
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
+          discountRate: c.discountRate || 0,
         })),
         taxRate,
         discountRate,
@@ -562,6 +591,7 @@ export function Sales() {
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
+          discountRate: c.discountRate || 0,
         })),
         taxRate,
         discountRate,
@@ -688,11 +718,12 @@ export function Sales() {
                     ) : (
                       <Table>
                         <TableHeader>
-                          <TableRow>
+                       <TableRow>
                             <TableHead className="w-8"></TableHead>
                             <TableHead>Item</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Quantity</TableHead>
+                            <TableHead>Disc %</TableHead>
                             <TableHead className="text-right">Total</TableHead>
                             {markupPercent !== '' && <TableHead>Markup</TableHead>}
                             <TableHead></TableHead>
@@ -926,7 +957,7 @@ export function Sales() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Discount (%)</Label>
+                        <Label>Additional Invoice Discount (%)</Label>
                         <Input
                           type="number"
                           value={discountRate}

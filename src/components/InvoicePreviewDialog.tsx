@@ -150,6 +150,9 @@ export function InvoicePreviewDialog({
                       <th className="text-left p-2 font-medium">SKU</th>
                       <th className="text-center p-2 font-medium">Qty</th>
                       <th className="text-right p-2 font-medium">Unit Price</th>
+                      {sale.items.some((it) => (it.discountRate || 0) > 0) && (
+                        <th className="text-right p-2 font-medium">Disc %</th>
+                      )}
                       <th className="text-right p-2 font-medium">Total</th>
                     </tr>
                   </thead>
@@ -160,6 +163,9 @@ export function InvoicePreviewDialog({
                         <td className="p-2 text-gray-600">{item.sku}</td>
                         <td className="p-2 text-center">{item.quantity}</td>
                         <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
+                        {sale.items.some((it) => (it.discountRate || 0) > 0) && (
+                          <td className="p-2 text-right">{(item.discountRate || 0) > 0 ? `${item.discountRate}%` : '—'}</td>
+                        )}
                         <td className="p-2 text-right">{formatCurrency(item.totalPrice)}</td>
                       </tr>
                     ))}

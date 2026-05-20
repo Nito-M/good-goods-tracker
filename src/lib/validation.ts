@@ -115,6 +115,7 @@ export const saleItemSchema = z.object({
   quantity: z.number().min(1, 'Quantity must be at least 1'),
   unitPrice: z.number().min(0, 'Price cannot be negative'),
   unitCost: z.number().min(0, 'Cost cannot be negative'),
+  discountRate: z.number().min(0).max(100, 'Item discount must be 0-100').optional(),
 });
 
 export const createSaleSchema = z.object({

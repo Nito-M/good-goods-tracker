@@ -33,6 +33,7 @@ interface EditableSaleItem {
   quantity: number;
   unitPrice: number;
   unitCost: number;
+  discountRate: number;
 }
 
 interface EditSaleDialogProps {
@@ -78,6 +79,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         unitCost: item.unitCost,
+        discountRate: item.discountRate || 0,
       })));
       setVendorId(sale.vendorId || '');
       setInvoiceNumber(sale.invoiceNumber);
@@ -111,10 +113,15 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       quantity: 1,
       unitPrice: 0,
       unitCost: 0,
+      discountRate: 0,
     }]);
   };
 
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const lineTotal = (item: EditableSaleItem) => {
+    const gross = item.quantity * item.unitPrice;
+    return gross - gross * ((item.discountRate || 0) / 100);
+  };
+  const subtotal = items.reduce((sum, item) => sum + lineTotal(item), 0);
   const discountAmount = subtotal * (discountRate / 100);
   const afterDiscount = subtotal - discountAmount;
   const taxAmount = afterDiscount * (taxRate / 100);
@@ -272,7 +279,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-5 gap-2">
                       <div className="space-y-1">
                         <Label className="text-xs">Quantity</Label>
                         <Input
@@ -302,10 +309,21 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                         />
                       </div>
                       <div className="space-y-1">
+                        <Label className="text-xs">Disc %</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min={0}
+                          max={100}
+                          value={item.discountRate}
+                          onChange={(e) => updateItem(item.id, { discountRate: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-1">
                         <Label className="text-xs">Total</Label>
                         <Input
                           readOnly
-                          value={formatCurrency(item.quantity * item.unitPrice)}
+                          value={formatCurrency(lineTotal(item))}
                           className="bg-muted"
                         />
                       </div>
@@ -319,7 +337,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
           {/* Rates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Discount Rate (%)</Label>
+              <Label>Additional Invoice Discount (%)</Label>
               <Input
                 type="number"
                 step="0.1"

@@ -145,22 +145,27 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   if (layout.itemsTable.visible) {
     const tableY = layout.itemsTable.y > 0 ? layout.itemsTable.y : flowY;
     let y = tableY;
-    
+
+    const hasDiscount = sale.items.some((it) => (it.discountRate || 0) > 0);
+
     // Table Header
     doc.setFillColor(240, 240, 240);
     doc.rect(layout.itemsTable.x, y - 4, pageWidth - layout.itemsTable.x - 20, 8, 'F');
     doc.setFont('helvetica', 'bold');
     doc.text('Item', layout.itemsTable.x + 2, y);
     doc.text('SKU', layout.itemsTable.x + 60, y);
-    doc.text('Qty', layout.itemsTable.x + 95, y);
-    doc.text('Unit Price', layout.itemsTable.x + 115, y);
+    doc.text('Qty', layout.itemsTable.x + 92, y);
+    doc.text('Unit Price', layout.itemsTable.x + 108, y);
+    if (hasDiscount) {
+      doc.text('Disc %', layout.itemsTable.x + 138, y);
+    }
     doc.text('Total', pageWidth - 22, y, { align: 'right' });
     y += 10;
 
     // Items
     doc.setFont('helvetica', 'normal');
     const nameColWidth = 55;
-    const skuColWidth = 32;
+    const skuColWidth = 30;
     sale.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
       const skuLines = doc.splitTextToSize(item.sku, skuColWidth);
@@ -171,12 +176,19 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
         doc.addPage();
         y = 20;
       }
-      
+
+      const rate = item.discountRate || 0;
+      const gross = item.quantity * item.unitPrice;
+      const lineTotal = gross - gross * (rate / 100);
+
       doc.text(nameLines, layout.itemsTable.x + 2, y);
       doc.text(skuLines, layout.itemsTable.x + 60, y);
-      doc.text(item.quantity.toString(), layout.itemsTable.x + 95, y);
-      doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 115, y);
-      doc.text(formatCurrency(item.totalPrice), pageWidth - 22, y, { align: 'right' });
+      doc.text(item.quantity.toString(), layout.itemsTable.x + 92, y);
+      doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 108, y);
+      if (hasDiscount) {
+        doc.text(rate > 0 ? `${rate}%` : '-', layout.itemsTable.x + 138, y);
+      }
+      doc.text(formatCurrency(lineTotal), pageWidth - 22, y, { align: 'right' });
       y += rowHeight + 2;
     });
 
