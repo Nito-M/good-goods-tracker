@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -63,18 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Only set up the auth state listener AFTER the initial check is done
     if (!initialCheckDone) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      // Keep prior object identities when nothing meaningful changed so consumers
+      // of useAuth() don't re-render and re-fetch on tab focus / token refresh.
+      setSession((currentSession) => {
+        if (currentSession?.user?.id === (nextSession?.user?.id ?? null) &&
+            currentSession?.access_token === (nextSession?.access_token ?? null)) {
+          return currentSession;
+        }
+        return nextSession;
+      });
       setUser((currentUser) => {
-        const nextUser = session?.user ?? null;
-        return currentUser?.id === nextUser?.id ? currentUser : nextUser;
+        const nextUser = nextSession?.user ?? null;
+        return currentUser?.id === (nextUser?.id ?? null) ? currentUser : nextUser;
       });
     });
 
     return () => subscription.unsubscribe();
   }, [initialCheckDone]);
 
-  const signUp = async (email: string, password: string, displayName: string, birthYear?: number) => {
+  const signUp = useCallback(async (email: string, password: string, displayName: string, birthYear?: number) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -84,29 +92,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     return { error };
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
+  const signIn = useCallback(async (email: string, password: string, rememberMe: boolean = true) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    
+
     if (!error) {
-      // Store remember me preference
       localStorage.setItem('remember_me', rememberMe ? 'true' : 'false');
-      // Set session marker (will be cleared when browser closes)
       sessionStorage.setItem(SESSION_ACTIVE_KEY, 'true');
     }
-    
-    return { error };
-  };
 
-  const signOut = async () => {
+    return { error };
+  }, []);
+
+  const signOut = useCallback(async () => {
     localStorage.removeItem('remember_me');
     sessionStorage.removeItem(SESSION_ACTIVE_KEY);
     await supabase.auth.signOut();
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, session, loading, signUp, signIn, signOut }),
+    [user, session, loading, signUp, signIn, signOut]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
