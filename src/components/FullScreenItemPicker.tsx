@@ -212,6 +212,8 @@ export function FullScreenItemPicker({
   formatPrice = formatCurrency,
   vendorItemIds,
   vendorName,
+  vendorPriceRows,
+  selectedVendorId,
 }: FullScreenItemPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAssemblies, setShowAssemblies] = useState(false);
@@ -221,19 +223,44 @@ export function FullScreenItemPicker({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
   const [confirmCreateOpen, setConfirmCreateOpen] = useState(false);
+  const [chooserItem, setChooserItem] = useState<InventoryItem | null>(null);
+  const [chooserRows, setChooserRows] = useState<VendorPriceRow[]>([]);
 
-  const handleCreateNewItemClick = () => {
-    if (documentType === 'Purchase Order') {
-      setConfirmCreateOpen(true);
-    } else {
-      navigate('/items/new');
-    }
-  };
+  // Index vendor price rows by item id for quick lookup
+  const rowsByItem = useMemo(() => {
+    const map = new Map<string, VendorPriceRow[]>();
+    (vendorPriceRows || []).forEach((r) => {
+      if (selectedVendorId && r.vendorId !== selectedVendorId) return;
+      const list = map.get(r.itemId) || [];
+      list.push(r);
+      map.set(r.itemId, list);
+    });
+    return map;
+  }, [vendorPriceRows, selectedVendorId]);
 
-  const handleConfirmCreateNewItem = () => {
-    setConfirmCreateOpen(false);
-    navigate('/items/new');
-  };
+  const handleItemClick = useCallback(
+    (item: InventoryItem) => {
+      const rows = rowsByItem.get(item.id) || [];
+      if (rows.length > 1) {
+        setChooserItem(item);
+        setChooserRows(rows);
+        return;
+      }
+      if (rows.length === 1 && selectedVendorId) {
+        const r = rows[0];
+        onAddItem(item, {
+          vendorPriceRowId: r.id,
+          vendorId: r.vendorId,
+          vendorName: r.vendorName,
+          price: r.price,
+          vendorSku: r.vendorSku,
+        });
+        return;
+      }
+      onAddItem(item);
+    },
+    [rowsByItem, selectedVendorId, onAddItem]
+  );
 
   const assemblyTypes = useMemo(() => {
     const typeMap = new Map<string, number>();
