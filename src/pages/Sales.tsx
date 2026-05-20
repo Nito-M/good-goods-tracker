@@ -957,7 +957,7 @@ export function Sales() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Discount (%)</Label>
+                        <Label>Additional Invoice Discount (%)</Label>
                         <Input
                           type="number"
                           value={discountRate}
