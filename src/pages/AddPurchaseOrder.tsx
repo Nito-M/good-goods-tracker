@@ -841,6 +841,8 @@ export function AddPurchaseOrder() {
         formatPrice={formatCurrency}
         vendorItemIds={vendorId && vendorId !== 'none' ? vendorPrices.map(vp => vp.itemId) : null}
         vendorName={vendors.find(v => v.id === vendorId)?.name}
+        vendorPriceRows={allVendorPriceRows}
+        selectedVendorId={vendorId && vendorId !== 'none' ? vendorId : null}
       />
     </div>
   );
