@@ -1316,6 +1316,7 @@ export function Sales() {
         onRemoveItem={removeFromCart}
         documentType="Invoice"
         formatPrice={formatCurrency}
+        vendorPriceRows={allVendorPriceRows}
       />
     </div>
   );
