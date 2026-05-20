@@ -560,6 +560,7 @@ export function useSales() {
       dueDate: string | null;
       companyId?: string | null;
       contactPersonName?: string | null;
+      adjustments?: { label: string; amount: number }[];
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -578,7 +579,9 @@ export function useSales() {
       const discountAmount = subtotal * (input.discountRate / 100);
       const afterDiscount = subtotal - discountAmount;
       const taxAmount = afterDiscount * (input.taxRate / 100);
-      const total = afterDiscount + taxAmount;
+      const adjustmentsSum = (input.adjustments || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      const total = afterDiscount + taxAmount + adjustmentsSum;
+
 
       const updateData: Record<string, unknown> = {
           vendor_id: input.vendorId,
@@ -632,6 +635,22 @@ export function useSales() {
 
         if (itemError) throw itemError;
       }
+
+      // Replace adjustments
+      await supabase.from('sale_adjustments' as any).delete().eq('sale_id', saleId);
+      if (input.adjustments && input.adjustments.length > 0) {
+        const rows = input.adjustments.map((a, idx) => ({
+          sale_id: saleId,
+          label: (a.label || '').trim(),
+          amount: Number(a.amount) || 0,
+          sort_order: idx,
+        }));
+        const { error: adjError } = await supabase
+          .from('sale_adjustments' as any)
+          .insert(rows as any);
+        if (adjError) throw adjError;
+      }
+
 
       toast({
         title: 'Invoice updated',
