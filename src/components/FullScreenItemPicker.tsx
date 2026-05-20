@@ -718,6 +718,50 @@ export function FullScreenItemPicker({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={!!chooserItem}
+        onOpenChange={(o) => { if (!o) { setChooserItem(null); setChooserRows([]); } }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Choose a vendor price</DialogTitle>
+            <DialogDescription>
+              {chooserItem?.name} has multiple vendor price entries
+              {selectedVendorId ? ' for this vendor' : ''}. Pick which one to use.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {chooserRows.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => handleChooserPick(r)}
+                className="w-full text-left border border-border rounded-lg p-3 hover:bg-accent transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{r.vendorName}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.vendorSku ? `Part #: ${r.vendorSku}` : 'No vendor part #'}
+                      {r.leadTimeDays != null ? ` · Lead time: ${r.leadTimeDays}d` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-semibold">{formatPrice(r.price)}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          {!selectedVendorId && (
+            <div className="pt-2 border-t border-border">
+              <Button variant="ghost" size="sm" onClick={handleChooserSkip} className="w-full">
+                Skip — use item's default cost
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
