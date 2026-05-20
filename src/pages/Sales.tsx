@@ -537,7 +537,11 @@ export function Sales() {
 
   const subtotal = useMemo(
     () =>
-      cart.reduce((sum, c) => sum + c.quantity * getItemPrice(c), 0),
+      cart.reduce((sum, c) => {
+        const gross = c.quantity * getItemPrice(c);
+        const rate = c.discountRate || 0;
+        return sum + (gross - gross * (rate / 100));
+      }, 0),
     [cart]
   );
 
@@ -564,6 +568,7 @@ export function Sales() {
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
+          discountRate: c.discountRate || 0,
         })),
         taxRate,
         discountRate,
@@ -586,6 +591,7 @@ export function Sales() {
           quantity: c.quantity,
           unitPrice: getItemPrice(c),
           unitCost: c.inventoryItem.cost,
+          discountRate: c.discountRate || 0,
         })),
         taxRate,
         discountRate,
