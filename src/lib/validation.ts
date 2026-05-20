@@ -111,7 +111,7 @@ export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;
 export const saleItemSchema = z.object({
   inventoryItemId: z.string().uuid('Invalid inventory item').nullable(),
   itemName: z.string().min(1).max(500),
-  sku: z.string().min(1).max(100),
+  sku: z.string().trim().max(100, 'Part # must be less than 100 characters').optional().default(''),
   quantity: z.number().min(1, 'Quantity must be at least 1'),
   unitPrice: z.number().min(0, 'Price cannot be negative'),
   unitCost: z.number().min(0, 'Cost cannot be negative'),

@@ -587,6 +587,20 @@ export function Sales() {
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
 
+    const invoiceItems = cart.map((c, index) => {
+      const itemName = c.inventoryItem.name.trim();
+      const isCustomLine = c.isCustom || c.inventoryItem.id.startsWith('custom-') || c.inventoryItem.id.startsWith('assembly-');
+      return {
+        inventoryItemId: isCustomLine ? null : c.inventoryItem.id,
+        itemName: itemName || `Custom Item ${index + 1}`,
+        sku: c.inventoryItem.sku.trim() || (isCustomLine ? `CUSTOM-${index + 1}` : c.inventoryItem.id),
+        quantity: c.quantity,
+        unitPrice: getItemPrice(c),
+        unitCost: c.inventoryItem.cost,
+        discountRate: c.discountRate || 0,
+      };
+    });
+
     setIsProcessing(true);
 
     if (editingSaleId) {
@@ -594,16 +608,7 @@ export function Sales() {
       const updated = await updateSale(editingSaleId, {
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || '',
-        items: cart.map((c, index) => ({
-          id: `updated-${c.inventoryItem.id}-${Date.now()}`,
-          inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
-          itemName: c.inventoryItem.name.trim(),
-          sku: c.inventoryItem.sku.trim() || `CUSTOM-${index + 1}`,
-          quantity: c.quantity,
-          unitPrice: getItemPrice(c),
-          unitCost: c.inventoryItem.cost,
-          discountRate: c.discountRate || 0,
-        })),
+        items: invoiceItems.map((item) => ({ ...item, id: `updated-${item.inventoryItemId || item.sku}-${Date.now()}` })),
         taxRate,
         discountRate,
         notes: notes || null,
@@ -621,15 +626,7 @@ export function Sales() {
       const sale = await createSale({
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || null,
-        items: cart.map((c, index) => ({
-          inventoryItemId: c.isCustom ? null : c.inventoryItem.id,
-          itemName: c.inventoryItem.name.trim(),
-          sku: c.inventoryItem.sku.trim() || `CUSTOM-${index + 1}`,
-          quantity: c.quantity,
-          unitPrice: getItemPrice(c),
-          unitCost: c.inventoryItem.cost,
-          discountRate: c.discountRate || 0,
-        })),
+        items: invoiceItems,
         taxRate,
         discountRate,
         notes: notes || null,
