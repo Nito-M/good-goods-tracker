@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Sale, SaleItem, CreateSaleInput, SaleStatus } from '@/types/sale';
+import { Sale, SaleItem, SaleAdjustment, CreateSaleInput, SaleStatus } from '@/types/sale';
 import { createSaleSchema, validateInput } from '@/lib/validation';
 
 export function useSales() {
@@ -35,11 +35,18 @@ export function useSales() {
 
       const salesWithItems: Sale[] = await Promise.all(
         (salesData || []).map(async (sale) => {
-          const { data: items } = await supabase
-            .from('sale_items')
-            .select('*')
-            .eq('sale_id', sale.id)
-            .order('sort_order', { ascending: true });
+          const [{ data: items }, { data: adjustmentsData }] = await Promise.all([
+            supabase
+              .from('sale_items')
+              .select('*')
+              .eq('sale_id', sale.id)
+              .order('sort_order', { ascending: true }),
+            supabase
+              .from('sale_adjustments' as any)
+              .select('*')
+              .eq('sale_id', sale.id)
+              .order('sort_order', { ascending: true }),
+          ]);
 
           const mappedItems = (items || []).map((item: any) => {
             const unitCost = Number(item.unit_cost) || 0;
@@ -67,6 +74,13 @@ export function useSales() {
               createdAt: item.created_at,
             };
           });
+
+          const adjustments: SaleAdjustment[] = ((adjustmentsData as any[]) || []).map((a) => ({
+            id: a.id,
+            label: a.label || '',
+            amount: Number(a.amount) || 0,
+            sortOrder: a.sort_order || 0,
+          }));
 
           const totalCost = mappedItems.reduce((sum, item) => sum + item.totalCost, 0);
           const totalProfit = mappedItems.reduce((sum, item) => sum + item.profit, 0);
@@ -96,6 +110,7 @@ export function useSales() {
             paymentTerms: sale.payment_terms,
             dueDate: sale.due_date,
             items: mappedItems,
+            adjustments,
             createdAt: sale.created_at,
             updatedAt: sale.updated_at,
             companyId: (sale as any).company_id || null,
@@ -260,7 +275,8 @@ export function useSales() {
       const discountAmount = subtotal * (input.discountRate / 100);
       const afterDiscount = subtotal - discountAmount;
       const taxAmount = afterDiscount * (input.taxRate / 100);
-      const total = afterDiscount + taxAmount;
+      const adjustmentsSum = (input.adjustments || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      const total = afterDiscount + taxAmount + adjustmentsSum;
 
       // Create sale with draft status by default
       const { data: sale, error: saleError } = await supabase
@@ -311,6 +327,22 @@ export function useSales() {
         
         // Note: PO allocations and inventory reduction now happen when marked as "picked_up"
       }
+
+      // Insert post-tax adjustments
+      if (input.adjustments && input.adjustments.length > 0) {
+        const rows = input.adjustments.map((a, idx) => ({
+          sale_id: sale.id,
+          label: (a.label || '').trim(),
+          amount: Number(a.amount) || 0,
+          sort_order: idx,
+        }));
+        const { error: adjError } = await supabase
+          .from('sale_adjustments' as any)
+          .insert(rows as any);
+        if (adjError) throw adjError;
+      }
+
+
 
       // Get current invoice_next_number and increment it
       const { data: profileData } = await supabase
@@ -528,6 +560,7 @@ export function useSales() {
       dueDate: string | null;
       companyId?: string | null;
       contactPersonName?: string | null;
+      adjustments?: { label: string; amount: number }[];
     }
   ): Promise<boolean> => {
     if (!user) return false;
@@ -546,7 +579,9 @@ export function useSales() {
       const discountAmount = subtotal * (input.discountRate / 100);
       const afterDiscount = subtotal - discountAmount;
       const taxAmount = afterDiscount * (input.taxRate / 100);
-      const total = afterDiscount + taxAmount;
+      const adjustmentsSum = (input.adjustments || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      const total = afterDiscount + taxAmount + adjustmentsSum;
+
 
       const updateData: Record<string, unknown> = {
           vendor_id: input.vendorId,
@@ -600,6 +635,22 @@ export function useSales() {
 
         if (itemError) throw itemError;
       }
+
+      // Replace adjustments
+      await supabase.from('sale_adjustments' as any).delete().eq('sale_id', saleId);
+      if (input.adjustments && input.adjustments.length > 0) {
+        const rows = input.adjustments.map((a, idx) => ({
+          sale_id: saleId,
+          label: (a.label || '').trim(),
+          amount: Number(a.amount) || 0,
+          sort_order: idx,
+        }));
+        const { error: adjError } = await supabase
+          .from('sale_adjustments' as any)
+          .insert(rows as any);
+        if (adjError) throw adjError;
+      }
+
 
       toast({
         title: 'Invoice updated',

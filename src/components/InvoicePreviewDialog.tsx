@@ -194,6 +194,12 @@ export function InvoicePreviewDialog({
                       <span>{formatCurrency(sale.taxAmount)}</span>
                     </div>
                   )}
+                  {(sale.adjustments || []).map((adj, idx) => (
+                    <div key={adj.id} className={`flex justify-between py-1 ${adj.amount < 0 ? 'text-green-600' : ''}`}>
+                      <span>{adj.label.trim() || `Adjustment ${idx + 1}`}:</span>
+                      <span>{adj.amount < 0 ? '-' : ''}{formatCurrency(Math.abs(adj.amount))}</span>
+                    </div>
+                  ))}
                   <div className="flex justify-between py-2 font-bold text-base border-t border-gray-300 mt-2">
                     <span>TOTAL:</span>
                     <span>{formatCurrency(sale.total)}</span>

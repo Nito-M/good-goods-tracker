@@ -227,6 +227,17 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
       y += 7;
     }
 
+    for (const [idx, adj] of (sale.adjustments || []).entries()) {
+      const label = (adj.label || '').trim() || `Adjustment ${idx + 1}`;
+      const isNegative = adj.amount < 0;
+      if (isNegative) doc.setTextColor(34, 139, 34);
+      doc.text(`${label}:`, totalsX, y);
+      const value = `${isNegative ? '-' : ''}${formatCurrency(Math.abs(adj.amount))}`;
+      doc.text(value, pageWidth - 22, y, { align: 'right' });
+      if (isNegative) doc.setTextColor(0, 0, 0);
+      y += 7;
+    }
+
     y += 3;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);

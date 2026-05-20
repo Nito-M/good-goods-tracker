@@ -19,6 +19,13 @@ export interface SaleItem {
 
 export type SaleStatus = 'draft' | 'sent' | 'picked_up' | 'paid' | 'overdue' | 'cancelled';
 
+export interface SaleAdjustment {
+  id: string;
+  label: string;
+  amount: number;
+  sortOrder: number;
+}
+
 export interface Sale {
   id: string;
   userId: string;
@@ -44,6 +51,7 @@ export interface Sale {
   paymentTerms: string;
   dueDate: string | null;
   items: SaleItem[];
+  adjustments: SaleAdjustment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +75,7 @@ export interface CreateSaleInput {
   paymentTerms: string;
   dueDate: string | null;
   companyId?: string | null;
+  adjustments?: { label: string; amount: number }[];
 }
 
 export interface InvoiceSettings {
