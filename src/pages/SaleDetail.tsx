@@ -249,6 +249,14 @@ export default function SaleDetail() {
             {sale.taxAmount > 0 && (
               <Row label={`Tax (${sale.taxRate}%)`} value={formatCurrency(sale.taxAmount)} />
             )}
+            {(sale.adjustments || []).map((adj, idx) => (
+              <Row
+                key={adj.id}
+                label={adj.label.trim() || `Adjustment ${idx + 1}`}
+                value={`${adj.amount < 0 ? '-' : ''}${formatCurrency(Math.abs(adj.amount))}`}
+                muted={adj.amount < 0}
+              />
+            ))}
             <div className="flex justify-between font-bold text-base pt-2 border-t">
               <span>Total</span>
               <span>{formatCurrency(sale.total)}</span>
