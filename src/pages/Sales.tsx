@@ -711,11 +711,12 @@ export function Sales() {
                     ) : (
                       <Table>
                         <TableHeader>
-                          <TableRow>
+                       <TableRow>
                             <TableHead className="w-8"></TableHead>
                             <TableHead>Item</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Quantity</TableHead>
+                            <TableHead>Disc %</TableHead>
                             <TableHead className="text-right">Total</TableHead>
                             {markupPercent !== '' && <TableHead>Markup</TableHead>}
                             <TableHead></TableHead>
