@@ -509,6 +509,7 @@ export function useSales() {
         quantity: number;
         unitPrice: number;
         unitCost: number;
+        discountRate?: number;
       }>;
       taxRate: number;
       discountRate: number;
@@ -522,11 +523,14 @@ export function useSales() {
     if (!user) return false;
 
     try {
-      // Calculate totals
-      const subtotal = input.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
-        0
-      );
+      // Calculate per-item discounts and totals
+      const itemLineTotals = input.items.map((item) => {
+        const gross = item.quantity * item.unitPrice;
+        const rate = item.discountRate || 0;
+        const discount = gross * (rate / 100);
+        return { gross, discount, lineTotal: gross - discount, rate };
+      });
+      const subtotal = itemLineTotals.reduce((sum, l) => sum + l.lineTotal, 0);
       const discountAmount = subtotal * (input.discountRate / 100);
       const afterDiscount = subtotal - discountAmount;
       const taxAmount = afterDiscount * (input.taxRate / 100);
@@ -565,6 +569,7 @@ export function useSales() {
       // Create new sale items
       for (let i = 0; i < input.items.length; i++) {
         const item = input.items[i];
+        const line = itemLineTotals[i];
         const { error: itemError } = await supabase
           .from('sale_items')
           .insert({
@@ -575,7 +580,9 @@ export function useSales() {
             quantity: item.quantity,
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
-            total_price: item.quantity * item.unitPrice,
+            discount_rate: line.rate,
+            discount_amount: line.discount,
+            total_price: line.lineTotal,
             sort_order: i,
           } as any);
 
