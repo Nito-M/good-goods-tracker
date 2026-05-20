@@ -174,23 +174,36 @@ export function AddPurchaseOrder() {
       .eq('vendor_id', newVendorId)
       .then(({ data }) => {
         if (data) {
-          // Group by item_id; first matching row wins
-          const rowsByItem = new Map<string, { price: number; vendorSku: string | null }>();
-          data.forEach(d => {
-            if (!rowsByItem.has(d.item_id)) {
-              rowsByItem.set(d.item_id, { price: Number(d.price), vendorSku: d.vendor_sku });
-            }
+          // Group ALL rows per item (a vendor can have multiple price rows per item)
+          const rowsByItem = new Map<string, Array<{ id: string; price: number; vendorSku: string | null; leadTimeDays: number | null }>>();
+          data.forEach((d: any) => {
+            const list = rowsByItem.get(d.item_id) || [];
+            list.push({ id: d.id, price: Number(d.price), vendorSku: d.vendor_sku, leadTimeDays: d.lead_time_days ?? null });
+            rowsByItem.set(d.item_id, list);
           });
+          const newChooserQueue: Array<{ cartId: string; itemName: string; rows: any[] }> = [];
           setCart(prev => prev.map(c => {
             if (c.inventoryItemId) {
-              const row = rowsByItem.get(c.inventoryItemId);
+              const rows = rowsByItem.get(c.inventoryItemId) || [];
               const inv = inventoryItems.find(i => i.id === c.inventoryItemId);
-              if (row) {
+              if (rows.length === 1) {
+                const row = rows[0];
                 return {
                   ...c,
                   unitPrice: row.price,
                   unitCost: row.price,
                   sku: row.vendorSku || inv?.sku || c.sku,
+                };
+              }
+              if (rows.length > 1) {
+                // Defer to chooser; tentatively apply first row so UI isn't blank
+                const first = rows[0];
+                newChooserQueue.push({ cartId: c.id, itemName: c.itemName, rows });
+                return {
+                  ...c,
+                  unitPrice: first.price,
+                  unitCost: first.price,
+                  sku: first.vendorSku || inv?.sku || c.sku,
                 };
               }
               // No vendor row → revert to primary SKU
@@ -200,8 +213,26 @@ export function AddPurchaseOrder() {
             }
             return c;
           }));
+          if (newChooserQueue.length > 0) {
+            setVendorChangeChooser(newChooserQueue);
+          }
         }
       });
+  };
+
+  // Select a vendor-price row for a queued cart item (after vendor change)
+  const handleVendorChangeChooserPick = (cartId: string, row: { id: string; price: number; vendorSku: string | null }) => {
+    setCart(prev => prev.map(c => {
+      if (c.id !== cartId) return c;
+      const inv = inventoryItems.find(i => i.id === c.inventoryItemId);
+      return {
+        ...c,
+        unitPrice: row.price,
+        unitCost: row.price,
+        sku: row.vendorSku || inv?.sku || c.sku,
+      };
+    }));
+    setVendorChangeChooser(prev => prev.filter(q => q.cartId !== cartId));
   };
 
   // Picker callbacks
