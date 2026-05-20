@@ -302,7 +302,24 @@ export function Sales() {
     if (defaultCompany && !selectedCompanyId) {
       setSelectedCompanyId(defaultCompany.id);
     }
-  }, [defaultCompany]);
+  }, [defaultCompany, selectedCompanyId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const draft = {
+      cart,
+      selectedVendorId,
+      contactPersonName,
+      taxRate,
+      discountRate,
+      markupPercent,
+      notes,
+      paymentTerms,
+      customInvoiceNumber,
+      selectedCompanyId,
+    };
+    window.localStorage.setItem(INVOICE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId]);
 
   // Auto-select vendor created from customer
   useEffect(() => {
@@ -362,6 +379,9 @@ export function Sales() {
     setSelectedCompanyId(defaultCompany?.id || '');
     setContactPersonName('');
     setEditingSaleId(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(INVOICE_DRAFT_STORAGE_KEY);
+    }
   };
 
   const handleEditSale = (sale: Sale) => {
@@ -424,11 +444,12 @@ export function Sales() {
 
   // Auto-populate invoice number when profile settings change
   useEffect(() => {
+    if (customInvoiceNumber || cart.length > 0 || editingSaleId) return;
     const prefix = profile?.invoicePrefix || 'INV';
     const nextNum = profile?.invoiceNextNumber || 1;
     const newNumber = `${prefix}-${String(nextNum).padStart(4, '0')}`;
     setCustomInvoiceNumber(newNumber);
-  }, [profile?.invoicePrefix, profile?.invoiceNextNumber]);
+  }, [profile?.invoicePrefix, profile?.invoiceNextNumber, customInvoiceNumber, cart.length, editingSaleId]);
 
   const filteredItems = useMemo(() => {
     return inventoryItems.filter(
