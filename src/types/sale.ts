@@ -9,6 +9,8 @@ export interface SaleItem {
   quantity: number;
   unitPrice: number;
   unitCost: number;
+  discountRate: number;
+  discountAmount: number;
   totalPrice: number;
   totalCost: number;
   profit: number;
