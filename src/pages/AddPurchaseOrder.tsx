@@ -27,7 +27,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
-import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
+import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
+import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
 
 interface VendorPrice {
   id: string;
