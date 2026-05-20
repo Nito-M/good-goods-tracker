@@ -280,6 +280,9 @@ export function Sales() {
   const [contactPersonName, setContactPersonName] = useState<string>(initialDraft?.contactPersonName || '');
   const [taxRate, setTaxRate] = useState(initialDraft?.taxRate ?? 5);
   const [discountRate, setDiscountRate] = useState(initialDraft?.discountRate ?? 0);
+  const [adjustments, setAdjustments] = useState<Array<{ label: string; amount: number }>>(
+    initialDraft?.adjustments || []
+  );
   const [markupPercent, setMarkupPercent] = useState<number | ''>(initialDraft?.markupPercent ?? '');
   const [notes, setNotes] = useState(initialDraft?.notes || '');
   const [paymentTerms, setPaymentTerms] = useState(initialDraft?.paymentTerms || 'Due on receipt');
@@ -312,6 +315,7 @@ export function Sales() {
       contactPersonName,
       taxRate,
       discountRate,
+      adjustments,
       markupPercent,
       notes,
       paymentTerms,
@@ -319,7 +323,7 @@ export function Sales() {
       selectedCompanyId,
     };
     window.localStorage.setItem(INVOICE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
-  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId]);
+  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, adjustments, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId]);
 
   // Auto-select vendor created from customer
   useEffect(() => {
