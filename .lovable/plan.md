@@ -1,21 +1,25 @@
-## Plan
+## Plan — Post-tax adjustment lines on invoices
 
-Fix the app-wide tab-return reload by stabilizing the global auth context instead of patching individual pages.
+Add a section in the invoice editor to create multiple labeled adjustment lines (each with a label and a +/- amount). They appear below the GST line on the invoice preview and PDF, and are applied to the final Total.
 
-### What I’ll change
+### What you'll see
+- In the invoice edit screen (`EditSaleDialog`), a new "Adjustments (after tax)" section below the tax field — add row, label, amount (can be negative), delete row.
+- In the invoice preview (`InvoicePreviewDialog`) and the generated PDF (`invoiceGenerator`), each adjustment appears as its own line under "Tax (GST)" and above the final "TOTAL".
+- Final Total = Subtotal − pre-tax discount + Tax + Σ adjustments.
 
-1. **Stabilize auth updates**
-   - Update `AuthContext` so token refresh events do not replace the `session` object or context value when the signed-in user has not changed.
-   - Keep the existing `user` stability fix, but extend it to the full context so every component using `useAuth()` does not rerender/refetch on tab focus.
+### Where the data lives
+- New database table `sale_adjustments` linked to a sale: `label`, `amount` (NUMERIC, can be negative), `sort_order`. RLS mirrors `sales` (owner + org members can read/write).
+- `sales.total` continues to be the authoritative final total (recomputed when adjustments change).
+- Loaded/saved alongside sale items in `useSales`.
 
-2. **Memoize auth functions/context value**
-   - Wrap `signUp`, `signIn`, and `signOut` in stable callbacks.
-   - Memoize the provider value so consumers only update when `user`, `session`, or `loading` meaningfully changes.
+### Where it shows up
+- `EditSaleDialog`: new adjustments editor.
+- `InvoicePreviewDialog`: render adjustments between Tax and Total.
+- `invoiceGenerator` (PDF): same order.
+- `SaleDetail`: include adjustments in the summary block.
 
-3. **Keep real auth changes working**
-   - Still update immediately on actual sign-in, sign-out, user change, or expired/missing session.
-   - Preserve the existing “Remember Me” behavior and password recovery exception.
-
-4. **Verify the trigger is removed**
-   - Confirm the only intentional hard reload remains the manual refresh button in `AppLayout`.
-   - Run a focused check so returning to the tab should no longer cause global page loading/spinner behavior.
+### Technical notes
+- Adjustments are post-tax only (do not affect taxable subtotal or item profit).
+- Amount stored as NUMERIC(12,2), step 0.01 in inputs; allow negatives.
+- Backward compatible: sales with no adjustments behave exactly as today.
+- Migration creates the table, RLS policies (owner + `users_share_org`), and an `updated_at` trigger.
