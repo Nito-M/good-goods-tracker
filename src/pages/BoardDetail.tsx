@@ -1783,9 +1783,12 @@ interface CellRendererProps {
   value: string;
   onSave: (value: string) => void;
   files: ReturnType<ReturnType<typeof useBoardCellFiles>['getFiles']>;
+  pendingUploads?: ReturnType<ReturnType<typeof useBoardCellFiles>['getUploads']>;
   onUploadFile: (file: File) => Promise<void>;
   onDeleteFile: (id: string) => Promise<void>;
   onOpenFile: (id: string) => Promise<string | null>;
+  onUpdateFileCaption?: (id: string, caption: string) => Promise<void>;
+  onReorderFiles?: (orderedIds: string[]) => Promise<void>;
   onConfigureConnect: () => void;
   readOnly?: boolean;
   cellAlign?: 'left' | 'center' | 'right' | null;
