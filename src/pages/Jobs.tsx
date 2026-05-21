@@ -905,6 +905,10 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                     placeholder="e.g. 1500"
                   />
                 </div>
+                <div>
+                  <Label>NVIS Link</Label>
+                  <Input value={fNvisLink} onChange={e => setFNvisLink(e.target.value)} placeholder="https://example.com/nvis" />
+                </div>
               </CardContent>
             </Card>
 
