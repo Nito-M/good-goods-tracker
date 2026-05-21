@@ -218,7 +218,10 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   }
 
   // Preload logo (if any) in parallel-friendly fashion
-  const logoImage = logoUrl ? await loadImageForPdf(logoUrl) : null;
+  const logoImage = logoUrl ? await loadImageForPdf(logoUrl, true) : null;
+  if (logoUrl && !logoImage) {
+    console.warn('Board PDF: logo URL was provided but could not be rendered', logoUrl);
+  }
 
   // Portrait A4 — fit all columns to upright page width
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
