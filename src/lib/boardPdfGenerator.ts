@@ -25,6 +25,8 @@ interface GenerateOpts {
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
   merges?: BoardMerge[];
   logoUrl?: string | null;
+  /** Optional: resolve a fresh signed URL for a given file id (more reliable than the stored URL). */
+  refreshFileUrl?: (fileId: string) => Promise<string | null>;
 }
 
 const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i;
