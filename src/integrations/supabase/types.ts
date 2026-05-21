@@ -740,8 +740,10 @@ export type Database = {
       }
       board_cell_files: {
         Row: {
+          caption: string | null
           column_id: string
           created_at: string
+          display_order: number
           file_name: string
           file_size: number | null
           file_url: string
@@ -751,8 +753,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          caption?: string | null
           column_id: string
           created_at?: string
+          display_order?: number
           file_name: string
           file_size?: number | null
           file_url: string
@@ -762,8 +766,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          caption?: string | null
           column_id?: string
           created_at?: string
+          display_order?: number
           file_name?: string
           file_size?: number | null
           file_url?: string
