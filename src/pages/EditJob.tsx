@@ -220,6 +220,10 @@ export function EditJob() {
               <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Address</Label>
               <Textarea value={formCustomerAddress} onChange={e => setFormCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} />
             </div>
+            <div>
+              <Label className="flex items-center gap-1.5">NVIS Link</Label>
+              <Input value={formNvisLink} onChange={e => setFormNvisLink(e.target.value)} placeholder="https://example.com/nvis" />
+            </div>
           </CardContent>
         </Card>
 
