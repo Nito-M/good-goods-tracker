@@ -2206,6 +2206,7 @@ export type Database = {
           id: string
           invoice_number: string | null
           job_number: string | null
+          nvis_link: string | null
           quote_number: string | null
           sales_order_number: string | null
           status: string
@@ -2228,6 +2229,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           job_number?: string | null
+          nvis_link?: string | null
           quote_number?: string | null
           sales_order_number?: string | null
           status?: string
@@ -2250,6 +2252,7 @@ export type Database = {
           id?: string
           invoice_number?: string | null
           job_number?: string | null
+          nvis_link?: string | null
           quote_number?: string | null
           sales_order_number?: string | null
           status?: string
