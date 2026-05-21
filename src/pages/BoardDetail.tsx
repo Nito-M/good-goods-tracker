@@ -307,6 +307,7 @@ export default function BoardDetail() {
   } = useBoard(id);
 
   const { user } = useAuth();
+  const { profile } = useProfile();
   // Need org id from board (needed even before columns load); we read from `board`
   const { currentUserColumnPerms, isOwnerOrAdmin } = useBoardAccess(id, null);
 
