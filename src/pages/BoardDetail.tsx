@@ -309,6 +309,12 @@ export default function BoardDetail() {
 
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { companies } = useCompanies();
+  const pdfLogoUrl =
+    companies.find((c) => c.isDefault)?.logoUrl ||
+    companies.find((c) => c.logoUrl)?.logoUrl ||
+    profile?.logoUrl ||
+    null;
   // Need org id from board (needed even before columns load); we read from `board`
   const { currentUserColumnPerms, isOwnerOrAdmin } = useBoardAccess(id, null);
 
