@@ -52,6 +52,7 @@ import { useBoardClipboard } from '@/hooks/useBoardClipboard';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useCompanies } from '@/hooks/useCompanies';
 import { toast } from 'sonner';
 import { resolveSelectedStatus, parseStatusValue } from '@/lib/boardStatusValue';
 import { getConnectCacheEntry } from '@/hooks/useBoardConnectData';
