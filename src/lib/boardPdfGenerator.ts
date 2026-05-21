@@ -24,6 +24,7 @@ interface GenerateOpts {
   getCellBgColor?: (rowId: string, columnId: string) => string | null;
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
   merges?: BoardMerge[];
+  logoUrl?: string | null;
 }
 
 const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i;
