@@ -243,6 +243,8 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const IMG_CAPTION_H = 9;
   const IMG_CELL_PAD = 4;
 
+  let cursorY = 60;
+
   groups.forEach((group, gIdx) => {
     if (group.label) {
       // Group header row spanning the table — render via a one-cell sub-table
