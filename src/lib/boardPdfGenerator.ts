@@ -25,6 +25,8 @@ interface GenerateOpts {
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
   merges?: BoardMerge[];
   logoUrl?: string | null;
+  /** Optional: resolve a fresh signed URL for a given file id (more reliable than the stored URL). */
+  refreshFileUrl?: (fileId: string) => Promise<string | null>;
 }
 
 const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i;
@@ -191,7 +193,7 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 };
 
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
-  const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [], logoUrl } = opts;
+  const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [], logoUrl, refreshFileUrl } = opts;
 
   // Preload every image referenced in any "files" cell so we can embed them.
   const imageCache = new Map<string, LoadedImage>();
@@ -210,7 +212,16 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const CHUNK = 6;
   for (let i = 0; i < allImageFiles.length; i += CHUNK) {
     const slice = allImageFiles.slice(i, i + CHUNK);
-    const loaded = await Promise.all(slice.map((f) => loadImageForPdf(f.file_url)));
+    const loaded = await Promise.all(
+      slice.map(async (f) => {
+        // Prefer a freshly-signed URL when available — stored URLs can expire or be blocked.
+        const freshUrl = refreshFileUrl ? await refreshFileUrl(f.id).catch(() => null) : null;
+        const url = freshUrl || f.file_url;
+        const img = await loadImageForPdf(url);
+        if (!img) console.warn('Board PDF: failed to load image for cell', f.file_name, url);
+        return img;
+      })
+    );
     slice.forEach((f, idx) => {
       const img = loaded[idx];
       if (img) imageCache.set(f.id, img);

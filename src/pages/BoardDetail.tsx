@@ -1057,6 +1057,7 @@ export default function BoardDetail() {
                       getCellTextAlign,
                       getCellBgColor,
                       getFiles,
+                      refreshFileUrl: refreshSignedUrl,
                       merges,
                       logoUrl: pdfLogoUrl,
                     });
