@@ -1834,9 +1834,12 @@ function CellRenderer({
       return (
         <FilesCell
           files={files}
+          pendingUploads={pendingUploads}
           onUpload={onUploadFile}
           onDelete={onDeleteFile}
           onOpen={onOpenFile}
+          onUpdateCaption={onUpdateFileCaption}
+          onReorder={onReorderFiles}
           readOnly={readOnly}
         />
       );
