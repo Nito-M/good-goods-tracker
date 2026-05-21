@@ -26,6 +26,50 @@ interface GenerateOpts {
   merges?: BoardMerge[];
 }
 
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i;
+function isImageFileName(name: string): boolean {
+  return IMAGE_EXT_RE.test(name);
+}
+
+type LoadedImage = {
+  dataUrl: string;
+  width: number;
+  height: number;
+  format: 'PNG' | 'JPEG';
+};
+
+/** Fetch image, downscale if huge, return base64 dataURL + dimensions for jsPDF. */
+async function loadImageForPdf(url: string): Promise<LoadedImage | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const bitmap = await createImageBitmap(blob).catch(() => null);
+    if (!bitmap) return null;
+
+    // Cap rendered dimension to keep PDF size sane; preserve aspect ratio.
+    const MAX = 1400;
+    const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    // White backdrop so JPEGs don't get muddy transparency
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    return { dataUrl, width: w, height: h, format: 'JPEG' };
+  } catch (e) {
+    console.warn('Failed to load image for PDF', e);
+    return null;
+  }
+}
+
 /**
  * Render any cell's stored string value to plain text suitable for the PDF.
  * Mirrors the on-screen formatting per column type.
@@ -37,8 +81,10 @@ function renderCell(
   formulaContext?: FormulaContext
 ): string {
   if (col.type === 'files') {
-    if (files.length === 0) return '';
-    return files.map((f) => f.file_name).join(', ');
+    // Images are drawn graphically in didDrawCell — only show names for non-image attachments.
+    const docs = files.filter((f) => !isImageFileName(f.file_name));
+    if (docs.length === 0) return '';
+    return docs.map((f) => f.file_name).join(', ');
   }
 
   if (col.type === 'connect') {
@@ -117,6 +163,30 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [] } = opts;
 
+  // Preload every image referenced in any "files" cell so we can embed them.
+  const imageCache = new Map<string, LoadedImage>();
+  const allImageFiles: BoardCellFile[] = [];
+  for (const g of groups) {
+    for (const r of g.rows) {
+      for (const c of columns) {
+        if (c.type !== 'files') continue;
+        for (const f of getFiles(r.id, c.id)) {
+          if (isImageFileName(f.file_name) && f.file_url) allImageFiles.push(f);
+        }
+      }
+    }
+  }
+  // Cap concurrency to keep PDF generation snappy
+  const CHUNK = 6;
+  for (let i = 0; i < allImageFiles.length; i += CHUNK) {
+    const slice = allImageFiles.slice(i, i + CHUNK);
+    const loaded = await Promise.all(slice.map((f) => loadImageForPdf(f.file_url)));
+    slice.forEach((f, idx) => {
+      const img = loaded[idx];
+      if (img) imageCache.set(f.id, img);
+    });
+  }
+
   // Portrait A4 — fit all columns to upright page width
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -165,6 +235,13 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const cellAligns = new Map<string, 'left' | 'center' | 'right'>();
   // Per-cell custom background colors set by the user (token like "blue-300").
   const colorFills = new Map<string, string>();
+  // Per-cell list of image files to render inside the cell.
+  const imageCells = new Map<string, BoardCellFile[]>();
+
+  // Image rendering constants (used by both minCellHeight + didDrawCell)
+  const IMG_GAP = 4;
+  const IMG_CAPTION_H = 9;
+  const IMG_CELL_PAD = 4;
 
   let cursorY = 60;
 
@@ -209,6 +286,13 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         const raw = getCellValue(row.id, col.id);
         const files = col.type === 'files' ? getFiles(row.id, col.id) : [];
         const text = renderCell(col, raw, files, formulaContext);
+
+        if (col.type === 'files') {
+          const imgs = files
+            .filter((f) => isImageFileName(f.file_name) && imageCache.has(f.id))
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+          if (imgs.length) imageCells.set(`${gIdx}-${rIdx}-${cIdx}`, imgs);
+        }
 
         if (col.type === 'status' && raw) {
           const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
@@ -304,6 +388,63 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
               data.cell.styles.textColor = [0, 0, 0];
             }
           }
+        }
+
+        // Reserve vertical space for image stacks in files cells.
+        const imgs = imageCells.get(key);
+        if (imgs && imgs.length) {
+          const cellInnerWidth = data.cell.width - IMG_CELL_PAD * 2;
+          let total = IMG_CELL_PAD;
+          for (const f of imgs) {
+            const img = imageCache.get(f.id)!;
+            const scale = Math.min(1, cellInnerWidth / img.width);
+            const drawW = img.width * scale;
+            const drawH = img.height * scale;
+            total += drawH + (f.caption ? IMG_CAPTION_H : 0) + IMG_GAP;
+          }
+          // Cap so a single mega-row doesn't blow past one page
+          const maxH = doc.internal.pageSize.getHeight() - 120;
+          data.cell.styles.minCellHeight = Math.min(total, maxH);
+        }
+      },
+      didDrawCell: (data: CellHookData) => {
+        if (data.section !== 'body') return;
+        const key = `${gIdx}-${data.row.index}-${data.column.index}`;
+        const imgs = imageCells.get(key);
+        if (!imgs || !imgs.length) return;
+
+        const cellX = data.cell.x + IMG_CELL_PAD;
+        const cellY = data.cell.y + IMG_CELL_PAD;
+        const cellInnerWidth = data.cell.width - IMG_CELL_PAD * 2;
+        const cellMaxBottom = data.cell.y + data.cell.height - IMG_CELL_PAD;
+        let y = cellY;
+
+        for (const f of imgs) {
+          const img = imageCache.get(f.id);
+          if (!img) continue;
+          const scale = Math.min(1, cellInnerWidth / img.width);
+          const drawW = img.width * scale;
+          const drawH = img.height * scale;
+          if (y + drawH > cellMaxBottom) break; // prevent overflow
+          try {
+            doc.addImage(img.dataUrl, img.format, cellX, y, drawW, drawH, undefined, 'FAST');
+          } catch (e) {
+            console.warn('addImage failed', e);
+          }
+          y += drawH;
+          if (f.caption) {
+            const captionBottom = y + IMG_CAPTION_H;
+            if (captionBottom <= cellMaxBottom) {
+              doc.setFont('helvetica', 'italic');
+              doc.setFontSize(7);
+              doc.setTextColor(80, 80, 80);
+              doc.text(f.caption, cellX, y + 7, { maxWidth: cellInnerWidth });
+              doc.setFont('helvetica', 'normal');
+              doc.setTextColor(0, 0, 0);
+              y = captionBottom;
+            }
+          }
+          y += IMG_GAP;
         }
       },
     });

@@ -320,7 +320,8 @@ export default function BoardDetail() {
   const { copyToClipboard } = useBoardClipboard();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
-  const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
+  const { getFiles, getUploads, uploadFile, deleteFile, refreshSignedUrl, updateCaption: updateFileCaption, reorderFiles } =
+    useBoardCellFiles(rowIds);
   const {
     getEntries: getNoteEntries,
     getCount: getNoteCount,
@@ -1267,9 +1268,12 @@ export default function BoardDetail() {
                 deleteRow={deleteRow}
                 setRowFrozen={setRowFrozen}
                 getFiles={getFiles}
+                getUploads={getUploads}
                 uploadFile={uploadFile}
                 deleteFile={deleteFile}
                 refreshSignedUrl={refreshSignedUrl}
+                updateFileCaption={updateFileCaption}
+                reorderFiles={reorderFiles}
                 getNoteCount={getNoteCount}
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
@@ -1433,9 +1437,12 @@ interface GroupSectionProps {
   deleteRow: (id: string) => void;
   setRowFrozen: (id: string, frozen: boolean) => void;
   getFiles: ReturnType<typeof useBoardCellFiles>['getFiles'];
+  getUploads: ReturnType<typeof useBoardCellFiles>['getUploads'];
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
+  updateFileCaption: ReturnType<typeof useBoardCellFiles>['updateCaption'];
+  reorderFiles: ReturnType<typeof useBoardCellFiles>['reorderFiles'];
   getNoteCount: (row_id: string) => number;
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
@@ -1473,9 +1480,12 @@ function GroupSection({
   deleteRow,
   setRowFrozen,
   getFiles,
+  getUploads,
   uploadFile,
   deleteFile,
   refreshSignedUrl,
+  updateFileCaption,
+  reorderFiles,
   getNoteCount,
   onOpenNote,
   onConfigureConnect,
@@ -1744,9 +1754,12 @@ function GroupSection({
                     value={getCellValue(row.id, col.id)}
                     onSave={(v) => setCellValue(row.id, col.id, v)}
                     files={col.type === 'files' ? getFiles(row.id, col.id) : []}
+                    pendingUploads={col.type === 'files' ? getUploads(row.id, col.id) : []}
                     onUploadFile={(f) => uploadFile(row.id, col.id, f)}
                     onDeleteFile={deleteFile}
                     onOpenFile={refreshSignedUrl}
+                    onUpdateFileCaption={updateFileCaption}
+                    onReorderFiles={(ids) => reorderFiles(row.id, col.id, ids)}
                     onConfigureConnect={() => onConfigureConnect(col.id)}
                     readOnly={currentUserColumnPerms(col.id) !== 'edit'}
                     cellAlign={getCellTextAlign(row.id, col.id)}
@@ -1770,9 +1783,12 @@ interface CellRendererProps {
   value: string;
   onSave: (value: string) => void;
   files: ReturnType<ReturnType<typeof useBoardCellFiles>['getFiles']>;
+  pendingUploads?: ReturnType<ReturnType<typeof useBoardCellFiles>['getUploads']>;
   onUploadFile: (file: File) => Promise<void>;
   onDeleteFile: (id: string) => Promise<void>;
   onOpenFile: (id: string) => Promise<string | null>;
+  onUpdateFileCaption?: (id: string, caption: string) => Promise<void>;
+  onReorderFiles?: (orderedIds: string[]) => Promise<void>;
   onConfigureConnect: () => void;
   readOnly?: boolean;
   cellAlign?: 'left' | 'center' | 'right' | null;
@@ -1786,9 +1802,12 @@ function CellRenderer({
   value,
   onSave,
   files,
+  pendingUploads,
   onUploadFile,
   onDeleteFile,
   onOpenFile,
+  onUpdateFileCaption,
+  onReorderFiles,
   onConfigureConnect,
   readOnly,
   cellAlign,
@@ -1815,9 +1834,12 @@ function CellRenderer({
       return (
         <FilesCell
           files={files}
+          pendingUploads={pendingUploads}
           onUpload={onUploadFile}
           onDelete={onDeleteFile}
           onOpen={onOpenFile}
+          onUpdateCaption={onUpdateFileCaption}
+          onReorder={onReorderFiles}
           readOnly={readOnly}
         />
       );
