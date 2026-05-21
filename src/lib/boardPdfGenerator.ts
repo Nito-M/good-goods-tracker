@@ -37,8 +37,10 @@ function renderCell(
   formulaContext?: FormulaContext
 ): string {
   if (col.type === 'files') {
-    if (files.length === 0) return '';
-    return files.map((f) => f.file_name).join(', ');
+    // Images are drawn graphically in didDrawCell — only show names for non-image attachments.
+    const docs = files.filter((f) => !isImageFileName(f.file_name));
+    if (docs.length === 0) return '';
+    return docs.map((f) => f.file_name).join(', ');
   }
 
   if (col.type === 'connect') {
