@@ -52,6 +52,7 @@ import { useBoardClipboard } from '@/hooks/useBoardClipboard';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useCompanies } from '@/hooks/useCompanies';
 import { toast } from 'sonner';
 import { resolveSelectedStatus, parseStatusValue } from '@/lib/boardStatusValue';
 import { getConnectCacheEntry } from '@/hooks/useBoardConnectData';
@@ -308,6 +309,12 @@ export default function BoardDetail() {
 
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { companies } = useCompanies();
+  const pdfLogoUrl =
+    companies.find((c) => c.isDefault)?.logoUrl ||
+    companies.find((c) => c.logoUrl)?.logoUrl ||
+    profile?.logoUrl ||
+    null;
   // Need org id from board (needed even before columns load); we read from `board`
   const { currentUserColumnPerms, isOwnerOrAdmin } = useBoardAccess(id, null);
 
@@ -1049,7 +1056,7 @@ export default function BoardDetail() {
                       getCellBgColor,
                       getFiles,
                       merges,
-                      logoUrl: profile?.logoUrl ?? null,
+                      logoUrl: pdfLogoUrl,
                     });
                   } catch (err) {
                     console.error('Board PDF export failed', err);
