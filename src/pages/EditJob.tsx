@@ -41,6 +41,7 @@ export function EditJob() {
   const [formDueDate, setFormDueDate] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [formWeight, setFormWeight] = useState('');
+  const [formNvisLink, setFormNvisLink] = useState('');
   const [saving, setSaving] = useState(false);
   const descRef = useRef<HTMLTextAreaElement>(null);
 
