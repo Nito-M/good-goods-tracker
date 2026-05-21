@@ -1437,9 +1437,12 @@ interface GroupSectionProps {
   deleteRow: (id: string) => void;
   setRowFrozen: (id: string, frozen: boolean) => void;
   getFiles: ReturnType<typeof useBoardCellFiles>['getFiles'];
+  getUploads: ReturnType<typeof useBoardCellFiles>['getUploads'];
   uploadFile: ReturnType<typeof useBoardCellFiles>['uploadFile'];
   deleteFile: ReturnType<typeof useBoardCellFiles>['deleteFile'];
   refreshSignedUrl: ReturnType<typeof useBoardCellFiles>['refreshSignedUrl'];
+  updateFileCaption: ReturnType<typeof useBoardCellFiles>['updateCaption'];
+  reorderFiles: ReturnType<typeof useBoardCellFiles>['reorderFiles'];
   getNoteCount: (row_id: string) => number;
   onOpenNote: (row_id: string) => void;
   onConfigureConnect: (col_id: string) => void;
