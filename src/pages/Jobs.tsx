@@ -426,6 +426,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const [fSalesOrderNumber, setFSalesOrderNumber] = useState(job.salesOrderNumber || '');
   const [fInvoiceNumber, setFInvoiceNumber] = useState(job.invoiceNumber || '');
   const [fWeight, setFWeight] = useState(job.weight != null ? String(job.weight) : '');
+  const [fNvisLink, setFNvisLink] = useState(job.nvisLink || '');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -444,6 +445,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     setFSalesOrderNumber(job.salesOrderNumber || '');
     setFInvoiceNumber(job.invoiceNumber || '');
     setFWeight(job.weight != null ? String(job.weight) : '');
+    setFNvisLink(job.nvisLink || '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
@@ -475,6 +477,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
       sales_order_number: fSalesOrderNumber.trim() || null,
       invoice_number: fInvoiceNumber.trim() || null,
       weight: fWeight.trim() === '' ? null : Number(fWeight),
+      nvis_link: fNvisLink.trim() || null,
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
@@ -901,6 +904,10 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                     onChange={e => setFWeight(e.target.value)}
                     placeholder="e.g. 1500"
                   />
+                </div>
+                <div>
+                  <Label>NVIS Link</Label>
+                  <Input value={fNvisLink} onChange={e => setFNvisLink(e.target.value)} placeholder="https://example.com/nvis" />
                 </div>
               </CardContent>
             </Card>
