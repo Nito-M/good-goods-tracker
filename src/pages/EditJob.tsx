@@ -94,6 +94,7 @@ export function EditJob() {
       customer_address: formCustomerAddress.trim() || null,
       due_date: formDueDate ? (() => { const [y, m, d] = formDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
       weight: formWeight.trim() === '' ? null : Number(formWeight),
+      nvis_link: formNvisLink.trim() || null,
     };
     if (formJobNumber.trim() !== (job?.jobNumber || '')) {
       updates.job_number = formJobNumber.trim() || undefined;
