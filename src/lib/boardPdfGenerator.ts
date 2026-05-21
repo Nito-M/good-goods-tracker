@@ -24,6 +24,7 @@ interface GenerateOpts {
   getCellBgColor?: (rowId: string, columnId: string) => string | null;
   getFiles: (rowId: string, columnId: string) => BoardCellFile[];
   merges?: BoardMerge[];
+  logoUrl?: string | null;
 }
 
 const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i;
@@ -161,7 +162,7 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 };
 
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
-  const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [] } = opts;
+  const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [], logoUrl } = opts;
 
   // Preload every image referenced in any "files" cell so we can embed them.
   const imageCache = new Map<string, LoadedImage>();
@@ -187,6 +188,9 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
     });
   }
 
+  // Preload logo (if any) in parallel-friendly fashion
+  const logoImage = logoUrl ? await loadImageForPdf(logoUrl) : null;
+
   // Portrait A4 — fit all columns to upright page width
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -194,11 +198,27 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const availableWidth = pageWidth - sideMargin * 2;
   const dynamicFontSize = columns.length > 6 ? 8 : 9;
 
-  // Header
+  // Header — logo (left), title, generated date (right)
+  let headerBottom = 40;
+  if (logoImage) {
+    const maxH = 40;
+    const maxW = 90;
+    const scale = Math.min(maxW / logoImage.width, maxH / logoImage.height, 1);
+    const lw = logoImage.width * scale;
+    const lh = logoImage.height * scale;
+    try {
+      doc.addImage(logoImage.dataUrl, logoImage.format, sideMargin, 20, lw, lh, undefined, 'FAST');
+      headerBottom = Math.max(headerBottom, 20 + lh);
+    } catch (e) {
+      console.warn('Failed to render logo on PDF', e);
+    }
+  }
+
+  const titleX = logoImage ? sideMargin + 100 : 40;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
-  doc.text(boardName || 'Board', 40, 40);
+  doc.text(boardName || 'Board', titleX, 40);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
@@ -243,7 +263,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const IMG_CAPTION_H = 9;
   const IMG_CELL_PAD = 4;
 
-  let cursorY = 60;
+  let cursorY = Math.max(60, headerBottom + 16);
 
   groups.forEach((group, gIdx) => {
     if (group.label) {

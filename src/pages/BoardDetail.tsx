@@ -51,6 +51,7 @@ import { BoardAccessSheet } from '@/components/board/BoardAccessSheet';
 import { useBoardClipboard } from '@/hooks/useBoardClipboard';
 import { useBoardAccess } from '@/hooks/useBoardAccess';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
 import { resolveSelectedStatus, parseStatusValue } from '@/lib/boardStatusValue';
 import { getConnectCacheEntry } from '@/hooks/useBoardConnectData';
@@ -306,6 +307,7 @@ export default function BoardDetail() {
   } = useBoard(id);
 
   const { user } = useAuth();
+  const { profile } = useProfile();
   // Need org id from board (needed even before columns load); we read from `board`
   const { currentUserColumnPerms, isOwnerOrAdmin } = useBoardAccess(id, null);
 
@@ -1047,6 +1049,7 @@ export default function BoardDetail() {
                       getCellBgColor,
                       getFiles,
                       merges,
+                      logoUrl: profile?.logoUrl ?? null,
                     });
                   } catch (err) {
                     console.error('Board PDF export failed', err);
