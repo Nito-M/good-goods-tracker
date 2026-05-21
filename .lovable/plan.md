@@ -1,22 +1,25 @@
-## Plan to fix the board PDF logo
+Add NVIS as a label + link button to the Customer card on the Job Details (Information tab) in `src/pages/Jobs.tsx`.
 
-The board PDF is currently only passing `profile.logoUrl`, but your active logo appears to be stored on the default company record, not necessarily on the profile. The logo bucket is also private, so public-style URLs can fail when the PDF generator tries to fetch them.
+### Change
+- Import `ExternalLink` from `lucide-react`.
+- In the Customer `<Card>` (around line 691, after the address block), add when `job.nvisLink` exists:
 
-### Changes I’ll make
+```tsx
+{job.nvisLink && (
+  <div className="flex items-center gap-2 text-sm">
+    <span className="text-muted-foreground">NVIS:</span>
+    <Button asChild variant="outline" size="sm" className="h-7">
+      <a
+        href={/^https?:\/\//i.test(job.nvisLink) ? job.nvisLink : `https://${job.nvisLink}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <ExternalLink className="h-3.5 w-3.5 mr-1" />
+        Open Link
+      </a>
+    </Button>
+  </div>
+)}
+```
 
-1. **Use the correct logo source on Boards**
-   - Load companies in `BoardDetail.tsx`.
-   - Prefer the default company logo when available.
-   - Fall back to the profile logo if no default company logo exists.
-
-2. **Make PDF logo loading private-storage safe**
-   - Update `boardPdfGenerator.ts` so logo URLs are loaded with a more reliable image path.
-   - If direct `fetch()` fails, fall back to an `Image` element with `crossOrigin='anonymous'`, then convert it to a PDF-safe data URL.
-   - Preserve transparency where possible instead of forcing every logo onto a white JPEG background.
-
-3. **Add a visible fallback/debug signal**
-   - If the logo still cannot load, show a small toast/console warning so it’s clear whether the issue is “no logo selected” vs “logo URL failed to load”.
-
-### Expected result
-
-When you click **Boards → Actions → Download PDF**, the PDF header should use the same logo you already use for invoices/quotes/POs, including the default company logo.
+- Also include `job.nvisLink` in the outer conditional on line 669 so the Customer card renders when only NVIS is set.
