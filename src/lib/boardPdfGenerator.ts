@@ -287,6 +287,13 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         const files = col.type === 'files' ? getFiles(row.id, col.id) : [];
         const text = renderCell(col, raw, files, formulaContext);
 
+        if (col.type === 'files') {
+          const imgs = files
+            .filter((f) => isImageFileName(f.file_name) && imageCache.has(f.id))
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+          if (imgs.length) imageCells.set(`${gIdx}-${rIdx}-${cIdx}`, imgs);
+        }
+
         if (col.type === 'status' && raw) {
           const { option } = resolveSelectedStatus(raw, col.options, col.per_row_options);
           if (option?.color && option.color !== 'none') {
