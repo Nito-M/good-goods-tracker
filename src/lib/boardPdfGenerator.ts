@@ -263,7 +263,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const IMG_CAPTION_H = 9;
   const IMG_CELL_PAD = 4;
 
-  let cursorY = 60;
+  let cursorY = Math.max(60, headerBottom + 16);
 
   groups.forEach((group, gIdx) => {
     if (group.label) {
