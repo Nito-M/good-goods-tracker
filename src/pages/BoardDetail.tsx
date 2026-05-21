@@ -320,7 +320,8 @@ export default function BoardDetail() {
   const { copyToClipboard } = useBoardClipboard();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
-  const { getFiles, uploadFile, deleteFile, refreshSignedUrl } = useBoardCellFiles(rowIds);
+  const { getFiles, getUploads, uploadFile, deleteFile, refreshSignedUrl, updateCaption: updateFileCaption, reorderFiles } =
+    useBoardCellFiles(rowIds);
   const {
     getEntries: getNoteEntries,
     getCount: getNoteCount,
