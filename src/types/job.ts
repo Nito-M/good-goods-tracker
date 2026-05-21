@@ -16,6 +16,7 @@ export interface Job {
   salesOrderNumber: string | null;
   invoiceNumber: string | null;
   weight: number | null;
+  nvisLink: string | null;
   createdAt: string;
   updatedAt: string;
 }

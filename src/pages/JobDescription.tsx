@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -123,7 +123,7 @@ export function JobDescription() {
           </CardContent>
         </Card>
 
-        {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) && (
+        {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress || job.nvisLink) && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Customer</CardTitle>
@@ -151,6 +151,20 @@ export function JobDescription() {
                 <div className="flex items-start gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <span className="whitespace-pre-line">{job.customerAddress}</span>
+                </div>
+              )}
+              {job.nvisLink && (
+                <div className="flex items-center gap-2 text-sm">
+                  <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-muted-foreground">NVIS:</span>
+                  <a
+                    href={/^https?:\/\//i.test(job.nvisLink) ? job.nvisLink : `https://${job.nvisLink}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline truncate"
+                  >
+                    {job.nvisLink}
+                  </a>
                 </div>
               )}
             </CardContent>

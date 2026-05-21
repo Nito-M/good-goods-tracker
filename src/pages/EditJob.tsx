@@ -41,6 +41,7 @@ export function EditJob() {
   const [formDueDate, setFormDueDate] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [formWeight, setFormWeight] = useState('');
+  const [formNvisLink, setFormNvisLink] = useState('');
   const [saving, setSaving] = useState(false);
   const descRef = useRef<HTMLTextAreaElement>(null);
 
@@ -64,6 +65,7 @@ export function EditJob() {
       setFormCustomerAddress(job.customerAddress || '');
       setFormDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
       setFormWeight(job.weight != null ? String(job.weight) : '');
+      setFormNvisLink(job.nvisLink || '');
     }
   }, [job]);
 
@@ -92,6 +94,7 @@ export function EditJob() {
       customer_address: formCustomerAddress.trim() || null,
       due_date: formDueDate ? (() => { const [y, m, d] = formDueDate.split('-').map(Number); return new Date(y, m - 1, d, 12, 0, 0).toISOString(); })() : null,
       weight: formWeight.trim() === '' ? null : Number(formWeight),
+      nvis_link: formNvisLink.trim() || null,
     };
     if (formJobNumber.trim() !== (job?.jobNumber || '')) {
       updates.job_number = formJobNumber.trim() || undefined;
@@ -216,6 +219,10 @@ export function EditJob() {
             <div>
               <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />Address</Label>
               <Textarea value={formCustomerAddress} onChange={e => setFormCustomerAddress(e.target.value)} placeholder="Customer address" rows={2} />
+            </div>
+            <div>
+              <Label className="flex items-center gap-1.5">NVIS Link</Label>
+              <Input value={formNvisLink} onChange={e => setFormNvisLink(e.target.value)} placeholder="https://example.com/nvis" />
             </div>
           </CardContent>
         </Card>
