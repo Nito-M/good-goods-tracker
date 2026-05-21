@@ -123,7 +123,7 @@ export function JobDescription() {
           </CardContent>
         </Card>
 
-        {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress) && (
+        {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress || job.nvisLink) && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Customer</CardTitle>
