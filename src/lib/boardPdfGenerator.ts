@@ -39,36 +39,65 @@ type LoadedImage = {
   format: 'PNG' | 'JPEG';
 };
 
-/** Fetch image, downscale if huge, return base64 dataURL + dimensions for jsPDF. */
-async function loadImageForPdf(url: string): Promise<LoadedImage | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    const bitmap = await createImageBitmap(blob).catch(() => null);
-    if (!bitmap) return null;
-
-    // Cap rendered dimension to keep PDF size sane; preserve aspect ratio.
-    const MAX = 1400;
-    const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
-    const w = Math.max(1, Math.round(bitmap.width * scale));
-    const h = Math.max(1, Math.round(bitmap.height * scale));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-    // White backdrop so JPEGs don't get muddy transparency
+function rasterize(
+  source: CanvasImageSource,
+  srcW: number,
+  srcH: number,
+  preserveAlpha: boolean
+): LoadedImage | null {
+  const MAX = 1400;
+  const scale = Math.min(1, MAX / Math.max(srcW, srcH));
+  const w = Math.max(1, Math.round(srcW * scale));
+  const h = Math.max(1, Math.round(srcH * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  if (!preserveAlpha) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    return { dataUrl, width: w, height: h, format: 'JPEG' };
+  }
+  ctx.drawImage(source, 0, 0, w, h);
+  if (preserveAlpha) {
+    return { dataUrl: canvas.toDataURL('image/png'), width: w, height: h, format: 'PNG' };
+  }
+  return { dataUrl: canvas.toDataURL('image/jpeg', 0.85), width: w, height: h, format: 'JPEG' };
+}
+
+function loadViaImageElement(url: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+/** Fetch image, downscale if huge, return base64 dataURL + dimensions for jsPDF. */
+async function loadImageForPdf(url: string, preserveAlpha = false): Promise<LoadedImage | null> {
+  // Try fetch -> bitmap first (works for most CORS-enabled URLs incl. signed Supabase URLs)
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const blob = await res.blob();
+      const bitmap = await createImageBitmap(blob).catch(() => null);
+      if (bitmap) {
+        const out = rasterize(bitmap, bitmap.width, bitmap.height, preserveAlpha);
+        if (out) return out;
+      }
+    }
   } catch (e) {
-    console.warn('Failed to load image for PDF', e);
+    console.warn('PDF image fetch path failed, trying <img> fallback', url, e);
+  }
+  // Fallback: <img crossOrigin="anonymous">
+  const img = await loadViaImageElement(url);
+  if (!img) {
+    console.warn('Failed to load image for PDF (both paths)', url);
     return null;
   }
+  return rasterize(img, img.naturalWidth || img.width, img.naturalHeight || img.height, preserveAlpha);
 }
 
 /**
