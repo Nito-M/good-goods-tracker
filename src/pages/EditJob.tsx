@@ -65,6 +65,7 @@ export function EditJob() {
       setFormCustomerAddress(job.customerAddress || '');
       setFormDueDate(job.dueDate ? job.dueDate.split('T')[0] : '');
       setFormWeight(job.weight != null ? String(job.weight) : '');
+      setFormNvisLink(job.nvisLink || '');
     }
   }, [job]);
 
