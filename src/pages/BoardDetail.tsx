@@ -310,7 +310,9 @@ export default function BoardDetail() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { companies } = useCompanies();
+  const boardCompany = companies.find((c) => c.id === board?.company_id);
   const pdfLogoUrl =
+    boardCompany?.logoUrl ||
     companies.find((c) => c.isDefault)?.logoUrl ||
     companies.find((c) => c.logoUrl)?.logoUrl ||
     profile?.logoUrl ||
