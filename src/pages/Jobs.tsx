@@ -666,7 +666,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                 </CardContent>
               </Card>
 
-              {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress || job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) ? (
+              {(job.customerName || job.customerEmail || job.customerPhone || job.customerAddress || job.nvisLink || job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) ? (
                 <Card>
                   <CardHeader><CardTitle>Customer</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
@@ -692,6 +692,21 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                       <div className="flex items-start gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                         <span className="whitespace-pre-line">{job.customerAddress}</span>
+                      </div>
+                    )}
+                    {job.nvisLink && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">NVIS:</span>
+                        <Button asChild variant="outline" size="sm" className="h-7">
+                          <a
+                            href={/^https?:\/\//i.test(job.nvisLink) ? job.nvisLink : `https://${job.nvisLink}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                            Open Link
+                          </a>
+                        </Button>
                       </div>
                     )}
                     {(job.quoteNumber || job.salesOrderNumber || job.invoiceNumber) && (
