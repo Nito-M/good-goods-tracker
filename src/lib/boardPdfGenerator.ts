@@ -26,6 +26,50 @@ interface GenerateOpts {
   merges?: BoardMerge[];
 }
 
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i;
+function isImageFileName(name: string): boolean {
+  return IMAGE_EXT_RE.test(name);
+}
+
+type LoadedImage = {
+  dataUrl: string;
+  width: number;
+  height: number;
+  format: 'PNG' | 'JPEG';
+};
+
+/** Fetch image, downscale if huge, return base64 dataURL + dimensions for jsPDF. */
+async function loadImageForPdf(url: string): Promise<LoadedImage | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const bitmap = await createImageBitmap(blob).catch(() => null);
+    if (!bitmap) return null;
+
+    // Cap rendered dimension to keep PDF size sane; preserve aspect ratio.
+    const MAX = 1400;
+    const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    // White backdrop so JPEGs don't get muddy transparency
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    return { dataUrl, width: w, height: h, format: 'JPEG' };
+  } catch (e) {
+    console.warn('Failed to load image for PDF', e);
+    return null;
+  }
+}
+
 /**
  * Render any cell's stored string value to plain text suitable for the PDF.
  * Mirrors the on-screen formatting per column type.
