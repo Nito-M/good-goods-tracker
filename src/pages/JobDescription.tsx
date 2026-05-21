@@ -153,6 +153,20 @@ export function JobDescription() {
                   <span className="whitespace-pre-line">{job.customerAddress}</span>
                 </div>
               )}
+              {job.nvisLink && (
+                <div className="flex items-center gap-2 text-sm">
+                  <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-muted-foreground">NVIS:</span>
+                  <a
+                    href={/^https?:\/\//i.test(job.nvisLink) ? job.nvisLink : `https://${job.nvisLink}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline truncate"
+                  >
+                    {job.nvisLink}
+                  </a>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
