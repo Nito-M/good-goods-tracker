@@ -1049,6 +1049,7 @@ export default function BoardDetail() {
                       getCellBgColor,
                       getFiles,
                       merges,
+                      logoUrl: profile?.logoUrl ?? null,
                     });
                   } catch (err) {
                     console.error('Board PDF export failed', err);
