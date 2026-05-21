@@ -163,6 +163,30 @@ const STATUS_FILL: Record<string, [number, number, number]> = {
 export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const { boardName, columns, groups, getCellValue, getCellTextAlign, getCellBgColor, getFiles, merges = [] } = opts;
 
+  // Preload every image referenced in any "files" cell so we can embed them.
+  const imageCache = new Map<string, LoadedImage>();
+  const allImageFiles: BoardCellFile[] = [];
+  for (const g of groups) {
+    for (const r of g.rows) {
+      for (const c of columns) {
+        if (c.type !== 'files') continue;
+        for (const f of getFiles(r.id, c.id)) {
+          if (isImageFileName(f.file_name) && f.file_url) allImageFiles.push(f);
+        }
+      }
+    }
+  }
+  // Cap concurrency to keep PDF generation snappy
+  const CHUNK = 6;
+  for (let i = 0; i < allImageFiles.length; i += CHUNK) {
+    const slice = allImageFiles.slice(i, i + CHUNK);
+    const loaded = await Promise.all(slice.map((f) => loadImageForPdf(f.file_url)));
+    slice.forEach((f, idx) => {
+      const img = loaded[idx];
+      if (img) imageCache.set(f.id, img);
+    });
+  }
+
   // Portrait A4 — fit all columns to upright page width
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
