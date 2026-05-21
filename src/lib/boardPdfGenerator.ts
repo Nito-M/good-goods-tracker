@@ -235,8 +235,13 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
   const cellAligns = new Map<string, 'left' | 'center' | 'right'>();
   // Per-cell custom background colors set by the user (token like "blue-300").
   const colorFills = new Map<string, string>();
+  // Per-cell list of image files to render inside the cell.
+  const imageCells = new Map<string, BoardCellFile[]>();
 
-  let cursorY = 60;
+  // Image rendering constants (used by both minCellHeight + didDrawCell)
+  const IMG_GAP = 4;
+  const IMG_CAPTION_H = 9;
+  const IMG_CELL_PAD = 4;
 
   groups.forEach((group, gIdx) => {
     if (group.label) {
