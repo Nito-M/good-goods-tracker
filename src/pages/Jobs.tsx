@@ -477,6 +477,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
       sales_order_number: fSalesOrderNumber.trim() || null,
       invoice_number: fInvoiceNumber.trim() || null,
       weight: fWeight.trim() === '' ? null : Number(fWeight),
+      nvis_link: fNvisLink.trim() || null,
     };
     if (fJobNumber.trim() !== (job.jobNumber || '')) {
       updates.job_number = fJobNumber.trim() || undefined;
