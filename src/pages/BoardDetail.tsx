@@ -1268,9 +1268,12 @@ export default function BoardDetail() {
                 deleteRow={deleteRow}
                 setRowFrozen={setRowFrozen}
                 getFiles={getFiles}
+                getUploads={getUploads}
                 uploadFile={uploadFile}
                 deleteFile={deleteFile}
                 refreshSignedUrl={refreshSignedUrl}
+                updateFileCaption={updateFileCaption}
+                reorderFiles={reorderFiles}
                 getNoteCount={getNoteCount}
                 onOpenNote={setNoteRowId}
                 onConfigureConnect={setConnectDialogColumnId}
