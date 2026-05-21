@@ -1754,9 +1754,12 @@ function GroupSection({
                     value={getCellValue(row.id, col.id)}
                     onSave={(v) => setCellValue(row.id, col.id, v)}
                     files={col.type === 'files' ? getFiles(row.id, col.id) : []}
+                    pendingUploads={col.type === 'files' ? getUploads(row.id, col.id) : []}
                     onUploadFile={(f) => uploadFile(row.id, col.id, f)}
                     onDeleteFile={deleteFile}
                     onOpenFile={refreshSignedUrl}
+                    onUpdateFileCaption={updateFileCaption}
+                    onReorderFiles={(ids) => reorderFiles(row.id, col.id, ids)}
                     onConfigureConnect={() => onConfigureConnect(col.id)}
                     readOnly={currentUserColumnPerms(col.id) !== 'edit'}
                     cellAlign={getCellTextAlign(row.id, col.id)}
