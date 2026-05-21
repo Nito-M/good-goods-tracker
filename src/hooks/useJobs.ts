@@ -38,6 +38,7 @@ export function useJobs() {
         salesOrderNumber: (d as any).sales_order_number ?? null,
         invoiceNumber: (d as any).invoice_number ?? null,
         weight: (d as any).weight ?? null,
+        nvisLink: (d as any).nvis_link ?? null,
         createdAt: d.created_at,
         updatedAt: d.updated_at,
       })));
