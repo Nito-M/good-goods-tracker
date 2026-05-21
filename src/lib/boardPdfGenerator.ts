@@ -389,6 +389,63 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
             }
           }
         }
+
+        // Reserve vertical space for image stacks in files cells.
+        const imgs = imageCells.get(key);
+        if (imgs && imgs.length) {
+          const cellInnerWidth = data.cell.width - IMG_CELL_PAD * 2;
+          let total = IMG_CELL_PAD;
+          for (const f of imgs) {
+            const img = imageCache.get(f.id)!;
+            const scale = Math.min(1, cellInnerWidth / img.width);
+            const drawW = img.width * scale;
+            const drawH = img.height * scale;
+            total += drawH + (f.caption ? IMG_CAPTION_H : 0) + IMG_GAP;
+          }
+          // Cap so a single mega-row doesn't blow past one page
+          const maxH = doc.internal.pageSize.getHeight() - 120;
+          data.cell.styles.minCellHeight = Math.min(total, maxH);
+        }
+      },
+      didDrawCell: (data: CellHookData) => {
+        if (data.section !== 'body') return;
+        const key = `${gIdx}-${data.row.index}-${data.column.index}`;
+        const imgs = imageCells.get(key);
+        if (!imgs || !imgs.length) return;
+
+        const cellX = data.cell.x + IMG_CELL_PAD;
+        const cellY = data.cell.y + IMG_CELL_PAD;
+        const cellInnerWidth = data.cell.width - IMG_CELL_PAD * 2;
+        const cellMaxBottom = data.cell.y + data.cell.height - IMG_CELL_PAD;
+        let y = cellY;
+
+        for (const f of imgs) {
+          const img = imageCache.get(f.id);
+          if (!img) continue;
+          const scale = Math.min(1, cellInnerWidth / img.width);
+          const drawW = img.width * scale;
+          const drawH = img.height * scale;
+          if (y + drawH > cellMaxBottom) break; // prevent overflow
+          try {
+            doc.addImage(img.dataUrl, img.format, cellX, y, drawW, drawH, undefined, 'FAST');
+          } catch (e) {
+            console.warn('addImage failed', e);
+          }
+          y += drawH;
+          if (f.caption) {
+            const captionBottom = y + IMG_CAPTION_H;
+            if (captionBottom <= cellMaxBottom) {
+              doc.setFont('helvetica', 'italic');
+              doc.setFontSize(7);
+              doc.setTextColor(80, 80, 80);
+              doc.text(f.caption, cellX, y + 7, { maxWidth: cellInnerWidth });
+              doc.setFont('helvetica', 'normal');
+              doc.setTextColor(0, 0, 0);
+              y = captionBottom;
+            }
+          }
+          y += IMG_GAP;
+        }
       },
     });
 
