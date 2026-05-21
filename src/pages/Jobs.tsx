@@ -445,6 +445,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     setFSalesOrderNumber(job.salesOrderNumber || '');
     setFInvoiceNumber(job.invoiceNumber || '');
     setFWeight(job.weight != null ? String(job.weight) : '');
+    setFNvisLink(job.nvisLink || '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
