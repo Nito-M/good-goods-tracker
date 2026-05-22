@@ -350,6 +350,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
 
   // Settings tab form state
   const [tab, setTab] = useState<'information' | 'parts' | 'settings'>('information');
+  const [descriptionCollapsed, setDescriptionCollapsed] = useState(false);
   const [fTitle, setFTitle] = useState(job.title);
   const [fDescription, setFDescription] = useState(job.description || '');
   const [fJobNumber, setFJobNumber] = useState(job.jobNumber || '');
@@ -548,14 +549,24 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
           {/* INFORMATION TAB */}
           <TabsContent value="information" className="space-y-6">
             <Card>
-              <CardHeader><CardTitle>Description</CardTitle></CardHeader>
-              <CardContent>
-                {job.description ? (
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{job.description}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No description provided.</p>
-                )}
-              </CardContent>
+              <CardHeader
+                className="cursor-pointer select-none"
+                onClick={() => setDescriptionCollapsed(v => !v)}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle>Description</CardTitle>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${descriptionCollapsed ? '-rotate-90' : ''}`} />
+                </div>
+              </CardHeader>
+              {!descriptionCollapsed && (
+                <CardContent>
+                  {job.description ? (
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{job.description}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">No description provided.</p>
+                  )}
+                </CardContent>
+              )}
             </Card>
 
             <div className="grid gap-6 md:grid-cols-2">
