@@ -239,12 +239,15 @@ export function Jobs() {
                 const count = jobs.filter(j => j.status === s.value).length;
                 if (count === 0) return null;
                 const trigger = <TabsTrigger key={s.value} value={s.value}>{s.label} ({count})</TabsTrigger>;
-                if (s.value === 'finished') {
+                if (s.value === 'delivered') {
                   return <Fragment key={s.value}>{trigger}<TabsTrigger value="all">All ({jobs.length})</TabsTrigger></Fragment>;
                 }
                 return trigger;
               })}
-              {!jobs.some(j => j.status === 'finished') && (
+              {!jobs.some(j => j.status === 'delivered') && !jobs.some(j => j.status === 'finished') && (
+                <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
+              )}
+              {!jobs.some(j => j.status === 'delivered') && jobs.some(j => j.status === 'finished') && (
                 <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
               )}
             </TabsList>
