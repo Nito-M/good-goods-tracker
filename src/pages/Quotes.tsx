@@ -31,7 +31,7 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useProfile } from '@/hooks/useProfile';
 import { useSales } from '@/hooks/useSales';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { addDays, format } from 'date-fns';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -377,6 +377,9 @@ export function Quotes() {
   const [showSku, setShowSku] = useState(true);
   const [activeTab, setActiveTab] = useState('history');
   const [showItemPicker, setShowItemPicker] = useState(false);
+  const [openMonths, setOpenMonths] = useState<string[]>([]);
+  const [highlightedQuoteId, setHighlightedQuoteId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
@@ -670,6 +673,31 @@ export function Quotes() {
     });
     return groups;
   }, [filteredQuotes]);
+
+  // Deep-link: ?quoteId=<id> opens history tab, expands its month, scrolls to it
+  useEffect(() => {
+    const targetId = searchParams.get('quoteId');
+    if (!targetId || quotes.length === 0) return;
+    const target = quotes.find((q) => q.id === targetId);
+    if (!target) return;
+    setActiveTab('history');
+    const monthKey = getMonthKey(target.createdAt);
+    setOpenMonths((prev) => (prev.includes(monthKey) ? prev : [...prev, monthKey]));
+    setHighlightedQuoteId(targetId);
+    setTimeout(() => {
+      const el = document.getElementById(`quote-${targetId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 250);
+    // Clear the param so subsequent navigations don't re-trigger
+    const next = new URLSearchParams(searchParams);
+    next.delete('quoteId');
+    setSearchParams(next, { replace: true });
+    // Clear highlight after a few seconds
+    const t = setTimeout(() => setHighlightedQuoteId(null), 3000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotes.length, searchParams.get('quoteId')]);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -1140,7 +1168,7 @@ export function Quotes() {
                     No quotes found
                   </p>
                 ) : (
-                  <Accordion type="multiple" className="space-y-4">
+                  <Accordion type="multiple" value={openMonths} onValueChange={setOpenMonths} className="space-y-4">
                     {Object.entries(groupedQuotes).map(([month, monthQuotes]) => (
                       <AccordionItem key={month} value={month} className="border rounded-lg px-4">
                         <AccordionTrigger className="hover:no-underline">
@@ -1151,22 +1179,27 @@ export function Quotes() {
                         </AccordionTrigger>
                         <AccordionContent className="space-y-3 pt-2">
                             {monthQuotes.map((quote) => (
-                              <QuoteCard
+                              <div
                                 key={quote.id}
-                                quote={quote}
-                                onDelete={deleteQuote}
-                                onUpdateStatus={updateQuoteStatus}
-                                onUploadAttachment={uploadAttachment}
-                                onRemoveAttachment={removeAttachment}
-                                onEdit={handleEditQuote}
-                                onConvertToInvoice={(quote, percentage) => convertToInvoice(quote, percentage)}
-                                onConvertToPurchaseOrder={convertToPurchaseOrder}
-                                onRevertInvoiceLink={revertInvoiceLink}
-                                onPreview={setPreviewQuote}
-                                quoteSettings={getQuoteSettingsForQuote(quote)}
-                                linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
-                                linkedPoNumber={quote.convertedToPoId ? poNumberMap.get(quote.convertedToPoId) : null}
-                              />
+                                id={`quote-${quote.id}`}
+                                className={highlightedQuoteId === quote.id ? 'rounded-lg ring-2 ring-primary transition-shadow' : ''}
+                              >
+                                <QuoteCard
+                                  quote={quote}
+                                  onDelete={deleteQuote}
+                                  onUpdateStatus={updateQuoteStatus}
+                                  onUploadAttachment={uploadAttachment}
+                                  onRemoveAttachment={removeAttachment}
+                                  onEdit={handleEditQuote}
+                                  onConvertToInvoice={(quote, percentage) => convertToInvoice(quote, percentage)}
+                                  onConvertToPurchaseOrder={convertToPurchaseOrder}
+                                  onRevertInvoiceLink={revertInvoiceLink}
+                                  onPreview={setPreviewQuote}
+                                  quoteSettings={getQuoteSettingsForQuote(quote)}
+                                  linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
+                                  linkedPoNumber={quote.convertedToPoId ? poNumberMap.get(quote.convertedToPoId) : null}
+                                />
+                              </div>
                             ))}
                         </AccordionContent>
                       </AccordionItem>
