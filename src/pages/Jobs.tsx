@@ -233,12 +233,18 @@ export function Jobs() {
         <Tabs value={statusTab} onValueChange={setStatusTab}>
           <div className="overflow-x-auto">
             <TabsList className="mb-4">
-              <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
               {STATUS_OPTIONS.map(s => {
                 const count = jobs.filter(j => j.status === s.value).length;
                 if (count === 0) return null;
-                return <TabsTrigger key={s.value} value={s.value}>{s.label} ({count})</TabsTrigger>;
+                const trigger = <TabsTrigger key={s.value} value={s.value}>{s.label} ({count})</TabsTrigger>;
+                if (s.value === 'finished') {
+                  return <Fragment key={s.value}>{trigger}<TabsTrigger value="all">All ({jobs.length})</TabsTrigger></Fragment>;
+                }
+                return trigger;
               })}
+              {!jobs.some(j => j.status === 'finished') && (
+                <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
+              )}
             </TabsList>
           </div>
 
