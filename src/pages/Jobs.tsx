@@ -244,10 +244,7 @@ export function Jobs() {
                 }
                 return trigger;
               })}
-              {!jobs.some(j => j.status === 'delivered') && !jobs.some(j => j.status === 'finished') && (
-                <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
-              )}
-              {!jobs.some(j => j.status === 'delivered') && jobs.some(j => j.status === 'finished') && (
+              {!jobs.some(j => j.status === 'delivered') && (
                 <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
               )}
             </TabsList>
