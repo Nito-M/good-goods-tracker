@@ -605,6 +605,9 @@ export function useSales() {
       if (input.contactPersonName !== undefined) {
         updateData.contact_person_name = input.contactPersonName;
       }
+      if (input.showSku !== undefined) {
+        updateData.show_sku = input.showSku;
+      }
 
       const { error: saleError } = await supabase
         .from('sales')
