@@ -135,24 +135,26 @@ export function AllJobItems() {
           </Card>
         ) : (
           <>
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                {needCostSummary.categories.map(c => (
-                  <div key={c.name} className="flex items-center gap-1.5">
-                    <span className="text-sm text-muted-foreground">{c.name}:</span>
-                    <span className="text-sm font-semibold text-card-foreground">{formatCurrency(c.cost)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 pt-3 border-t border-border flex justify-end">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">Grand Total Needed:</span>
-                  <span className="text-lg font-bold text-card-foreground">{formatCurrency(needCostSummary.grandTotal)}</span>
+          {canViewJobPricing && (
+            <Card className="mb-6">
+              <CardContent className="p-4">
+                <div className="flex flex-wrap gap-4 items-center">
+                  {needCostSummary.categories.map(c => (
+                    <div key={c.name} className="flex items-center gap-1.5">
+                      <span className="text-sm text-muted-foreground">{c.name}:</span>
+                      <span className="text-sm font-semibold text-card-foreground">{formatCurrency(c.cost)}</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mt-3 pt-3 border-t border-border flex justify-end">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">Grand Total Needed:</span>
+                    <span className="text-lg font-bold text-card-foreground">{formatCurrency(needCostSummary.grandTotal)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <div className="space-y-4">
             {groupedItems.map(([category, items]) => {
               const isCollapsed = collapsedCategories.has(category);
