@@ -373,29 +373,34 @@ function AssemblyDetail({
               </div>
               {assembly.description && <p className="text-sm text-muted-foreground mt-1">{assembly.description}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-4">
-                {summary && summary.itemCount > 0 && (
+                {canViewAssemblyPricing && summary && summary.itemCount > 0 && (
                   <div className="flex items-center gap-1.5 text-sm">
                     <span className="text-muted-foreground">{summary.itemCount} item{summary.itemCount !== 1 ? 's' : ''} · Cost:</span>
                     <span className="font-semibold">{formatCurrency(summary.totalCost)}</span>
                     {summary.hasCustomItems && <span className="text-xs text-muted-foreground italic">(excl. custom)</span>}
                   </div>
                 )}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm text-muted-foreground">Sell:</span>
-                  {editingPrice ? (
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-muted-foreground">$</span>
-                      <Input type="number" min={0} step="0.01" value={priceInput} onChange={(e) => setPriceInput(e.target.value)} className="h-7 w-28 text-sm px-2" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleSavePrice(); if (e.key === 'Escape') { setEditingPrice(false); setPriceInput(String(assembly.selling_price ?? 0)); } }} />
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSavePrice} disabled={savingPrice}><Check className="h-3 w-3" /></Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingPrice(false); setPriceInput(String(assembly.selling_price ?? 0)); }}><X className="h-3 w-3" /></Button>
-                    </div>
-                  ) : (
-                    <button className="text-sm font-semibold text-primary hover:underline cursor-pointer" onClick={() => { setEditingPrice(true); setPriceInput(String(assembly.selling_price ?? 0)); }}>
-                      {assembly.selling_price > 0 ? formatCurrency(assembly.selling_price) : <span className="text-muted-foreground font-normal">Set price…</span>}
-                    </button>
-                  )}
-                </div>
-                {summary && summary.totalCost > 0 && assembly.selling_price > 0 && (
+                {!canViewAssemblyPricing && summary && summary.itemCount > 0 && (
+                  <div className="text-sm text-muted-foreground">{summary.itemCount} item{summary.itemCount !== 1 ? 's' : ''}</div>
+                )}
+                {canViewAssemblyPricing && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm text-muted-foreground">Sell:</span>
+                    {editingPrice ? (
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm text-muted-foreground">$</span>
+                        <Input type="number" min={0} step="0.01" value={priceInput} onChange={(e) => setPriceInput(e.target.value)} className="h-7 w-28 text-sm px-2" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleSavePrice(); if (e.key === 'Escape') { setEditingPrice(false); setPriceInput(String(assembly.selling_price ?? 0)); } }} />
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSavePrice} disabled={savingPrice}><Check className="h-3 w-3" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingPrice(false); setPriceInput(String(assembly.selling_price ?? 0)); }}><X className="h-3 w-3" /></Button>
+                      </div>
+                    ) : (
+                      <button className="text-sm font-semibold text-primary hover:underline cursor-pointer" onClick={() => { setEditingPrice(true); setPriceInput(String(assembly.selling_price ?? 0)); }}>
+                        {assembly.selling_price > 0 ? formatCurrency(assembly.selling_price) : <span className="text-muted-foreground font-normal">Set price…</span>}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {canViewAssemblyPricing && summary && summary.totalCost > 0 && assembly.selling_price > 0 && (
                   <div className="text-sm text-muted-foreground">
                     Margin: <span className={assembly.selling_price >= summary.totalCost ? 'text-green-600 font-medium' : 'text-destructive font-medium'}>
                       {formatCurrency(assembly.selling_price - summary.totalCost)} ({(((assembly.selling_price - summary.totalCost) / assembly.selling_price) * 100).toFixed(1)}%)
