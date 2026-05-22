@@ -13,6 +13,7 @@ import { useParts } from '@/hooks/useParts';
 import { usePartFolders } from '@/hooks/usePartFolders';
 import { usePartsAssemblies, PartsAssembly } from '@/hooks/usePartsAssemblies';
 import { useAssemblyModels } from '@/hooks/useAssemblyModels';
+import { useCanViewAssemblyPricing } from '@/hooks/useCanViewAssemblyPricing';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
