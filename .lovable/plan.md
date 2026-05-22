@@ -1,26 +1,23 @@
 ## Goal
-On the Sales Order page, in the Billing tab's **Invoices** card, surface paid vs. owing totals (with both dollar amount and percentage of the sales order total), and add a button to create an invoice for the remaining balance — mirroring the "To Invoice" button on the quote.
+On the Sales Order **Jobs** tab, hide each item's long description (`item.notes`) by default and let the user expand it per row. The add-on count already shows next to the title — keep it there.
 
-## Changes (file: `src/pages/SalesOrderDetail.tsx`)
+## Changes (single file: `src/pages/SalesOrderDetail.tsx`)
 
-1. **Wire up the invoice conversion hook**
-   - Pull `convertToInvoice` from the existing `useQuotes()` call (already imported).
-   - Add local state for a "Create Invoice for Remaining" dialog (open flag + percentage input), modeled on `QuoteCard.tsx`'s existing dialog.
+1. **New state** next to `collapsedParents`:
+   ```ts
+   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+   ```
+   (Default = empty → all descriptions collapsed.)
 
-2. **Enhance the Invoices card header / summary**
-   At the top of the Invoices card content (above the per-invoice rows), add a summary block showing:
-   - **Paid:** `$X.XX (YY%)` — sum of linked sales where `paidAt` is set, percentage = paid / quote.total.
-   - **Owing:** `$X.XX (YY%)` — `quote.total - paid`, percentage = 100 - paid%.
-   - Color: Paid green, Owing red when > 0 (using `text-emerald-600` / `text-destructive` semantic tokens already used elsewhere in the file).
+2. **Row title area** (around lines 689–699): when `item.notes` exists, render a small chevron button right after the item name + add-on count. Clicking it toggles `item.linkKey` in `expandedNotes`.
+   - Collapsed (default): chevron-right icon, notes hidden.
+   - Expanded: chevron-down icon, notes shown below as today.
 
-3. **Add "Invoice Remaining" button**
-   - Show next to the Invoices card title (or in the summary block) when `quote.invoicedPercentage < 100`.
-   - Label: `Invoice Remaining (NN%)` where NN = `100 - quote.invoicedPercentage`.
-   - Clicking opens a dialog (copied pattern from `QuoteCard.tsx` lines 411–449):
-     - Numeric input pre-filled with remaining %, capped at remaining %.
-     - Shows preview: `Invoice total: $X.XX`.
-     - Confirm calls `convertToInvoice(quote, percentage)`; the hook updates `quote.invoicedPercentage` and creates the linked sale, which will refresh into the existing list.
+3. Add-on count stays as-is — `(N add-ons)` rendered inline after the title.
 
-## Notes
-- "Paid %" intentionally uses paid dollars over quote total (not `invoicedPercentage`), so partially-paid invoices are reflected accurately. If you'd prefer the percentage to mean "% of the sales order that has been invoiced (regardless of payment)", say the word and I'll swap it.
-- No backend/schema changes. Reuses the existing `convertToInvoice` flow from `useQuotes`.
+4. Child rows (`isChild`) get the same treatment so attached add-on notes also collapse.
+
+## Behavior
+- No layout shift when there are no notes (button only renders if `item.notes` is set).
+- State is local to the component; collapses reset on page reload (matches existing `collapsedParents` pattern).
+- No backend or data changes.
