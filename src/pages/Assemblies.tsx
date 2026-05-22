@@ -639,8 +639,8 @@ function AssemblyDetail({
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              <span>Item</span><span className="w-20 text-center">SKU</span><span className="w-20 text-right">Cost</span><span className="w-16 text-center">Qty</span><span className="w-20 text-right">Total</span><span className="w-8" />
+            <div className={`grid ${canViewAssemblyPricing ? 'grid-cols-[1fr_auto_auto_auto_auto_auto]' : 'grid-cols-[1fr_auto_auto_auto]'} gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide`}>
+              <span>Item</span><span className="w-20 text-center">SKU</span>{canViewAssemblyPricing && <span className="w-20 text-right">Cost</span>}<span className="w-16 text-center">Qty</span>{canViewAssemblyPricing && <span className="w-20 text-right">Total</span>}<span className="w-8" />
             </div>
             {items.map((item) => {
               const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : (item.unit_cost > 0 ? item.unit_cost : null);
