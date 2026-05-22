@@ -310,6 +310,19 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                 <span>{formatCurrency(sale.taxAmount)}</span>
               </div>
             )}
+            {(() => {
+              const itemDiscountTotal = sale.items.reduce(
+                (sum, it) => sum + (it.quantity * it.unitPrice * ((it.discountRate || 0) / 100)),
+                0,
+              );
+              if (itemDiscountTotal <= 0) return null;
+              return (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Item Discounts</span>
+                  <span>-{formatCurrency(itemDiscountTotal)}</span>
+                </div>
+              );
+            })()}
             {(sale.adjustments || []).map((adj, idx) => (
               <div
                 key={adj.id}
