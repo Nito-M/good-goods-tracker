@@ -151,10 +151,11 @@ export default function SaleDetail() {
           Back to Sales
         </Button>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" onClick={() => navigate('/sales', { state: { editSaleId: sale.id } })}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit
           </Button>
+
           <Button variant="outline" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-4 w-4 mr-2" />
             Preview
