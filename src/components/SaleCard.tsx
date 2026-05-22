@@ -302,6 +302,14 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                 <span>-{formatCurrency(sale.discountAmount)}</span>
               </div>
             )}
+            {sale.taxAmount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  Tax ({sale.taxRate}%)
+                </span>
+                <span>{formatCurrency(sale.taxAmount)}</span>
+              </div>
+            )}
             {(() => {
               const itemDiscountTotal = sale.items.reduce(
                 (sum, it) => sum + (it.quantity * it.unitPrice * ((it.discountRate || 0) / 100)),
