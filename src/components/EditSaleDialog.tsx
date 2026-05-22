@@ -149,6 +149,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       companyId: companyId || null,
       contactPersonName: contactPersonName.trim() || null,
+      showSku,
     });
     setIsSaving(false);
     onOpenChange(false);
