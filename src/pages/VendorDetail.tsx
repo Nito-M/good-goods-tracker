@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useVendors } from '@/hooks/useVendors';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { useSales } from '@/hooks/useSales';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { VendorContactsManager } from '@/components/VendorContactsManager';
 
