@@ -260,6 +260,39 @@ export function VendorDetail() {
             </CardContent>
           </Card>
         )}
+
+        {/* Recent Invoices */}
+        {vendorSales.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Invoices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y divide-border">
+                {vendorSales.slice(0, 10).map((sale) => (
+                  <Link
+                    key={sale.id}
+                    to={`/sales/${sale.id}`}
+                    className="flex items-center justify-between py-3 hover:bg-muted/50 rounded px-2 -mx-2 transition-colors"
+                  >
+                    <div>
+                      <div className="font-medium text-sm">{sale.invoiceNumber}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(sale.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-foreground">${Number(sale.total || 0).toFixed(2)}</span>
+                      <Badge variant={sale.status === 'paid' ? 'default' : 'secondary'}>
+                        {sale.status}
+                      </Badge>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </main>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
