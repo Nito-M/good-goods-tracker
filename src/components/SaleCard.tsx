@@ -160,10 +160,6 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
             </Select>
           )}
           {sale.status === 'cancelled' && getStatusBadges()}
-          <Button variant="outline" size="sm" onClick={() => onEdit(sale)}>
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
           <Button variant="outline" size="sm" onClick={onPreviewInvoice}>
             <Eye className="h-4 w-4 mr-2" />
             Preview
@@ -172,36 +168,62 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
             <Download className="h-4 w-4 mr-2" />
             Invoice
           </Button>
-          {sale.status !== 'cancelled' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="icon" title="Revert sale">
-                  <Undo2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Revert Sale?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will mark {sale.invoiceNumber} as reverted
-                    {isPickedUp && ' and restore all items back to inventory'}.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onRevert(sale.id)}>
-                    Revert Sale
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="icon" className="text-destructive">
-                <Trash2 className="h-4 w-4" />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title="More actions">
+                <MoreVertical className="h-4 w-4" />
               </Button>
-            </AlertDialogTrigger>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => onEdit(sale)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              {sale.status !== 'cancelled' && (
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setRevertOpen(true);
+                  }}
+                >
+                  <Undo2 className="h-4 w-4 mr-2" />
+                  Revert
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setDeleteOpen(true);
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <AlertDialog open={revertOpen} onOpenChange={setRevertOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Revert Sale?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will mark {sale.invoiceNumber} as reverted
+                  {isPickedUp && ' and restore all items back to inventory'}.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onRevert(sale.id)}>
+                  Revert Sale
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Sale?</AlertDialogTitle>
