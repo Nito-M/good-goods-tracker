@@ -1,22 +1,26 @@
-## Problem
+## Goal
+On the Sales Order page, in the Billing tab's **Invoices** card, surface paid vs. owing totals (with both dollar amount and percentage of the sales order total), and add a button to create an invoice for the remaining balance — mirroring the "To Invoice" button on the quote.
 
-All 21 invoices currently marked **paid** have `paid_at = NULL` in the database, so the invoice detail Timeline shows "Paid: —". The code that records `paid_at` (in `useSales.updateStatus`) is correct and runs whenever status is changed to `paid` going forward — but these existing rows were marked paid before that logic captured the timestamp (or via another path), so the column was never populated.
+## Changes (file: `src/pages/SalesOrderDetail.tsx`)
 
-The UI itself already displays the paid date correctly (`SaleDetail.tsx` Timeline row "Paid" reads `sale.paidAt`); there's nothing to fix in the component.
+1. **Wire up the invoice conversion hook**
+   - Pull `convertToInvoice` from the existing `useQuotes()` call (already imported).
+   - Add local state for a "Create Invoice for Remaining" dialog (open flag + percentage input), modeled on `QuoteCard.tsx`'s existing dialog.
 
-## Fix
+2. **Enhance the Invoices card header / summary**
+   At the top of the Invoices card content (above the per-invoice rows), add a summary block showing:
+   - **Paid:** `$X.XX (YY%)` — sum of linked sales where `paidAt` is set, percentage = paid / quote.total.
+   - **Owing:** `$X.XX (YY%)` — `quote.total - paid`, percentage = 100 - paid%.
+   - Color: Paid green, Owing red when > 0 (using `text-emerald-600` / `text-destructive` semantic tokens already used elsewhere in the file).
 
-Run a one-time data backfill: for every sale where `status = 'paid'` and `paid_at IS NULL`, set `paid_at = updated_at`. The `updated_at` column is the closest available approximation of when the status was flipped to paid.
-
-```sql
-UPDATE public.sales
-SET paid_at = updated_at
-WHERE status = 'paid' AND paid_at IS NULL;
-```
-
-This affects 21 rows. After it runs, the SaleDetail Timeline will show a Paid date for each of them, and any newly-marked-paid invoices will continue to capture the real timestamp via the existing code path.
+3. **Add "Invoice Remaining" button**
+   - Show next to the Invoices card title (or in the summary block) when `quote.invoicedPercentage < 100`.
+   - Label: `Invoice Remaining (NN%)` where NN = `100 - quote.invoicedPercentage`.
+   - Clicking opens a dialog (copied pattern from `QuoteCard.tsx` lines 411–449):
+     - Numeric input pre-filled with remaining %, capped at remaining %.
+     - Shows preview: `Invoice total: $X.XX`.
+     - Confirm calls `convertToInvoice(quote, percentage)`; the hook updates `quote.invoicedPercentage` and creates the linked sale, which will refresh into the existing list.
 
 ## Notes
-
-- No code changes required.
-- If you'd rather show "—" instead of a guessed date for these historical records, we can skip the backfill — but every existing paid invoice will keep showing no paid date.
+- "Paid %" intentionally uses paid dollars over quote total (not `invoicedPercentage`), so partially-paid invoices are reflected accurately. If you'd prefer the percentage to mean "% of the sales order that has been invoiced (regardless of payment)", say the word and I'll swap it.
+- No backend/schema changes. Reuses the existing `convertToInvoice` flow from `useQuotes`.
