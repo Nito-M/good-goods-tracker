@@ -1271,12 +1271,18 @@ export function Assemblies() {
                           </div>
                             {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5" title={a.description}>{a.description}</p>}
                             {!a.description && a.status === 'not_finished' && a.status_notes && <p className="text-xs text-muted-foreground truncate mt-0.5 italic" title={a.status_notes}>{a.status_notes}</p>}
-                          {(s && s.itemCount > 0) || a.selling_price > 0 ? (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
-                              {a.selling_price > 0 && <>{s && s.itemCount > 0 ? ' · ' : ''}Sell: <span className="font-medium text-primary">{formatCurrency(a.selling_price)}</span></>}
-                            </p>
-                          ) : null}
+                          {canViewAssemblyPricing ? (
+                            (s && s.itemCount > 0) || a.selling_price > 0 ? (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {s && s.itemCount > 0 && <>{s.itemCount} item{s.itemCount !== 1 ? 's' : ''} · Cost: <span className="font-medium text-foreground">{formatCurrency(s.totalCost)}</span></>}
+                                {a.selling_price > 0 && <>{s && s.itemCount > 0 ? ' · ' : ''}Sell: <span className="font-medium text-primary">{formatCurrency(a.selling_price)}</span></>}
+                              </p>
+                            ) : null
+                          ) : (
+                            s && s.itemCount > 0 ? (
+                              <p className="text-xs text-muted-foreground mt-0.5">{s.itemCount} item{s.itemCount !== 1 ? 's' : ''}</p>
+                            ) : null
+                          )}
                         </button>
                       );
                     })}
