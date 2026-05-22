@@ -54,6 +54,8 @@ export interface Sale {
   items: SaleItem[];
   adjustments: SaleAdjustment[];
   showSku?: boolean;
+  linkedQuoteId?: string | null;
+  linkedSalesOrderId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

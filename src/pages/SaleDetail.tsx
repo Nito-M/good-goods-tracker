@@ -13,6 +13,7 @@ import { useCompanies } from '@/hooks/useCompanies';
 import { InvoiceSettings, Sale, SaleStatus } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { InvoicePreviewDialog } from '@/components/InvoicePreviewDialog';
+import { LinkedDocumentsCard } from '@/components/sale/LinkedDocumentsCard';
 
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -186,6 +187,10 @@ export default function SaleDetail() {
           <TimelineRow icon={<FileText className="h-4 w-4" />} label="Payment Terms" value={sale.paymentTerms || '—'} />
         </CardContent>
       </Card>
+
+      <LinkedDocumentsCard sale={sale} />
+
+
 
       {/* Customer */}
       {(sale.vendorName || sale.contactPersonName || sale.vendorAddress) && (

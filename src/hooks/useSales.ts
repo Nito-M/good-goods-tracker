@@ -116,6 +116,8 @@ export function useSales() {
             createdAt: sale.created_at,
             updatedAt: sale.updated_at,
             companyId: (sale as any).company_id || null,
+            linkedQuoteId: (sale as any).linked_quote_id ?? null,
+            linkedSalesOrderId: (sale as any).linked_sales_order_id ?? null,
           };
         })
       );
@@ -894,6 +896,36 @@ export function useSales() {
     }
   };
 
+  const updateLinks = async (
+    saleId: string,
+    links: { linkedQuoteId?: string | null; linkedSalesOrderId?: string | null }
+  ) => {
+    try {
+      const updateData: Record<string, unknown> = {};
+      if (links.linkedQuoteId !== undefined) updateData.linked_quote_id = links.linkedQuoteId;
+      if (links.linkedSalesOrderId !== undefined) updateData.linked_sales_order_id = links.linkedSalesOrderId;
+      const { error } = await supabase.from('sales').update(updateData as any).eq('id', saleId);
+      if (error) throw error;
+      setSales((prev) =>
+        prev.map((s) =>
+          s.id === saleId
+            ? {
+                ...s,
+                linkedQuoteId: links.linkedQuoteId !== undefined ? links.linkedQuoteId : s.linkedQuoteId,
+                linkedSalesOrderId:
+                  links.linkedSalesOrderId !== undefined ? links.linkedSalesOrderId : s.linkedSalesOrderId,
+              }
+            : s
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error('Error updating links:', error);
+      toast({ title: 'Error updating links', variant: 'destructive' });
+      return false;
+    }
+  };
+
   return {
     sales,
     loading,
@@ -904,6 +936,7 @@ export function useSales() {
     deleteSale,
     revertSale,
     updateInternalNotes,
+    updateLinks,
     refetch: fetchSales,
   };
 }
