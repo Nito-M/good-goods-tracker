@@ -62,6 +62,7 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [showPoDialog, setShowPoDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [invoicePercentage, setInvoicePercentage] = useState(100);
 
   const remainingPercentage = 100 - quote.invoicedPercentage;
@@ -186,6 +187,13 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                 <Upload className="h-4 w-4 mr-2" />
                 Attach PDF or image
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <AlertDialog open={showPoDialog} onOpenChange={setShowPoDialog}>
@@ -231,12 +239,7 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="icon" className="text-destructive">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Quote?</AlertDialogTitle>
