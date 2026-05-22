@@ -188,6 +188,10 @@ export default function SaleDetail() {
         </CardContent>
       </Card>
 
+      <LinkedDocumentsCard sale={sale} />
+
+
+
       {/* Customer */}
       {(sale.vendorName || sale.contactPersonName || sale.vendorAddress) && (
         <Card>
