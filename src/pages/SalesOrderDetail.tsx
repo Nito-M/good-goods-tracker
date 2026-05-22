@@ -82,7 +82,10 @@ export function SalesOrderDetail() {
   const { quotes, loading: quotesLoading, convertToInvoice } = useQuotes();
   const [showInvoiceRemainingDialog, setShowInvoiceRemainingDialog] = useState(false);
   const [invoiceRemainingPct, setInvoiceRemainingPct] = useState(100);
-  const { vendors, loading: vendorsLoading } = useVendors();
+  const { vendors, loading: vendorsLoading, updateVendor } = useVendors();
+  const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
+  const [customerForm, setCustomerForm] = useState({ name: '', contact_phone: '', contact_email: '', address: '' });
+  const [savingCustomer, setSavingCustomer] = useState(false);
   const { createJob } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
@@ -592,8 +595,25 @@ export function SalesOrderDetail() {
         <TabsContent value="customer" className="space-y-6 mt-4">
           {/* Customer Info */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-lg">Customer Information</CardTitle>
+              {vendor && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCustomerForm({
+                      name: vendor.name || '',
+                      contact_phone: vendor.contact_phone || '',
+                      contact_email: vendor.contact_email || '',
+                      address: vendor.address || '',
+                    });
+                    setShowEditCustomerDialog(true);
+                  }}
+                >
+                  Edit
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -620,6 +640,54 @@ export function SalesOrderDetail() {
               </div>
             </CardContent>
           </Card>
+
+          <Dialog open={showEditCustomerDialog} onOpenChange={setShowEditCustomerDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Customer Information</DialogTitle>
+                <DialogDescription>Update the customer's contact details.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cust-name">Name</Label>
+                  <Input id="cust-name" value={customerForm.name} onChange={(e) => setCustomerForm((f) => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cust-phone">Phone</Label>
+                  <Input id="cust-phone" value={customerForm.contact_phone} onChange={(e) => setCustomerForm((f) => ({ ...f, contact_phone: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cust-email">Email</Label>
+                  <Input id="cust-email" type="email" value={customerForm.contact_email} onChange={(e) => setCustomerForm((f) => ({ ...f, contact_email: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cust-address">Address</Label>
+                  <Input id="cust-address" value={customerForm.address} onChange={(e) => setCustomerForm((f) => ({ ...f, address: e.target.value }))} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowEditCustomerDialog(false)} disabled={savingCustomer}>Cancel</Button>
+                <Button
+                  disabled={savingCustomer || !vendor}
+                  onClick={async () => {
+                    if (!vendor) return;
+                    setSavingCustomer(true);
+                    await updateVendor(vendor.id, {
+                      name: customerForm.name.trim(),
+                      contact_phone: customerForm.contact_phone.trim() || null,
+                      contact_email: customerForm.contact_email.trim() || null,
+                      address: customerForm.address.trim() || null,
+                    });
+                    setSavingCustomer(false);
+                    setShowEditCustomerDialog(false);
+                  }}
+                >
+                  {savingCustomer ? 'Saving...' : 'Save'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
 
 
           {/* Notes */}
