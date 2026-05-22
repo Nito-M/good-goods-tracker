@@ -186,6 +186,13 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                 <Upload className="h-4 w-4 mr-2" />
                 Attach PDF or image
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <AlertDialog open={showPoDialog} onOpenChange={setShowPoDialog}>
