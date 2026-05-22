@@ -218,7 +218,7 @@ export function JobAddItems() {
                               <TableCell className="font-medium">{item.name}</TableCell>
                               <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
                               <TableCell className="text-right">{item.quantity}</TableCell>
-                              <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                              {canViewJobPricing && <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>}
                               <TableCell>
                                 <Button size="sm" variant={isAdded ? 'secondary' : 'ghost'} onClick={() => handleAddItem(item)}>
                                   {isAdded ? <><Check className="h-4 w-4 mr-1" />Added</> : <><Plus className="h-4 w-4 mr-1" />Add</>}
