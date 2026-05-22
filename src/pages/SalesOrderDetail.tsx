@@ -226,6 +226,70 @@ export function SalesOrderDetail() {
     fetchItemLinks();
   }, [fetchItemLinks]);
 
+  const fetchAttachments = useCallback(async () => {
+    if (!quote) return;
+    const { data } = await supabase
+      .from('so_item_attachments' as any)
+      .select('*')
+      .eq('quote_id', quote.id);
+    if (data) {
+      const map: Record<string, string> = {};
+      (data as any[]).forEach((a) => {
+        const child = `${a.child_quote_item_id}-${a.child_unit_index}`;
+        const parent = `${a.parent_quote_item_id}-${a.parent_unit_index}`;
+        map[child] = parent;
+      });
+      setAttachments(map);
+    }
+  }, [quote]);
+
+  useEffect(() => {
+    fetchAttachments();
+  }, [fetchAttachments]);
+
+  const attachItem = async (child: ExpandedItem, parent: ExpandedItem) => {
+    if (!quote) return;
+    if (child.linkKey === parent.linkKey) return;
+    // Prevent attaching a parent (has children) to something else
+    const childHasChildren = Object.values(attachments).includes(child.linkKey);
+    if (childHasChildren) {
+      toast({ title: 'Cannot attach', description: 'Detach its children first.', variant: 'destructive' });
+      return;
+    }
+    const { error } = await (supabase.from('so_item_attachments' as any) as any).upsert(
+      {
+        quote_id: quote.id,
+        child_quote_item_id: child.quoteItemId,
+        child_unit_index: child.unitIndex,
+        parent_quote_item_id: parent.quoteItemId,
+        parent_unit_index: parent.unitIndex,
+      },
+      { onConflict: 'child_quote_item_id,child_unit_index' }
+    );
+    if (error) {
+      toast({ title: 'Error attaching item', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Attached', description: `${child.itemName} → ${parent.itemName}` });
+    await fetchAttachments();
+  };
+
+  const detachItem = async (child: ExpandedItem) => {
+    if (!quote) return;
+    const { error } = await supabase
+      .from('so_item_attachments' as any)
+      .delete()
+      .eq('quote_id', quote.id)
+      .eq('child_quote_item_id', child.quoteItemId)
+      .eq('child_unit_index', child.unitIndex);
+    if (error) {
+      toast({ title: 'Error detaching', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await fetchAttachments();
+  };
+
+
   const handleStatusChange = async (newStatus: string) => {
     if (!quote) return;
     try {
