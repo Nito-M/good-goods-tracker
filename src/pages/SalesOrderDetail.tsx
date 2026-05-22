@@ -86,6 +86,8 @@ export function SalesOrderDetail() {
   const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
   const [customerForm, setCustomerForm] = useState({ name: '', contact_phone: '', contact_email: '', address: '' });
   const [savingCustomer, setSavingCustomer] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState({ name: '', email: '', company: '' });
+  const [paymentInfoInit, setPaymentInfoInit] = useState(false);
   const { createJob } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
