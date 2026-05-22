@@ -116,6 +116,8 @@ export function useSales() {
             createdAt: sale.created_at,
             updatedAt: sale.updated_at,
             companyId: (sale as any).company_id || null,
+            linkedQuoteId: (sale as any).linked_quote_id ?? null,
+            linkedSalesOrderId: (sale as any).linked_sales_order_id ?? null,
           };
         })
       );
