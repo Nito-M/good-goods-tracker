@@ -4123,6 +4123,8 @@ export type Database = {
           id: string
           internal_notes: string | null
           invoice_number: string
+          linked_quote_id: string | null
+          linked_sales_order_id: string | null
           notes: string | null
           paid_at: string | null
           payment_terms: string | null
@@ -4148,6 +4150,8 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_number: string
+          linked_quote_id?: string | null
+          linked_sales_order_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_terms?: string | null
@@ -4173,6 +4177,8 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_number?: string
+          linked_quote_id?: string | null
+          linked_sales_order_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_terms?: string | null
@@ -4194,6 +4200,20 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_linked_quote_id_fkey"
+            columns: ["linked_quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_linked_sales_order_id_fkey"
+            columns: ["linked_sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
           {

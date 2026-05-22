@@ -1,25 +1,28 @@
-## Change
+## Add Quote / Sales Order links on Invoice Details
 
-In `src/components/SaleCard.tsx`, replace the inline Edit, Revert, and Delete buttons in the card header with a single `MoreVertical` (⋮) icon button that opens a `DropdownMenu`.
+### Database
+Add two nullable columns to `sales`:
+- `linked_quote_id uuid` (references `quotes.id`, on delete set null)
+- `linked_sales_order_id uuid` (references `quotes.id`, on delete set null — sales orders live in the `quotes` table with `status='sales_order'`)
 
-Keep as-is (still inline next to the dropdown):
-- Picked Up checkbox
-- Status selector
-- Preview button
-- Invoice (download) button
+Indexes on both for lookups.
 
-Dropdown contents:
-1. **Edit** — calls `onEdit(sale)`
-2. **Revert** — only if `sale.status !== 'cancelled'`; opens the existing `AlertDialog` confirm (Revert Sale?) before calling `onRevert`
-3. **Delete** (destructive styling) — opens the existing `AlertDialog` confirm (Delete Sale?) before calling `onDelete`
+### Types & hook
+- `Sale` / `CreateSaleInput` (`src/types/sale.ts`) gain `linkedQuoteId` and `linkedSalesOrderId`.
+- `useSales` (`src/hooks/useSales.ts`): map the two new columns on read, persist them on create/update, and add an `updateLinks(saleId, { linkedQuoteId, linkedSalesOrderId })` helper.
 
-## Technical notes
+### Invoice Details page (`src/pages/SaleDetail.tsx`)
+Add a new "Linked Documents" card under Timeline showing two rows: Quote and Sales Order.
 
-- Use existing `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator` from `@/components/ui/dropdown-menu`.
-- For the two `AlertDialog` confirms, control them with local `useState` (`revertOpen`, `deleteOpen`) and trigger them from `DropdownMenuItem` `onSelect` handlers (call `e.preventDefault()` so the menu closes cleanly, then open the dialog). This avoids nesting an `AlertDialogTrigger` inside a menu item.
-- Wrap the trigger button and dialogs in the existing `onClick={stop}` container so card navigation isn't triggered.
-- No behavior, props, or parent-component changes — `Sales.tsx` stays the same.
+**Auto-detected links** (read-only):
+- Scan all quotes via `useQuotes` for any whose `linkedInvoices` includes this sale's id → show them as clickable badges that navigate to `/quotes` (or `/sales-orders` if status is `sales_order`) with the relevant id.
 
-## Files
+**Manual links** (editable):
+- For each of the two slots, show the currently linked quote/sales order as a clickable badge with an "x" to unlink.
+- An "Add link" button opens a Combobox/Command dialog listing quotes (filtered by status: quotes for the Quote slot, `sales_order` status for the Sales Order slot), searchable by number and customer name. Selecting one saves via `updateLinks`.
+- Auto-detected items already attached via `linkedInvoices` are shown with a small "auto" tag and cannot be removed from the invoice side.
 
-- `src/components/SaleCard.tsx`
+### Notes
+- Links are display-only metadata — they don't change totals or trigger any business logic.
+- No PDF changes.
+- No changes to the Edit Sale dialog in this pass (linking happens from the details page as requested).
