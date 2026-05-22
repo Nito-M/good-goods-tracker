@@ -298,7 +298,8 @@ export function useSales() {
           due_date: input.dueDate,
           company_id: input.companyId || null,
           contact_person_name: input.contactPersonName || null,
-        })
+          show_sku: input.showSku !== false,
+        } as any)
         .select()
         .single();
 
