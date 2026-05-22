@@ -412,6 +412,7 @@ export function Sales() {
     setSelectedCompanyId(defaultCompany?.id || '');
     setContactPersonName('');
     setShowSku(true);
+    setDueDate('');
     setEditingSaleId(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(INVOICE_DRAFT_STORAGE_KEY);
