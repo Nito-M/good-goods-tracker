@@ -921,10 +921,10 @@ export function SalesOrderDetail() {
 
 
 
-          {/* Payment Information */}
+          {/* Billing Information */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-lg">Payment Information</CardTitle>
+              <CardTitle className="text-lg">Billing Information</CardTitle>
               <Button
                 variant="outline"
                 size="sm"
@@ -964,7 +964,7 @@ export function SalesOrderDetail() {
           <Dialog open={showEditPaymentDialog} onOpenChange={setShowEditPaymentDialog}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Edit Payment Information</DialogTitle>
+                <DialogTitle>Edit Billing Information</DialogTitle>
                 <DialogDescription>Update the payment contact details for this sales order.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
