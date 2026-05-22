@@ -51,6 +51,7 @@ interface EditSaleDialogProps {
     dueDate: string | null;
     companyId: string | null;
     contactPersonName: string | null;
+    showSku: boolean;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
@@ -67,6 +68,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
   const [isSaving, setIsSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>('');
   const [contactPersonName, setContactPersonName] = useState<string>('');
+  const [showSku, setShowSku] = useState(true);
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
@@ -90,6 +92,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       setDueDate(sale.dueDate ? format(new Date(sale.dueDate), 'yyyy-MM-dd') : '');
       setCompanyId((sale as any).companyId || defaultCompany?.id || '');
       setContactPersonName((sale as any).contactPersonName || '');
+      setShowSku(sale.showSku !== false);
     }
   }, [sale, defaultCompany]);
 
@@ -146,6 +149,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       companyId: companyId || null,
       contactPersonName: contactPersonName.trim() || null,
+      showSku,
     });
     setIsSaving(false);
     onOpenChange(false);
@@ -354,6 +358,20 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                 onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
               />
             </div>
+          </div>
+
+          {/* PDF Options */}
+          <div className="flex items-center gap-2">
+            <input
+              id="showSku"
+              type="checkbox"
+              checked={showSku}
+              onChange={(e) => setShowSku(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="showSku" className="text-sm font-normal cursor-pointer">
+              Show Part # on invoice PDF
+            </Label>
           </div>
 
           {/* Notes */}

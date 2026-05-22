@@ -147,29 +147,38 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     let y = tableY;
 
     const hasDiscount = sale.items.some((it) => (it.discountRate || 0) > 0);
+    const showSku = sale.showSku !== false;
+
+    // Column X positions (shift left when SKU is hidden)
+    const skuX = layout.itemsTable.x + 60;
+    const qtyX = showSku ? layout.itemsTable.x + 92 : layout.itemsTable.x + 60;
+    const priceX = showSku ? layout.itemsTable.x + 108 : layout.itemsTable.x + 78;
+    const discX = showSku ? layout.itemsTable.x + 138 : layout.itemsTable.x + 108;
 
     // Table Header
     doc.setFillColor(240, 240, 240);
     doc.rect(layout.itemsTable.x, y - 4, pageWidth - layout.itemsTable.x - 20, 8, 'F');
     doc.setFont('helvetica', 'bold');
     doc.text('Item', layout.itemsTable.x + 2, y);
-    doc.text('SKU', layout.itemsTable.x + 60, y);
-    doc.text('Qty', layout.itemsTable.x + 92, y);
-    doc.text('Unit Price', layout.itemsTable.x + 108, y);
+    if (showSku) {
+      doc.text('SKU', skuX, y);
+    }
+    doc.text('Qty', qtyX, y);
+    doc.text('Unit Price', priceX, y);
     if (hasDiscount) {
-      doc.text('Disc %', layout.itemsTable.x + 138, y);
+      doc.text('Disc %', discX, y);
     }
     doc.text('Total', pageWidth - 22, y, { align: 'right' });
     y += 10;
 
     // Items
     doc.setFont('helvetica', 'normal');
-    const nameColWidth = 55;
+    const nameColWidth = showSku ? 55 : 85;
     const skuColWidth = 30;
     sale.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
-      const skuLines = doc.splitTextToSize(item.sku, skuColWidth);
-      const rowLineCount = Math.max(nameLines.length, skuLines.length);
+      const skuLines = showSku ? doc.splitTextToSize(item.sku, skuColWidth) : [];
+      const rowLineCount = Math.max(nameLines.length, skuLines.length || 1);
       const rowHeight = rowLineCount * 5;
 
       if (y + rowHeight > 260) {
@@ -182,11 +191,13 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
       const lineTotal = gross - gross * (rate / 100);
 
       doc.text(nameLines, layout.itemsTable.x + 2, y);
-      doc.text(skuLines, layout.itemsTable.x + 60, y);
-      doc.text(item.quantity.toString(), layout.itemsTable.x + 92, y);
-      doc.text(formatCurrency(item.unitPrice), layout.itemsTable.x + 108, y);
+      if (showSku) {
+        doc.text(skuLines, skuX, y);
+      }
+      doc.text(item.quantity.toString(), qtyX, y);
+      doc.text(formatCurrency(item.unitPrice), priceX, y);
       if (hasDiscount) {
-        doc.text(rate > 0 ? `${rate}%` : '-', layout.itemsTable.x + 138, y);
+        doc.text(rate > 0 ? `${rate}%` : '-', discX, y);
       }
       doc.text(formatCurrency(lineTotal), pageWidth - 22, y, { align: 'right' });
       y += rowHeight + 2;

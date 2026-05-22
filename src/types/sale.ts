@@ -52,6 +52,7 @@ export interface Sale {
   dueDate: string | null;
   items: SaleItem[];
   adjustments: SaleAdjustment[];
+  showSku?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +77,7 @@ export interface CreateSaleInput {
   dueDate: string | null;
   companyId?: string | null;
   adjustments?: { label: string; amount: number }[];
+  showSku?: boolean;
 }
 
 export interface InvoiceSettings {

@@ -147,7 +147,9 @@ export function InvoicePreviewDialog({
                   <thead>
                     <tr className="bg-gray-100">
                       <th className="text-left p-2 font-medium">Item</th>
-                      <th className="text-left p-2 font-medium">SKU</th>
+                      {sale.showSku !== false && (
+                        <th className="text-left p-2 font-medium">SKU</th>
+                      )}
                       <th className="text-center p-2 font-medium">Qty</th>
                       <th className="text-right p-2 font-medium">Unit Price</th>
                       {sale.items.some((it) => (it.discountRate || 0) > 0) && (
@@ -160,7 +162,9 @@ export function InvoicePreviewDialog({
                     {sale.items.map((item) => (
                       <tr key={item.id} className="border-b border-gray-200">
                         <td className="p-2">{item.itemName}</td>
-                        <td className="p-2 text-gray-600">{item.sku}</td>
+                        {sale.showSku !== false && (
+                          <td className="p-2 text-gray-600">{item.sku}</td>
+                        )}
                         <td className="p-2 text-center">{item.quantity}</td>
                         <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
                         {sale.items.some((it) => (it.discountRate || 0) > 0) && (

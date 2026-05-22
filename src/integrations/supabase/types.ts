@@ -4125,6 +4125,7 @@ export type Database = {
           payment_terms: string | null
           picked_up_at: string | null
           sent_at: string | null
+          show_sku: boolean
           status: string
           subtotal: number
           tax_amount: number
@@ -4149,6 +4150,7 @@ export type Database = {
           payment_terms?: string | null
           picked_up_at?: string | null
           sent_at?: string | null
+          show_sku?: boolean
           status?: string
           subtotal?: number
           tax_amount?: number
@@ -4173,6 +4175,7 @@ export type Database = {
           payment_terms?: string | null
           picked_up_at?: string | null
           sent_at?: string | null
+          show_sku?: boolean
           status?: string
           subtotal?: number
           tax_amount?: number
