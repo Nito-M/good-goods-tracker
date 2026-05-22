@@ -51,6 +51,7 @@ interface EditSaleDialogProps {
     dueDate: string | null;
     companyId: string | null;
     contactPersonName: string | null;
+    showSku: boolean;
   }) => Promise<void>;
   vendors: Array<{ id: string; name: string }>;
 }
