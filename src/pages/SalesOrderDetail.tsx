@@ -6,11 +6,13 @@ import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { useProfile } from '@/hooks/useProfile';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useSales } from '@/hooks/useSales';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
