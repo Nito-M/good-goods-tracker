@@ -178,8 +178,10 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     sale.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
       const skuLines = showSku ? doc.splitTextToSize(item.sku, skuColWidth) : [];
+      const noteText = (item.notes || '').trim();
+      const noteLines = noteText ? doc.splitTextToSize(`Note: ${noteText}`, nameColWidth) : [];
       const rowLineCount = Math.max(nameLines.length, skuLines.length || 1);
-      const rowHeight = rowLineCount * 5;
+      const rowHeight = rowLineCount * 5 + (noteLines.length ? noteLines.length * 4 + 1 : 0);
 
       if (y + rowHeight > 260) {
         doc.addPage();
@@ -200,6 +202,18 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
         doc.text(rate > 0 ? `${rate}%` : '-', discX, y);
       }
       doc.text(formatCurrency(lineTotal), pageWidth - 22, y, { align: 'right' });
+
+      if (noteLines.length) {
+        const noteY = y + nameLines.length * 5;
+        doc.setFontSize(8);
+        doc.setTextColor(110, 110, 110);
+        doc.setFont('helvetica', 'italic');
+        doc.text(noteLines, layout.itemsTable.x + 2, noteY);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+      }
+
       y += rowHeight + 2;
     });
 
