@@ -52,6 +52,7 @@ export interface Sale {
   dueDate: string | null;
   items: SaleItem[];
   adjustments: SaleAdjustment[];
+  showSku?: boolean;
   createdAt: string;
   updatedAt: string;
 }
