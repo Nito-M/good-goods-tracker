@@ -26,7 +26,7 @@ import { useVendors } from '@/hooks/useVendors';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useProfile } from '@/hooks/useProfile';
 import { useBank } from '@/hooks/useBank';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
