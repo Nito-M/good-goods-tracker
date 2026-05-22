@@ -111,6 +111,7 @@ export function useSales() {
             dueDate: sale.due_date,
             items: mappedItems,
             adjustments,
+            showSku: (sale as any).show_sku !== false,
             createdAt: sale.created_at,
             updatedAt: sale.updated_at,
             companyId: (sale as any).company_id || null,
