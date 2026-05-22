@@ -83,6 +83,7 @@ export function SalesOrderDetail() {
   const { createJob } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
+  const { sales } = useSales();
   const { toast } = useToast();
 
   const quoteSettings = useMemo<QuoteSettings>(() => ({
