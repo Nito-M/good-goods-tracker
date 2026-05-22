@@ -335,8 +335,16 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                         />
                       </div>
                     </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs">Note <span className="text-sky-400">(optional)</span></Label>
+                      <Input
+                        value={item.notes ?? ''}
+                        onChange={(e) => updateItem(item.id, { notes: e.target.value })}
+                        placeholder="Add a note shown under this item on the PDF"
+                      />
+                    </div>
                   </div>
-                ))}
               </div>
             )}
           </div>
