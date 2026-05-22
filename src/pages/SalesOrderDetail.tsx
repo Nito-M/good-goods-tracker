@@ -398,6 +398,7 @@ export function SalesOrderDetail() {
         <TabsList>
           <TabsTrigger value="items">Items</TabsTrigger>
           <TabsTrigger value="customer">Customer & Details</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="items" className="space-y-6 mt-4">
