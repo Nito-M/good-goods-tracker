@@ -605,7 +605,7 @@ export function SalesOrderDetail() {
           {/* Items Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Items</CardTitle>
+              <CardTitle className="text-lg">Jobs</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="border rounded-lg overflow-hidden">
