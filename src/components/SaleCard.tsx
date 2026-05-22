@@ -1,6 +1,14 @@
-import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil, Eye, Package } from 'lucide-react';
+import { Download, Trash2, Building2, Calendar, FileText, Undo2, Pencil, Eye, Package, MoreVertical } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Card,
   CardContent,

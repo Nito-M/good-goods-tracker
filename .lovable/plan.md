@@ -1,31 +1,25 @@
-## Changes
+## Change
 
-### 1. Show post-tax adjustments in Sales history cards
+In `src/components/SaleCard.tsx`, replace the inline Edit, Revert, and Delete buttons in the card header with a single `MoreVertical` (⋮) icon button that opens a `DropdownMenu`.
 
-In `src/components/SaleCard.tsx`, inside the Totals block (between the Tax row and the Total row), render each entry from `sale.adjustments` the same way `SaleDetail.tsx` already does:
+Keep as-is (still inline next to the dropdown):
+- Picked Up checkbox
+- Status selector
+- Preview button
+- Invoice (download) button
 
-- Label: `adj.label` (fallback `Adjustment N`)
-- Amount: signed currency, muted styling when negative
-- Skip rendering if `sale.adjustments` is empty/undefined
+Dropdown contents:
+1. **Edit** — calls `onEdit(sale)`
+2. **Revert** — only if `sale.status !== 'cancelled'`; opens the existing `AlertDialog` confirm (Revert Sale?) before calling `onRevert`
+3. **Delete** (destructive styling) — opens the existing `AlertDialog` confirm (Delete Sale?) before calling `onDelete`
 
-This matches the existing pattern in `SaleDetail.tsx` so the history card mirrors the invoice detail page.
+## Technical notes
 
-### 2. Make the Edit button in Sale Detail behave like the one in Sales history
+- Use existing `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator` from `@/components/ui/dropdown-menu`.
+- For the two `AlertDialog` confirms, control them with local `useState` (`revertOpen`, `deleteOpen`) and trigger them from `DropdownMenuItem` `onSelect` handlers (call `e.preventDefault()` so the menu closes cleanly, then open the dialog). This avoids nesting an `AlertDialogTrigger` inside a menu item.
+- Wrap the trigger button and dialogs in the existing `onClick={stop}` container so card navigation isn't triggered.
+- No behavior, props, or parent-component changes — `Sales.tsx` stays the same.
 
-Currently:
-- Sales history (`SaleCard` → `handleEditSale` in `Sales.tsx`) loads the sale back into the full "New Sale" form (cart, vendor, tax, discount, adjustments, notes, etc.) so the entire invoice can be edited.
-- Sale Detail (`SaleDetail.tsx`) opens the smaller `EditSaleDialog`, which only edits a limited set of fields.
+## Files
 
-Change `SaleDetail.tsx` so its Edit button instead navigates to `/sales` and triggers the same `handleEditSale` flow:
-
-- Replace the `EditSaleDialog` trigger with `navigate('/sales', { state: { editSaleId: sale.id } })`.
-- In `Sales.tsx`, read `location.state.editSaleId` on mount; when present and the matching sale is loaded, call `handleEditSale(sale)` and clear the state (`navigate(..., { replace: true, state: {} })`) so it doesn't re-trigger on refresh.
-- Remove the now-unused `EditSaleDialog` import/usage and `editOpen` state from `SaleDetail.tsx`.
-
-No backend, schema, or business-logic changes.
-
-## Files touched
-
-- `src/components/SaleCard.tsx` — render adjustments rows
-- `src/pages/SaleDetail.tsx` — Edit button navigates to Sales edit flow; drop EditSaleDialog
-- `src/pages/Sales.tsx` — pick up `editSaleId` from router state and invoke `handleEditSale`
+- `src/components/SaleCard.tsx`
