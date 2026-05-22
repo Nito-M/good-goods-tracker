@@ -40,17 +40,17 @@ export default function SaleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { sales, loading, updateInternalNotes, updateSale } = useSales();
+  const { sales, loading, updateInternalNotes } = useSales();
   const { profile } = useProfile();
   const { companies } = useCompanies();
-  const { vendors } = useVendors();
+  useVendors();
 
   const sale = useMemo(() => sales.find((s) => s.id === id), [sales, id]);
 
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+
 
   useEffect(() => {
     setInternalNotes(sale?.internalNotes || '');
