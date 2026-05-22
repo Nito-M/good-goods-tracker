@@ -71,6 +71,7 @@ export function useSales() {
               totalPrice,
               totalCost,
               profit: totalPrice - totalCost,
+              notes: (item as any).notes ?? null,
               createdAt: item.created_at,
             };
           });
