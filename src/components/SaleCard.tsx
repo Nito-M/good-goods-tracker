@@ -278,6 +278,18 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                 <span>{formatCurrency(sale.taxAmount)}</span>
               </div>
             )}
+            {(sale.adjustments || []).map((adj, idx) => (
+              <div
+                key={adj.id}
+                className={`flex justify-between text-sm ${adj.amount < 0 ? 'text-muted-foreground' : ''}`}
+              >
+                <span>{adj.label.trim() || `Adjustment ${idx + 1}`}</span>
+                <span>
+                  {adj.amount < 0 ? '-' : ''}
+                  {formatCurrency(Math.abs(adj.amount))}
+                </span>
+              </div>
+            ))}
             <div className="flex justify-between font-bold">
               <span>Total</span>
               <span>{formatCurrency(sale.total)}</span>
