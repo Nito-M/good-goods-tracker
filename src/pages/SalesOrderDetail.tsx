@@ -720,6 +720,45 @@ export function SalesOrderDetail() {
 
 
 
+          {/* Payment Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Payment Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pay-name">Name</Label>
+                  <Input
+                    id="pay-name"
+                    value={paymentInfo.name}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, name: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pay-email">Email</Label>
+                  <Input
+                    id="pay-email"
+                    type="email"
+                    value={paymentInfo.email}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, email: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pay-company">Company</Label>
+                  <Input
+                    id="pay-company"
+                    value={paymentInfo.company}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, company: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Notes */}
           {quote.notes && (
             <Card>
