@@ -182,7 +182,7 @@ export function AllJobItems() {
                              <TableHead className="text-right">Total Qty</TableHead>
                              <TableHead className="text-right">In Stock</TableHead>
                              <TableHead className="text-right">Need</TableHead>
-                             <TableHead className="text-right">Unit Price</TableHead>
+                             {canViewJobPricing && <TableHead className="text-right">Unit Price</TableHead>}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
