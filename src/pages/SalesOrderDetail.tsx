@@ -79,13 +79,15 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 export function SalesOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { quotes, loading: quotesLoading, convertToInvoice } = useQuotes();
+  const { quotes, loading: quotesLoading, convertToInvoice, refetch: refetchQuotes } = useQuotes();
   const [showInvoiceRemainingDialog, setShowInvoiceRemainingDialog] = useState(false);
   const [invoiceRemainingPct, setInvoiceRemainingPct] = useState(100);
   const { vendors, loading: vendorsLoading, updateVendor } = useVendors();
   const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
   const [customerForm, setCustomerForm] = useState({ name: '', contact_phone: '', contact_email: '', address: '' });
   const [savingCustomer, setSavingCustomer] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState({ name: '', email: '', company: '' });
+  const [paymentInfoInit, setPaymentInfoInit] = useState(false);
   const { createJob } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
@@ -141,6 +143,34 @@ export function SalesOrderDetail() {
 
   const loading = quotesLoading || vendorsLoading;
   const quote = useMemo(() => quotes.find((q) => q.id === id), [quotes, id]);
+
+  useEffect(() => {
+    if (quote && !paymentInfoInit) {
+      setPaymentInfo({
+        name: quote.paymentContactName || '',
+        email: quote.paymentContactEmail || '',
+        company: quote.paymentContactCompany || '',
+      });
+      setPaymentInfoInit(true);
+    }
+  }, [quote, paymentInfoInit]);
+
+  const savePaymentInfo = useCallback(async (next: { name: string; email: string; company: string }) => {
+    if (!quote) return;
+    const { error } = await supabase
+      .from('quotes')
+      .update({
+        payment_contact_name: next.name.trim() || null,
+        payment_contact_email: next.email.trim() || null,
+        payment_contact_company: next.company.trim() || null,
+      } as any)
+      .eq('id', quote.id);
+    if (error) {
+      toast({ title: 'Error saving payment info', description: error.message, variant: 'destructive' });
+      return;
+    }
+    refetchQuotes();
+  }, [quote, toast, refetchQuotes]);
 
   // Expand items by quantity so each unit becomes its own row/job
   const expandedItems = useMemo<ExpandedItem[]>(() => {
@@ -690,6 +720,45 @@ export function SalesOrderDetail() {
 
 
 
+          {/* Payment Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Payment Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pay-name">Name</Label>
+                  <Input
+                    id="pay-name"
+                    value={paymentInfo.name}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, name: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pay-email">Email</Label>
+                  <Input
+                    id="pay-email"
+                    type="email"
+                    value={paymentInfo.email}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, email: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pay-company">Company</Label>
+                  <Input
+                    id="pay-company"
+                    value={paymentInfo.company}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, company: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Notes */}
           {quote.notes && (
             <Card>
@@ -818,6 +887,30 @@ export function SalesOrderDetail() {
               )}
             </CardHeader>
             <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 mb-4 border-b">
+                <div className="space-y-1.5">
+                  <Label htmlFor="inv-name" className="text-xs">Name</Label>
+                  <Input
+                    id="inv-name"
+                    value={paymentInfo.name}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, name: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                    placeholder="Bill to name"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="inv-email" className="text-xs">Email</Label>
+                  <Input
+                    id="inv-email"
+                    type="email"
+                    value={paymentInfo.email}
+                    onChange={(e) => setPaymentInfo((p) => ({ ...p, email: e.target.value }))}
+                    onBlur={() => savePaymentInfo(paymentInfo)}
+                    placeholder="billing@example.com"
+                  />
+                </div>
+              </div>
+
               {(() => {
                 const links = quote.linkedInvoices || [];
                 const rows = links
