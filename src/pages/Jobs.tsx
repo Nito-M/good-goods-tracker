@@ -646,10 +646,12 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                     <span className="text-muted-foreground">Total Qty</span>
                     <span>{items.reduce((s, i) => s + i.quantity, 0)}</span>
                   </div>
-                  <div className="border-t pt-4 flex justify-between font-semibold">
-                    <span>Total Value</span>
-                    <span>{formatCurrency(totalValue)}</span>
-                  </div>
+                  {canViewJobPricing && (
+                    <div className="border-t pt-4 flex justify-between font-semibold">
+                      <span>Total Value</span>
+                      <span>{formatCurrency(totalValue)}</span>
+                    </div>
+                  )}
                   {job.dueDate && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Due Date</span>
