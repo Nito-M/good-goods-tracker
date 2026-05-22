@@ -9,9 +9,11 @@ import { useAllJobItems } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '@/lib/utils';
+import { useCanViewJobPricing } from '@/hooks/useCanViewJobPricing';
 
 export function AllJobItems() {
   const { items: allJobItems, loading, fetchAllItems } = useAllJobItems();
+  const { canViewJobPricing } = useCanViewJobPricing();
   const [inventoryQtys, setInventoryQtys] = useState<Record<string, number>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
