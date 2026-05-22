@@ -82,7 +82,10 @@ export function SalesOrderDetail() {
   const { quotes, loading: quotesLoading, convertToInvoice } = useQuotes();
   const [showInvoiceRemainingDialog, setShowInvoiceRemainingDialog] = useState(false);
   const [invoiceRemainingPct, setInvoiceRemainingPct] = useState(100);
-  const { vendors, loading: vendorsLoading } = useVendors();
+  const { vendors, loading: vendorsLoading, updateVendor } = useVendors();
+  const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
+  const [customerForm, setCustomerForm] = useState({ name: '', contact_phone: '', contact_email: '', address: '' });
+  const [savingCustomer, setSavingCustomer] = useState(false);
   const { createJob } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
