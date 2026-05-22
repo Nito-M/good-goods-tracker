@@ -472,6 +472,10 @@ export function SalesOrderDetail() {
     );
   }
 
+  const topLevelItems = expandedItems.filter((it) => !attachments[it.linkKey]);
+  const allJobsCreated =
+    topLevelItems.length > 0 && topLevelItems.every((it) => !!itemLinks[it.linkKey]?.jobId);
+
   return (
     <div className="space-y-6">
       {/* Header */}
