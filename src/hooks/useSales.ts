@@ -556,6 +556,7 @@ export function useSales() {
         unitPrice: number;
         unitCost: number;
         discountRate?: number;
+        notes?: string | null;
       }>;
       taxRate: number;
       discountRate: number;
