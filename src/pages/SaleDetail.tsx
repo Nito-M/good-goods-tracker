@@ -43,7 +43,7 @@ export default function SaleDetail() {
   const { sales, loading, updateInternalNotes } = useSales();
   const { profile } = useProfile();
   const { companies } = useCompanies();
-  useVendors();
+  
 
   const sale = useMemo(() => sales.find((s) => s.id === id), [sales, id]);
 
