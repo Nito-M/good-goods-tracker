@@ -12,7 +12,7 @@ import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt, Link2, X, CornerDownRight } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, ChevronRight, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt, Link2, X, CornerDownRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -142,6 +142,7 @@ export function SalesOrderDetail() {
   const [itemLinks, setItemLinks] = useState<Record<string, ItemLink>>({});
   // childLinkKey -> parentLinkKey
   const [attachments, setAttachments] = useState<Record<string, string>>({});
+  const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
   const [creatingJobFor, setCreatingJobFor] = useState<string | null>(null);
   const [updatingStatusFor, setUpdatingStatusFor] = useState<string | null>(null);
 
@@ -652,8 +653,34 @@ export function SalesOrderDetail() {
                             <TableCell className="font-medium">
                               <div className={cn('flex items-start gap-2', isChild && 'pl-6')}>
                                 {isChild && <CornerDownRight className="h-3.5 w-3.5 mt-1 text-muted-foreground shrink-0" />}
+                                {!isChild && hasChildren && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCollapsedParents((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(item.linkKey)) next.delete(item.linkKey);
+                                        else next.add(item.linkKey);
+                                        return next;
+                                      });
+                                    }}
+                                    className="mt-0.5 p-0.5 rounded hover:bg-muted shrink-0"
+                                    title={collapsedParents.has(item.linkKey) ? 'Expand add-ons' : 'Collapse add-ons'}
+                                  >
+                                    {collapsedParents.has(item.linkKey) ? (
+                                      <ChevronRight className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <ChevronDown className="h-3.5 w-3.5" />
+                                    )}
+                                  </button>
+                                )}
                                 <div>
                                   <span>{item.itemName}</span>
+                                  {!isChild && hasChildren && (
+                                    <span className="ml-2 text-xs text-muted-foreground font-normal">
+                                      ({childrenByParent[item.linkKey].length} add-on{childrenByParent[item.linkKey].length === 1 ? '' : 's'})
+                                    </span>
+                                  )}
                                   {item.notes && (
                                     <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
                                   )}
@@ -779,8 +806,10 @@ export function SalesOrderDetail() {
                       const rows: JSX.Element[] = [];
                       for (const parent of topLevel) {
                         rows.push(renderRow(parent, false));
-                        for (const child of childrenByParent[parent.linkKey] || []) {
-                          rows.push(renderRow(child, true));
+                        if (!collapsedParents.has(parent.linkKey)) {
+                          for (const child of childrenByParent[parent.linkKey] || []) {
+                            rows.push(renderRow(child, true));
+                          }
                         }
                       }
                       return rows;
