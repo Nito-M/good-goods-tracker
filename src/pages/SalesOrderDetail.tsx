@@ -526,7 +526,7 @@ export function SalesOrderDetail() {
 
       <Tabs defaultValue="items" className="w-full">
         <TabsList>
-          <TabsTrigger value="items">Items</TabsTrigger>
+          <TabsTrigger value="items">Jobs</TabsTrigger>
           <TabsTrigger value="customer">Customer & Details</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
