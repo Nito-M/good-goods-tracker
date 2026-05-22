@@ -144,6 +144,34 @@ export function SalesOrderDetail() {
   const loading = quotesLoading || vendorsLoading;
   const quote = useMemo(() => quotes.find((q) => q.id === id), [quotes, id]);
 
+  useEffect(() => {
+    if (quote && !paymentInfoInit) {
+      setPaymentInfo({
+        name: quote.paymentContactName || '',
+        email: quote.paymentContactEmail || '',
+        company: quote.paymentContactCompany || '',
+      });
+      setPaymentInfoInit(true);
+    }
+  }, [quote, paymentInfoInit]);
+
+  const savePaymentInfo = useCallback(async (next: { name: string; email: string; company: string }) => {
+    if (!quote) return;
+    const { error } = await supabase
+      .from('quotes')
+      .update({
+        payment_contact_name: next.name.trim() || null,
+        payment_contact_email: next.email.trim() || null,
+        payment_contact_company: next.company.trim() || null,
+      } as any)
+      .eq('id', quote.id);
+    if (error) {
+      toast({ title: 'Error saving payment info', description: error.message, variant: 'destructive' });
+      return;
+    }
+    refetchQuotes();
+  }, [quote, toast, refetchQuotes]);
+
   // Expand items by quantity so each unit becomes its own row/job
   const expandedItems = useMemo<ExpandedItem[]>(() => {
     if (!quote) return [];
