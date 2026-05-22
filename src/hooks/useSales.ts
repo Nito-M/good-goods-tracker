@@ -324,6 +324,7 @@ export function useSales() {
             discount_amount: line.discount,
             total_price: line.lineTotal,
             sort_order: i,
+            notes: (item as any).notes ?? null,
           } as any);
 
         if (itemError) throw itemError;
