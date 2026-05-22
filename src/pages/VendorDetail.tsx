@@ -26,6 +26,7 @@ export function VendorDetail() {
   const navigate = useNavigate();
   const { vendors, loading, deleteVendor, updateVendor } = useVendors();
   const { orders } = usePurchaseOrders();
+  const { sales } = useSales();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState('');
