@@ -1154,6 +1154,19 @@ export function Sales() {
                         onChange={(e) => setNotes(e.target.value)}
                       />
                     </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="showSkuNewSale"
+                        type="checkbox"
+                        checked={showSku}
+                        onChange={(e) => setShowSku(e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor="showSkuNewSale" className="text-sm font-normal cursor-pointer">
+                        Show Part # on invoice PDF
+                      </Label>
+                    </div>
                   </CardContent>
                 </Card>
 
