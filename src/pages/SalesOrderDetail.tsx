@@ -142,6 +142,7 @@ export function SalesOrderDetail() {
   const [itemLinks, setItemLinks] = useState<Record<string, ItemLink>>({});
   // childLinkKey -> parentLinkKey
   const [attachments, setAttachments] = useState<Record<string, string>>({});
+  const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
   const [creatingJobFor, setCreatingJobFor] = useState<string | null>(null);
   const [updatingStatusFor, setUpdatingStatusFor] = useState<string | null>(null);
 
