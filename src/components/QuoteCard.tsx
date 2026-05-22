@@ -62,6 +62,7 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [showPoDialog, setShowPoDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [invoicePercentage, setInvoicePercentage] = useState(100);
 
   const remainingPercentage = 100 - quote.invoicedPercentage;
