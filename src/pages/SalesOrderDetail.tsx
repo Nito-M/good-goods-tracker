@@ -727,7 +727,7 @@ export function SalesOrderDetail() {
 
           {/* Invoices card */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base flex items-center gap-2">
                 <Receipt className="h-4 w-4" /> Invoices
                 {(quote.linkedInvoices || []).length > 0 && (
@@ -736,17 +736,22 @@ export function SalesOrderDetail() {
                   </Badge>
                 )}
               </CardTitle>
+              {quote.invoicedPercentage < 100 && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setInvoiceRemainingPct(100 - quote.invoicedPercentage);
+                    setShowInvoiceRemainingDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Invoice Remaining ({100 - quote.invoicedPercentage}%)
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {(() => {
                 const links = quote.linkedInvoices || [];
-                if (links.length === 0) {
-                  return (
-                    <p className="text-sm text-muted-foreground italic">
-                      No invoices linked to this sales order yet.
-                    </p>
-                  );
-                }
                 const rows = links
                   .map((li) => {
                     const s = sales.find((x) => x.id === li.saleId);
@@ -754,50 +759,141 @@ export function SalesOrderDetail() {
                   })
                   .filter((r) => r.sale);
                 const totalInvoiced = rows.reduce((sum, r) => sum + (r.sale?.total || 0), 0);
+                const paid = rows
+                  .filter((r) => r.sale?.paidAt)
+                  .reduce((sum, r) => sum + (r.sale?.total || 0), 0);
+                const owing = Math.max(0, quote.total - paid);
+                const paidPct = quote.total > 0 ? Math.round((paid / quote.total) * 100) : 0;
+                const owingPct = Math.max(0, 100 - paidPct);
+
                 return (
-                  <div className="space-y-2">
-                    {rows.map(({ li, sale }) => (
-                      <div
-                        key={li.saleId}
-                        className="flex flex-wrap items-center justify-between gap-4 rounded-md border p-3"
-                      >
-                        <div className="space-y-1">
-                          <Link
-                            to={`/sales/${sale!.id}`}
-                            className="text-sm font-semibold text-primary hover:underline"
+                  <div className="space-y-3">
+                    {/* Paid / Owing summary */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-md border p-3 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900">
+                        <div className="text-xs text-muted-foreground">Paid</div>
+                        <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                          {formatCurrency(paid)}
+                        </div>
+                        <div className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
+                          {paidPct}% of total
+                        </div>
+                      </div>
+                      <div className={`rounded-md border p-3 ${owing > 0 ? 'bg-destructive/10 border-destructive/30' : 'bg-muted border-border'}`}>
+                        <div className="text-xs text-muted-foreground">Owing</div>
+                        <div className={`text-lg font-bold ${owing > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          {formatCurrency(owing)}
+                        </div>
+                        <div className={`text-xs ${owing > 0 ? 'text-destructive/80' : 'text-muted-foreground'}`}>
+                          {owingPct}% of total
+                        </div>
+                      </div>
+                    </div>
+
+                    {rows.length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic">
+                        No invoices linked to this sales order yet.
+                      </p>
+                    ) : (
+                      <>
+                        {rows.map(({ li, sale }) => (
+                          <div
+                            key={li.saleId}
+                            className="flex flex-wrap items-center justify-between gap-4 rounded-md border p-3"
                           >
-                            {sale!.invoiceNumber}
-                          </Link>
-                          <div className="text-xs text-muted-foreground space-y-0.5">
-                            <div>Created: {format(new Date(sale!.createdAt), 'MMM d, yyyy')}</div>
-                            {sale!.dueDate && (
-                              <div>Due: {format(new Date(sale!.dueDate), 'MMM d, yyyy')}</div>
-                            )}
-                            {sale!.paidAt && (
-                              <div>Paid: {format(new Date(sale!.paidAt), 'MMM d, yyyy')}</div>
-                            )}
-                            {li.percentage > 0 && li.percentage < 100 && (
-                              <div>Portion: {li.percentage}%</div>
-                            )}
+                            <div className="space-y-1">
+                              <Link
+                                to={`/sales/${sale!.id}`}
+                                className="text-sm font-semibold text-primary hover:underline"
+                              >
+                                {sale!.invoiceNumber}
+                              </Link>
+                              <div className="text-xs text-muted-foreground space-y-0.5">
+                                <div>Created: {format(new Date(sale!.createdAt), 'MMM d, yyyy')}</div>
+                                {sale!.dueDate && (
+                                  <div>Due: {format(new Date(sale!.dueDate), 'MMM d, yyyy')}</div>
+                                )}
+                                {sale!.paidAt && (
+                                  <div>Paid: {format(new Date(sale!.paidAt), 'MMM d, yyyy')}</div>
+                                )}
+                                {li.percentage > 0 && li.percentage < 100 && (
+                                  <div>Portion: {li.percentage}%</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs text-muted-foreground">Total</div>
+                              <div className="text-lg font-bold">{formatCurrency(sale!.total)}</div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs text-muted-foreground">Total</div>
-                          <div className="text-lg font-bold">{formatCurrency(sale!.total)}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {rows.length > 1 && (
-                      <div className="flex justify-end pt-2 text-sm">
-                        <span className="text-muted-foreground mr-2">Total Invoiced:</span>
-                        <span className="font-bold">{formatCurrency(totalInvoiced)}</span>
-                      </div>
+                        ))}
+                        {rows.length > 1 && (
+                          <div className="flex justify-end pt-2 text-sm">
+                            <span className="text-muted-foreground mr-2">Total Invoiced:</span>
+                            <span className="font-bold">{formatCurrency(totalInvoiced)}</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 );
               })()}
             </CardContent>
           </Card>
+
+          {/* Invoice Remaining Dialog */}
+          <Dialog open={showInvoiceRemainingDialog} onOpenChange={setShowInvoiceRemainingDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Invoice</DialogTitle>
+                <DialogDescription>
+                  Choose what percentage of {quote.quoteNumber} to invoice.
+                  {quote.invoicedPercentage > 0 && (
+                    <span className="block mt-1">
+                      Already invoiced: {quote.invoicedPercentage}% — {100 - quote.invoicedPercentage}% remaining
+                    </span>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label>Percentage to invoice</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100 - quote.invoicedPercentage}
+                    value={invoiceRemainingPct}
+                    onChange={(e) => setInvoiceRemainingPct(Number(e.target.value))}
+                  />
+                  {invoiceRemainingPct > 100 - quote.invoicedPercentage && (
+                    <p className="text-sm text-destructive">
+                      Cannot exceed {100 - quote.invoicedPercentage}%
+                    </p>
+                  )}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Invoice total: {formatCurrency(quote.total * (invoiceRemainingPct / 100))}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowInvoiceRemainingDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  disabled={
+                    invoiceRemainingPct < 1 ||
+                    invoiceRemainingPct > 100 - quote.invoicedPercentage
+                  }
+                  onClick={async () => {
+                    await convertToInvoice(quote, invoiceRemainingPct);
+                    setShowInvoiceRemainingDialog(false);
+                  }}
+                >
+                  Create Invoice ({invoiceRemainingPct}%)
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
 
