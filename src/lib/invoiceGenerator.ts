@@ -246,12 +246,6 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
       y += 7;
     }
 
-    if (sale.taxAmount > 0) {
-      doc.text(`Tax (${sale.taxRate}%):`, totalsX, y);
-      doc.text(formatCurrency(sale.taxAmount), pageWidth - 22, y, { align: 'right' });
-      y += 7;
-    }
-
     const itemDiscountTotal = sale.items.reduce(
       (sum, it) => sum + (it.quantity * it.unitPrice * ((it.discountRate || 0) / 100)),
       0,
@@ -261,6 +255,12 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
       doc.text('Item Discounts:', totalsX, y);
       doc.text(`-${formatCurrency(itemDiscountTotal)}`, pageWidth - 22, y, { align: 'right' });
       doc.setTextColor(0, 0, 0);
+      y += 7;
+    }
+
+    if (sale.taxAmount > 0) {
+      doc.text(`Tax (${sale.taxRate}%):`, totalsX, y);
+      doc.text(formatCurrency(sale.taxAmount), pageWidth - 22, y, { align: 'right' });
       y += 7;
     }
 
