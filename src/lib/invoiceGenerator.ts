@@ -151,9 +151,9 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
 
     // Column X positions (shift left when SKU is hidden)
     const skuX = layout.itemsTable.x + 60;
-    const qtyX = showSku ? layout.itemsTable.x + 92 : layout.itemsTable.x + 60;
-    const priceX = showSku ? layout.itemsTable.x + 108 : layout.itemsTable.x + 78;
-    const discX = showSku ? layout.itemsTable.x + 138 : layout.itemsTable.x + 108;
+    const qtyX = showSku ? layout.itemsTable.x + 92 : layout.itemsTable.x + 95;
+    const priceX = showSku ? layout.itemsTable.x + 108 : layout.itemsTable.x + 115;
+    const discX = showSku ? layout.itemsTable.x + 138 : layout.itemsTable.x + 145;
 
     // Table Header
     doc.setFillColor(240, 240, 240);
@@ -173,7 +173,7 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
 
     // Items
     doc.setFont('helvetica', 'normal');
-    const nameColWidth = showSku ? 55 : 85;
+    const nameColWidth = showSku ? 55 : 88;
     const skuColWidth = 30;
     sale.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
