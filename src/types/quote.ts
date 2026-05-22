@@ -30,6 +30,9 @@ export interface Quote {
   vendorName?: string;
   vendorAddress?: string;
   contactPersonName?: string | null;
+  paymentContactName?: string | null;
+  paymentContactEmail?: string | null;
+  paymentContactCompany?: string | null;
   quoteNumber: string;
   salesOrderNumber: string | null;
   status: QuoteStatus;
