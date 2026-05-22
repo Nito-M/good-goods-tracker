@@ -683,7 +683,7 @@ function AssemblyDetail({
                   )}
                 </div>
                 <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.sku || '—'}</span>
-                <span className="w-20 text-right text-sm text-muted-foreground">{itemCost !== null ? formatCurrency(itemCost) : '—'}</span>
+                {canViewAssemblyPricing && <span className="w-20 text-right text-sm text-muted-foreground">{itemCost !== null ? formatCurrency(itemCost) : '—'}</span>}
                 {editingId === item.id ? (
                   <div className="flex items-center gap-1 w-24">
                     <Input type="number" min={1} value={editQty} onChange={(e) => setEditQty(Number(e.target.value))} className="h-7 w-16 text-center text-sm px-1" />
