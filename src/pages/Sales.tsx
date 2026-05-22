@@ -690,6 +690,7 @@ export function Sales() {
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
         adjustments,
+        showSku,
       });
 
       if (sale) {
