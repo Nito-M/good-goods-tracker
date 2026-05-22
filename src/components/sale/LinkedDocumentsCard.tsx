@@ -29,11 +29,8 @@ export function LinkedDocumentsCard({ sale }: Props) {
   const { quotes } = useQuotes();
   const { updateLinks } = useSales();
 
-  // Quotes for picker: status !== sales_order
-  const quoteOptions = useMemo(
-    () => quotes.filter((q) => q.status !== 'sales_order'),
-    [quotes]
-  );
+  // Quote picker: all quotes (including converted/sales_order). Label by quote number.
+  const quoteOptions = useMemo(() => quotes, [quotes]);
   const salesOrderOptions = useMemo(
     () => quotes.filter((q) => q.status === 'sales_order'),
     [quotes]
