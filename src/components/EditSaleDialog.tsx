@@ -345,6 +345,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                       />
                     </div>
                   </div>
+                ))}
               </div>
             )}
           </div>
