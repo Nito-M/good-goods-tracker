@@ -173,6 +173,16 @@ export function VendorDetail() {
                 <span className="text-sm text-muted-foreground">Total Spent</span>
                 <span className="font-semibold text-foreground">${totalSpent.toFixed(2)}</span>
               </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Invoices</span>
+                <Badge variant="secondary">{vendorSales.length}</Badge>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Total Invoiced</span>
+                <span className="font-semibold text-foreground">${totalInvoiced.toFixed(2)}</span>
+              </div>
               {vendor.color && (
                 <>
                   <Separator />
