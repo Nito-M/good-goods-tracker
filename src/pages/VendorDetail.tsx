@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useVendors } from '@/hooks/useVendors';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
+import { useSales } from '@/hooks/useSales';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { VendorContactsManager } from '@/components/VendorContactsManager';
 
@@ -25,6 +26,7 @@ export function VendorDetail() {
   const navigate = useNavigate();
   const { vendors, loading, deleteVendor, updateVendor } = useVendors();
   const { orders } = usePurchaseOrders();
+  const { sales } = useSales();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState('');
@@ -62,6 +64,11 @@ export function VendorDetail() {
     }
     return sum;
   }, 0);
+
+  const vendorSales = (sales || [])
+    .filter((s) => s.vendorId === vendor.id)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const totalInvoiced = vendorSales.reduce((sum, s) => sum + Number(s.total || 0), 0);
 
   const handleDelete = async () => {
     await deleteVendor(vendor.id);
@@ -166,6 +173,16 @@ export function VendorDetail() {
                 <span className="text-sm text-muted-foreground">Total Spent</span>
                 <span className="font-semibold text-foreground">${totalSpent.toFixed(2)}</span>
               </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Invoices</span>
+                <Badge variant="secondary">{vendorSales.length}</Badge>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Total Invoiced</span>
+                <span className="font-semibold text-foreground">${totalInvoiced.toFixed(2)}</span>
+              </div>
               {vendor.color && (
                 <>
                   <Separator />
@@ -238,6 +255,39 @@ export function VendorDetail() {
                       {order.status}
                     </Badge>
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recent Invoices */}
+        {vendorSales.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Invoices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y divide-border">
+                {vendorSales.slice(0, 10).map((sale) => (
+                  <Link
+                    key={sale.id}
+                    to={`/sales/${sale.id}`}
+                    className="flex items-center justify-between py-3 hover:bg-muted/50 rounded px-2 -mx-2 transition-colors"
+                  >
+                    <div>
+                      <div className="font-medium text-sm">{sale.invoiceNumber}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(sale.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-foreground">${Number(sale.total || 0).toFixed(2)}</span>
+                      <Badge variant={sale.status === 'paid' ? 'default' : 'secondary'}>
+                        {sale.status}
+                      </Badge>
+                    </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>
