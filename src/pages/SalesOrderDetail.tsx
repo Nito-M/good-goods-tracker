@@ -806,8 +806,10 @@ export function SalesOrderDetail() {
                       const rows: JSX.Element[] = [];
                       for (const parent of topLevel) {
                         rows.push(renderRow(parent, false));
-                        for (const child of childrenByParent[parent.linkKey] || []) {
-                          rows.push(renderRow(child, true));
+                        if (!collapsedParents.has(parent.linkKey)) {
+                          for (const child of childrenByParent[parent.linkKey] || []) {
+                            rows.push(renderRow(child, true));
+                          }
                         }
                       }
                       return rows;
