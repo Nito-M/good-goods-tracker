@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, Fragment } from 'react';
 import { Plus, ArrowLeft, LogOut, Search, Briefcase, Trash2, Edit, ChevronRight, Minus, X, PackagePlus, Copy, AlertTriangle, GripVertical, User, Mail, Phone, MapPin, List, ImageIcon, ChevronDown, Package, Undo2, Check, ExternalLink } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -39,9 +39,8 @@ const statusColors: Record<string, string> = {
 };
 
 const STATUS_OPTIONS = [
-  { value: 'open', label: 'Open' },
   { value: 'in-progress', label: 'In Progress' },
-  
+  { value: 'open', label: 'Open' },
   { value: 'welding-done', label: 'Welding Done' },
   { value: 'painting-done', label: 'Painting Done' },
   { value: 'finished', label: 'Finished' },
@@ -234,12 +233,18 @@ export function Jobs() {
         <Tabs value={statusTab} onValueChange={setStatusTab}>
           <div className="overflow-x-auto">
             <TabsList className="mb-4">
-              <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
               {STATUS_OPTIONS.map(s => {
                 const count = jobs.filter(j => j.status === s.value).length;
                 if (count === 0) return null;
-                return <TabsTrigger key={s.value} value={s.value}>{s.label} ({count})</TabsTrigger>;
+                const trigger = <TabsTrigger key={s.value} value={s.value}>{s.label} ({count})</TabsTrigger>;
+                if (s.value === 'finished') {
+                  return <Fragment key={s.value}>{trigger}<TabsTrigger value="all">All ({jobs.length})</TabsTrigger></Fragment>;
+                }
+                return trigger;
               })}
+              {!jobs.some(j => j.status === 'finished') && (
+                <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
+              )}
             </TabsList>
           </div>
 
