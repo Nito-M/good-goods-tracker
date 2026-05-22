@@ -323,16 +323,6 @@ export default function SaleDetail() {
         onDownload={handleDownload}
       />
 
-      <EditSaleDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        sale={sale}
-        vendors={vendors.map((v) => ({ id: v.id, name: v.name }))}
-        onSave={async (saleId, data) => {
-          const ok = await updateSale(saleId, data as any);
-          if (ok) setEditOpen(false);
-        }}
-      />
     </div>
   );
 }
