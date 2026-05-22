@@ -57,7 +57,7 @@ export function LinkedDocumentsCard({ sale }: Props) {
     if (slotKind === 'sales_order') {
       navigate(`/sales-orders/${q.id}`);
     } else {
-      navigate('/quotes');
+      navigate(`/quotes?quoteId=${q.id}`);
     }
   };
 
