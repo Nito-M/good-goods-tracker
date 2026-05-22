@@ -188,7 +188,7 @@ export function JobAddItems() {
                         <TableHead>Item</TableHead>
                         <TableHead>SKU</TableHead>
                         <TableHead className="text-right">Stock</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
+                        {canViewJobPricing && <TableHead className="text-right">Price</TableHead>}
                         <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
