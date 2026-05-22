@@ -1127,29 +1127,6 @@ export function SalesOrderDetail() {
               )}
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 mb-4 border-b">
-                <div className="space-y-1.5">
-                  <Label htmlFor="inv-name" className="text-xs">Name</Label>
-                  <Input
-                    id="inv-name"
-                    value={paymentInfo.name}
-                    onChange={(e) => setPaymentInfo((p) => ({ ...p, name: e.target.value }))}
-                    onBlur={() => savePaymentInfo(paymentInfo)}
-                    placeholder="Bill to name"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="inv-email" className="text-xs">Email</Label>
-                  <Input
-                    id="inv-email"
-                    type="email"
-                    value={paymentInfo.email}
-                    onChange={(e) => setPaymentInfo((p) => ({ ...p, email: e.target.value }))}
-                    onBlur={() => savePaymentInfo(paymentInfo)}
-                    placeholder="billing@example.com"
-                  />
-                </div>
-              </div>
 
               {(() => {
                 const links = quote.linkedInvoices || [];
