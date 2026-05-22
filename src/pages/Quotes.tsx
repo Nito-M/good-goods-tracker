@@ -1168,7 +1168,7 @@ export function Quotes() {
                     No quotes found
                   </p>
                 ) : (
-                  <Accordion type="multiple" className="space-y-4">
+                  <Accordion type="multiple" value={openMonths} onValueChange={setOpenMonths} className="space-y-4">
                     {Object.entries(groupedQuotes).map(([month, monthQuotes]) => (
                       <AccordionItem key={month} value={month} className="border rounded-lg px-4">
                         <AccordionTrigger className="hover:no-underline">
@@ -1179,22 +1179,27 @@ export function Quotes() {
                         </AccordionTrigger>
                         <AccordionContent className="space-y-3 pt-2">
                             {monthQuotes.map((quote) => (
-                              <QuoteCard
+                              <div
                                 key={quote.id}
-                                quote={quote}
-                                onDelete={deleteQuote}
-                                onUpdateStatus={updateQuoteStatus}
-                                onUploadAttachment={uploadAttachment}
-                                onRemoveAttachment={removeAttachment}
-                                onEdit={handleEditQuote}
-                                onConvertToInvoice={(quote, percentage) => convertToInvoice(quote, percentage)}
-                                onConvertToPurchaseOrder={convertToPurchaseOrder}
-                                onRevertInvoiceLink={revertInvoiceLink}
-                                onPreview={setPreviewQuote}
-                                quoteSettings={getQuoteSettingsForQuote(quote)}
-                                linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
-                                linkedPoNumber={quote.convertedToPoId ? poNumberMap.get(quote.convertedToPoId) : null}
-                              />
+                                id={`quote-${quote.id}`}
+                                className={highlightedQuoteId === quote.id ? 'rounded-lg ring-2 ring-primary transition-shadow' : ''}
+                              >
+                                <QuoteCard
+                                  quote={quote}
+                                  onDelete={deleteQuote}
+                                  onUpdateStatus={updateQuoteStatus}
+                                  onUploadAttachment={uploadAttachment}
+                                  onRemoveAttachment={removeAttachment}
+                                  onEdit={handleEditQuote}
+                                  onConvertToInvoice={(quote, percentage) => convertToInvoice(quote, percentage)}
+                                  onConvertToPurchaseOrder={convertToPurchaseOrder}
+                                  onRevertInvoiceLink={revertInvoiceLink}
+                                  onPreview={setPreviewQuote}
+                                  quoteSettings={getQuoteSettingsForQuote(quote)}
+                                  linkedInvoiceNumber={quote.convertedToInvoiceId ? invoiceNumberMap.get(quote.convertedToInvoiceId) : null}
+                                  linkedPoNumber={quote.convertedToPoId ? poNumberMap.get(quote.convertedToPoId) : null}
+                                />
+                              </div>
                             ))}
                         </AccordionContent>
                       </AccordionItem>
