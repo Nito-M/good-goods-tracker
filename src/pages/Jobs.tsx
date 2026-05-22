@@ -125,7 +125,7 @@ export function Jobs() {
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverJobId, setDragOverJobId] = useState<string | null>(null);
-  const [statusTab, setStatusTab] = useState('all');
+  const [statusTab, setStatusTab] = useState('in-progress');
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
