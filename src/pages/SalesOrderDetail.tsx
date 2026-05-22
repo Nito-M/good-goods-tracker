@@ -88,6 +88,8 @@ export function SalesOrderDetail() {
   const [savingCustomer, setSavingCustomer] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState({ name: '', email: '', company: '' });
   const [paymentInfoInit, setPaymentInfoInit] = useState(false);
+  const [showEditPaymentDialog, setShowEditPaymentDialog] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
   const { createJob } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
@@ -722,42 +724,81 @@ export function SalesOrderDetail() {
 
           {/* Payment Information */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-lg">Payment Information</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setPaymentInfo({
+                    name: quote.paymentContactName || '',
+                    email: quote.paymentContactEmail || '',
+                    company: quote.paymentContactCompany || '',
+                  });
+                  setShowEditPaymentDialog(true);
+                }}
+              >
+                Edit
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pay-name">Name</Label>
-                  <Input
-                    id="pay-name"
-                    value={paymentInfo.name}
-                    onChange={(e) => setPaymentInfo((p) => ({ ...p, name: e.target.value }))}
-                    onBlur={() => savePaymentInfo(paymentInfo)}
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Name:</span>
+                  <span>{quote.paymentContactName || '—'}</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pay-email">Email</Label>
-                  <Input
-                    id="pay-email"
-                    type="email"
-                    value={paymentInfo.email}
-                    onChange={(e) => setPaymentInfo((p) => ({ ...p, email: e.target.value }))}
-                    onBlur={() => savePaymentInfo(paymentInfo)}
-                  />
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Email:</span>
+                  <span>{quote.paymentContactEmail || '—'}</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pay-company">Company</Label>
-                  <Input
-                    id="pay-company"
-                    value={paymentInfo.company}
-                    onChange={(e) => setPaymentInfo((p) => ({ ...p, company: e.target.value }))}
-                    onBlur={() => savePaymentInfo(paymentInfo)}
-                  />
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Company:</span>
+                  <span>{quote.paymentContactCompany || '—'}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          <Dialog open={showEditPaymentDialog} onOpenChange={setShowEditPaymentDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Payment Information</DialogTitle>
+                <DialogDescription>Update the payment contact details for this sales order.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pay-name">Name</Label>
+                  <Input id="pay-name" value={paymentInfo.name} onChange={(e) => setPaymentInfo((p) => ({ ...p, name: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pay-email">Email</Label>
+                  <Input id="pay-email" type="email" value={paymentInfo.email} onChange={(e) => setPaymentInfo((p) => ({ ...p, email: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pay-company">Company</Label>
+                  <Input id="pay-company" value={paymentInfo.company} onChange={(e) => setPaymentInfo((p) => ({ ...p, company: e.target.value }))} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowEditPaymentDialog(false)} disabled={savingPayment}>Cancel</Button>
+                <Button
+                  disabled={savingPayment}
+                  onClick={async () => {
+                    setSavingPayment(true);
+                    await savePaymentInfo(paymentInfo);
+                    setSavingPayment(false);
+                    setShowEditPaymentDialog(false);
+                  }}
+                >
+                  {savingPayment ? 'Saving...' : 'Save'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
 
           {/* Notes */}
           {quote.notes && (
