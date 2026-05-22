@@ -699,7 +699,7 @@ function AssemblyDetail({
                     })()}
                   </button>
                 )}
-                <span className="w-20 text-right text-sm font-medium">{itemCost !== null ? formatCurrency(itemCost * item.quantity) : '—'}</span>
+                {canViewAssemblyPricing && <span className="w-20 text-right text-sm font-medium">{itemCost !== null ? formatCurrency(itemCost * item.quantity) : '—'}</span>}
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteItemId(item.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
