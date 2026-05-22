@@ -25,6 +25,7 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
+import { useCanViewJobPricing } from '@/hooks/useCanViewJobPricing';
 
 const statusColors: Record<string, string> = {
   open: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
