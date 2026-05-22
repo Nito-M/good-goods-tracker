@@ -305,6 +305,7 @@ export function Sales() {
   const [markupPercent, setMarkupPercent] = useState<number | ''>(initialDraft?.markupPercent ?? '');
   const [notes, setNotes] = useState(initialDraft?.notes || '');
   const [showSku, setShowSku] = useState<boolean>(initialDraft?.showSku !== false);
+  const [dueDate, setDueDate] = useState<string>(initialDraft?.dueDate || '');
   const [paymentTerms, setPaymentTerms] = useState(initialDraft?.paymentTerms || 'Due on receipt');
   const [searchQuery, setSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
