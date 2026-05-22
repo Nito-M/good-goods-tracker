@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSales } from '@/hooks/useSales';
-import { useVendors } from '@/hooks/useVendors';
+
 import { useProfile } from '@/hooks/useProfile';
 import { useCompanies } from '@/hooks/useCompanies';
 import { InvoiceSettings, Sale, SaleStatus } from '@/types/sale';
