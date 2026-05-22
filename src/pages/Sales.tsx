@@ -466,6 +466,7 @@ export function Sales() {
     setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
     setContactPersonName(sale.contactPersonName || '');
     setShowSku(sale.showSku !== false);
+    setDueDate(sale.dueDate ? new Date(sale.dueDate).toISOString().slice(0, 10) : '');
     setEditingSaleId(sale.id);
     setActiveTab('new-sale');
   };
