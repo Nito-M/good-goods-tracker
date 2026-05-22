@@ -194,7 +194,7 @@ export function JobAddItems() {
                     </TableHeader>
                     <TableBody>
                       {filteredInventory.length === 0 ? (
-                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No items found</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={canViewJobPricing ? 6 : 5} className="text-center text-muted-foreground">No items found</TableCell></TableRow>
                       ) : (
                         filteredInventory.map(item => {
                           const isAdded = jobItemInventoryIds.has(item.id);
