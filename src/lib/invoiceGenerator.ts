@@ -252,6 +252,18 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
       y += 7;
     }
 
+    const itemDiscountTotal = sale.items.reduce(
+      (sum, it) => sum + (it.quantity * it.unitPrice * ((it.discountRate || 0) / 100)),
+      0,
+    );
+    if (itemDiscountTotal > 0) {
+      doc.setTextColor(34, 139, 34);
+      doc.text('Item Discounts:', totalsX, y);
+      doc.text(`-${formatCurrency(itemDiscountTotal)}`, pageWidth - 22, y, { align: 'right' });
+      doc.setTextColor(0, 0, 0);
+      y += 7;
+    }
+
     for (const [idx, adj] of (sale.adjustments || []).entries()) {
       const label = (adj.label || '').trim() || `Adjustment ${idx + 1}`;
       const isNegative = adj.amount < 0;
