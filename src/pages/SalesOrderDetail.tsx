@@ -493,10 +493,15 @@ export function SalesOrderDetail() {
               {Object.keys(itemLinks).length > 0 && (
                 <Link
                   to="/jobs"
-                  className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  className={cn(
+                    "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-colors",
+                    allJobsCreated
+                      ? "bg-green-100 text-green-800 hover:bg-green-200"
+                      : "bg-primary/10 text-primary hover:bg-primary/20"
+                  )}
                 >
                   <Briefcase className="h-3 w-3" />
-                  Jobs Created
+                  {allJobsCreated ? 'All Jobs Created' : 'Jobs Created'}
                 </Link>
               )}
             </div>
