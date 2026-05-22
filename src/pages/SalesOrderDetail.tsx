@@ -367,72 +367,6 @@ export function SalesOrderDetail() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleDownloadSalesOrder}>
-            <Download className="h-4 w-4 mr-2" />
-            Download PDF
-          </Button>
-          <div className="flex items-center gap-1.5">
-            <Label htmlFor="jobNumber" className="text-sm whitespace-nowrap flex items-center gap-1">
-              <Hash className="h-3.5 w-3.5" />Job #
-            </Label>
-            <Input
-              id="jobNumber"
-              value={jobNumber}
-              onChange={(e) => setJobNumber(e.target.value)}
-              placeholder="Auto"
-              className="w-24 h-9"
-            />
-          </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "justify-start text-left font-normal h-9",
-                  !dueDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
-                {dueDate ? format(dueDate, "MMM d, yyyy") : <span>Due date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={dueDate}
-                onSelect={setDueDate}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" disabled={creating} className="h-9">
-                {creating ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 mr-1.5" />
-                )}
-                Actions
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleCreateAllJobs}>
-                <Briefcase className="h-4 w-4 mr-2" />
-                Create All Jobs
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
-                <Clock className="h-4 w-4 mr-2" />
-                In Progress
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Mark as Complete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 text-destructive hover:text-destructive" disabled={deleting}>
@@ -457,189 +391,274 @@ export function SalesOrderDetail() {
         </div>
       </div>
 
-      {/* Customer Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Customer Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Name:</span>
-              <span>{quote.vendorName || '—'}</span>
+      <Tabs defaultValue="items" className="w-full">
+        <TabsList>
+          <TabsTrigger value="items">Items</TabsTrigger>
+          <TabsTrigger value="customer">Customer & Details</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="items" className="space-y-6 mt-4">
+          {/* Items toolbar: PDF, Job #, Due Date, Actions */}
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={handleDownloadSalesOrder} className="h-9">
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="jobNumber" className="text-sm whitespace-nowrap flex items-center gap-1">
+                <Hash className="h-3.5 w-3.5" />Job #
+              </Label>
+              <Input
+                id="jobNumber"
+                value={jobNumber}
+                onChange={(e) => setJobNumber(e.target.value)}
+                placeholder="Auto"
+                className="w-24 h-9"
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Phone:</span>
-              <span>{vendor?.contact_phone || '—'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Email:</span>
-              <span>{vendor?.contact_email || '—'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Address:</span>
-              <span>{vendor?.address || '—'}</span>
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "justify-start text-left font-normal h-9",
+                    !dueDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                  {dueDate ? format(dueDate, "MMM d, yyyy") : <span>Due date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={setDueDate}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" disabled={creating} className="h-9">
+                  {creating ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 mr-1.5" />
+                  )}
+                  Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCreateAllJobs}>
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  Create All Jobs
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
+                  <Clock className="h-4 w-4 mr-2" />
+                  In Progress
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Mark as Complete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Items Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Job</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expandedItems.map((item) => {
-                  const link = itemLinks[item.linkKey];
-                  const statusKey = link?.status ?? 'pending';
-                  const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
-                  const isCreatingThis = creatingJobFor === item.linkKey;
-                  const isUpdatingThis = updatingStatusFor === item.linkKey;
-
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <span>{item.itemName}</span>
-                          {item.notes && (
-                            <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{item.sku || '—'}</TableCell>
-                      <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
-
-                      {/* Per-item status */}
-                      <TableCell className="text-center">
-                        {link ? (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                disabled={isUpdatingThis}
-                                className={cn(
-                                  'inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-opacity cursor-pointer',
-                                  statusCfg.className,
-                                  isUpdatingThis && 'opacity-50'
-                                )}
-                              >
-                                {isUpdatingThis && <Loader2 className="h-3 w-3 animate-spin" />}
-                                {statusCfg.label}
-                                <ChevronDown className="h-3 w-3 ml-0.5" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="center">
-                              {Object.entries(STATUS_CONFIG)
-                                .filter(([k]) => k !== 'pending')
-                                .map(([key, cfg]) => (
-                                  <DropdownMenuItem
-                                    key={key}
-                                    onClick={() => handleUpdateItemStatus(item.linkKey, key)}
-                                  >
-                                    <span className={cn('inline-block w-2 h-2 rounded-full mr-2', cfg.className)} />
-                                    {cfg.label}
-                                  </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : (
-                          <span className={cn('inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full', statusCfg.className)}>
-                            {statusCfg.label}
-                          </span>
-                        )}
-                      </TableCell>
-
-                      {/* Per-item: add to shared job / linked indicator */}
-                      <TableCell className="text-center">
-                        {link?.jobId ? (
-                          <Link
-                            to={`/jobs/${link.jobId}`}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                          >
-                            <Briefcase className="h-3.5 w-3.5" />
-                            View Job
-                          </Link>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs px-2"
-                            disabled={isCreatingThis || !!creatingJobFor}
-                            onClick={() => handleCreateJobForItem(item)}
-                          >
-                            {isCreatingThis ? (
-                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                            ) : (
-                              <Plus className="h-3 w-3 mr-1" />
-                            )}
-                            Create Job
-                          </Button>
-                        )}
-                      </TableCell>
+          {/* Items Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead className="text-right">Unit Price</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Job</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {expandedItems.map((item) => {
+                      const link = itemLinks[item.linkKey];
+                      const statusKey = link?.status ?? 'pending';
+                      const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
+                      const isCreatingThis = creatingJobFor === item.linkKey;
+                      const isUpdatingThis = updatingStatusFor === item.linkKey;
 
-      {/* Totals */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-end gap-1 text-sm">
-            <div className="flex justify-between w-48">
-              <span className="text-muted-foreground">Subtotal:</span>
-              <span>${quote.subtotal.toFixed(2)}</span>
-            </div>
-            {quote.discountRate > 0 && (
-              <div className="flex justify-between w-48">
-                <span className="text-muted-foreground">Discount ({quote.discountRate}%):</span>
-                <span>-${quote.discountAmount.toFixed(2)}</span>
-              </div>
-            )}
-            {quote.taxRate > 0 && (
-              <div className="flex justify-between w-48">
-                <span className="text-muted-foreground">Tax ({quote.taxRate}%):</span>
-                <span>${quote.taxAmount.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between w-48 font-bold border-t pt-1 mt-1">
-              <span>Total:</span>
-              <span>${quote.total.toFixed(2)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">
+                            <div>
+                              <span>{item.itemName}</span>
+                              {item.notes && (
+                                <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{item.sku || '—'}</TableCell>
+                          <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
 
-      {/* Notes */}
-      {quote.notes && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
-          </CardContent>
-        </Card>
-      )}
+                          {/* Per-item status */}
+                          <TableCell className="text-center">
+                            {link ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    disabled={isUpdatingThis}
+                                    className={cn(
+                                      'inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-opacity cursor-pointer',
+                                      statusCfg.className,
+                                      isUpdatingThis && 'opacity-50'
+                                    )}
+                                  >
+                                    {isUpdatingThis && <Loader2 className="h-3 w-3 animate-spin" />}
+                                    {statusCfg.label}
+                                    <ChevronDown className="h-3 w-3 ml-0.5" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="center">
+                                  {Object.entries(STATUS_CONFIG)
+                                    .filter(([k]) => k !== 'pending')
+                                    .map(([key, cfg]) => (
+                                      <DropdownMenuItem
+                                        key={key}
+                                        onClick={() => handleUpdateItemStatus(item.linkKey, key)}
+                                      >
+                                        <span className={cn('inline-block w-2 h-2 rounded-full mr-2', cfg.className)} />
+                                        {cfg.label}
+                                      </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <span className={cn('inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full', statusCfg.className)}>
+                                {statusCfg.label}
+                              </span>
+                            )}
+                          </TableCell>
+
+                          {/* Per-item: add to shared job / linked indicator */}
+                          <TableCell className="text-center">
+                            {link?.jobId ? (
+                              <Link
+                                to={`/jobs/${link.jobId}`}
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              >
+                                <Briefcase className="h-3.5 w-3.5" />
+                                View Job
+                              </Link>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs px-2"
+                                disabled={isCreatingThis || !!creatingJobFor}
+                                onClick={() => handleCreateJobForItem(item)}
+                              >
+                                {isCreatingThis ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : (
+                                  <Plus className="h-3 w-3 mr-1" />
+                                )}
+                                Create Job
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="customer" className="space-y-6 mt-4">
+          {/* Customer Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Customer Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Name:</span>
+                  <span>{quote.vendorName || '—'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Phone:</span>
+                  <span>{vendor?.contact_phone || '—'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Email:</span>
+                  <span>{vendor?.contact_email || '—'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Address:</span>
+                  <span>{vendor?.address || '—'}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Totals */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Pricing</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-end gap-1 text-sm">
+                <div className="flex justify-between w-48">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span>${quote.subtotal.toFixed(2)}</span>
+                </div>
+                {quote.discountRate > 0 && (
+                  <div className="flex justify-between w-48">
+                    <span className="text-muted-foreground">Discount ({quote.discountRate}%):</span>
+                    <span>-${quote.discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                {quote.taxRate > 0 && (
+                  <div className="flex justify-between w-48">
+                    <span className="text-muted-foreground">Tax ({quote.taxRate}%):</span>
+                    <span>${quote.taxAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between w-48 font-bold border-t pt-1 mt-1">
+                  <span>Total:</span>
+                  <span>${quote.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notes */}
+          {quote.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+
     </div>
   );
 }
