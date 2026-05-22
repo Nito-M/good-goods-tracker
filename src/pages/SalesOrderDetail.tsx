@@ -6,11 +6,13 @@ import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { useProfile } from '@/hooks/useProfile';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useSales } from '@/hooks/useSales';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,6 +83,7 @@ export function SalesOrderDetail() {
   const { createJob } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
+  const { sales } = useSales();
   const { toast } = useToast();
 
   const quoteSettings = useMemo<QuoteSettings>(() => ({
@@ -395,6 +398,7 @@ export function SalesOrderDetail() {
         <TabsList>
           <TabsTrigger value="items">Items</TabsTrigger>
           <TabsTrigger value="customer">Customer & Details</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="items" className="space-y-6 mt-4">
@@ -656,6 +660,114 @@ export function SalesOrderDetail() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6 mt-4">
+          {/* Quote card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4" /> Quote
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border p-3">
+                <div className="space-y-1">
+                  <Link
+                    to={`/quotes?quoteId=${quote.id}`}
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
+                    {quote.quoteNumber}
+                  </Link>
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    <div>Created: {format(new Date(quote.createdAt), 'MMM d, yyyy')}</div>
+                    {quote.validUntil && (
+                      <div>Valid until: {format(new Date(quote.validUntil), 'MMM d, yyyy')}</div>
+                    )}
+                    {quote.vendorName && <div>Customer: {quote.vendorName}</div>}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">Total</div>
+                  <div className="text-lg font-bold">{formatCurrency(quote.total)}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Invoices card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Receipt className="h-4 w-4" /> Invoices
+                {(quote.linkedInvoices || []).length > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {quote.linkedInvoices.length}
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const links = quote.linkedInvoices || [];
+                if (links.length === 0) {
+                  return (
+                    <p className="text-sm text-muted-foreground italic">
+                      No invoices linked to this sales order yet.
+                    </p>
+                  );
+                }
+                const rows = links
+                  .map((li) => {
+                    const s = sales.find((x) => x.id === li.saleId);
+                    return { li, sale: s };
+                  })
+                  .filter((r) => r.sale);
+                const totalInvoiced = rows.reduce((sum, r) => sum + (r.sale?.total || 0), 0);
+                return (
+                  <div className="space-y-2">
+                    {rows.map(({ li, sale }) => (
+                      <div
+                        key={li.saleId}
+                        className="flex flex-wrap items-center justify-between gap-4 rounded-md border p-3"
+                      >
+                        <div className="space-y-1">
+                          <Link
+                            to={`/sales/${sale!.id}`}
+                            className="text-sm font-semibold text-primary hover:underline"
+                          >
+                            {sale!.invoiceNumber}
+                          </Link>
+                          <div className="text-xs text-muted-foreground space-y-0.5">
+                            <div>Created: {format(new Date(sale!.createdAt), 'MMM d, yyyy')}</div>
+                            {sale!.dueDate && (
+                              <div>Due: {format(new Date(sale!.dueDate), 'MMM d, yyyy')}</div>
+                            )}
+                            {sale!.paidAt && (
+                              <div>Paid: {format(new Date(sale!.paidAt), 'MMM d, yyyy')}</div>
+                            )}
+                            {li.percentage > 0 && li.percentage < 100 && (
+                              <div>Portion: {li.percentage}%</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground">Total</div>
+                          <div className="text-lg font-bold">{formatCurrency(sale!.total)}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {rows.length > 1 && (
+                      <div className="flex justify-end pt-2 text-sm">
+                        <span className="text-muted-foreground mr-2">Total Invoiced:</span>
+                        <span className="font-bold">{formatCurrency(totalInvoiced)}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
