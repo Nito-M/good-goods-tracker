@@ -14,6 +14,7 @@ export interface SaleItem {
   totalPrice: number;
   totalCost: number;
   profit: number;
+  notes?: string | null;
   createdAt: string;
 }
 
