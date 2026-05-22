@@ -440,6 +440,7 @@ export function Sales() {
         customPrice: item.unitPrice,
         isCustom: !item.inventoryItemId,
         discountRate: item.discountRate || 0,
+        notes: item.notes ?? '',
       };
     });
 
