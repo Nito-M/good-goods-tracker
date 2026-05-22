@@ -595,10 +595,12 @@ export function SalesOrderDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleCreateAllJobs}>
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Create All Jobs
-                </DropdownMenuItem>
+                {!allJobsCreated && (
+                  <DropdownMenuItem onClick={handleCreateAllJobs}>
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Create All Jobs
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
                   <Clock className="h-4 w-4 mr-2" />
                   In Progress
