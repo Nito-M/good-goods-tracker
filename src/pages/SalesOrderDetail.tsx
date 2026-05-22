@@ -695,7 +695,29 @@ export function SalesOrderDetail() {
                                     </span>
                                   )}
                                   {item.notes && (
-                                    <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setExpandedNotes((prev) => {
+                                          const next = new Set(prev);
+                                          if (next.has(item.linkKey)) next.delete(item.linkKey);
+                                          else next.add(item.linkKey);
+                                          return next;
+                                        });
+                                      }}
+                                      className="ml-2 inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground font-normal align-middle"
+                                      title={expandedNotes.has(item.linkKey) ? 'Hide details' : 'Show details'}
+                                    >
+                                      {expandedNotes.has(item.linkKey) ? (
+                                        <ChevronDown className="h-3 w-3" />
+                                      ) : (
+                                        <ChevronRight className="h-3 w-3" />
+                                      )}
+                                      details
+                                    </button>
+                                  )}
+                                  {item.notes && expandedNotes.has(item.linkKey) && (
+                                    <p className="text-xs text-muted-foreground font-normal mt-0.5 whitespace-pre-wrap">{item.notes}</p>
                                   )}
                                 </div>
                               </div>
