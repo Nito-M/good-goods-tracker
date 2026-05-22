@@ -350,6 +350,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
 
   // Settings tab form state
   const [tab, setTab] = useState<'information' | 'parts' | 'settings'>('information');
+  const [descriptionCollapsed, setDescriptionCollapsed] = useState(false);
   const [fTitle, setFTitle] = useState(job.title);
   const [fDescription, setFDescription] = useState(job.description || '');
   const [fJobNumber, setFJobNumber] = useState(job.jobNumber || '');
