@@ -410,6 +410,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem, reserveItem, unreserveItem } = useJobItems(job.id);
   const { customers } = useCustomers();
+  const { canViewJobPricing } = useCanViewJobPricing();
 
   // Settings tab form state
   const [tab, setTab] = useState<'information' | 'parts' | 'settings'>('information');
