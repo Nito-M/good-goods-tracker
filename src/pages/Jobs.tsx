@@ -41,7 +41,7 @@ const statusColors: Record<string, string> = {
 const STATUS_OPTIONS = [
   { value: 'open', label: 'Open' },
   { value: 'in-progress', label: 'In Progress' },
-  { value: 'in-production', label: 'In Production' },
+  
   { value: 'welding-done', label: 'Welding Done' },
   { value: 'painting-done', label: 'Painting Done' },
   { value: 'finished', label: 'Finished' },
