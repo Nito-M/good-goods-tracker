@@ -377,6 +377,9 @@ export function Quotes() {
   const [showSku, setShowSku] = useState(true);
   const [activeTab, setActiveTab] = useState('history');
   const [showItemPicker, setShowItemPicker] = useState(false);
+  const [openMonths, setOpenMonths] = useState<string[]>([]);
+  const [highlightedQuoteId, setHighlightedQuoteId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
