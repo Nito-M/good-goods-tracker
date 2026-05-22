@@ -306,13 +306,35 @@ export function SalesOrderDetail() {
   };
 
   // Create a dedicated job for one item (item name = job title)
+  // Build a description that lists attached add-on items under the parent
+  const buildJobDescription = (parent: ExpandedItem): string | undefined => {
+    const childKeys = Object.entries(attachments)
+      .filter(([, parentKey]) => parentKey === parent.linkKey)
+      .map(([k]) => k);
+    const children = expandedItems.filter((it) => childKeys.includes(it.linkKey));
+    const lines: string[] = [];
+    if (parent.notes) lines.push(parent.notes);
+    if (children.length > 0) {
+      lines.push('');
+      lines.push('Add-ons:');
+      for (const c of children) {
+        lines.push(`• ${c.itemName}${c.notes ? ` — ${c.notes}` : ''}`);
+      }
+    }
+    return lines.length > 0 ? lines.join('\n') : undefined;
+  };
+
   const handleCreateJobForItem = async (item: ExpandedItem) => {
     if (!quote) return;
+    if (attachments[item.linkKey]) {
+      toast({ title: 'This item is attached as an add-on', description: 'Detach it first or create the parent\'s job.', variant: 'destructive' });
+      return;
+    }
     setCreatingJobFor(item.linkKey);
     try {
       const job = await createJob(
         item.itemName,
-        item.notes || undefined,
+        buildJobDescription(item),
         'open',
         {
           name: quote.vendorName || undefined,
@@ -346,17 +368,18 @@ export function SalesOrderDetail() {
     }
   };
 
-  // Create one separate job per unlinked item
+  // Create one separate job per unlinked top-level item (attached children skipped)
   const handleCreateAllJobs = async () => {
     if (!quote || expandedItems.length === 0) return;
     setCreating(true);
     try {
       for (const item of expandedItems) {
+        if (attachments[item.linkKey]) continue; // attached as add-on, no job
         if (itemLinks[item.linkKey]?.jobId) continue; // already linked
 
         const job = await createJob(
           item.itemName,
-          item.notes || undefined,
+          buildJobDescription(item),
           'open',
           {
             name: quote.vendorName || undefined,
@@ -389,6 +412,7 @@ export function SalesOrderDetail() {
       setCreating(false);
     }
   };
+
 
   // Update the status of a specific item link
   const handleUpdateItemStatus = async (linkKey: string, newStatus: string) => {
