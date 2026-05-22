@@ -618,7 +618,22 @@ export function SalesOrderDetail() {
             </CardContent>
           </Card>
 
-          {/* Totals */}
+
+          {/* Notes */}
+          {quote.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6 mt-4">
+          {/* Pricing */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Pricing</CardTitle>
@@ -649,20 +664,7 @@ export function SalesOrderDetail() {
             </CardContent>
           </Card>
 
-          {/* Notes */}
-          {quote.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
 
-        <TabsContent value="billing" className="space-y-6 mt-4">
           {/* Quote card */}
           <Card>
             <CardHeader>
