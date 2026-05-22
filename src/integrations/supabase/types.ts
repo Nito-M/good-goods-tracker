@@ -3716,6 +3716,9 @@ export type Database = {
           id: string
           invoiced_percentage: number
           notes: string | null
+          payment_contact_company: string | null
+          payment_contact_email: string | null
+          payment_contact_name: string | null
           payment_terms: string | null
           quote_number: string
           sales_order_number: string | null
@@ -3745,6 +3748,9 @@ export type Database = {
           id?: string
           invoiced_percentage?: number
           notes?: string | null
+          payment_contact_company?: string | null
+          payment_contact_email?: string | null
+          payment_contact_name?: string | null
           payment_terms?: string | null
           quote_number: string
           sales_order_number?: string | null
@@ -3774,6 +3780,9 @@ export type Database = {
           id?: string
           invoiced_percentage?: number
           notes?: string | null
+          payment_contact_company?: string | null
+          payment_contact_email?: string | null
+          payment_contact_name?: string | null
           payment_terms?: string | null
           quote_number?: string
           sales_order_number?: string | null
