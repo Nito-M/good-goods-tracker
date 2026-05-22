@@ -346,9 +346,10 @@ export function Sales() {
       paymentTerms,
       customInvoiceNumber,
       selectedCompanyId,
+      showSku,
     };
     window.localStorage.setItem(INVOICE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
-  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, adjustments, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId]);
+  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, adjustments, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId, showSku]);
 
   // Auto-select vendor created from customer
   useEffect(() => {
