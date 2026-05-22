@@ -463,6 +463,19 @@ export function Sales() {
     setActiveTab('new-sale');
   };
 
+  // Pick up edit request from SaleDetail navigation
+  useEffect(() => {
+    const editSaleId = (location.state as { editSaleId?: string } | null)?.editSaleId;
+    if (!editSaleId || editStateHandledRef.current === editSaleId) return;
+    if (!sales.length || !inventoryItems.length) return;
+    const target = sales.find((s) => s.id === editSaleId);
+    if (!target) return;
+    editStateHandledRef.current = editSaleId;
+    handleEditSale(target);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state, location.pathname, sales, inventoryItems, navigate]);
+
+
   // Get the invoice prefix from profile
   const invoicePrefix = profile?.invoicePrefix || 'INV';
 
