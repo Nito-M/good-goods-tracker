@@ -628,6 +628,7 @@ export function Sales() {
         unitPrice: getItemPrice(c),
         unitCost: c.inventoryItem.cost,
         discountRate: c.discountRate || 0,
+        notes: c.notes?.trim() || null,
       };
     });
 
