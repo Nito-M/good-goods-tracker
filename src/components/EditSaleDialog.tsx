@@ -92,6 +92,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       setDueDate(sale.dueDate ? format(new Date(sale.dueDate), 'yyyy-MM-dd') : '');
       setCompanyId((sale as any).companyId || defaultCompany?.id || '');
       setContactPersonName((sale as any).contactPersonName || '');
+      setShowSku(sale.showSku !== false);
     }
   }, [sale, defaultCompany]);
 
