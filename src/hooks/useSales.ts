@@ -71,6 +71,7 @@ export function useSales() {
               totalPrice,
               totalCost,
               profit: totalPrice - totalCost,
+              notes: (item as any).notes ?? null,
               createdAt: item.created_at,
             };
           });
@@ -323,6 +324,7 @@ export function useSales() {
             discount_amount: line.discount,
             total_price: line.lineTotal,
             sort_order: i,
+            notes: (item as any).notes ?? null,
           } as any);
 
         if (itemError) throw itemError;
@@ -554,6 +556,7 @@ export function useSales() {
         unitPrice: number;
         unitCost: number;
         discountRate?: number;
+        notes?: string | null;
       }>;
       taxRate: number;
       discountRate: number;
@@ -637,6 +640,7 @@ export function useSales() {
             discount_amount: line.discount,
             total_price: line.lineTotal,
             sort_order: i,
+            notes: (item as any).notes ?? null,
           } as any);
 
         if (itemError) throw itemError;

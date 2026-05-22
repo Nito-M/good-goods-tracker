@@ -14,6 +14,7 @@ export interface SaleItem {
   totalPrice: number;
   totalCost: number;
   profit: number;
+  notes?: string | null;
   createdAt: string;
 }
 
@@ -69,6 +70,7 @@ export interface CreateSaleInput {
     unitPrice: number;
     unitCost: number;
     discountRate?: number;
+    notes?: string | null;
   }[];
   taxRate: number;
   discountRate: number;

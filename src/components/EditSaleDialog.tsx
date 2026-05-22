@@ -34,6 +34,7 @@ interface EditableSaleItem {
   unitPrice: number;
   unitCost: number;
   discountRate: number;
+  notes?: string | null;
 }
 
 interface EditSaleDialogProps {
@@ -82,6 +83,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
         unitPrice: item.unitPrice,
         unitCost: item.unitCost,
         discountRate: item.discountRate || 0,
+        notes: item.notes ?? '',
       })));
       setVendorId(sale.vendorId || '');
       setInvoiceNumber(sale.invoiceNumber);
@@ -117,6 +119,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       unitPrice: 0,
       unitCost: 0,
       discountRate: 0,
+      notes: '',
     }]);
   };
 
@@ -331,6 +334,15 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
                           className="bg-muted"
                         />
                       </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs">Note <span className="text-sky-400">(optional)</span></Label>
+                      <Input
+                        value={item.notes ?? ''}
+                        onChange={(e) => updateItem(item.id, { notes: e.target.value })}
+                        placeholder="Add a note shown under this item on the PDF"
+                      />
                     </div>
                   </div>
                 ))}

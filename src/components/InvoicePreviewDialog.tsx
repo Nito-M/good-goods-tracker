@@ -161,7 +161,12 @@ export function InvoicePreviewDialog({
                   <tbody>
                     {sale.items.map((item) => (
                       <tr key={item.id} className="border-b border-gray-200">
-                        <td className="p-2">{item.itemName}</td>
+                        <td className="p-2">
+                          {item.itemName}
+                          {item.notes && (
+                            <p className="text-xs text-gray-500 mt-1 italic">Note: {item.notes}</p>
+                          )}
+                        </td>
                         {sale.showSku !== false && (
                           <td className="p-2 text-gray-600">{item.sku}</td>
                         )}
