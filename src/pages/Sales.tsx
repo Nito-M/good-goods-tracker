@@ -318,6 +318,11 @@ export function Sales() {
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('history');
 
+  const location = useLocation();
+  const navigate = useNavigate();
+  const editStateHandledRef = useRef<string | null>(null);
+
+
   // Default to default company
   const { defaultCompany } = useCompanies();
   useEffect(() => {
