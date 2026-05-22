@@ -9,9 +9,11 @@ import { useAllJobItems } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '@/lib/utils';
+import { useCanViewJobPricing } from '@/hooks/useCanViewJobPricing';
 
 export function AllJobItems() {
   const { items: allJobItems, loading, fetchAllItems } = useAllJobItems();
+  const { canViewJobPricing } = useCanViewJobPricing();
   const [inventoryQtys, setInventoryQtys] = useState<Record<string, number>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -133,24 +135,26 @@ export function AllJobItems() {
           </Card>
         ) : (
           <>
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                {needCostSummary.categories.map(c => (
-                  <div key={c.name} className="flex items-center gap-1.5">
-                    <span className="text-sm text-muted-foreground">{c.name}:</span>
-                    <span className="text-sm font-semibold text-card-foreground">{formatCurrency(c.cost)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 pt-3 border-t border-border flex justify-end">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">Grand Total Needed:</span>
-                  <span className="text-lg font-bold text-card-foreground">{formatCurrency(needCostSummary.grandTotal)}</span>
+          {canViewJobPricing && (
+            <Card className="mb-6">
+              <CardContent className="p-4">
+                <div className="flex flex-wrap gap-4 items-center">
+                  {needCostSummary.categories.map(c => (
+                    <div key={c.name} className="flex items-center gap-1.5">
+                      <span className="text-sm text-muted-foreground">{c.name}:</span>
+                      <span className="text-sm font-semibold text-card-foreground">{formatCurrency(c.cost)}</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mt-3 pt-3 border-t border-border flex justify-end">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">Grand Total Needed:</span>
+                    <span className="text-lg font-bold text-card-foreground">{formatCurrency(needCostSummary.grandTotal)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <div className="space-y-4">
             {groupedItems.map(([category, items]) => {
               const isCollapsed = collapsedCategories.has(category);
@@ -166,7 +170,7 @@ export function AllJobItems() {
                       <span className="font-semibold text-card-foreground">{category}</span>
                       <Badge variant="secondary">{items.length}</Badge>
                     </div>
-                    <span className="text-sm font-medium text-muted-foreground">{formatCurrency(subtotal)}</span>
+                    {canViewJobPricing && <span className="text-sm font-medium text-muted-foreground">{formatCurrency(subtotal)}</span>}
                   </button>
                   {!isCollapsed && (
                     <CardContent className="p-0 border-t border-border">
@@ -178,7 +182,7 @@ export function AllJobItems() {
                              <TableHead className="text-right">Total Qty</TableHead>
                              <TableHead className="text-right">In Stock</TableHead>
                              <TableHead className="text-right">Need</TableHead>
-                             <TableHead className="text-right">Unit Price</TableHead>
+                             {canViewJobPricing && <TableHead className="text-right">Unit Price</TableHead>}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -212,11 +216,11 @@ export function AllJobItems() {
                                        <span className="text-muted-foreground">0</span>
                                      )}
                                    </TableCell>
-                                   <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                                   {canViewJobPricing && <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>}
                                  </TableRow>
                                  {expandedRows.has(rowKey) && (
                                    <TableRow key={`${rowKey}-detail`}>
-                                     <TableCell colSpan={6} className="bg-muted/30 py-2 px-4">
+                                     <TableCell colSpan={canViewJobPricing ? 6 : 5} className="bg-muted/30 py-2 px-4">
                                        <div className="space-y-1">
                                          <div className="text-xs">
                                            <span className="font-medium text-muted-foreground mr-1">SKU:</span>

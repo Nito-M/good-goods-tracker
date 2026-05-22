@@ -737,6 +737,9 @@ export function UsersSettings() {
                   if (page.key === 'parts') {
                     pageExtras.push({ key: 'parts_prefer_dxf', label: 'Show DXF Drawing Instead of Image', description: 'Use the DXF preview as the default visual.' });
                   }
+                  if (page.key === 'jobs') {
+                    pageExtras.push({ key: 'view_job_pricing', label: 'View Job Pricing', description: 'See unit prices and totals on jobs.' });
+                  }
 
                   const showWorkerAccess = page.key === 'assets';
 

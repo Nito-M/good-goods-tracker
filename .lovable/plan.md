@@ -1,19 +1,32 @@
-## Add Invoices to Vendor Detail page
+## Add "View Job Pricing" permission
 
-Mirror the existing "Recent Purchase Orders" section on `src/pages/VendorDetail.tsx` with a new "Recent Invoices" section for sales tied to this vendor.
+Follow the existing feature-permission pattern (same as `view_all_requests`, `view_all_workers`, `parts_prefer_dxf`) stored in the `user_feature_permissions` table.
 
-### Changes
+### New feature key
+`view_job_pricing` — when granted (or user is admin/org admin), pricing is visible on Jobs. Otherwise all price/total UI on Jobs pages is hidden.
 
-**`src/pages/VendorDetail.tsx`**
-- Import `useSales` from `@/hooks/useSales`.
-- Filter sales where `sale.vendorId === vendor.id` (vendor = customer in sales context).
-- Add a "Recent Invoices" card below "Recent Purchase Orders", showing up to 10 most recent invoices:
-  - Invoice number (linked to `/sales/:id`)
-  - Date (`createdAt` or `pickedUpAt`)
-  - Total amount
-  - Status badge (draft/sent/picked_up/paid/overdue/cancelled)
-- Add an "Invoices" row in the Summary card showing the count and total invoiced amount.
+### Settings UI
+In `src/components/UsersSettings.tsx`, under the **Jobs** page card, add an extra checkbox:
+- Label: "View Job Pricing"
+- Description: "See unit prices and totals on jobs."
 
-### Notes
-- Read-only display, no schema or business-logic changes.
-- Follows the same card/list pattern already used for POs to keep styling consistent.
+Saving uses the same insert/delete flow already used for the other feature keys.
+
+### Where pricing gets gated
+Use `useFeaturePermissions().hasFeature('view_job_pricing')` plus `useIsAdmin` / `useIsOrgAdmin` to compute `canViewJobPricing`. When false, hide:
+
+1. `src/pages/Jobs.tsx` (job detail panel)
+   - "Total Value" summary line (around line 566)
+   - Per-category total (`catTotal`, ~line 768)
+   - "Unit Price" / line-total columns in the items table
+2. `src/pages/AllJobItems.tsx`
+   - Subtotal (line 157), "Unit Price" column header and cells, category cost rollup (`catCost`)
+3. `src/pages/JobAddItems.tsx`
+   - "Price" column in the inventory picker table
+
+No schema changes required (table + RLS already exist). No changes to data fetching or job logic — purely a conditional render gate.
+
+### Out of scope
+- Quotes, Sales, Purchase Orders pricing (unchanged)
+- PDF/invoice generation (unchanged)
+- Editing prices (already controlled by page access)

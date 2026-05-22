@@ -25,6 +25,7 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { PurchaseOrderItem } from '@/types/purchaseOrder';
+import { useCanViewJobPricing } from '@/hooks/useCanViewJobPricing';
 
 const statusColors: Record<string, string> = {
   open: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -409,6 +410,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const navigate = useNavigate();
   const { items, loading, updateItem, removeItem, reserveItem, unreserveItem } = useJobItems(job.id);
   const { customers } = useCustomers();
+  const { canViewJobPricing } = useCanViewJobPricing();
 
   // Settings tab form state
   const [tab, setTab] = useState<'information' | 'parts' | 'settings'>('information');
@@ -644,10 +646,12 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                     <span className="text-muted-foreground">Total Qty</span>
                     <span>{items.reduce((s, i) => s + i.quantity, 0)}</span>
                   </div>
-                  <div className="border-t pt-4 flex justify-between font-semibold">
-                    <span>Total Value</span>
-                    <span>{formatCurrency(totalValue)}</span>
-                  </div>
+                  {canViewJobPricing && (
+                    <div className="border-t pt-4 flex justify-between font-semibold">
+                      <span>Total Value</span>
+                      <span>{formatCurrency(totalValue)}</span>
+                    </div>
+                  )}
                   {job.dueDate && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Due Date</span>
@@ -777,7 +781,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                             <span className="font-semibold text-sm">{category}</span>
                             <Badge variant="secondary" className="text-xs">{catItems.length}</Badge>
                           </div>
-                          <span className="text-sm font-medium text-muted-foreground">{formatCurrency(catTotal)}</span>
+                          {canViewJobPricing && <span className="text-sm font-medium text-muted-foreground">{formatCurrency(catTotal)}</span>}
                         </button>
                         {!isCollapsed && (
                           <Table>

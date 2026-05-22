@@ -17,11 +17,13 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCanViewJobPricing } from '@/hooks/useCanViewJobPricing';
 
 export function JobAddItems() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canViewJobPricing } = useCanViewJobPricing();
   const { allItems: inventoryItems } = useInventory();
   const { jobs } = useJobs();
   const { items: jobItems, addItem, updateItem } = useJobItems(jobId || '');
@@ -186,13 +188,13 @@ export function JobAddItems() {
                         <TableHead>Item</TableHead>
                         <TableHead>SKU</TableHead>
                         <TableHead className="text-right">Stock</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
+                        {canViewJobPricing && <TableHead className="text-right">Price</TableHead>}
                         <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredInventory.length === 0 ? (
-                        <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No items found</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={canViewJobPricing ? 6 : 5} className="text-center text-muted-foreground">No items found</TableCell></TableRow>
                       ) : (
                         filteredInventory.map(item => {
                           const isAdded = jobItemInventoryIds.has(item.id);
@@ -216,7 +218,7 @@ export function JobAddItems() {
                               <TableCell className="font-medium">{item.name}</TableCell>
                               <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
                               <TableCell className="text-right">{item.quantity}</TableCell>
-                              <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                              {canViewJobPricing && <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>}
                               <TableCell>
                                 <Button size="sm" variant={isAdded ? 'secondary' : 'ghost'} onClick={() => handleAddItem(item)}>
                                   {isAdded ? <><Check className="h-4 w-4 mr-1" />Added</> : <><Plus className="h-4 w-4 mr-1" />Add</>}
