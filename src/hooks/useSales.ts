@@ -563,6 +563,7 @@ export function useSales() {
       companyId?: string | null;
       contactPersonName?: string | null;
       adjustments?: { label: string; amount: number }[];
+      showSku?: boolean;
     }
   ): Promise<boolean> => {
     if (!user) return false;
