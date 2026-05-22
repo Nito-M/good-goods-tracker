@@ -77,6 +77,7 @@ export interface CreateSaleInput {
   dueDate: string | null;
   companyId?: string | null;
   adjustments?: { label: string; amount: number }[];
+  showSku?: boolean;
 }
 
 export interface InvoiceSettings {
