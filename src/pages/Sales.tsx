@@ -670,7 +670,7 @@ export function Sales() {
         discountRate,
         notes: notes || null,
         paymentTerms,
-        dueDate: null,
+        dueDate: dueDate ? new Date(`${dueDate}T12:00:00`).toISOString() : null,
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
         adjustments,
