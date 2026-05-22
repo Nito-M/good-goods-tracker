@@ -462,6 +462,7 @@ export function Sales() {
     setPaymentTerms(sale.paymentTerms || 'Due on receipt');
     setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
     setContactPersonName(sale.contactPersonName || '');
+    setShowSku(sale.showSku !== false);
     setEditingSaleId(sale.id);
     setActiveTab('new-sale');
   };
