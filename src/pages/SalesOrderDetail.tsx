@@ -12,7 +12,7 @@ import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt, Link2, X, CornerDownRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -140,6 +140,8 @@ export function SalesOrderDetail() {
 
   // Per-item link state
   const [itemLinks, setItemLinks] = useState<Record<string, ItemLink>>({});
+  // childLinkKey -> parentLinkKey
+  const [attachments, setAttachments] = useState<Record<string, string>>({});
   const [creatingJobFor, setCreatingJobFor] = useState<string | null>(null);
   const [updatingStatusFor, setUpdatingStatusFor] = useState<string | null>(null);
 
@@ -224,6 +226,70 @@ export function SalesOrderDetail() {
     fetchItemLinks();
   }, [fetchItemLinks]);
 
+  const fetchAttachments = useCallback(async () => {
+    if (!quote) return;
+    const { data } = await supabase
+      .from('so_item_attachments' as any)
+      .select('*')
+      .eq('quote_id', quote.id);
+    if (data) {
+      const map: Record<string, string> = {};
+      (data as any[]).forEach((a) => {
+        const child = `${a.child_quote_item_id}-${a.child_unit_index}`;
+        const parent = `${a.parent_quote_item_id}-${a.parent_unit_index}`;
+        map[child] = parent;
+      });
+      setAttachments(map);
+    }
+  }, [quote]);
+
+  useEffect(() => {
+    fetchAttachments();
+  }, [fetchAttachments]);
+
+  const attachItem = async (child: ExpandedItem, parent: ExpandedItem) => {
+    if (!quote) return;
+    if (child.linkKey === parent.linkKey) return;
+    // Prevent attaching a parent (has children) to something else
+    const childHasChildren = Object.values(attachments).includes(child.linkKey);
+    if (childHasChildren) {
+      toast({ title: 'Cannot attach', description: 'Detach its children first.', variant: 'destructive' });
+      return;
+    }
+    const { error } = await (supabase.from('so_item_attachments' as any) as any).upsert(
+      {
+        quote_id: quote.id,
+        child_quote_item_id: child.quoteItemId,
+        child_unit_index: child.unitIndex,
+        parent_quote_item_id: parent.quoteItemId,
+        parent_unit_index: parent.unitIndex,
+      },
+      { onConflict: 'child_quote_item_id,child_unit_index' }
+    );
+    if (error) {
+      toast({ title: 'Error attaching item', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Attached', description: `${child.itemName} → ${parent.itemName}` });
+    await fetchAttachments();
+  };
+
+  const detachItem = async (child: ExpandedItem) => {
+    if (!quote) return;
+    const { error } = await supabase
+      .from('so_item_attachments' as any)
+      .delete()
+      .eq('quote_id', quote.id)
+      .eq('child_quote_item_id', child.quoteItemId)
+      .eq('child_unit_index', child.unitIndex);
+    if (error) {
+      toast({ title: 'Error detaching', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await fetchAttachments();
+  };
+
+
   const handleStatusChange = async (newStatus: string) => {
     if (!quote) return;
     try {
@@ -240,13 +306,35 @@ export function SalesOrderDetail() {
   };
 
   // Create a dedicated job for one item (item name = job title)
+  // Build a description that lists attached add-on items under the parent
+  const buildJobDescription = (parent: ExpandedItem): string | undefined => {
+    const childKeys = Object.entries(attachments)
+      .filter(([, parentKey]) => parentKey === parent.linkKey)
+      .map(([k]) => k);
+    const children = expandedItems.filter((it) => childKeys.includes(it.linkKey));
+    const lines: string[] = [];
+    if (parent.notes) lines.push(parent.notes);
+    if (children.length > 0) {
+      lines.push('');
+      lines.push('Add-ons:');
+      for (const c of children) {
+        lines.push(`• ${c.itemName}${c.notes ? ` — ${c.notes}` : ''}`);
+      }
+    }
+    return lines.length > 0 ? lines.join('\n') : undefined;
+  };
+
   const handleCreateJobForItem = async (item: ExpandedItem) => {
     if (!quote) return;
+    if (attachments[item.linkKey]) {
+      toast({ title: 'This item is attached as an add-on', description: 'Detach it first or create the parent\'s job.', variant: 'destructive' });
+      return;
+    }
     setCreatingJobFor(item.linkKey);
     try {
       const job = await createJob(
         item.itemName,
-        item.notes || undefined,
+        buildJobDescription(item),
         'open',
         {
           name: quote.vendorName || undefined,
@@ -280,17 +368,18 @@ export function SalesOrderDetail() {
     }
   };
 
-  // Create one separate job per unlinked item
+  // Create one separate job per unlinked top-level item (attached children skipped)
   const handleCreateAllJobs = async () => {
     if (!quote || expandedItems.length === 0) return;
     setCreating(true);
     try {
       for (const item of expandedItems) {
+        if (attachments[item.linkKey]) continue; // attached as add-on, no job
         if (itemLinks[item.linkKey]?.jobId) continue; // already linked
 
         const job = await createJob(
           item.itemName,
-          item.notes || undefined,
+          buildJobDescription(item),
           'open',
           {
             name: quote.vendorName || undefined,
@@ -323,6 +412,7 @@ export function SalesOrderDetail() {
       setCreating(false);
     }
   };
+
 
   // Update the status of a specific item link
   const handleUpdateItemStatus = async (linkKey: string, newStatus: string) => {
@@ -523,101 +613,180 @@ export function SalesOrderDetail() {
                       <TableHead>Item Name</TableHead>
                       <TableHead>SKU</TableHead>
                       <TableHead className="text-right">Unit Price</TableHead>
+                      <TableHead className="text-center">Attach</TableHead>
                       <TableHead className="text-center">Status</TableHead>
                       <TableHead className="text-center">Job</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {expandedItems.map((item) => {
-                      const link = itemLinks[item.linkKey];
-                      const statusKey = link?.status ?? 'pending';
-                      const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
-                      const isCreatingThis = creatingJobFor === item.linkKey;
-                      const isUpdatingThis = updatingStatusFor === item.linkKey;
+                    {(() => {
+                      const childrenByParent: Record<string, ExpandedItem[]> = {};
+                      for (const it of expandedItems) {
+                        const p = attachments[it.linkKey];
+                        if (p) {
+                          (childrenByParent[p] ||= []).push(it);
+                        }
+                      }
+                      const topLevel = expandedItems.filter((it) => !attachments[it.linkKey]);
 
-                      return (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">
-                            <div>
-                              <span>{item.itemName}</span>
-                              {item.notes && (
-                                <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{item.sku || '—'}</TableCell>
-                          <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
+                      const renderRow = (item: ExpandedItem, isChild: boolean) => {
+                        const link = itemLinks[item.linkKey];
+                        const statusKey = link?.status ?? 'pending';
+                        const statusCfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pending;
+                        const isCreatingThis = creatingJobFor === item.linkKey;
+                        const isUpdatingThis = updatingStatusFor === item.linkKey;
+                        const hasChildren = !!childrenByParent[item.linkKey]?.length;
+                        const parentKey = attachments[item.linkKey];
 
-                          {/* Per-item status */}
-                          <TableCell className="text-center">
-                            {link ? (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button
-                                    disabled={isUpdatingThis}
-                                    className={cn(
-                                      'inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-opacity cursor-pointer',
-                                      statusCfg.className,
-                                      isUpdatingThis && 'opacity-50'
-                                    )}
-                                  >
-                                    {isUpdatingThis && <Loader2 className="h-3 w-3 animate-spin" />}
-                                    {statusCfg.label}
-                                    <ChevronDown className="h-3 w-3 ml-0.5" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="center">
-                                  {Object.entries(STATUS_CONFIG)
-                                    .filter(([k]) => k !== 'pending')
-                                    .map(([key, cfg]) => (
-                                      <DropdownMenuItem
-                                        key={key}
-                                        onClick={() => handleUpdateItemStatus(item.linkKey, key)}
-                                      >
-                                        <span className={cn('inline-block w-2 h-2 rounded-full mr-2', cfg.className)} />
-                                        {cfg.label}
+                        // Items eligible as attach targets:
+                        // - not self
+                        // - not currently a child (avoid 2-level nesting via a child)
+                        const attachableTargets = expandedItems.filter(
+                          (other) =>
+                            other.linkKey !== item.linkKey &&
+                            !attachments[other.linkKey]
+                        );
+
+                        return (
+                          <TableRow key={item.id} className={isChild ? 'bg-muted/40' : ''}>
+                            <TableCell className="font-medium">
+                              <div className={cn('flex items-start gap-2', isChild && 'pl-6')}>
+                                {isChild && <CornerDownRight className="h-3.5 w-3.5 mt-1 text-muted-foreground shrink-0" />}
+                                <div>
+                                  <span>{item.itemName}</span>
+                                  {item.notes && (
+                                    <p className="text-xs text-muted-foreground font-normal mt-0.5">{item.notes}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{item.sku || '—'}</TableCell>
+                            <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
+
+                            {/* Attach control */}
+                            <TableCell className="text-center">
+                              {parentKey ? (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs px-2"
+                                  onClick={() => detachItem(item)}
+                                  title="Detach from parent"
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  Detach
+                                </Button>
+                              ) : hasChildren ? (
+                                <span className="text-xs text-muted-foreground">Main item</span>
+                              ) : (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 text-xs px-2"
+                                      disabled={attachableTargets.length === 0 || !!link?.jobId}
+                                    >
+                                      <Link2 className="h-3 w-3 mr-1" />
+                                      Attach to…
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="center" className="max-h-72 overflow-auto">
+                                    {attachableTargets.map((t) => (
+                                      <DropdownMenuItem key={t.linkKey} onClick={() => attachItem(item, t)}>
+                                        {t.itemName}
                                       </DropdownMenuItem>
                                     ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            ) : (
-                              <span className={cn('inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full', statusCfg.className)}>
-                                {statusCfg.label}
-                              </span>
-                            )}
-                          </TableCell>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </TableCell>
 
-                          {/* Per-item: add to shared job / linked indicator */}
-                          <TableCell className="text-center">
-                            {link?.jobId ? (
-                              <Link
-                                to={`/jobs/${link.jobId}`}
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                              >
-                                <Briefcase className="h-3.5 w-3.5" />
-                                View Job
-                              </Link>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs px-2"
-                                disabled={isCreatingThis || !!creatingJobFor}
-                                onClick={() => handleCreateJobForItem(item)}
-                              >
-                                {isCreatingThis ? (
-                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                ) : (
-                                  <Plus className="h-3 w-3 mr-1" />
-                                )}
-                                Create Job
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            {/* Per-item status */}
+                            <TableCell className="text-center">
+                              {parentKey ? (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              ) : link ? (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      disabled={isUpdatingThis}
+                                      className={cn(
+                                        'inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-opacity cursor-pointer',
+                                        statusCfg.className,
+                                        isUpdatingThis && 'opacity-50'
+                                      )}
+                                    >
+                                      {isUpdatingThis && <Loader2 className="h-3 w-3 animate-spin" />}
+                                      {statusCfg.label}
+                                      <ChevronDown className="h-3 w-3 ml-0.5" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="center">
+                                    {Object.entries(STATUS_CONFIG)
+                                      .filter(([k]) => k !== 'pending')
+                                      .map(([key, cfg]) => (
+                                        <DropdownMenuItem
+                                          key={key}
+                                          onClick={() => handleUpdateItemStatus(item.linkKey, key)}
+                                        >
+                                          <span className={cn('inline-block w-2 h-2 rounded-full mr-2', cfg.className)} />
+                                          {cfg.label}
+                                        </DropdownMenuItem>
+                                      ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : (
+                                <span className={cn('inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full', statusCfg.className)}>
+                                  {statusCfg.label}
+                                </span>
+                              )}
+                            </TableCell>
+
+                            {/* Per-item: create job / linked indicator */}
+                            <TableCell className="text-center">
+                              {parentKey ? (
+                                <span className="text-xs text-muted-foreground">Add-on</span>
+                              ) : link?.jobId ? (
+                                <Link
+                                  to={`/jobs/${link.jobId}`}
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                >
+                                  <Briefcase className="h-3.5 w-3.5" />
+                                  View Job
+                                </Link>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs px-2"
+                                  disabled={isCreatingThis || !!creatingJobFor}
+                                  onClick={() => handleCreateJobForItem(item)}
+                                >
+                                  {isCreatingThis ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  ) : (
+                                    <Plus className="h-3 w-3 mr-1" />
+                                  )}
+                                  Create Job
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      };
+
+                      const rows: JSX.Element[] = [];
+                      for (const parent of topLevel) {
+                        rows.push(renderRow(parent, false));
+                        for (const child of childrenByParent[parent.linkKey] || []) {
+                          rows.push(renderRow(child, true));
+                        }
+                      }
+                      return rows;
+                    })()}
                   </TableBody>
+
                 </Table>
               </div>
             </CardContent>

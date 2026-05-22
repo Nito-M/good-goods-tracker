@@ -4255,6 +4255,61 @@ export type Database = {
         }
         Relationships: []
       }
+      so_item_attachments: {
+        Row: {
+          child_quote_item_id: string
+          child_unit_index: number
+          created_at: string
+          id: string
+          parent_quote_item_id: string
+          parent_unit_index: number
+          quote_id: string
+          updated_at: string
+        }
+        Insert: {
+          child_quote_item_id: string
+          child_unit_index?: number
+          created_at?: string
+          id?: string
+          parent_quote_item_id: string
+          parent_unit_index?: number
+          quote_id: string
+          updated_at?: string
+        }
+        Update: {
+          child_quote_item_id?: string
+          child_unit_index?: number
+          created_at?: string
+          id?: string
+          parent_quote_item_id?: string
+          parent_unit_index?: number
+          quote_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "so_item_attachments_child_quote_item_id_fkey"
+            columns: ["child_quote_item_id"]
+            isOneToOne: false
+            referencedRelation: "quote_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "so_item_attachments_parent_quote_item_id_fkey"
+            columns: ["parent_quote_item_id"]
+            isOneToOne: false
+            referencedRelation: "quote_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "so_item_attachments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       so_item_job_links: {
         Row: {
           created_at: string
