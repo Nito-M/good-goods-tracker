@@ -111,24 +111,40 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
         </button>
       </TableCell>
       <TableCell className="font-medium">
-        {c.isCustom ? (
+        <div className="space-y-1">
+          {c.isCustom ? (
+            <Input
+              type="text"
+              placeholder="Custom item name"
+              className="w-full min-w-[180px]"
+              value={c.inventoryItem.name}
+              onChange={(e) => {
+                const newName = e.target.value;
+                setCart(prev => prev.map(item =>
+                  item.inventoryItem.id === c.inventoryItem.id
+                    ? { ...item, inventoryItem: { ...item.inventoryItem, name: newName } }
+                    : item
+                ));
+              }}
+            />
+          ) : (
+            <div>{c.inventoryItem.name}</div>
+          )}
           <Input
             type="text"
-            placeholder="Custom item name"
-            className="w-full min-w-[180px]"
-            value={c.inventoryItem.name}
+            placeholder="Note (optional)"
+            className="h-7 text-xs text-muted-foreground"
+            value={c.notes ?? ''}
             onChange={(e) => {
-              const newName = e.target.value;
+              const newNote = e.target.value;
               setCart(prev => prev.map(item =>
                 item.inventoryItem.id === c.inventoryItem.id
-                  ? { ...item, inventoryItem: { ...item.inventoryItem, name: newName } }
+                  ? { ...item, notes: newNote }
                   : item
               ));
             }}
           />
-        ) : (
-          c.inventoryItem.name
-        )}
+        </div>
       </TableCell>
       <TableCell>
         <Input
