@@ -1,21 +1,19 @@
-## Add "Show Part #" toggle to invoices
+## Add Invoices to Vendor Detail page
 
-Mirror the pattern already used for quotes (`show_sku`) so users can hide the Part # (SKU) column on the invoice PDF and preview.
+Mirror the existing "Recent Purchase Orders" section on `src/pages/VendorDetail.tsx` with a new "Recent Invoices" section for sales tied to this vendor.
 
-### Database
-- Migration: add `show_sku boolean not null default true` to `sales` table.
+### Changes
 
-### Types & hooks
-- `src/types/sale.ts`: add `showSku?: boolean` to Sale + create-input types.
-- `src/hooks/useSales.ts`: read `show_sku` into `showSku` (default `true`); write it on create/update.
+**`src/pages/VendorDetail.tsx`**
+- Import `useSales` from `@/hooks/useSales`.
+- Filter sales where `sale.vendorId === vendor.id` (vendor = customer in sales context).
+- Add a "Recent Invoices" card below "Recent Purchase Orders", showing up to 10 most recent invoices:
+  - Invoice number (linked to `/sales/:id`)
+  - Date (`createdAt` or `pickedUpAt`)
+  - Total amount
+  - Status badge (draft/sent/picked_up/paid/overdue/cancelled)
+- Add an "Invoices" row in the Summary card showing the count and total invoiced amount.
 
-### UI — toggle
-- `src/pages/Sales.tsx` (new invoice flow): add `showSku` state (default true), include in saved payload, render a checkbox "Show Part # on PDF" near the existing PDF-related options.
-- `src/components/EditSaleDialog.tsx`: same checkbox, initialize from `sale.showSku !== false`, include in submit payload.
-
-### PDF & preview
-- `src/lib/invoiceGenerator.ts`: when `sale.showSku === false`, skip rendering the SKU header and SKU column cells, and shift the Qty/Price/Total columns left to fill the space (reuse quoteGenerator.ts logic as reference).
-- `src/components/InvoicePreviewDialog.tsx`: wrap SKU `<th>` and `<td>` in `{sale.showSku !== false && …}`.
-
-### Out of scope
-- No changes to how SKU is stored on line items or to other documents (quotes, POs).
+### Notes
+- Read-only display, no schema or business-logic changes.
+- Follows the same card/list pattern already used for POs to keep styling consistent.
