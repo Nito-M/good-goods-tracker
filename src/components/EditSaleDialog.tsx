@@ -68,6 +68,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
   const [isSaving, setIsSaving] = useState(false);
   const [companyId, setCompanyId] = useState<string>('');
   const [contactPersonName, setContactPersonName] = useState<string>('');
+  const [showSku, setShowSku] = useState(true);
   const { companies, defaultCompany } = useCompanies();
 
   useEffect(() => {
