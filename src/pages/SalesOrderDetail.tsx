@@ -472,6 +472,10 @@ export function SalesOrderDetail() {
     );
   }
 
+  const topLevelItems = expandedItems.filter((it) => !attachments[it.linkKey]);
+  const allJobsCreated =
+    topLevelItems.length > 0 && topLevelItems.every((it) => !!itemLinks[it.linkKey]?.jobId);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -489,10 +493,15 @@ export function SalesOrderDetail() {
               {Object.keys(itemLinks).length > 0 && (
                 <Link
                   to="/jobs"
-                  className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  className={cn(
+                    "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-colors",
+                    allJobsCreated
+                      ? "bg-green-100 text-green-800 hover:bg-green-200"
+                      : "bg-primary/10 text-primary hover:bg-primary/20"
+                  )}
                 >
                   <Briefcase className="h-3 w-3" />
-                  Jobs Created
+                  {allJobsCreated ? 'All Jobs Created' : 'Jobs Created'}
                 </Link>
               )}
             </div>
@@ -586,10 +595,12 @@ export function SalesOrderDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleCreateAllJobs}>
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Create All Jobs
-                </DropdownMenuItem>
+                {!allJobsCreated && (
+                  <DropdownMenuItem onClick={handleCreateAllJobs}>
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Create All Jobs
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
                   <Clock className="h-4 w-4 mr-2" />
                   In Progress
