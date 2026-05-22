@@ -152,8 +152,8 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     // Column X positions (shift left when SKU is hidden)
     const skuX = layout.itemsTable.x + 60;
     const qtyX = showSku ? layout.itemsTable.x + 92 : layout.itemsTable.x + 95;
-    const priceX = showSku ? layout.itemsTable.x + 108 : layout.itemsTable.x + 115;
-    const discX = showSku ? layout.itemsTable.x + 138 : layout.itemsTable.x + 145;
+    const priceX = showSku ? layout.itemsTable.x + 108 : layout.itemsTable.x + 112;
+    const discX = showSku ? layout.itemsTable.x + 135 : layout.itemsTable.x + 138;
 
     // Table Header
     doc.setFillColor(240, 240, 240);
