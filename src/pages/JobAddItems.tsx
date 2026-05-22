@@ -17,11 +17,13 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCanViewJobPricing } from '@/hooks/useCanViewJobPricing';
 
 export function JobAddItems() {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { canViewJobPricing } = useCanViewJobPricing();
   const { allItems: inventoryItems } = useInventory();
   const { jobs } = useJobs();
   const { items: jobItems, addItem, updateItem } = useJobItems(jobId || '');
