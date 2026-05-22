@@ -34,6 +34,7 @@ const statusColors: Record<string, string> = {
   'welding-done': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   'painting-done': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
   finished: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+  delivered: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   'on-hold': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
 };
@@ -44,6 +45,7 @@ const STATUS_OPTIONS = [
   { value: 'welding-done', label: 'Welding Done' },
   { value: 'painting-done', label: 'Painting Done' },
   { value: 'finished', label: 'Finished' },
+  { value: 'delivered', label: 'Delivered' },
   { value: 'on-hold', label: 'On Hold' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
@@ -237,12 +239,12 @@ export function Jobs() {
                 const count = jobs.filter(j => j.status === s.value).length;
                 if (count === 0) return null;
                 const trigger = <TabsTrigger key={s.value} value={s.value}>{s.label} ({count})</TabsTrigger>;
-                if (s.value === 'finished') {
+                if (s.value === 'delivered') {
                   return <Fragment key={s.value}>{trigger}<TabsTrigger value="all">All ({jobs.length})</TabsTrigger></Fragment>;
                 }
                 return trigger;
               })}
-              {!jobs.some(j => j.status === 'finished') && (
+              {!jobs.some(j => j.status === 'delivered') && (
                 <TabsTrigger value="all">All ({jobs.length})</TabsTrigger>
               )}
             </TabsList>
@@ -265,96 +267,25 @@ export function Jobs() {
             </CardContent>
           </Card>
         ) : (
-          isMobile ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredJobs.map(job => (
-                <Card
-                  key={job.id}
-                  className={`cursor-pointer hover:shadow-md transition-all ${draggedJobId === job.id ? 'opacity-50 scale-95' : ''} ${dragOverJobId === job.id ? 'ring-2 ring-primary' : ''}`}
-                  draggable={!searchQuery}
-                  onDragStart={() => handleDragStart(job.id)}
-                  onDragOver={e => handleDragOver(e, job.id)}
-                  onDragLeave={() => setDragOverJobId(null)}
-                  onDrop={() => handleDrop(job.id)}
-                  onDragEnd={handleDragEnd}
-                  onClick={() => openJob(job.id)}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-2">
-                        {!searchQuery && (
-                          <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5 cursor-grab shrink-0" />
-                        )}
-                        <div>
-                          <CardDescription className="text-xs font-mono">{job.jobNumber}</CardDescription>
-                          <CardTitle className="text-lg">{job.title}</CardTitle>
-                        </div>
-                      </div>
-                      <Badge className={statusColors[job.status] || ''}>{job.status}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {job.customerName && (
-                      <p className="text-sm text-foreground flex items-center gap-1.5 mb-1">
-                        <User className="h-3.5 w-3.5 text-muted-foreground" />
-                        {job.customerName}
-                      </p>
-                    )}
-                    {job.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{job.description}</p>}
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">{new Date(job.createdAt).toLocaleDateString()}</span>
-                      {job.dueDate && (
-                        <span className="text-xs text-muted-foreground">Due: {(() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })()}</span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted hover:bg-muted">
-                    <TableHead className="w-10"></TableHead>
-                    <TableHead>Job #</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Created</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredJobs.map(job => (
-                    <TableRow
-                      key={job.id}
-                      className={`cursor-pointer ${draggedJobId === job.id ? 'opacity-50' : ''} ${dragOverJobId === job.id ? 'ring-2 ring-primary' : ''}`}
-                      draggable={!searchQuery}
-                      onDragStart={() => handleDragStart(job.id)}
-                      onDragOver={e => handleDragOver(e, job.id)}
-                      onDragLeave={() => setDragOverJobId(null)}
-                      onDrop={() => handleDrop(job.id)}
-                      onDragEnd={handleDragEnd}
-                      onClick={() => openJob(job.id)}
-                    >
-                      <TableCell className="w-10">
-                        {!searchQuery && <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">{job.jobNumber}</TableCell>
-                      <TableCell className="font-medium">{job.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{job.customerName || '—'}</TableCell>
-                      <TableCell><Badge className={statusColors[job.status] || ''}>{job.status}</Badge></TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {job.dueDate ? (() => { const dt = new Date(job.dueDate); return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 12).toLocaleDateString(); })() : '—'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{new Date(job.createdAt).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )
+          <div className="rounded-md border divide-y">
+            {filteredJobs.map(job => (
+              <div
+                key={job.id}
+                className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors ${draggedJobId === job.id ? 'opacity-50' : ''} ${dragOverJobId === job.id ? 'ring-2 ring-primary' : ''}`}
+                draggable={!searchQuery}
+                onDragStart={() => handleDragStart(job.id)}
+                onDragOver={e => handleDragOver(e, job.id)}
+                onDragLeave={() => setDragOverJobId(null)}
+                onDrop={() => handleDrop(job.id)}
+                onDragEnd={handleDragEnd}
+                onClick={() => openJob(job.id)}
+              >
+                {!searchQuery && <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab shrink-0" />}
+                <span className="font-medium flex-1 truncate">{job.title}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </div>
+            ))}
+          </div>
         )}
         </Tabs>
       </main>
