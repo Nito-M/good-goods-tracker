@@ -170,7 +170,7 @@ export function AllJobItems() {
                       <span className="font-semibold text-card-foreground">{category}</span>
                       <Badge variant="secondary">{items.length}</Badge>
                     </div>
-                    <span className="text-sm font-medium text-muted-foreground">{formatCurrency(subtotal)}</span>
+                    {canViewJobPricing && <span className="text-sm font-medium text-muted-foreground">{formatCurrency(subtotal)}</span>}
                   </button>
                   {!isCollapsed && (
                     <CardContent className="p-0 border-t border-border">
