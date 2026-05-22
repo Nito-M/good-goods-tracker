@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,7 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showPoDialog, setShowPoDialog] = useState(false);
   const [invoicePercentage, setInvoicePercentage] = useState(100);
 
   const remainingPercentage = 100 - quote.invoicedPercentage;
@@ -137,53 +138,12 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {quote.invoicedPercentage < 100 && onConvertToInvoice && (
-            <Button variant="outline" size="sm" className="text-success" onClick={() => {
-              setInvoicePercentage(remainingPercentage);
-              setShowInvoiceDialog(true);
-            }}>
-              <Receipt className="h-4 w-4 mr-2" />
-              To Invoice {quote.invoicedPercentage > 0 ? `(${remainingPercentage}% left)` : ''}
-            </Button>
-          )}
-          {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-primary">
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  To PO
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Convert to Purchase Order?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will create a new purchase order from {quote.quoteNumber} and mark the quote as converted.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onConvertToPurchaseOrder(quote)}>
-                    Convert
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          <Button variant="outline" size="sm" onClick={() => onEdit(quote)}>
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
           {onPreview && (
             <Button variant="outline" size="sm" onClick={() => onPreview(quote)}>
               <Eye className="h-4 w-4 mr-2" />
               Preview
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
-            <Download className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -191,14 +151,59 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
             className="hidden"
             onChange={handleFileSelect}
           />
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            title="Attach PDF or image"
-          >
-            <Upload className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreHorizontal className="h-4 w-4 mr-2" />
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {quote.invoicedPercentage < 100 && onConvertToInvoice && (
+                <DropdownMenuItem onClick={() => {
+                  setInvoicePercentage(remainingPercentage);
+                  setShowInvoiceDialog(true);
+                }}>
+                  <Receipt className="h-4 w-4 mr-2" />
+                  To Invoice {quote.invoicedPercentage > 0 ? `(${remainingPercentage}% left)` : ''}
+                </DropdownMenuItem>
+              )}
+              {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
+                <DropdownMenuItem onClick={() => setShowPoDialog(true)}>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  To PO
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => onEdit(quote)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDownloadPDF}>
+                <Download className="h-4 w-4 mr-2" />
+                PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-2" />
+                Attach PDF or image
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <AlertDialog open={showPoDialog} onOpenChange={setShowPoDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Convert to Purchase Order?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will create a new purchase order from {quote.quoteNumber} and mark the quote as converted.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onConvertToPurchaseOrder?.(quote)}>
+                  Convert
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
