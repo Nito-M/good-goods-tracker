@@ -115,7 +115,11 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     doc.text(`Invoice Number: ${sale.invoiceNumber}`, layout.invoiceDetails.x, detailsY);
     doc.text(`Date: ${formatDate(sale.createdAt)}`, pageWidth - 20, detailsY, { align: 'right' });
     doc.text(`Payment Terms: ${sale.paymentTerms}`, layout.invoiceDetails.x, detailsY + 7);
-    flowY = Math.max(flowY, detailsY + 20);
+    let detailExtra = 0;
+    if (sale.dueDate) {
+      doc.text(`Due Date: ${formatDate(sale.dueDate)}`, pageWidth - 20, detailsY + 7, { align: 'right' });
+    }
+    flowY = Math.max(flowY, detailsY + 20 + detailExtra);
   }
 
   // Bill To
