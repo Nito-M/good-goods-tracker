@@ -645,7 +645,7 @@ function AssemblyDetail({
             {items.map((item) => {
               const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : (item.unit_cost > 0 ? item.unit_cost : null);
               return (
-              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 items-center px-3 py-2.5 rounded-lg border bg-card">
+              <div key={item.id} className={`grid ${canViewAssemblyPricing ? 'grid-cols-[1fr_auto_auto_auto_auto_auto]' : 'grid-cols-[1fr_auto_auto_auto]'} gap-3 items-center px-3 py-2.5 rounded-lg border bg-card`}>
                 <div>
                   {(() => {
                     const partMatch = item.part_id
