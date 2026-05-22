@@ -164,10 +164,6 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
-          <Button variant="outline" size="sm" onClick={onDownloadInvoice}>
-            <Download className="h-4 w-4 mr-2" />
-            Invoice
-          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -179,6 +175,10 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               <DropdownMenuItem onSelect={() => onEdit(sale)}>
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onDownloadInvoice()}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Invoice
               </DropdownMenuItem>
               {sale.status !== 'cancelled' && (
                 <DropdownMenuItem
