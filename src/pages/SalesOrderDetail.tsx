@@ -237,12 +237,15 @@ export function SalesOrderDetail() {
       .eq('quote_id', quote.id);
     if (data) {
       const map: Record<string, string> = {};
+      const parents = new Set<string>();
       (data as any[]).forEach((a) => {
         const child = `${a.child_quote_item_id}-${a.child_unit_index}`;
         const parent = `${a.parent_quote_item_id}-${a.parent_unit_index}`;
         map[child] = parent;
+        parents.add(parent);
       });
       setAttachments(map);
+      setCollapsedParents(parents);
     }
   }, [quote]);
 
