@@ -281,6 +281,7 @@ export function Jobs() {
                 onClick={() => openJob(job.id)}
               >
                 {!searchQuery && <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab shrink-0" />}
+                {job.jobNumber && <span className="text-xs font-mono text-muted-foreground shrink-0">{job.jobNumber}</span>}
                 <span className="font-medium flex-1 truncate">{job.title}</span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </div>
