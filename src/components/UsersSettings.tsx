@@ -740,6 +740,9 @@ export function UsersSettings() {
                   if (page.key === 'jobs') {
                     pageExtras.push({ key: 'view_job_pricing', label: 'View Job Pricing', description: 'See unit prices and totals on jobs.' });
                   }
+                  if (page.key === 'assemblies') {
+                    pageExtras.push({ key: 'view_assembly_pricing', label: 'View Assembly Pricing', description: 'See cost, selling price, and margin on assemblies.' });
+                  }
 
                   const showWorkerAccess = page.key === 'assets';
 
