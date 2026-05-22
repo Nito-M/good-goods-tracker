@@ -13,6 +13,7 @@ import { useCompanies } from '@/hooks/useCompanies';
 import { InvoiceSettings, Sale, SaleStatus } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { InvoicePreviewDialog } from '@/components/InvoicePreviewDialog';
+import { LinkedDocumentsCard } from '@/components/sale/LinkedDocumentsCard';
 
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
