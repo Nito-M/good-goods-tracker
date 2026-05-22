@@ -305,6 +305,7 @@ export function Sales() {
   const [markupPercent, setMarkupPercent] = useState<number | ''>(initialDraft?.markupPercent ?? '');
   const [notes, setNotes] = useState(initialDraft?.notes || '');
   const [showSku, setShowSku] = useState<boolean>(initialDraft?.showSku !== false);
+  const [dueDate, setDueDate] = useState<string>(initialDraft?.dueDate || '');
   const [paymentTerms, setPaymentTerms] = useState(initialDraft?.paymentTerms || 'Due on receipt');
   const [searchQuery, setSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
@@ -347,9 +348,10 @@ export function Sales() {
       customInvoiceNumber,
       selectedCompanyId,
       showSku,
+      dueDate,
     };
     window.localStorage.setItem(INVOICE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
-  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, adjustments, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId, showSku]);
+  }, [cart, selectedVendorId, contactPersonName, taxRate, discountRate, adjustments, markupPercent, notes, paymentTerms, customInvoiceNumber, selectedCompanyId, showSku, dueDate]);
 
   // Auto-select vendor created from customer
   useEffect(() => {
@@ -410,6 +412,7 @@ export function Sales() {
     setSelectedCompanyId(defaultCompany?.id || '');
     setContactPersonName('');
     setShowSku(true);
+    setDueDate('');
     setEditingSaleId(null);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(INVOICE_DRAFT_STORAGE_KEY);
@@ -463,6 +466,7 @@ export function Sales() {
     setSelectedCompanyId((sale as any).companyId || defaultCompany?.id || '');
     setContactPersonName(sale.contactPersonName || '');
     setShowSku(sale.showSku !== false);
+    setDueDate(sale.dueDate ? new Date(sale.dueDate).toISOString().slice(0, 10) : '');
     setEditingSaleId(sale.id);
     setActiveTab('new-sale');
   };
@@ -666,7 +670,7 @@ export function Sales() {
         discountRate,
         notes: notes || null,
         paymentTerms,
-        dueDate: null,
+        dueDate: dueDate ? new Date(`${dueDate}T12:00:00`).toISOString() : null,
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
         adjustments,
@@ -686,7 +690,7 @@ export function Sales() {
         discountRate,
         notes: notes || null,
         paymentTerms,
-        dueDate: null,
+        dueDate: dueDate ? new Date(`${dueDate}T12:00:00`).toISOString() : null,
         companyId: selectedCompanyId || null,
         contactPersonName: contactPersonName.trim() || null,
         adjustments,
@@ -1124,6 +1128,15 @@ export function Sales() {
                           ))}
                         </div>
                       )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Due Date <span className="text-sky-400">(optional)</span></Label>
+                      <Input
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                      />
                     </div>
 
                     <div className="space-y-2">
