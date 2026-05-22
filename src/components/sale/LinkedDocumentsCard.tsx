@@ -53,8 +53,8 @@ export function LinkedDocumentsCard({ sale }: Props) {
     ? quotes.find((q) => q.id === sale.linkedSalesOrderId) || null
     : null;
 
-  const openDoc = (q: Quote) => {
-    if (q.status === 'sales_order') {
+  const openDoc = (q: Quote, slotKind: Kind) => {
+    if (slotKind === 'sales_order') {
       navigate(`/sales-orders/${q.id}`);
     } else {
       navigate('/quotes');
@@ -78,7 +78,7 @@ export function LinkedDocumentsCard({ sale }: Props) {
           kind="quote"
           onPick={(q) => updateLinks(sale.id, { linkedQuoteId: q.id })}
           onUnlink={() => updateLinks(sale.id, { linkedQuoteId: null })}
-          onOpen={openDoc}
+          onOpen={(q) => openDoc(q, 'quote')}
         />
         <LinkRow
           icon={<ClipboardList className="h-4 w-4" />}
@@ -89,7 +89,7 @@ export function LinkedDocumentsCard({ sale }: Props) {
           kind="sales_order"
           onPick={(q) => updateLinks(sale.id, { linkedSalesOrderId: q.id })}
           onUnlink={() => updateLinks(sale.id, { linkedSalesOrderId: null })}
-          onOpen={openDoc}
+          onOpen={(q) => openDoc(q, 'sales_order')}
         />
       </CardContent>
     </Card>
