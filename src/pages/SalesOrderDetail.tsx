@@ -618,36 +618,6 @@ export function SalesOrderDetail() {
             </CardContent>
           </Card>
 
-          {/* Totals */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Pricing</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-end gap-1 text-sm">
-                <div className="flex justify-between w-48">
-                  <span className="text-muted-foreground">Subtotal:</span>
-                  <span>${quote.subtotal.toFixed(2)}</span>
-                </div>
-                {quote.discountRate > 0 && (
-                  <div className="flex justify-between w-48">
-                    <span className="text-muted-foreground">Discount ({quote.discountRate}%):</span>
-                    <span>-${quote.discountAmount.toFixed(2)}</span>
-                  </div>
-                )}
-                {quote.taxRate > 0 && (
-                  <div className="flex justify-between w-48">
-                    <span className="text-muted-foreground">Tax ({quote.taxRate}%):</span>
-                    <span>${quote.taxAmount.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between w-48 font-bold border-t pt-1 mt-1">
-                  <span>Total:</span>
-                  <span>${quote.total.toFixed(2)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Notes */}
           {quote.notes && (
