@@ -216,7 +216,7 @@ export function AllJobItems() {
                                        <span className="text-muted-foreground">0</span>
                                      )}
                                    </TableCell>
-                                   <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                                   {canViewJobPricing && <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>}
                                  </TableRow>
                                  {expandedRows.has(rowKey) && (
                                    <TableRow key={`${rowKey}-detail`}>
