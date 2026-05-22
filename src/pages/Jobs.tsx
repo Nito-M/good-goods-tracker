@@ -781,7 +781,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                             <span className="font-semibold text-sm">{category}</span>
                             <Badge variant="secondary" className="text-xs">{catItems.length}</Badge>
                           </div>
-                          <span className="text-sm font-medium text-muted-foreground">{formatCurrency(catTotal)}</span>
+                          {canViewJobPricing && <span className="text-sm font-medium text-muted-foreground">{formatCurrency(catTotal)}</span>}
                         </button>
                         {!isCollapsed && (
                           <Table>
