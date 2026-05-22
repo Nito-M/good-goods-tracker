@@ -65,6 +65,11 @@ export function VendorDetail() {
     return sum;
   }, 0);
 
+  const vendorSales = (sales || [])
+    .filter((s) => s.vendorId === vendor.id)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const totalInvoiced = vendorSales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+
   const handleDelete = async () => {
     await deleteVendor(vendor.id);
     navigate('/settings');
