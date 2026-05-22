@@ -75,6 +75,7 @@ interface CartItem {
   excludeMarkup?: boolean;
   isCustom?: boolean;
   discountRate?: number; // Per-item discount %
+  notes?: string;
 }
 
 const INVOICE_DRAFT_STORAGE_KEY = 'sales-invoice-draft-v1';
