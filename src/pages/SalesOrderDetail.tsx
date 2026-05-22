@@ -79,7 +79,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 export function SalesOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { quotes, loading: quotesLoading, convertToInvoice } = useQuotes();
+  const { quotes, loading: quotesLoading, convertToInvoice, refetch: refetchQuotes } = useQuotes();
   const [showInvoiceRemainingDialog, setShowInvoiceRemainingDialog] = useState(false);
   const [invoiceRemainingPct, setInvoiceRemainingPct] = useState(100);
   const { vendors, loading: vendorsLoading, updateVendor } = useVendors();
