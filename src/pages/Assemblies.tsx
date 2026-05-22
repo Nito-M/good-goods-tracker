@@ -1039,6 +1039,7 @@ export function Assemblies() {
   const activeType = typeParam ? decodeURIComponent(typeParam) : 'General';
 
   const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, duplicateAssembly } = useAssemblies();
+  const { canViewAssemblyPricing } = useCanViewAssemblyPricing();
   const { allItems: inventoryItems } = useInventory();
   const { parts } = useParts();
   const { folders } = usePartFolders();
