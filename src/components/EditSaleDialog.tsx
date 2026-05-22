@@ -119,6 +119,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
       unitPrice: 0,
       unitCost: 0,
       discountRate: 0,
+      notes: '',
     }]);
   };
 
