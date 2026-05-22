@@ -7,13 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSales } from '@/hooks/useSales';
-import { useVendors } from '@/hooks/useVendors';
+
 import { useProfile } from '@/hooks/useProfile';
 import { useCompanies } from '@/hooks/useCompanies';
 import { InvoiceSettings, Sale, SaleStatus } from '@/types/sale';
 import { generateInvoicePDF } from '@/lib/invoiceGenerator';
 import { InvoicePreviewDialog } from '@/components/InvoicePreviewDialog';
-import { EditSaleDialog } from '@/components/EditSaleDialog';
+
 import { formatCurrency } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,17 +40,17 @@ export default function SaleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { sales, loading, updateInternalNotes, updateSale } = useSales();
+  const { sales, loading, updateInternalNotes } = useSales();
   const { profile } = useProfile();
   const { companies } = useCompanies();
-  const { vendors } = useVendors();
+  
 
   const sale = useMemo(() => sales.find((s) => s.id === id), [sales, id]);
 
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+
 
   useEffect(() => {
     setInternalNotes(sale?.internalNotes || '');
@@ -151,10 +151,11 @@ export default function SaleDetail() {
           Back to Sales
         </Button>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
+          <Button variant="outline" onClick={() => navigate('/sales', { state: { editSaleId: sale.id } })}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit
           </Button>
+
           <Button variant="outline" onClick={() => setPreviewOpen(true)}>
             <Eye className="h-4 w-4 mr-2" />
             Preview
@@ -322,16 +323,6 @@ export default function SaleDetail() {
         onDownload={handleDownload}
       />
 
-      <EditSaleDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        sale={sale}
-        vendors={vendors.map((v) => ({ id: v.id, name: v.name }))}
-        onSave={async (saleId, data) => {
-          const ok = await updateSale(saleId, data as any);
-          if (ok) setEditOpen(false);
-        }}
-      />
     </div>
   );
 }

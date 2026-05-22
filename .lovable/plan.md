@@ -1,32 +1,31 @@
-## Add "View Job Pricing" permission
+## Changes
 
-Follow the existing feature-permission pattern (same as `view_all_requests`, `view_all_workers`, `parts_prefer_dxf`) stored in the `user_feature_permissions` table.
+### 1. Show post-tax adjustments in Sales history cards
 
-### New feature key
-`view_job_pricing` — when granted (or user is admin/org admin), pricing is visible on Jobs. Otherwise all price/total UI on Jobs pages is hidden.
+In `src/components/SaleCard.tsx`, inside the Totals block (between the Tax row and the Total row), render each entry from `sale.adjustments` the same way `SaleDetail.tsx` already does:
 
-### Settings UI
-In `src/components/UsersSettings.tsx`, under the **Jobs** page card, add an extra checkbox:
-- Label: "View Job Pricing"
-- Description: "See unit prices and totals on jobs."
+- Label: `adj.label` (fallback `Adjustment N`)
+- Amount: signed currency, muted styling when negative
+- Skip rendering if `sale.adjustments` is empty/undefined
 
-Saving uses the same insert/delete flow already used for the other feature keys.
+This matches the existing pattern in `SaleDetail.tsx` so the history card mirrors the invoice detail page.
 
-### Where pricing gets gated
-Use `useFeaturePermissions().hasFeature('view_job_pricing')` plus `useIsAdmin` / `useIsOrgAdmin` to compute `canViewJobPricing`. When false, hide:
+### 2. Make the Edit button in Sale Detail behave like the one in Sales history
 
-1. `src/pages/Jobs.tsx` (job detail panel)
-   - "Total Value" summary line (around line 566)
-   - Per-category total (`catTotal`, ~line 768)
-   - "Unit Price" / line-total columns in the items table
-2. `src/pages/AllJobItems.tsx`
-   - Subtotal (line 157), "Unit Price" column header and cells, category cost rollup (`catCost`)
-3. `src/pages/JobAddItems.tsx`
-   - "Price" column in the inventory picker table
+Currently:
+- Sales history (`SaleCard` → `handleEditSale` in `Sales.tsx`) loads the sale back into the full "New Sale" form (cart, vendor, tax, discount, adjustments, notes, etc.) so the entire invoice can be edited.
+- Sale Detail (`SaleDetail.tsx`) opens the smaller `EditSaleDialog`, which only edits a limited set of fields.
 
-No schema changes required (table + RLS already exist). No changes to data fetching or job logic — purely a conditional render gate.
+Change `SaleDetail.tsx` so its Edit button instead navigates to `/sales` and triggers the same `handleEditSale` flow:
 
-### Out of scope
-- Quotes, Sales, Purchase Orders pricing (unchanged)
-- PDF/invoice generation (unchanged)
-- Editing prices (already controlled by page access)
+- Replace the `EditSaleDialog` trigger with `navigate('/sales', { state: { editSaleId: sale.id } })`.
+- In `Sales.tsx`, read `location.state.editSaleId` on mount; when present and the matching sale is loaded, call `handleEditSale(sale)` and clear the state (`navigate(..., { replace: true, state: {} })`) so it doesn't re-trigger on refresh.
+- Remove the now-unused `EditSaleDialog` import/usage and `editOpen` state from `SaleDetail.tsx`.
+
+No backend, schema, or business-logic changes.
+
+## Files touched
+
+- `src/components/SaleCard.tsx` — render adjustments rows
+- `src/pages/SaleDetail.tsx` — Edit button navigates to Sales edit flow; drop EditSaleDialog
+- `src/pages/Sales.tsx` — pick up `editSaleId` from router state and invoke `handleEditSale`
