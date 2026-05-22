@@ -83,6 +83,7 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
         unitPrice: item.unitPrice,
         unitCost: item.unitCost,
         discountRate: item.discountRate || 0,
+        notes: item.notes ?? '',
       })));
       setVendorId(sale.vendorId || '');
       setInvoiceNumber(sale.invoiceNumber);
