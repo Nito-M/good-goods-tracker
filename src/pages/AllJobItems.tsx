@@ -220,7 +220,7 @@ export function AllJobItems() {
                                  </TableRow>
                                  {expandedRows.has(rowKey) && (
                                    <TableRow key={`${rowKey}-detail`}>
-                                     <TableCell colSpan={6} className="bg-muted/30 py-2 px-4">
+                                     <TableCell colSpan={canViewJobPricing ? 6 : 5} className="bg-muted/30 py-2 px-4">
                                        <div className="space-y-1">
                                          <div className="text-xs">
                                            <span className="font-medium text-muted-foreground mr-1">SKU:</span>
