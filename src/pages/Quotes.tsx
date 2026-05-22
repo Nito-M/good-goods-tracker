@@ -674,6 +674,31 @@ export function Quotes() {
     return groups;
   }, [filteredQuotes]);
 
+  // Deep-link: ?quoteId=<id> opens history tab, expands its month, scrolls to it
+  useEffect(() => {
+    const targetId = searchParams.get('quoteId');
+    if (!targetId || quotes.length === 0) return;
+    const target = quotes.find((q) => q.id === targetId);
+    if (!target) return;
+    setActiveTab('history');
+    const monthKey = getMonthKey(target.createdAt);
+    setOpenMonths((prev) => (prev.includes(monthKey) ? prev : [...prev, monthKey]));
+    setHighlightedQuoteId(targetId);
+    setTimeout(() => {
+      const el = document.getElementById(`quote-${targetId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 250);
+    // Clear the param so subsequent navigations don't re-trigger
+    const next = new URLSearchParams(searchParams);
+    next.delete('quoteId');
+    setSearchParams(next, { replace: true });
+    // Clear highlight after a few seconds
+    const t = setTimeout(() => setHighlightedQuoteId(null), 3000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotes.length, searchParams.get('quoteId')]);
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
