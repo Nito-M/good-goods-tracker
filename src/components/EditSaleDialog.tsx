@@ -360,6 +360,20 @@ export function EditSaleDialog({ sale, open, onOpenChange, onSave, vendors }: Ed
             </div>
           </div>
 
+          {/* PDF Options */}
+          <div className="flex items-center gap-2">
+            <input
+              id="showSku"
+              type="checkbox"
+              checked={showSku}
+              onChange={(e) => setShowSku(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="showSku" className="text-sm font-normal cursor-pointer">
+              Show Part # on invoice PDF
+            </Label>
+          </div>
+
           {/* Notes */}
           <div className="space-y-2">
             <Label>Notes</Label>
