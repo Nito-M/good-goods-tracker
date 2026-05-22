@@ -1131,6 +1131,15 @@ export function Sales() {
                     </div>
 
                     <div className="space-y-2">
+                      <Label>Due Date <span className="text-sky-400">(optional)</span></Label>
+                      <Input
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
                       <Label>Payment Terms</Label>
                       <Select
                         value={paymentTerms}
