@@ -539,9 +539,14 @@ export function AssetDetail() {
                 <h3 className="font-semibold">Available Parts</h3>
                 <p className="text-xs text-muted-foreground">Reference catalog of parts available for this asset (not yet installed).</p>
               </div>
-              <Button size="sm" onClick={() => { resetAvailPartForm(); setAvailPartOpen(true); }}>
-                <Plus className="h-4 w-4 mr-1" /> Add Available Part
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => { setInvPickerSearch(''); setInvPickerOpen(true); }}>
+                  <Package className="h-4 w-4 mr-1" /> Add from Inventory
+                </Button>
+                <Button size="sm" onClick={() => { resetAvailPartForm(); setAvailPartOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Available Part
+                </Button>
+              </div>
             </div>
             {availableParts.length === 0 ? (
               <p className="text-sm text-muted-foreground">No available parts saved yet.</p>
