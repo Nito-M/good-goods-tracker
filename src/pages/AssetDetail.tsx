@@ -117,6 +117,8 @@ export function AssetDetail() {
 
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [invPickerOpen, setInvPickerOpen] = useState(false);
+  const [invPickerSearch, setInvPickerSearch] = useState('');
 
   // Add part state
   const [partSearch, setPartSearch] = useState('');
@@ -537,9 +539,14 @@ export function AssetDetail() {
                 <h3 className="font-semibold">Available Parts</h3>
                 <p className="text-xs text-muted-foreground">Reference catalog of parts available for this asset (not yet installed).</p>
               </div>
-              <Button size="sm" onClick={() => { resetAvailPartForm(); setAvailPartOpen(true); }}>
-                <Plus className="h-4 w-4 mr-1" /> Add Available Part
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => { setInvPickerSearch(''); setInvPickerOpen(true); }}>
+                  <Package className="h-4 w-4 mr-1" /> Add from Inventory
+                </Button>
+                <Button size="sm" onClick={() => { resetAvailPartForm(); setAvailPartOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Available Part
+                </Button>
+              </div>
             </div>
             {availableParts.length === 0 ? (
               <p className="text-sm text-muted-foreground">No available parts saved yet.</p>
@@ -916,6 +923,66 @@ export function AssetDetail() {
         open={viewerOpen}
         onOpenChange={setViewerOpen}
       />
+
+      <Dialog open={invPickerOpen} onOpenChange={setInvPickerOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add from Inventory</DialogTitle>
+          </DialogHeader>
+          <Input
+            placeholder="Search by name or SKU..."
+            value={invPickerSearch}
+            onChange={(e) => setInvPickerSearch(e.target.value)}
+            autoFocus
+          />
+          <p className="text-xs text-muted-foreground">
+            Adds this item to the asset's available parts as a reference. Stock is not affected.
+          </p>
+          <div className="max-h-[60vh] overflow-y-auto border border-border rounded-md divide-y divide-border">
+            {allItems
+              .filter((it) => {
+                const q = invPickerSearch.trim().toLowerCase();
+                if (!q) return true;
+                return it.name.toLowerCase().includes(q) || (it.sku || '').toLowerCase().includes(q);
+              })
+              .slice(0, 100)
+              .map((it) => (
+                <button
+                  key={it.id}
+                  type="button"
+                  className="w-full flex items-center gap-3 p-2 hover:bg-muted text-left"
+                  onClick={async () => {
+                    await addAvailablePart({
+                      name: it.name,
+                      sku: it.sku || null,
+                      price: it.price ?? null,
+                      image_url: it.imageUrl || null,
+                    } as any);
+                    setInvPickerOpen(false);
+                    toast({ title: 'Added to available parts' });
+                  }}
+                >
+                  {it.imageUrl ? (
+                    <img src={it.imageUrl} alt={it.name} className="h-10 w-10 rounded object-cover shrink-0" />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-muted flex items-center justify-center shrink-0">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{it.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {it.sku ? `SKU: ${it.sku}` : ''}{it.sku && it.price != null ? ' · ' : ''}{it.price != null ? `$${Number(it.price).toFixed(2)}` : ''}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            {allItems.length === 0 && (
+              <p className="text-sm text-muted-foreground p-3">No inventory items found.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
