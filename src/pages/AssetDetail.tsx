@@ -117,6 +117,8 @@ export function AssetDetail() {
 
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [invPickerOpen, setInvPickerOpen] = useState(false);
+  const [invPickerSearch, setInvPickerSearch] = useState('');
 
   // Add part state
   const [partSearch, setPartSearch] = useState('');
