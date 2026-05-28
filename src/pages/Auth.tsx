@@ -205,17 +205,6 @@ export function Auth() {
             </div>
           </div>
           
-          <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/20 backdrop-blur-sm">
-              <BarChart3 className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Real-time Analytics</h3>
-              <p className="text-primary-foreground/80">
-                Get insights into sales trends, purchase patterns, and inventory performance.
-              </p>
-            </div>
-          </div>
           
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/20 backdrop-blur-sm">
