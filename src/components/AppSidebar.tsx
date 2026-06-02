@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle, Store, ExternalLink, Truck, Wrench, Table2 } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle, Store, ExternalLink, Truck, Wrench, Table2, X } from "lucide-react";
 import { useBoards } from "@/hooks/useBoards";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,7 +57,7 @@ export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { links, addLink } = useJobSidebarLinks();
+  const { links, addLink, removeLink } = useJobSidebarLinks();
   const { isPageAllowed } = usePagePermissions();
   const [jobsOpen, setJobsOpen] = useState(location.pathname.startsWith("/jobs"));
   const [salesOpen, setSalesOpen] = useState(location.pathname.startsWith("/sales") || location.pathname.startsWith("/quotes") || location.pathname.startsWith("/sales-orders"));
@@ -221,14 +221,21 @@ export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
                   <CollapsibleContent>
                       <div className="ml-7 border-l border-border pl-2 mt-1 space-y-0.5">
                         {links.map((link) =>
-                      <NavLink
-                        key={link.id}
-                        to={`/jobs/link/${link.id}`}
-                        className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
-                        activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
-
-                            {link.label}
-                          </NavLink>
+                      <div key={link.id} className="group/link flex items-center gap-1">
+                            <NavLink
+                              to={`/jobs/link/${link.id}`}
+                              className="flex-1 block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                              activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
+                              {link.label}
+                            </NavLink>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-5 w-5 shrink-0 opacity-0 group-hover/link:opacity-100 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm(`Delete "${link.label}"?`)) removeLink(link.id); }}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                       )}
                         {addingLink ?
                       <div className="flex items-center gap-1 px-1">
