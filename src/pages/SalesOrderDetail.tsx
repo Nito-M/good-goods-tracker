@@ -350,7 +350,7 @@ export function SalesOrderDetail() {
           address: vendor?.address || undefined,
         },
         dueDate ? dueDate.toISOString() : undefined,
-        jobNumber || undefined
+        (itemJobNumbers[item.linkKey]?.trim() || jobNumber || undefined)
       );
       if (!job) return;
 
