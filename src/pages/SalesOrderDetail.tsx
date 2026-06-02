@@ -140,6 +140,7 @@ export function SalesOrderDetail() {
   const [dueDate, setDueDate] = useState<Date | undefined>();
 
   // Per-item link state
+  const [itemJobNumbers, setItemJobNumbers] = useState<Record<string, string>>({});
   const [itemLinks, setItemLinks] = useState<Record<string, ItemLink>>({});
   // childLinkKey -> parentLinkKey
   const [attachments, setAttachments] = useState<Record<string, string>>({});
