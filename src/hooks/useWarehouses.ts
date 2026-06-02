@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -13,34 +13,28 @@ export interface Warehouse {
 }
 
 export function useWarehouses() {
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const queryKey = ['warehouses', user?.id] as const;
 
-  const fetchWarehouses = useCallback(async () => {
-    if (!user) {
-      setWarehouses([]);
-      setLoading(false);
-      return;
-    }
+  const { data, isPending, refetch } = useQuery({
+    queryKey,
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('warehouses')
+        .select('*')
+        .order('name');
+      if (error) {
+        console.error('Error fetching warehouses:', error);
+        throw error;
+      }
+      return (data || []) as Warehouse[];
+    },
+  });
 
-    const { data, error } = await supabase
-      .from('warehouses')
-      .select('*')
-      .order('name');
-
-    if (error) {
-      console.error('Error fetching warehouses:', error);
-    } else {
-      setWarehouses((data as Warehouse[]) || []);
-    }
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => {
-    fetchWarehouses();
-  }, [fetchWarehouses]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const addWarehouse = async (name: string, description?: string) => {
     if (!user) return null;
@@ -56,8 +50,8 @@ export function useWarehouses() {
       return null;
     }
 
-    setWarehouses((prev) => [...prev, data as Warehouse].sort((a, b) => a.name.localeCompare(b.name)));
     toast({ title: 'Location created' });
+    invalidate();
     return data as Warehouse;
   };
 
@@ -72,11 +66,8 @@ export function useWarehouses() {
       return;
     }
 
-    setWarehouses((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, name, description: description || null } : w))
-        .sort((a, b) => a.name.localeCompare(b.name))
-    );
     toast({ title: 'Location updated' });
+    invalidate();
   };
 
   const deleteWarehouse = async (id: string) => {
@@ -90,9 +81,16 @@ export function useWarehouses() {
       return;
     }
 
-    setWarehouses((prev) => prev.filter((w) => w.id !== id));
     toast({ title: 'Location deleted' });
+    invalidate();
   };
 
-  return { warehouses, loading, addWarehouse, updateWarehouse, deleteWarehouse, refetch: fetchWarehouses };
+  return {
+    warehouses: data ?? [],
+    loading: !!user && isPending,
+    addWarehouse,
+    updateWarehouse,
+    deleteWarehouse,
+    refetch: () => refetch().then(() => undefined),
+  };
 }

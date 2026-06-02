@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,41 +17,33 @@ export interface Customer {
 }
 
 export function useCustomers() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const queryKey = ['customers', user?.id] as const;
 
-  const fetchCustomers = useCallback(async () => {
-    if (!user) {
-      setCustomers([]);
-      setLoading(false);
-      return;
-    }
+  const { data, isPending, refetch } = useQuery({
+    queryKey,
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('name', { ascending: true });
+      if (error) {
+        console.error('Error loading customers:', error);
+        toast({
+          title: 'Error loading customers',
+          description: 'Unable to load customers. Please try again.',
+          variant: 'destructive',
+        });
+        throw error;
+      }
+      return (data || []) as Customer[];
+    },
+  });
 
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('Error loading customers:', error);
-      toast({
-        title: 'Error loading customers',
-        description: 'Unable to load customers. Please try again.',
-        variant: 'destructive',
-      });
-      setLoading(false);
-      return;
-    }
-
-    setCustomers((data as Customer[]) || []);
-    setLoading(false);
-  }, [toast, user]);
-
-  useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const addCustomer = async (customer: Omit<Customer, 'id' | 'created_at' | 'updated_at'>) => {
     if (!user) return;
@@ -87,7 +79,7 @@ export function useCustomers() {
     }
 
     toast({ title: 'Customer added successfully' });
-    fetchCustomers();
+    invalidate();
   };
 
   const updateCustomer = async (id: string, updates: Partial<Customer>) => {
@@ -118,7 +110,7 @@ export function useCustomers() {
     }
 
     toast({ title: 'Customer updated successfully' });
-    fetchCustomers();
+    invalidate();
   };
 
   const deleteCustomer = async (id: string) => {
@@ -138,15 +130,15 @@ export function useCustomers() {
     }
 
     toast({ title: 'Customer deleted successfully' });
-    fetchCustomers();
+    invalidate();
   };
 
   return {
-    customers,
-    loading,
+    customers: data ?? [],
+    loading: !!user && isPending,
     addCustomer,
     updateCustomer,
     deleteCustomer,
-    refetch: fetchCustomers,
+    refetch: () => refetch().then(() => undefined),
   };
 }

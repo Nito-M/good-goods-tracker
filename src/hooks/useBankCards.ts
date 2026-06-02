@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -15,41 +15,34 @@ export interface BankCard {
 }
 
 export function useBankCards() {
-  const [cards, setCards] = useState<BankCard[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const queryKey = ['bank_cards', user?.id] as const;
 
-  const fetchCards = async () => {
-    if (!user) return;
-    try {
+  const { data, isPending, refetch } = useQuery({
+    queryKey,
+    enabled: !!user,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('bank_cards')
         .select('*')
         .order('created_at', { ascending: true });
       if (error) throw error;
-      setCards(
-        (data || []).map((c: any) => ({
-          id: c.id,
-          userId: c.user_id,
-          name: c.name,
-          balance: Number(c.balance),
-          color: c.color,
-          category: c.category || null,
-          createdAt: c.created_at,
-          updatedAt: c.updated_at,
-        }))
-      );
-    } catch (e) {
-      console.error('Error fetching bank cards:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []).map((c: any): BankCard => ({
+        id: c.id,
+        userId: c.user_id,
+        name: c.name,
+        balance: Number(c.balance),
+        color: c.color,
+        category: c.category || null,
+        createdAt: c.created_at,
+        updatedAt: c.updated_at,
+      }));
+    },
+  });
 
-  useEffect(() => {
-    fetchCards();
-  }, [user]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const addCard = async (name: string, balance: number, color: string, category?: string | null) => {
     if (!user) return false;
@@ -63,7 +56,7 @@ export function useBankCards() {
       } as any);
       if (error) throw error;
       toast({ title: 'Card added', description: `"${name}" card created.` });
-      await fetchCards();
+      invalidate();
       return true;
     } catch (e) {
       console.error('Error adding card:', e);
@@ -82,7 +75,7 @@ export function useBankCards() {
 
       const { error } = await supabase.from('bank_cards').update(payload).eq('id', id);
       if (error) throw error;
-      await fetchCards();
+      invalidate();
       return true;
     } catch (e) {
       console.error('Error updating card:', e);
@@ -96,7 +89,7 @@ export function useBankCards() {
       const { error } = await supabase.from('bank_cards').delete().eq('id', id);
       if (error) throw error;
       toast({ title: 'Card deleted' });
-      setCards((prev) => prev.filter((c) => c.id !== id));
+      invalidate();
       return true;
     } catch (e) {
       console.error('Error deleting card:', e);
@@ -105,5 +98,12 @@ export function useBankCards() {
     }
   };
 
-  return { cards, loading, addCard, updateCard, deleteCard, refetch: fetchCards };
+  return {
+    cards: data ?? [],
+    loading: !!user && isPending,
+    addCard,
+    updateCard,
+    deleteCard,
+    refetch: () => refetch().then(() => undefined),
+  };
 }

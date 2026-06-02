@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -56,24 +56,23 @@ export interface UpdateProfileInput {
 }
 
 export function useProfile() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const queryKey = ['profile', user?.id] as const;
 
-  const fetchProfile = async () => {
-    if (!user) return;
-
-    try {
+  const { data, isPending, refetch } = useQuery({
+    queryKey,
+    enabled: !!user,
+    queryFn: async (): Promise<Profile | null> => {
+      if (!user) return null;
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
-
       if (error) throw error;
-
-      setProfile({
+      return {
         id: data.id,
         userId: data.user_id,
         displayName: data.display_name,
@@ -97,22 +96,15 @@ export function useProfile() {
         requesterName: data.requester_name,
         requesterNames: data.requester_names || [],
         backgroundImageUrl: data.background_image_url,
-      });
-    } catch (error: any) {
-      console.error('Error fetching profile:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      };
+    },
+  });
 
-  useEffect(() => {
-    fetchProfile();
-  }, [user]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const updateProfile = async (input: UpdateProfileInput) => {
     if (!user) return false;
 
-    // Validate input
     const validation = validateInput(profileSchema.partial(), input);
     if (!validation.success) {
       toast({
@@ -125,7 +117,7 @@ export function useProfile() {
 
     try {
       const updateData: Record<string, unknown> = {};
-      
+
       if (validation.data.displayName !== undefined) updateData.display_name = validation.data.displayName;
       if (validation.data.avatarUrl !== undefined) updateData.avatar_url = validation.data.avatarUrl;
       if (validation.data.logoUrl !== undefined) updateData.logo_url = validation.data.logoUrl;
@@ -160,7 +152,7 @@ export function useProfile() {
         description: 'Your settings have been updated',
       });
 
-      await fetchProfile();
+      await refetch();
       return true;
     } catch (error: unknown) {
       console.error('Error saving settings:', error);
@@ -174,9 +166,9 @@ export function useProfile() {
   };
 
   return {
-    profile,
-    loading,
+    profile: data ?? null,
+    loading: !!user && isPending,
     updateProfile,
-    refetch: fetchProfile,
+    refetch: () => refetch().then(() => undefined),
   };
 }

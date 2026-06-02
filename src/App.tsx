@@ -75,7 +75,16 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import { useColorTheme } from "@/hooks/useColorTheme";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000, // 1 min — cached data is reused across page navigations
+      gcTime: 5 * 60_000, // 5 min — keep in memory after unmount
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function AppContent() {
   useColorTheme();

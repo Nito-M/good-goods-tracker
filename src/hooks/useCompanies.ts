@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -50,32 +50,25 @@ export interface CompanyInput {
 }
 
 export function useCompanies() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const queryKey = ['companies', user?.id] as const;
 
-  const fetchCompanies = useCallback(async () => {
-    if (!user) {
-      setCompanies([]);
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('companies')
-      .select('*')
-      .order('is_default', { ascending: false })
-      .order('name');
-
-    if (error) {
-      console.error('Error fetching companies:', error);
-      setLoading(false);
-      return;
-    }
-
-    setCompanies(
-      (data || []).map((c: any) => ({
+  const { data, isPending, refetch } = useQuery({
+    queryKey,
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('is_default', { ascending: false })
+        .order('name');
+      if (error) {
+        console.error('Error fetching companies:', error);
+        throw error;
+      }
+      return (data || []).map((c: any): Company => ({
         id: c.id,
         userId: c.user_id,
         name: c.name,
@@ -98,19 +91,15 @@ export function useCompanies() {
         poThankYouNote: c.po_thank_you_note || 'Thank you for your order!',
         createdAt: c.created_at,
         updatedAt: c.updated_at,
-      }))
-    );
-    setLoading(false);
-  }, [user]);
+      }));
+    },
+  });
 
-  useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const addCompany = async (input: CompanyInput) => {
     if (!user) return;
 
-    // If setting as default, unset others first
     if (input.isDefault) {
       await supabase
         .from('companies')
@@ -147,7 +136,7 @@ export function useCompanies() {
     }
 
     toast({ title: 'Company added' });
-    fetchCompanies();
+    invalidate();
   };
 
   const updateCompany = async (id: string, input: Partial<CompanyInput>) => {
@@ -192,7 +181,7 @@ export function useCompanies() {
     }
 
     toast({ title: 'Company updated' });
-    fetchCompanies();
+    invalidate();
   };
 
   const deleteCompany = async (id: string) => {
@@ -205,10 +194,19 @@ export function useCompanies() {
     }
 
     toast({ title: 'Company deleted' });
-    fetchCompanies();
+    invalidate();
   };
 
+  const companies = data ?? [];
   const defaultCompany = companies.find((c) => c.isDefault) || companies[0] || null;
 
-  return { companies, loading, addCompany, updateCompany, deleteCompany, defaultCompany, fetchCompanies };
+  return {
+    companies,
+    loading: !!user && isPending,
+    addCompany,
+    updateCompany,
+    deleteCompany,
+    defaultCompany,
+    fetchCompanies: () => refetch().then(() => undefined),
+  };
 }
