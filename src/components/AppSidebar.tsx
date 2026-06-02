@@ -221,14 +221,21 @@ export function AppSidebar({ shopSlug, shops = [] }: AppSidebarProps) {
                   <CollapsibleContent>
                       <div className="ml-7 border-l border-border pl-2 mt-1 space-y-0.5">
                         {links.map((link) =>
-                      <NavLink
-                        key={link.id}
-                        to={`/jobs/link/${link.id}`}
-                        className="block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
-                        activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
-
-                            {link.label}
-                          </NavLink>
+                      <div key={link.id} className="group/link flex items-center gap-1">
+                            <NavLink
+                              to={`/jobs/link/${link.id}`}
+                              className="flex-1 block text-sm py-1 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent truncate"
+                              activeClassName="text-sidebar-accent-foreground bg-sidebar-accent">
+                              {link.label}
+                            </NavLink>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-5 w-5 shrink-0 opacity-0 group-hover/link:opacity-100 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm(`Delete "${link.label}"?`)) removeLink(link.id); }}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                       )}
                         {addingLink ?
                       <div className="flex items-center gap-1 px-1">
