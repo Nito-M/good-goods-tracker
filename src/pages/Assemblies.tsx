@@ -1134,8 +1134,14 @@ export function Assemblies() {
   // Group filtered assemblies by model
   const groupedFiltered = useMemo(() => {
     const groups = new Map<string, typeof filtered>();
-    // Seed with known models so empty groups show up
-    for (const m of assemblyModels) groups.set(m.name, [] as any);
+    const isSpecificSubType = selectedSubType && selectedSubType !== '__all__' && selectedSubType !== '__unassigned__';
+    if (isSpecificSubType) {
+      // Only seed the selected sub-type so other model headers don't linger
+      groups.set(selectedSubType!, [] as any);
+    } else {
+      // Seed with known models so empty groups show up
+      for (const m of assemblyModels) groups.set(m.name, [] as any);
+    }
     for (const a of filtered) {
       const key = a.model || '__unassigned__';
       const arr = groups.get(key) || [];
@@ -1147,7 +1153,8 @@ export function Assemblies() {
       if (b === '__unassigned__') return -1;
       return a.localeCompare(b);
     });
-  }, [filtered, assemblyModels]);
+  }, [filtered, assemblyModels, selectedSubType]);
+
 
   const toggleModelCollapse = (key: string) => {
     setCollapsedModels(prev => {

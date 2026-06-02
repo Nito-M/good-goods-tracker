@@ -1,23 +1,12 @@
-## Goal
-On the Sales Order **Jobs** tab, hide each item's long description (`item.notes`) by default and let the user expand it per row. The add-on count already shows next to the title — keep it there.
+## Problem
+When a specific sub-type (model) is selected in the Assemblies page, the sidebar list still seeds groups for **all** known models. This causes empty sub-type headers to linger with "No assemblies in this sub-type yet."
 
-## Changes (single file: `src/pages/SalesOrderDetail.tsx`)
+## Fix
+Update the `groupedFiltered` `useMemo` in `src/pages/Assemblies.tsx` so that when `selectedSubType` is a specific model name, only that model's group is created. Keep the current all-models behavior when viewing `__all__` or `__unassigned__`.
 
-1. **New state** next to `collapsedParents`:
-   ```ts
-   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
-   ```
-   (Default = empty → all descriptions collapsed.)
+### Technical Detail
+In the `groupedFiltered` calculation (lines ~1135-1150):
+- If `selectedSubType` is a concrete model string (not `null`, `'__all__'`, or `'__unassigned__'`): only seed `groups.set(selectedSubType, [])`.
+- Otherwise: keep seeding all `assemblyModels` as before.
 
-2. **Row title area** (around lines 689–699): when `item.notes` exists, render a small chevron button right after the item name + add-on count. Clicking it toggles `item.linkKey` in `expandedNotes`.
-   - Collapsed (default): chevron-right icon, notes hidden.
-   - Expanded: chevron-down icon, notes shown below as today.
-
-3. Add-on count stays as-is — `(N add-ons)` rendered inline after the title.
-
-4. Child rows (`isChild`) get the same treatment so attached add-on notes also collapse.
-
-## Behavior
-- No layout shift when there are no notes (button only renders if `item.notes` is set).
-- State is local to the component; collapses reset on page reload (matches existing `collapsedParents` pattern).
-- No backend or data changes.
+This is a single-file, single-block edit with zero risk to other functionality.
