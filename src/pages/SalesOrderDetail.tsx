@@ -820,23 +820,36 @@ export function SalesOrderDetail() {
                                   className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                                 >
                                   <Briefcase className="h-3.5 w-3.5" />
-                                  View Job
+                                  {jobs.find((j) => j.id === link.jobId)?.jobNumber || 'View Job'}
                                 </Link>
                               ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 text-xs px-2"
-                                  disabled={isCreatingThis || !!creatingJobFor}
-                                  onClick={() => handleCreateJobForItem(item)}
-                                >
-                                  {isCreatingThis ? (
-                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                                  ) : (
-                                    <Plus className="h-3 w-3 mr-1" />
-                                  )}
-                                  Create Job
-                                </Button>
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <Input
+                                    value={itemJobNumbers[item.linkKey] ?? ''}
+                                    onChange={(e) =>
+                                      setItemJobNumbers((prev) => ({
+                                        ...prev,
+                                        [item.linkKey]: e.target.value,
+                                      }))
+                                    }
+                                    placeholder={jobNumber || 'Auto'}
+                                    className="w-20 h-7 text-xs"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs px-2"
+                                    disabled={isCreatingThis || !!creatingJobFor}
+                                    onClick={() => handleCreateJobForItem(item)}
+                                  >
+                                    {isCreatingThis ? (
+                                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                    ) : (
+                                      <Plus className="h-3 w-3 mr-1" />
+                                    )}
+                                    Create Job
+                                  </Button>
+                                </div>
                               )}
                             </TableCell>
                           </TableRow>
