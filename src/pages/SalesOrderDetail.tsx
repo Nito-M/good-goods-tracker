@@ -91,7 +91,7 @@ export function SalesOrderDetail() {
   const [paymentInfoInit, setPaymentInfoInit] = useState(false);
   const [showEditPaymentDialog, setShowEditPaymentDialog] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
-  const { createJob } = useJobs();
+  const { createJob, jobs } = useJobs();
   const { profile } = useProfile();
   const { companies } = useCompanies();
   const { sales } = useSales();
