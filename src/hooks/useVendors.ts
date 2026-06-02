@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,46 +18,37 @@ export interface Vendor {
 }
 
 export function useVendors() {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const queryKey = ['vendors', user?.id] as const;
 
-  const fetchVendors = useCallback(async () => {
-    if (!user) {
-      setVendors([]);
-      setLoading(false);
-      return;
-    }
+  const { data, isPending, refetch } = useQuery({
+    queryKey,
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vendors')
+        .select('*')
+        .order('name', { ascending: true });
+      if (error) {
+        console.error('Error loading vendors:', error);
+        toast({
+          title: 'Error loading vendors',
+          description: 'Unable to load vendors. Please try again.',
+          variant: 'destructive',
+        });
+        throw error;
+      }
+      return (data || []) as Vendor[];
+    },
+  });
 
-    const { data, error } = await supabase
-      .from('vendors')
-      .select('*')
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('Error loading vendors:', error);
-      toast({
-        title: 'Error loading vendors',
-        description: 'Unable to load vendors. Please try again.',
-        variant: 'destructive',
-      });
-      setLoading(false);
-      return;
-    }
-
-    setVendors(data || []);
-    setLoading(false);
-  }, [toast, user]);
-
-  useEffect(() => {
-    fetchVendors();
-  }, [fetchVendors]);
+  const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
   const addVendor = async (vendor: Omit<Vendor, 'id' | 'created_at' | 'updated_at'>) => {
     if (!user) return;
 
-    // Validate input
     const validation = validateInput(vendorSchema, vendor);
     if (!validation.success) {
       toast({
@@ -90,11 +81,10 @@ export function useVendors() {
     }
 
     toast({ title: 'Vendor added successfully' });
-    fetchVendors();
+    invalidate();
   };
 
   const updateVendor = async (id: string, updates: Partial<Vendor>) => {
-    // Validate partial update - only validate provided fields
     const partialSchema = vendorSchema.partial();
     const validation = validateInput(partialSchema, updates);
     if (!validation.success) {
@@ -108,7 +98,7 @@ export function useVendors() {
 
     const updateData: Record<string, any> = { ...validation.data };
     if ('color' in updates) updateData.color = updates.color;
-    
+
     const { error } = await supabase
       .from('vendors')
       .update(updateData)
@@ -125,7 +115,7 @@ export function useVendors() {
     }
 
     toast({ title: 'Vendor updated successfully' });
-    fetchVendors();
+    invalidate();
   };
 
   const deleteVendor = async (id: string) => {
@@ -145,15 +135,15 @@ export function useVendors() {
     }
 
     toast({ title: 'Vendor deleted successfully' });
-    fetchVendors();
+    invalidate();
   };
 
   return {
-    vendors,
-    loading,
+    vendors: data ?? [],
+    loading: !!user && isPending,
     addVendor,
     updateVendor,
     deleteVendor,
-    refetch: fetchVendors,
+    refetch: () => refetch().then(() => undefined),
   };
 }
