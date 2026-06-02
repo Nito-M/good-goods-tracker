@@ -187,10 +187,20 @@ export function useInventory(activeOrgId?: string | null) {
       }
 
       if (data) {
-        // Clear local cache first to remove stale entries, then write fresh server data
-        await clearTable('inventory_items');
-        await putMany('inventory_items', data as unknown as Record<string, unknown>[]);
         setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
+        setLoading(false);
+        // Persist to IndexedDB in the background (don't block render)
+        const persist = () => {
+          clearTable('inventory_items')
+            .then(() => putMany('inventory_items', data as unknown as Record<string, unknown>[]))
+            .catch((err) => console.error('Background IndexedDB persist failed:', err));
+        };
+        if (typeof (window as any).requestIdleCallback === 'function') {
+          (window as any).requestIdleCallback(persist);
+        } else {
+          setTimeout(persist, 0);
+        }
+        return;
       }
     }
 
@@ -208,9 +218,12 @@ export function useInventory(activeOrgId?: string | null) {
     return () => window.removeEventListener('sync-complete', handleSyncComplete);
   }, [fetchItems]);
 
-  // Fetch vendor names per item for search
+  // Fetch vendor names per item for search — only when user actually searches
+  const [vendorMapLoaded, setVendorMapLoaded] = useState(false);
   useEffect(() => {
-    if (!user || !isOnline) return;
+    if (!user || !isOnline || vendorMapLoaded) return;
+    if (!searchQuery.trim()) return;
+    setVendorMapLoaded(true);
     (async () => {
       const { data } = await supabase
         .from('item_vendor_prices')
@@ -229,7 +242,7 @@ export function useInventory(activeOrgId?: string | null) {
         setItemVendorMap(map);
       }
     })();
-  }, [user, isOnline]);
+  }, [user, isOnline, searchQuery, vendorMapLoaded]);
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
