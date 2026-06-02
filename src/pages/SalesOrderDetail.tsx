@@ -395,6 +395,7 @@ export function SalesOrderDetail() {
             address: vendor?.address || undefined,
           },
           dueDate ? dueDate.toISOString() : undefined,
+          itemJobNumbers[item.linkKey]?.trim() || undefined,
         );
         if (!job) continue;
 
