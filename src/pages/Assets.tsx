@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Truck, Users, Briefcase, Mail, Phone, Filter } from 'lucide-react';
+import { Plus, Search, Truck, Users, Briefcase, Mail, Phone, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAssets } from '@/hooks/useAssets';
 import { useWorkers, Worker } from '@/hooks/useWorkers';
 import { AddAssetDialog } from '@/components/AddAssetDialog';
