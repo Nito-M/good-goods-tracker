@@ -91,6 +91,7 @@ export function PurchaseOrderCard({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const cardRef = React.useRef<HTMLDivElement>(null);
 
