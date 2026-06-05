@@ -93,20 +93,6 @@ export function Assets() {
                 className="pl-9"
               />
             </div>
-            {tab === 'assets' && assetTypes.length > 0 && (
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {assetTypes.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
 
           <TabsContent value="assets">
