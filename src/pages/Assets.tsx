@@ -84,8 +84,8 @@ export function Assets() {
             <TabsTrigger value="workers"><Users className="h-4 w-4 mr-1.5" />Staff Directory</TabsTrigger>
           </TabsList>
 
-          <div className="mb-4">
-            <div className="relative max-w-sm">
+          <div className="mb-4 flex flex-col sm:flex-row gap-3 items-start">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={tab === 'assets' ? 'Search assets...' : 'Search workers...'}
@@ -94,6 +94,20 @@ export function Assets() {
                 className="pl-9"
               />
             </div>
+            {tab === 'assets' && assetTypes.length > 0 && (
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {assetTypes.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <TabsContent value="assets">
