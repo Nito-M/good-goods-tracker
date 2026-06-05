@@ -37,12 +37,13 @@ export function Assets() {
 
   const filteredAssets = assets.filter((a) => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch =
       a.name.toLowerCase().includes(q) ||
       a.asset_type.toLowerCase().includes(q) ||
       a.brand.toLowerCase().includes(q) ||
-      a.serial_number.toLowerCase().includes(q)
-    );
+      a.serial_number.toLowerCase().includes(q);
+    const matchesCategory = category === 'all' || a.asset_type === category;
+    return matchesSearch && matchesCategory;
   });
 
   const filteredWorkers = workers.filter((w) => {
