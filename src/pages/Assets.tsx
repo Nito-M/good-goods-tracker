@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Truck, Users, Briefcase, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Truck, Users, Briefcase, Mail, Phone, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAssets } from '@/hooks/useAssets';
 import { useWorkers, Worker } from '@/hooks/useWorkers';
 import { AddAssetDialog } from '@/components/AddAssetDialog';
@@ -26,16 +27,23 @@ export function Assets() {
   const [assetDialog, setAssetDialog] = useState(false);
   const [workerDialog, setWorkerDialog] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
+  const [category, setCategory] = useState<string>('all');
   const navigate = useNavigate();
+
+  const assetTypes = useMemo(() => {
+    const types = new Set(assets.map((a) => a.asset_type).filter(Boolean));
+    return Array.from(types).sort();
+  }, [assets]);
 
   const filteredAssets = assets.filter((a) => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch =
       a.name.toLowerCase().includes(q) ||
       a.asset_type.toLowerCase().includes(q) ||
       a.brand.toLowerCase().includes(q) ||
-      a.serial_number.toLowerCase().includes(q)
-    );
+      a.serial_number.toLowerCase().includes(q);
+    const matchesCategory = category === 'all' || a.asset_type === category;
+    return matchesSearch && matchesCategory;
   });
 
   const filteredWorkers = workers.filter((w) => {
@@ -76,8 +84,8 @@ export function Assets() {
             <TabsTrigger value="workers"><Users className="h-4 w-4 mr-1.5" />Staff Directory</TabsTrigger>
           </TabsList>
 
-          <div className="mb-4">
-            <div className="relative max-w-sm">
+          <div className="mb-4 flex flex-col sm:flex-row gap-3 items-start">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={tab === 'assets' ? 'Search assets...' : 'Search workers...'}
@@ -86,6 +94,20 @@ export function Assets() {
                 className="pl-9"
               />
             </div>
+            {tab === 'assets' && assetTypes.length > 0 && (
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {assetTypes.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <TabsContent value="assets">
