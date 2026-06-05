@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import {
   AlertDialog,
@@ -39,7 +45,7 @@ import {
   Plus,
   Undo2,
   ExternalLink,
-  MoreHorizontal,
+  MoreVertical,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { downloadFileFromUrl, getFileNameFromUrl } from '@/lib/fileDownload';
@@ -92,7 +98,7 @@ export function PurchaseOrderCard({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
+  
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const cardRef = React.useRef<HTMLDivElement>(null);
 
@@ -496,83 +502,86 @@ export function PurchaseOrderCard({
                 </div>
 
                 {/* Actions */}
-                <Collapsible open={actionsOpen} onOpenChange={setActionsOpen}>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full flex items-center justify-between gap-2">
-                      <span className="flex items-center gap-2">
-                        <MoreHorizontal className="h-4 w-4" />
-                        Actions
-                      </span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${actionsOpen ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-2 pt-1">
+                  {onPreview && (
+                    <Button variant="outline" size="sm" onClick={() => onPreview(order)} className="flex-1">
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview
                     </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <TooltipProvider delayDuration={200}>
-                      <div className="flex flex-col gap-1.5 pt-2">
-                        {(() => {
-                          const IconBtn = ({
-                            label,
-                            onClick,
-                            icon: Icon,
-                            className = '',
-                            disabled,
-                          }: {
-                            label: string;
-                            onClick: () => void;
-                            icon: React.ComponentType<{ className?: string }>;
-                            className?: string;
-                            disabled?: boolean;
-                          }) => (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={onClick}
-                                  disabled={disabled}
-                                  aria-label={label}
-                                  className={`h-9 w-9 ${className}`}
-                                >
-                                  <Icon className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>{label}</TooltipContent>
-                            </Tooltip>
-                          );
-
-                          return (
-                            <>
-                              {order.status === 'draft' && onMarkOrdered && (
-                                <IconBtn label="Place Order" onClick={() => onMarkOrdered(order.id)} icon={Package} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary" />
-                              )}
-                              {order.status === 'ordered' && onMarkPartiallyReceived && (
-                                <IconBtn label="Partial Receive" onClick={() => onMarkPartiallyReceived(order.id)} icon={Package} disabled={loading} className="border-orange-500 text-orange-600 hover:bg-orange-50" />
-                              )}
-                              {(order.status === 'ordered' || order.status === 'partially_received') && (
-                                <IconBtn label="Mark Received" onClick={() => onMarkReceived(order.id)} icon={Check} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary" />
-                              )}
-                              {(order.status === 'received' || order.status === 'partially_received') && onRevert && (
-                                <IconBtn label="Revert Received" onClick={() => order.status === 'partially_received' ? onRevert(order.id) : setRevertConfirmOpen(true)} icon={Undo2} disabled={loading} className="border-orange-500 text-orange-600 hover:bg-orange-50" />
-                              )}
-                              {!order.paidAt && (
-                                <IconBtn label="Mark Paid" onClick={() => onMarkPaid(order.id)} icon={Banknote} disabled={loading} className="border-blue-500 text-blue-600 hover:bg-blue-50" />
-                              )}
-                              {order.paidAt && onRevertPaid && (
-                                <IconBtn label="Revert Paid" onClick={() => onRevertPaid(order.id)} icon={Undo2} disabled={loading} className="border-amber-500 text-amber-600 hover:bg-amber-50" />
-                              )}
-                              {onPreview && (
-                                <IconBtn label="Preview" onClick={() => onPreview(order)} icon={Eye} />
-                              )}
-                              <IconBtn label="Download" onClick={() => onDownload(order)} icon={Download} />
-                              <IconBtn label="Edit" onClick={() => onEdit(order)} icon={Pencil} />
-                              <IconBtn label="Delete" onClick={() => onDelete(order.id)} icon={Trash2} className="text-destructive hover:text-destructive" />
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </TooltipProvider>
-                  </CollapsibleContent>
-                </Collapsible>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" title="More actions">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {order.status === 'draft' && onMarkOrdered && (
+                        <DropdownMenuItem onSelect={() => onMarkOrdered(order.id)} disabled={loading}>
+                          <Package className="h-4 w-4 mr-2" />
+                          Place Order
+                        </DropdownMenuItem>
+                      )}
+                      {order.status === 'ordered' && onMarkPartiallyReceived && (
+                        <DropdownMenuItem onSelect={() => onMarkPartiallyReceived(order.id)} disabled={loading}>
+                          <Package className="h-4 w-4 mr-2" />
+                          Partial Receive
+                        </DropdownMenuItem>
+                      )}
+                      {(order.status === 'ordered' || order.status === 'partially_received') && (
+                        <DropdownMenuItem onSelect={() => onMarkReceived(order.id)} disabled={loading}>
+                          <Check className="h-4 w-4 mr-2" />
+                          Mark Received
+                        </DropdownMenuItem>
+                      )}
+                      {(order.status === 'received' || order.status === 'partially_received') && onRevert && (
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            if (order.status === 'partially_received') {
+                              onRevert(order.id);
+                            } else {
+                              e.preventDefault();
+                              setRevertConfirmOpen(true);
+                            }
+                          }}
+                          disabled={loading}
+                        >
+                          <Undo2 className="h-4 w-4 mr-2" />
+                          Revert Received
+                        </DropdownMenuItem>
+                      )}
+                      {!order.paidAt && (
+                        <DropdownMenuItem onSelect={() => onMarkPaid(order.id)} disabled={loading}>
+                          <Banknote className="h-4 w-4 mr-2" />
+                          Mark Paid
+                        </DropdownMenuItem>
+                      )}
+                      {order.paidAt && onRevertPaid && (
+                        <DropdownMenuItem onSelect={() => onRevertPaid(order.id)} disabled={loading}>
+                          <Undo2 className="h-4 w-4 mr-2" />
+                          Revert Paid
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => onEdit(order)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onDownload(order)}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={() => onDelete(order.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
