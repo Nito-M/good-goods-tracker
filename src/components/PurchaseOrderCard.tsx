@@ -504,9 +504,8 @@ export function PurchaseOrderCard({
                 {/* Actions */}
                 <div className="flex items-center gap-2 pt-1">
                   {onPreview && (
-                    <Button variant="outline" size="sm" onClick={() => onPreview(order)} className="flex-1">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Preview
+                    <Button variant="outline" size="icon" title="Preview" onClick={() => onPreview(order)}>
+                      <Eye className="h-4 w-4" />
                     </Button>
                   )}
                   <DropdownMenu>
