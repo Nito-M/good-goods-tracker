@@ -27,7 +27,7 @@ export function Assets() {
   const [assetDialog, setAssetDialog] = useState(false);
   const [workerDialog, setWorkerDialog] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
-  const [category, setCategory] = useState<string>('all');
+  const [category, setCategory] = useState<string>('');
   const navigate = useNavigate();
 
   const assetTypes = useMemo(() => {
@@ -43,7 +43,7 @@ export function Assets() {
       a.brand.toLowerCase().includes(q) ||
       a.serial_number.toLowerCase().includes(q);
     const matchesCategory = category === 'all' || a.asset_type === category;
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && category !== '';
   });
 
   const filteredWorkers = workers.filter((w) => {
@@ -98,7 +98,7 @@ export function Assets() {
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="w-full sm:w-48">
                   <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
@@ -113,6 +113,8 @@ export function Assets() {
           <TabsContent value="assets">
             {loading ? (
               <p className="text-muted-foreground text-sm">Loading...</p>
+            ) : category === '' ? (
+              <p className="text-muted-foreground text-sm">Select a category to view assets.</p>
             ) : filteredAssets.length === 0 ? (
               <p className="text-muted-foreground text-sm">No assets found.</p>
             ) : (
