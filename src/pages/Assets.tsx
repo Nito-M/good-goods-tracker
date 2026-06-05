@@ -98,7 +98,7 @@ export function Assets() {
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="w-full sm:w-48">
                   <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
@@ -113,6 +113,8 @@ export function Assets() {
           <TabsContent value="assets">
             {loading ? (
               <p className="text-muted-foreground text-sm">Loading...</p>
+            ) : category === '' ? (
+              <p className="text-muted-foreground text-sm">Select a category to view assets.</p>
             ) : filteredAssets.length === 0 ? (
               <p className="text-muted-foreground text-sm">No assets found.</p>
             ) : (
