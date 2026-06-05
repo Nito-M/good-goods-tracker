@@ -27,7 +27,13 @@ export function Assets() {
   const [assetDialog, setAssetDialog] = useState(false);
   const [workerDialog, setWorkerDialog] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
+  const [category, setCategory] = useState<string>('all');
   const navigate = useNavigate();
+
+  const assetTypes = useMemo(() => {
+    const types = new Set(assets.map((a) => a.asset_type).filter(Boolean));
+    return Array.from(types).sort();
+  }, [assets]);
 
   const filteredAssets = assets.filter((a) => {
     const q = search.toLowerCase();
