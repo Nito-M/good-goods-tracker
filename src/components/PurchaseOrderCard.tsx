@@ -495,7 +495,7 @@ export function PurchaseOrderCard({
 
                 {/* Actions */}
                 <TooltipProvider delayDuration={200}>
-                  <div className="flex flex-wrap gap-1.5 pt-2">
+                  <div className="flex flex-col gap-1.5 pt-2">
                     {(() => {
                       const IconBtn = ({
                         label,
