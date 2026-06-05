@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import {
   AlertDialog,
@@ -493,62 +494,70 @@ export function PurchaseOrderCard({
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {order.status === 'draft' && onMarkOrdered && (
-                    <Button size="sm" onClick={() => onMarkOrdered(order.id)} disabled={loading} className="gap-2">
-                      <Package className="h-4 w-4" />
-                      Place Order
-                    </Button>
-                  )}
-                  {order.status === 'ordered' && onMarkPartiallyReceived && (
-                    <Button size="sm" variant="outline" onClick={() => onMarkPartiallyReceived(order.id)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
-                      <Package className="h-4 w-4" />
-                      Partial Receive
-                    </Button>
-                  )}
-                  {(order.status === 'ordered' || order.status === 'partially_received') && (
-                    <Button size="sm" onClick={() => onMarkReceived(order.id)} disabled={loading} className="gap-2">
-                      <Check className="h-4 w-4" />
-                      Mark Received
-                    </Button>
-                  )}
-                  {(order.status === 'received' || order.status === 'partially_received') && onRevert && (
-                    <Button size="sm" variant="outline" onClick={() => order.status === 'partially_received' ? onRevert(order.id) : setRevertConfirmOpen(true)} disabled={loading} className="gap-2 border-orange-500 text-orange-600 hover:bg-orange-50">
-                      <Undo2 className="h-4 w-4" />
-                      Revert
-                    </Button>
-                  )}
-                  {!order.paidAt && (
-                    <Button size="sm" variant="outline" onClick={() => onMarkPaid(order.id)} disabled={loading} className="gap-2 border-blue-500 text-blue-600 hover:bg-blue-50">
-                      <Banknote className="h-4 w-4" />
-                      Mark Paid
-                    </Button>
-                  )}
-                  {order.paidAt && onRevertPaid && (
-                    <Button size="sm" variant="outline" onClick={() => onRevertPaid(order.id)} disabled={loading} className="gap-2 border-amber-500 text-amber-600 hover:bg-amber-50">
-                      <Undo2 className="h-4 w-4" />
-                      Revert Paid
-                    </Button>
-                  )}
-                  {onPreview && (
-                    <Button size="sm" variant="outline" onClick={() => onPreview(order)} className="gap-2">
-                      <Eye className="h-4 w-4" />
-                      Preview
-                    </Button>
-                  )}
-                  <Button size="sm" variant="outline" onClick={() => onDownload(order)} className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Download
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => onEdit(order)} className="gap-2">
-                    <Pencil className="h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => onDelete(order.id)} className="gap-2 text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
+                <TooltipProvider delayDuration={200}>
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {(() => {
+                      const IconBtn = ({
+                        label,
+                        onClick,
+                        icon: Icon,
+                        className = '',
+                        disabled,
+                      }: {
+                        label: string;
+                        onClick: () => void;
+                        icon: React.ComponentType<{ className?: string }>;
+                        className?: string;
+                        disabled?: boolean;
+                      }) => (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={onClick}
+                              disabled={disabled}
+                              aria-label={label}
+                              className={`h-9 w-9 ${className}`}
+                            >
+                              <Icon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{label}</TooltipContent>
+                        </Tooltip>
+                      );
+
+                      return (
+                        <>
+                          {order.status === 'draft' && onMarkOrdered && (
+                            <IconBtn label="Place Order" onClick={() => onMarkOrdered(order.id)} icon={Package} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary" />
+                          )}
+                          {order.status === 'ordered' && onMarkPartiallyReceived && (
+                            <IconBtn label="Partial Receive" onClick={() => onMarkPartiallyReceived(order.id)} icon={Package} disabled={loading} className="border-orange-500 text-orange-600 hover:bg-orange-50" />
+                          )}
+                          {(order.status === 'ordered' || order.status === 'partially_received') && (
+                            <IconBtn label="Mark Received" onClick={() => onMarkReceived(order.id)} icon={Check} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary" />
+                          )}
+                          {(order.status === 'received' || order.status === 'partially_received') && onRevert && (
+                            <IconBtn label="Revert Received" onClick={() => order.status === 'partially_received' ? onRevert(order.id) : setRevertConfirmOpen(true)} icon={Undo2} disabled={loading} className="border-orange-500 text-orange-600 hover:bg-orange-50" />
+                          )}
+                          {!order.paidAt && (
+                            <IconBtn label="Mark Paid" onClick={() => onMarkPaid(order.id)} icon={Banknote} disabled={loading} className="border-blue-500 text-blue-600 hover:bg-blue-50" />
+                          )}
+                          {order.paidAt && onRevertPaid && (
+                            <IconBtn label="Revert Paid" onClick={() => onRevertPaid(order.id)} icon={Undo2} disabled={loading} className="border-amber-500 text-amber-600 hover:bg-amber-50" />
+                          )}
+                          {onPreview && (
+                            <IconBtn label="Preview" onClick={() => onPreview(order)} icon={Eye} />
+                          )}
+                          <IconBtn label="Download" onClick={() => onDownload(order)} icon={Download} />
+                          <IconBtn label="Edit" onClick={() => onEdit(order)} icon={Pencil} />
+                          <IconBtn label="Delete" onClick={() => onDelete(order.id)} icon={Trash2} className="text-destructive hover:text-destructive" />
+                        </>
+                      );
+                    })()}
+                  </div>
+                </TooltipProvider>
               </div>
             </CollapsibleContent>
           </Collapsible>
