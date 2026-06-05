@@ -27,7 +27,7 @@ export function Assets() {
   const [assetDialog, setAssetDialog] = useState(false);
   const [workerDialog, setWorkerDialog] = useState(false);
   const [editWorker, setEditWorker] = useState<Worker | null>(null);
-  const [category, setCategory] = useState<string>('all');
+  const [category, setCategory] = useState<string>('');
   const navigate = useNavigate();
 
   const assetTypes = useMemo(() => {
