@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Truck, Users, Briefcase, Mail, Phone, Filter } from 'lucide-react';
+import { Plus, Search, Truck, Users, Briefcase, Mail, Phone, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAssets } from '@/hooks/useAssets';
 import { useWorkers, Worker } from '@/hooks/useWorkers';
 import { AddAssetDialog } from '@/components/AddAssetDialog';
@@ -94,56 +93,105 @@ export function Assets() {
                 className="pl-9"
               />
             </div>
-            {tab === 'assets' && assetTypes.length > 0 && (
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {assetTypes.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
 
           <TabsContent value="assets">
             {loading ? (
               <p className="text-muted-foreground text-sm">Loading...</p>
-            ) : category === '' ? (
-              <p className="text-muted-foreground text-sm">Select a category to view assets.</p>
-            ) : filteredAssets.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No assets found.</p>
+            ) : assetTypes.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No assets yet. Click "Add Asset" to add one.</p>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredAssets.map((asset) => (
-                  <div
-                    key={asset.id}
-                    className="border border-border rounded-lg bg-card p-4 cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => navigate(`/assets/${asset.id}`)}
-                  >
-                    <div className="flex gap-3">
-                      {asset.display_image_url ? (
-                        <img src={asset.display_image_url} alt={asset.name} className="h-16 w-16 rounded-md object-cover shrink-0" />
-                      ) : (
-                        <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center shrink-0">
-                          <Truck className="h-6 w-6 text-muted-foreground" />
+              <>
+                {category === '' ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">Choose a category to view assets:</p>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <button
+                        onClick={() => setCategory('all')}
+                        className="flex items-center gap-3 border border-border rounded-lg bg-card p-4 cursor-pointer hover:shadow-md transition-shadow text-left"
+                      >
+                        <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                          <LayoutGrid className="h-5 w-5 text-primary" />
                         </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-sm text-foreground truncate">{asset.name}</h3>
-                        <p className="text-xs text-muted-foreground">{asset.asset_type} · {asset.brand} {asset.year || ''}</p>
-                        <Badge variant="secondary" className={`mt-1 text-xs ${STATUS_COLORS[asset.status] || ''}`}>
-                          {asset.status}
-                        </Badge>
-                      </div>
+                        <div>
+                          <h3 className="font-semibold text-sm text-foreground">All</h3>
+                          <p className="text-xs text-muted-foreground">{assets.length} assets</p>
+                        </div>
+                      </button>
+                      {assetTypes.map((t) => {
+                        const count = assets.filter((a) => a.asset_type === t).length;
+                        return (
+                          <button
+                            key={t}
+                            onClick={() => setCategory(t)}
+                            className="flex items-center gap-3 border border-border rounded-lg bg-card p-4 cursor-pointer hover:shadow-md transition-shadow text-left"
+                          >
+                            <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                              <Truck className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-sm text-foreground">{t}</h3>
+                              <p className="text-xs text-muted-foreground">{count} assets</p>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant={category === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCategory('all')}
+                      >
+                        All
+                      </Button>
+                      {assetTypes.map((t) => (
+                        <Button
+                          key={t}
+                          variant={category === t ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setCategory(t)}
+                        >
+                          {t}
+                        </Button>
+                      ))}
+                    </div>
+                    {filteredAssets.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">No assets found.</p>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {filteredAssets.map((asset) => (
+                          <div
+                            key={asset.id}
+                            className="border border-border rounded-lg bg-card p-4 cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => navigate(`/assets/${asset.id}`)}
+                          >
+                            <div className="flex gap-3">
+                              {asset.display_image_url ? (
+                                <img src={asset.display_image_url} alt={asset.name} className="h-16 w-16 rounded-md object-cover shrink-0" />
+                              ) : (
+                                <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                  <Truck className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-semibold text-sm text-foreground truncate">{asset.name}</h3>
+                                <p className="text-xs text-muted-foreground">{asset.asset_type} · {asset.brand} {asset.year || ''}</p>
+                                <Badge variant="secondary" className={`mt-1 text-xs ${STATUS_COLORS[asset.status] || ''}`}>
+                                  {asset.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
