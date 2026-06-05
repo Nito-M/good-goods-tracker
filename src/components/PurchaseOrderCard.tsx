@@ -39,6 +39,7 @@ import {
   Plus,
   Undo2,
   ExternalLink,
+  MoreHorizontal,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { downloadFileFromUrl, getFileNameFromUrl } from '@/lib/fileDownload';
