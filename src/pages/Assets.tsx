@@ -43,7 +43,7 @@ export function Assets() {
       a.brand.toLowerCase().includes(q) ||
       a.serial_number.toLowerCase().includes(q);
     const matchesCategory = category === 'all' || a.asset_type === category;
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && category !== '';
   });
 
   const filteredWorkers = workers.filter((w) => {
