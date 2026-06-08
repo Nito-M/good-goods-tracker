@@ -397,8 +397,6 @@ export function usePurchaseOrders() {
     }
 
     // Update the purchase order status and items with received quantities
-    const newStatus = partial ? 'partially_received' : 'received';
-
     const validLocations = locationItems?.filter(e => e.warehouseId && e.items.length > 0) || [];
 
     // Build per-item total quantities to add to inventory (sum across all locations)
@@ -408,7 +406,7 @@ export function usePurchaseOrders() {
         itemTotalMap.set(item.sku, (itemTotalMap.get(item.sku) || 0) + item.quantity);
       }
     }
-    
+
     // Build updated items with receivedQuantity tracking.
     // If the dialog provided a prev-received override, use it as the new baseline.
     const updatedItems = order.items.map(item => {
@@ -421,12 +419,16 @@ export function usePurchaseOrders() {
       };
     });
 
+    // Auto-promote to fully received if every line is now fully received.
+    const allFull = updatedItems.every(i => (i.receivedQuantity || 0) >= i.quantity);
+    const newStatus = (!partial || allFull) ? 'received' : 'partially_received';
+
     const { error } = await supabase
       .from('purchase_orders')
       .update({
         status: newStatus,
         items: JSON.parse(JSON.stringify(updatedItems)),
-        ...(partial ? {} : { received_at: new Date().toISOString() }),
+        ...(newStatus === 'received' ? { received_at: new Date().toISOString() } : {}),
       })
       .eq('id', orderId);
 
