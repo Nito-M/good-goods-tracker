@@ -397,8 +397,6 @@ export function usePurchaseOrders() {
     }
 
     // Update the purchase order status and items with received quantities
-    const newStatus = partial ? 'partially_received' : 'received';
-
     const validLocations = locationItems?.filter(e => e.warehouseId && e.items.length > 0) || [];
 
     // Build per-item total quantities to add to inventory (sum across all locations)
@@ -408,7 +406,7 @@ export function usePurchaseOrders() {
         itemTotalMap.set(item.sku, (itemTotalMap.get(item.sku) || 0) + item.quantity);
       }
     }
-    
+
     // Build updated items with receivedQuantity tracking.
     // If the dialog provided a prev-received override, use it as the new baseline.
     const updatedItems = order.items.map(item => {
@@ -421,12 +419,16 @@ export function usePurchaseOrders() {
       };
     });
 
+    // Auto-promote to fully received if every line is now fully received.
+    const allFull = updatedItems.every(i => (i.receivedQuantity || 0) >= i.quantity);
+    const newStatus = (!partial || allFull) ? 'received' : 'partially_received';
+
     const { error } = await supabase
       .from('purchase_orders')
       .update({
         status: newStatus,
         items: JSON.parse(JSON.stringify(updatedItems)),
-        ...(partial ? {} : { received_at: new Date().toISOString() }),
+        ...(newStatus === 'received' ? { received_at: new Date().toISOString() } : {}),
       })
       .eq('id', orderId);
 
@@ -1047,13 +1049,19 @@ export function usePurchaseOrders() {
       return false;
     }
 
-    if (order.status !== 'received') {
-      toast({ title: 'Only received orders can be reverted', variant: 'destructive' });
+    if (order.status !== 'received' && order.status !== 'partially_received') {
+      toast({ title: 'Only received or partially received orders can be reverted', variant: 'destructive' });
       return false;
     }
 
-    // Remove quantities from inventory for each item
+    // Remove from inventory the actual received quantity per line
+    // (for fully received orders this equals item.quantity; for partial it equals receivedQuantity).
     for (const item of order.items) {
+      const qtyToReverse = order.status === 'received'
+        ? item.quantity
+        : (item.receivedQuantity || 0);
+      if (qtyToReverse <= 0) continue;
+
       const { data: inventoryItem } = await supabase
         .from('inventory_items')
         .select('id, quantity')
@@ -1062,7 +1070,7 @@ export function usePurchaseOrders() {
         .single();
 
       if (inventoryItem) {
-        const newQty = Math.max(0, inventoryItem.quantity - item.quantity);
+        const newQty = Math.max(0, inventoryItem.quantity - qtyToReverse);
         await supabase
           .from('inventory_items')
           .update({ quantity: newQty })
@@ -1076,7 +1084,7 @@ export function usePurchaseOrders() {
           .eq('user_id', user!.id);
 
         if (locQtys) {
-          let remaining = item.quantity;
+          let remaining = qtyToReverse;
           for (const loc of locQtys) {
             if (remaining <= 0) break;
             const reduce = Math.min(loc.quantity, remaining);
@@ -1090,10 +1098,16 @@ export function usePurchaseOrders() {
       }
     }
 
-    // Revert PO status back to ordered
+    // Reset per-item receivedQuantity to 0 and revert PO status to ordered
+    const clearedItems = order.items.map(i => ({ ...i, receivedQuantity: 0 }));
     const { error } = await supabase
       .from('purchase_orders')
-      .update({ status: 'ordered', received_at: null })
+      .update({
+        status: 'ordered',
+        received_at: null,
+        partially_received_at: null,
+        items: JSON.parse(JSON.stringify(clearedItems)),
+      })
       .eq('id', orderId);
 
     if (error) {
@@ -1105,6 +1119,7 @@ export function usePurchaseOrders() {
     fetchOrders();
     return true;
   };
+
 
   const markAsPartiallyReceived = async (orderId: string) => {
     const { error } = await supabase
