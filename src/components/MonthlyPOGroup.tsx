@@ -22,11 +22,14 @@ export function groupOrdersByMonth(orders: PurchaseOrder[]): MonthlyGroup[] {
 
   return Array.from(groups.entries())
     .sort((a, b) => b[0].localeCompare(a[0]))
-    .map(([key, groupOrders]) => ({
-      key,
-      label: format(new Date(key + '-01'), 'MMMM yyyy'),
-      orders: groupOrders,
-    }));
+    .map(([key, groupOrders]) => {
+      const [y, m] = key.split('-').map(Number);
+      return {
+        key,
+        label: format(new Date(y, m - 1, 1, 12), 'MMMM yyyy'),
+        orders: groupOrders,
+      };
+    });
 }
 
 interface MonthlyPOGroupProps {
