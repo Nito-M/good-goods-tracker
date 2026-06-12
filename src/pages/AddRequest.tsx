@@ -173,7 +173,12 @@ function RequestItemForm({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-popover z-50" align="start">
-              <Command>
+              <Command filter={(value, search) => {
+                if (!search) return 1;
+                const tokens = search.toLowerCase().split(/\s+/).filter(Boolean);
+                const hay = value.toLowerCase();
+                return tokens.every((t) => hay.includes(t)) ? 1 : 0;
+              }}>
                 <CommandInput placeholder="Search items..." />
                 <CommandList className="max-h-[min(50vh,20rem)] overflow-y-auto overscroll-contain" onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
                   <CommandEmpty>No items found.</CommandEmpty>
