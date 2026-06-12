@@ -276,8 +276,10 @@ export function AddPurchaseOrderDialog({
     const items: PurchaseOrderItem[] = lineItems.map((lineItem) => {
       const { sku, itemName } = getItemDetails(lineItem);
       const unitCost = lineItem.unitCost ? parseFloat(lineItem.unitCost) : undefined;
-      return { sku, itemName, quantity: lineItem.quantity, unitCost, notes: lineItem.itemNotes || undefined };
+      const inventoryItemId = lineItem.selectedItemId && lineItem.selectedItemId !== 'custom' ? lineItem.selectedItemId : null;
+      return { sku, itemName, quantity: lineItem.quantity, unitCost, notes: lineItem.itemNotes || undefined, inventoryItemId };
     });
+
 
     const [year, month, day] = orderedAt.split('-').map(Number);
     const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
