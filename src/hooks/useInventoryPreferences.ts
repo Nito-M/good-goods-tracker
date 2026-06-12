@@ -3,6 +3,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export type InventoryPriceDisplay = 'selling' | 'cost';
+export type InventoryColumnKey = 'image' | 'name' | 'sku' | 'quantity' | 'price';
+
+export const DEFAULT_COLUMN_ORDER: InventoryColumnKey[] = ['image', 'name', 'sku', 'quantity', 'price'];
+
+function normalizeOrder(input: unknown): InventoryColumnKey[] {
+  const allowed: InventoryColumnKey[] = ['image', 'name', 'sku', 'quantity', 'price'];
+  const arr = Array.isArray(input) ? (input as string[]) : [];
+  const filtered = arr.filter((k): k is InventoryColumnKey => (allowed as string[]).includes(k));
+  // Append any missing keys at the end so new columns appear automatically
+  for (const k of allowed) if (!filtered.includes(k)) filtered.push(k);
+  return filtered;
+}
 
 export interface InventoryPreferences {
   priceDisplay: InventoryPriceDisplay;
@@ -11,6 +23,7 @@ export interface InventoryPreferences {
   showSku: boolean;
   showQuantity: boolean;
   showPrice: boolean;
+  columnOrder: InventoryColumnKey[];
 }
 
 export function useInventoryPreferences() {
@@ -22,10 +35,10 @@ export function useInventoryPreferences() {
     queryFn: async (): Promise<InventoryPreferences> => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true, showQuantity: true, showPrice: true };
+      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true, showQuantity: true, showPrice: true, columnOrder: DEFAULT_COLUMN_ORDER };
       const { data, error } = await supabase
         .from('profiles')
-        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku, inventory_show_quantity, inventory_show_price')
+        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku, inventory_show_quantity, inventory_show_price, inventory_column_order')
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
@@ -38,6 +51,7 @@ export function useInventoryPreferences() {
         showSku: row?.inventory_show_sku !== false,
         showQuantity: row?.inventory_show_quantity !== false,
         showPrice: row?.inventory_show_price !== false,
+        columnOrder: normalizeOrder(row?.inventory_column_order),
       };
     },
     staleTime: 5 * 60_000,
@@ -63,6 +77,7 @@ export function useInventoryPreferences() {
         showSku: old?.showSku ?? true,
         showQuantity: old?.showQuantity ?? true,
         showPrice: old?.showPrice ?? true,
+        columnOrder: old?.columnOrder ?? DEFAULT_COLUMN_ORDER,
       }));
       toast({ title: 'Inventory settings saved' });
     },
@@ -94,11 +109,42 @@ export function useInventoryPreferences() {
         showSku: input.showSku !== undefined ? input.showSku : (old?.showSku ?? true),
         showQuantity: input.showQuantity !== undefined ? input.showQuantity : (old?.showQuantity ?? true),
         showPrice: input.showPrice !== undefined ? input.showPrice : (old?.showPrice ?? true),
+        columnOrder: old?.columnOrder ?? DEFAULT_COLUMN_ORDER,
       }));
       toast({ title: 'Inventory settings saved' });
     },
     onError: (e: any) => {
       toast({ title: 'Failed to save', description: e?.message, variant: 'destructive' });
+    },
+  });
+
+  const orderMutation = useMutation({
+    mutationFn: async (columnOrder: InventoryColumnKey[]) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      const normalized = normalizeOrder(columnOrder);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ inventory_column_order: normalized } as any)
+        .eq('user_id', userId);
+      if (error) throw error;
+      return normalized;
+    },
+    onMutate: async (columnOrder) => {
+      const normalized = normalizeOrder(columnOrder);
+      queryClient.setQueryData(['inventory-preferences'], (old: InventoryPreferences | undefined) => ({
+        priceDisplay: old?.priceDisplay ?? 'selling',
+        showTags: old?.showTags ?? true,
+        showImages: old?.showImages ?? true,
+        showSku: old?.showSku ?? true,
+        showQuantity: old?.showQuantity ?? true,
+        showPrice: old?.showPrice ?? true,
+        columnOrder: normalized,
+      }));
+    },
+    onError: (e: any) => {
+      toast({ title: 'Failed to save order', description: e?.message, variant: 'destructive' });
     },
   });
 
@@ -109,6 +155,7 @@ export function useInventoryPreferences() {
     showSku: data?.showSku ?? true,
     showQuantity: data?.showQuantity ?? true,
     showPrice: data?.showPrice ?? true,
+    columnOrder: data?.columnOrder ?? DEFAULT_COLUMN_ORDER,
     loading: isLoading,
     setPriceDisplay: (v: InventoryPriceDisplay) => priceMutation.mutate(v),
     setShowTags: (v: boolean) => toggleMutation.mutate({ showTags: v }),
@@ -116,6 +163,7 @@ export function useInventoryPreferences() {
     setShowSku: (v: boolean) => toggleMutation.mutate({ showSku: v }),
     setShowQuantity: (v: boolean) => toggleMutation.mutate({ showQuantity: v }),
     setShowPrice: (v: boolean) => toggleMutation.mutate({ showPrice: v }),
-    saving: priceMutation.isPending || toggleMutation.isPending,
+    setColumnOrder: (v: InventoryColumnKey[]) => orderMutation.mutate(v),
+    saving: priceMutation.isPending || toggleMutation.isPending || orderMutation.isPending,
   };
 }
