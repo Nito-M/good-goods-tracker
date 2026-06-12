@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { useInventoryPreferences, InventoryPriceDisplay, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
 import { ItemCsvImport } from '@/components/ItemCsvImport';
 import { InventoryItem } from '@/types/inventory';
@@ -22,7 +23,7 @@ interface InventorySettingsProps {
 
 export const InventorySettings = ({ addItem }: InventorySettingsProps) => {
   const navigate = useNavigate();
-  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, loading, saving } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, markupPercent, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, setMarkupPercent, loading, saving } = useInventoryPreferences();
 
   const moveColumn = (index: number, direction: -1 | 1) => {
     const target = index + direction;
@@ -91,6 +92,33 @@ export const InventorySettings = ({ addItem }: InventorySettingsProps) => {
               </div>
             </label>
           </RadioGroup>
+
+          {priceDisplay === 'selling' && (
+            <div className="mt-5 rounded-lg border border-border bg-background p-4">
+              <Label htmlFor="markup-percent" className="text-sm font-medium">
+                Upscale markup percentage
+              </Label>
+              <p className="text-xs text-muted-foreground mb-3">
+                When an item has no explicit selling price, the table will calculate it from cost plus this markup.
+              </p>
+              <div className="flex items-center gap-2 max-w-[200px]">
+                <Input
+                  id="markup-percent"
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={markupPercent}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setMarkupPercent(isNaN(val) ? 0 : Math.max(0, val));
+                  }}
+                  disabled={loading || saving}
+                  className="tabular-nums"
+                />
+                <span className="text-sm text-muted-foreground font-medium">%</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Display Options */}

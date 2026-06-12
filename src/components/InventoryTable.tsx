@@ -51,7 +51,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
-  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, markupPercent } = useInventoryPreferences();
   const showCost = priceDisplay === 'cost';
 
   const visibleColumns = useMemo<InventoryColumnKey[]>(() => {
@@ -145,12 +145,20 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
           </TableCell>
         );
-      case 'price':
+      case 'price': {
+        const rawPrice = showCost
+          ? item.cost
+          : item.price > 0
+            ? item.price
+            : markupPercent > 0 && item.cost > 0
+              ? item.cost * (1 + markupPercent / 100)
+              : 0;
         return (
           <TableCell key={key} className="text-right tabular-nums">
-            {formatCurrency(showCost ? item.cost : item.price)}
+            {formatCurrency(rawPrice)}
           </TableCell>
         );
+      }
     }
   };
 
