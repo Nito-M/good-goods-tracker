@@ -51,7 +51,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
-  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, markupPercent } = useInventoryPreferences();
   const showCost = priceDisplay === 'cost';
 
   const visibleColumns = useMemo<InventoryColumnKey[]>(() => {
