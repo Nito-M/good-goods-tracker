@@ -9,6 +9,8 @@ export interface InventoryPreferences {
   showTags: boolean;
   showImages: boolean;
   showSku: boolean;
+  showQuantity: boolean;
+  showPrice: boolean;
 }
 
 export function useInventoryPreferences() {
