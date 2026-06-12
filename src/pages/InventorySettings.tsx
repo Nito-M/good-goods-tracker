@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { useInventoryPreferences, InventoryPriceDisplay, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
+import { ItemCsvImport } from '@/components/ItemCsvImport';
+import { InventoryItem } from '@/types/inventory';
 
 const COLUMN_LABELS: Record<InventoryColumnKey, string> = {
   image: 'Image',
@@ -14,7 +16,11 @@ const COLUMN_LABELS: Record<InventoryColumnKey, string> = {
   price: 'Price / Cost',
 };
 
-export const InventorySettings = () => {
+interface InventorySettingsProps {
+  addItem: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
+}
+
+export const InventorySettings = ({ addItem }: InventorySettingsProps) => {
   const navigate = useNavigate();
   const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, loading, saving } = useInventoryPreferences();
 
@@ -179,6 +185,17 @@ export const InventorySettings = () => {
                 disabled={loading || saving}
               />
             </div>
+          </div>
+        </div>
+
+        {/* CSV Import */}
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-card-foreground">Import items</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Bulk import inventory items from a CSV file.
+          </p>
+          <div className="mt-5">
+            <ItemCsvImport addItem={addItem} />
           </div>
         </div>
 
