@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { useInventoryPreferences, InventoryPriceDisplay, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
+import { ItemCsvImport } from '@/components/ItemCsvImport';
+import { InventoryItem } from '@/types/inventory';
 
 const COLUMN_LABELS: Record<InventoryColumnKey, string> = {
   image: 'Image',
