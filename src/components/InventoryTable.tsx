@@ -51,10 +51,10 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
-  const { priceDisplay, showTags, showImages } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku } = useInventoryPreferences();
   const showCost = priceDisplay === 'cost';
 
-  const colCount = showImages ? 4 : 3;
+  const colCount = 3 + (showImages ? 1 : 0) + (showSku ? 1 : 0);
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
