@@ -65,7 +65,9 @@ interface LineItem {
 }
 
 function createLineItemFromOrder(item: PurchaseOrderItem, inventoryItems: InventoryItem[]): LineItem {
-  const matchingItem = inventoryItems.find(i => i.sku === item.sku);
+  const matchingItem =
+    (item.inventoryItemId && inventoryItems.find(i => i.id === item.inventoryItemId)) ||
+    inventoryItems.find(i => i.sku === item.sku);
   return {
     id: crypto.randomUUID(),
     selectedItemId: matchingItem?.id || 'custom',
@@ -76,6 +78,7 @@ function createLineItemFromOrder(item: PurchaseOrderItem, inventoryItems: Invent
     itemNotes: item.notes || '',
   };
 }
+
 
 function createEmptyLineItem(): LineItem {
   return {
@@ -177,8 +180,10 @@ export function EditPurchaseOrderDialog({
     const items: PurchaseOrderItem[] = lineItems.map((lineItem) => {
       const { sku, itemName } = getItemDetails(lineItem);
       const unitCost = lineItem.unitCost ? parseFloat(lineItem.unitCost) : undefined;
-      return { sku, itemName, quantity: lineItem.quantity, unitCost, notes: lineItem.itemNotes || undefined };
+      const inventoryItemId = lineItem.selectedItemId && lineItem.selectedItemId !== 'custom' ? lineItem.selectedItemId : null;
+      return { sku, itemName, quantity: lineItem.quantity, unitCost, notes: lineItem.itemNotes || undefined, inventoryItemId };
     });
+
 
     // Parse date as local time to avoid timezone offset issues
     const [year, month, day] = orderedAt.split('-').map(Number);

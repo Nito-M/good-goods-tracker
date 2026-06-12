@@ -5,7 +5,9 @@ export interface PurchaseOrderItem {
   unitCost?: number;
   notes?: string;
   receivedQuantity?: number;
+  inventoryItemId?: string | null;
 }
+
 
 export interface PoAttachment {
   id: string;

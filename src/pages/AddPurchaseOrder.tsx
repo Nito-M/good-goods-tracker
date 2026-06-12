@@ -301,7 +301,9 @@ export function AddPurchaseOrder() {
       quantity: c.quantity || 0,
       unitCost: c.unitPrice || undefined,
       notes: c.notes || undefined,
+      inventoryItemId: c.inventoryItemId || null,
     }));
+
 
     const [year, month, day] = orderedAt.split('-').map(Number);
     const localOrderedAt = new Date(year, month - 1, day, 12, 0, 0);
