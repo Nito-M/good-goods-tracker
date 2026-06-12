@@ -64,7 +64,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   // Vendor and pricing hooks
   const { vendors } = useVendors();
   const { warehouses } = useWarehouses();
-  const { prices: existingPrices, insertPrice, updatePriceById, deletePriceById } = useItemVendorPrices(editItem?.id);
+  const { prices: existingPrices, insertPrice, updatePriceById, deletePriceById, refetch: refetchVendorPrices } = useItemVendorPrices(editItem?.id);
   const { locations: existingLocations, saveLocations } = useItemLocationQuantities(editItem?.id);
   const { selectedTagIds, setTagsForItem } = useItemTags(editItem?.id);
   // Multi-image support for editing mode
@@ -442,6 +442,27 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
         } else {
           await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
         }
+      }
+      // Refetch from DB and rebuild local state with real ids so a subsequent
+      // main "Save" doesn't re-insert the same rows as duplicates.
+      await refetchVendorPrices();
+      const { data: fresh } = await supabase
+        .from('item_vendor_prices')
+        .select('*')
+        .eq('item_id', editItem.id)
+        .order('created_at', { ascending: true });
+      if (fresh) {
+        setVendorPrices(
+          fresh.map((p: any) => ({
+            id: p.id,
+            vendorId: p.vendor_id,
+            price: String(p.price),
+            link: p.link || '',
+            vendorSku: p.vendor_sku || '',
+            leadTimeDays: p.lead_time_days ? String(p.lead_time_days) : '',
+            isNew: false,
+          }))
+        );
       }
       toast({ title: 'Vendor prices saved successfully' });
     } catch {
