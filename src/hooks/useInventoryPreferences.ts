@@ -24,6 +24,7 @@ export interface InventoryPreferences {
   showQuantity: boolean;
   showPrice: boolean;
   columnOrder: InventoryColumnKey[];
+  markupPercent: number;
 }
 
 export function useInventoryPreferences() {
