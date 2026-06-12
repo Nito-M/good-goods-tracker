@@ -63,6 +63,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
           <TableRow className="bg-muted hover:bg-muted">
             {showImages && <TableHead className="font-semibold text-card-foreground w-12"></TableHead>}
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
+            {showSku && <TableHead className="font-semibold text-card-foreground">Part #</TableHead>}
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">{showCost ? 'Cost' : 'Price'}</TableHead>
           </TableRow>
@@ -142,6 +143,11 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                     })()}
                     </div>
                   </TableCell>
+                  {showSku && (
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {item.sku}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right tabular-nums">
                     {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </TableCell>

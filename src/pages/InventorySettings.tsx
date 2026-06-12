@@ -8,7 +8,7 @@ import { useInventoryPreferences, InventoryPriceDisplay } from '@/hooks/useInven
 
 export const InventorySettings = () => {
   const navigate = useNavigate();
-  const { priceDisplay, showTags, showImages, setPriceDisplay, setShowTags, setShowImages, loading, saving } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, setPriceDisplay, setShowTags, setShowImages, setShowSku, loading, saving } = useInventoryPreferences();
 
   return (
     <div className="min-h-screen bg-background">
