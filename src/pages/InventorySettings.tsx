@@ -129,6 +129,40 @@ export const InventorySettings = () => {
                 disabled={loading || saving}
               />
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+              <div>
+                <Label htmlFor="show-quantity" className="text-sm font-medium">
+                  Show quantity
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Display the Quantity column for each item.
+                </p>
+              </div>
+              <Switch
+                id="show-quantity"
+                checked={showQuantity}
+                onCheckedChange={setShowQuantity}
+                disabled={loading || saving}
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+              <div>
+                <Label htmlFor="show-price" className="text-sm font-medium">
+                  Show price column
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Display the Price/Cost column for each item.
+                </p>
+              </div>
+              <Switch
+                id="show-price"
+                checked={showPrice}
+                onCheckedChange={setShowPrice}
+                disabled={loading || saving}
+              />
+            </div>
           </div>
         </div>
       </main>
