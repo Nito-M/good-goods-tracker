@@ -25,6 +25,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useBulkItemTags } from '@/hooks/useItemTags';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
+import { useInventoryPreferences } from '@/hooks/useInventoryPreferences';
 
 interface InventoryTableProps {
   items: InventoryItem[];
@@ -50,6 +51,8 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
+  const { priceDisplay } = useInventoryPreferences();
+  const showCost = priceDisplay === 'cost';
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
@@ -59,7 +62,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             <TableHead className="font-semibold text-card-foreground w-12"></TableHead>
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
-            <TableHead className="font-semibold text-card-foreground text-right">Price</TableHead>
+            <TableHead className="font-semibold text-card-foreground text-right">{showCost ? 'Cost' : 'Price'}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -138,7 +141,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                   <TableCell className="text-right tabular-nums">
                     {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(item.price)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrency(showCost ? item.cost : item.price)}</TableCell>
                 </TableRow>);
 
           })

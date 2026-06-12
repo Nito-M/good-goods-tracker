@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, MapPin, Building2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, Building2, Settings as SettingsIcon } from 'lucide-react';
 import { ItemCsvImport } from '@/components/ItemCsvImport';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -224,6 +224,14 @@ export const Items = ({
             </h1>
             <div className="flex items-center gap-2">
               <ItemCsvImport addItem={addItem} />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate('/inventory-settings')}
+                title="Inventory Settings"
+              >
+                <SettingsIcon className="h-4 w-4" />
+              </Button>
               <Button onClick={() => navigate('/items/new')} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add Item
