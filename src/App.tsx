@@ -208,7 +208,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <InventorySettings />
+                <InventorySettings addItem={addItem} />
               </AppLayout>
             </ProtectedRoute>
           }
