@@ -198,20 +198,15 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     const totalsY = layout.totals.y > 0 ? layout.totals.y : flowY;
     let y = totalsY;
     const totalsX = pageWidth - 70;
-    const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
     const discountAmount = order.discountAmount || 0;
     const afterDiscount = Math.max(0, subtotal - discountAmount);
     const taxAmount = afterDiscount * TAX_RATE;
     const totalCost = afterDiscount + taxAmount;
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Total Items:', totalsX, y);
-    doc.text(totalQuantity.toString(), pageWidth - 22, y, { align: 'right' });
-
     if (hasAnyCost) {
-      y += 7;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
       doc.text('Subtotal:', totalsX, y);
       doc.text(formatCurrency(subtotal), pageWidth - 22, y, { align: 'right' });
 
@@ -233,9 +228,9 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
       doc.setFontSize(12);
       doc.text('TOTAL:', totalsX, y);
       doc.text(formatCurrency(totalCost), pageWidth - 22, y, { align: 'right' });
-    }
 
-    flowY = Math.max(flowY, y + 10);
+      flowY = Math.max(flowY, y + 10);
+    }
   }
 
   // Notes
