@@ -251,6 +251,7 @@ export function ItemCsvImport({ addItem }: Props) {
     setImporting(false);
     setPreviewOpen(false);
     const parts = [`${created} item${created !== 1 ? 's' : ''} created`];
+    if (skipped > 0) parts.push(`${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped`);
     if (vendorLinked > 0) parts.push(`${vendorLinked} vendor link${vendorLinked !== 1 ? 's' : ''} added`);
     toast({ title: parts.join(', ') });
   };
