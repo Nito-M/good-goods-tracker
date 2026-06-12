@@ -51,15 +51,17 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
-  const { priceDisplay } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages } = useInventoryPreferences();
   const showCost = priceDisplay === 'cost';
+
+  const colCount = showImages ? 4 : 3;
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted hover:bg-muted">
-            <TableHead className="font-semibold text-card-foreground w-12"></TableHead>
+            {showImages && <TableHead className="font-semibold text-card-foreground w-12"></TableHead>}
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">{showCost ? 'Cost' : 'Price'}</TableHead>
@@ -68,7 +70,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
         <TableBody>
           {items.length === 0 ?
           <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={colCount} className="h-24 text-center text-muted-foreground">
                 No items found.
               </TableCell>
             </TableRow> :
@@ -91,6 +93,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                   draggable && 'cursor-grab active:cursor-grabbing',
                 )}>
 
+                {showImages && (
                   <TableCell className="w-14 py-1">
                     {thumbnailMap.get(item.id) || item.imageUrl ?
                   <div
@@ -112,13 +115,14 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                       </div>
                   }
                   </TableCell>
-                  <TableCell
+                )}
+                <TableCell
                   className="font-medium text-card-foreground cursor-pointer hover:underline"
                   onClick={() => navigate(`/item/${item.id}`)}>
 
                     <div>
                       {item.name}
-                      {(() => {
+                      {showTags && (() => {
                       const itemTags = getTagsForItem(item.id);
                       if (itemTags.length === 0) return null;
                       return (

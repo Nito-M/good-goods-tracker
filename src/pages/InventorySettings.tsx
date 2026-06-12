@@ -3,11 +3,12 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import { useInventoryPreferences, InventoryPriceDisplay } from '@/hooks/useInventoryPreferences';
 
 export const InventorySettings = () => {
   const navigate = useNavigate();
-  const { priceDisplay, setPriceDisplay, loading, saving } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, setPriceDisplay, setShowTags, setShowImages, loading, saving } = useInventoryPreferences();
 
   return (
     <div className="min-h-screen bg-background">
@@ -24,7 +25,8 @@ export const InventorySettings = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+        {/* Price Column */}
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-card-foreground">Price column</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -67,6 +69,50 @@ export const InventorySettings = () => {
               </div>
             </label>
           </RadioGroup>
+        </div>
+
+        {/* Display Options */}
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-card-foreground">Display options</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose what else is visible in the Items & Inventory table.
+          </p>
+
+          <div className="mt-5 space-y-4">
+            <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+              <div>
+                <Label htmlFor="show-tags" className="text-sm font-medium">
+                  Show tags
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Display tags under each item name.
+                </p>
+              </div>
+              <Switch
+                id="show-tags"
+                checked={showTags}
+                onCheckedChange={setShowTags}
+                disabled={loading || saving}
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+              <div>
+                <Label htmlFor="show-images" className="text-sm font-medium">
+                  Show images
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Display the thumbnail image column for each item.
+                </p>
+              </div>
+              <Switch
+                id="show-images"
+                checked={showImages}
+                onCheckedChange={setShowImages}
+                disabled={loading || saving}
+              />
+            </div>
+          </div>
         </div>
       </main>
     </div>
