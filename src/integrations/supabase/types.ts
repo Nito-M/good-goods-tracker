@@ -3400,6 +3400,7 @@ export type Database = {
           custom_text_color: string | null
           display_name: string | null
           id: string
+          inventory_price_display: string
           invoice_layout: Json | null
           invoice_next_number: number | null
           invoice_prefix: string | null
@@ -3433,6 +3434,7 @@ export type Database = {
           custom_text_color?: string | null
           display_name?: string | null
           id?: string
+          inventory_price_display?: string
           invoice_layout?: Json | null
           invoice_next_number?: number | null
           invoice_prefix?: string | null
@@ -3466,6 +3468,7 @@ export type Database = {
           custom_text_color?: string | null
           display_name?: string | null
           id?: string
+          inventory_price_display?: string
           invoice_layout?: Json | null
           invoice_next_number?: number | null
           invoice_prefix?: string | null
