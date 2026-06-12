@@ -443,6 +443,27 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
           await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
         }
       }
+      // Refetch from DB and rebuild local state with real ids so a subsequent
+      // main "Save" doesn't re-insert the same rows as duplicates.
+      await refetchVendorPrices();
+      const { data: fresh } = await supabase
+        .from('item_vendor_prices')
+        .select('*')
+        .eq('item_id', editItem.id)
+        .order('created_at', { ascending: true });
+      if (fresh) {
+        setVendorPrices(
+          fresh.map((p: any) => ({
+            id: p.id,
+            vendorId: p.vendor_id,
+            price: String(p.price),
+            link: p.link || '',
+            vendorSku: p.vendor_sku || '',
+            leadTimeDays: p.lead_time_days ? String(p.lead_time_days) : '',
+            isNew: false,
+          }))
+        );
+      }
       toast({ title: 'Vendor prices saved successfully' });
     } catch {
       toast({ title: 'Error saving vendor prices', variant: 'destructive' });
