@@ -16,7 +16,11 @@ const COLUMN_LABELS: Record<InventoryColumnKey, string> = {
   price: 'Price / Cost',
 };
 
-export const InventorySettings = () => {
+interface InventorySettingsProps {
+  addItem: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
+}
+
+export const InventorySettings = ({ addItem }: InventorySettingsProps) => {
   const navigate = useNavigate();
   const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, loading, saving } = useInventoryPreferences();
 
