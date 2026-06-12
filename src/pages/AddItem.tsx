@@ -64,7 +64,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   // Vendor and pricing hooks
   const { vendors } = useVendors();
   const { warehouses } = useWarehouses();
-  const { prices: existingPrices, insertPrice, updatePriceById, deletePriceById } = useItemVendorPrices(editItem?.id);
+  const { prices: existingPrices, insertPrice, updatePriceById, deletePriceById, refetch: refetchVendorPrices } = useItemVendorPrices(editItem?.id);
   const { locations: existingLocations, saveLocations } = useItemLocationQuantities(editItem?.id);
   const { selectedTagIds, setTagsForItem } = useItemTags(editItem?.id);
   // Multi-image support for editing mode
