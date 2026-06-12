@@ -51,10 +51,10 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
-  const { priceDisplay, showTags, showImages } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku } = useInventoryPreferences();
   const showCost = priceDisplay === 'cost';
 
-  const colCount = showImages ? 4 : 3;
+  const colCount = 3 + (showImages ? 1 : 0) + (showSku ? 1 : 0);
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
@@ -63,6 +63,7 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
           <TableRow className="bg-muted hover:bg-muted">
             {showImages && <TableHead className="font-semibold text-card-foreground w-12"></TableHead>}
             <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
+            {showSku && <TableHead className="font-semibold text-card-foreground">Part #</TableHead>}
             <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-card-foreground text-right">{showCost ? 'Cost' : 'Price'}</TableHead>
           </TableRow>
@@ -142,6 +143,11 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                     })()}
                     </div>
                   </TableCell>
+                  {showSku && (
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {item.sku}
+                    </TableCell>
+                  )}
                   <TableCell className="text-right tabular-nums">
                     {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
                   </TableCell>
