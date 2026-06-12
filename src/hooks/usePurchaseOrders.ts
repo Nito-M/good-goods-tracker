@@ -444,115 +444,95 @@ export function usePurchaseOrders() {
 
     // Determine which items to process from order
     const itemsToReceive = order.items.filter(oi => itemTotalMap.has(oi.sku));
+    const missingItems: string[] = [];
 
     // Update inventory items with new costs and quantities, and save vendor prices
     for (const item of itemsToReceive) {
       const receiveQty = itemTotalMap.get(item.sku) || 0;
-      
-      const { data: inventoryItem } = await supabase
+
+      // Prefer looking up by tracked inventoryItemId; fall back to SKU match
+      let inventoryItem: { id: string; quantity: number; cost: number } | null = null;
+      if (item.inventoryItemId) {
+        const { data } = await supabase
+          .from('inventory_items')
+          .select('id, quantity, cost')
+          .eq('id', item.inventoryItemId)
+          .maybeSingle();
+        inventoryItem = data ?? null;
+      }
+      if (!inventoryItem) {
+        const { data } = await supabase
+          .from('inventory_items')
+          .select('id, quantity, cost')
+          .eq('sku', item.sku)
+          .eq('user_id', user!.id)
+          .maybeSingle();
+        inventoryItem = data ?? null;
+      }
+
+      if (!inventoryItem) {
+        // Do NOT auto-create. Skip and warn — keeps inventory clean.
+        missingItems.push(`${item.itemName} (${item.sku})`);
+        continue;
+      }
+
+      // Existing item - update quantity and cost
+      const updates: Record<string, unknown> = {
+        quantity: inventoryItem.quantity + receiveQty,
+      };
+
+      // Update cost if provided in the PO
+      if (item.unitCost !== undefined && item.unitCost > 0) {
+        updates.cost = item.unitCost;
+
+        if (order.vendorId) {
+          await updateVendorPriceFromPO(user!.id, inventoryItem.id, order.vendorId, item.unitCost);
+        }
+      }
+
+      await supabase
         .from('inventory_items')
-        .select('id, quantity, cost')
-        .eq('sku', item.sku)
-        .eq('user_id', user!.id)
-        .single();
+        .update(updates)
+        .eq('id', inventoryItem.id);
 
-      if (inventoryItem) {
-        // Existing item - update quantity and cost
-        const updates: Record<string, unknown> = {
-          quantity: inventoryItem.quantity + receiveQty,
-        };
+      // Update item_location_quantities per location
+      for (const loc of validLocations) {
+        const locItem = loc.items.find(li => li.sku === item.sku);
+        if (!locItem || locItem.quantity <= 0) continue;
 
-        // Update cost if provided in the PO
-        if (item.unitCost !== undefined && item.unitCost > 0) {
-          updates.cost = item.unitCost;
-          
-          if (order.vendorId) {
-            await updateVendorPriceFromPO(user!.id, inventoryItem.id, order.vendorId, item.unitCost);
-          }
-        }
-
-        await supabase
-          .from('inventory_items')
-          .update(updates)
-          .eq('id', inventoryItem.id);
-
-        // Update item_location_quantities per location
-        for (const loc of validLocations) {
-          const locItem = loc.items.find(li => li.sku === item.sku);
-          if (!locItem || locItem.quantity <= 0) continue;
-
-          const { data: existingLocQty } = await supabase
-            .from('item_location_quantities')
-            .select('id, quantity')
-            .eq('item_id', inventoryItem.id)
-            .eq('warehouse_id', loc.warehouseId)
-            .single();
-
-          if (existingLocQty) {
-            await supabase
-              .from('item_location_quantities')
-              .update({ quantity: existingLocQty.quantity + locItem.quantity })
-              .eq('id', existingLocQty.id);
-          } else {
-            await supabase
-              .from('item_location_quantities')
-              .insert({
-                item_id: inventoryItem.id,
-                warehouse_id: loc.warehouseId,
-                quantity: locItem.quantity,
-                user_id: user!.id,
-              });
-          }
-        }
-      } else {
-        // Custom item - create new inventory item
-        const firstLoc = validLocations.find(l => l.items.some(li => li.sku === item.sku));
-        const { data: newItem, error: createError } = await supabase
-          .from('inventory_items')
-          .insert({
-            user_id: user!.id,
-            sku: item.sku,
-            name: item.itemName,
-            category: 'Other',
-            quantity: receiveQty,
-            cost: item.unitCost || 0,
-            price: 0,
-            min_stock: 0,
-            weight: 0,
-            weight_unit: 'lb',
-            quantity_unit: 'pcs',
-            dimensions_length: 0,
-            dimensions_width: 0,
-            dimensions_height: 0,
-            dimensions_unit: 'in',
-            warehouse_id: validLocations.length === 1 ? validLocations[0].warehouseId : null,
-          })
-          .select('id')
+        const { data: existingLocQty } = await supabase
+          .from('item_location_quantities')
+          .select('id, quantity')
+          .eq('item_id', inventoryItem.id)
+          .eq('warehouse_id', loc.warehouseId)
           .single();
 
-        if (createError) {
-          console.error('Error creating inventory item from PO:', createError);
-        } else if (newItem) {
-          // Save vendor price for the newly created item
-          if (order.vendorId && item.unitCost && item.unitCost > 0) {
-            await updateVendorPriceFromPO(user!.id, newItem.id, order.vendorId, item.unitCost);
-          }
-          // Save location quantities per location
-          for (const loc of validLocations) {
-            const locItem = loc.items.find(li => li.sku === item.sku);
-            if (!locItem || locItem.quantity <= 0) continue;
-            await supabase
-              .from('item_location_quantities')
-              .insert({
-                item_id: newItem.id,
-                warehouse_id: loc.warehouseId,
-                quantity: locItem.quantity,
-                user_id: user!.id,
-              });
-          }
+        if (existingLocQty) {
+          await supabase
+            .from('item_location_quantities')
+            .update({ quantity: existingLocQty.quantity + locItem.quantity })
+            .eq('id', existingLocQty.id);
+        } else {
+          await supabase
+            .from('item_location_quantities')
+            .insert({
+              item_id: inventoryItem.id,
+              warehouse_id: loc.warehouseId,
+              quantity: locItem.quantity,
+              user_id: user!.id,
+            });
         }
       }
     }
+
+    if (missingItems.length > 0) {
+      toast({
+        title: 'Some lines were not received into inventory',
+        description: `No matching inventory item found for: ${missingItems.join(', ')}. Add them in Items first, then receive again.`,
+        variant: 'destructive',
+      });
+    }
+
 
     toast({ title: 'Order marked as received', description: 'Inventory updated (new items created if needed)' });
     fetchOrders();
