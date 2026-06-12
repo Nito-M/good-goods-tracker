@@ -22,10 +22,10 @@ export function useInventoryPreferences() {
     queryFn: async (): Promise<InventoryPreferences> => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true };
+      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true, showQuantity: true, showPrice: true };
       const { data, error } = await supabase
         .from('profiles')
-        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku')
+        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku, inventory_show_quantity, inventory_show_price')
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
@@ -36,6 +36,8 @@ export function useInventoryPreferences() {
         showTags: row?.inventory_show_tags !== false,
         showImages: row?.inventory_show_images !== false,
         showSku: row?.inventory_show_sku !== false,
+        showQuantity: row?.inventory_show_quantity !== false,
+        showPrice: row?.inventory_show_price !== false,
       };
     },
     staleTime: 5 * 60_000,
