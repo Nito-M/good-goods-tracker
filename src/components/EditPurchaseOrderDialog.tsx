@@ -65,7 +65,9 @@ interface LineItem {
 }
 
 function createLineItemFromOrder(item: PurchaseOrderItem, inventoryItems: InventoryItem[]): LineItem {
-  const matchingItem = inventoryItems.find(i => i.sku === item.sku);
+  const matchingItem =
+    (item.inventoryItemId && inventoryItems.find(i => i.id === item.inventoryItemId)) ||
+    inventoryItems.find(i => i.sku === item.sku);
   return {
     id: crypto.randomUUID(),
     selectedItemId: matchingItem?.id || 'custom',
@@ -76,6 +78,7 @@ function createLineItemFromOrder(item: PurchaseOrderItem, inventoryItems: Invent
     itemNotes: item.notes || '',
   };
 }
+
 
 function createEmptyLineItem(): LineItem {
   return {
