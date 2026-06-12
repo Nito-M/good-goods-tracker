@@ -180,51 +180,78 @@ export function ItemCsvImport({ addItem }: Props) {
       vendorByName.set(v.name.toLowerCase(), v.id);
     }
 
+    // Pre-fetch existing items in this tenant so we can skip duplicates
+    const { data: existingItems } = await supabase
+      .from('inventory_items')
+      .select('id, sku, name')
+      .is('deleted_at', null);
+    const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const existingByKey = new Map<string, string>();
+    for (const ei of existingItems || []) {
+      existingByKey.set(`${ei.sku}|${norm(ei.name)}`, ei.id);
+    }
+
     let created = 0;
+    let skipped = 0;
     let vendorLinked = 0;
     for (const row of rows) {
-      const id = await addItem({
-        name: row.name,
-        description: row.description,
-        sku: row.name.substring(0, 100),
-        category: 'Other',
-        quantity: 0,
-        quantityUnit: row.quantityUnit,
-        price: 0,
-        cost: 0,
-        minStock: 0,
-        weight: 0,
-        weightUnit: 'lb',
-        dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
-        colors: [],
-        palletAmount: 0,
-        boxAmount: 0,
-        bundleAmount: 0,
-        pieceLength: 0,
-      });
-      if (!id) continue;
-      created++;
+      const sku = row.name.substring(0, 100);
+      const key = `${sku}|${norm(row.name)}`;
+      let id: string | null = existingByKey.get(key) || null;
+      if (id) {
+        skipped++;
+      } else {
+        id = await addItem({
+          name: row.name,
+          description: row.description,
+          sku,
+          category: 'Other',
+          quantity: 0,
+          quantityUnit: row.quantityUnit,
+          price: 0,
+          cost: 0,
+          minStock: 0,
+          weight: 0,
+          weightUnit: 'lb',
+          dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
+          colors: [],
+          palletAmount: 0,
+          boxAmount: 0,
+          bundleAmount: 0,
+          pieceLength: 0,
+        });
+        if (!id) continue;
+        existingByKey.set(key, id);
+        created++;
+      }
 
-      // Link vendors
+      // Link vendors (skip if a row for that vendor already exists)
       for (const vName of row.vendorNames) {
         const vendorId = vendorByName.get(vName.toLowerCase());
-        if (vendorId) {
-          const { error } = await supabase
-            .from('item_vendor_prices')
-            .insert({
-              item_id: id,
-              vendor_id: vendorId,
-              price: 0,
-              user_id: user.id,
-            });
-          if (!error) vendorLinked++;
-        }
+        if (!vendorId) continue;
+        const { data: existingVP } = await supabase
+          .from('item_vendor_prices')
+          .select('id')
+          .eq('item_id', id)
+          .eq('vendor_id', vendorId)
+          .maybeSingle();
+        if (existingVP) continue;
+        const { error } = await supabase
+          .from('item_vendor_prices')
+          .insert({
+            item_id: id,
+            vendor_id: vendorId,
+            price: 0,
+            user_id: user.id,
+          });
+        if (!error) vendorLinked++;
       }
     }
 
     setImporting(false);
     setPreviewOpen(false);
     const parts = [`${created} item${created !== 1 ? 's' : ''} created`];
+    if (skipped > 0) parts.push(`${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped`);
     if (vendorLinked > 0) parts.push(`${vendorLinked} vendor link${vendorLinked !== 1 ? 's' : ''} added`);
     toast({ title: parts.join(', ') });
   };
