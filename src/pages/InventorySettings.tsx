@@ -1,14 +1,30 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { useInventoryPreferences, InventoryPriceDisplay } from '@/hooks/useInventoryPreferences';
+import { useInventoryPreferences, InventoryPriceDisplay, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
+
+const COLUMN_LABELS: Record<InventoryColumnKey, string> = {
+  image: 'Image',
+  name: 'Product name',
+  sku: 'Part number',
+  quantity: 'Quantity',
+  price: 'Price / Cost',
+};
 
 export const InventorySettings = () => {
   const navigate = useNavigate();
-  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, loading, saving } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, loading, saving } = useInventoryPreferences();
+
+  const moveColumn = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= columnOrder.length) return;
+    const next = [...columnOrder];
+    [next[index], next[target]] = [next[target], next[index]];
+    setColumnOrder(next);
+  };
 
   return (
     <div className="min-h-screen bg-background">
