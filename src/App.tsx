@@ -10,6 +10,7 @@ import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import { Welcome } from "./pages/Welcome";
 import { Items } from "./pages/Items";
+import { InventorySettings } from "./pages/InventorySettings";
 import { ItemDetails } from "./pages/ItemDetails";
 import { AddItemPage } from "./pages/AddItem";
 import { Auth } from "./pages/Auth";
@@ -198,6 +199,16 @@ function AppContent() {
                   copyItemToOrg={copyItemToOrg}
                   refetchInventory={refetch}
                 />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventory-settings"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <InventorySettings />
               </AppLayout>
             </ProtectedRoute>
           }
