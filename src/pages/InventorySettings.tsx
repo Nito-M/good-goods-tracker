@@ -188,6 +188,17 @@ export const InventorySettings = ({ addItem }: InventorySettingsProps) => {
           </div>
         </div>
 
+        {/* CSV Import */}
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-card-foreground">Import items</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Bulk import inventory items from a CSV file.
+          </p>
+          <div className="mt-5">
+            <ItemCsvImport addItem={addItem} />
+          </div>
+        </div>
+
         {/* Column Order */}
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-card-foreground">Column order</h2>
