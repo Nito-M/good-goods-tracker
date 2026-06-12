@@ -3401,6 +3401,7 @@ export type Database = {
           display_name: string | null
           id: string
           inventory_column_order: string[]
+          inventory_markup_percent: number | null
           inventory_price_display: string
           inventory_show_images: boolean
           inventory_show_price: boolean
@@ -3441,6 +3442,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           inventory_column_order?: string[]
+          inventory_markup_percent?: number | null
           inventory_price_display?: string
           inventory_show_images?: boolean
           inventory_show_price?: boolean
@@ -3481,6 +3483,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           inventory_column_order?: string[]
+          inventory_markup_percent?: number | null
           inventory_price_display?: string
           inventory_show_images?: boolean
           inventory_show_price?: boolean
