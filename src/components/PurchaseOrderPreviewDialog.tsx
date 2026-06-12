@@ -30,7 +30,7 @@ export function PurchaseOrderPreviewDialog({
   const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) };
   const TAX_RATE = 0.05;
   const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
-  const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  
   const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
@@ -171,10 +171,6 @@ export function PurchaseOrderPreviewDialog({
             {layout.totals.visible && (
             <div className="flex justify-end mb-6">
               <div className="w-64 text-sm">
-                <div className="flex justify-between py-1">
-                  <span>Total Items:</span>
-                  <span>{totalQuantity}</span>
-                </div>
                 {hasAnyCost && (
                   <>
                     <div className="flex justify-between py-1">
