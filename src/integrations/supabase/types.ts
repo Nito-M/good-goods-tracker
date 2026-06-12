@@ -3401,6 +3401,8 @@ export type Database = {
           display_name: string | null
           id: string
           inventory_price_display: string
+          inventory_show_images: boolean
+          inventory_show_tags: boolean
           invoice_layout: Json | null
           invoice_next_number: number | null
           invoice_prefix: string | null
@@ -3435,6 +3437,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           inventory_price_display?: string
+          inventory_show_images?: boolean
+          inventory_show_tags?: boolean
           invoice_layout?: Json | null
           invoice_next_number?: number | null
           invoice_prefix?: string | null
@@ -3469,6 +3473,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           inventory_price_display?: string
+          inventory_show_images?: boolean
+          inventory_show_tags?: boolean
           invoice_layout?: Json | null
           invoice_next_number?: number | null
           invoice_prefix?: string | null
