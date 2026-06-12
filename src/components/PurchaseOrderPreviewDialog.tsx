@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrencyPdf as formatCurrency } from '@/lib/utils';
 
 interface PurchaseOrderPreviewDialogProps {
   open: boolean;
