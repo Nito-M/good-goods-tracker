@@ -148,10 +148,10 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
       case 'price': {
         const rawPrice = showCost
           ? item.cost
-          : item.price > 0
-            ? item.price
-            : markupPercent > 0 && item.cost > 0
-              ? item.cost * (1 + markupPercent / 100)
+          : markupPercent > 0 && item.cost > 0
+            ? item.cost * (1 + markupPercent / 100)
+            : item.price > 0
+              ? item.price
               : 0;
         return (
           <TableCell key={key} className="text-right tabular-nums">
