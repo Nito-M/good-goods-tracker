@@ -23,7 +23,7 @@ interface InventorySettingsProps {
 
 export const InventorySettings = ({ addItem }: InventorySettingsProps) => {
   const navigate = useNavigate();
-  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, loading, saving } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, markupPercent, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, setMarkupPercent, loading, saving } = useInventoryPreferences();
 
   const moveColumn = (index: number, direction: -1 | 1) => {
     const target = index + direction;
