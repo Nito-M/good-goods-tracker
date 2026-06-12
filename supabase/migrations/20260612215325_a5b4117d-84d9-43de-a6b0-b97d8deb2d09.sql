@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS inventory_column_order text[] NOT NULL DEFAULT ARRAY['image','name','sku','quantity','price']::text[];
