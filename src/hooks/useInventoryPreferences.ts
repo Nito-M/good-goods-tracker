@@ -36,10 +36,10 @@ export function useInventoryPreferences() {
     queryFn: async (): Promise<InventoryPreferences> => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true, showQuantity: true, showPrice: true, columnOrder: DEFAULT_COLUMN_ORDER };
+      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true, showQuantity: true, showPrice: true, columnOrder: DEFAULT_COLUMN_ORDER, markupPercent: 0 };
       const { data, error } = await supabase
         .from('profiles')
-        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku, inventory_show_quantity, inventory_show_price, inventory_column_order')
+        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku, inventory_show_quantity, inventory_show_price, inventory_column_order, inventory_markup_percent')
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
@@ -53,6 +53,7 @@ export function useInventoryPreferences() {
         showQuantity: row?.inventory_show_quantity !== false,
         showPrice: row?.inventory_show_price !== false,
         columnOrder: normalizeOrder(row?.inventory_column_order),
+        markupPercent: Math.max(0, Number(row?.inventory_markup_percent ?? 0)),
       };
     },
     staleTime: 5 * 60_000,
@@ -79,6 +80,7 @@ export function useInventoryPreferences() {
         showQuantity: old?.showQuantity ?? true,
         showPrice: old?.showPrice ?? true,
         columnOrder: old?.columnOrder ?? DEFAULT_COLUMN_ORDER,
+        markupPercent: old?.markupPercent ?? 0,
       }));
       toast({ title: 'Inventory settings saved' });
     },
@@ -111,6 +113,7 @@ export function useInventoryPreferences() {
         showQuantity: input.showQuantity !== undefined ? input.showQuantity : (old?.showQuantity ?? true),
         showPrice: input.showPrice !== undefined ? input.showPrice : (old?.showPrice ?? true),
         columnOrder: old?.columnOrder ?? DEFAULT_COLUMN_ORDER,
+        markupPercent: old?.markupPercent ?? 0,
       }));
       toast({ title: 'Inventory settings saved' });
     },
@@ -142,10 +145,42 @@ export function useInventoryPreferences() {
         showQuantity: old?.showQuantity ?? true,
         showPrice: old?.showPrice ?? true,
         columnOrder: normalized,
+        markupPercent: old?.markupPercent ?? 0,
       }));
     },
     onError: (e: any) => {
       toast({ title: 'Failed to save order', description: e?.message, variant: 'destructive' });
+    },
+  });
+
+  const markupMutation = useMutation({
+    mutationFn: async (markupPercent: number) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      const clamped = Math.max(0, Number(markupPercent));
+      const { error } = await supabase
+        .from('profiles')
+        .update({ inventory_markup_percent: clamped } as any)
+        .eq('user_id', userId);
+      if (error) throw error;
+      return clamped;
+    },
+    onSuccess: (markupPercent) => {
+      queryClient.setQueryData(['inventory-preferences'], (old: InventoryPreferences | undefined) => ({
+        priceDisplay: old?.priceDisplay ?? 'selling',
+        showTags: old?.showTags ?? true,
+        showImages: old?.showImages ?? true,
+        showSku: old?.showSku ?? true,
+        showQuantity: old?.showQuantity ?? true,
+        showPrice: old?.showPrice ?? true,
+        columnOrder: old?.columnOrder ?? DEFAULT_COLUMN_ORDER,
+        markupPercent,
+      }));
+      toast({ title: 'Markup percentage saved' });
+    },
+    onError: (e: any) => {
+      toast({ title: 'Failed to save markup', description: e?.message, variant: 'destructive' });
     },
   });
 
@@ -157,6 +192,7 @@ export function useInventoryPreferences() {
     showQuantity: data?.showQuantity ?? true,
     showPrice: data?.showPrice ?? true,
     columnOrder: data?.columnOrder ?? DEFAULT_COLUMN_ORDER,
+    markupPercent: data?.markupPercent ?? 0,
     loading: isLoading,
     setPriceDisplay: (v: InventoryPriceDisplay) => priceMutation.mutate(v),
     setShowTags: (v: boolean) => toggleMutation.mutate({ showTags: v }),
@@ -165,6 +201,7 @@ export function useInventoryPreferences() {
     setShowQuantity: (v: boolean) => toggleMutation.mutate({ showQuantity: v }),
     setShowPrice: (v: boolean) => toggleMutation.mutate({ showPrice: v }),
     setColumnOrder: (v: InventoryColumnKey[]) => orderMutation.mutate(v),
-    saving: priceMutation.isPending || toggleMutation.isPending || orderMutation.isPending,
+    setMarkupPercent: (v: number) => markupMutation.mutate(v),
+    saving: priceMutation.isPending || toggleMutation.isPending || orderMutation.isPending || markupMutation.isPending,
   };
 }
