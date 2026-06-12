@@ -1042,12 +1042,25 @@ export function usePurchaseOrders() {
         : (item.receivedQuantity || 0);
       if (qtyToReverse <= 0) continue;
 
-      const { data: inventoryItem } = await supabase
-        .from('inventory_items')
-        .select('id, quantity')
-        .eq('sku', item.sku)
-        .eq('user_id', user!.id)
-        .single();
+      let inventoryItem: { id: string; quantity: number } | null = null;
+      if (item.inventoryItemId) {
+        const { data } = await supabase
+          .from('inventory_items')
+          .select('id, quantity')
+          .eq('id', item.inventoryItemId)
+          .maybeSingle();
+        inventoryItem = data ?? null;
+      }
+      if (!inventoryItem) {
+        const { data } = await supabase
+          .from('inventory_items')
+          .select('id, quantity')
+          .eq('sku', item.sku)
+          .eq('user_id', user!.id)
+          .maybeSingle();
+        inventoryItem = data ?? null;
+      }
+
 
       if (inventoryItem) {
         const newQty = Math.max(0, inventoryItem.quantity - qtyToReverse);
