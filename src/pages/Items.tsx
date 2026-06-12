@@ -222,7 +222,6 @@ export const Items = ({
               Items & Inventory
             </h1>
             <div className="flex items-center gap-2">
-              <ItemCsvImport addItem={addItem} />
               <Button
                 variant="outline"
                 size="icon"
