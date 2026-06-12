@@ -112,6 +112,23 @@ export const InventorySettings = () => {
                 disabled={loading || saving}
               />
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+              <div>
+                <Label htmlFor="show-sku" className="text-sm font-medium">
+                  Show part number
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Display the Part Number column for each item.
+                </p>
+              </div>
+              <Switch
+                id="show-sku"
+                checked={showSku}
+                onCheckedChange={setShowSku}
+                disabled={loading || saving}
+              />
+            </div>
           </div>
         </div>
       </main>
