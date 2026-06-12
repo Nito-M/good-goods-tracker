@@ -4,29 +4,40 @@ import { useToast } from '@/hooks/use-toast';
 
 export type InventoryPriceDisplay = 'selling' | 'cost';
 
+export interface InventoryPreferences {
+  priceDisplay: InventoryPriceDisplay;
+  showTags: boolean;
+  showImages: boolean;
+}
+
 export function useInventoryPreferences() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ['inventory-preferences'],
-    queryFn: async (): Promise<{ priceDisplay: InventoryPriceDisplay }> => {
+    queryFn: async (): Promise<InventoryPreferences> => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId) return { priceDisplay: 'selling' };
+      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true };
       const { data, error } = await supabase
         .from('profiles')
-        .select('inventory_price_display')
+        .select('inventory_price_display, inventory_show_tags, inventory_show_images')
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
-      const val = (data as any)?.inventory_price_display as InventoryPriceDisplay | undefined;
-      return { priceDisplay: val === 'cost' ? 'cost' : 'selling' };
+      const row = data as any;
+      const val = row?.inventory_price_display as InventoryPriceDisplay | undefined;
+      return {
+        priceDisplay: val === 'cost' ? 'cost' : 'selling',
+        showTags: row?.inventory_show_tags !== false,
+        showImages: row?.inventory_show_images !== false,
+      };
     },
     staleTime: 5 * 60_000,
   });
 
-  const mutation = useMutation({
+  const priceMutation = useMutation({
     mutationFn: async (priceDisplay: InventoryPriceDisplay) => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
@@ -36,10 +47,39 @@ export function useInventoryPreferences() {
         .update({ inventory_price_display: priceDisplay } as any)
         .eq('user_id', userId);
       if (error) throw error;
-      return priceDisplay;
+      return { priceDisplay };
     },
-    onSuccess: (priceDisplay) => {
-      queryClient.setQueryData(['inventory-preferences'], { priceDisplay });
+    onSuccess: (vars) => {
+      queryClient.setQueryData(['inventory-preferences'], (old: InventoryPreferences | undefined) => ({
+        priceDisplay: vars.priceDisplay,
+        showTags: old?.showTags ?? true,
+        showImages: old?.showImages ?? true,
+      }));
+      toast({ title: 'Inventory settings saved' });
+    },
+    onError: (e: any) => {
+      toast({ title: 'Failed to save', description: e?.message, variant: 'destructive' });
+    },
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async (input: { showTags?: boolean; showImages?: boolean }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      const updateData: Record<string, unknown> = {};
+      if (input.showTags !== undefined) updateData.inventory_show_tags = input.showTags;
+      if (input.showImages !== undefined) updateData.inventory_show_images = input.showImages;
+      const { error } = await supabase.from('profiles').update(updateData as any).eq('user_id', userId);
+      if (error) throw error;
+      return input;
+    },
+    onSuccess: (input) => {
+      queryClient.setQueryData(['inventory-preferences'], (old: InventoryPreferences | undefined) => ({
+        priceDisplay: old?.priceDisplay ?? 'selling',
+        showTags: input.showTags !== undefined ? input.showTags : (old?.showTags ?? true),
+        showImages: input.showImages !== undefined ? input.showImages : (old?.showImages ?? true),
+      }));
       toast({ title: 'Inventory settings saved' });
     },
     onError: (e: any) => {
@@ -49,8 +89,12 @@ export function useInventoryPreferences() {
 
   return {
     priceDisplay: data?.priceDisplay ?? 'selling',
+    showTags: data?.showTags ?? true,
+    showImages: data?.showImages ?? true,
     loading: isLoading,
-    setPriceDisplay: (v: InventoryPriceDisplay) => mutation.mutate(v),
-    saving: mutation.isPending,
+    setPriceDisplay: (v: InventoryPriceDisplay) => priceMutation.mutate(v),
+    setShowTags: (v: boolean) => toggleMutation.mutate({ showTags: v }),
+    setShowImages: (v: boolean) => toggleMutation.mutate({ showImages: v }),
+    saving: priceMutation.isPending || toggleMutation.isPending,
   };
 }
