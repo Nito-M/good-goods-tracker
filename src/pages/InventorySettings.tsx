@@ -1,14 +1,30 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { useInventoryPreferences, InventoryPriceDisplay } from '@/hooks/useInventoryPreferences';
+import { useInventoryPreferences, InventoryPriceDisplay, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
+
+const COLUMN_LABELS: Record<InventoryColumnKey, string> = {
+  image: 'Image',
+  name: 'Product name',
+  sku: 'Part number',
+  quantity: 'Quantity',
+  price: 'Price / Cost',
+};
 
 export const InventorySettings = () => {
   const navigate = useNavigate();
-  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, loading, saving } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, setColumnOrder, loading, saving } = useInventoryPreferences();
+
+  const moveColumn = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= columnOrder.length) return;
+    const next = [...columnOrder];
+    [next[index], next[target]] = [next[target], next[index]];
+    setColumnOrder(next);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -163,6 +179,54 @@ export const InventorySettings = () => {
                 disabled={loading || saving}
               />
             </div>
+          </div>
+        </div>
+
+        {/* Column Order */}
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-card-foreground">Column order</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Reorder the columns shown in the Items & Inventory table. Hidden columns keep their position for when you turn them back on.
+          </p>
+
+          <div className="mt-5 space-y-2">
+            {columnOrder.map((key, index) => (
+              <div
+                key={key}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-muted text-xs font-medium text-muted-foreground tabular-nums">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm font-medium">{COLUMN_LABELS[key]}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => moveColumn(index, -1)}
+                    disabled={index === 0 || loading || saving}
+                    aria-label={`Move ${COLUMN_LABELS[key]} up`}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => moveColumn(index, 1)}
+                    disabled={index === columnOrder.length - 1 || loading || saving}
+                    aria-label={`Move ${COLUMN_LABELS[key]} down`}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </main>

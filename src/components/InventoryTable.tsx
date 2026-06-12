@@ -25,7 +25,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useBulkItemTags } from '@/hooks/useItemTags';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
-import { useInventoryPreferences } from '@/hooks/useInventoryPreferences';
+import { useInventoryPreferences, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
 
 interface InventoryTableProps {
   items: InventoryItem[];
@@ -51,27 +51,121 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const thumbnailMap = useItemThumbnails(pagedItemIds);
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
-  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder } = useInventoryPreferences();
   const showCost = priceDisplay === 'cost';
 
-  const colCount = 1 + (showImages ? 1 : 0) + (showSku ? 1 : 0) + (showQuantity ? 1 : 0) + (showPrice ? 1 : 0);
+  const visibleColumns = useMemo<InventoryColumnKey[]>(() => {
+    return columnOrder.filter((k) => {
+      if (k === 'image') return showImages;
+      if (k === 'sku') return showSku;
+      if (k === 'quantity') return showQuantity;
+      if (k === 'price') return showPrice;
+      return true; // name always visible
+    });
+  }, [columnOrder, showImages, showSku, showQuantity, showPrice]);
+
+  const renderHeader = (key: InventoryColumnKey) => {
+    switch (key) {
+      case 'image':
+        return <TableHead key={key} className="font-semibold text-card-foreground w-12"></TableHead>;
+      case 'name':
+        return <TableHead key={key} className="font-semibold text-card-foreground">Product Name</TableHead>;
+      case 'sku':
+        return <TableHead key={key} className="font-semibold text-card-foreground">Part #</TableHead>;
+      case 'quantity':
+        return <TableHead key={key} className="font-semibold text-card-foreground text-right">Quantity</TableHead>;
+      case 'price':
+        return <TableHead key={key} className="font-semibold text-card-foreground text-right">{showCost ? 'Cost' : 'Price'}</TableHead>;
+    }
+  };
+
+  const renderCell = (key: InventoryColumnKey, item: InventoryItem, displayQty: number) => {
+    switch (key) {
+      case 'image':
+        return (
+          <TableCell key={key} className="w-14 py-1">
+            {thumbnailMap.get(item.id) || item.imageUrl ? (
+              <div
+                className="w-12 h-12 rounded-md border border-border bg-muted/30 overflow-hidden cursor-pointer flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewerImage({ url: thumbnailMap.get(item.id) || item.imageUrl!, alt: item.name });
+                }}>
+                <img
+                  src={thumbnailMap.get(item.id) || item.imageUrl!}
+                  alt={item.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center px-0">
+                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
+          </TableCell>
+        );
+      case 'name':
+        return (
+          <TableCell
+            key={key}
+            className="font-medium text-card-foreground cursor-pointer hover:underline"
+            onClick={() => navigate(`/item/${item.id}`)}>
+            <div>
+              {item.name}
+              {showTags && (() => {
+                const itemTags = getTagsForItem(item.id);
+                if (itemTags.length === 0) return null;
+                return (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {itemTags.slice(0, 3).map((t, i) => (
+                      <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
+                        {t.name}
+                      </Badge>
+                    ))}
+                    {itemTags.length > 3 && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        +{itemTags.length - 3}
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </TableCell>
+        );
+      case 'sku':
+        return (
+          <TableCell key={key} className="tabular-nums text-muted-foreground">
+            {item.sku}
+          </TableCell>
+        );
+      case 'quantity':
+        return (
+          <TableCell key={key} className="text-right tabular-nums">
+            {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+          </TableCell>
+        );
+      case 'price':
+        return (
+          <TableCell key={key} className="text-right tabular-nums">
+            {formatCurrency(showCost ? item.cost : item.price)}
+          </TableCell>
+        );
+    }
+  };
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted hover:bg-muted">
-            {showImages && <TableHead className="font-semibold text-card-foreground w-12"></TableHead>}
-            <TableHead className="font-semibold text-card-foreground">Product Name</TableHead>
-            {showSku && <TableHead className="font-semibold text-card-foreground">Part #</TableHead>}
-            {showQuantity && <TableHead className="font-semibold text-card-foreground text-right">Quantity</TableHead>}
-            {showPrice && <TableHead className="font-semibold text-card-foreground text-right">{showCost ? 'Cost' : 'Price'}</TableHead>}
+            {visibleColumns.map(renderHeader)}
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.length === 0 ?
           <TableRow>
-              <TableCell colSpan={colCount} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={visibleColumns.length} className="h-24 text-center text-muted-foreground">
                 No items found.
               </TableCell>
             </TableRow> :
@@ -80,7 +174,6 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             const displayQty = warehouseFilter && warehouseItemQtyMap ?
             warehouseItemQtyMap.get(`${warehouseFilter}:${item.id}`) ?? 0 :
             item.quantity;
-            const isLowStock = item.quantity <= item.minStock;
             return (
               <TableRow
                 key={item.id}
@@ -93,68 +186,8 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
                   'transition-colors hover:bg-muted/30',
                   draggable && 'cursor-grab active:cursor-grabbing',
                 )}>
-
-                {showImages && (
-                  <TableCell className="w-14 py-1">
-                    {thumbnailMap.get(item.id) || item.imageUrl ?
-                  <div
-                    className="w-12 h-12 rounded-md border border-border bg-muted/30 overflow-hidden cursor-pointer flex items-center justify-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewerImage({ url: thumbnailMap.get(item.id) || item.imageUrl!, alt: item.name });
-                    }}>
-                    <img
-                      src={thumbnailMap.get(item.id) || item.imageUrl!}
-                      alt={item.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div> :
-
-
-                  <div className="w-12 h-12 rounded-md border border-border bg-muted/50 flex items-center justify-center px-0">
-                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                  }
-                  </TableCell>
-                )}
-                <TableCell
-                  className="font-medium text-card-foreground cursor-pointer hover:underline"
-                  onClick={() => navigate(`/item/${item.id}`)}>
-
-                    <div>
-                      {item.name}
-                      {showTags && (() => {
-                      const itemTags = getTagsForItem(item.id);
-                      if (itemTags.length === 0) return null;
-                      return (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                            {itemTags.slice(0, 3).map((t, i) =>
-                          <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
-                                {t.name}
-                              </Badge>
-                          )}
-                            {itemTags.length > 3 &&
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                +{itemTags.length - 3}
-                              </Badge>
-                          }
-                          </div>);
-
-                    })()}
-                    </div>
-                  </TableCell>
-                  {showSku && (
-                    <TableCell className="tabular-nums text-muted-foreground">
-                      {item.sku}
-                    </TableCell>
-                  )}
-                  {showQuantity && (
-                    <TableCell className="text-right tabular-nums">
-                      {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
-                    </TableCell>
-                  )}
-                  {showPrice && <TableCell className="text-right tabular-nums">{formatCurrency(showCost ? item.cost : item.price)}</TableCell>}
-                </TableRow>);
+                {visibleColumns.map((k) => renderCell(k, item, displayQty))}
+              </TableRow>);
 
           })
           }
