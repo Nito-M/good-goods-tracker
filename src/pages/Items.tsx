@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2, MapPin, Building2, Settings as SettingsIcon } from 'lucide-react';
-import { ItemCsvImport } from '@/components/ItemCsvImport';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
