@@ -8,7 +8,7 @@ import { useInventoryPreferences, InventoryPriceDisplay } from '@/hooks/useInven
 
 export const InventorySettings = () => {
   const navigate = useNavigate();
-  const { priceDisplay, showTags, showImages, showSku, setPriceDisplay, setShowTags, setShowImages, setShowSku, loading, saving } = useInventoryPreferences();
+  const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, setPriceDisplay, setShowTags, setShowImages, setShowSku, setShowQuantity, setShowPrice, loading, saving } = useInventoryPreferences();
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,6 +126,40 @@ export const InventorySettings = () => {
                 id="show-sku"
                 checked={showSku}
                 onCheckedChange={setShowSku}
+                disabled={loading || saving}
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+              <div>
+                <Label htmlFor="show-quantity" className="text-sm font-medium">
+                  Show quantity
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Display the Quantity column for each item.
+                </p>
+              </div>
+              <Switch
+                id="show-quantity"
+                checked={showQuantity}
+                onCheckedChange={setShowQuantity}
+                disabled={loading || saving}
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+              <div>
+                <Label htmlFor="show-price" className="text-sm font-medium">
+                  Show price column
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Display the Price/Cost column for each item.
+                </p>
+              </div>
+              <Switch
+                id="show-price"
+                checked={showPrice}
+                onCheckedChange={setShowPrice}
                 disabled={loading || saving}
               />
             </div>

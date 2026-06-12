@@ -9,6 +9,8 @@ export interface InventoryPreferences {
   showTags: boolean;
   showImages: boolean;
   showSku: boolean;
+  showQuantity: boolean;
+  showPrice: boolean;
 }
 
 export function useInventoryPreferences() {
@@ -20,10 +22,10 @@ export function useInventoryPreferences() {
     queryFn: async (): Promise<InventoryPreferences> => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
-      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true };
+      if (!userId) return { priceDisplay: 'selling', showTags: true, showImages: true, showSku: true, showQuantity: true, showPrice: true };
       const { data, error } = await supabase
         .from('profiles')
-        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku')
+        .select('inventory_price_display, inventory_show_tags, inventory_show_images, inventory_show_sku, inventory_show_quantity, inventory_show_price')
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw error;
@@ -34,6 +36,8 @@ export function useInventoryPreferences() {
         showTags: row?.inventory_show_tags !== false,
         showImages: row?.inventory_show_images !== false,
         showSku: row?.inventory_show_sku !== false,
+        showQuantity: row?.inventory_show_quantity !== false,
+        showPrice: row?.inventory_show_price !== false,
       };
     },
     staleTime: 5 * 60_000,
@@ -57,6 +61,8 @@ export function useInventoryPreferences() {
         showTags: old?.showTags ?? true,
         showImages: old?.showImages ?? true,
         showSku: old?.showSku ?? true,
+        showQuantity: old?.showQuantity ?? true,
+        showPrice: old?.showPrice ?? true,
       }));
       toast({ title: 'Inventory settings saved' });
     },
@@ -66,7 +72,7 @@ export function useInventoryPreferences() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (input: { showTags?: boolean; showImages?: boolean; showSku?: boolean }) => {
+    mutationFn: async (input: { showTags?: boolean; showImages?: boolean; showSku?: boolean; showQuantity?: boolean; showPrice?: boolean }) => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       if (!userId) throw new Error('Not signed in');
@@ -74,6 +80,8 @@ export function useInventoryPreferences() {
       if (input.showTags !== undefined) updateData.inventory_show_tags = input.showTags;
       if (input.showImages !== undefined) updateData.inventory_show_images = input.showImages;
       if (input.showSku !== undefined) updateData.inventory_show_sku = input.showSku;
+      if (input.showQuantity !== undefined) updateData.inventory_show_quantity = input.showQuantity;
+      if (input.showPrice !== undefined) updateData.inventory_show_price = input.showPrice;
       const { error } = await supabase.from('profiles').update(updateData as any).eq('user_id', userId);
       if (error) throw error;
       return input;
@@ -84,6 +92,8 @@ export function useInventoryPreferences() {
         showTags: input.showTags !== undefined ? input.showTags : (old?.showTags ?? true),
         showImages: input.showImages !== undefined ? input.showImages : (old?.showImages ?? true),
         showSku: input.showSku !== undefined ? input.showSku : (old?.showSku ?? true),
+        showQuantity: input.showQuantity !== undefined ? input.showQuantity : (old?.showQuantity ?? true),
+        showPrice: input.showPrice !== undefined ? input.showPrice : (old?.showPrice ?? true),
       }));
       toast({ title: 'Inventory settings saved' });
     },
@@ -97,11 +107,15 @@ export function useInventoryPreferences() {
     showTags: data?.showTags ?? true,
     showImages: data?.showImages ?? true,
     showSku: data?.showSku ?? true,
+    showQuantity: data?.showQuantity ?? true,
+    showPrice: data?.showPrice ?? true,
     loading: isLoading,
     setPriceDisplay: (v: InventoryPriceDisplay) => priceMutation.mutate(v),
     setShowTags: (v: boolean) => toggleMutation.mutate({ showTags: v }),
     setShowImages: (v: boolean) => toggleMutation.mutate({ showImages: v }),
     setShowSku: (v: boolean) => toggleMutation.mutate({ showSku: v }),
+    setShowQuantity: (v: boolean) => toggleMutation.mutate({ showQuantity: v }),
+    setShowPrice: (v: boolean) => toggleMutation.mutate({ showPrice: v }),
     saving: priceMutation.isPending || toggleMutation.isPending,
   };
 }
