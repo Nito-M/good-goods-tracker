@@ -308,86 +308,90 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
               <ArrowLeft className="h-4 w-4" />
               Back to Items & Inventory
             </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleEdit} className="gap-2">
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </Button>
-              <Button
-                variant="destructive"
-                className="gap-2"
-                onClick={() => setConsumeDialogOpen(true)}
-              >
-                <Minus className="h-4 w-4" />
-                Consume
-              </Button>
-              <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
-                setDeleteDialogOpen(open);
-                if (!open) setDeleteError(null);
-              }}>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="gap-2">
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Item?</AlertDialogTitle>
-                    <AlertDialogDescription asChild>
-                      <div className="space-y-3">
-                        {deleteError ? (
-                          <>
-                            <p className="text-destructive font-medium">
-                              {deleteError.message}
-                            </p>
-                            {deleteError.poNumbers && deleteError.poNumbers.length > 0 && (
-                              <div className="bg-destructive/10 rounded-md p-3 text-sm">
-                                <p className="font-medium text-foreground mb-2">Blocking POs:</p>
-                                <ul className="list-disc list-inside text-muted-foreground">
-                                  {deleteError.poNumbers.map((po) => (
-                                    <li key={po}>{po}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            <p className="text-sm text-muted-foreground">
-                              Please receive or delete these POs first.
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p>
-                              This will permanently remove <strong>{item.name}</strong> from your inventory.
-                            </p>
-                            <div className="bg-muted/50 rounded-md p-3 text-sm space-y-1">
-                              <p className="font-medium text-foreground">What happens:</p>
-                              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                                <li>Item won't appear in future PO/quote/invoice dropdowns</li>
-                                <li>Historical invoices and quotes will keep the item info</li>
-                                <li>Historical POs (received/paid) will keep the item info</li>
-                                <li>Vendor pricing records will be preserved</li>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleEdit}>
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setConsumeDialogOpen(true)}>
+                  <Minus className="h-4 w-4 mr-2" />
+                  Consume
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+              setDeleteDialogOpen(open);
+              if (!open) setDeleteError(null);
+            }}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+                  <AlertDialogDescription asChild>
+                    <div className="space-y-3">
+                      {deleteError ? (
+                        <>
+                          <p className="text-destructive font-medium">
+                            {deleteError.message}
+                          </p>
+                          {deleteError.poNumbers && deleteError.poNumbers.length > 0 && (
+                            <div className="bg-destructive/10 rounded-md p-3 text-sm">
+                              <p className="font-medium text-foreground mb-2">Blocking POs:</p>
+                              <ul className="list-disc list-inside text-muted-foreground">
+                                {deleteError.poNumbers.map((po) => (
+                                  <li key={po}>{po}</li>
+                                ))}
                               </ul>
                             </div>
-                          </>
-                        )}
-                      </div>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    {!deleteError && (
-                      <AlertDialogAction
-                        onClick={() => handleDelete()}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete Anyway
-                      </AlertDialogAction>
-                    )}
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+                          )}
+                          <p className="text-sm text-muted-foreground">
+                            Please receive or delete these POs first.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p>
+                            This will permanently remove <strong>{item.name}</strong> from your inventory.
+                          </p>
+                          <div className="bg-muted/50 rounded-md p-3 text-sm space-y-1">
+                            <p className="font-medium text-foreground">What happens:</p>
+                            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                              <li>Item won't appear in future PO/quote/invoice dropdowns</li>
+                              <li>Historical invoices and quotes will keep the item info</li>
+                              <li>Historical POs (received/paid) will keep the item info</li>
+                              <li>Vendor pricing records will be preserved</li>
+                            </ul>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  {!deleteError && (
+                    <AlertDialogAction
+                      onClick={() => handleDelete()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Anyway
+                    </AlertDialogAction>
+                  )}
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </header>
