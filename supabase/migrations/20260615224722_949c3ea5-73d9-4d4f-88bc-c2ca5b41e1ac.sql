@@ -1,0 +1,1 @@
+CREATE POLICY "Org members can delete org assemblies" ON public.assemblies FOR DELETE USING (public.users_share_org(auth.uid(), user_id));
