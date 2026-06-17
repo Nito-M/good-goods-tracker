@@ -157,14 +157,19 @@ export function JobDescription() {
                 <div className="flex items-center gap-2 text-sm">
                   <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="text-muted-foreground">NVIS:</span>
-                  <a
-                    href={/^https?:\/\//i.test(job.nvisLink) ? job.nvisLink : `https://${job.nvisLink}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline truncate"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
                   >
-                    {job.nvisLink}
-                  </a>
+                    <a
+                      href={/^https?:\/\//i.test(job.nvisLink) ? job.nvisLink : `https://${job.nvisLink}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open Link
+                    </a>
+                  </Button>
                 </div>
               )}
             </CardContent>
