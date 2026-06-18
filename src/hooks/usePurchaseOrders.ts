@@ -376,6 +376,7 @@ export function usePurchaseOrders() {
     locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number }[] }[],
     partial?: boolean,
     prevReceivedOverrides?: Record<string, number>,
+    receivedDate?: string,
   ) => {
     // Get the order to access its items and costs
     const order = orders.find((o) => o.id === orderId);
