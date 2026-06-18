@@ -31,6 +31,7 @@ interface ReceiveLocationDialogProps {
     locationItems: LocationItemEntry[],
     isPartial: boolean,
     prevReceivedOverrides?: Record<string, number>,
+    receivedDate?: string,
   ) => void;
   warehouses: Warehouse[];
   poItems: PurchaseOrderItem[];
@@ -58,6 +59,10 @@ export function ReceiveLocationDialog({
 }: ReceiveLocationDialogProps) {
   const [locations, setLocations] = useState<LocationRow[]>([]);
   const [prevOverrides, setPrevOverrides] = useState<Record<number, string>>({});
+  const [receivedDate, setReceivedDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
 
   useEffect(() => {
     if (open && warehouses.length > 0) {
@@ -71,6 +76,8 @@ export function ReceiveLocationDialog({
         init[i] = String(it.receivedQuantity ?? 0);
       });
       setPrevOverrides(init);
+      const d = new Date();
+      setReceivedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
     }
   }, [open, poItems, warehouses.length]);
 
@@ -227,7 +234,7 @@ export function ReceiveLocationDialog({
     poItems.forEach((it, i) => {
       overrides[it.sku] = getPrev(i);
     });
-    onConfirm(entries, !allComplete, overrides);
+    onConfirm(entries, !allComplete, overrides, receivedDate);
   };
 
   const noWarehouses = warehouses.length === 0;
@@ -251,6 +258,16 @@ export function ReceiveLocationDialog({
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto py-4 space-y-6 min-h-0">
+            {/* Received date */}
+            <div className="space-y-2 max-w-xs">
+              <Label htmlFor="received-date" className="text-sm font-medium">Received Date</Label>
+              <Input
+                id="received-date"
+                type="date"
+                value={receivedDate}
+                onChange={(e) => setReceivedDate(e.target.value)}
+              />
+            </div>
             {/* Per-item assignment summary */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Item Distribution Summary</Label>

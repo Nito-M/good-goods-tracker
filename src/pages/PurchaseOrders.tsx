@@ -78,13 +78,14 @@ export function PurchaseOrders() {
     locationItems: import('@/components/ReceiveLocationDialog').LocationItemEntry[],
     isPartial: boolean,
     prevReceivedOverrides?: Record<string, number>,
+    receivedDate?: string,
   ) => {
     if (!receivingOrderId) return;
     setProcessingId(receivingOrderId);
     if (isPartial) {
-      await markAsReceived(receivingOrderId, locationItems, true, prevReceivedOverrides);
+      await markAsReceived(receivingOrderId, locationItems, true, prevReceivedOverrides, receivedDate);
     } else {
-      await markAsReceived(receivingOrderId, locationItems, false, prevReceivedOverrides);
+      await markAsReceived(receivingOrderId, locationItems, false, prevReceivedOverrides, receivedDate);
     }
     setProcessingId(null);
     setReceiveDialogOpen(false);
