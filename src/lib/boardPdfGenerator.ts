@@ -67,10 +67,10 @@ function rasterize(
   return { dataUrl: canvas.toDataURL('image/jpeg', 0.85), width: w, height: h, format: 'JPEG' };
 }
 
-function loadViaImageElement(url: string): Promise<HTMLImageElement | null> {
+function loadViaImageElement(url: string, useCors: boolean): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (useCors) img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = url;
@@ -79,24 +79,38 @@ function loadViaImageElement(url: string): Promise<HTMLImageElement | null> {
 
 /** Fetch image, downscale if huge, return base64 dataURL + dimensions for jsPDF. */
 async function loadImageForPdf(url: string, preserveAlpha = false): Promise<LoadedImage | null> {
-  // Try fetch -> bitmap first (works for most CORS-enabled URLs incl. signed Supabase URLs)
+  // Preferred: fetch -> blob -> object URL -> <img>. The browser decodes
+  // webp/heic/avif natively, and the object URL is same-origin so canvas
+  // drawing never taints — much more reliable than createImageBitmap directly.
   try {
     const res = await fetch(url);
     if (res.ok) {
       const blob = await res.blob();
-      const bitmap = await createImageBitmap(blob).catch(() => null);
-      if (bitmap) {
-        const out = rasterize(bitmap, bitmap.width, bitmap.height, preserveAlpha);
-        if (out) return out;
+      const objectUrl = URL.createObjectURL(blob);
+      try {
+        const img = await loadViaImageElement(objectUrl, false);
+        if (img) {
+          const out = rasterize(img, img.naturalWidth || img.width, img.naturalHeight || img.height, preserveAlpha);
+          if (out) return out;
+        }
+        const bitmap = await createImageBitmap(blob).catch(() => null);
+        if (bitmap) {
+          const out = rasterize(bitmap, bitmap.width, bitmap.height, preserveAlpha);
+          if (out) return out;
+        }
+      } finally {
+        URL.revokeObjectURL(objectUrl);
       }
+    } else {
+      console.warn('PDF image fetch returned non-OK', res.status, url);
     }
   } catch (e) {
     console.warn('PDF image fetch path failed, trying <img> fallback', url, e);
   }
-  // Fallback: <img crossOrigin="anonymous">
-  const img = await loadViaImageElement(url);
+  // Fallback: cross-origin <img> directly from the URL
+  const img = await loadViaImageElement(url, true);
   if (!img) {
-    console.warn('Failed to load image for PDF (both paths)', url);
+    console.warn('Failed to load image for PDF (all paths)', url);
     return null;
   }
   return rasterize(img, img.naturalWidth || img.width, img.naturalHeight || img.height, preserveAlpha);
