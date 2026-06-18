@@ -76,6 +76,8 @@ export function ReceiveLocationDialog({
         init[i] = String(it.receivedQuantity ?? 0);
       });
       setPrevOverrides(init);
+      const d = new Date();
+      setReceivedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
     }
   }, [open, poItems, warehouses.length]);
 
