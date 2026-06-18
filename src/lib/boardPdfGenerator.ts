@@ -503,10 +503,14 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
         for (const f of imgs) {
           const img = imageCache.get(f.id);
           if (!img) continue;
-          const scale = Math.min(1, cellInnerWidth / img.width);
-          const drawW = img.width * scale;
-          const drawH = img.height * scale;
-          if (y + drawH > cellMaxBottom) break; // prevent overflow
+          const remaining = cellMaxBottom - y;
+          if (remaining <= 4) break;
+          const captionH = f.caption ? IMG_CAPTION_H : 0;
+          const widthScale = Math.min(1, cellInnerWidth / img.width);
+          const heightCap = Math.max(8, remaining - captionH);
+          const heightScale = Math.min(widthScale, heightCap / img.height);
+          const drawW = img.width * heightScale;
+          const drawH = img.height * heightScale;
           try {
             doc.addImage(img.dataUrl, img.format, cellX, y, drawW, drawH, undefined, 'FAST');
           } catch (e) {
