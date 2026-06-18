@@ -424,12 +424,22 @@ export function usePurchaseOrders() {
     const allFull = updatedItems.every(i => (i.receivedQuantity || 0) >= i.quantity);
     const newStatus = (!partial || allFull) ? 'received' : 'partially_received';
 
+    // Build received timestamp from optional date (use noon local to avoid TZ shifts)
+    const receivedTs = (() => {
+      if (!receivedDate) return new Date().toISOString();
+      const [y, m, d] = receivedDate.split('-').map(Number);
+      if (!y || !m || !d) return new Date().toISOString();
+      return new Date(y, m - 1, d, 12, 0, 0).toISOString();
+    })();
+
     const { error } = await supabase
       .from('purchase_orders')
       .update({
         status: newStatus,
         items: JSON.parse(JSON.stringify(updatedItems)),
-        ...(newStatus === 'received' ? { received_at: new Date().toISOString() } : {}),
+        ...(newStatus === 'received'
+          ? { received_at: receivedTs }
+          : { partially_received_at: receivedTs }),
       })
       .eq('id', orderId);
 
