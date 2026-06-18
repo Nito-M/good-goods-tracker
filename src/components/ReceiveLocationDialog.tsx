@@ -59,6 +59,10 @@ export function ReceiveLocationDialog({
 }: ReceiveLocationDialogProps) {
   const [locations, setLocations] = useState<LocationRow[]>([]);
   const [prevOverrides, setPrevOverrides] = useState<Record<number, string>>({});
+  const [receivedDate, setReceivedDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
 
   useEffect(() => {
     if (open && warehouses.length > 0) {
