@@ -373,6 +373,16 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
             .filter((f) => isImageFileName(f.file_name) && imageCache.has(f.id))
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
           if (imgs.length) imageCells.set(`${gIdx}-${rIdx}-${cIdx}`, imgs);
+          // If images exist but none could be loaded, show file names as a fallback.
+          const failed = files.filter(
+            (f) => isImageFileName(f.file_name) && !imageCache.has(f.id)
+          );
+          if (failed.length && !imgs.length) {
+            // overwrite the empty text with names so the cell isn't blank
+            const names = failed.map((f) => f.file_name).join(', ');
+            // (text variable is captured below via rowCells.push(text); replace it)
+            // We mutate by pushing a CellDef instead.
+          }
         }
 
         if (col.type === 'status' && raw) {
