@@ -234,7 +234,7 @@ export function ReceiveLocationDialog({
     poItems.forEach((it, i) => {
       overrides[it.sku] = getPrev(i);
     });
-    onConfirm(entries, !allComplete, overrides);
+    onConfirm(entries, !allComplete, overrides, receivedDate);
   };
 
   const noWarehouses = warehouses.length === 0;
