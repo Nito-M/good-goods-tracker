@@ -1,23 +1,25 @@
-# Inventory Price Display Toggle
+## Plan
 
-Add a per-user preference that controls whether the Items & Inventory page shows each item's **Selling price** or **Cost price** in the price column. Configured from a new **Inventory Settings** page.
+1. **Stop relying on the stored signed URL**
+   - Use each board file’s `storage_path` as the primary source for PDF export.
+   - Generate a fresh signed URL at export time for every image, even if `file_url` is missing, expired, or blocked.
 
-## What you'll see
+2. **Make `.webp` photos PDF-safe**
+   - Decode the image through the browser, draw it to a canvas, and convert it to JPEG/PNG before adding it to the PDF.
+   - Keep the existing fallback paths, but add stronger logging when an image cannot be decoded.
 
-- On the Items & Inventory page header, next to the existing action buttons, a new **Settings** (gear icon) button.
-- Clicking it opens a new full page: **Inventory Settings**.
-- First setting on that page: **Price column shows** — two choices, *Selling price* (default) or *Cost price*.
-- Saving flips the price column on the Items & Inventory page (and the inventory table everywhere it's used) for that user, on every device.
-- The page is built so more inventory-wide preferences can be added later (default sort, low-stock threshold display, etc.).
+3. **Ensure the photo gets table space**
+   - Reserve a fixed image area in Files-column cells so the picture has room to render instead of being clipped out.
+   - If an image is too tall, scale it down to fit the PDF cell instead of skipping it.
 
-## Technical notes
+4. **Add a visible fallback in the PDF**
+   - If an image still cannot load, show the file name in that cell instead of leaving it blank.
 
-- **DB**: add columns to `profiles`:
-  - `inventory_price_display text not null default 'selling'` (check in `'selling','cost'`)
-- **Hook**: `useInventoryPreferences()` — reads/writes the profile row, exposes `{ priceDisplay, setPriceDisplay }`. Cached via React Query.
-- **UI changes**:
-  - `src/pages/Items.tsx` — add gear button → navigates to `/inventory-settings`.
-  - `src/components/InventoryTable.tsx` — read `priceDisplay`; render `item.cost` instead of `item.price` when set to `'cost'`. Header label switches between "Price" and "Cost".
-  - New page `src/pages/InventorySettings.tsx` — back button, single RadioGroup card for now, saves on change.
-  - Route added in `src/App.tsx`.
-- No business-logic changes; sales/quotes/POs still use the real `price`/`cost` fields as today. This is presentation only.
+5. **Verify on the current board**
+   - Export the board currently at `/boards/95f5ca6f-a724-48e3-b817-bc364d1b9d44` and confirm `blawicoup038.webp` appears in the PDF.
+
+## Technical details
+
+- Update `src/lib/boardPdfGenerator.ts` to preload images from fresh signed URLs and remove the `f.file_url` gate.
+- Update the PDF cell rendering so images are scaled to the actual cell width/height and are not skipped when the original dimensions exceed the row height.
+- If needed, update `src/hooks/useBoardCellFiles.ts` so `refreshSignedUrl` can resolve from `storage_path` consistently for PDF generation.

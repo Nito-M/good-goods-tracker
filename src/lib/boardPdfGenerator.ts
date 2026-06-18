@@ -217,7 +217,7 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
       for (const c of columns) {
         if (c.type !== 'files') continue;
         for (const f of getFiles(r.id, c.id)) {
-          if (isImageFileName(f.file_name) && f.file_url) allImageFiles.push(f);
+          if (isImageFileName(f.file_name)) allImageFiles.push(f);
         }
       }
     }
@@ -228,12 +228,16 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
     const slice = allImageFiles.slice(i, i + CHUNK);
     const loaded = await Promise.all(
       slice.map(async (f) => {
-        // Prefer a freshly-signed URL when available — stored URLs can expire or be blocked.
+        // Always try a fresh signed URL first — stored URLs can expire or be blocked.
         const freshUrl = refreshFileUrl ? await refreshFileUrl(f.id).catch(() => null) : null;
-        const url = freshUrl || f.file_url;
-        const img = await loadImageForPdf(url);
-        if (!img) console.warn('Board PDF: failed to load image for cell', f.file_name, url);
-        return img;
+        const candidates = [freshUrl, f.file_url].filter((u): u is string => !!u);
+        for (const url of candidates) {
+          const img = await loadImageForPdf(url);
+          if (img) return img;
+          console.warn('Board PDF: failed to load image, trying next URL', f.file_name, url);
+        }
+        console.warn('Board PDF: no working URL for image', f.file_name, f.id);
+        return null;
       })
     );
     slice.forEach((f, idx) => {
