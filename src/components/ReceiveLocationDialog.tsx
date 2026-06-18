@@ -31,6 +31,7 @@ interface ReceiveLocationDialogProps {
     locationItems: LocationItemEntry[],
     isPartial: boolean,
     prevReceivedOverrides?: Record<string, number>,
+    receivedDate?: string,
   ) => void;
   warehouses: Warehouse[];
   poItems: PurchaseOrderItem[];
