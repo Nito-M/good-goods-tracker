@@ -258,6 +258,16 @@ export function ReceiveLocationDialog({
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto py-4 space-y-6 min-h-0">
+            {/* Received date */}
+            <div className="space-y-2 max-w-xs">
+              <Label htmlFor="received-date" className="text-sm font-medium">Received Date</Label>
+              <Input
+                id="received-date"
+                type="date"
+                value={receivedDate}
+                onChange={(e) => setReceivedDate(e.target.value)}
+              />
+            </div>
             {/* Per-item assignment summary */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Item Distribution Summary</Label>
