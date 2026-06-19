@@ -42,6 +42,7 @@ export interface PurchaseOrder {
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   discountAmount: number;
+  pstPercent: number;
   companyId: string | null;
   companyName?: string | null;
   bankCardId: string | null;
