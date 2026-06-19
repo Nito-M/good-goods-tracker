@@ -847,6 +847,11 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                             })}
                             {vp.lead_time_days && ` • Lead time: ${vp.lead_time_days} day${vp.lead_time_days !== 1 ? 's' : ''}`}
                           </p>
+                          {(vp as any).notes && (
+                            <p className="mt-1.5 text-sm whitespace-pre-wrap text-foreground/90 bg-background/60 rounded p-2 border">
+                              {(vp as any).notes}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-3">
                           <p className="text-lg font-semibold">{formatCurrency(vp.price)}</p>

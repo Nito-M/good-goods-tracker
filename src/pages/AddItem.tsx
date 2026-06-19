@@ -217,6 +217,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
           link: p.link || '',
           vendorSku: p.vendor_sku || '',
           leadTimeDays: p.lead_time_days ? String(p.lead_time_days) : '',
+          notes: (p as any).notes || '',
           isNew: false,
         }))
       );
@@ -348,9 +349,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
         if (!vp.price) continue;
         const leadTime = vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null;
         if (vp.id.startsWith('new-')) {
-          await insertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
+          await insertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime, vp.notes || null);
         } else {
-          await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
+          await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime, vp.notes || null);
         }
       }
 
@@ -389,8 +390,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                 link: vp.link || null,
                 vendor_sku: vp.vendorSku || null,
                 lead_time_days: vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null,
+                notes: vp.notes || null,
                 user_id: user.id,
-              });
+              } as any);
               if (error) {
                 console.error('Error saving vendor price for new item:', error);
               }
@@ -438,9 +440,9 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
         if (!vp.price) continue;
         const leadTime = vp.leadTimeDays ? parseInt(vp.leadTimeDays) : null;
         if (vp.id.startsWith('new-')) {
-          await insertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
+          await insertPrice(vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime, vp.notes || null);
         } else {
-          await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime);
+          await updatePriceById(vp.id, vp.vendorId, parseFloat(vp.price), vp.link, vp.vendorSku, leadTime, vp.notes || null);
         }
       }
       // Refetch from DB and rebuild local state with real ids so a subsequent
@@ -460,6 +462,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
             link: p.link || '',
             vendorSku: p.vendor_sku || '',
             leadTimeDays: p.lead_time_days ? String(p.lead_time_days) : '',
+            notes: p.notes || '',
             isNew: false,
           }))
         );
