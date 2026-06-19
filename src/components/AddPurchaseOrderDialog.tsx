@@ -261,7 +261,7 @@ export function AddPurchaseOrderDialog({
 
   const isLineItemValid = (lineItem: LineItem) => {
     const { sku, itemName } = getItemDetails(lineItem);
-    return sku && itemName && lineItem.quantity >= 1;
+    return !!sku && !!itemName && lineItem.quantity !== 0 && !Number.isNaN(lineItem.quantity);
   };
 
   const isFormValid = () => {
