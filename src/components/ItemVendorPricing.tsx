@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown, Hash, Clock } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown, Hash, Clock, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ export interface VendorPriceEntry {
   link?: string;
   vendorSku?: string;
   leadTimeDays?: string;
+  notes?: string;
   isNew?: boolean;
 }
 
