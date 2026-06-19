@@ -125,7 +125,9 @@ export function AddPurchaseOrder() {
   
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   const taxAmount = Math.round(afterDiscount * 5) / 100;
-  const grandTotal = afterDiscount + taxAmount;
+  const pstNum = parseFloat(pstPercent) || 0;
+  const pstAmount = Math.round(afterDiscount * pstNum * 100) / 10000;
+  const grandTotal = afterDiscount + taxAmount + pstAmount;
 
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
