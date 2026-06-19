@@ -234,8 +234,9 @@ export function ItemVendorPricing({
               return (
                 <div
                   key={vp.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                  className="p-3 rounded-lg border bg-card space-y-2"
                 >
+                  <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">
@@ -336,6 +337,16 @@ export function ItemVendorPricing({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                  </div>
+                  </div>
+                  <div className="relative">
+                    <StickyNote className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Textarea
+                      placeholder="Notes (optional)..."
+                      value={vp.notes || ''}
+                      onChange={(e) => handleNotesChange(vp.id, e.target.value)}
+                      className="pl-8 min-h-[60px] text-sm"
+                    />
                   </div>
                 </div>
               );
