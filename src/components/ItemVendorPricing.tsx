@@ -60,6 +60,7 @@ export function ItemVendorPricing({
       if ((existing.link || '') !== (vp.link || '')) return true;
       if ((existing.vendor_sku || '') !== (vp.vendorSku || '')) return true;
       if (String(existing.lead_time_days || '') !== (vp.leadTimeDays || '')) return true;
+      if (((existing as any).notes || '') !== (vp.notes || '')) return true;
     }
     return false;
   }, [isEditing, existingPrices, vendorPrices]);
@@ -76,6 +77,7 @@ export function ItemVendorPricing({
         link: '',
         vendorSku: '',
         leadTimeDays: '',
+        notes: '',
         isNew: true,
       },
     ]);
@@ -103,6 +105,12 @@ export function ItemVendorPricing({
   const handleLeadTimeChange = (rowId: string, leadTimeDays: string) => {
     onVendorPricesChange(
       vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, leadTimeDays } : vp))
+    );
+  };
+
+  const handleNotesChange = (rowId: string, notes: string) => {
+    onVendorPricesChange(
+      vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, notes } : vp))
     );
   };
 
