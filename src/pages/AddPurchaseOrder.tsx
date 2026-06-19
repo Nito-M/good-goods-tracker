@@ -502,7 +502,6 @@ export function AddPurchaseOrder() {
                             className="h-7 text-sm"
                             value={c.quantity ?? ''}
                             onChange={(e) => handleUpdateQuantity(c.id, e.target.value === '' ? null : parseFloat(e.target.value) || 0)}
-                            min={0}
                             step={0.01}
                           />
                         </div>
@@ -513,7 +512,6 @@ export function AddPurchaseOrder() {
                             className="h-7 text-sm"
                             value={c.unitPrice || ''}
                             onChange={(e) => handleUpdateItem(c.id, { unitPrice: parseFloat(e.target.value) || 0, unitCost: parseFloat(e.target.value) || 0 })}
-                            min={0}
                             step={0.00001}
                             placeholder="0.00"
                           />
