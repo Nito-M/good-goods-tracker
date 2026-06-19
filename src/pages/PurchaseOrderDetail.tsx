@@ -96,7 +96,8 @@ export default function PurchaseOrderDetail() {
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   const taxAmount = afterDiscount * TAX_RATE;
-  const total = afterDiscount + taxAmount;
+  const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
+  const total = afterDiscount + taxAmount + pstAmount;
   const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
   const totalReceived = order.items.reduce((s, i) => s + (i.receivedQuantity || 0), 0);
 
@@ -235,6 +236,9 @@ export default function PurchaseOrderDetail() {
               <Row label={`Discount${order.discountType === 'percentage' ? ` (${order.discountValue}%)` : ''}`} value={`-${formatCurrency(discountAmount)}`} muted />
             )}
             <Row label="Tax (5%)" value={formatCurrency(taxAmount)} muted />
+            {pstAmount > 0 && (
+              <Row label={`PST (${order.pstPercent}%)`} value={formatCurrency(pstAmount)} muted />
+            )}
             <div className="flex justify-between font-bold text-base pt-2 border-t">
               <span>Total</span><span>{formatCurrency(total)}</span>
             </div>

@@ -134,7 +134,8 @@ export function PurchaseOrderCard({
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   const taxAmount = afterDiscount * TAX_RATE;
-  const totalCost = afterDiscount + taxAmount;
+  const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
+  const totalCost = afterDiscount + taxAmount + pstAmount;
 
   const formatLocalDate = (dateValue: Date | string) => {
     const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
@@ -309,6 +310,12 @@ export function PurchaseOrderCard({
                       <span>Tax (5%)</span>
                       <span>{formatCurrency(taxAmount)}</span>
                     </div>
+                    {pstAmount > 0 && (
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>PST ({order.pstPercent}%)</span>
+                        <span>{formatCurrency(pstAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-semibold text-base pt-1 border-t">
                       <span>Total</span>
                       <span>{formatCurrency(totalCost)}</span>

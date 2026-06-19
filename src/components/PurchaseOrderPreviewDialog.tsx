@@ -35,7 +35,8 @@ export function PurchaseOrderPreviewDialog({
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   const taxAmount = afterDiscount * TAX_RATE;
-  const totalCost = afterDiscount + taxAmount;
+  const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
+  const totalCost = afterDiscount + taxAmount + pstAmount;
 
   const formatDate = (date: Date | string) => {
     const d = typeof date === 'string' ? new Date(date) : date;
@@ -187,6 +188,12 @@ export function PurchaseOrderPreviewDialog({
                       <span>Tax (5%):</span>
                       <span>{formatCurrency(taxAmount)}</span>
                     </div>
+                    {pstAmount > 0 && (
+                      <div className="flex justify-between py-1">
+                        <span>PST ({order.pstPercent}%):</span>
+                        <span>{formatCurrency(pstAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between py-2 font-bold text-base border-t border-gray-300 mt-2">
                       <span>TOTAL:</span>
                       <span>{formatCurrency(totalCost)}</span>

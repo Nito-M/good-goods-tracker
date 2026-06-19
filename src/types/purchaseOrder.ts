@@ -42,6 +42,7 @@ export interface PurchaseOrder {
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   discountAmount: number;
+  pstPercent: number;
   companyId: string | null;
   companyName?: string | null;
   bankCardId: string | null;
@@ -104,6 +105,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     discountType: (db.discount_type as 'percentage' | 'fixed') || 'percentage',
     discountValue: db.discount_value || 0,
     discountAmount: db.discount_amount || 0,
+    pstPercent: Number((db as any).pst_percent) || 0,
     companyId: (db as any).company_id || null,
     companyName,
     bankCardId: (db as any).bank_card_id || null,

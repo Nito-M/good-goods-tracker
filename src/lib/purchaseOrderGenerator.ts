@@ -202,7 +202,8 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     const discountAmount = order.discountAmount || 0;
     const afterDiscount = Math.max(0, subtotal - discountAmount);
     const taxAmount = afterDiscount * TAX_RATE;
-    const totalCost = afterDiscount + taxAmount;
+    const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
+    const totalCost = afterDiscount + taxAmount + pstAmount;
 
     if (hasAnyCost) {
       doc.setFontSize(10);
@@ -221,6 +222,12 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
       y += 7;
       doc.text('Tax (5%):', totalsX, y);
       doc.text(formatCurrency(taxAmount), pageWidth - 22, y, { align: 'right' });
+
+      if (pstAmount > 0) {
+        y += 7;
+        doc.text(`PST (${order.pstPercent}%):`, totalsX, y);
+        doc.text(formatCurrency(pstAmount), pageWidth - 22, y, { align: 'right' });
+      }
 
       y += 3;
       y += 7;

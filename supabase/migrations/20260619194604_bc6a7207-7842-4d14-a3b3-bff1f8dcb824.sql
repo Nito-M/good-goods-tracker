@@ -1,0 +1,1 @@
+ALTER TABLE public.purchase_orders ADD COLUMN IF NOT EXISTS pst_percent numeric NOT NULL DEFAULT 0;
