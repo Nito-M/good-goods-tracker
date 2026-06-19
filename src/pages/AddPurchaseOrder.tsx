@@ -836,6 +836,30 @@ export function AddPurchaseOrder() {
                     <span className="text-muted-foreground">Tax (5%)</span>
                     <span className="font-medium">${taxAmount.toFixed(2)}</span>
                   </div>
+
+                  {/* PST Input */}
+                  <div className="flex items-center justify-between gap-3 py-1">
+                    <span className="text-sm text-muted-foreground">PST <span className="text-sky-400">(optional)</span></span>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        max={100}
+                        value={pstPercent}
+                        onChange={(e) => setPstPercent(e.target.value)}
+                        placeholder="0"
+                        className="h-8 w-24 text-right"
+                      />
+                      <span className="text-sm text-muted-foreground w-8">%</span>
+                    </div>
+                  </div>
+                  {pstAmount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">PST ({pstNum}%)</span>
+                      <span className="font-medium">${pstAmount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-base pt-2 border-t font-semibold">
                     <span>Total</span>
                     <span className="text-primary">${grandTotal.toFixed(2)}</span>
