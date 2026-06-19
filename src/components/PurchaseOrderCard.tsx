@@ -134,7 +134,8 @@ export function PurchaseOrderCard({
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   const taxAmount = afterDiscount * TAX_RATE;
-  const totalCost = afterDiscount + taxAmount;
+  const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
+  const totalCost = afterDiscount + taxAmount + pstAmount;
 
   const formatLocalDate = (dateValue: Date | string) => {
     const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
