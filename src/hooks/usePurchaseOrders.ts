@@ -680,7 +680,7 @@ export function usePurchaseOrders() {
         const subtotal = updates.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
         const discountAmount = updates.discountAmount || 0;
         const afterDiscount = Math.max(0, subtotal - discountAmount);
-        const totalCost = afterDiscount + (afterDiscount * TAX_RATE);
+        const totalCost = afterDiscount + (afterDiscount * TAX_RATE) + (afterDiscount * (updates.pstPercent || 0) / 100);
         const poLabel = updates.poNumber || existingOrder.poNumber || `PO-${orderId.slice(0, 8).toUpperCase()}`;
 
         if (totalCost > 0) {
