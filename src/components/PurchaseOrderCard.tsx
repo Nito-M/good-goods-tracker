@@ -310,6 +310,12 @@ export function PurchaseOrderCard({
                       <span>Tax (5%)</span>
                       <span>{formatCurrency(taxAmount)}</span>
                     </div>
+                    {pstAmount > 0 && (
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>PST ({order.pstPercent}%)</span>
+                        <span>{formatCurrency(pstAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-semibold text-base pt-1 border-t">
                       <span>Total</span>
                       <span>{formatCurrency(totalCost)}</span>
