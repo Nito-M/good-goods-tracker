@@ -345,6 +345,7 @@ export function usePurchaseOrders() {
       discount_type: order.discountType || 'percentage',
       discount_value: order.discountValue || 0,
       discount_amount: order.discountAmount || 0,
+      pst_percent: order.pstPercent || 0,
       company_id: order.companyId || null,
       bank_card_id: order.bankCardId || null,
       contact_person_name: order.contactPersonName || null,
