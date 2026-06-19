@@ -564,6 +564,7 @@ export function usePurchaseOrders() {
       discountType?: 'percentage' | 'fixed';
       discountValue?: number;
       discountAmount?: number;
+      pstPercent?: number;
       companyId?: string | null;
       bankCardId?: string | null;
       contactPersonName?: string | null;
