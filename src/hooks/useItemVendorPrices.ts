@@ -11,6 +11,7 @@ export interface ItemVendorPrice {
   link: string | null;
   vendor_sku: string | null;
   lead_time_days: number | null;
+  notes: string | null;
   updated_at: string;
   created_at: string;
 }
@@ -55,7 +56,8 @@ export function useItemVendorPrices(itemId?: string) {
     price: number,
     link?: string,
     vendorSku?: string,
-    leadTimeDays?: number | null
+    leadTimeDays?: number | null,
+    notes?: string | null
   ) => {
     if (!user || !itemId) return false;
 
@@ -67,8 +69,9 @@ export function useItemVendorPrices(itemId?: string) {
         link: link || null,
         vendor_sku: vendorSku || null,
         lead_time_days: leadTimeDays ?? null,
+        notes: notes ?? null,
         updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('id', rowId);
 
     if (error) {
@@ -89,7 +92,8 @@ export function useItemVendorPrices(itemId?: string) {
     price: number,
     link?: string,
     vendorSku?: string,
-    leadTimeDays?: number | null
+    leadTimeDays?: number | null,
+    notes?: string | null
   ) => {
     if (!user || !itemId) return false;
 
@@ -102,8 +106,9 @@ export function useItemVendorPrices(itemId?: string) {
         link: link || null,
         vendor_sku: vendorSku || null,
         lead_time_days: leadTimeDays ?? null,
+        notes: notes ?? null,
         user_id: user.id,
-      });
+      } as any);
 
     if (error) {
       console.error('Error adding vendor price:', error);
