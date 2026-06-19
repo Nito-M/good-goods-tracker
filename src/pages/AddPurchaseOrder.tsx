@@ -98,6 +98,7 @@ export function AddPurchaseOrder() {
   const [saving, setSaving] = useState(false);
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>(editingOrder?.discountType || 'percentage');
   const [discountValue, setDiscountValue] = useState<string>(editingOrder?.discountValue ? String(editingOrder.discountValue) : '');
+  const [pstPercent, setPstPercent] = useState<string>(editingOrder?.pstPercent ? String(editingOrder.pstPercent) : '');
   const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
   const [contactPersonName, setContactPersonName] = useState<string>(editingOrder?.contactPersonName || '');
   const { companies, defaultCompany } = useCompanies();
