@@ -42,8 +42,11 @@ export function useCategories() {
         return;
       }
 
-      // If no categories exist, seed with defaults
-      if (!data || data.length === 0) {
+      // Only seed defaults once per user (first time ever). After that, respect deletions.
+      const seedFlagKey = `categories-seeded-${user.id}`;
+      const alreadySeeded = localStorage.getItem(seedFlagKey) === '1';
+
+      if ((!data || data.length === 0) && !alreadySeeded) {
         const categoriesToInsert = DEFAULT_CATEGORY_NAMES.map((name) => ({
           name,
           user_id: user.id,
@@ -53,6 +56,7 @@ export function useCategories() {
         if (seedError) {
           console.error('Error seeding default categories:', seedError);
         }
+        localStorage.setItem(seedFlagKey, '1');
 
         // Re-fetch after seeding
         const { data: seededData } = await supabase
@@ -61,7 +65,8 @@ export function useCategories() {
           .order('name', { ascending: true });
         setCategories(seededData || []);
       } else {
-        setCategories(data);
+        if (data && data.length > 0) localStorage.setItem(seedFlagKey, '1');
+        setCategories(data || []);
       }
     } finally {
       setLoading(false);
