@@ -188,6 +188,12 @@ export function PurchaseOrderPreviewDialog({
                       <span>Tax (5%):</span>
                       <span>{formatCurrency(taxAmount)}</span>
                     </div>
+                    {pstAmount > 0 && (
+                      <div className="flex justify-between py-1">
+                        <span>PST ({order.pstPercent}%):</span>
+                        <span>{formatCurrency(pstAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between py-2 font-bold text-base border-t border-gray-300 mt-2">
                       <span>TOTAL:</span>
                       <span>{formatCurrency(totalCost)}</span>
