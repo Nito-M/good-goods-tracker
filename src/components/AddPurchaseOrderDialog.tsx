@@ -261,7 +261,7 @@ export function AddPurchaseOrderDialog({
 
   const isLineItemValid = (lineItem: LineItem) => {
     const { sku, itemName } = getItemDetails(lineItem);
-    return sku && itemName && lineItem.quantity >= 1;
+    return !!sku && !!itemName && lineItem.quantity !== 0 && !Number.isNaN(lineItem.quantity);
   };
 
   const isFormValid = () => {
@@ -445,7 +445,6 @@ export function AddPurchaseOrderDialog({
                     <Label>Quantity *</Label>
                     <Input
                       type="number"
-                      min={0.01}
                       step="0.01"
                       value={lineItem.quantity}
                       onChange={(e) =>
@@ -459,7 +458,6 @@ export function AddPurchaseOrderDialog({
                     <Label>Unit Cost</Label>
                     <Input
                       type="number"
-                      min={0}
                       step="0.00001"
                       value={lineItem.unitCost}
                       onChange={(e) =>

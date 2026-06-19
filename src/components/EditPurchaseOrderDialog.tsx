@@ -346,7 +346,6 @@ export function EditPurchaseOrderDialog({
                     <Label>Quantity *</Label>
                     <Input
                       type="number"
-                      min={0.01}
                       step="0.01"
                       value={lineItem.quantity}
                       onChange={(e) =>
@@ -360,7 +359,6 @@ export function EditPurchaseOrderDialog({
                     <Label>Unit Cost</Label>
                     <Input
                       type="number"
-                      min={0}
                       step="0.00001"
                       value={lineItem.unitCost}
                       onChange={(e) =>
