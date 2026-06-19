@@ -223,6 +223,12 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
       doc.text('Tax (5%):', totalsX, y);
       doc.text(formatCurrency(taxAmount), pageWidth - 22, y, { align: 'right' });
 
+      if (pstAmount > 0) {
+        y += 7;
+        doc.text(`PST (${order.pstPercent}%):`, totalsX, y);
+        doc.text(formatCurrency(pstAmount), pageWidth - 22, y, { align: 'right' });
+      }
+
       y += 3;
       y += 7;
       doc.setFont('helvetica', 'bold');
