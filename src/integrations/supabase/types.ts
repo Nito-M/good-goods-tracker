@@ -3530,6 +3530,7 @@ export type Database = {
           partially_received_at: string | null
           pdf_url: string | null
           po_number: string | null
+          pst_percent: number
           quantity: number
           received_at: string | null
           request_id: string | null
@@ -3558,6 +3559,7 @@ export type Database = {
           partially_received_at?: string | null
           pdf_url?: string | null
           po_number?: string | null
+          pst_percent?: number
           quantity?: number
           received_at?: string | null
           request_id?: string | null
@@ -3586,6 +3588,7 @@ export type Database = {
           partially_received_at?: string | null
           pdf_url?: string | null
           po_number?: string | null
+          pst_percent?: number
           quantity?: number
           received_at?: string | null
           request_id?: string | null
