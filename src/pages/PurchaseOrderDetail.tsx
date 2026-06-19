@@ -236,6 +236,9 @@ export default function PurchaseOrderDetail() {
               <Row label={`Discount${order.discountType === 'percentage' ? ` (${order.discountValue}%)` : ''}`} value={`-${formatCurrency(discountAmount)}`} muted />
             )}
             <Row label="Tax (5%)" value={formatCurrency(taxAmount)} muted />
+            {pstAmount > 0 && (
+              <Row label={`PST (${order.pstPercent}%)`} value={formatCurrency(pstAmount)} muted />
+            )}
             <div className="flex justify-between font-bold text-base pt-2 border-t">
               <span>Total</span><span>{formatCurrency(total)}</span>
             </div>
