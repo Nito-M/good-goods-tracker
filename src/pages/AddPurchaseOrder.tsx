@@ -324,6 +324,7 @@ export function AddPurchaseOrder() {
           discountType,
           discountValue: parseFloat(discountValue) || 0,
           discountAmount,
+          pstPercent: pstNum,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
