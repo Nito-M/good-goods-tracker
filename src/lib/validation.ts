@@ -90,8 +90,8 @@ export type InventoryItemInput = z.infer<typeof inventoryItemSchema>;
 export const purchaseOrderItemSchema = z.object({
   sku: z.string().min(1, 'SKU is required').max(100),
   itemName: z.string().min(1, 'Item name is required').max(500),
-  quantity: z.number().min(1, 'Quantity must be at least 1'),
-  unitCost: z.number().min(0, 'Unit cost cannot be negative').optional(),
+  quantity: z.number().refine((v) => v !== 0 && !Number.isNaN(v), 'Quantity cannot be zero'),
+  unitCost: z.number().optional(),
   notes: z.string().max(1000).optional(),
 });
 
