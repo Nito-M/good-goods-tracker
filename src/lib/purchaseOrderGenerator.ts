@@ -202,7 +202,8 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     const discountAmount = order.discountAmount || 0;
     const afterDiscount = Math.max(0, subtotal - discountAmount);
     const taxAmount = afterDiscount * TAX_RATE;
-    const totalCost = afterDiscount + taxAmount;
+    const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
+    const totalCost = afterDiscount + taxAmount + pstAmount;
 
     if (hasAnyCost) {
       doc.setFontSize(10);
