@@ -96,7 +96,8 @@ export default function PurchaseOrderDetail() {
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
   const taxAmount = afterDiscount * TAX_RATE;
-  const total = afterDiscount + taxAmount;
+  const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
+  const total = afterDiscount + taxAmount + pstAmount;
   const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
   const totalReceived = order.items.reduce((s, i) => s + (i.receivedQuantity || 0), 0);
 
