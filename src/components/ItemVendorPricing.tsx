@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown, Hash, Clock } from 'lucide-react';
+import { Plus, Trash2, DollarSign, Store, ExternalLink, Link, Save, Loader2, Check, ChevronsUpDown, Hash, Clock, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ export interface VendorPriceEntry {
   link?: string;
   vendorSku?: string;
   leadTimeDays?: string;
+  notes?: string;
   isNew?: boolean;
 }
 
@@ -58,6 +60,7 @@ export function ItemVendorPricing({
       if ((existing.link || '') !== (vp.link || '')) return true;
       if ((existing.vendor_sku || '') !== (vp.vendorSku || '')) return true;
       if (String(existing.lead_time_days || '') !== (vp.leadTimeDays || '')) return true;
+      if (((existing as any).notes || '') !== (vp.notes || '')) return true;
     }
     return false;
   }, [isEditing, existingPrices, vendorPrices]);
@@ -74,6 +77,7 @@ export function ItemVendorPricing({
         link: '',
         vendorSku: '',
         leadTimeDays: '',
+        notes: '',
         isNew: true,
       },
     ]);
@@ -101,6 +105,12 @@ export function ItemVendorPricing({
   const handleLeadTimeChange = (rowId: string, leadTimeDays: string) => {
     onVendorPricesChange(
       vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, leadTimeDays } : vp))
+    );
+  };
+
+  const handleNotesChange = (rowId: string, notes: string) => {
+    onVendorPricesChange(
+      vendorPrices.map((vp) => (vp.id === rowId ? { ...vp, notes } : vp))
     );
   };
 
@@ -224,8 +234,9 @@ export function ItemVendorPricing({
               return (
                 <div
                   key={vp.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                  className="p-3 rounded-lg border bg-card space-y-2"
                 >
+                  <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">
@@ -326,6 +337,16 @@ export function ItemVendorPricing({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                  </div>
+                  </div>
+                  <div className="relative">
+                    <StickyNote className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Textarea
+                      placeholder="Notes (optional)..."
+                      value={vp.notes || ''}
+                      onChange={(e) => handleNotesChange(vp.id, e.target.value)}
+                      className="pl-8 min-h-[60px] text-sm"
+                    />
                   </div>
                 </div>
               );
