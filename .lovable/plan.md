@@ -1,25 +1,18 @@
-## Plan
+## Allow negative quantity & unit cost in Purchase Orders
 
-1. **Stop relying on the stored signed URL**
-   - Use each board file’s `storage_path` as the primary source for PDF export.
-   - Generate a fresh signed URL at export time for every image, even if `file_url` is missing, expired, or blocked.
+Remove the `min` constraints on number inputs so users can enter negative values for returns/credits.
 
-2. **Make `.webp` photos PDF-safe**
-   - Decode the image through the browser, draw it to a canvas, and convert it to JPEG/PNG before adding it to the PDF.
-   - Keep the existing fallback paths, but add stronger logging when an image cannot be decoded.
+### Files to update
 
-3. **Ensure the photo gets table space**
-   - Reserve a fixed image area in Files-column cells so the picture has room to render instead of being clipped out.
-   - If an image is too tall, scale it down to fit the PDF cell instead of skipping it.
+1. **`src/components/AddPurchaseOrderDialog.tsx`** — remove `min={0.01}` on quantity, `min={0}` on unit cost. Drop the `quantity >= 1` rule in `isLineItemValid` (allow any non-zero number, but accept negatives).
+2. **`src/components/EditPurchaseOrderDialog.tsx`** — same: remove `min` on quantity/unit cost inputs and any received-quantity `min={0}` if blocking returns.
+3. **`src/pages/AddPurchaseOrder.tsx`** — remove `min={0}` on the three number inputs (quantity, unit cost, received qty as applicable).
 
-4. **Add a visible fallback in the PDF**
-   - If an image still cannot load, show the file name in that cell instead of leaving it blank.
+### Behavior
 
-5. **Verify on the current board**
-   - Export the board currently at `/boards/95f5ca6f-a724-48e3-b817-bc364d1b9d44` and confirm `blawicoup038.webp` appears in the PDF.
+- Quantity and unit cost accept negative values; totals (qty × cost) compute naturally — a negative qty with positive cost yields a negative line total, so the PO total reflects a credit/return.
+- No DB schema changes needed (no CHECK constraints on these columns).
+- No changes to receive flow, bank deductions, or inventory logic — those already use the stored numbers.
 
-## Technical details
-
-- Update `src/lib/boardPdfGenerator.ts` to preload images from fresh signed URLs and remove the `f.file_url` gate.
-- Update the PDF cell rendering so images are scaled to the actual cell width/height and are not skipped when the original dimensions exceed the row height.
-- If needed, update `src/hooks/useBoardCellFiles.ts` so `refreshSignedUrl` can resolve from `storage_path` consistently for PDF generation.
+### Note
+Inventory adjustments on receive will subtract instead of add when quantity is negative. If you want the receive step to skip stock changes for negative lines, say so and I'll add that branch.
