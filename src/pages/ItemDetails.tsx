@@ -45,6 +45,7 @@ import { useItemConsumptions } from '@/hooks/useItemConsumptions';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useInventoryPreferences } from '@/hooks/useInventoryPreferences';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
@@ -269,8 +270,12 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
     }
   };
 
+  const { markupPercent } = useInventoryPreferences();
+  const displayPrice = markupPercent > 0 && item.cost > 0
+    ? item.cost * (1 + markupPercent / 100)
+    : item.price;
   const isLowStock = item.quantity <= item.minStock;
-  const profitMargin = item.price > 0 ? ((item.price - item.cost) / item.price) * 100 : 0;
+  const profitMargin = displayPrice > 0 ? ((displayPrice - item.cost) / displayPrice) * 100 : 0;
 
   const handleEdit = () => {
     navigate(`/items/edit/${item.id}`);
@@ -449,7 +454,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Selling Price</p>
-                  <p className="text-2xl font-bold text-card-foreground">{formatCurrency(item.price)}</p>
+                  <p className="text-2xl font-bold text-card-foreground">{formatCurrency(displayPrice)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Cost</p>
@@ -517,7 +522,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Selling Price</p>
-                  <p className="text-2xl font-bold text-card-foreground">{formatCurrency(item.price)}</p>
+                  <p className="text-2xl font-bold text-card-foreground">{formatCurrency(displayPrice)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Cost</p>
@@ -533,7 +538,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Value</p>
                   <p className="text-xl font-semibold text-card-foreground">
-                    {formatCurrency(item.quantity * item.price)}
+                    {formatCurrency(item.quantity * displayPrice)}
                   </p>
                 </div>
               </div>
@@ -559,10 +564,10 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                     <div>
                       <p className="text-sm text-muted-foreground">Price per Piece</p>
                       <p className="text-xl font-semibold text-card-foreground">
-                        {formatCurrency(item.price * item.pieceLength)}
+                        {formatCurrency(displayPrice * item.pieceLength)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatCurrency(item.price)} × {item.pieceLength} {QUANTITY_UNIT_LABELS[item.quantityUnit] || item.quantityUnit}
+                        {formatCurrency(displayPrice)} × {item.pieceLength} {QUANTITY_UNIT_LABELS[item.quantityUnit] || item.quantityUnit}
                       </p>
                     </div>
                     <div>
@@ -609,7 +614,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                       <div>
                         <p className="text-sm text-muted-foreground">Price per Sheet</p>
                         <p className="text-xl font-semibold text-card-foreground">
-                          {formatCurrency(item.price * sheetSqFt)}
+                          {formatCurrency(displayPrice * sheetSqFt)}
                         </p>
                       </div>
                       <div>
