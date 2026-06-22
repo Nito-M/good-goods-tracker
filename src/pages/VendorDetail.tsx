@@ -20,6 +20,21 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useSales } from '@/hooks/useSales';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { VendorContactsManager } from '@/components/VendorContactsManager';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
+import { format } from 'date-fns';
+import type { PurchaseOrder } from '@/types/purchaseOrder';
+
+function poTotal(o: PurchaseOrder): number {
+  const subtotal = (o.items || []).reduce(
+    (s, it) => s + Number(it.unitCost || 0) * Number(it.quantity || 0),
+    0
+  );
+  const afterDiscount = Math.max(0, subtotal - Number(o.discountAmount || 0));
+  const tax = afterDiscount * 0.05;
+  const pst = afterDiscount * (Number(o.pstPercent || 0) / 100);
+  return afterDiscount + tax + pst;
+}
 
 export function VendorDetail() {
   const { id } = useParams<{ id: string }>();
