@@ -1421,6 +1421,47 @@ export default function BoardDetail() {
         hasMultipleNonEmpty={(pendingMergeContext?.nonEmptyCount ?? 0) > 1}
         onConfirm={confirmMerge}
       />
+
+      <AlertDialog open={pdfConfirmOpen} onOpenChange={setPdfConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Export board to PDF</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-foreground">
+                {visibleColumns.length} columns × {grouped.reduce((s, g) => s + g.rows.length, 0)} rows
+              </span>{' '}
+              will be exported.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await generateBoardPdf({
+                    boardName: board.name,
+                    columns: visibleColumns,
+                    groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
+                    getCellValue,
+                    getCellTextAlign,
+                    getCellBgColor,
+                    getFiles,
+                    refreshFileUrl: refreshSignedUrl,
+                    merges,
+                    logoUrl: pdfLogoUrl,
+                  });
+                } catch (err) {
+                  console.error('Board PDF export failed', err);
+                  toast.error('Failed to export PDF');
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
