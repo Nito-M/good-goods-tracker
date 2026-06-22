@@ -250,31 +250,100 @@ export function VendorDetail() {
           </CardContent>
         </Card>
 
-        {/* Recent Purchase Orders */}
-        {vendorOrders.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Purchase Orders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="divide-y divide-border">
-                {vendorOrders.slice(0, 10).map((order) => (
-                  <div key={order.id} className="flex items-center justify-between py-3">
-                    <div>
-                      <div className="font-medium text-sm">{order.poNumber || (order.items?.[0]?.itemName)}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(order.orderedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <Badge variant={order.status === 'received' ? 'default' : 'secondary'}>
-                      {order.status}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Purchase Orders by Year / Month */}
+        {vendorOrders.length > 0 && (() => {
+          const byYear = new Map<string, PurchaseOrder[]>();
+          for (const o of vendorOrders) {
+            const y = format(new Date(o.orderedAt), 'yyyy');
+            const arr = byYear.get(y) || [];
+            arr.push(o);
+            byYear.set(y, arr);
+          }
+          const years = Array.from(byYear.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Purchase Orders</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {years.map(([year, yOrders]) => {
+                  const yearTotal = yOrders.reduce((s, o) => s + poTotal(o), 0);
+                  const byMonth = new Map<string, PurchaseOrder[]>();
+                  for (const o of yOrders) {
+                    const k = format(new Date(o.orderedAt), 'yyyy-MM');
+                    const arr = byMonth.get(k) || [];
+                    arr.push(o);
+                    byMonth.set(k, arr);
+                  }
+                  const months = Array.from(byMonth.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+
+                  return (
+                    <Collapsible key={year} defaultOpen>
+                      <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-3 text-left hover:bg-muted transition-colors group">
+                        <span className="font-semibold text-card-foreground">{year}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-semibold text-foreground">${yearTotal.toFixed(2)}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                            {yOrders.length}
+                          </span>
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 pt-2 pl-2">
+                        {months.map(([mKey, mOrders]) => {
+                          const monthTotal = mOrders.reduce((s, o) => s + poTotal(o), 0);
+                          const [yy, mm] = mKey.split('-').map(Number);
+                          const monthLabel = format(new Date(yy, mm - 1, 1, 12), 'MMMM yyyy');
+                          return (
+                            <Collapsible key={mKey}>
+                              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-left hover:bg-muted/50 transition-colors group">
+                                <span className="text-sm font-medium text-card-foreground">{monthLabel}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-semibold text-foreground">${monthTotal.toFixed(2)}</span>
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                                    {mOrders.length}
+                                  </span>
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                                </div>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <div className="divide-y divide-border pl-2">
+                                  {mOrders
+                                    .sort((a, b) => new Date(b.orderedAt).getTime() - new Date(a.orderedAt).getTime())
+                                    .map((order) => (
+                                      <Link
+                                        key={order.id}
+                                        to={`/purchase-orders/${order.id}`}
+                                        className="flex items-center justify-between py-3 hover:bg-muted/50 rounded px-2 -mx-2 transition-colors"
+                                      >
+                                        <div>
+                                          <div className="font-medium text-sm">{order.poNumber || (order.items?.[0]?.itemName)}</div>
+                                          <div className="text-xs text-muted-foreground">
+                                            {new Date(order.orderedAt).toLocaleDateString()}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <span className="text-sm font-semibold text-foreground">${poTotal(order).toFixed(2)}</span>
+                                          <Badge variant={order.status === 'received' ? 'default' : 'secondary'}>
+                                            {order.status}
+                                          </Badge>
+                                        </div>
+                                      </Link>
+                                    ))}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          );
+                        })}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Recent Invoices */}
         {vendorSales.length > 0 && (
