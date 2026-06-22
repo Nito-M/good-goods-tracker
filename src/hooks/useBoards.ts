@@ -80,13 +80,20 @@ export function useBoards() {
       return null;
     }
 
-    // Create 3 default columns
-    const defaultColumns = [
-      { board_id: boardId, name: 'Item', position: 0 },
-      { board_id: boardId, name: 'Status', position: 1 },
-      { board_id: boardId, name: 'Notes', position: 2 },
-    ];
+    // Create 26 default text columns (A–Z) and 50 empty rows
+    const defaultColumns = Array.from({ length: 26 }, (_, i) => ({
+      board_id: boardId,
+      name: String.fromCharCode(65 + i),
+      position: i,
+      type: 'text' as const,
+    }));
     await supabase.from('board_columns').insert(defaultColumns);
+
+    const defaultRows = Array.from({ length: 50 }, (_, i) => ({
+      board_id: boardId,
+      position: i,
+    }));
+    await supabase.from('board_rows').insert(defaultRows);
 
     // Grant access to the creator (so they can see their own board)
     await supabase
