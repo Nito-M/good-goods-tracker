@@ -73,11 +73,16 @@ export function ItemCell({ value, onSave, readOnly, align = 'right', livePrice }
       )}
     >
       {linked ? (
-        typeof total === 'number' ? (
-          <span className="font-medium">{formatCurrency(total)}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )
+        <span className="flex items-center gap-2 min-w-0 justify-end">
+          {linked.s && (
+            <span className="text-xs text-muted-foreground truncate">{linked.s}</span>
+          )}
+          {typeof total === 'number' ? (
+            <span className="font-medium">{formatCurrency(total)}</span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </span>
       ) : (
         <>
           <Link2 className="h-3.5 w-3.5 opacity-50" />
