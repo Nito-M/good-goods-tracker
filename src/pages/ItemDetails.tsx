@@ -270,8 +270,12 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
     }
   };
 
+  const { markupPercent } = useInventoryPreferences();
+  const displayPrice = markupPercent > 0 && item.cost > 0
+    ? item.cost * (1 + markupPercent / 100)
+    : item.price;
   const isLowStock = item.quantity <= item.minStock;
-  const profitMargin = item.price > 0 ? ((item.price - item.cost) / item.price) * 100 : 0;
+  const profitMargin = displayPrice > 0 ? ((displayPrice - item.cost) / displayPrice) * 100 : 0;
 
   const handleEdit = () => {
     navigate(`/items/edit/${item.id}`);
