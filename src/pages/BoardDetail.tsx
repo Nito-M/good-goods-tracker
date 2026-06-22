@@ -31,6 +31,16 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { AddColumnPopover, BoardColumnType } from '@/components/board/AddColumnPopover';
 import { StatusOptionsDialog, getStatusColorClasses } from '@/components/board/StatusOptionsDialog';
@@ -328,6 +338,7 @@ export default function BoardDetail() {
 
   const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
   const [accessSheetOpen, setAccessSheetOpen] = useState(false);
+  const [pdfConfirmOpen, setPdfConfirmOpen] = useState(false);
   const { copyToClipboard } = useBoardClipboard();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
@@ -1046,27 +1057,7 @@ export default function BoardDetail() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem
-                onClick={async () => {
-                  try {
-                    await generateBoardPdf({
-                      boardName: board.name,
-                      columns: visibleColumns,
-                      groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
-                      getCellValue,
-                      getCellTextAlign,
-                      getCellBgColor,
-                      getFiles,
-                      refreshFileUrl: refreshSignedUrl,
-                      merges,
-                      logoUrl: pdfLogoUrl,
-                    });
-                  } catch (err) {
-                    console.error('Board PDF export failed', err);
-                    toast.error('Failed to export PDF');
-                  }
-                }}
-              >
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setPdfConfirmOpen(true); }}>
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </DropdownMenuItem>
@@ -1430,6 +1421,47 @@ export default function BoardDetail() {
         hasMultipleNonEmpty={(pendingMergeContext?.nonEmptyCount ?? 0) > 1}
         onConfirm={confirmMerge}
       />
+
+      <AlertDialog open={pdfConfirmOpen} onOpenChange={setPdfConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Export board to PDF</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-foreground">
+                {visibleColumns.length} columns × {grouped.reduce((s, g) => s + g.rows.length, 0)} rows
+              </span>{' '}
+              will be exported.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  await generateBoardPdf({
+                    boardName: board.name,
+                    columns: visibleColumns,
+                    groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
+                    getCellValue,
+                    getCellTextAlign,
+                    getCellBgColor,
+                    getFiles,
+                    refreshFileUrl: refreshSignedUrl,
+                    merges,
+                    logoUrl: pdfLogoUrl,
+                  });
+                } catch (err) {
+                  console.error('Board PDF export failed', err);
+                  toast.error('Failed to export PDF');
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -537,16 +537,20 @@ export async function generateBoardPdf(opts: GenerateOpts): Promise<void> {
     cursorY = (doc as any).lastAutoTable.finalY + 12;
   });
 
-  // Footer page numbers
+  // Footer page numbers + column/row counts
+  const totalRowCount = groups.reduce((s, g) => s + g.rows.length, 0);
+  const countLabel = `${columns.length} columns × ${totalRowCount} rows`;
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(0, 0, 0);
+    const footerY = doc.internal.pageSize.getHeight() - 20;
+    doc.text(countLabel, sideMargin, footerY);
     doc.text(
       `Page ${i} of ${pageCount}`,
       pageWidth - 40,
-      doc.internal.pageSize.getHeight() - 20,
+      footerY,
       { align: 'right' }
     );
     doc.setTextColor(0);

@@ -1,18 +1,36 @@
-## Allow negative quantity & unit cost in Purchase Orders
+# Boards: default 26×50 grid + PDF count display
 
-Remove the `min` constraints on number inputs so users can enter negative values for returns/credits.
+## 1. New boards start with 26 columns × 50 rows
 
-### Files to update
+Update the "create board" path so every newly created board is seeded with:
+- 26 text columns named `A`, `B`, `C`, … `Z` (positions 0–25, type `text`)
+- 50 empty rows (positions 0–49)
 
-1. **`src/components/AddPurchaseOrderDialog.tsx`** — remove `min={0.01}` on quantity, `min={0}` on unit cost. Drop the `quantity >= 1` rule in `isLineItemValid` (allow any non-zero number, but accept negatives).
-2. **`src/components/EditPurchaseOrderDialog.tsx`** — same: remove `min` on quantity/unit cost inputs and any received-quantity `min={0}` if blocking returns.
-3. **`src/pages/AddPurchaseOrder.tsx`** — remove `min={0}` on the three number inputs (quantity, unit cost, received qty as applicable).
+Column type can still be changed afterward via the existing column type menu — no change there.
 
-### Behavior
+**Where:**
+- `src/hooks/useBoards.ts` (or wherever `addBoard` / board creation lives) — after the `boards` row is inserted, bulk-insert the 26 `board_columns` and 50 `board_rows` rows in two `supabase.from(...).insert([...])` calls.
+- Existing boards are left untouched (per your choice).
 
-- Quantity and unit cost accept negative values; totals (qty × cost) compute naturally — a negative qty with positive cost yields a negative line total, so the PO total reflects a credit/return.
-- No DB schema changes needed (no CHECK constraints on these columns).
-- No changes to receive flow, bank deductions, or inventory logic — those already use the stored numbers.
+## 2. PDF export — show how many columns/rows will be exported
 
-### Note
-Inventory adjustments on receive will subtract instead of add when quantity is negative. If you want the receive step to skip stock changes for negative lines, say so and I'll add that branch.
+**In the export dialog (live preview):**
+- In the PDF settings dialog used for boards (the one opened from `BoardDetail`), add a small summary line:
+  `26 columns × 50 rows will be exported`
+- The count reflects the user's current filters/visibility toggles — if a column or row is hidden/excluded from the PDF, it isn't counted.
+
+**On the PDF itself:**
+- In `src/lib/boardPdfGenerator.ts`, add a small footer on every page:
+  `X columns × Y rows` (right-aligned, same small footer style as page numbers).
+
+## Technical notes
+
+- Seeding uses two batch inserts; no per-row loop. `board_cells` are NOT pre-created — they're created lazily by `setCellValue` as today, so 26×50 empty cells cost nothing.
+- The default column name pattern `A…Z` is purely cosmetic; users can rename immediately.
+- PDF footer count is computed from the same arrays the generator already iterates, so no extra queries.
+
+## Out of scope
+
+- No migration / no schema changes.
+- No backfill of existing boards.
+- No change to column-type switching UI (already exists).
