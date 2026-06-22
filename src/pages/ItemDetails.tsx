@@ -45,6 +45,7 @@ import { useItemConsumptions } from '@/hooks/useItemConsumptions';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useInventoryPreferences } from '@/hooks/useInventoryPreferences';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
