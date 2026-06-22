@@ -166,25 +166,23 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
               <DropdownMenuItem onClick={onEditNotes}>
                 {hasNotes ? 'Edit notes' : 'Add notes'}
               </DropdownMenuItem>
-              {!isPrimary && (
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      {types.map((t) => (
-                        <DropdownMenuItem
-                          key={t.type}
-                          onClick={() => onChangeType(t.type)}
-                          disabled={t.type === column.type}
-                        >
-                          {t.label} {t.type === column.type && '✓'}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-              )}
-              {column.type === 'status' && !isPrimary && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {types.map((t) => (
+                      <DropdownMenuItem
+                        key={t.type}
+                        onClick={() => onChangeType(t.type)}
+                        disabled={t.type === column.type}
+                      >
+                        {t.label} {t.type === column.type && '✓'}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+              {column.type === 'status' && (
                 <>
                   <DropdownMenuItem onClick={onTogglePerRowOptions}>
                     {column.per_row_options ? 'Use shared column options' : 'Per-row status options'}
@@ -194,7 +192,7 @@ function ColumnHeader({ column, onRename, onChangeType, onManageOptions, onConfi
                   )}
                 </>
               )}
-              {column.type === 'connect' && !isPrimary && (
+              {column.type === 'connect' && (
                 <DropdownMenuItem onClick={onConfigureConnect}>Configure connection</DropdownMenuItem>
               )}
               <DropdownMenuSub>
