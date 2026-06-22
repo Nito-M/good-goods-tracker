@@ -31,6 +31,16 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { AddColumnPopover, BoardColumnType } from '@/components/board/AddColumnPopover';
 import { StatusOptionsDialog, getStatusColorClasses } from '@/components/board/StatusOptionsDialog';
