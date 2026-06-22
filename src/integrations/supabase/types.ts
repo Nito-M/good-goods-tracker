@@ -5122,6 +5122,41 @@ export type Database = {
           },
         ]
       }
+      vendor_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_notes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           address: string | null
