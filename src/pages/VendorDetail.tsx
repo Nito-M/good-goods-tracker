@@ -20,6 +20,7 @@ import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useSales } from '@/hooks/useSales';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { VendorContactsManager } from '@/components/VendorContactsManager';
+import { VendorNotesList } from '@/components/VendorNotesList';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
