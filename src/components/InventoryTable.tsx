@@ -37,12 +37,23 @@ interface InventoryTableProps {
 
 const PAGE_SIZE = 40;
 
+const PAGE_STORAGE_KEY = 'inventory-table-page';
+
 export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItemQtyMap, draggable }: InventoryTableProps) {
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(1);
-  useEffect(() => {setCurrentPage(1);}, [items]);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const stored = sessionStorage.getItem(PAGE_STORAGE_KEY);
+    const n = stored ? parseInt(stored, 10) : 1;
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  });
+  useEffect(() => {
+    sessionStorage.setItem(PAGE_STORAGE_KEY, String(currentPage));
+  }, [currentPage]);
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.name.localeCompare(b.name)), [items]);
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
   const pagedItems = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return sortedItems.slice(start, start + PAGE_SIZE);
