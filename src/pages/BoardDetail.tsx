@@ -1057,27 +1057,7 @@ export default function BoardDetail() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem
-                onClick={async () => {
-                  try {
-                    await generateBoardPdf({
-                      boardName: board.name,
-                      columns: visibleColumns,
-                      groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
-                      getCellValue,
-                      getCellTextAlign,
-                      getCellBgColor,
-                      getFiles,
-                      refreshFileUrl: refreshSignedUrl,
-                      merges,
-                      logoUrl: pdfLogoUrl,
-                    });
-                  } catch (err) {
-                    console.error('Board PDF export failed', err);
-                    toast.error('Failed to export PDF');
-                  }
-                }}
-              >
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setPdfConfirmOpen(true); }}>
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </DropdownMenuItem>
