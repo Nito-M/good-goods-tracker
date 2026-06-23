@@ -254,11 +254,23 @@ export function PurchaseOrderCard({
                 {/* Multiple items list */}
                 {order.items.length > 1 && (
                   <div className="pt-3 space-y-1.5">
-                    {[...order.items].sort((a, b) => a.itemName.localeCompare(b.itemName)).map((item, idx) => (
+                    {[...order.items].sort((a, b) => a.itemName.localeCompare(b.itemName)).map((item, idx) => {
+                      const recv = item.receivedQuantity || 0;
+                      const showRecv = order.status === 'partially_received' || (recv > 0 && recv < item.quantity);
+                      const fullyReceived = recv >= item.quantity && recv > 0;
+                      return (
                       <div key={idx} className="py-1 border-b border-dashed last:border-b-0">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Package className="h-3 w-3 shrink-0" />
                           <span className="flex-1 truncate">{item.itemName}</span>
+                          {showRecv && (
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] px-1.5 py-0 ${fullyReceived ? 'border-green-600 text-green-600' : recv > 0 ? 'border-orange-500 text-orange-600' : 'border-muted-foreground text-muted-foreground'}`}
+                            >
+                              {recv}/{item.quantity} received
+                            </Badge>
+                          )}
                           <span className="text-foreground font-medium">x{item.quantity}</span>
                           {item.unitCost !== undefined && (
                             <span className="text-muted-foreground">@ {formatCurrency(item.unitCost)}</span>
@@ -273,19 +285,35 @@ export function PurchaseOrderCard({
                           <p className="text-xs text-muted-foreground mt-0.5 ml-5 italic">{item.notes}</p>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
                 {/* Single item details */}
                 {order.items.length === 1 && (
                   <div className="pt-3 space-y-1">
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                       <span>SKU: {order.items[0].sku}</span>
                       <span>Qty: {order.items[0].quantity}</span>
                       {order.items[0].unitCost !== undefined && order.items[0].unitCost > 0 && (
                         <span className="font-medium text-foreground">@ {formatCurrency(order.items[0].unitCost)} each</span>
                       )}
+                      {(() => {
+                        const item = order.items[0];
+                        const recv = item.receivedQuantity || 0;
+                        const showRecv = order.status === 'partially_received' || (recv > 0 && recv < item.quantity);
+                        if (!showRecv) return null;
+                        const fullyReceived = recv >= item.quantity && recv > 0;
+                        return (
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] px-1.5 py-0 ${fullyReceived ? 'border-green-600 text-green-600' : recv > 0 ? 'border-orange-500 text-orange-600' : 'border-muted-foreground text-muted-foreground'}`}
+                          >
+                            {recv}/{item.quantity} received
+                          </Badge>
+                        );
+                      })()}
                     </div>
                     {order.items[0].notes && (
                       <p className="text-sm text-muted-foreground italic">{order.items[0].notes}</p>
