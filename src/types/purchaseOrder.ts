@@ -8,6 +8,29 @@ export interface PurchaseOrderItem {
   inventoryItemId?: string | null;
 }
 
+export function getPurchaseOrderItemKey(item: PurchaseOrderItem): string {
+  const sku = item.sku?.trim().toLowerCase();
+  if (sku) return `sku:${sku}`;
+
+  const inventoryItemId = item.inventoryItemId?.trim();
+  if (inventoryItemId) return `inventory:${inventoryItemId}`;
+
+  return `name:${item.itemName.trim().toLowerCase()}`;
+}
+
+export function getDuplicatePurchaseOrderItems(items: PurchaseOrderItem[]) {
+  const counts = new Map<string, { label: string; count: number }>();
+
+  for (const item of items) {
+    const key = getPurchaseOrderItemKey(item);
+    const label = item.sku?.trim() || item.itemName;
+    const current = counts.get(key);
+    counts.set(key, { label, count: (current?.count || 0) + 1 });
+  }
+
+  return Array.from(counts.values()).filter((entry) => entry.count > 1);
+}
+
 
 export interface PoAttachment {
   id: string;
