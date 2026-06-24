@@ -93,6 +93,8 @@ export const purchaseOrderItemSchema = z.object({
   quantity: z.number().refine((v) => v !== 0 && !Number.isNaN(v), 'Quantity cannot be zero'),
   unitCost: z.number().optional(),
   notes: z.string().max(1000).optional(),
+  receivedQuantity: z.number().optional(),
+  inventoryItemId: z.string().uuid().nullable().optional(),
 });
 
 export const purchaseOrderSchema = z.object({
