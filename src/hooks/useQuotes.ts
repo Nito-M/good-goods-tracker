@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Quote, QuoteItem, QuoteInvoiceLink, CreateQuoteInput, QuoteStatus } from '@/types/quote';
+import { dedupePurchaseOrderItems } from '@/types/purchaseOrder';
 
 export function useQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -573,12 +574,13 @@ export function useQuotes() {
 
     try {
       // Build items array for purchase order
-      const poItems = quote.items.map((item) => ({
+      const poItems = dedupePurchaseOrderItems(quote.items.map((item) => ({
         sku: item.sku || 'CUSTOM',
         itemName: item.itemName,
         quantity: item.quantity,
         unitCost: item.unitCost,
-      }));
+        inventoryItemId: item.inventoryItemId || null,
+      })));
 
       const firstItem = poItems[0];
       const totalQuantity = poItems.reduce((sum, item) => sum + item.quantity, 0);
