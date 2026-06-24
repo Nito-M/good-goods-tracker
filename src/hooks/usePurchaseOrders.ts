@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem, PoAttachment } from '@/types/purchaseOrder';
+import { PurchaseOrder, DbPurchaseOrder, dbToPurchaseOrder, PurchaseOrderItem, PoAttachment, getDuplicatePurchaseOrderItems } from '@/types/purchaseOrder';
 import { purchaseOrderSchema, validateInput } from '@/lib/validation';
 import { updateVendorPriceFromPO } from '@/hooks/useItemVendorPrices';
 
@@ -284,6 +284,16 @@ export function usePurchaseOrders() {
       return;
     }
 
+    const duplicateItems = getDuplicatePurchaseOrderItems(order.items);
+    if (duplicateItems.length > 0) {
+      toast({
+        title: 'Duplicate PO line blocked',
+        description: `Part # ${duplicateItems[0].label} is already on this PO. Use one line and adjust its quantity.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Validate input
     const validation = validateInput(purchaseOrderSchema, {
       items: order.items,
@@ -375,7 +385,7 @@ export function usePurchaseOrders() {
 
   const markAsReceived = async (
     orderId: string,
-    locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number }[] }[],
+    locationItems?: { warehouseId: string; items: { sku: string; itemName: string; quantity: number; poItemIndex?: number; inventoryItemId?: string | null }[] }[],
     partial?: boolean,
     prevReceivedOverrides?: Record<string, number>,
     receivedDate?: string,
@@ -402,20 +412,27 @@ export function usePurchaseOrders() {
     // Update the purchase order status and items with received quantities
     const validLocations = locationItems?.filter(e => e.warehouseId && e.items.length > 0) || [];
 
-    // Build per-item total quantities to add to inventory (sum across all locations)
+    // Build per-line total quantities to add to inventory (sum across all locations).
+    // Use the PO line index instead of SKU so duplicate catalog SKUs can never fan out across PO lines.
     const itemTotalMap = new Map<string, number>();
     for (const loc of validLocations) {
       for (const item of loc.items) {
-        itemTotalMap.set(item.sku, (itemTotalMap.get(item.sku) || 0) + item.quantity);
+        const key = item.poItemIndex !== undefined ? String(item.poItemIndex) : item.inventoryItemId || item.sku;
+        itemTotalMap.set(key, (itemTotalMap.get(key) || 0) + item.quantity);
       }
     }
 
     // Build updated items with receivedQuantity tracking.
     // If the dialog provided a prev-received override, use it as the new baseline.
-    const updatedItems = order.items.map(item => {
-      const overridePrev = prevReceivedOverrides?.[item.sku];
+    const updatedItems = order.items.map((item, index) => {
+      const overridePrev = prevReceivedOverrides?.[String(index)]
+        ?? (item.inventoryItemId ? prevReceivedOverrides?.[item.inventoryItemId] : undefined)
+        ?? prevReceivedOverrides?.[item.sku];
       const prevReceived = overridePrev !== undefined ? overridePrev : (item.receivedQuantity || 0);
-      const newlyReceived = itemTotalMap.get(item.sku) || 0;
+      const newlyReceived = itemTotalMap.get(String(index))
+        ?? (item.inventoryItemId ? itemTotalMap.get(item.inventoryItemId) : undefined)
+        ?? itemTotalMap.get(item.sku)
+        ?? 0;
       return {
         ...item,
         receivedQuantity: prevReceived + newlyReceived,
@@ -456,12 +473,17 @@ export function usePurchaseOrders() {
     }
 
     // Determine which items to process from order
-    const itemsToReceive = order.items.filter(oi => itemTotalMap.has(oi.sku));
+    const itemsToReceive = order.items
+      .map((item, index) => ({ item, index }))
+      .filter(({ item, index }) => itemTotalMap.has(String(index)) || (item.inventoryItemId ? itemTotalMap.has(item.inventoryItemId) : false) || itemTotalMap.has(item.sku));
     const missingItems: string[] = [];
 
     // Update inventory items with new costs and quantities, and save vendor prices
-    for (const item of itemsToReceive) {
-      const receiveQty = itemTotalMap.get(item.sku) || 0;
+    for (const { item, index } of itemsToReceive) {
+      const receiveQty = itemTotalMap.get(String(index))
+        ?? (item.inventoryItemId ? itemTotalMap.get(item.inventoryItemId) : undefined)
+        ?? itemTotalMap.get(item.sku)
+        ?? 0;
 
       // Prefer looking up by tracked inventoryItemId; fall back to SKU match
       let inventoryItem: { id: string; quantity: number; cost: number } | null = null;
@@ -510,7 +532,9 @@ export function usePurchaseOrders() {
 
       // Update item_location_quantities per location
       for (const loc of validLocations) {
-        const locItem = loc.items.find(li => li.sku === item.sku);
+        const locItem = loc.items.find(li => li.poItemIndex === index)
+          || (item.inventoryItemId ? loc.items.find(li => li.inventoryItemId === item.inventoryItemId) : undefined)
+          || loc.items.find(li => li.sku === item.sku);
         if (!locItem || locItem.quantity <= 0) continue;
 
         const { data: existingLocQty } = await supabase
@@ -576,6 +600,16 @@ export function usePurchaseOrders() {
       toast({
         title: 'Not authenticated',
         description: 'Please sign in to update purchase orders.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const duplicateItems = getDuplicatePurchaseOrderItems(updates.items);
+    if (duplicateItems.length > 0) {
+      toast({
+        title: 'Duplicate PO line blocked',
+        description: `Part # ${duplicateItems[0].label} is already on this PO. Use one line and adjust its quantity.`,
         variant: 'destructive',
       });
       return;

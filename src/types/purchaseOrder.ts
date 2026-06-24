@@ -8,6 +8,43 @@ export interface PurchaseOrderItem {
   inventoryItemId?: string | null;
 }
 
+export function getPurchaseOrderItemKey(item: PurchaseOrderItem): string {
+  const sku = item.sku?.trim().toLowerCase();
+  if (sku) return `sku:${sku}`;
+
+  const inventoryItemId = item.inventoryItemId?.trim();
+  if (inventoryItemId) return `inventory:${inventoryItemId}`;
+
+  return `name:${item.itemName.trim().toLowerCase()}`;
+}
+
+export function getDuplicatePurchaseOrderItems(items: PurchaseOrderItem[]) {
+  const counts = new Map<string, { label: string; count: number }>();
+
+  for (const item of items) {
+    const key = getPurchaseOrderItemKey(item);
+    const label = item.sku?.trim() || item.itemName;
+    const current = counts.get(key);
+    counts.set(key, { label, count: (current?.count || 0) + 1 });
+  }
+
+  return Array.from(counts.values()).filter((entry) => entry.count > 1);
+}
+
+export function dedupePurchaseOrderItems(items: PurchaseOrderItem[]): PurchaseOrderItem[] {
+  const seen = new Set<string>();
+  const deduped: PurchaseOrderItem[] = [];
+
+  for (const item of items) {
+    const key = getPurchaseOrderItemKey(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(item);
+  }
+
+  return deduped;
+}
+
 
 export interface PoAttachment {
   id: string;
@@ -81,6 +118,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
   const items: PurchaseOrderItem[] = rawItems && Array.isArray(rawItems) && rawItems.length > 0
     ? rawItems
     : [{ sku: db.sku, itemName: db.item_name, quantity: db.quantity }];
+  const dedupedItems = dedupePurchaseOrderItems(items);
 
   return {
     id: db.id,
@@ -94,7 +132,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     jobNumbers: jobNumbers || [],
     pdfUrl: db.pdf_url,
     imageUrl: db.image_url,
-    items,
+    items: dedupedItems,
     status: db.status as 'draft' | 'ordered' | 'partially_received' | 'received',
     orderedAt: new Date(db.ordered_at),
     receivedAt: db.received_at ? new Date(db.received_at) : null,

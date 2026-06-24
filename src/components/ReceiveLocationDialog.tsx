@@ -21,7 +21,7 @@ interface Warehouse {
 
 export interface LocationItemEntry {
   warehouseId: string;
-  items: { sku: string; itemName: string; quantity: number }[];
+  items: { sku: string; itemName: string; quantity: number; poItemIndex: number; inventoryItemId?: string | null }[];
 }
 
 interface ReceiveLocationDialogProps {
@@ -225,6 +225,8 @@ export function ReceiveLocationDialog({
             sku: poItems[it.poItemIndex].sku,
             itemName: poItems[it.poItemIndex].itemName,
             quantity: parseFloat(it.quantity) || 0,
+            poItemIndex: it.poItemIndex,
+            inventoryItemId: poItems[it.poItemIndex].inventoryItemId || null,
           }))
           .filter((item) => item.quantity > 0),
       }))
@@ -232,7 +234,7 @@ export function ReceiveLocationDialog({
 
     const overrides: Record<string, number> = {};
     poItems.forEach((it, i) => {
-      overrides[it.sku] = getPrev(i);
+      overrides[String(i)] = getPrev(i);
     });
     onConfirm(entries, !allComplete, overrides, receivedDate);
   };

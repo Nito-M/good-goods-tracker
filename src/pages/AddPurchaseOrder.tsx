@@ -30,6 +30,7 @@ import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
 import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
 import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
+import { useToast } from '@/hooks/use-toast';
 
 interface VendorPrice {
   id: string;
@@ -52,15 +53,18 @@ export function AddPurchaseOrder() {
   const { requests } = useRequests();
   const { jobs } = useJobs();
   const { cards: bankCards } = useBankCards();
+  const { toast } = useToast();
 
   // Initialize cart from editing order
   const initCart = (): POCartItem[] => {
     if (editingOrder) {
       return editingOrder.items.map((item) => {
-        const matchingItem = inventoryItems.find(i => i.sku === item.sku);
+        const matchingItem = item.inventoryItemId
+          ? inventoryItems.find(i => i.id === item.inventoryItemId)
+          : inventoryItems.find(i => i.sku === item.sku);
         return {
           id: crypto.randomUUID(),
-          inventoryItemId: matchingItem?.id || null,
+          inventoryItemId: item.inventoryItemId || matchingItem?.id || null,
           itemName: item.itemName,
           sku: item.sku,
           quantity: item.quantity,
@@ -245,18 +249,40 @@ export function AddPurchaseOrder() {
     const cost = override?.price ?? vendorPrice?.price ?? item.cost ?? 0;
     const sku = override?.vendorSku
       ?? ((vendorId && vendorId !== 'none' && vendorPrice?.vendorSku) || item.sku);
-    const newItem: POCartItem = {
-      id: crypto.randomUUID(),
-      inventoryItemId: item.id,
-      itemName: item.name,
-      sku,
-      quantity: 1,
-      quantityUnit: item.quantityUnit || 'pcs',
-      unitPrice: cost,
-      unitCost: cost,
-      notes: '',
-    };
-    setCart(prev => [...prev, newItem]);
+    const normalizedSku = String(sku || '').trim().toLowerCase();
+
+    setCart(prev => {
+      const sameInventoryItem = prev.find(c => c.inventoryItemId === item.id);
+      if (sameInventoryItem) {
+        return prev.map(c => c.id === sameInventoryItem.id
+          ? { ...c, quantity: (c.quantity || 0) + 1, unitPrice: cost, unitCost: cost, sku }
+          : c);
+      }
+
+      const samePartNumber = normalizedSku
+        ? prev.find(c => String(c.sku || '').trim().toLowerCase() === normalizedSku)
+        : undefined;
+      if (samePartNumber) {
+        toast({
+          title: 'Part # already on this PO',
+          description: 'Adjust the quantity on the existing line instead of adding another matching inventory record.',
+        });
+        return prev;
+      }
+
+      const newItem: POCartItem = {
+        id: crypto.randomUUID(),
+        inventoryItemId: item.id,
+        itemName: item.name,
+        sku,
+        quantity: 1,
+        quantityUnit: item.quantityUnit || 'pcs',
+        unitPrice: cost,
+        unitCost: cost,
+        notes: '',
+      };
+      return [...prev, newItem];
+    });
   };
 
   const handleAddCustomItem = () => {
