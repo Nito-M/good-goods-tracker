@@ -144,6 +144,24 @@ export function AddVendor() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="vendor-category">Category</Label>
+                <Input
+                  id="vendor-category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="e.g. Steel, Hardware, Electrical"
+                  list="vendor-category-options"
+                />
+                <datalist id="vendor-category-options">
+                  {existingCategories.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
+
+
+
+              <div className="space-y-2">
                 <Label htmlFor="vendor-address">Address</Label>
                 <Textarea
                   id="vendor-address"
