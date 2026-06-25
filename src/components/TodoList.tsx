@@ -38,6 +38,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+
 
 export function TodoList() {
   const { todos, loading, addTodo, updateTodo, deleteTodo, reorderTodos } = useTodos();
