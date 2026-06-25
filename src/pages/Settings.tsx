@@ -269,8 +269,21 @@ export function Settings() {
       vendor.name.toLowerCase().includes(query) ||
       vendor.contact_email?.toLowerCase().includes(query) ||
       vendor.contact_phone?.toLowerCase().includes(query) ||
-      vendor.address?.toLowerCase().includes(query)
+      vendor.address?.toLowerCase().includes(query) ||
+      vendor.category?.toLowerCase().includes(query)
     );
+  });
+
+  // Group vendors by category for display
+  const vendorsByCategory = filteredVendors.reduce<Record<string, typeof filteredVendors>>((acc, v) => {
+    const key = v.category?.trim() || 'Uncategorized';
+    (acc[key] ||= []).push(v);
+    return acc;
+  }, {});
+  const vendorCategoryKeys = Object.keys(vendorsByCategory).sort((a, b) => {
+    if (a === 'Uncategorized') return 1;
+    if (b === 'Uncategorized') return -1;
+    return a.localeCompare(b);
   });
   
   // Filtered categories
