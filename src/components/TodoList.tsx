@@ -317,15 +317,27 @@ export function TodoList() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Amount (kg)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={newKgAmount}
-                    onChange={(e) => setNewKgAmount(e.target.value)}
-                    placeholder="0"
-                  />
+                  <Label>Amount</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={newKgAmount}
+                      onChange={(e) => setNewKgAmount(e.target.value)}
+                      placeholder="0"
+                      className="flex-1"
+                    />
+                    <Select value={newAmountUnit} onValueChange={(v) => setNewAmountUnit(v as AmountUnit)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="amount">amount</SelectItem>
+                        <SelectItem value="pieces">pieces</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Priority # (1 = first)</Label>
