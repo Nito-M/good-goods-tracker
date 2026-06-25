@@ -14,9 +14,13 @@ export interface Todo {
   purchaseOrderId: string | null;
   displayOrder: number;
   kgAmount: number;
+  priorityNumber: number | null;
+  priorityGroup: 'urgent' | 'soon' | 'eventually' | null;
   createdAt: string;
   updatedAt: string;
 }
+
+export type PriorityGroup = 'urgent' | 'soon' | 'eventually';
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([]);
