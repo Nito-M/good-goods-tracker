@@ -172,7 +172,7 @@ export function TodoList() {
           variant="outline"
           className="text-xs shrink-0 border-primary/30 text-primary"
         >
-          {todo.kgAmount} kg
+          {todo.kgAmount} {todo.amountUnit || 'kg'}
         </Badge>
       );
     }
