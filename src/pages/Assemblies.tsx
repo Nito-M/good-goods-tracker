@@ -508,83 +508,104 @@ function AssemblyDetail({
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
              <div className="flex gap-2">
-              {folders && folders.length > 0 && (
-                <Popover open={showFolderPicker} onOpenChange={setShowFolderPicker}>
-                  <PopoverTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-1"><FolderPlus className="h-4 w-4" /> Add Folder</Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-0" align="end">
-                    <Command>
-                      <CommandInput placeholder="Search folders..." />
-                      <CommandList>
-                        <CommandEmpty>No folders found.</CommandEmpty>
-                        <CommandGroup>
-                          {folders.map((f) => {
-                            const partCount = partsRaw?.filter(p => p.folderId === f.id).length ?? 0;
-                            return (
-                              <CommandItem
-                                key={f.id}
-                                value={f.name}
-                                onSelect={() => handleAddFolderParts(f.id)}
-                                disabled={!!addingFolderId}
-                                className="flex items-center justify-between py-2 cursor-pointer"
-                              >
-                                <span className="font-medium text-sm">{f.name}</span>
-                                <span className="text-xs text-muted-foreground">{partCount} part{partCount !== 1 ? 's' : ''}</span>
-                                {addingFolderId === f.id && <span className="text-xs text-primary ml-2">Adding...</span>}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              )}
-              {otherAssemblies.length > 0 && (
-                <Popover open={showAssemblyPicker} onOpenChange={(open) => { setShowAssemblyPicker(open); if (!open) setAssemblySearchQuery(''); }}>
-                  <PopoverTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-1"><PackagePlus className="h-4 w-4" /> Add Assembly</Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-0" align="end">
-                    <Command shouldFilter={true}>
-                      <CommandInput placeholder="Search assemblies..." value={assemblySearchQuery} onValueChange={setAssemblySearchQuery} />
-                      <CommandList>
-                        {assemblySearchQuery.trim().length > 0 ? (
-                          <>
-                            <CommandEmpty>No assemblies found.</CommandEmpty>
-                            <CommandGroup>
-                              {otherAssemblies.map((a) => (
-                                <CommandItem
-                                  key={a.id}
-                                  value={`${a.name} ${a.description || ''} ${a.type}`}
-                                  onSelect={() => handleAddAssemblyItems(a.id)}
-                                  disabled={!!addingAssemblyId}
-                                  className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
-                                >
-                                  <span className="font-medium text-sm">{a.name}</span>
-                                  {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
-                                  {addingAssemblyId === a.id && <span className="text-xs text-primary">Adding...</span>}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </>
-                        ) : (
-                          <div className="py-6 text-center text-sm text-muted-foreground">Type to search assemblies...</div>
-                        )}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              )}
-              {((partsAssemblies && partsAssemblies.length > 0) || otherAssemblies.length > 0) && (
-                <Button size="sm" variant="outline" className="gap-1" onClick={() => setShowSubAssemblyPicker(true)}>
-                  <PackagePlus className="h-4 w-4" /> Sub Assembly
-                </Button>
-              )}
+              {(folders && folders.length > 0) || otherAssemblies.length > 0 || (partsAssemblies && partsAssemblies.length > 0) ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1">
+                      <Plus className="h-4 w-4" /> Add From <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {folders && folders.length > 0 && (
+                      <DropdownMenuItem onClick={() => setShowFolderPicker(true)}>
+                        <FolderPlus className="h-4 w-4 mr-2" /> Add Folder
+                      </DropdownMenuItem>
+                    )}
+                    {otherAssemblies.length > 0 && (
+                      <DropdownMenuItem onClick={() => setShowAssemblyPicker(true)}>
+                        <PackagePlus className="h-4 w-4 mr-2" /> Add Assembly
+                      </DropdownMenuItem>
+                    )}
+                    {((partsAssemblies && partsAssemblies.length > 0) || otherAssemblies.length > 0) && (
+                      <DropdownMenuItem onClick={() => setShowSubAssemblyPicker(true)}>
+                        <PackagePlus className="h-4 w-4 mr-2" /> Sub Assembly
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
               <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Item</Button>
             </div>
         </div>
+
+        {/* Add Folder dialog */}
+        <Dialog open={showFolderPicker} onOpenChange={setShowFolderPicker}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-4 pt-4">
+              <DialogTitle>Add Folder Parts</DialogTitle>
+            </DialogHeader>
+            <Command>
+              <CommandInput placeholder="Search folders..." />
+              <CommandList>
+                <CommandEmpty>No folders found.</CommandEmpty>
+                <CommandGroup>
+                  {folders?.map((f) => {
+                    const partCount = partsRaw?.filter(p => p.folderId === f.id).length ?? 0;
+                    return (
+                      <CommandItem
+                        key={f.id}
+                        value={f.name}
+                        onSelect={() => handleAddFolderParts(f.id)}
+                        disabled={!!addingFolderId}
+                        className="flex items-center justify-between py-2 cursor-pointer"
+                      >
+                        <span className="font-medium text-sm">{f.name}</span>
+                        <span className="text-xs text-muted-foreground">{partCount} part{partCount !== 1 ? 's' : ''}</span>
+                        {addingFolderId === f.id && <span className="text-xs text-primary ml-2">Adding...</span>}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Assembly dialog */}
+        <Dialog open={showAssemblyPicker} onOpenChange={(open) => { setShowAssemblyPicker(open); if (!open) setAssemblySearchQuery(''); }}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-4 pt-4">
+              <DialogTitle>Add Assembly Items</DialogTitle>
+            </DialogHeader>
+            <Command shouldFilter={true}>
+              <CommandInput placeholder="Search assemblies..." value={assemblySearchQuery} onValueChange={setAssemblySearchQuery} />
+              <CommandList>
+                {assemblySearchQuery.trim().length > 0 ? (
+                  <>
+                    <CommandEmpty>No assemblies found.</CommandEmpty>
+                    <CommandGroup>
+                      {otherAssemblies.map((a) => (
+                        <CommandItem
+                          key={a.id}
+                          value={`${a.name} ${a.description || ''} ${a.type}`}
+                          onSelect={() => handleAddAssemblyItems(a.id)}
+                          disabled={!!addingAssemblyId}
+                          className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
+                        >
+                          <span className="font-medium text-sm">{a.name}</span>
+                          {a.description && <span className="text-xs text-muted-foreground">{a.description}</span>}
+                          {addingAssemblyId === a.id && <span className="text-xs text-primary">Adding...</span>}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </>
+                ) : (
+                  <div className="py-6 text-center text-sm text-muted-foreground">Type to search assemblies...</div>
+                )}
+              </CommandList>
+            </Command>
+          </DialogContent>
+        </Dialog>
 
         <FullScreenSubAssemblyPicker
           open={showSubAssemblyPicker}
