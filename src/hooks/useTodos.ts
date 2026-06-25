@@ -14,6 +14,7 @@ export interface Todo {
   purchaseOrderId: string | null;
   displayOrder: number;
   kgAmount: number;
+  amountUnit: AmountUnit;
   priorityNumber: number | null;
   priorityGroup: 'urgent' | 'soon' | 'eventually' | null;
   createdAt: string;
@@ -21,6 +22,12 @@ export interface Todo {
 }
 
 export type PriorityGroup = 'urgent' | 'soon' | 'eventually';
+export type AmountUnit = 'kg' | 'amount' | 'pieces';
+export const AMOUNT_UNIT_LABELS: Record<AmountUnit, string> = {
+  kg: 'kg',
+  amount: 'amount',
+  pieces: 'pieces',
+};
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([]);
