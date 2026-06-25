@@ -25,6 +25,7 @@ export function AddVendor() {
   const [notes, setNotes] = useState('');
   const [link, setLink] = useState('');
   const [color, setColor] = useState('');
+  const [category, setCategory] = useState('');
 
   useEffect(() => {
     if (existingVendor) {
@@ -35,6 +36,7 @@ export function AddVendor() {
       setNotes(existingVendor.notes || '');
       setLink(existingVendor.link || '');
       setColor(existingVendor.color || '');
+      setCategory(existingVendor.category || '');
     }
   }, [existingVendor]);
 
@@ -48,6 +50,7 @@ export function AddVendor() {
       notes: notes || null,
       link: link || null,
       color: color || null,
+      category: category.trim() || null,
     };
 
     if (isEditing && id) {
