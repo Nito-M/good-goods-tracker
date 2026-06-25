@@ -13,6 +13,7 @@ export interface Vendor {
   notes: string | null;
   link: string | null;
   color: string | null;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
