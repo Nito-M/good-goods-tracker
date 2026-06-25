@@ -102,6 +102,8 @@ export function useTodos() {
         purchaseOrderId: data.purchase_order_id,
         displayOrder: data.display_order,
         kgAmount: data.kg_amount || 0,
+        priorityNumber: data.priority_number ?? null,
+        priorityGroup: data.priority_group ?? null,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
