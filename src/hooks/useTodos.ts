@@ -126,7 +126,7 @@ export function useTodos() {
     }
   };
 
-  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number; requestId: string | null; purchaseOrderId: string | null; kgAmount: number; priorityNumber: number | null; priorityGroup: 'urgent' | 'soon' | 'eventually' | null }>): Promise<boolean> => {
+  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number; requestId: string | null; purchaseOrderId: string | null; kgAmount: number; amountUnit: AmountUnit; priorityNumber: number | null; priorityGroup: 'urgent' | 'soon' | 'eventually' | null }>): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
@@ -137,6 +137,7 @@ export function useTodos() {
       if (updates.requestId !== undefined) dbUpdates.request_id = updates.requestId;
       if (updates.purchaseOrderId !== undefined) dbUpdates.purchase_order_id = updates.purchaseOrderId;
       if (updates.kgAmount !== undefined) dbUpdates.kg_amount = updates.kgAmount;
+      if (updates.amountUnit !== undefined) dbUpdates.amount_unit = updates.amountUnit;
       if (updates.priorityNumber !== undefined) dbUpdates.priority_number = updates.priorityNumber;
       if (updates.priorityGroup !== undefined) dbUpdates.priority_group = updates.priorityGroup;
 
