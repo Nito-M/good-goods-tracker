@@ -59,6 +59,7 @@ export function TodoList() {
   const [newRequestId, setNewRequestId] = useState<string>("");
   const [newPurchaseOrderId, setNewPurchaseOrderId] = useState<string>("");
   const [newKgAmount, setNewKgAmount] = useState<string>("");
+  const [newAmountUnit, setNewAmountUnit] = useState<AmountUnit>("kg");
   const [newPriorityNumber, setNewPriorityNumber] = useState<string>("");
   const [newPriorityGroup, setNewPriorityGroup] = useState<string>("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -69,6 +70,7 @@ export function TodoList() {
   const [editRequestId, setEditRequestId] = useState<string>("");
   const [editPurchaseOrderId, setEditPurchaseOrderId] = useState<string>("");
   const [editKgAmount, setEditKgAmount] = useState<string>("");
+  const [editAmountUnit, setEditAmountUnit] = useState<AmountUnit>("kg");
   const [editPriorityNumber, setEditPriorityNumber] = useState<string>("");
   const [editPriorityGroup, setEditPriorityGroup] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
