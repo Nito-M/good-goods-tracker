@@ -108,6 +108,7 @@ export function TodoList() {
     setEditRequestId(todo.requestId || "");
     setEditPurchaseOrderId(todo.purchaseOrderId || "");
     setEditKgAmount(todo.kgAmount ? String(todo.kgAmount) : "");
+    setEditAmountUnit(todo.amountUnit || "kg");
     setEditPriorityNumber(todo.priorityNumber ? String(todo.priorityNumber) : "");
     setEditPriorityGroup(todo.priorityGroup || "");
   };
@@ -121,6 +122,7 @@ export function TodoList() {
       requestId: editRequestId || null,
       purchaseOrderId: editPurchaseOrderId || null,
       kgAmount: editKgAmount ? parseFloat(editKgAmount) : 0,
+      amountUnit: editAmountUnit,
       priorityNumber: editPriorityNumber ? parseInt(editPriorityNumber, 10) : null,
       priorityGroup: (editPriorityGroup as any) || null,
     });
