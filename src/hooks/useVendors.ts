@@ -47,7 +47,7 @@ export function useVendors() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
-  const addVendor = async (vendor: Omit<Vendor, 'id' | 'created_at' | 'updated_at'>) => {
+  const addVendor = async (vendor: Partial<Omit<Vendor, 'id' | 'created_at' | 'updated_at'>> & { name: string }) => {
     if (!user) return;
 
     const validation = validateInput(vendorSchema, vendor);
