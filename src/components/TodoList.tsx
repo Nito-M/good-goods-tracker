@@ -86,6 +86,7 @@ export function TodoList() {
       newKgAmount ? parseFloat(newKgAmount) : 0,
       newPriorityNumber ? parseInt(newPriorityNumber, 10) : null,
       (newPriorityGroup as any) || null,
+      newAmountUnit,
     );
     setNewTitle("");
     setNewDueDate("");
@@ -93,6 +94,7 @@ export function TodoList() {
     setNewRequestId("");
     setNewPurchaseOrderId("");
     setNewKgAmount("");
+    setNewAmountUnit("kg");
     setNewPriorityNumber("");
     setNewPriorityGroup("");
     setAddDialogOpen(false);
