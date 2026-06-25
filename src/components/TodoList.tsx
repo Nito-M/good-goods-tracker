@@ -352,12 +352,29 @@ export function TodoList() {
         </div>
       )}
 
-      <div className="space-y-1">
-        {pendingTodos.map((todo, idx) => {
+      {(() => {
+        const groupMeta: Record<string, { label: string; className: string }> = {
+          urgent: { label: "Urgent", className: "bg-destructive/15 text-destructive border-destructive/30" },
+          soon: { label: "Soon", className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+          eventually: { label: "Eventually", className: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30" },
+          none: { label: "No priority group", className: "bg-muted text-muted-foreground border-border" },
+        };
+        const groupOrder: Array<'urgent' | 'soon' | 'eventually' | 'none'> = ["urgent", "soon", "eventually", "none"];
+        const buckets: Record<string, Todo[]> = { urgent: [], soon: [], eventually: [], none: [] };
+        for (const t of pendingTodos) buckets[t.priorityGroup || "none"].push(t);
+        for (const k of Object.keys(buckets)) {
+          buckets[k].sort((a, b) => {
+            const an = a.priorityNumber ?? Number.POSITIVE_INFINITY;
+            const bn = b.priorityNumber ?? Number.POSITIVE_INFINITY;
+            if (an !== bn) return an - bn;
+            return a.displayOrder - b.displayOrder;
+          });
+        }
+
+        const renderRow = (todo: Todo, itemNumber: number) => {
           const originalIndex = todos.indexOf(todo);
           const isEditing = editingId === todo.id;
           const isExpanded = expandedId === todo.id;
-          const itemNumber = idx + 1;
           const linkedBadges = getLinkedBadges(todo);
 
           return (
@@ -366,14 +383,12 @@ export function TodoList() {
               className="flex flex-col gap-2 p-2 rounded-md border bg-card hover:bg-accent/50 transition-colors group"
             >
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground w-5 text-center">
-                  {itemNumber}.
+                <span className="text-xs font-medium text-muted-foreground w-6 text-center">
+                  {todo.priorityNumber ?? itemNumber}.
                 </span>
                 <Checkbox
                   checked={todo.isDone}
-                  onCheckedChange={(checked) =>
-                    updateTodo(todo.id, { isDone: !!checked })
-                  }
+                  onCheckedChange={(checked) => updateTodo(todo.id, { isDone: !!checked })}
                 />
 
                 {isEditing ? (
@@ -400,64 +415,32 @@ export function TodoList() {
                   </div>
                 ) : (
                   <>
-                    <span
-                      className="flex-1 text-sm cursor-pointer"
-                      onDoubleClick={() => startEdit(todo)}
-                    >
+                    <span className="flex-1 text-sm cursor-pointer" onDoubleClick={() => startEdit(todo)}>
                       {todo.title}
                     </span>
                     {linkedBadges}
                     {getDueDateBadge(todo.dueDate)}
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => setExpandedId(isExpanded ? null : todo.id)}
-                        title={isExpanded ? "Hide details" : "Show details"}
-                      >
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setExpandedId(isExpanded ? null : todo.id)} title={isExpanded ? "Hide details" : "Show details"}>
                         {isExpanded ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => startEdit(todo)}
-                      >
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(todo)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => moveItem(originalIndex, "up")}
-                        disabled={originalIndex === 0}
-                      >
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveItem(originalIndex, "up")} disabled={originalIndex === 0}>
                         <ChevronUp className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        onClick={() => moveItem(originalIndex, "down")}
-                        disabled={originalIndex === todos.length - 1}
-                      >
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveItem(originalIndex, "down")} disabled={originalIndex === todos.length - 1}>
                         <ChevronDown className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => deleteTodo(todo.id)}
-                      >
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteTodo(todo.id)}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </>
                 )}
               </div>
-              
-              {/* Expanded notes & links section */}
+
               {isExpanded && !isEditing && (
                 <div className="ml-12 space-y-1">
                   {todo.notes && (
@@ -467,8 +450,7 @@ export function TodoList() {
                   )}
                 </div>
               )}
-              
-              {/* Edit section with link selectors */}
+
               {isEditing && (
                 <div className="ml-12 space-y-2">
                   <Textarea
@@ -487,6 +469,26 @@ export function TodoList() {
                       placeholder="Amount (kg)..."
                       className="h-8 w-32 text-sm"
                     />
+                    <Input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={editPriorityNumber}
+                      onChange={(e) => setEditPriorityNumber(e.target.value)}
+                      placeholder="Priority # (1=first)"
+                      className="h-8 w-40 text-sm"
+                    />
+                    <Select value={editPriorityGroup || "none"} onValueChange={(v) => setEditPriorityGroup(v === "none" ? "" : v)}>
+                      <SelectTrigger className="h-8 w-36 text-sm">
+                        <SelectValue placeholder="Priority group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No group</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="soon">Soon</SelectItem>
+                        <SelectItem value="eventually">Eventually</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <LinkSelectors
                       requestId={editRequestId}
                       setRequestId={(v) => setEditRequestId(v === "none" ? "" : v)}
@@ -498,8 +500,31 @@ export function TodoList() {
               )}
             </div>
           );
-        })}
-      </div>
+        };
+
+        return (
+          <div className="space-y-4">
+            {groupOrder.map((g) => {
+              const items = buckets[g];
+              if (items.length === 0) return null;
+              const meta = groupMeta[g];
+              return (
+                <div key={g} className="space-y-1">
+                  <div className="flex items-center gap-2 pt-1">
+                    <Badge variant="outline" className={cn("text-xs", meta.className)}>
+                      {meta.label}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{items.length} item{items.length === 1 ? "" : "s"}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {items.map((t, i) => renderRow(t, i + 1))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Completed todos grouped by year > month */}
       {doneTodos.length > 0 && (() => {
