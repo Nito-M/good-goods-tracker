@@ -93,7 +93,7 @@ export function TodoList() {
     setNewKgAmount("");
     setNewPriorityNumber("");
     setNewPriorityGroup("");
-    setShowAddNotes(false);
+    setAddDialogOpen(false);
   };
 
   const startEdit = (todo: Todo) => {
