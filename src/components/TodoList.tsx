@@ -50,6 +50,8 @@ export function TodoList() {
   const [newRequestId, setNewRequestId] = useState<string>("");
   const [newPurchaseOrderId, setNewPurchaseOrderId] = useState<string>("");
   const [newKgAmount, setNewKgAmount] = useState<string>("");
+  const [newPriorityNumber, setNewPriorityNumber] = useState<string>("");
+  const [newPriorityGroup, setNewPriorityGroup] = useState<string>("");
   const [showAddNotes, setShowAddNotes] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -58,6 +60,8 @@ export function TodoList() {
   const [editRequestId, setEditRequestId] = useState<string>("");
   const [editPurchaseOrderId, setEditPurchaseOrderId] = useState<string>("");
   const [editKgAmount, setEditKgAmount] = useState<string>("");
+  const [editPriorityNumber, setEditPriorityNumber] = useState<string>("");
+  const [editPriorityGroup, setEditPriorityGroup] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleAdd = async () => {
@@ -68,7 +72,9 @@ export function TodoList() {
       newNotes || null,
       newRequestId || null,
       newPurchaseOrderId || null,
-      newKgAmount ? parseFloat(newKgAmount) : 0
+      newKgAmount ? parseFloat(newKgAmount) : 0,
+      newPriorityNumber ? parseInt(newPriorityNumber, 10) : null,
+      (newPriorityGroup as any) || null,
     );
     setNewTitle("");
     setNewDueDate("");
@@ -76,6 +82,8 @@ export function TodoList() {
     setNewRequestId("");
     setNewPurchaseOrderId("");
     setNewKgAmount("");
+    setNewPriorityNumber("");
+    setNewPriorityGroup("");
     setShowAddNotes(false);
   };
 
@@ -87,6 +95,8 @@ export function TodoList() {
     setEditRequestId(todo.requestId || "");
     setEditPurchaseOrderId(todo.purchaseOrderId || "");
     setEditKgAmount(todo.kgAmount ? String(todo.kgAmount) : "");
+    setEditPriorityNumber(todo.priorityNumber ? String(todo.priorityNumber) : "");
+    setEditPriorityGroup(todo.priorityGroup || "");
   };
 
   const saveEdit = async () => {
@@ -98,6 +108,8 @@ export function TodoList() {
       requestId: editRequestId || null,
       purchaseOrderId: editPurchaseOrderId || null,
       kgAmount: editKgAmount ? parseFloat(editKgAmount) : 0,
+      priorityNumber: editPriorityNumber ? parseInt(editPriorityNumber, 10) : null,
+      priorityGroup: (editPriorityGroup as any) || null,
     });
     setEditingId(null);
   };
