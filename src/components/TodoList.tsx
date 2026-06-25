@@ -314,6 +314,26 @@ export function TodoList() {
                 placeholder="Amount (kg)..."
                 className="h-8 w-32"
               />
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                value={newPriorityNumber}
+                onChange={(e) => setNewPriorityNumber(e.target.value)}
+                placeholder="Priority # (1=first)"
+                className="h-8 w-40"
+              />
+              <Select value={newPriorityGroup || "none"} onValueChange={(v) => setNewPriorityGroup(v === "none" ? "" : v)}>
+                <SelectTrigger className="h-8 w-36">
+                  <SelectValue placeholder="Priority group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No group</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="soon">Soon</SelectItem>
+                  <SelectItem value="eventually">Eventually</SelectItem>
+                </SelectContent>
+              </Select>
               <LinkSelectors
                 requestId={newRequestId}
                 setRequestId={(v) => setNewRequestId(v === "none" ? "" : v)}
