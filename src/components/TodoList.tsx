@@ -38,6 +38,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+
 
 export function TodoList() {
   const { todos, loading, addTodo, updateTodo, deleteTodo, reorderTodos } = useTodos();
@@ -52,7 +61,7 @@ export function TodoList() {
   const [newKgAmount, setNewKgAmount] = useState<string>("");
   const [newPriorityNumber, setNewPriorityNumber] = useState<string>("");
   const [newPriorityGroup, setNewPriorityGroup] = useState<string>("");
-  const [showAddNotes, setShowAddNotes] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
@@ -84,7 +93,7 @@ export function TodoList() {
     setNewKgAmount("");
     setNewPriorityNumber("");
     setNewPriorityGroup("");
-    setShowAddNotes(false);
+    setAddDialogOpen(false);
   };
 
   const startEdit = (todo: Todo) => {
@@ -267,83 +276,114 @@ export function TodoList() {
 
   return (
     <div className="space-y-4">
-      {/* Add new todo */}
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Add a to-do..."
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !showAddNotes && handleAdd()}
-            className="flex-1"
-          />
-          <Input
-            type="date"
-            value={newDueDate}
-            onChange={(e) => setNewDueDate(e.target.value)}
-            className="w-40"
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowAddNotes(!showAddNotes)}
-            className={cn("shrink-0", showAddNotes && "bg-accent")}
-            title="More options"
-          >
-            {showAddNotes ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </Button>
-          <Button onClick={handleAdd} size="icon" disabled={!newTitle.trim()}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        {showAddNotes && (
-          <div className="space-y-2 ml-0">
-            <Textarea
-              placeholder="Add notes (optional)..."
-              value={newNotes}
-              onChange={(e) => setNewNotes(e.target.value)}
-              className="min-h-[60px]"
-            />
-            <div className="flex gap-2 flex-wrap items-center">
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={newKgAmount}
-                onChange={(e) => setNewKgAmount(e.target.value)}
-                placeholder="Amount (kg)..."
-                className="h-8 w-32"
-              />
-              <Input
-                type="number"
-                min="1"
-                step="1"
-                value={newPriorityNumber}
-                onChange={(e) => setNewPriorityNumber(e.target.value)}
-                placeholder="Priority # (1=first)"
-                className="h-8 w-40"
-              />
-              <Select value={newPriorityGroup || "none"} onValueChange={(v) => setNewPriorityGroup(v === "none" ? "" : v)}>
-                <SelectTrigger className="h-8 w-36">
-                  <SelectValue placeholder="Priority group" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No group</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="soon">Soon</SelectItem>
-                  <SelectItem value="eventually">Eventually</SelectItem>
-                </SelectContent>
-              </Select>
-              <LinkSelectors
-                requestId={newRequestId}
-                setRequestId={(v) => setNewRequestId(v === "none" ? "" : v)}
-                purchaseOrderId={newPurchaseOrderId}
-                setPurchaseOrderId={(v) => setNewPurchaseOrderId(v === "none" ? "" : v)}
-              />
+      {/* Add new todo trigger */}
+      <div className="flex justify-end">
+        <Button onClick={() => setAddDialogOpen(true)} size="lg">
+          <Plus className="h-4 w-4 mr-2" />
+          New To-Do
+        </Button>
+      </div>
+
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-none w-screen h-screen sm:rounded-none p-0 flex flex-col gap-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle>Create New To-Do</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div className="space-y-2">
+                <Label>Title</Label>
+                <Input
+                  placeholder="What needs to be done?"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Due date</Label>
+                  <Input
+                    type="date"
+                    value={newDueDate}
+                    onChange={(e) => setNewDueDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Amount (kg)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newKgAmount}
+                    onChange={(e) => setNewKgAmount(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Priority # (1 = first)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={newPriorityNumber}
+                    onChange={(e) => setNewPriorityNumber(e.target.value)}
+                    placeholder="Priority order"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Priority group</Label>
+                  <Select
+                    value={newPriorityGroup || "none"}
+                    onValueChange={(v) => setNewPriorityGroup(v === "none" ? "" : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Priority group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No group</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="soon">Soon</SelectItem>
+                      <SelectItem value="eventually">Eventually</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
+                  placeholder="Add notes (optional)..."
+                  value={newNotes}
+                  onChange={(e) => setNewNotes(e.target.value)}
+                  className="min-h-[120px]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Links</Label>
+                <LinkSelectors
+                  requestId={newRequestId}
+                  setRequestId={(v) => setNewRequestId(v === "none" ? "" : v)}
+                  purchaseOrderId={newPurchaseOrderId}
+                  setPurchaseOrderId={(v) => setNewPurchaseOrderId(v === "none" ? "" : v)}
+                />
+              </div>
             </div>
           </div>
-        )}
-      </div>
+          <DialogFooter className="px-6 py-4 border-t">
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAdd} disabled={!newTitle.trim()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create To-Do
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Pending todos */}
       {pendingTodos.length === 0 && doneTodos.length === 0 && (
