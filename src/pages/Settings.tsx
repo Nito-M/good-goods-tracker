@@ -786,34 +786,43 @@ export function Settings() {
                       : "No vendors match your search."}
                   </div>
                 ) : (
-                  <div className="divide-y divide-border">
-                    {filteredVendors.map((vendor) => (
-                      <Link to={`/vendors/${vendor.id}`} key={vendor.id} className="flex items-center justify-between py-4 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors cursor-pointer">
-                        <div className="flex items-center gap-3">
-                          {vendor.color && (
-                            <div className="h-4 w-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: vendor.color }} />
-                          )}
-                          <div>
-                            <div className="font-medium">{vendor.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {[vendor.contact_email, vendor.contact_phone].filter(Boolean).join(' • ') || 'No contact info'}
-                            </div>
-                          </div>
+                  <div className="space-y-6">
+                    {vendorCategoryKeys.map((catKey) => (
+                      <div key={catKey}>
+                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 px-1">
+                          {catKey} <span className="text-muted-foreground/70 font-normal">({vendorsByCategory[catKey].length})</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} asChild>
-                            <Link to={`/vendors/${vendor.id}/edit`}>Edit</Link>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteVendorId(vendor.id); }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div className="divide-y divide-border">
+                          {vendorsByCategory[catKey].map((vendor) => (
+                            <Link to={`/vendors/${vendor.id}`} key={vendor.id} className="flex items-center justify-between py-4 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors cursor-pointer">
+                              <div className="flex items-center gap-3">
+                                {vendor.color && (
+                                  <div className="h-4 w-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: vendor.color }} />
+                                )}
+                                <div>
+                                  <div className="font-medium">{vendor.name}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {[vendor.contact_email, vendor.contact_phone].filter(Boolean).join(' • ') || 'No contact info'}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} asChild>
+                                  <Link to={`/vendors/${vendor.id}/edit`}>Edit</Link>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteVendorId(vendor.id); }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </Link>
+                          ))}
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}
