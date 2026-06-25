@@ -5169,6 +5169,7 @@ export type Database = {
       vendors: {
         Row: {
           address: string | null
+          category: string | null
           color: string | null
           contact_email: string | null
           contact_phone: string | null
@@ -5182,6 +5183,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          category?: string | null
           color?: string | null
           contact_email?: string | null
           contact_phone?: string | null
@@ -5195,6 +5197,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          category?: string | null
           color?: string | null
           contact_email?: string | null
           contact_phone?: string | null
