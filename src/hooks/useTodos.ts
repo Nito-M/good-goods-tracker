@@ -76,7 +76,7 @@ export function useTodos() {
     fetchTodos();
   }, [fetchTodos]);
 
-  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null, requestId?: string | null, purchaseOrderId?: string | null, kgAmount?: number, priorityNumber?: number | null, priorityGroup?: 'urgent' | 'soon' | 'eventually' | null): Promise<Todo | null> => {
+  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null, requestId?: string | null, purchaseOrderId?: string | null, kgAmount?: number, priorityNumber?: number | null, priorityGroup?: 'urgent' | 'soon' | 'eventually' | null, amountUnit?: AmountUnit): Promise<Todo | null> => {
     if (!user) return null;
     try {
       const maxOrder = todos.length > 0 ? Math.max(...todos.map((t) => t.displayOrder)) + 1 : 0;
@@ -91,6 +91,7 @@ export function useTodos() {
           purchase_order_id: purchaseOrderId || null,
           display_order: maxOrder,
           kg_amount: kgAmount || 0,
+          amount_unit: amountUnit || 'kg',
           priority_number: priorityNumber ?? null,
           priority_group: priorityGroup ?? null,
         })
