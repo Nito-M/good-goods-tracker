@@ -61,7 +61,7 @@ export function TodoList() {
   const [newKgAmount, setNewKgAmount] = useState<string>("");
   const [newPriorityNumber, setNewPriorityNumber] = useState<string>("");
   const [newPriorityGroup, setNewPriorityGroup] = useState<string>("");
-  const [showAddNotes, setShowAddNotes] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
