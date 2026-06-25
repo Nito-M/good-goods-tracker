@@ -520,13 +520,22 @@ export function TodoList() {
                   <div className="flex gap-2 flex-wrap items-center">
                     <Input
                       type="number"
-                      min="0"
                       step="0.01"
                       value={editKgAmount}
                       onChange={(e) => setEditKgAmount(e.target.value)}
-                      placeholder="Amount (kg)..."
-                      className="h-8 w-32 text-sm"
+                      placeholder="Amount..."
+                      className="h-8 w-28 text-sm"
                     />
+                    <Select value={editAmountUnit} onValueChange={(v) => setEditAmountUnit(v as AmountUnit)}>
+                      <SelectTrigger className="h-8 w-28 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="amount">amount</SelectItem>
+                        <SelectItem value="pieces">pieces</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Input
                       type="number"
                       min="1"
