@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTodos, Todo } from "@/hooks/useTodos";
+import { useTodos, Todo, AmountUnit } from "@/hooks/useTodos";
 import { useRequests } from "@/hooks/useRequests";
 import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
 import { useNavigate } from "react-router-dom";
@@ -59,6 +59,7 @@ export function TodoList() {
   const [newRequestId, setNewRequestId] = useState<string>("");
   const [newPurchaseOrderId, setNewPurchaseOrderId] = useState<string>("");
   const [newKgAmount, setNewKgAmount] = useState<string>("");
+  const [newAmountUnit, setNewAmountUnit] = useState<AmountUnit>("kg");
   const [newPriorityNumber, setNewPriorityNumber] = useState<string>("");
   const [newPriorityGroup, setNewPriorityGroup] = useState<string>("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -69,6 +70,7 @@ export function TodoList() {
   const [editRequestId, setEditRequestId] = useState<string>("");
   const [editPurchaseOrderId, setEditPurchaseOrderId] = useState<string>("");
   const [editKgAmount, setEditKgAmount] = useState<string>("");
+  const [editAmountUnit, setEditAmountUnit] = useState<AmountUnit>("kg");
   const [editPriorityNumber, setEditPriorityNumber] = useState<string>("");
   const [editPriorityGroup, setEditPriorityGroup] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -84,6 +86,7 @@ export function TodoList() {
       newKgAmount ? parseFloat(newKgAmount) : 0,
       newPriorityNumber ? parseInt(newPriorityNumber, 10) : null,
       (newPriorityGroup as any) || null,
+      newAmountUnit,
     );
     setNewTitle("");
     setNewDueDate("");
@@ -91,6 +94,7 @@ export function TodoList() {
     setNewRequestId("");
     setNewPurchaseOrderId("");
     setNewKgAmount("");
+    setNewAmountUnit("kg");
     setNewPriorityNumber("");
     setNewPriorityGroup("");
     setAddDialogOpen(false);
@@ -104,6 +108,7 @@ export function TodoList() {
     setEditRequestId(todo.requestId || "");
     setEditPurchaseOrderId(todo.purchaseOrderId || "");
     setEditKgAmount(todo.kgAmount ? String(todo.kgAmount) : "");
+    setEditAmountUnit(todo.amountUnit || "kg");
     setEditPriorityNumber(todo.priorityNumber ? String(todo.priorityNumber) : "");
     setEditPriorityGroup(todo.priorityGroup || "");
   };
@@ -117,6 +122,7 @@ export function TodoList() {
       requestId: editRequestId || null,
       purchaseOrderId: editPurchaseOrderId || null,
       kgAmount: editKgAmount ? parseFloat(editKgAmount) : 0,
+      amountUnit: editAmountUnit,
       priorityNumber: editPriorityNumber ? parseInt(editPriorityNumber, 10) : null,
       priorityGroup: (editPriorityGroup as any) || null,
     });
@@ -166,7 +172,7 @@ export function TodoList() {
           variant="outline"
           className="text-xs shrink-0 border-primary/30 text-primary"
         >
-          {todo.kgAmount} kg
+          {todo.kgAmount} {todo.amountUnit || 'kg'}
         </Badge>
       );
     }
@@ -311,15 +317,27 @@ export function TodoList() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Amount (kg)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={newKgAmount}
-                    onChange={(e) => setNewKgAmount(e.target.value)}
-                    placeholder="0"
-                  />
+                  <Label>Amount</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={newKgAmount}
+                      onChange={(e) => setNewKgAmount(e.target.value)}
+                      placeholder="0"
+                      className="flex-1"
+                    />
+                    <Select value={newAmountUnit} onValueChange={(v) => setNewAmountUnit(v as AmountUnit)}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="amount">amount</SelectItem>
+                        <SelectItem value="pieces">pieces</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Priority # (1 = first)</Label>
@@ -502,13 +520,22 @@ export function TodoList() {
                   <div className="flex gap-2 flex-wrap items-center">
                     <Input
                       type="number"
-                      min="0"
                       step="0.01"
                       value={editKgAmount}
                       onChange={(e) => setEditKgAmount(e.target.value)}
-                      placeholder="Amount (kg)..."
-                      className="h-8 w-32 text-sm"
+                      placeholder="Amount..."
+                      className="h-8 w-28 text-sm"
                     />
+                    <Select value={editAmountUnit} onValueChange={(v) => setEditAmountUnit(v as AmountUnit)}>
+                      <SelectTrigger className="h-8 w-28 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="amount">amount</SelectItem>
+                        <SelectItem value="pieces">pieces</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Input
                       type="number"
                       min="1"

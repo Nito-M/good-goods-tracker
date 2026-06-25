@@ -14,6 +14,7 @@ export interface Todo {
   purchaseOrderId: string | null;
   displayOrder: number;
   kgAmount: number;
+  amountUnit: AmountUnit;
   priorityNumber: number | null;
   priorityGroup: 'urgent' | 'soon' | 'eventually' | null;
   createdAt: string;
@@ -21,6 +22,12 @@ export interface Todo {
 }
 
 export type PriorityGroup = 'urgent' | 'soon' | 'eventually';
+export type AmountUnit = 'kg' | 'amount' | 'pieces';
+export const AMOUNT_UNIT_LABELS: Record<AmountUnit, string> = {
+  kg: 'kg',
+  amount: 'amount',
+  pieces: 'pieces',
+};
 
 export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -50,6 +57,7 @@ export function useTodos() {
           purchaseOrderId: t.purchase_order_id,
           displayOrder: t.display_order,
           kgAmount: t.kg_amount || 0,
+          amountUnit: (t.amount_unit as AmountUnit) || 'kg',
           priorityNumber: t.priority_number ?? null,
           priorityGroup: t.priority_group ?? null,
           createdAt: t.created_at,
@@ -68,7 +76,7 @@ export function useTodos() {
     fetchTodos();
   }, [fetchTodos]);
 
-  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null, requestId?: string | null, purchaseOrderId?: string | null, kgAmount?: number, priorityNumber?: number | null, priorityGroup?: 'urgent' | 'soon' | 'eventually' | null): Promise<Todo | null> => {
+  const addTodo = async (title: string, dueDate?: string | null, notes?: string | null, requestId?: string | null, purchaseOrderId?: string | null, kgAmount?: number, priorityNumber?: number | null, priorityGroup?: 'urgent' | 'soon' | 'eventually' | null, amountUnit?: AmountUnit): Promise<Todo | null> => {
     if (!user) return null;
     try {
       const maxOrder = todos.length > 0 ? Math.max(...todos.map((t) => t.displayOrder)) + 1 : 0;
@@ -83,6 +91,7 @@ export function useTodos() {
           purchase_order_id: purchaseOrderId || null,
           display_order: maxOrder,
           kg_amount: kgAmount || 0,
+          amount_unit: amountUnit || 'kg',
           priority_number: priorityNumber ?? null,
           priority_group: priorityGroup ?? null,
         })
@@ -102,6 +111,7 @@ export function useTodos() {
         purchaseOrderId: data.purchase_order_id,
         displayOrder: data.display_order,
         kgAmount: data.kg_amount || 0,
+        amountUnit: (data.amount_unit as AmountUnit) || 'kg',
         priorityNumber: data.priority_number ?? null,
         priorityGroup: data.priority_group ?? null,
         createdAt: data.created_at,
@@ -116,7 +126,7 @@ export function useTodos() {
     }
   };
 
-  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number; requestId: string | null; purchaseOrderId: string | null; kgAmount: number; priorityNumber: number | null; priorityGroup: 'urgent' | 'soon' | 'eventually' | null }>): Promise<boolean> => {
+  const updateTodo = async (id: string, updates: Partial<{ title: string; isDone: boolean; dueDate: string | null; notes: string | null; displayOrder: number; requestId: string | null; purchaseOrderId: string | null; kgAmount: number; amountUnit: AmountUnit; priorityNumber: number | null; priorityGroup: 'urgent' | 'soon' | 'eventually' | null }>): Promise<boolean> => {
     try {
       const dbUpdates: Record<string, any> = {};
       if (updates.title !== undefined) dbUpdates.title = updates.title;
@@ -127,6 +137,7 @@ export function useTodos() {
       if (updates.requestId !== undefined) dbUpdates.request_id = updates.requestId;
       if (updates.purchaseOrderId !== undefined) dbUpdates.purchase_order_id = updates.purchaseOrderId;
       if (updates.kgAmount !== undefined) dbUpdates.kg_amount = updates.kgAmount;
+      if (updates.amountUnit !== undefined) dbUpdates.amount_unit = updates.amountUnit;
       if (updates.priorityNumber !== undefined) dbUpdates.priority_number = updates.priorityNumber;
       if (updates.priorityGroup !== undefined) dbUpdates.priority_group = updates.priorityGroup;
 
