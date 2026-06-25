@@ -14,6 +14,8 @@ export function AddVendor() {
   const { vendors, loading, addVendor, updateVendor } = useVendors();
   const isEditing = !!id;
 
+  const existingCategories = Array.from(new Set(vendors.map(v => v.category).filter(Boolean) as string[])).sort();
+
   const existingVendor = isEditing ? vendors.find((v) => v.id === id) : null;
 
   const [name, setName] = useState('');
