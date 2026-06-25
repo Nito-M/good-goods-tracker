@@ -4738,6 +4738,8 @@ export type Database = {
           is_done: boolean
           kg_amount: number | null
           notes: string | null
+          priority_group: string | null
+          priority_number: number | null
           purchase_order_id: string | null
           request_id: string | null
           title: string
@@ -4752,6 +4754,8 @@ export type Database = {
           is_done?: boolean
           kg_amount?: number | null
           notes?: string | null
+          priority_group?: string | null
+          priority_number?: number | null
           purchase_order_id?: string | null
           request_id?: string | null
           title?: string
@@ -4766,6 +4770,8 @@ export type Database = {
           is_done?: boolean
           kg_amount?: number | null
           notes?: string | null
+          priority_group?: string | null
+          priority_number?: number | null
           purchase_order_id?: string | null
           request_id?: string | null
           title?: string
