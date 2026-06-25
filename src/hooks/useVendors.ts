@@ -13,6 +13,7 @@ export interface Vendor {
   notes: string | null;
   link: string | null;
   color: string | null;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,7 +47,7 @@ export function useVendors() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
-  const addVendor = async (vendor: Omit<Vendor, 'id' | 'created_at' | 'updated_at'>) => {
+  const addVendor = async (vendor: Partial<Omit<Vendor, 'id' | 'created_at' | 'updated_at'>> & { name: string }) => {
     if (!user) return;
 
     const validation = validateInput(vendorSchema, vendor);
@@ -66,6 +67,7 @@ export function useVendors() {
       address: validation.data.address ?? null,
       notes: validation.data.notes ?? null,
       link: validation.data.link ?? null,
+      category: validation.data.category ?? null,
       color: (vendor as any).color ?? null,
       user_id: user.id,
     }]);

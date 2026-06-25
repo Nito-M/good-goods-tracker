@@ -14,6 +14,8 @@ export function AddVendor() {
   const { vendors, loading, addVendor, updateVendor } = useVendors();
   const isEditing = !!id;
 
+  const existingCategories = Array.from(new Set(vendors.map(v => v.category).filter(Boolean) as string[])).sort();
+
   const existingVendor = isEditing ? vendors.find((v) => v.id === id) : null;
 
   const [name, setName] = useState('');
@@ -23,6 +25,7 @@ export function AddVendor() {
   const [notes, setNotes] = useState('');
   const [link, setLink] = useState('');
   const [color, setColor] = useState('');
+  const [category, setCategory] = useState('');
 
   useEffect(() => {
     if (existingVendor) {
@@ -33,6 +36,7 @@ export function AddVendor() {
       setNotes(existingVendor.notes || '');
       setLink(existingVendor.link || '');
       setColor(existingVendor.color || '');
+      setCategory(existingVendor.category || '');
     }
   }, [existingVendor]);
 
@@ -46,6 +50,7 @@ export function AddVendor() {
       notes: notes || null,
       link: link || null,
       color: color || null,
+      category: category.trim() || null,
     };
 
     if (isEditing && id) {
@@ -137,6 +142,24 @@ export function AddVendor() {
                   />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="vendor-category">Category</Label>
+                <Input
+                  id="vendor-category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="e.g. Steel, Hardware, Electrical"
+                  list="vendor-category-options"
+                />
+                <datalist id="vendor-category-options">
+                  {existingCategories.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
+
+
 
               <div className="space-y-2">
                 <Label htmlFor="vendor-address">Address</Label>

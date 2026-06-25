@@ -17,6 +17,7 @@ export const vendorSchema = z.object({
   address: optionalAddress,
   notes: optionalNotes,
   link: optionalUrl,
+  category: z.string().max(100, 'Category must be less than 100 characters').optional().nullable(),
 });
 
 export type VendorInput = z.infer<typeof vendorSchema>;
