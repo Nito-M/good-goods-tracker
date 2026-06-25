@@ -4731,6 +4731,7 @@ export type Database = {
       }
       todos: {
         Row: {
+          amount_unit: string
           created_at: string
           display_order: number
           due_date: string | null
@@ -4747,6 +4748,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          amount_unit?: string
           created_at?: string
           display_order?: number
           due_date?: string | null
@@ -4763,6 +4765,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          amount_unit?: string
           created_at?: string
           display_order?: number
           due_date?: string | null
