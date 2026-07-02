@@ -399,6 +399,9 @@ function AssemblyDetail({
                         {assembly.selling_price > 0 ? formatCurrency(assembly.selling_price) : <span className="text-muted-foreground font-normal">Set price…</span>}
                       </button>
                     )}
+                    {assembly.selling_price > 0 && assembly.selling_price_updated_at && !editingPrice && (
+                      <span className="text-xs text-muted-foreground ml-1">(updated {new Date(assembly.selling_price_updated_at).toLocaleDateString()})</span>
+                    )}
                   </div>
                 )}
                 {canViewAssemblyPricing && summary && summary.totalCost > 0 && assembly.selling_price > 0 && (
