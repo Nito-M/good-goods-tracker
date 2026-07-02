@@ -134,9 +134,14 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings, op
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
 
-    // LEFT: Quote #, Date, Valid Until
-    doc.text(`${documentLabel}: ${quote.quoteNumber}`, layout.invoiceDetails.x, detailsY);
+    // LEFT: SO #, Quote #, Date, Valid Until
+    const primaryNumber = isSalesOrder ? (quote.salesOrderNumber || quote.quoteNumber) : quote.quoteNumber;
+    doc.text(`${documentLabel}: ${primaryNumber}`, layout.invoiceDetails.x, detailsY);
     let leftY = detailsY + 7;
+    if (isSalesOrder && quote.quoteNumber) {
+      doc.text(`Quote #: ${quote.quoteNumber}`, layout.invoiceDetails.x, leftY);
+      leftY += 7;
+    }
     doc.text(`Date: ${formatDate(quote.createdAt)}`, layout.invoiceDetails.x, leftY);
     leftY += 7;
     if (quote.validUntil) {
