@@ -13,6 +13,7 @@ export interface Assembly {
   status_notes: string | null;
   type: string;
   model: string | null;
+  selling_price_updated_at: string | null;
   created_at: string;
   updated_at: string;
 }
