@@ -368,7 +368,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings, op
   }
 
   // Save the PDF
-  const fileName = isSalesOrder ? `SO-${quote.quoteNumber}.pdf` : `${quote.quoteNumber}.pdf`;
+  const fileName = isSalesOrder
+    ? `${quote.salesOrderNumber || 'SO'}-${quote.quoteNumber}.pdf`
+    : `${quote.quoteNumber}.pdf`;
   await savePdfBlob(doc, fileName);
 };
 
