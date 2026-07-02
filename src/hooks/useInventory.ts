@@ -161,22 +161,35 @@ export function useInventory(activeOrgId?: string | null) {
       console.error('Error loading from IndexedDB:', error);
     }
 
-    // If online, always fetch from server
+    // If online, always fetch from server (paginated to bypass PostgREST 1000-row cap)
     if (isOnline) {
-      let query = supabase
-        .from('inventory_items')
-        .select('*')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (activeOrgId) {
-        query = query.eq('organization_id', activeOrgId);
+      const PAGE = 1000;
+      let allData: DbInventoryItem[] = [];
+      let from = 0;
+      let fetchError: any = null;
+      while (true) {
+        let query = supabase
+          .from('inventory_items')
+          .select('*')
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (activeOrgId) {
+          query = query.eq('organization_id', activeOrgId);
+        }
+        const { data, error } = await query;
+        if (error) {
+          fetchError = error;
+          break;
+        }
+        if (!data || data.length === 0) break;
+        allData = allData.concat(data as DbInventoryItem[]);
+        if (data.length < PAGE) break;
+        from += PAGE;
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error loading inventory:', error);
+      if (fetchError) {
+        console.error('Error loading inventory:', fetchError);
         toast({
           title: 'Error loading inventory',
           description: 'Unable to load inventory. Please try again.',
@@ -186,23 +199,22 @@ export function useInventory(activeOrgId?: string | null) {
         return;
       }
 
-      if (data) {
-        setItems((data as DbInventoryItem[]).map(dbToInventoryItem));
-        setLoading(false);
-        // Persist to IndexedDB in the background (don't block render)
-        const persist = () => {
-          clearTable('inventory_items')
-            .then(() => putMany('inventory_items', data as unknown as Record<string, unknown>[]))
-            .catch((err) => console.error('Background IndexedDB persist failed:', err));
-        };
-        if (typeof (window as any).requestIdleCallback === 'function') {
-          (window as any).requestIdleCallback(persist);
-        } else {
-          setTimeout(persist, 0);
-        }
-        return;
+      setItems(allData.map(dbToInventoryItem));
+      setLoading(false);
+      // Persist to IndexedDB in the background (don't block render)
+      const persist = () => {
+        clearTable('inventory_items')
+          .then(() => putMany('inventory_items', allData as unknown as Record<string, unknown>[]))
+          .catch((err) => console.error('Background IndexedDB persist failed:', err));
+      };
+      if (typeof (window as any).requestIdleCallback === 'function') {
+        (window as any).requestIdleCallback(persist);
+      } else {
+        setTimeout(persist, 0);
       }
+      return;
     }
+
 
     setLoading(false);
   }, [toast, user, isOnline, activeOrgId]);
