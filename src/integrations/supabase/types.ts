@@ -91,6 +91,7 @@ export type Database = {
           model: string | null
           name: string
           selling_price: number
+          selling_price_updated_at: string | null
           status: string
           status_notes: string | null
           type: string
@@ -104,6 +105,7 @@ export type Database = {
           model?: string | null
           name: string
           selling_price?: number
+          selling_price_updated_at?: string | null
           status?: string
           status_notes?: string | null
           type?: string
@@ -117,6 +119,7 @@ export type Database = {
           model?: string | null
           name?: string
           selling_price?: number
+          selling_price_updated_at?: string | null
           status?: string
           status_notes?: string | null
           type?: string
