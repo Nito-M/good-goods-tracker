@@ -170,16 +170,61 @@ export function JobInstructionEdit() {
     if (Object.keys(dbUpdates).length > 0) updatePart(itemId, dbUpdates);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const esc = (s: string) => s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]!));
+
+    // Fetch primary images for parts linked to inventory items and inline as data URLs.
+    const itemIds = Array.from(new Set(parts.map(p => p.inventory_item_id).filter((id): id is string => !!id)));
+    const dataUrlByItem = new Map<string, string>();
+    if (itemIds.length > 0) {
+      const { data: imgRows } = await supabase
+        .from('item_images')
+        .select('item_id, image_url')
+        .in('item_id', itemIds)
+        .eq('is_primary', true);
+      const rows = imgRows || [];
+      const paths = rows.map(r => {
+        const u = r.image_url as string;
+        if (!u.startsWith('http')) return u;
+        const m = u.match(/\/item-images\/(.+?)(?:\?|$)/);
+        return m ? decodeURIComponent(m[1]) : u;
+      });
+      const { data: signed } = paths.length
+        ? await supabase.storage.from('item-images').createSignedUrls(paths, 3600)
+        : { data: null as any };
+      await Promise.all(rows.map(async (r, i) => {
+        const url = signed?.[i]?.signedUrl;
+        if (!url) return;
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const blob = await res.blob();
+          const dataUrl: string = await new Promise((resolve, reject) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(fr.result as string);
+            fr.onerror = () => reject(fr.error);
+            fr.readAsDataURL(blob);
+          });
+          dataUrlByItem.set(r.item_id as string, dataUrl);
+        } catch { /* ignore */ }
+      }));
+    }
+
+    const imgCell = (id: string | null) => {
+      const url = id ? dataUrlByItem.get(id) : undefined;
+      return url
+        ? `<img src="${url}" style="width:56px;height:56px;object-fit:cover;border-radius:4px;display:block;" />`
+        : `<div style="width:56px;height:56px;border-radius:4px;background:#f0f0f0;"></div>`;
+    };
+
     const partsRows = parts.map(p => `
       <tr>
+        <td style="width:64px">${imgCell(p.inventory_item_id)}</td>
         <td>${esc(p.item_name)}</td>
         <td>${esc(p.sku || '')}</td>
         <td style="text-align:right">${p.quantity}</td>
       </tr>`).join('');
 
-    
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title || 'Instruction')}</title>
 <style>
   body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;padding:32px;max-width:800px;margin:0 auto;}
@@ -196,9 +241,9 @@ export function JobInstructionEdit() {
 <h1>${esc(title || 'Instruction')}</h1>
 <div class="meta">Printed ${new Date().toLocaleString()}</div>
 ${content.trim() ? `<h2>Instructions</h2><pre>${esc(content)}</pre>` : ''}
-${parts.length ? `<h2>Parts List</h2><table><thead><tr><th>Item</th><th>Part #</th><th style="text-align:right">Qty</th></tr></thead><tbody>${partsRows}</tbody></table>` : ''}
+${parts.length ? `<h2>Parts List</h2><table><thead><tr><th style="width:64px">Image</th><th>Item</th><th>Part #</th><th style="text-align:right">Qty</th></tr></thead><tbody>${partsRows}</tbody></table>` : ''}
 
-<script>window.onload=()=>{setTimeout(()=>window.print(),150);}</script>
+<script>window.onload=()=>{setTimeout(()=>window.print(),300);}</script>
 </body></html>`;
     const w = window.open('', '_blank');
     if (!w) {
@@ -208,6 +253,7 @@ ${parts.length ? `<h2>Parts List</h2><table><thead><tr><th>Item</th><th>Part #</
     w.document.open();
     w.document.write(html);
     w.document.close();
+
   };
 
   const backTo = `/jobs/${jobId}?tab=instructions`;
