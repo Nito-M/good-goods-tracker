@@ -72,7 +72,7 @@ export function AllJobItems() {
 
   const aggregatedItems = useMemo(() => {
     const map = new Map<string, { itemName: string; sku: string; totalQty: number; unitPrice: number; jobs: string[]; inventoryItemId: string | null; category: string | null }>();
-    for (const item of allJobItems) {
+    for (const item of filteredJobItems) {
       const key = item.inventoryItemId || `${item.itemName}::${item.sku}`;
       const existing = map.get(key);
       const jobLabel = item.jobNumber || item.jobTitle;
@@ -86,7 +86,21 @@ export function AllJobItems() {
       }
     }
     return Array.from(map.values());
-  }, [allJobItems]);
+  }, [filteredJobItems]);
+
+  // Per-customer groupings when Group by customer is on
+  const customerGroups = useMemo(() => {
+    const map = new Map<string, { key: string; label: string; items: typeof allJobItems }>();
+    for (const item of filteredJobItems) {
+      const key = item.customerId || '__none__';
+      const label = item.customerId
+        ? (customers.find(c => c.id === item.customerId)?.name || item.customerName || 'Unknown Customer')
+        : (item.customerName || 'No Customer');
+      if (!map.has(key)) map.set(key, { key, label, items: [] });
+      map.get(key)!.items.push(item);
+    }
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [filteredJobItems, customers, allJobItems]);
 
   const groupedItems = useMemo(() => {
     const groups: Record<string, typeof aggregatedItems> = {};
