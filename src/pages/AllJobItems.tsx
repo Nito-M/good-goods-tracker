@@ -1,11 +1,13 @@
 import { useMemo, useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, List, ChevronDown } from 'lucide-react';
+import { ArrowLeft, List, ChevronDown, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAllJobItems } from '@/hooks/useJobs';
+import { useCustomers } from '@/hooks/useCustomers';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '@/lib/utils';
