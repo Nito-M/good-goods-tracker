@@ -400,6 +400,20 @@ ${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
           </>
         )}
       </main>
+
+      <FullScreenItemPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        inventoryItems={inventoryItems}
+        cart={pickerCart}
+        onAddItem={handlePickerAddItem}
+        onAddCustomItem={handlePickerAddCustomItem}
+        onUpdateQuantity={handlePickerUpdateQty}
+        onRemoveItem={handlePickerRemoveItem}
+        onUpdateItem={handlePickerUpdateItem}
+        documentType="Part"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
