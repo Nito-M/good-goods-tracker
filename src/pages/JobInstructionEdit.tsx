@@ -288,12 +288,22 @@ ${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
                   <p className="text-sm text-muted-foreground">No parts added. Add inventory items you'll need for this install (reference only — no stock is reserved).</p>
                 ) : (
                   <div className="space-y-1.5">
-                    {parts.map(p => (
+                    {parts.map(p => {
+                      const thumb = p.inventory_item_id ? partThumbnails.get(p.inventory_item_id) : undefined;
+                      return (
                       <div key={p.id} className="flex items-center gap-2 p-2 border border-border rounded-md">
+                        <div className="h-12 w-12 shrink-0 rounded-md overflow-hidden bg-muted/40 flex items-center justify-center border border-border">
+                          {thumb ? (
+                            <img src={thumb} alt={p.item_name} className="h-full w-full object-cover" />
+                          ) : (
+                            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{p.item_name}</p>
                           <p className="text-xs text-muted-foreground truncate">{p.sku || '—'}</p>
                         </div>
+
                         <Input
                           type="number"
                           step="0.01"
