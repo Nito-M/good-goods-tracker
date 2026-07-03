@@ -804,9 +804,10 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                   </div>
                 ) : (
                   <>
-                  {groupedItems.map(([category, catItems]) => {
+                  {groupedItems.map(([category, subGroups]) => {
                     const isCollapsed = collapsedCategories.has(category);
-                    const catTotal = catItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+                    const allCatItems = subGroups.flatMap(([, its]) => its);
+                    const catTotal = allCatItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
                     return (
                       <div key={category} className="border border-border rounded-lg mb-3 overflow-hidden">
                         <button
@@ -816,11 +817,28 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                           <div className="flex items-center gap-2">
                             <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
                             <span className="font-semibold text-sm">{category}</span>
-                            <Badge variant="secondary" className="text-xs">{catItems.length}</Badge>
+                            <Badge variant="secondary" className="text-xs">{allCatItems.length}</Badge>
                           </div>
                           {canViewJobPricing && <span className="text-sm font-medium text-muted-foreground">{formatCurrency(catTotal)}</span>}
                         </button>
-                        {!isCollapsed && (
+                        {!isCollapsed && subGroups.map(([subcategory, catItems]) => {
+                          const subKey = `${category}::${subcategory}`;
+                          const subCollapsed = collapsedCategories.has(subKey);
+                          const subTotal = catItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+                          return (
+                            <div key={subKey} className="border-t border-border">
+                              <button
+                                onClick={() => toggleCategory(subKey)}
+                                className="w-full flex items-center justify-between px-6 py-2 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${subCollapsed ? '-rotate-90' : ''}`} />
+                                  <span className="text-xs font-medium text-muted-foreground">{subcategory}</span>
+                                  <Badge variant="outline" className="text-xs">{catItems.length}</Badge>
+                                </div>
+                                {canViewJobPricing && <span className="text-xs text-muted-foreground">{formatCurrency(subTotal)}</span>}
+                              </button>
+                              {!subCollapsed && (
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -903,10 +921,14 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
                               })}
                             </TableBody>
                           </Table>
-                        )}
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}
+
                   <ImageViewerDialog
                     imageUrl={viewerImage?.url ?? null}
                     alt={viewerImage?.alt ?? ''}
