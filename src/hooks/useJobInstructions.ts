@@ -114,22 +114,38 @@ export function useJobInstructions(jobId: string | null) {
   return { instructions, fileCounts, loading, createInstruction, updateInstruction, deleteInstruction, refetch: fetchInstructions };
 }
 
+export interface JobInstructionPart {
+  id: string;
+  instruction_id: string;
+  user_id: string;
+  inventory_item_id: string | null;
+  item_name: string;
+  sku: string;
+  quantity: number;
+  notes: string | null;
+  display_order: number;
+  created_at: string;
+}
+
 export function useJobInstruction(instructionId: string | null) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [instruction, setInstruction] = useState<JobInstruction | null>(null);
   const [files, setFiles] = useState<JobInstructionFile[]>([]);
+  const [parts, setParts] = useState<JobInstructionPart[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchAll = useCallback(async () => {
-    if (!instructionId) { setInstruction(null); setFiles([]); return; }
+    if (!instructionId) { setInstruction(null); setFiles([]); setParts([]); return; }
     setLoading(true);
-    const [{ data: ins }, { data: fs }] = await Promise.all([
+    const [{ data: ins }, { data: fs }, { data: ps }] = await Promise.all([
       supabase.from('job_instructions').select('*').eq('id', instructionId).maybeSingle(),
       supabase.from('job_instruction_files').select('*').eq('instruction_id', instructionId).order('created_at', { ascending: true }),
+      supabase.from('job_instruction_parts').select('*').eq('instruction_id', instructionId).order('created_at', { ascending: true }),
     ]);
     setInstruction((ins as JobInstruction) || null);
     setFiles((fs as JobInstructionFile[]) || []);
+    setParts(((ps as any[]) || []).map(p => ({ ...p, quantity: Number(p.quantity) })) as JobInstructionPart[]);
     setLoading(false);
   }, [instructionId]);
 
@@ -184,5 +200,42 @@ export function useJobInstruction(instructionId: string | null) {
     return data?.signedUrl || null;
   };
 
-  return { instruction, files, loading, uploadFile, deleteFile, getSignedUrl, refetch: fetchAll };
+  const addPart = async (input: { inventoryItemId: string | null; itemName: string; sku: string; quantity?: number; notes?: string | null }) => {
+    if (!user || !instructionId) return;
+    const { error } = await supabase.from('job_instruction_parts').insert([{
+      instruction_id: instructionId,
+      user_id: user.id,
+      inventory_item_id: input.inventoryItemId,
+      item_name: input.itemName,
+      sku: input.sku || '',
+      quantity: input.quantity ?? 1,
+      notes: input.notes ?? null,
+    }]);
+    if (error) {
+      toast({ title: 'Error adding part', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await fetchAll();
+  };
+
+  const updatePart = async (id: string, patch: Partial<Pick<JobInstructionPart, 'quantity' | 'notes' | 'item_name' | 'sku'>>) => {
+    const { error } = await supabase.from('job_instruction_parts').update(patch).eq('id', id);
+    if (error) {
+      toast({ title: 'Error updating part', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await fetchAll();
+  };
+
+  const removePart = async (id: string) => {
+    const { error } = await supabase.from('job_instruction_parts').delete().eq('id', id);
+    if (error) {
+      toast({ title: 'Error removing part', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await fetchAll();
+  };
+
+  return { instruction, files, parts, loading, uploadFile, deleteFile, getSignedUrl, addPart, updatePart, removePart, refetch: fetchAll };
 }
+
