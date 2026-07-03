@@ -179,7 +179,7 @@ export function JobInstructionEdit() {
         <td style="text-align:right">${p.quantity}</td>
       </tr>`).join('');
 
-    const filesList = files.map(f => `<li>${esc(f.file_name)}</li>`).join('');
+    
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title || 'Instruction')}</title>
 <style>
   body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;padding:32px;max-width:800px;margin:0 auto;}
@@ -197,7 +197,7 @@ export function JobInstructionEdit() {
 <div class="meta">Printed ${new Date().toLocaleString()}</div>
 ${content.trim() ? `<h2>Instructions</h2><pre>${esc(content)}</pre>` : ''}
 ${parts.length ? `<h2>Parts List</h2><table><thead><tr><th>Item</th><th>Part #</th><th style="text-align:right">Qty</th></tr></thead><tbody>${partsRows}</tbody></table>` : ''}
-${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
+
 <script>window.onload=()=>{setTimeout(()=>window.print(),150);}</script>
 </body></html>`;
     const w = window.open('', '_blank');
