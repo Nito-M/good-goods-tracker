@@ -129,6 +129,10 @@ export function Jobs() {
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverJobId, setDragOverJobId] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState('in-progress');
+  const [customerFilter, setCustomerFilter] = useState<string>(() => localStorage.getItem('jobs-customer-filter') || 'all');
+  const [groupByCustomer, setGroupByCustomer] = useState<boolean>(() => localStorage.getItem('jobs-group-by-customer') === '1');
+  useEffect(() => { localStorage.setItem('jobs-customer-filter', customerFilter); }, [customerFilter]);
+  useEffect(() => { localStorage.setItem('jobs-group-by-customer', groupByCustomer ? '1' : '0'); }, [groupByCustomer]);
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
