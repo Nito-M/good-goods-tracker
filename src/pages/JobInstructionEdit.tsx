@@ -114,7 +114,69 @@ export function JobInstructionEdit() {
     if (url) window.open(url, '_blank');
   };
 
+  const filteredInventory = useMemo(() => {
+    const q = partSearch.trim().toLowerCase();
+    if (!q) return inventoryItems.slice(0, 30);
+    return inventoryItems.filter(i =>
+      i.name.toLowerCase().includes(q) ||
+      (i.sku || '').toLowerCase().includes(q) ||
+      (i.internalPartNumber || '').toLowerCase().includes(q)
+    ).slice(0, 50);
+  }, [inventoryItems, partSearch]);
+
+  const handleAddInventoryPart = async (inv: typeof inventoryItems[number]) => {
+    await addPart({
+      inventoryItemId: inv.id,
+      itemName: inv.name,
+      sku: inv.sku || inv.internalPartNumber || '',
+      quantity: 1,
+    });
+    setPartSearch('');
+    setPickerOpen(false);
+  };
+
+  const handlePrint = () => {
+    const esc = (s: string) => s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]!));
+    const partsRows = parts.map(p => `
+      <tr>
+        <td>${esc(p.item_name)}</td>
+        <td>${esc(p.sku || '')}</td>
+        <td style="text-align:right">${p.quantity}</td>
+        <td>${esc(p.notes || '')}</td>
+      </tr>`).join('');
+    const filesList = files.map(f => `<li>${esc(f.file_name)}</li>`).join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title || 'Instruction')}</title>
+<style>
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;padding:32px;max-width:800px;margin:0 auto;}
+  h1{font-size:22px;margin:0 0 4px;}
+  .meta{color:#666;font-size:12px;margin-bottom:24px;}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:#444;margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:4px;}
+  pre{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.5;margin:12px 0;}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+  th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top;}
+  th{background:#f5f5f5;}
+  ul{font-size:12px;margin:8px 0 0 20px;padding:0;}
+  @media print { body{padding:0;} }
+</style></head><body>
+<h1>${esc(title || 'Instruction')}</h1>
+<div class="meta">Printed ${new Date().toLocaleString()}</div>
+${content.trim() ? `<h2>Instructions</h2><pre>${esc(content)}</pre>` : ''}
+${parts.length ? `<h2>Parts List</h2><table><thead><tr><th>Item</th><th>Part #</th><th style="text-align:right">Qty</th><th>Notes</th></tr></thead><tbody>${partsRows}</tbody></table>` : ''}
+${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
+<script>window.onload=()=>{setTimeout(()=>window.print(),150);}</script>
+</body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) {
+      toast({ title: 'Popup blocked', description: 'Allow popups to print.', variant: 'destructive' });
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  };
+
   const backTo = `/jobs/${jobId}?tab=instructions`;
+
 
   return (
     <div className="min-h-screen bg-background">
