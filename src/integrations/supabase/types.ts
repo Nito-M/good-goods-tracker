@@ -314,6 +314,44 @@ export type Database = {
         }
         Relationships: []
       }
+      assembly_price_history: {
+        Row: {
+          assembly_id: string
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_price: number
+          old_price: number | null
+          user_id: string
+        }
+        Insert: {
+          assembly_id: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_price: number
+          old_price?: number | null
+          user_id: string
+        }
+        Update: {
+          assembly_id?: string
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_price?: number
+          old_price?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assembly_price_history_assembly_id_fkey"
+            columns: ["assembly_id"]
+            isOneToOne: false
+            referencedRelation: "assemblies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_available_parts: {
         Row: {
           asset_id: string

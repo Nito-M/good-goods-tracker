@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy, Tag, Settings2, ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy, Tag, Settings2, ChevronDown, ChevronRight, MoreHorizontal, History } from 'lucide-react';
+import { AssemblyPriceHistoryDialog } from '@/components/AssemblyPriceHistoryDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
 import { FullScreenSubAssemblyPicker } from '@/components/FullScreenSubAssemblyPicker';
@@ -102,6 +103,7 @@ function AssemblyDetail({
   const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
   const [savingStatus, setSavingStatus] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showPriceHistory, setShowPriceHistory] = useState(false);
   const [hidePricesOnPdf, setHidePricesOnPdf] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [newModelInput, setNewModelInput] = useState('');
@@ -401,6 +403,11 @@ function AssemblyDetail({
                     )}
                     {assembly.selling_price > 0 && assembly.selling_price_updated_at && !editingPrice && (
                       <span className="text-xs text-muted-foreground ml-1">(updated {new Date(assembly.selling_price_updated_at).toLocaleDateString()})</span>
+                    )}
+                    {!editingPrice && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6" title="Price history" onClick={() => setShowPriceHistory(true)}>
+                        <History className="h-3 w-3" />
+                      </Button>
                     )}
                   </div>
                 )}
@@ -776,6 +783,12 @@ function AssemblyDetail({
           unitCost: i.unit_cost,
           notes: i.notes,
         }))}
+      />
+      <AssemblyPriceHistoryDialog
+        assemblyId={assembly.id}
+        assemblyName={assembly.name}
+        open={showPriceHistory}
+        onOpenChange={setShowPriceHistory}
       />
     </div>
   );
