@@ -367,7 +367,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const [fInvoiceNumber, setFInvoiceNumber] = useState(job.invoiceNumber || '');
   const [fWeight, setFWeight] = useState(job.weight != null ? String(job.weight) : '');
   const [fNvisLink, setFNvisLink] = useState(job.nvisLink || '');
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState(job.customerId || '');
   const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
