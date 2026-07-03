@@ -21,6 +21,8 @@ import { useSales } from '@/hooks/useSales';
 import { useItemVendorPrices } from '@/hooks/useItemVendorPrices';
 import { VendorContactsManager } from '@/components/VendorContactsManager';
 import { VendorNotesList } from '@/components/VendorNotesList';
+import { VendorFilesSection } from '@/components/VendorFilesSection';
+import { VendorLinksSection } from '@/components/VendorLinksSection';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -218,12 +220,34 @@ export function VendorDetail() {
         {/* Contacts */}
         <VendorContactsManager vendorId={vendor.id} />
 
+        {/* Links */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Links</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <VendorLinksSection vendorId={vendor.id} />
+          </CardContent>
+        </Card>
+
+        {/* Files */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Files &amp; PDFs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <VendorFilesSection vendorId={vendor.id} />
+          </CardContent>
+        </Card>
+
         {/* Notes */}
         <VendorNotesList
           vendorId={vendor.id}
           legacyNote={vendor.notes}
           onMigrateLegacy={async () => { await updateVendor(vendor.id, { notes: null }); }}
         />
+
+
 
 
         {/* Purchase Orders by Year / Month */}
