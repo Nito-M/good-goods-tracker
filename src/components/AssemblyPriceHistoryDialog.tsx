@@ -23,8 +23,7 @@ interface HistoryEntry {
 export function AssemblyPriceHistoryDialog({ assemblyId, assemblyName, open, onOpenChange }: Props) {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const userIds = Array.from(new Set(entries.map(e => e.changed_by).filter((v): v is string => !!v)));
-  const { names } = useOrgUserNames(userIds);
+  const { userNames: names } = useOrgUserNames();
 
   useEffect(() => {
     if (!open) return;
