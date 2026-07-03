@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useJobs, useJobItems } from '@/hooks/useJobs';
+import { useJobInstructions } from '@/hooks/useJobInstructions';
 import { useJobSidebarLinks } from '@/hooks/useJobSidebarLinks';
 
 import { Link, useNavigate, useParams } from 'react-router-dom';
