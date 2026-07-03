@@ -25,7 +25,6 @@ export function JobInstructionEdit() {
   const { instruction, files, parts, loading, uploadFile, deleteFile, getSignedUrl, addPart, updatePart, removePart, refetch } =
     useJobInstruction(isNew ? null : instructionId!);
   const { allItems: inventoryItems } = useInventory();
-  const [partSearch, setPartSearch] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const [title, setTitle] = useState('');
