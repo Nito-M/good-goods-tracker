@@ -2186,6 +2186,60 @@ export type Database = {
           },
         ]
       }
+      job_instruction_parts: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          instruction_id: string
+          inventory_item_id: string | null
+          item_name: string
+          notes: string | null
+          quantity: number
+          sku: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          instruction_id: string
+          inventory_item_id?: string | null
+          item_name: string
+          notes?: string | null
+          quantity?: number
+          sku?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          instruction_id?: string
+          inventory_item_id?: string | null
+          item_name?: string
+          notes?: string | null
+          quantity?: number
+          sku?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_instruction_parts_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "job_instructions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_instruction_parts_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_instructions: {
         Row: {
           content: string | null
