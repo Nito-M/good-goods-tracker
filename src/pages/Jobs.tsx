@@ -949,7 +949,74 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
             </Card>
           </TabsContent>
 
+          {/* INSTRUCTIONS TAB */}
+          <TabsContent value="instructions">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => navigate(`/jobs/${job.id}/instructions/new`)}>
+                <Plus className="h-4 w-4 mr-2" />Add Install Instruction
+              </Button>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Install Instructions ({instructions.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {instructions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <List className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No instructions yet</h3>
+                    <p className="text-muted-foreground mb-4">Add step-by-step install guides, torque specs, or reference PDFs for this job.</p>
+                    <Button onClick={() => navigate(`/jobs/${job.id}/instructions/new`)}>
+                      <Plus className="h-4 w-4 mr-2" />Add Install Instruction
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {instructions.map(ins => {
+                      const fileCount = instructionFileCounts[ins.id] || 0;
+                      const snippet = (ins.content || '').replace(/\s+/g, ' ').slice(0, 140);
+                      return (
+                        <div
+                          key={ins.id}
+                          className="flex items-start gap-3 p-3 border border-border rounded-lg hover:bg-muted/40 cursor-pointer transition-colors"
+                          onClick={() => navigate(`/jobs/${job.id}/instructions/${ins.id}`)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">{ins.title}</span>
+                              {fileCount > 0 && (
+                                <Badge variant="secondary" className="text-xs">{fileCount} file{fileCount === 1 ? '' : 's'}</Badge>
+                              )}
+                            </div>
+                            {snippet && (
+                              <p className="text-sm text-muted-foreground truncate mt-0.5">{snippet}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Updated {new Date(ins.updated_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Delete "${ins.title}"?`)) deleteInstruction(ins.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* SETTINGS TAB */}
+
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader><CardTitle>Job Details</CardTitle></CardHeader>
