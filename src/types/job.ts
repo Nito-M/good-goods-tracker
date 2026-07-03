@@ -5,6 +5,7 @@ export interface Job {
   description: string | null;
   status: string;
   displayOrder: number;
+  customerId: string | null;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;

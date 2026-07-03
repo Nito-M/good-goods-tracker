@@ -54,6 +54,7 @@ export function CreateJob() {
     if (!formTitle.trim()) return;
     setSaving(true);
     const result = await createJob(formTitle.trim(), formDescription.trim() || undefined, formStatus, {
+      id: selectedCustomerId && selectedCustomerId !== 'none' ? selectedCustomerId : null,
       name: formCustomerName.trim() || undefined,
       email: formCustomerEmail.trim() || undefined,
       phone: formCustomerPhone.trim() || undefined,

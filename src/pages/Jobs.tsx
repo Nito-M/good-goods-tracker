@@ -101,6 +101,7 @@ export function Jobs() {
   const isMobile = useIsMobile();
   const { jobId: urlJobId, linkId } = useParams<{ jobId?: string; linkId?: string }>();
   const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs } = useJobs();
+  const { customers } = useCustomers();
   const { links, removeLink } = useJobSidebarLinks();
   
 
@@ -128,6 +129,10 @@ export function Jobs() {
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverJobId, setDragOverJobId] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState('in-progress');
+  const [customerFilter, setCustomerFilter] = useState<string>(() => localStorage.getItem('jobs-customer-filter') || 'all');
+  const [groupByCustomer, setGroupByCustomer] = useState<boolean>(() => localStorage.getItem('jobs-group-by-customer') === '1');
+  useEffect(() => { localStorage.setItem('jobs-customer-filter', customerFilter); }, [customerFilter]);
+  useEffect(() => { localStorage.setItem('jobs-group-by-customer', groupByCustomer ? '1' : '0'); }, [groupByCustomer]);
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
@@ -135,6 +140,13 @@ export function Jobs() {
     let result = jobs;
     if (statusTab !== 'all') {
       result = result.filter(j => j.status === statusTab);
+    }
+    if (customerFilter !== 'all') {
+      if (customerFilter === 'none') {
+        result = result.filter(j => !j.customerId);
+      } else {
+        result = result.filter(j => j.customerId === customerFilter);
+      }
     }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -145,7 +157,22 @@ export function Jobs() {
       );
     }
     return result;
-  }, [jobs, searchQuery, statusTab]);
+  }, [jobs, searchQuery, statusTab, customerFilter]);
+
+  const jobsByCustomer = useMemo(() => {
+    const groups = new Map<string, { label: string; jobs: typeof filteredJobs }>();
+    for (const j of filteredJobs) {
+      const key = j.customerId || '__none__';
+      const label = j.customerId
+        ? (customers.find(c => c.id === j.customerId)?.name || j.customerName || 'Unknown Customer')
+        : (j.customerName || 'No Customer');
+      if (!groups.has(key)) groups.set(key, { label, jobs: [] });
+      groups.get(key)!.jobs.push(j);
+    }
+    return Array.from(groups.entries())
+      .map(([key, v]) => ({ key, ...v }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [filteredJobs, customers]);
 
   const openCreate = () => {
     navigate('/jobs/new');
@@ -250,9 +277,28 @@ export function Jobs() {
             </TabsList>
           </div>
 
-          <div className="relative max-w-md mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search jobs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="relative max-w-md flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search jobs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+            </div>
+            <Select value={customerFilter} onValueChange={setCustomerFilter}>
+              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Filter by customer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All customers</SelectItem>
+                <SelectItem value="none">— No customer —</SelectItem>
+                {customers.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant={groupByCustomer ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setGroupByCustomer(v => !v)}
+            >
+              <User className="h-4 w-4 mr-2" />Group by customer
+            </Button>
           </div>
 
         {loading ? (
@@ -266,6 +312,34 @@ export function Jobs() {
               <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Create Job</Button>
             </CardContent>
           </Card>
+        ) : groupByCustomer ? (
+          <div className="space-y-4">
+            {jobsByCustomer.map(group => (
+              <Card key={group.key}>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    {group.label}
+                    <Badge variant="secondary" className="ml-1">{group.jobs.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 border-t divide-y">
+                  {group.jobs.map(job => (
+                    <div
+                      key={job.id}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => openJob(job.id)}
+                    >
+                      {job.jobNumber && <span className="text-xs font-mono text-muted-foreground shrink-0">{job.jobNumber}</span>}
+                      <span className="font-medium flex-1 truncate">{job.title}</span>
+                      <Badge className={statusColors[job.status] || ''}>{STATUS_OPTIONS.find(s => s.value === job.status)?.label || job.status}</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         ) : (
           <div className="rounded-md border divide-y">
             {filteredJobs.map(job => (
@@ -367,7 +441,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const [fInvoiceNumber, setFInvoiceNumber] = useState(job.invoiceNumber || '');
   const [fWeight, setFWeight] = useState(job.weight != null ? String(job.weight) : '');
   const [fNvisLink, setFNvisLink] = useState(job.nvisLink || '');
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState(job.customerId || '');
   const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
@@ -386,6 +460,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     setFInvoiceNumber(job.invoiceNumber || '');
     setFWeight(job.weight != null ? String(job.weight) : '');
     setFNvisLink(job.nvisLink || '');
+    setSelectedCustomerId(job.customerId || '');
   }, [job.id]);
 
   const handleCustomerSelect = (customerId: string) => {
@@ -406,6 +481,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     const updates: Record<string, string | number | null | undefined> = {
       title: fTitle.trim(),
       description: fDescription.trim() || undefined,
+      customer_id: selectedCustomerId && selectedCustomerId !== 'none' ? selectedCustomerId : null,
       customer_name: fCustomerName.trim() || null,
       customer_email: fCustomerEmail.trim() || null,
       customer_phone: fCustomerPhone.trim() || null,

@@ -27,6 +27,7 @@ export function useJobs() {
         description: d.description,
         status: d.status,
         displayOrder: d.display_order,
+        customerId: (d as any).customer_id ?? null,
         customerName: d.customer_name,
         customerEmail: d.customer_email,
         customerPhone: d.customer_phone,
@@ -48,13 +49,14 @@ export function useJobs() {
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  const createJob = async (title: string, description?: string, status?: string, customer?: { name?: string; email?: string; phone?: string; address?: string }, dueDate?: string, jobNumber?: string) => {
+  const createJob = async (title: string, description?: string, status?: string, customer?: { id?: string | null; name?: string; email?: string; phone?: string; address?: string }, dueDate?: string, jobNumber?: string) => {
     if (!user) return null;
     const insertData: Record<string, unknown> = {
       title,
       description: description || null,
       user_id: user.id,
       status: status || 'open',
+      customer_id: customer?.id || null,
       customer_name: customer?.name || null,
       customer_email: customer?.email || null,
       customer_phone: customer?.phone || null,
@@ -97,7 +99,7 @@ export function useJobs() {
       .eq('consumed', true);
   };
 
-  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null; due_date?: string | null; vin?: string | null; stock_number?: string | null; quote_number?: string | null; sales_order_number?: string | null; invoice_number?: string | null; weight?: number | null; nvis_link?: string | null }) => {
+  const updateJob = async (id: string, updates: { title?: string; description?: string; status?: string; job_number?: string; customer_id?: string | null; customer_name?: string | null; customer_email?: string | null; customer_phone?: string | null; customer_address?: string | null; due_date?: string | null; vin?: string | null; stock_number?: string | null; quote_number?: string | null; sales_order_number?: string | null; invoice_number?: string | null; weight?: number | null; nvis_link?: string | null }) => {
     // If status is changing to finished, consume reserved items
     if (updates.status === 'finished') {
       await consumeReservedItems(id);
@@ -176,7 +178,7 @@ export function useJobs() {
 }
 
 export function useAllJobItems() {
-  const [items, setItems] = useState<(JobItem & { jobTitle: string; jobNumber: string | null })[]>([]);
+  const [items, setItems] = useState<(JobItem & { jobTitle: string; jobNumber: string | null; customerId: string | null; customerName: string | null })[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
@@ -185,7 +187,7 @@ export function useAllJobItems() {
     setLoading(true);
     const { data, error } = await supabase
       .from('job_items')
-      .select('*, jobs!inner(title, job_number, status), inventory_items(category)')
+      .select('*, jobs!inner(title, job_number, status, customer_id, customer_name), inventory_items(category)')
       .neq('jobs.status', 'finished')
       .neq('jobs.status', 'on-hold');
     if (error) {
@@ -206,6 +208,8 @@ export function useAllJobItems() {
         createdAt: d.created_at,
         jobTitle: d.jobs.title,
         jobNumber: d.jobs.job_number,
+        customerId: d.jobs.customer_id ?? null,
+        customerName: d.jobs.customer_name ?? null,
       })));
     }
     setLoading(false);
