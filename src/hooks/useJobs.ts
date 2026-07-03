@@ -49,13 +49,14 @@ export function useJobs() {
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  const createJob = async (title: string, description?: string, status?: string, customer?: { name?: string; email?: string; phone?: string; address?: string }, dueDate?: string, jobNumber?: string) => {
+  const createJob = async (title: string, description?: string, status?: string, customer?: { id?: string | null; name?: string; email?: string; phone?: string; address?: string }, dueDate?: string, jobNumber?: string) => {
     if (!user) return null;
     const insertData: Record<string, unknown> = {
       title,
       description: description || null,
       user_id: user.id,
       status: status || 'open',
+      customer_id: customer?.id || null,
       customer_name: customer?.name || null,
       customer_email: customer?.email || null,
       customer_phone: customer?.phone || null,
