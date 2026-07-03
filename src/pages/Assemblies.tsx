@@ -404,6 +404,11 @@ function AssemblyDetail({
                     {assembly.selling_price > 0 && assembly.selling_price_updated_at && !editingPrice && (
                       <span className="text-xs text-muted-foreground ml-1">(updated {new Date(assembly.selling_price_updated_at).toLocaleDateString()})</span>
                     )}
+                    {!editingPrice && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6" title="Price history" onClick={() => setShowPriceHistory(true)}>
+                        <History className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 )}
                 {canViewAssemblyPricing && summary && summary.totalCost > 0 && assembly.selling_price > 0 && (
