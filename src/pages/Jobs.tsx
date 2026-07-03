@@ -277,9 +277,28 @@ export function Jobs() {
             </TabsList>
           </div>
 
-          <div className="relative max-w-md mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search jobs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="relative max-w-md flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search jobs..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+            </div>
+            <Select value={customerFilter} onValueChange={setCustomerFilter}>
+              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Filter by customer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All customers</SelectItem>
+                <SelectItem value="none">— No customer —</SelectItem>
+                {customers.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant={groupByCustomer ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setGroupByCustomer(v => !v)}
+            >
+              <User className="h-4 w-4 mr-2" />Group by customer
+            </Button>
           </div>
 
         {loading ? (
@@ -293,6 +312,34 @@ export function Jobs() {
               <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Create Job</Button>
             </CardContent>
           </Card>
+        ) : groupByCustomer ? (
+          <div className="space-y-4">
+            {jobsByCustomer.map(group => (
+              <Card key={group.key}>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    {group.label}
+                    <Badge variant="secondary" className="ml-1">{group.jobs.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 border-t divide-y">
+                  {group.jobs.map(job => (
+                    <div
+                      key={job.id}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => openJob(job.id)}
+                    >
+                      {job.jobNumber && <span className="text-xs font-mono text-muted-foreground shrink-0">{job.jobNumber}</span>}
+                      <span className="font-medium flex-1 truncate">{job.title}</span>
+                      <Badge className={statusColors[job.status] || ''}>{STATUS_OPTIONS.find(s => s.value === job.status)?.label || job.status}</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         ) : (
           <div className="rounded-md border divide-y">
             {filteredJobs.map(job => (
