@@ -555,14 +555,26 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
 
   useEffect(() => { fetchOrderedAndStock(); }, [fetchOrderedAndStock]);
 
+  const NO_SUB = '— No subcategory —';
   const groupedItems = useMemo(() => {
-    const groups: Record<string, typeof items> = {};
+    const groups: Record<string, Record<string, typeof items>> = {};
     items.forEach(item => {
       const cat = item.category || 'Uncategorized';
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(item);
+      const sub = item.subcategory || NO_SUB;
+      if (!groups[cat]) groups[cat] = {};
+      if (!groups[cat][sub]) groups[cat][sub] = [];
+      groups[cat][sub].push(item);
     });
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([cat, subs]) => {
+        const subEntries = Object.entries(subs).sort(([a], [b]) => {
+          if (a === NO_SUB) return 1;
+          if (b === NO_SUB) return -1;
+          return a.localeCompare(b);
+        });
+        return [cat, subEntries] as const;
+      });
   }, [items]);
 
   const toggleCategory = (cat: string) => {
@@ -573,6 +585,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
       return next;
     });
   };
+
 
   const handleDelete = async () => {
     await onDelete();
