@@ -15,11 +15,22 @@ import { useCanViewJobPricing } from '@/hooks/useCanViewJobPricing';
 
 export function AllJobItems() {
   const { items: allJobItems, loading, fetchAllItems } = useAllJobItems();
+  const { customers } = useCustomers();
   const { canViewJobPricing } = useCanViewJobPricing();
   const [inventoryQtys, setInventoryQtys] = useState<Record<string, number>>({});
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const [customerFilter, setCustomerFilter] = useState<string>(() => localStorage.getItem('alljobitems-customer-filter') || 'all');
+  const [groupByCustomer, setGroupByCustomer] = useState<boolean>(() => localStorage.getItem('alljobitems-group-by-customer') === '1');
+  useEffect(() => { localStorage.setItem('alljobitems-customer-filter', customerFilter); }, [customerFilter]);
+  useEffect(() => { localStorage.setItem('alljobitems-group-by-customer', groupByCustomer ? '1' : '0'); }, [groupByCustomer]);
+
+  const filteredJobItems = useMemo(() => {
+    if (customerFilter === 'all') return allJobItems;
+    if (customerFilter === 'none') return allJobItems.filter(i => !i.customerId);
+    return allJobItems.filter(i => i.customerId === customerFilter);
+  }, [allJobItems, customerFilter]);
 
   const toggleCategory = (cat: string) => {
     setCollapsedCategories(prev => {
