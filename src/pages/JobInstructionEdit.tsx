@@ -191,7 +191,7 @@ export function JobInstructionEdit() {
 <h1>${esc(title || 'Instruction')}</h1>
 <div class="meta">Printed ${new Date().toLocaleString()}</div>
 ${content.trim() ? `<h2>Instructions</h2><pre>${esc(content)}</pre>` : ''}
-${parts.length ? `<h2>Parts List</h2><table><thead><tr><th>Item</th><th>Part #</th><th style="text-align:right">Qty</th><th>Notes</th></tr></thead><tbody>${partsRows}</tbody></table>` : ''}
+${parts.length ? `<h2>Parts List</h2><table><thead><tr><th>Item</th><th>Part #</th><th style="text-align:right">Qty</th></tr></thead><tbody>${partsRows}</tbody></table>` : ''}
 ${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
 <script>window.onload=()=>{setTimeout(()=>window.print(),150);}</script>
 </body></html>`;
