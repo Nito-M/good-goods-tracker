@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Upload, FileText, ImageIcon, X, ExternalLink, Printer, Plus, Search, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, FileText, ImageIcon, X, ExternalLink, Printer, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useJobInstruction, useJobInstructions } from '@/hooks/useJobInstructions';
 import { useInventory } from '@/hooks/useInventory';
 import { useToast } from '@/hooks/use-toast';
+import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
+import { formatCurrency } from '@/lib/utils';
 
 const BUCKET = 'job-instruction-files';
 
@@ -24,7 +25,6 @@ export function JobInstructionEdit() {
   const { instruction, files, parts, loading, uploadFile, deleteFile, getSignedUrl, addPart, updatePart, removePart, refetch } =
     useJobInstruction(isNew ? null : instructionId!);
   const { allItems: inventoryItems } = useInventory();
-  const [partSearch, setPartSearch] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const [title, setTitle] = useState('');
@@ -114,25 +114,55 @@ export function JobInstructionEdit() {
     if (url) window.open(url, '_blank');
   };
 
-  const filteredInventory = useMemo(() => {
-    const q = partSearch.trim().toLowerCase();
-    if (!q) return inventoryItems.slice(0, 30);
-    return inventoryItems.filter(i =>
-      i.name.toLowerCase().includes(q) ||
-      (i.sku || '').toLowerCase().includes(q) ||
-      (i.internalPartNumber || '').toLowerCase().includes(q)
-    ).slice(0, 50);
-  }, [inventoryItems, partSearch]);
+  // Build the picker cart from the saved parts so the picker reflects current state.
+  const pickerCart: PickerCartItem[] = parts.map(p => ({
+    id: p.id,
+    inventoryItemId: p.inventory_item_id,
+    itemName: p.item_name,
+    sku: p.sku || '',
+    quantity: p.quantity,
+    quantityUnit: 'pcs' as const,
+    unitPrice: 0,
+    unitCost: 0,
+    notes: p.notes || '',
+  }));
 
-  const handleAddInventoryPart = async (inv: typeof inventoryItems[number]) => {
+  const handlePickerAddItem = async (inv: any) => {
+    if (parts.some(p => p.inventory_item_id === inv.id)) return;
     await addPart({
       inventoryItemId: inv.id,
       itemName: inv.name,
       sku: inv.sku || inv.internalPartNumber || '',
       quantity: 1,
     });
-    setPartSearch('');
-    setPickerOpen(false);
+  };
+
+  const handlePickerAddCustomItem = async () => {
+    const name = prompt('Custom part name:');
+    if (!name?.trim()) return;
+    await addPart({
+      inventoryItemId: null,
+      itemName: name.trim(),
+      sku: '',
+      quantity: 1,
+    });
+  };
+
+  const handlePickerUpdateQty = (itemId: string, qty: number | null) => {
+    if (qty != null && qty > 0) updatePart(itemId, { quantity: qty });
+  };
+
+  const handlePickerRemoveItem = (itemId: string) => {
+    removePart(itemId);
+  };
+
+  const handlePickerUpdateItem = (itemId: string, updates: Partial<PickerCartItem>) => {
+    const dbUpdates: Record<string, any> = {};
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.quantity !== undefined && updates.quantity != null && updates.quantity > 0) {
+      dbUpdates.quantity = updates.quantity;
+    }
+    if (Object.keys(dbUpdates).length > 0) updatePart(itemId, dbUpdates);
   };
 
   const handlePrint = () => {
@@ -241,47 +271,9 @@ ${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Parts List ({parts.length})</span>
-                  <Popover open={pickerOpen} onOpenChange={(o) => { setPickerOpen(o); if (!o) setPartSearch(''); }}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" disabled={isNew}>
-                        <Plus className="h-4 w-4 mr-2" />Add Part
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-[380px] p-0">
-                      <div className="p-2 border-b border-border">
-                        <div className="relative">
-                          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                          <Input
-                            autoFocus
-                            value={partSearch}
-                            onChange={e => setPartSearch(e.target.value)}
-                            placeholder="Search inventory by name or part #..."
-                            className="pl-7 h-8 text-sm"
-                          />
-                        </div>
-                      </div>
-                      <div className="max-h-72 overflow-y-auto">
-                        {filteredInventory.length === 0 ? (
-                          <p className="text-xs text-muted-foreground p-3 text-center">No matching items</p>
-                        ) : filteredInventory.map(inv => (
-                          <button
-                            key={inv.id}
-                            type="button"
-                            onClick={() => handleAddInventoryPart(inv)}
-                            className="w-full text-left px-3 py-2 hover:bg-muted flex items-center justify-between gap-2"
-                          >
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{inv.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {inv.sku || inv.internalPartNumber || '—'} · Stock: {inv.quantity}
-                              </p>
-                            </div>
-                            <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <Button variant="outline" size="sm" disabled={isNew} onClick={() => setPickerOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />Add Part
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -408,6 +400,20 @@ ${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
           </>
         )}
       </main>
+
+      <FullScreenItemPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        inventoryItems={inventoryItems}
+        cart={pickerCart}
+        onAddItem={handlePickerAddItem}
+        onAddCustomItem={handlePickerAddCustomItem}
+        onUpdateQuantity={handlePickerUpdateQty}
+        onRemoveItem={handlePickerRemoveItem}
+        onUpdateItem={handlePickerUpdateItem}
+        documentType="Part"
+        formatPrice={formatCurrency}
+      />
     </div>
   );
 }
