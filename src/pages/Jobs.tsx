@@ -141,6 +141,13 @@ export function Jobs() {
     if (statusTab !== 'all') {
       result = result.filter(j => j.status === statusTab);
     }
+    if (customerFilter !== 'all') {
+      if (customerFilter === 'none') {
+        result = result.filter(j => !j.customerId);
+      } else {
+        result = result.filter(j => j.customerId === customerFilter);
+      }
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(j =>
@@ -150,7 +157,22 @@ export function Jobs() {
       );
     }
     return result;
-  }, [jobs, searchQuery, statusTab]);
+  }, [jobs, searchQuery, statusTab, customerFilter]);
+
+  const jobsByCustomer = useMemo(() => {
+    const groups = new Map<string, { label: string; jobs: typeof filteredJobs }>();
+    for (const j of filteredJobs) {
+      const key = j.customerId || '__none__';
+      const label = j.customerId
+        ? (customers.find(c => c.id === j.customerId)?.name || j.customerName || 'Unknown Customer')
+        : (j.customerName || 'No Customer');
+      if (!groups.has(key)) groups.set(key, { label, jobs: [] });
+      groups.get(key)!.jobs.push(j);
+    }
+    return Array.from(groups.entries())
+      .map(([key, v]) => ({ key, ...v }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [filteredJobs, customers]);
 
   const openCreate = () => {
     navigate('/jobs/new');
