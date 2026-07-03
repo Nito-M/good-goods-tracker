@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useJobInstruction, useJobInstructions } from '@/hooks/useJobInstructions';
 import { useInventory } from '@/hooks/useInventory';
+import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useToast } from '@/hooks/use-toast';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 import { formatCurrency } from '@/lib/utils';
+
 
 const BUCKET = 'job-instruction-files';
 
