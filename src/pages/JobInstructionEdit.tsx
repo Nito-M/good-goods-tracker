@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Upload, FileText, ImageIcon, X, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, FileText, ImageIcon, X, ExternalLink, Printer, Plus, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useJobInstruction, useJobInstructions } from '@/hooks/useJobInstructions';
+import { useInventory } from '@/hooks/useInventory';
 import { useToast } from '@/hooks/use-toast';
 
 const BUCKET = 'job-instruction-files';
@@ -19,8 +21,11 @@ export function JobInstructionEdit() {
   const isNew = !instructionId || instructionId === 'new';
 
   const { createInstruction } = useJobInstructions(jobId ?? null);
-  const { instruction, files, loading, uploadFile, deleteFile, getSignedUrl, refetch } =
+  const { instruction, files, parts, loading, uploadFile, deleteFile, getSignedUrl, addPart, updatePart, removePart, refetch } =
     useJobInstruction(isNew ? null : instructionId!);
+  const { inventoryItems } = useInventory();
+  const [partSearch, setPartSearch] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
