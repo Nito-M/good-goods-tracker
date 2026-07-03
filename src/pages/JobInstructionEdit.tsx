@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Upload, FileText, ImageIcon, X, ExternalLink, Printer, Plus, Search, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, FileText, ImageIcon, X, ExternalLink, Printer, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useJobInstruction, useJobInstructions } from '@/hooks/useJobInstructions';
 import { useInventory } from '@/hooks/useInventory';
 import { useToast } from '@/hooks/use-toast';
+import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
+import { formatCurrency } from '@/lib/utils';
 
 const BUCKET = 'job-instruction-files';
 
