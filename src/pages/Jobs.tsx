@@ -101,6 +101,7 @@ export function Jobs() {
   const isMobile = useIsMobile();
   const { jobId: urlJobId, linkId } = useParams<{ jobId?: string; linkId?: string }>();
   const { jobs, loading, createJob, updateJob, deleteJob, duplicateJob, reorderJobs } = useJobs();
+  const { customers } = useCustomers();
   const { links, removeLink } = useJobSidebarLinks();
   
 
