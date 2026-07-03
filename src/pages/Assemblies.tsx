@@ -103,6 +103,7 @@ function AssemblyDetail({
   const [statusNotesInput, setStatusNotesInput] = useState(assembly.status_notes || '');
   const [savingStatus, setSavingStatus] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showPriceHistory, setShowPriceHistory] = useState(false);
   const [hidePricesOnPdf, setHidePricesOnPdf] = useState(false);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [newModelInput, setNewModelInput] = useState('');
