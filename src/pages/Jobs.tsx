@@ -424,7 +424,13 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
   const { canViewJobPricing } = useCanViewJobPricing();
 
   // Settings tab form state
-  const [tab, setTab] = useState<'information' | 'parts' | 'settings'>('information');
+  const initialTab = (() => {
+    if (typeof window === 'undefined') return 'information';
+    const p = new URLSearchParams(window.location.search).get('tab');
+    return (p === 'parts' || p === 'settings' || p === 'instructions') ? p : 'information';
+  })();
+  const [tab, setTab] = useState<'information' | 'parts' | 'settings' | 'instructions'>(initialTab as any);
+  const { instructions, fileCounts: instructionFileCounts, deleteInstruction } = useJobInstructions(job.id);
   const [descriptionCollapsed, setDescriptionCollapsed] = useState(false);
   const [fTitle, setFTitle] = useState(job.title);
   const [fDescription, setFDescription] = useState(job.description || '');
