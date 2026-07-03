@@ -178,7 +178,7 @@ export function useJobs() {
 }
 
 export function useAllJobItems() {
-  const [items, setItems] = useState<(JobItem & { jobTitle: string; jobNumber: string | null })[]>([]);
+  const [items, setItems] = useState<(JobItem & { jobTitle: string; jobNumber: string | null; customerId: string | null; customerName: string | null })[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
@@ -187,7 +187,7 @@ export function useAllJobItems() {
     setLoading(true);
     const { data, error } = await supabase
       .from('job_items')
-      .select('*, jobs!inner(title, job_number, status), inventory_items(category)')
+      .select('*, jobs!inner(title, job_number, status, customer_id, customer_name), inventory_items(category)')
       .neq('jobs.status', 'finished')
       .neq('jobs.status', 'on-hold');
     if (error) {
@@ -208,6 +208,8 @@ export function useAllJobItems() {
         createdAt: d.created_at,
         jobTitle: d.jobs.title,
         jobNumber: d.jobs.job_number,
+        customerId: d.jobs.customer_id ?? null,
+        customerName: d.jobs.customer_name ?? null,
       })));
     }
     setLoading(false);
