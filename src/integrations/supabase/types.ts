@@ -2204,6 +2204,7 @@ export type Database = {
           created_at: string
           customer_address: string | null
           customer_email: string | null
+          customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
           description: string | null
@@ -2227,6 +2228,7 @@ export type Database = {
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           description?: string | null
@@ -2250,6 +2252,7 @@ export type Database = {
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           description?: string | null
@@ -2269,7 +2272,15 @@ export type Database = {
           vin?: string | null
           weight?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       model_number_slots: {
         Row: {
