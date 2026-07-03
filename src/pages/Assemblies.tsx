@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy, Tag, Settings2, ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Plus, Trash2, Search, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, PanelLeftClose, PanelLeftOpen, PackagePlus, FolderPlus, Download, Eye, Copy, Tag, Settings2, ChevronDown, ChevronRight, MoreHorizontal, History } from 'lucide-react';
+import { AssemblyPriceHistoryDialog } from '@/components/AssemblyPriceHistoryDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { FullScreenPartsPicker, PartsPickerCartItem } from '@/components/FullScreenPartsPicker';
 import { FullScreenSubAssemblyPicker } from '@/components/FullScreenSubAssemblyPicker';
