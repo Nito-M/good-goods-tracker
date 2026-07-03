@@ -39,6 +39,7 @@ import { EditJob } from "./pages/EditJob";
 import { AllJobItems } from "./pages/AllJobItems";
 import { JobDescription } from "./pages/JobDescription";
 import { JobAddItems } from "./pages/JobAddItems";
+import { JobInstructionEdit } from "./pages/JobInstructionEdit";
 import { Assemblies } from "./pages/Assemblies";
 import { AssemblyTypes } from "./pages/AssemblyTypes";
 
@@ -536,6 +537,22 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <JobAddItems />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:jobId/instructions/new"
+          element={
+            <ProtectedRoute>
+              <JobInstructionEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:jobId/instructions/:instructionId"
+          element={
+            <ProtectedRoute>
+              <JobInstructionEdit />
             </ProtectedRoute>
           }
         />

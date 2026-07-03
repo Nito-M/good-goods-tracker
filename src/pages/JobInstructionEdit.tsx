@@ -1,0 +1,255 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Loader2, Upload, FileText, ImageIcon, X, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { useJobInstruction, useJobInstructions } from '@/hooks/useJobInstructions';
+import { useToast } from '@/hooks/use-toast';
+
+const BUCKET = 'job-instruction-files';
+
+export function JobInstructionEdit() {
+  const { jobId, instructionId } = useParams<{ jobId: string; instructionId?: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const isNew = !instructionId || instructionId === 'new';
+
+  const { createInstruction } = useJobInstructions(jobId ?? null);
+  const { instruction, files, loading, uploadFile, deleteFile, getSignedUrl, refetch } =
+    useJobInstruction(isNew ? null : instructionId!);
+
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (instruction) {
+      setTitle(instruction.title);
+      setContent(instruction.content || '');
+    }
+  }, [instruction]);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = contentRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = Math.max(el.scrollHeight, 200) + 'px';
+    }
+  }, [content]);
+
+  // Resolve signed URLs for image previews
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const imageFiles = files.filter(f => (f.file_type || '').startsWith('image/'));
+      const entries = await Promise.all(imageFiles.map(async f => {
+        const { data } = await supabase.storage.from(BUCKET).createSignedUrl(f.file_url, 60 * 60);
+        return [f.id, data?.signedUrl || ''] as const;
+      }));
+      if (cancelled) return;
+      const map: Record<string, string> = {};
+      entries.forEach(([id, url]) => { if (url) map[id] = url; });
+      setThumbUrls(map);
+    })();
+    return () => { cancelled = true; };
+  }, [files]);
+
+  const handleSave = async () => {
+    if (!title.trim()) {
+      toast({ title: 'Title is required', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    if (isNew) {
+      const newId = await createInstruction(title.trim(), content.trim() || null);
+      setSaving(false);
+      if (newId) navigate(`/jobs/${jobId}/instructions/${newId}`, { replace: true });
+    } else if (instruction) {
+      const { error } = await supabase
+        .from('job_instructions')
+        .update({ title: title.trim(), content: content.trim() || null })
+        .eq('id', instruction.id);
+      setSaving(false);
+      if (error) {
+        toast({ title: 'Error saving', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Saved' });
+        refetch();
+      }
+    } else {
+      setSaving(false);
+    }
+  };
+
+  const handleFilesSelected = async (list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    if (isNew || !instruction) {
+      toast({ title: 'Save the title first', description: 'You can attach files after the instruction is created.', variant: 'destructive' });
+      return;
+    }
+    setUploading(true);
+    for (const f of Array.from(list)) {
+      await uploadFile(f);
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const openFile = async (id: string) => {
+    const url = await getSignedUrl(id);
+    if (url) window.open(url, '_blank');
+  };
+
+  const backTo = `/jobs/${jobId}?tab=instructions`;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-card">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link to={backTo}>
+                <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
+              </Link>
+              <div className="min-w-0">
+                <h1 className="text-lg font-semibold truncate">
+                  {isNew ? 'Add Install Instruction' : (title || 'Edit Instruction')}
+                </h1>
+                <p className="text-xs text-muted-foreground">Install & how-to details for this job</p>
+              </div>
+            </div>
+            <Button onClick={handleSave} disabled={saving || !title.trim()}>
+              {saving ? 'Saving...' : (isNew ? 'Create' : 'Save')}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+        {loading && !isNew ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : (
+          <>
+            <Card>
+              <CardHeader><CardTitle>Instruction</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="ji-title">Title *</Label>
+                  <Input
+                    id="ji-title"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder="e.g. Installing rear axle brake lines"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ji-content">Instructions (text)</Label>
+                  <Textarea
+                    id="ji-content"
+                    ref={contentRef}
+                    value={content}
+                    onChange={e => setContent(e.target.value)}
+                    placeholder="Steps, torque specs, wiring notes, part numbers..."
+                    className="min-h-[200px] resize-none overflow-hidden"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>PDFs & Images</span>
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/pdf,image/*"
+                      multiple
+                      className="hidden"
+                      onChange={e => handleFilesSelected(e.target.files)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading || isNew}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? 'Uploading...' : 'Upload'}
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isNew ? (
+                  <p className="text-sm text-muted-foreground">Save the title first to attach PDFs or images.</p>
+                ) : files.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No files attached yet. Upload PDFs or images related to this install.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {files.map(f => {
+                      const isImage = (f.file_type || '').startsWith('image/');
+                      const isPdf = (f.file_type || '').includes('pdf');
+                      const thumb = thumbUrls[f.id];
+                      return (
+                        <div key={f.id} className="group relative border border-border rounded-md overflow-hidden bg-muted/30">
+                          <button
+                            type="button"
+                            onClick={() => openFile(f.id)}
+                            className="w-full aspect-square flex items-center justify-center overflow-hidden hover:opacity-90 transition-opacity"
+                          >
+                            {isImage && thumb ? (
+                              <img src={thumb} alt={f.file_name} className="w-full h-full object-cover" />
+                            ) : isPdf ? (
+                              <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                                <FileText className="h-10 w-10" />
+                                <span className="text-[10px] uppercase">PDF</span>
+                              </div>
+                            ) : (
+                              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                            )}
+                          </button>
+                          <div className="p-2 text-xs flex items-center justify-between gap-2 border-t border-border">
+                            <span className="truncate flex-1" title={f.file_name}>{f.file_name}</span>
+                            <button
+                              type="button"
+                              onClick={() => openFile(f.id)}
+                              className="text-muted-foreground hover:text-foreground"
+                              title="Open"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteFile(f.id)}
+                              className="text-destructive hover:text-destructive/80"
+                              title="Delete"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default JobInstructionEdit;
