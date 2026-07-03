@@ -172,8 +172,8 @@ export function JobInstructionEdit() {
         <td>${esc(p.item_name)}</td>
         <td>${esc(p.sku || '')}</td>
         <td style="text-align:right">${p.quantity}</td>
-        <td>${esc(p.notes || '')}</td>
       </tr>`).join('');
+
     const filesList = files.map(f => `<li>${esc(f.file_name)}</li>`).join('');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title || 'Instruction')}</title>
 <style>
