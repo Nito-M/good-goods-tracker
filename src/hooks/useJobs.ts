@@ -27,6 +27,7 @@ export function useJobs() {
         description: d.description,
         status: d.status,
         displayOrder: d.display_order,
+        customerId: (d as any).customer_id ?? null,
         customerName: d.customer_name,
         customerEmail: d.customer_email,
         customerPhone: d.customer_phone,
