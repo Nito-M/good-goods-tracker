@@ -541,6 +541,22 @@ function AppContent() {
           }
         />
         <Route
+          path="/jobs/:jobId/instructions/new"
+          element={
+            <ProtectedRoute>
+              <JobInstructionEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:jobId/instructions/:instructionId"
+          element={
+            <ProtectedRoute>
+              <JobInstructionEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/bank"
           element={
             <ProtectedRoute>
