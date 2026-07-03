@@ -194,9 +194,14 @@ ${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
                 <p className="text-xs text-muted-foreground">Install & how-to details for this job</p>
               </div>
             </div>
-            <Button onClick={handleSave} disabled={saving || !title.trim()}>
-              {saving ? 'Saving...' : (isNew ? 'Create' : 'Save')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handlePrint} disabled={isNew}>
+                <Printer className="h-4 w-4 mr-2" />Print
+              </Button>
+              <Button onClick={handleSave} disabled={saving || !title.trim()}>
+                {saving ? 'Saving...' : (isNew ? 'Create' : 'Save')}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
