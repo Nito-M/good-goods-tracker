@@ -640,6 +640,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
           <TabsList className="mb-6">
             <TabsTrigger value="information">Information</TabsTrigger>
             <TabsTrigger value="parts">Parts ({items.length})</TabsTrigger>
+            <TabsTrigger value="instructions">Instructions ({instructions.length})</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
