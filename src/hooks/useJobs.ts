@@ -229,7 +229,7 @@ export function useJobItems(jobId: string | null) {
     setLoading(true);
     const { data, error } = await supabase
       .from('job_items')
-      .select('*, inventory_items(category)')
+      .select('*, inventory_items(category, subcategory)')
       .eq('job_id', jobId)
       .order('created_at', { ascending: true });
     if (error) {
@@ -245,6 +245,7 @@ export function useJobItems(jobId: string | null) {
         unitPrice: Number(d.unit_price),
         notes: d.notes,
         category: d.inventory_items?.category ?? null,
+        subcategory: d.inventory_items?.subcategory ?? null,
         reserved: d.reserved ?? false,
         consumed: d.consumed ?? false,
         createdAt: d.created_at,
