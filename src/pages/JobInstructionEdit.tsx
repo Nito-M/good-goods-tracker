@@ -271,47 +271,9 @@ ${files.length ? `<h2>Attached Files</h2><ul>${filesList}</ul>` : ''}
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Parts List ({parts.length})</span>
-                  <Popover open={pickerOpen} onOpenChange={(o) => { setPickerOpen(o); if (!o) setPartSearch(''); }}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" disabled={isNew}>
-                        <Plus className="h-4 w-4 mr-2" />Add Part
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-[380px] p-0">
-                      <div className="p-2 border-b border-border">
-                        <div className="relative">
-                          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                          <Input
-                            autoFocus
-                            value={partSearch}
-                            onChange={e => setPartSearch(e.target.value)}
-                            placeholder="Search inventory by name or part #..."
-                            className="pl-7 h-8 text-sm"
-                          />
-                        </div>
-                      </div>
-                      <div className="max-h-72 overflow-y-auto">
-                        {filteredInventory.length === 0 ? (
-                          <p className="text-xs text-muted-foreground p-3 text-center">No matching items</p>
-                        ) : filteredInventory.map(inv => (
-                          <button
-                            key={inv.id}
-                            type="button"
-                            onClick={() => handleAddInventoryPart(inv)}
-                            className="w-full text-left px-3 py-2 hover:bg-muted flex items-center justify-between gap-2"
-                          >
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{inv.name}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {inv.sku || inv.internalPartNumber || '—'} · Stock: {inv.quantity}
-                              </p>
-                            </div>
-                            <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <Button variant="outline" size="sm" disabled={isNew} onClick={() => setPickerOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />Add Part
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
