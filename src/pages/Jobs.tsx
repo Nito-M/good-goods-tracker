@@ -407,6 +407,7 @@ function JobDetail({ job, onBack, onDuplicate, onUpdateStatus, onDelete, updateJ
     const updates: Record<string, string | number | null | undefined> = {
       title: fTitle.trim(),
       description: fDescription.trim() || undefined,
+      customer_id: selectedCustomerId && selectedCustomerId !== 'none' ? selectedCustomerId : null,
       customer_name: fCustomerName.trim() || null,
       customer_email: fCustomerEmail.trim() || null,
       customer_phone: fCustomerPhone.trim() || null,
