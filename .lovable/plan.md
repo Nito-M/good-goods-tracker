@@ -1,28 +1,21 @@
 ## Goal
-Link jobs to the existing Customers table so you can group and filter jobs by customer on both the Jobs board and the All Job Items page.
+In the Job details page → Parts tab, show items grouped by **Category → Subcategory** (nested), instead of the current flat category grouping.
 
-## Database
-- Add `customer_id UUID` (nullable) to `jobs`, referencing `customers(id)` with `ON DELETE SET NULL`. Index it.
-- Backfill: for each job with a non-empty `customer_name`, match to a customer in the same organization (case-insensitive name match) and set `customer_id`. Jobs with no match keep `customer_name` as free text.
-- Keep `customer_name/email/phone/address` columns for backward compatibility and for jobs that aren't tied to a customer record.
+## Changes
 
-## Jobs board (kanban)
-- Add a customer selector when creating/editing a job: searchable dropdown of customers (with "None / free-text" option). Selecting one auto-fills name/email/phone/address from the customer record.
-- Add a **Customer filter** control at the top of the Jobs page (multi-select or single-select dropdown of customers, plus "All" and "No customer"). Filters the columns' cards in place.
-- Add a **Group by customer** toggle. When on, the board switches from status columns to customer sections; within each customer section jobs are still ordered by status/due date.
+**1. `src/hooks/useJobs.ts` — `useJobItems`**
+- Extend the Supabase select to also fetch `subcategory` from the joined inventory item: `inventory_items(category, subcategory)`.
+- Map `subcategory: d.inventory_items?.subcategory ?? null` onto each item.
 
-## All Job Items page
-- Add the same **Customer filter** at the top (driven by the parent job's `customer_id`).
-- Add a **Group by customer** toggle that renders one collapsible section per customer, showing that customer's aggregated items.
+**2. `src/types/job.ts`**
+- Add `subcategory: string | null` to the `JobItem` interface.
 
-## Technical details
-- Migration adds column, FK, index, and runs the name-based backfill in one step. GRANTs unchanged (jobs table already granted).
-- Update `src/types/job.ts` (`customerId: string | null`), `src/hooks/useJobs.ts` (select/map/insert/update `customer_id`), and `useAllJobItems` query to also pull `jobs.customer_id`.
-- New small `CustomerPicker` component reused in Create/Edit Job dialogs, wired to `useCustomers`.
-- Jobs page: add filter + group-by state (persisted to `localStorage`), render either status columns or customer sections.
-- AllJobItems page: same filter + group-by pattern.
-- No changes to reservation/consumption logic.
+**3. `src/pages/Jobs.tsx` (JobDetail component, Parts tab)**
+- Replace the current `groupedItems` (flat `category → items[]`) with a nested structure: `category → { subcategory → items[] }`. Items with no subcategory go under a "— No subcategory —" bucket.
+- Render each category as the existing collapsible card (unchanged header: name, count, total). Inside, render each subcategory as a lighter collapsible sub-section (chevron, name, item count, and subcategory total if pricing is visible). The existing items `Table` renders inside each subcategory group.
+- Extend `collapsedCategories` handling to also track collapsed subcategories using composite keys like `"${category}::${subcategory}"` so state doesn't collide.
+- Sort categories alphabetically (as today); sort subcategories alphabetically with the "No subcategory" bucket last.
 
 ## Out of scope
-- Renaming/removing the free-text customer fields.
-- Per-customer sub-categories (can be a follow-up if you want tags like "Repair/Build" per customer).
+- No change to All Job Items page, Jobs board grouping, or the Add-Items flow.
+- No schema changes — subcategory already exists on `inventory_items` and is joined at read time.
