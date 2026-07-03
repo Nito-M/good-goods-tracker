@@ -179,10 +179,19 @@ export function JobInstructionEdit() {
     if (itemIds.length > 0) {
       const { data: imgRows } = await supabase
         .from('item_images')
-        .select('item_id, image_url')
+        .select('item_id, image_url, is_primary, display_order, created_at')
         .in('item_id', itemIds)
-        .eq('is_primary', true);
-      const rows = imgRows || [];
+        .order('is_primary', { ascending: false })
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true });
+      // Keep only the best image per item (first one after ordering)
+      const seen = new Set<string>();
+      const rows = (imgRows || []).filter((r: any) => {
+        if (seen.has(r.item_id)) return false;
+        seen.add(r.item_id);
+        return true;
+      });
+
       const paths = rows.map(r => {
         const u = r.image_url as string;
         if (!u.startsWith('http')) return u;

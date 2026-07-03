@@ -30,9 +30,11 @@ export function useItemThumbnails(itemIds: string[]) {
         const batch = itemIds.slice(i, i + BATCH_SIZE);
         const { data, error } = await supabase
           .from('item_images')
-          .select('item_id, image_url')
+          .select('item_id, image_url, is_primary, display_order, created_at')
           .in('item_id', batch)
-          .eq('is_primary', true);
+          .order('is_primary', { ascending: false })
+          .order('display_order', { ascending: true })
+          .order('created_at', { ascending: true });
 
         if (error) {
           console.error('Error fetching item thumbnails:', error);
@@ -41,16 +43,25 @@ export function useItemThumbnails(itemIds: string[]) {
 
         if (!data || data.length === 0) continue;
 
+        // Keep only the best image per item (primary first, then earliest)
+        const seen = new Set<string>();
+        const bestPerItem = data.filter((row: any) => {
+          if (seen.has(row.item_id)) return false;
+          seen.add(row.item_id);
+          return true;
+        });
+
         // Generate fresh signed URLs for all paths
-        const paths = data.map(row => extractPathFromUrl(row.image_url));
+        const paths = bestPerItem.map(row => extractPathFromUrl(row.image_url));
         const { data: signedData } = await supabase.storage
           .from('item-images')
           .createSignedUrls(paths, 3600);
 
-        data.forEach((row, idx) => {
+        bestPerItem.forEach((row, idx) => {
           const url = signedData?.[idx]?.signedUrl ?? row.image_url;
           map.set(row.item_id, url);
         });
+
       }
 
       setThumbnailMap(map);
