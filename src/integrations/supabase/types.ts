@@ -2145,6 +2145,88 @@ export type Database = {
           },
         ]
       }
+      job_instruction_files: {
+        Row: {
+          created_at: string
+          display_order: number
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          instruction_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          instruction_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          instruction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_instruction_files_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "job_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_instructions: {
+        Row: {
+          content: string | null
+          created_at: string
+          display_order: number
+          id: string
+          job_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          job_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          job_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_instructions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_items: {
         Row: {
           consumed: boolean
