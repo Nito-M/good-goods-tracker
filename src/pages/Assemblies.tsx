@@ -784,6 +784,12 @@ function AssemblyDetail({
           notes: i.notes,
         }))}
       />
+      <AssemblyPriceHistoryDialog
+        assemblyId={assembly.id}
+        assemblyName={assembly.name}
+        open={showPriceHistory}
+        onOpenChange={setShowPriceHistory}
+      />
     </div>
   );
 }
