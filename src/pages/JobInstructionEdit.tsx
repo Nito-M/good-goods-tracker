@@ -179,7 +179,7 @@ export function JobInstructionEdit() {
         <td style="text-align:right">${p.quantity}</td>
       </tr>`).join('');
 
-    const filesList = files.map(f => `<li>${esc(f.file_name)}</li>`).join('');
+    
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title || 'Instruction')}</title>
 <style>
   body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;padding:32px;max-width:800px;margin:0 auto;}
