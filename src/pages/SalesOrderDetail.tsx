@@ -743,8 +743,28 @@ export function SalesOrderDetail() {
                                   <X className="h-3 w-3 mr-1" />
                                   Detach
                                 </Button>
-                              ) : hasChildren ? (
-                                <span className="text-xs text-muted-foreground">Main item</span>
+                               ) : hasChildren ? (
+                                 <DropdownMenu>
+                                   <DropdownMenuTrigger asChild>
+                                     <Button
+                                       size="sm"
+                                       variant="outline"
+                                       className="h-7 text-xs px-2"
+                                       title="Detach an add-on from this item"
+                                     >
+                                       <X className="h-3 w-3 mr-1" />
+                                       Detach add-on
+                                     </Button>
+                                   </DropdownMenuTrigger>
+                                   <DropdownMenuContent align="center" className="max-h-72 overflow-auto">
+                                     {(childrenByParent[item.linkKey] || []).map((c) => (
+                                       <DropdownMenuItem key={c.linkKey} onClick={() => detachItem(c)}>
+                                         <X className="h-3 w-3 mr-2" />
+                                         {c.itemName}
+                                       </DropdownMenuItem>
+                                     ))}
+                                   </DropdownMenuContent>
+                                 </DropdownMenu>
                               ) : (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
