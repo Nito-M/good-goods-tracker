@@ -1174,7 +1174,7 @@ export default function BoardDetail() {
                       dragOverColId === col.id && draggedColId !== col.id && 'bg-primary/10',
                       draggedColId === col.id && 'opacity-40'
                     )}
-                    draggable={idx !== 0}
+                    draggable
                     onMouseDown={(e) => {
                       if (e.button !== 0) return;
                       const target = e.target as HTMLElement;
@@ -1183,13 +1183,12 @@ export default function BoardDetail() {
                     }}
                     title="Click to select column (Shift+Click to extend)"
                     onDragStart={(e) => {
-                      if (idx === 0) return;
                       setDraggedColId(col.id);
                       e.dataTransfer.effectAllowed = 'move';
                       e.dataTransfer.setData('text/plain', col.id);
                     }}
                     onDragOver={(e) => {
-                      if (!draggedColId || draggedColId === col.id || idx === 0) return;
+                      if (!draggedColId || draggedColId === col.id) return;
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
                       setDragOverColId(col.id);
@@ -1199,7 +1198,7 @@ export default function BoardDetail() {
                     }}
                     onDrop={(e) => {
                       e.preventDefault();
-                      if (draggedColId && draggedColId !== col.id && idx !== 0) {
+                      if (draggedColId && draggedColId !== col.id) {
                         reorderColumns(draggedColId, col.id);
                       }
                       setDraggedColId(null);
