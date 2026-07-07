@@ -1,0 +1,1 @@
+ALTER TABLE public.quote_items ADD COLUMN IF NOT EXISTS discount_rate NUMERIC NOT NULL DEFAULT 0;
