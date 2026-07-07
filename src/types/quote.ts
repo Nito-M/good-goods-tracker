@@ -10,6 +10,7 @@ export interface QuoteItem {
   quantityUnit: string;
   unitPrice: number;
   unitCost: number;
+  discountRate: number;
   totalPrice: number;
   notes: string | null;
   createdAt: string;
@@ -72,6 +73,7 @@ export interface CreateQuoteInput {
     quantityUnit: string;
     unitPrice: number;
     unitCost: number;
+    discountRate?: number;
     notes: string | null;
   }[];
   taxRate: number;

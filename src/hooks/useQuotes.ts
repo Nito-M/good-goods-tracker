@@ -73,6 +73,7 @@ export function useQuotes() {
             quantityUnit: (item as any).quantity_unit || 'pcs',
             unitPrice: Number(item.unit_price),
             unitCost: Number(item.unit_cost),
+            discountRate: Number((item as any).discount_rate || 0),
             totalPrice: Number(item.total_price),
             notes: (item as any).notes || null,
             createdAt: item.created_at,
@@ -140,7 +141,7 @@ export function useQuotes() {
     try {
       // Calculate totals
       const subtotal = input.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
+        (sum, item) => sum + item.quantity * item.unitPrice * (1 - (item.discountRate || 0) / 100),
         0
       );
       const discountAmount = subtotal * (input.discountRate / 100);
@@ -180,6 +181,8 @@ export function useQuotes() {
       // Create quote items
       for (let i = 0; i < input.items.length; i++) {
         const item = input.items[i];
+        const itemDisc = item.discountRate || 0;
+        const lineNet = item.quantity * item.unitPrice * (1 - itemDisc / 100);
         const { error: itemError } = await supabase
           .from('quote_items')
           .insert({
@@ -191,7 +194,8 @@ export function useQuotes() {
             quantity_unit: item.quantityUnit,
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
-            total_price: item.quantity * item.unitPrice,
+            discount_rate: itemDisc,
+            total_price: lineNet,
             notes: item.notes,
             sort_order: i,
           } as any);
@@ -361,6 +365,7 @@ export function useQuotes() {
         quantityUnit: string;
         unitPrice: number;
         unitCost: number;
+        discountRate?: number;
         notes: string;
       }>;
       taxRate: number;
@@ -381,7 +386,7 @@ export function useQuotes() {
     try {
       // Calculate totals
       const subtotal = input.items.reduce(
-        (sum, item) => sum + (item.quantity || 0) * item.unitPrice,
+        (sum, item) => sum + (item.quantity || 0) * item.unitPrice * (1 - (item.discountRate || 0) / 100),
         0
       );
       const discountAmount = subtotal * (input.discountRate / 100);
@@ -421,6 +426,9 @@ export function useQuotes() {
       // Create new quote items
       for (let i = 0; i < input.items.length; i++) {
         const item = input.items[i];
+        const itemDisc = item.discountRate || 0;
+        const qty = item.quantity || 0;
+        const lineNet = qty * item.unitPrice * (1 - itemDisc / 100);
         const { error: itemError } = await supabase
           .from('quote_items')
           .insert({
@@ -428,11 +436,12 @@ export function useQuotes() {
             inventory_item_id: item.inventoryItemId,
             item_name: item.itemName,
             sku: item.sku || 'CUSTOM',
-            quantity: item.quantity ?? 0,
+            quantity: qty,
             quantity_unit: item.quantityUnit,
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
-            total_price: (item.quantity || 0) * item.unitPrice,
+            discount_rate: itemDisc,
+            total_price: lineNet,
             notes: item.notes || null,
             sort_order: i,
           } as any);
@@ -464,12 +473,17 @@ export function useQuotes() {
     try {
       const fraction = percentage / 100;
 
-      // Scale items by percentage
-      const scaledItems = quote.items.map(item => ({
-        ...item,
-        quantity: item.quantity * fraction,
-        totalPrice: item.totalPrice * fraction,
-      }));
+      // Scale items by percentage and fold in per-item discount into unit price
+      const scaledItems = quote.items.map(item => {
+        const itemDisc = item.discountRate || 0;
+        const netUnitPrice = item.unitPrice * (1 - itemDisc / 100);
+        return {
+          ...item,
+          quantity: item.quantity * fraction,
+          unitPrice: netUnitPrice,
+          totalPrice: item.totalPrice * fraction,
+        };
+      });
 
       // Calculate totals for the scaled invoice
       const subtotal = scaledItems.reduce(

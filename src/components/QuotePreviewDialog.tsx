@@ -153,37 +153,47 @@ export function QuotePreviewDialog({
                     </tr>
                   </thead>
                   <tbody>
-                    {quote.items.map((item, index) => (
-                      <tr key={item.id} className="border-b border-gray-300">
-                        <td className="p-2">
-                          {item.itemName}
-                          {item.notes && (
-                            <p className="text-xs text-gray-500 mt-1">Note: {item.notes}</p>
+                    {quote.items.map((item, index) => {
+                      const grossLine = item.quantity * item.unitPrice;
+                      const netAfterAll = item.totalPrice * (1 - quote.discountRate / 100);
+                      const hasDiscount = (item.discountRate || 0) > 0 || quote.discountRate > 0;
+                      return (
+                        <tr key={item.id} className="border-b border-gray-300">
+                          <td className="p-2">
+                            {item.itemName}
+                            {item.notes && (
+                              <p className="text-xs text-gray-500 mt-1">Note: {item.notes}</p>
+                            )}
+                          </td>
+                          {quote.showSku !== false && (
+                            <td className="p-2 text-gray-600">{item.sku}</td>
                           )}
-                        </td>
-                        {quote.showSku !== false && (
-                          <td className="p-2 text-gray-600">{item.sku}</td>
-                        )}
-                        <td className="p-2 text-center">
-                          {item.quantity} {item.quantityUnit}
-                        </td>
-                        {!quote.hidePrices && (
-                          <>
-                            <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
-                            <td className="p-2 text-right">
-                              {quote.discountRate > 0 ? (
-                                <div>
-                                  <span>{formatCurrency(item.totalPrice * (1 - quote.discountRate / 100))}</span>
-                                  <span className="ml-2 text-gray-400 line-through text-xs">{formatCurrency(item.totalPrice)}</span>
-                                </div>
-                              ) : (
-                                formatCurrency(item.totalPrice)
-                              )}
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
+                          <td className="p-2 text-center">
+                            {item.quantity} {item.quantityUnit}
+                          </td>
+                          {!quote.hidePrices && (
+                            <>
+                              <td className="p-2 text-right">
+                                {formatCurrency(item.unitPrice)}
+                                {(item.discountRate || 0) > 0 && (
+                                  <div className="text-xs text-gray-500">−{item.discountRate}%</div>
+                                )}
+                              </td>
+                              <td className="p-2 text-right">
+                                {hasDiscount ? (
+                                  <div>
+                                    <span>{formatCurrency(netAfterAll)}</span>
+                                    <span className="ml-2 text-gray-400 line-through text-xs">{formatCurrency(grossLine)}</span>
+                                  </div>
+                                ) : (
+                                  formatCurrency(grossLine)
+                                )}
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

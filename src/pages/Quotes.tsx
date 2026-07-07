@@ -72,6 +72,7 @@ interface CartItem {
   quantityUnit: QuantityUnit;
   unitPrice: number;
   unitCost: number;
+  discountRate?: number;
   notes: string;
   excludeMarkup?: boolean;
 }
@@ -92,9 +93,11 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: c.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
+  const itemDiscountRate = c.discountRate || 0;
   const lineTotal = (c.quantity || 0) * c.unitPrice;
-  const itemDiscount = lineTotal * (discountRate / 100);
-  const afterDiscount = lineTotal - itemDiscount;
+  const afterItemDiscount = lineTotal * (1 - itemDiscountRate / 100);
+  const combinedDiscountRate = 1 - (1 - itemDiscountRate / 100) * (1 - discountRate / 100);
+  const afterDiscount = lineTotal * (1 - combinedDiscountRate);
 
   return (
     <div ref={setNodeRef} style={style} className="border rounded-lg p-4 space-y-3">
@@ -132,7 +135,7 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
           </div>
 
           {/* Quantity, Unit, and Price */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             <div className="space-y-1">
               <Label className="text-xs">Quantity</Label>
               <Input
@@ -182,9 +185,25 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
               )}
             </div>
             <div className="space-y-1">
+              <Label className="text-xs">Discount (%)</Label>
+              <Input
+                type="number"
+                className="h-8"
+                value={c.discountRate ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateCartItem(c.id, { discountRate: val === '' ? 0 : parseFloat(val) || 0 });
+                }}
+                min={0}
+                max={100}
+                step={0.1}
+                placeholder="0"
+              />
+            </div>
+            <div className="space-y-1">
               <Label className="text-xs">Total</Label>
               <div className="h-8 flex items-center gap-2">
-                {discountRate > 0 ? (
+                {(itemDiscountRate > 0 || discountRate > 0) ? (
                   <>
                     <p className="font-bold">{formatCurrency(afterDiscount)}</p>
                     <p className="text-sm text-muted-foreground line-through">{formatCurrency(lineTotal)}</p>
@@ -195,6 +214,7 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
               </div>
             </div>
           </div>
+
 
           {/* Exclude from Markup toggle */}
           {c.inventoryItemId && markupPercent !== '' && (
@@ -398,6 +418,7 @@ export function Quotes() {
       quantityUnit: (item.quantityUnit as QuantityUnit) || 'pcs',
       unitPrice: item.unitPrice,
       unitCost: item.unitCost,
+      discountRate: item.discountRate || 0,
       notes: item.notes || '',
     }));
     setCart(quoteCartItems);
@@ -570,7 +591,7 @@ export function Quotes() {
 
   const subtotal = useMemo(
     () =>
-      cart.reduce((sum, c) => sum + (c.quantity || 0) * c.unitPrice, 0),
+      cart.reduce((sum, c) => sum + (c.quantity || 0) * c.unitPrice * (1 - (c.discountRate || 0) / 100), 0),
     [cart]
   );
 
@@ -598,6 +619,7 @@ export function Quotes() {
         quantityUnit: c.quantityUnit,
         unitPrice: c.unitPrice,
         unitCost: c.unitCost,
+        discountRate: c.discountRate || 0,
         notes: c.notes || null,
       }));
 

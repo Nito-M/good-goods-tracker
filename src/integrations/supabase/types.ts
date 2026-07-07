@@ -3859,6 +3859,7 @@ export type Database = {
       quote_items: {
         Row: {
           created_at: string
+          discount_rate: number
           id: string
           inventory_item_id: string | null
           item_name: string
@@ -3874,6 +3875,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_rate?: number
           id?: string
           inventory_item_id?: string | null
           item_name: string
@@ -3889,6 +3891,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_rate?: number
           id?: string
           inventory_item_id?: string | null
           item_name?: string

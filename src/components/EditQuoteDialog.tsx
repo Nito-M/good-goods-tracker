@@ -38,6 +38,7 @@ interface EditableQuoteItem {
   quantityUnit: QuantityUnit;
   unitPrice: number;
   unitCost: number;
+  discountRate: number;
   notes: string;
 }
 
@@ -94,6 +95,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
         quantityUnit: (item.quantityUnit as QuantityUnit) || 'pcs',
         unitPrice: item.unitPrice,
         unitCost: item.unitCost,
+        discountRate: item.discountRate || 0,
         notes: item.notes || '',
       })));
       // Snapshot the original prices so markup recalculates from a stable base
@@ -175,11 +177,12 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       quantityUnit: 'pcs' as QuantityUnit,
       unitPrice: 0,
       unitCost: 0,
+      discountRate: 0,
       notes: '',
     }]);
   };
 
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity || 0) * item.unitPrice, 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity || 0) * item.unitPrice * (1 - (item.discountRate || 0) / 100), 0);
   const effectiveDiscountRate = discountRate ?? 0;
   const effectiveTaxRate = taxRate ?? 0;
   const discountAmount = subtotal * (effectiveDiscountRate / 100);
