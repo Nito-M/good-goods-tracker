@@ -185,9 +185,25 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
               )}
             </div>
             <div className="space-y-1">
+              <Label className="text-xs">Discount (%)</Label>
+              <Input
+                type="number"
+                className="h-8"
+                value={c.discountRate ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  updateCartItem(c.id, { discountRate: val === '' ? 0 : parseFloat(val) || 0 });
+                }}
+                min={0}
+                max={100}
+                step={0.1}
+                placeholder="0"
+              />
+            </div>
+            <div className="space-y-1">
               <Label className="text-xs">Total</Label>
               <div className="h-8 flex items-center gap-2">
-                {discountRate > 0 ? (
+                {(itemDiscountRate > 0 || discountRate > 0) ? (
                   <>
                     <p className="font-bold">{formatCurrency(afterDiscount)}</p>
                     <p className="text-sm text-muted-foreground line-through">{formatCurrency(lineTotal)}</p>
@@ -198,6 +214,7 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
               </div>
             </div>
           </div>
+
 
           {/* Exclude from Markup toggle */}
           {c.inventoryItemId && markupPercent !== '' && (
