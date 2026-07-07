@@ -181,6 +181,8 @@ export function useQuotes() {
       // Create quote items
       for (let i = 0; i < input.items.length; i++) {
         const item = input.items[i];
+        const itemDisc = item.discountRate || 0;
+        const lineNet = item.quantity * item.unitPrice * (1 - itemDisc / 100);
         const { error: itemError } = await supabase
           .from('quote_items')
           .insert({
@@ -192,7 +194,8 @@ export function useQuotes() {
             quantity_unit: item.quantityUnit,
             unit_price: item.unitPrice,
             unit_cost: item.unitCost,
-            total_price: item.quantity * item.unitPrice,
+            discount_rate: itemDisc,
+            total_price: lineNet,
             notes: item.notes,
             sort_order: i,
           } as any);
