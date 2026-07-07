@@ -418,6 +418,7 @@ export function Quotes() {
       quantityUnit: (item.quantityUnit as QuantityUnit) || 'pcs',
       unitPrice: item.unitPrice,
       unitCost: item.unitCost,
+      discountRate: item.discountRate || 0,
       notes: item.notes || '',
     }));
     setCart(quoteCartItems);
