@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight, ExternalLink, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useJobs } from '@/hooks/useJobs';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusColors: Record<string, string> = {
   open: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
