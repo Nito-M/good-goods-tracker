@@ -206,6 +206,38 @@ export function JobDescription() {
             </CardContent>
           </Card>
         )}
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><History className="h-4 w-4" /> Status History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {history.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No status changes recorded yet.</p>
+            ) : (
+              <ol className="relative border-l border-border ml-2 space-y-4">
+                {history.map(h => (
+                  <li key={h.id} className="ml-4">
+                    <span className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-primary" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className={statusColors[h.status] || ''}>
+                        {STATUS_LABELS[h.status] || h.status}
+                      </Badge>
+                      {h.previous_status && (
+                        <span className="text-xs text-muted-foreground">
+                          from {STATUS_LABELS[h.previous_status] || h.previous_status}
+                        </span>
+                      )}
+                    </div>
+                    <time className="block text-xs text-muted-foreground mt-1">
+                      {new Date(h.created_at).toLocaleString()}
+                    </time>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
