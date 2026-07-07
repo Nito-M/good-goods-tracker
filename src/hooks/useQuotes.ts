@@ -473,12 +473,17 @@ export function useQuotes() {
     try {
       const fraction = percentage / 100;
 
-      // Scale items by percentage
-      const scaledItems = quote.items.map(item => ({
-        ...item,
-        quantity: item.quantity * fraction,
-        totalPrice: item.totalPrice * fraction,
-      }));
+      // Scale items by percentage and fold in per-item discount into unit price
+      const scaledItems = quote.items.map(item => {
+        const itemDisc = item.discountRate || 0;
+        const netUnitPrice = item.unitPrice * (1 - itemDisc / 100);
+        return {
+          ...item,
+          quantity: item.quantity * fraction,
+          unitPrice: netUnitPrice,
+          totalPrice: item.totalPrice * fraction,
+        };
+      });
 
       // Calculate totals for the scaled invoice
       const subtotal = scaledItems.reduce(
