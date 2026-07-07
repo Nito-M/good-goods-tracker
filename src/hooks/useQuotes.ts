@@ -365,6 +365,7 @@ export function useQuotes() {
         quantityUnit: string;
         unitPrice: number;
         unitCost: number;
+        discountRate?: number;
         notes: string;
       }>;
       taxRate: number;
