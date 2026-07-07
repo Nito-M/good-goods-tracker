@@ -10,6 +10,7 @@ export interface QuoteItem {
   quantityUnit: string;
   unitPrice: number;
   unitCost: number;
+  discountRate: number;
   totalPrice: number;
   notes: string | null;
   createdAt: string;
