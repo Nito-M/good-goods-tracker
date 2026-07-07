@@ -43,10 +43,25 @@ export function JobDescription() {
   const job = jobs.find(j => j.id === jobId);
   const [weightInput, setWeightInput] = useState('');
   const [savingWeight, setSavingWeight] = useState(false);
+  const [history, setHistory] = useState<Array<{ id: string; status: string; previous_status: string | null; created_at: string }>>([]);
 
   useEffect(() => {
     if (job) setWeightInput(job.weight != null ? String(job.weight) : '');
   }, [job?.id, job?.weight]);
+
+  useEffect(() => {
+    if (!jobId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('job_status_history')
+        .select('id, status, previous_status, created_at')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: false });
+      if (!cancelled && data) setHistory(data);
+    })();
+    return () => { cancelled = true; };
+  }, [jobId, job?.status]);
 
   const handleSaveWeight = async () => {
     if (!job) return;
