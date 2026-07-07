@@ -177,11 +177,12 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
       quantityUnit: 'pcs' as QuantityUnit,
       unitPrice: 0,
       unitCost: 0,
+      discountRate: 0,
       notes: '',
     }]);
   };
 
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity || 0) * item.unitPrice, 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity || 0) * item.unitPrice * (1 - (item.discountRate || 0) / 100), 0);
   const effectiveDiscountRate = discountRate ?? 0;
   const effectiveTaxRate = taxRate ?? 0;
   const discountAmount = subtotal * (effectiveDiscountRate / 100);
