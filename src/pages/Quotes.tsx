@@ -93,9 +93,11 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: c.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
+  const itemDiscountRate = c.discountRate || 0;
   const lineTotal = (c.quantity || 0) * c.unitPrice;
-  const itemDiscount = lineTotal * (discountRate / 100);
-  const afterDiscount = lineTotal - itemDiscount;
+  const afterItemDiscount = lineTotal * (1 - itemDiscountRate / 100);
+  const combinedDiscountRate = 1 - (1 - itemDiscountRate / 100) * (1 - discountRate / 100);
+  const afterDiscount = lineTotal * (1 - combinedDiscountRate);
 
   return (
     <div ref={setNodeRef} style={style} className="border rounded-lg p-4 space-y-3">
