@@ -95,6 +95,7 @@ export function EditQuoteDialog({ quote, open, onOpenChange, onSave, vendors }: 
         quantityUnit: (item.quantityUnit as QuantityUnit) || 'pcs',
         unitPrice: item.unitPrice,
         unitCost: item.unitCost,
+        discountRate: item.discountRate || 0,
         notes: item.notes || '',
       })));
       // Snapshot the original prices so markup recalculates from a stable base
