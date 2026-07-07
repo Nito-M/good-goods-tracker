@@ -2373,6 +2373,44 @@ export type Database = {
           },
         ]
       }
+      job_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          job_id: string
+          previous_status: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          job_id: string
+          previous_status?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string
+          previous_status?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_status_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           created_at: string

@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, CalendarClock, Weight, ExternalLink, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useJobs } from '@/hooks/useJobs';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusColors: Record<string, string> = {
   open: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -15,8 +16,23 @@ const statusColors: Record<string, string> = {
   'welding-done': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   'painting-done': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
   finished: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+  delivered: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  'picked-up': 'bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200',
   'on-hold': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  'in-progress': 'In Progress',
+  'in-production': 'In Production',
+  'welding-done': 'Welding Done',
+  'painting-done': 'Painting Done',
+  finished: 'Finished',
+  delivered: 'Delivered',
+  'picked-up': 'Picked Up / Sold',
+  'on-hold': 'On Hold',
+  cancelled: 'Cancelled',
 };
 
 export function JobDescription() {
@@ -27,10 +43,25 @@ export function JobDescription() {
   const job = jobs.find(j => j.id === jobId);
   const [weightInput, setWeightInput] = useState('');
   const [savingWeight, setSavingWeight] = useState(false);
+  const [history, setHistory] = useState<Array<{ id: string; status: string; previous_status: string | null; created_at: string }>>([]);
 
   useEffect(() => {
     if (job) setWeightInput(job.weight != null ? String(job.weight) : '');
   }, [job?.id, job?.weight]);
+
+  useEffect(() => {
+    if (!jobId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('job_status_history')
+        .select('id, status, previous_status, created_at')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: false });
+      if (!cancelled && data) setHistory(data);
+    })();
+    return () => { cancelled = true; };
+  }, [jobId, job?.status]);
 
   const handleSaveWeight = async () => {
     if (!job) return;
@@ -175,6 +206,38 @@ export function JobDescription() {
             </CardContent>
           </Card>
         )}
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><History className="h-4 w-4" /> Status History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {history.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No status changes recorded yet.</p>
+            ) : (
+              <ol className="relative border-l border-border ml-2 space-y-4">
+                {history.map(h => (
+                  <li key={h.id} className="ml-4">
+                    <span className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-primary" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className={statusColors[h.status] || ''}>
+                        {STATUS_LABELS[h.status] || h.status}
+                      </Badge>
+                      {h.previous_status && (
+                        <span className="text-xs text-muted-foreground">
+                          from {STATUS_LABELS[h.previous_status] || h.previous_status}
+                        </span>
+                      )}
+                    </div>
+                    <time className="block text-xs text-muted-foreground mt-1">
+                      {new Date(h.created_at).toLocaleString()}
+                    </time>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
