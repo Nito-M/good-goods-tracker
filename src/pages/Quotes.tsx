@@ -618,6 +618,7 @@ export function Quotes() {
         quantityUnit: c.quantityUnit,
         unitPrice: c.unitPrice,
         unitCost: c.unitCost,
+        discountRate: c.discountRate || 0,
         notes: c.notes || null,
       }));
 
