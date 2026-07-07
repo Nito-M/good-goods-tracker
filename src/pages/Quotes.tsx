@@ -590,7 +590,7 @@ export function Quotes() {
 
   const subtotal = useMemo(
     () =>
-      cart.reduce((sum, c) => sum + (c.quantity || 0) * c.unitPrice, 0),
+      cart.reduce((sum, c) => sum + (c.quantity || 0) * c.unitPrice * (1 - (c.discountRate || 0) / 100), 0),
     [cart]
   );
 
