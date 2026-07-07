@@ -72,7 +72,7 @@ interface CartItem {
   quantityUnit: QuantityUnit;
   unitPrice: number;
   unitCost: number;
-  discountRate: number;
+  discountRate?: number;
   notes: string;
   excludeMarkup?: boolean;
 }
