@@ -135,7 +135,7 @@ function SortableQuoteItem({ item: c, formatCurrency, updateCartItem, updateCart
           </div>
 
           {/* Quantity, Unit, and Price */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             <div className="space-y-1">
               <Label className="text-xs">Quantity</Label>
               <Input
