@@ -141,7 +141,7 @@ export function useQuotes() {
     try {
       // Calculate totals
       const subtotal = input.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
+        (sum, item) => sum + item.quantity * item.unitPrice * (1 - (item.discountRate || 0) / 100),
         0
       );
       const discountAmount = subtotal * (input.discountRate / 100);
