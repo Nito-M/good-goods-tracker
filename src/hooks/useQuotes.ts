@@ -73,6 +73,7 @@ export function useQuotes() {
             quantityUnit: (item as any).quantity_unit || 'pcs',
             unitPrice: Number(item.unit_price),
             unitCost: Number(item.unit_cost),
+            discountRate: Number((item as any).discount_rate || 0),
             totalPrice: Number(item.total_price),
             notes: (item as any).notes || null,
             createdAt: item.created_at,
