@@ -38,6 +38,7 @@ interface EditableQuoteItem {
   quantityUnit: QuantityUnit;
   unitPrice: number;
   unitCost: number;
+  discountRate: number;
   notes: string;
 }
 
