@@ -53,6 +53,7 @@ interface ItemLink {
   id: string;
   jobId: string | null;
   status: string;
+  externalJobNumber: string | null;
 }
 
 type ExpandedItem = {
