@@ -22,6 +22,7 @@ import SaleDetail from "./pages/SaleDetail";
 import { Quotes } from "./pages/Quotes";
 import { SalesOrders } from "./pages/SalesOrders";
 import { SalesOrderDetail } from "./pages/SalesOrderDetail";
+import { SalesOrderItemDetail } from "./pages/SalesOrderItemDetail";
 import { Requests } from "./pages/Requests";
 import { AddRequest } from "./pages/AddRequest";
 import { EditRequest } from "./pages/EditRequest";
