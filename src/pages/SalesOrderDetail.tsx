@@ -695,7 +695,12 @@ export function SalesOrderDetail() {
                                   </button>
                                 )}
                                 <div>
-                                  <span>{item.itemName}</span>
+                                  <Link
+                                    to={`/sales-orders/${quote.id}/items/${item.quoteItemId}/${item.unitIndex}`}
+                                    className="hover:underline"
+                                  >
+                                    {item.itemName}
+                                  </Link>
                                   {!isChild && hasChildren && (
                                     <span className="ml-2 text-xs text-muted-foreground font-normal">
                                       ({childrenByParent[item.linkKey].length} add-on{childrenByParent[item.linkKey].length === 1 ? '' : 's'})
