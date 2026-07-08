@@ -221,6 +221,7 @@ export function SalesOrderDetail() {
           id: link.id,
           jobId: link.job_id,
           status: link.status,
+          externalJobNumber: link.external_job_number ?? null,
         };
       });
       setItemLinks(map);
