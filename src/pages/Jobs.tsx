@@ -139,6 +139,15 @@ export function Jobs() {
 
   const selectedJob = jobs.find(j => j.id === selectedJobId) || null;
 
+  const jobNumberCompare = (a: Job, b: Job) => {
+    const an = a.jobNumber || '';
+    const bn = b.jobNumber || '';
+    if (!an && !bn) return 0;
+    if (!an) return 1;
+    if (!bn) return -1;
+    return an.localeCompare(bn, undefined, { numeric: true, sensitivity: 'base' });
+  };
+
   const filteredJobs = useMemo(() => {
     let result = jobs;
     if (statusTab !== 'all') {
@@ -159,7 +168,7 @@ export function Jobs() {
         j.description?.toLowerCase().includes(q)
       );
     }
-    return result;
+    return [...result].sort(jobNumberCompare);
   }, [jobs, searchQuery, statusTab, customerFilter]);
 
   const jobsByCustomer = useMemo(() => {
@@ -173,7 +182,7 @@ export function Jobs() {
       groups.get(key)!.jobs.push(j);
     }
     return Array.from(groups.entries())
-      .map(([key, v]) => ({ key, ...v }))
+      .map(([key, v]) => ({ key, ...v, jobs: [...v.jobs].sort(jobNumberCompare) }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [filteredJobs, customers]);
 
