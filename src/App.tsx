@@ -344,6 +344,16 @@ function AppContent() {
           }
         />
         <Route
+          path="/sales-orders/:id/items/:quoteItemId/:unitIndex"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SalesOrderItemDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/requests"
           element={
             <ProtectedRoute>
