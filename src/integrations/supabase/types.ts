@@ -4572,6 +4572,9 @@ export type Database = {
       so_item_job_links: {
         Row: {
           created_at: string
+          external_due_date: string | null
+          external_job_number: string | null
+          external_notes: string | null
           id: string
           job_id: string | null
           quote_id: string
@@ -4582,6 +4585,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          external_due_date?: string | null
+          external_job_number?: string | null
+          external_notes?: string | null
           id?: string
           job_id?: string | null
           quote_id: string
@@ -4592,6 +4598,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          external_due_date?: string | null
+          external_job_number?: string | null
+          external_notes?: string | null
           id?: string
           job_id?: string | null
           quote_id?: string
