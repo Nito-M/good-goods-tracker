@@ -53,6 +53,7 @@ interface ItemLink {
   id: string;
   jobId: string | null;
   status: string;
+  externalJobNumber: string | null;
 }
 
 type ExpandedItem = {
@@ -220,6 +221,7 @@ export function SalesOrderDetail() {
           id: link.id,
           jobId: link.job_id,
           status: link.status,
+          externalJobNumber: link.external_job_number ?? null,
         };
       });
       setItemLinks(map);
@@ -693,7 +695,12 @@ export function SalesOrderDetail() {
                                   </button>
                                 )}
                                 <div>
-                                  <span>{item.itemName}</span>
+                                  <Link
+                                    to={`/sales-orders/${quote.id}/items/${item.quoteItemId}/${item.unitIndex}`}
+                                    className="hover:underline"
+                                  >
+                                    {item.itemName}
+                                  </Link>
                                   {!isChild && hasChildren && (
                                     <span className="ml-2 text-xs text-muted-foreground font-normal">
                                       ({childrenByParent[item.linkKey].length} add-on{childrenByParent[item.linkKey].length === 1 ? '' : 's'})
@@ -835,13 +842,33 @@ export function SalesOrderDetail() {
                               {parentKey ? (
                                 <span className="text-xs text-muted-foreground">Add-on</span>
                               ) : link?.jobId ? (
-                                <Link
-                                  to={`/jobs/${link.jobId}`}
-                                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                >
-                                  <Briefcase className="h-3.5 w-3.5" />
-                                  {jobs.find((j) => j.id === link.jobId)?.jobNumber || 'View Job'}
-                                </Link>
+                                <div className="flex items-center justify-center gap-2">
+                                  <Link
+                                    to={`/jobs/${link.jobId}`}
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                  >
+                                    <Briefcase className="h-3.5 w-3.5" />
+                                    {jobs.find((j) => j.id === link.jobId)?.jobNumber || 'View Job'}
+                                  </Link>
+                                  <Link
+                                    to={`/sales-orders/${quote.id}/items/${item.quoteItemId}/${item.unitIndex}`}
+                                    className="text-[10px] text-muted-foreground hover:text-foreground underline"
+                                  >
+                                    details
+                                  </Link>
+                                </div>
+                              ) : link?.externalJobNumber ? (
+                                <div className="flex items-center justify-center gap-2">
+                                  <Link
+                                    to={`/sales-orders/${quote.id}/items/${item.quoteItemId}/${item.unitIndex}`}
+                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                    title="External job — click for details"
+                                  >
+                                    <Briefcase className="h-3.5 w-3.5" />
+                                    {link.externalJobNumber}
+                                    <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0">ext</Badge>
+                                  </Link>
+                                </div>
                               ) : (
                                 <div className="flex items-center justify-center gap-1.5">
                                   <Input
@@ -869,12 +896,19 @@ export function SalesOrderDetail() {
                                     )}
                                     Create Job
                                   </Button>
+                                  <Link
+                                    to={`/sales-orders/${quote.id}/items/${item.quoteItemId}/${item.unitIndex}`}
+                                    className="text-[10px] text-muted-foreground hover:text-foreground underline"
+                                  >
+                                    more
+                                  </Link>
                                 </div>
                               )}
                             </TableCell>
                           </TableRow>
                         );
                       };
+
 
                       const rows: JSX.Element[] = [];
                       for (const parent of topLevel) {
