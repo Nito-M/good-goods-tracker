@@ -4736,6 +4736,7 @@ export type Database = {
           name: string
           parent_id: string | null
           sort_order: number
+          type_id: string | null
           updated_at: string
           user_id: string
         }
@@ -4745,6 +4746,7 @@ export type Database = {
           name: string
           parent_id?: string | null
           sort_order?: number
+          type_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -4754,6 +4756,7 @@ export type Database = {
           name?: string
           parent_id?: string | null
           sort_order?: number
+          type_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -4763,6 +4766,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "sop_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sop_categories_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "sop_types"
             referencedColumns: ["id"]
           },
         ]
@@ -4900,6 +4910,45 @@ export type Database = {
           },
         ]
       }
+      sop_types: {
+        Row: {
+          archived: boolean
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sops: {
         Row: {
           approved_by: string | null
@@ -4914,6 +4963,7 @@ export type Database = {
           sop_number: string | null
           status: string
           title: string
+          type_id: string | null
           updated_at: string
           user_id: string
         }
@@ -4930,6 +4980,7 @@ export type Database = {
           sop_number?: string | null
           status?: string
           title: string
+          type_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -4946,6 +4997,7 @@ export type Database = {
           sop_number?: string | null
           status?: string
           title?: string
+          type_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -4955,6 +5007,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "sop_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sops_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "sop_types"
             referencedColumns: ["id"]
           },
         ]
