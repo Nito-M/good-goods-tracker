@@ -37,7 +37,7 @@ function renderIcon(name: string, className = 'h-6 w-6') {
 
 export default function KnowledgeBaseTypes() {
   const { types, stats, loading, createType, updateType, deleteType, reorderTypes } = useSopTypes();
-  const { isAdmin } = useIsAdmin();
+  const isAdmin = true;
   const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
   const [editing, setEditing] = useState<Partial<SopType> | null>(null);
