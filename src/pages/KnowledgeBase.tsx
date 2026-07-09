@@ -158,8 +158,32 @@ export default function KnowledgeBase() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 p-4 md:p-6 h-[calc(100vh-4rem)]">
-      {/* Sidebar */}
+    <div className="flex flex-col p-4 md:p-6 gap-3 h-[calc(100vh-4rem)]">
+      {/* Breadcrumb + back */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/knowledge-base')}>
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+        <div className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
+          <Link to="/knowledge-base" className="hover:text-foreground hover:underline">Knowledge Base</Link>
+          {type && <><ChevronRight className="h-3 w-3" /><span className="text-foreground font-medium">{type.name}</span></>}
+        </div>
+      </div>
+
+      {type && (
+        <div className="flex items-center gap-3 border-l-4 pl-3 py-1" style={{ borderColor: type.color }}>
+          <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
+               style={{ backgroundColor: `${type.color}20`, color: type.color }}>
+            <TypeIcon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-lg">{type.name}</div>
+            {type.description && <div className="text-xs text-muted-foreground line-clamp-1">{type.description}</div>}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
       <div className="w-full md:w-72 shrink-0 border border-border rounded-lg bg-card flex flex-col">
         <div className="p-3 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold">
