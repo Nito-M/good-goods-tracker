@@ -433,118 +433,130 @@ function StepRow({
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const preview = (step.content || '').split('\n')[0].slice(0, 100) || 'No content';
+
   return (
     <div ref={setNodeRef} style={style} className="border border-border rounded-lg p-3 bg-card">
       <div className="flex items-start gap-2">
         <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground mt-1" title="Drag to reorder">
           <GripVertical className="h-4 w-4" />
         </button>
+        <button onClick={onToggleExpand} className="text-muted-foreground hover:text-foreground mt-1" title={isExpanded ? 'Collapse' : 'Expand'}>
+          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </button>
         <Badge variant="outline" className="mt-0.5 shrink-0">Step {index + 1}</Badge>
-        <div className="flex-1 space-y-2">
-          <Textarea
-            value={step.content || ''}
-            onChange={e => onUpdate({ content: e.target.value })}
-            placeholder="Describe what to do..."
-            className="min-h-[80px]"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <FieldWithIcon icon={AlertTriangle} label="Warnings" color="text-red-500"
-              value={step.warnings || ''} onChange={v => onUpdate({ warnings: v })} />
-            <FieldWithIcon icon={StickyNote} label="Notes"
-              value={step.notes || ''} onChange={v => onUpdate({ notes: v })} />
-            <FieldWithIcon icon={Lightbulb} label="Tips" color="text-amber-500"
-              value={step.tips || ''} onChange={v => onUpdate({ tips: v })} />
-            <FieldWithIcon icon={Wrench} label="Required Tools"
-              value={step.required_tools || ''} onChange={v => onUpdate({ required_tools: v })} />
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <Input type="number" min="0" placeholder="min"
-                value={step.estimated_minutes ?? ''}
-                onChange={e => onUpdate({ estimated_minutes: e.target.value === '' ? null : Number(e.target.value) })}
-                className="w-24 h-8" />
-              <span className="text-xs text-muted-foreground">est. minutes</span>
+        {!isExpanded && (
+          <span className="flex-1 text-sm text-muted-foreground truncate mt-0.5" title={step.content || ''}>
+            {preview}
+          </span>
+        )}
+        {isExpanded && (
+          <div className="flex-1 space-y-2">
+            <Textarea
+              value={step.content || ''}
+              onChange={e => onUpdate({ content: e.target.value })}
+              placeholder="Describe what to do..."
+              className="min-h-[80px]"
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <FieldWithIcon icon={AlertTriangle} label="Warnings" color="text-red-500"
+                value={step.warnings || ''} onChange={v => onUpdate({ warnings: v })} />
+              <FieldWithIcon icon={StickyNote} label="Notes"
+                value={step.notes || ''} onChange={v => onUpdate({ notes: v })} />
+              <FieldWithIcon icon={Lightbulb} label="Tips" color="text-amber-500"
+                value={step.tips || ''} onChange={v => onUpdate({ tips: v })} />
+              <FieldWithIcon icon={Wrench} label="Required Tools"
+                value={step.required_tools || ''} onChange={v => onUpdate({ required_tools: v })} />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <Input type="number" min="0" placeholder="min"
+                  value={step.estimated_minutes ?? ''}
+                  onChange={e => onUpdate({ estimated_minutes: e.target.value === '' ? null : Number(e.target.value) })}
+                  className="w-24 h-8" />
+                <span className="text-xs text-muted-foreground">est. minutes</span>
+              </div>
+            </div>
+
+            {/* Linked items */}
+            {items.length > 0 && (
+              <div className="space-y-1 border-t border-border pt-2">
+                <div className="text-xs font-semibold text-muted-foreground">Linked parts</div>
+                {items.map(it => {
+                  const inv = itemsById.get(it.inventory_item_id);
+                  return (
+                    <div key={it.id} className="flex items-center gap-2 flex-wrap text-sm">
+                      <Input type="number" step="0.01" value={it.quantity}
+                        onChange={e => onUpdateItem(it.id, { quantity: Number(e.target.value) })}
+                        className="w-16 h-7" />
+                      <span>×</span>
+                      <Link to={`/item/${it.inventory_item_id}`} className="hover:text-primary font-medium">
+                        {inv?.name || 'Missing item'}
+                      </Link>
+                      {inv?.sku && <span className="text-xs text-muted-foreground">#{inv.sku}</span>}
+                      {inv && (
+                        <span className="text-xs text-muted-foreground">
+                          · stock {inv.quantity} · {formatCurrency(inv.cost || 0)}
+                        </span>
+                      )}
+                      <Link to={`/item/${it.inventory_item_id}`} className="text-muted-foreground hover:text-primary" title="Open item">
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive ml-auto"
+                        onClick={() => onRemoveItem(it.id)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Files */}
+            {files.length > 0 && (
+              <div className="flex flex-wrap gap-2 border-t border-border pt-2">
+                {files.map(f => {
+                  const url = signedUrls[f.id];
+                  const isImg = (f.mime_type || '').startsWith('image/');
+                  return (
+                    <div key={f.id} className="relative group">
+                      {isImg && url ? (
+                        <a href={url} target="_blank" rel="noreferrer">
+                          <img src={url} alt={f.file_name} className="h-16 w-16 object-cover rounded border border-border" />
+                        </a>
+                      ) : (
+                        <a href={url} target="_blank" rel="noreferrer"
+                          className="h-16 w-16 rounded border border-border bg-muted flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-muted-foreground" />
+                        </a>
+                      )}
+                      <button onClick={() => onDeleteFile(f.id)}
+                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <input ref={fileRef} type="file" multiple className="hidden"
+                onChange={async e => {
+                  if (!e.target.files) return;
+                  for (const f of Array.from(e.target.files)) await onUpload(f);
+                  if (fileRef.current) fileRef.current.value = '';
+                }} />
+              <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                <Upload className="h-3.5 w-3.5 mr-1" /> Add file/image
+              </Button>
+              <Button size="sm" variant="outline" onClick={onOpenPicker}>
+                <Package className="h-3.5 w-3.5 mr-1" /> Link Inventory
+              </Button>
             </div>
           </div>
-
-          {/* Linked items */}
-          {items.length > 0 && (
-            <div className="space-y-1 border-t border-border pt-2">
-              <div className="text-xs font-semibold text-muted-foreground">Linked parts</div>
-              {items.map(it => {
-                const inv = itemsById.get(it.inventory_item_id);
-                return (
-                  <div key={it.id} className="flex items-center gap-2 flex-wrap text-sm">
-                    <Input type="number" step="0.01" value={it.quantity}
-                      onChange={e => onUpdateItem(it.id, { quantity: Number(e.target.value) })}
-                      className="w-16 h-7" />
-                    <span>×</span>
-                    <Link to={`/item/${it.inventory_item_id}`} className="hover:text-primary font-medium">
-                      {inv?.name || 'Missing item'}
-                    </Link>
-                    {inv?.sku && <span className="text-xs text-muted-foreground">#{inv.sku}</span>}
-                    {inv && (
-                      <span className="text-xs text-muted-foreground">
-                        · stock {inv.quantity} · {formatCurrency(inv.cost || 0)}
-                      </span>
-                    )}
-                    <Link to={`/item/${it.inventory_item_id}`} className="text-muted-foreground hover:text-primary" title="Open item">
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive ml-auto"
-                      onClick={() => onRemoveItem(it.id)}>
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Files */}
-          {files.length > 0 && (
-            <div className="flex flex-wrap gap-2 border-t border-border pt-2">
-              {files.map(f => {
-                const url = signedUrls[f.id];
-                const isImg = (f.mime_type || '').startsWith('image/');
-                return (
-                  <div key={f.id} className="relative group">
-                    {isImg && url ? (
-                      <a href={url} target="_blank" rel="noreferrer">
-                        <img src={url} alt={f.file_name} className="h-16 w-16 object-cover rounded border border-border" />
-                      </a>
-                    ) : (
-                      <a href={url} target="_blank" rel="noreferrer"
-                        className="h-16 w-16 rounded border border-border bg-muted flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-muted-foreground" />
-                      </a>
-                    )}
-                    <button onClick={() => onDeleteFile(f.id)}
-                      className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-1">
-            <input ref={fileRef} type="file" multiple className="hidden"
-              onChange={async e => {
-                if (!e.target.files) return;
-                for (const f of Array.from(e.target.files)) await onUpload(f);
-                if (fileRef.current) fileRef.current.value = '';
-              }} />
-            <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
-              <Upload className="h-3.5 w-3.5 mr-1" /> Add file/image
-            </Button>
-            <Button size="sm" variant="outline" onClick={onOpenPicker}>
-              <Package className="h-3.5 w-3.5 mr-1" /> Link Inventory
-            </Button>
-          </div>
-        </div>
+        )}
         <Button size="icon" variant="ghost" className="text-destructive" onClick={onDelete}>
           <Trash2 className="h-4 w-4" />
         </Button>
