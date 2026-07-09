@@ -117,10 +117,18 @@ export function useSopDetail(sopId: string | null) {
     setSteps(prev => [...prev, data as any]);
   };
 
-  const updateStep = async (id: string, updates: Partial<SopStep>) => {
+  const stepPending = useRef<Record<string, Partial<SopStep>>>({});
+  const updateStep = (id: string, updates: Partial<SopStep>) => {
     setSteps(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-    const { error } = await supabase.from('sop_steps' as any).update(updates).eq('id', id);
-    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    stepPending.current[id] = { ...(stepPending.current[id] || {}), ...updates };
+    const key = `step:${id}`;
+    if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
+    saveTimers.current[key] = setTimeout(async () => {
+      const patch = stepPending.current[id];
+      delete stepPending.current[id];
+      const { error } = await supabase.from('sop_steps' as any).update(patch).eq('id', id);
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }, 500);
   };
 
   const deleteStep = async (id: string) => {
