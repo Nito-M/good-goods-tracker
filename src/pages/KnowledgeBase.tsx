@@ -33,12 +33,24 @@ function statusColor(s: string) {
 }
 
 export default function KnowledgeBase() {
-  const { categories, sops, createCategory, renameCategory, deleteCategory, createSop, deleteSop } = useSops();
+  const { typeId } = useParams<{ typeId: string }>();
+  const { categories, sops, createCategory, renameCategory, deleteCategory, createSop, deleteSop } = useSops(typeId ?? null);
   const { allItems } = useInventory();
   const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const [type, setType] = useState<{ name: string; description: string | null; icon: string; color: string } | null>(null);
+  useEffect(() => {
+    if (!typeId) { setType(null); return; }
+    (async () => {
+      const { data } = await supabase.from('sop_types' as any).select('name, description, icon, color').eq('id', typeId).maybeSingle();
+      setType(data as any);
+    })();
+  }, [typeId]);
+
+  const TypeIcon = (type && (LucideIcons as any)[type.icon]) || BookOpen;
 
   const tree = useMemo(() => buildTree(categories), [categories]);
 
