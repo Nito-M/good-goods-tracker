@@ -327,7 +327,7 @@ ${parts.length ? `<h2>Parts List</h2><table><thead><tr><th style="width:64px">Im
                     value={content}
                     onChange={e => setContent(e.target.value)}
                     placeholder="Steps, torque specs, wiring notes, part numbers..."
-                    className="min-h-[200px] resize-none overflow-hidden"
+                    className="min-h-[300px] resize-y overflow-auto"
                   />
                 </div>
               </CardContent>
