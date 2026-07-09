@@ -47,14 +47,20 @@ export function JobInstructionEdit() {
     }
   }, [instruction]);
 
-  // Auto-grow textarea
+  // Auto-grow textarea to fit all content
   useEffect(() => {
-    const el = contentRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = Math.max(el.scrollHeight, 200) + 'px';
-    }
-  }, [content]);
+    const grow = () => {
+      const el = contentRef.current;
+      if (el) {
+        el.style.height = 'auto';
+        el.style.height = Math.max(el.scrollHeight + 2, 300) + 'px';
+      }
+    };
+    grow();
+    const id = requestAnimationFrame(grow);
+    return () => cancelAnimationFrame(id);
+  }, [content, loading]);
+
 
   // Resolve signed URLs for image previews
   useEffect(() => {
@@ -321,7 +327,7 @@ ${parts.length ? `<h2>Parts List</h2><table><thead><tr><th style="width:64px">Im
                     value={content}
                     onChange={e => setContent(e.target.value)}
                     placeholder="Steps, torque specs, wiring notes, part numbers..."
-                    className="min-h-[200px] resize-none overflow-hidden"
+                    className="min-h-[300px] resize-y overflow-auto"
                   />
                 </div>
               </CardContent>
