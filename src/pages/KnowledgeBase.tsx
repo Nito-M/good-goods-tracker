@@ -250,6 +250,7 @@ export default function KnowledgeBase() {
           )}
         </div>
       </div>
+      </div>
     </div>
   );
 }
