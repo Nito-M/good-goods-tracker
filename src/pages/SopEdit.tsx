@@ -281,6 +281,50 @@ export default function SopEdit() {
         </CardContent>
       </Card>
 
+      {/* Locations */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Locations</CardTitle>
+          <Button size="sm" variant="outline" onClick={() => addLocation()}>
+            <Plus className="h-4 w-4 mr-1" /> Add Location
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {locations.length === 0 ? (
+            <div className="text-sm text-muted-foreground text-center py-4">No locations yet.</div>
+          ) : (
+            <div className="space-y-2">
+              {locations.map(loc => (
+                <div key={loc.id} className="flex flex-wrap items-center gap-2 border border-border rounded-md p-2">
+                  <Input
+                    value={loc.name}
+                    onChange={e => updateLocation(loc.id, { name: e.target.value })}
+                    placeholder="Location name (e.g. Shop A)"
+                    className="flex-1 min-w-[160px] h-8"
+                  />
+                  <Input
+                    value={loc.url || ''}
+                    onChange={e => updateLocation(loc.id, { url: e.target.value })}
+                    placeholder="https://... (Google Maps, etc.)"
+                    className="flex-[2] min-w-[220px] h-8"
+                  />
+                  {loc.url && (
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={loc.url} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open
+                      </a>
+                    </Button>
+                  )}
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeLocation(loc.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Attachments */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
