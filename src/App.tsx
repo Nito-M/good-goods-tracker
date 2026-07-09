@@ -441,13 +441,23 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AppLayout>
+                <KnowledgeBaseTypes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/knowledge-base/type/:typeId"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
                 <KnowledgeBase />
               </AppLayout>
             </ProtectedRoute>
           }
         />
         <Route
-          path="/knowledge-base/:id"
+          path="/knowledge-base/sop/:id"
           element={
             <ProtectedRoute>
               <AppLayout>
