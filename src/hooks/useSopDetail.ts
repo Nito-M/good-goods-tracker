@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -89,12 +89,22 @@ export function useSopDetail(sopId: string | null) {
 
   useEffect(() => { refetch(); }, [refetch]);
 
-  const updateSop = async (updates: Partial<SopRecord>) => {
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const pendingUpdates = useRef<Partial<SopRecord>>({});
+
+  const updateSop = (updates: Partial<SopRecord>) => {
     if (!sopId) return;
-    const patch = { ...updates, last_updated_date: new Date().toISOString().slice(0, 10) };
-    const { error } = await supabase.from('sops' as any).update(patch).eq('id', sopId);
-    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    else setSop(prev => prev ? { ...prev, ...patch } as SopRecord : prev);
+    // Optimistic local update — no await, no round-trip lag while typing
+    setSop(prev => prev ? { ...prev, ...updates } as SopRecord : prev);
+    pendingUpdates.current = { ...pendingUpdates.current, ...updates };
+    if (saveTimers.current.sop) clearTimeout(saveTimers.current.sop);
+    saveTimers.current.sop = setTimeout(async () => {
+      const patch = { ...pendingUpdates.current, last_updated_date: new Date().toISOString().slice(0, 10) };
+      pendingUpdates.current = {};
+      const { error } = await supabase.from('sops' as any).update(patch).eq('id', sopId);
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      else setSop(prev => prev ? { ...prev, last_updated_date: patch.last_updated_date } as SopRecord : prev);
+    }, 500);
   };
 
   const addStep = async () => {
@@ -107,10 +117,18 @@ export function useSopDetail(sopId: string | null) {
     setSteps(prev => [...prev, data as any]);
   };
 
-  const updateStep = async (id: string, updates: Partial<SopStep>) => {
+  const stepPending = useRef<Record<string, Partial<SopStep>>>({});
+  const updateStep = (id: string, updates: Partial<SopStep>) => {
     setSteps(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-    const { error } = await supabase.from('sop_steps' as any).update(updates).eq('id', id);
-    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    stepPending.current[id] = { ...(stepPending.current[id] || {}), ...updates };
+    const key = `step:${id}`;
+    if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
+    saveTimers.current[key] = setTimeout(async () => {
+      const patch = stepPending.current[id];
+      delete stepPending.current[id];
+      const { error } = await supabase.from('sop_steps' as any).update(patch).eq('id', id);
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }, 500);
   };
 
   const deleteStep = async (id: string) => {
