@@ -46,6 +46,10 @@ export default function SopEdit() {
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const hasInitializedExpanded = useRef(false);
   useEffect(() => {
+    hasInitializedExpanded.current = false;
+    setExpandedSteps(new Set());
+  }, [id]);
+  useEffect(() => {
     if (!loading && steps.length && !hasInitializedExpanded.current) {
       hasInitializedExpanded.current = true;
       setExpandedSteps(new Set());
