@@ -43,6 +43,24 @@ export default function SopEdit() {
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
   const attachRef = useRef<HTMLInputElement>(null);
 
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+  const hasInitializedExpanded = useRef(false);
+  useEffect(() => {
+    if (!loading && steps.length && !hasInitializedExpanded.current) {
+      hasInitializedExpanded.current = true;
+      setExpandedSteps(new Set());
+    }
+  }, [loading, steps]);
+
+  const toggleStep = (stepId: string) => {
+    setExpandedSteps(prev => {
+      const next = new Set(prev);
+      if (next.has(stepId)) next.delete(stepId);
+      else next.add(stepId);
+      return next;
+    });
+  };
+
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   useEffect(() => {
     const all = [...stepFiles, ...attachments];
