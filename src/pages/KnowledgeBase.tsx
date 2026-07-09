@@ -117,7 +117,7 @@ export default function KnowledgeBase() {
     if (!title?.trim()) return;
     const catId = selectedCat && selectedCat !== '__uncat__' ? selectedCat : null;
     const created = await createSop(title.trim(), catId);
-    if (created) navigate(`/knowledge-base/${created.id}`);
+    if (created) navigate(`/knowledge-base/sop/${created.id}`);
   };
 
   const renderNode = (node: CategoryNode, depth: number) => {
