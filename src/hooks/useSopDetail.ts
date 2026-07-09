@@ -89,12 +89,22 @@ export function useSopDetail(sopId: string | null) {
 
   useEffect(() => { refetch(); }, [refetch]);
 
-  const updateSop = async (updates: Partial<SopRecord>) => {
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const pendingUpdates = useRef<Partial<SopRecord>>({});
+
+  const updateSop = (updates: Partial<SopRecord>) => {
     if (!sopId) return;
-    const patch = { ...updates, last_updated_date: new Date().toISOString().slice(0, 10) };
-    const { error } = await supabase.from('sops' as any).update(patch).eq('id', sopId);
-    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    else setSop(prev => prev ? { ...prev, ...patch } as SopRecord : prev);
+    // Optimistic local update — no await, no round-trip lag while typing
+    setSop(prev => prev ? { ...prev, ...updates } as SopRecord : prev);
+    pendingUpdates.current = { ...pendingUpdates.current, ...updates };
+    if (saveTimers.current.sop) clearTimeout(saveTimers.current.sop);
+    saveTimers.current.sop = setTimeout(async () => {
+      const patch = { ...pendingUpdates.current, last_updated_date: new Date().toISOString().slice(0, 10) };
+      pendingUpdates.current = {};
+      const { error } = await supabase.from('sops' as any).update(patch).eq('id', sopId);
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      else setSop(prev => prev ? { ...prev, last_updated_date: patch.last_updated_date } as SopRecord : prev);
+    }, 500);
   };
 
   const addStep = async () => {
