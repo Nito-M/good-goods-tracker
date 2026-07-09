@@ -39,6 +39,10 @@ export interface SopAttachment {
   file_name: string; mime_type: string | null; size_bytes: number | null;
 }
 
+export interface SopLocation {
+  id: string; sop_id: string; name: string; url: string | null; sort_order: number;
+}
+
 export interface SopRecord {
   id: string; user_id: string; category_id: string | null;
   title: string; sop_number: string | null; department: string | null;
