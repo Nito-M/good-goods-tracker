@@ -28,12 +28,13 @@ export default function SopEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
-    sop, steps, stepFiles, stepItems, bom, attachments, loading,
+    sop, steps, stepFiles, stepItems, bom, attachments, locations, loading,
     updateSop, addStep, updateStep, deleteStep, reorderSteps,
     uploadStepFile, deleteStepFile,
     addStepItem, updateStepItem, removeStepItem,
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment, getSignedUrl,
+    addLocation, updateLocation, removeLocation,
   } = useSopDetail(id ?? null);
   const { allItems } = useInventory();
   const itemsById = useMemo(() => new Map(allItems.map(i => [i.id, i])), [allItems]);
