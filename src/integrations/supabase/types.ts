@@ -4633,6 +4633,332 @@ export type Database = {
           },
         ]
       }
+      sop_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          sop_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          sop_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          sop_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_attachments_sop_id_fkey"
+            columns: ["sop_id"]
+            isOneToOne: false
+            referencedRelation: "sops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sop_bom_items: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          is_optional: boolean
+          notes: string | null
+          quantity: number
+          sop_id: string
+          sort_order: number
+          substitute_of_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          is_optional?: boolean
+          notes?: string | null
+          quantity?: number
+          sop_id: string
+          sort_order?: number
+          substitute_of_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          is_optional?: boolean
+          notes?: string | null
+          quantity?: number
+          sop_id?: string
+          sort_order?: number
+          substitute_of_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_bom_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sop_bom_items_sop_id_fkey"
+            columns: ["sop_id"]
+            isOneToOne: false
+            referencedRelation: "sops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sop_bom_items_substitute_of_id_fkey"
+            columns: ["substitute_of_id"]
+            isOneToOne: false
+            referencedRelation: "sop_bom_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sop_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "sop_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sop_step_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          step_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          step_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          step_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_step_files_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "sop_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sop_step_items: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          notes: string | null
+          quantity: number
+          sort_order: number
+          step_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          notes?: string | null
+          quantity?: number
+          sort_order?: number
+          step_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          notes?: string | null
+          quantity?: number
+          sort_order?: number
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_step_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sop_step_items_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "sop_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sop_steps: {
+        Row: {
+          content: string | null
+          created_at: string
+          estimated_minutes: number | null
+          id: string
+          notes: string | null
+          required_tools: string | null
+          sop_id: string
+          sort_order: number
+          tips: string | null
+          updated_at: string
+          warnings: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          estimated_minutes?: number | null
+          id?: string
+          notes?: string | null
+          required_tools?: string | null
+          sop_id: string
+          sort_order?: number
+          tips?: string | null
+          updated_at?: string
+          warnings?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          estimated_minutes?: number | null
+          id?: string
+          notes?: string | null
+          required_tools?: string | null
+          sop_id?: string
+          sort_order?: number
+          tips?: string | null
+          updated_at?: string
+          warnings?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_steps_sop_id_fkey"
+            columns: ["sop_id"]
+            isOneToOne: false
+            referencedRelation: "sops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sops: {
+        Row: {
+          approved_by: string | null
+          author: string | null
+          category_id: string | null
+          created_at: string
+          department: string | null
+          effective_date: string | null
+          id: string
+          last_updated_date: string | null
+          revision_number: string | null
+          sop_number: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          author?: string | null
+          category_id?: string | null
+          created_at?: string
+          department?: string | null
+          effective_date?: string | null
+          id?: string
+          last_updated_date?: string | null
+          revision_number?: string | null
+          sop_number?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          author?: string | null
+          category_id?: string | null
+          created_at?: string
+          department?: string | null
+          effective_date?: string | null
+          id?: string
+          last_updated_date?: string | null
+          revision_number?: string | null
+          sop_number?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sops_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "sop_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       storefront_categories: {
         Row: {
           category_name: string

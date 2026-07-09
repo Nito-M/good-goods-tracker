@@ -70,6 +70,8 @@ import { VendorDetail } from "./pages/VendorDetail";
 import { AddVendor } from "./pages/AddVendor";
 import { EditTripPlan } from "./pages/EditTripPlan";
 import { CompanyDetail } from "./pages/CompanyDetail";
+import KnowledgeBase from "./pages/KnowledgeBase";
+import SopEdit from "./pages/SopEdit";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
@@ -429,6 +431,26 @@ function AppContent() {
             <ProtectedRoute>
               <AppLayout>
                 <Notes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/knowledge-base"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <KnowledgeBase />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/knowledge-base/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SopEdit />
               </AppLayout>
             </ProtectedRoute>
           }

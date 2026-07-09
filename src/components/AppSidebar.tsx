@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle, Store, ExternalLink, Truck, Wrench, Table2, X } from "lucide-react";
+import { Home, ShoppingCart, ClipboardList, Settings, ChevronLeft, ChevronRight, Package, FileText, Wallet, ListTodo, CalendarDays, StickyNote, Briefcase, Plus, ChevronDown, LogOut, Layers, Puzzle, Store, ExternalLink, Truck, Wrench, Table2, X, BookOpen } from "lucide-react";
 import { useBoards } from "@/hooks/useBoards";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +31,7 @@ const menuItems = [
 { title: "Requests", url: "/requests", icon: ListTodo, pageKey: "requests" },
 { title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
 { title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
+{ title: "Knowledge Base", url: "/knowledge-base", icon: BookOpen, pageKey: "knowledge-base" },
 { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
 { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
 { title: "Business Info", url: "/assets", icon: Briefcase, pageKey: "assets" },
