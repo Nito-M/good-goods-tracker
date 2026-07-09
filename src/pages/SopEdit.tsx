@@ -327,7 +327,7 @@ export default function SopEdit() {
           onUpdateQuantity={handlePickerQty}
           onRemoveItem={handlePickerRemove}
           onUpdateItem={handlePickerUpdate}
-          documentType={pickerContext.mode === 'step' ? 'Step Part' : 'BOM Part'}
+          documentType="Part"
           formatPrice={formatCurrency}
         />
       )}
