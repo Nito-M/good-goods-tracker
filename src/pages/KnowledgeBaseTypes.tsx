@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
-import { BookOpen, Plus, Pencil, Trash2, Archive, ArchiveRestore, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, Archive, ArchiveRestore, GripVertical, ArrowUp, ArrowDown, FolderPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Switch } from '@/components/ui/switch';
 import { useSopTypes, SopType } from '@/hooks/useSopTypes';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+
 
 const ICON_CHOICES = [
   'BookOpen', 'ShoppingCart', 'PackageCheck', 'Factory', 'Flame', 'Wrench',
