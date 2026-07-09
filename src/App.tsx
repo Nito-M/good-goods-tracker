@@ -436,6 +436,26 @@ function AppContent() {
           }
         />
         <Route
+          path="/knowledge-base"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <KnowledgeBase />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/knowledge-base/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SopEdit />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/boards"
           element={
             <ProtectedRoute>
