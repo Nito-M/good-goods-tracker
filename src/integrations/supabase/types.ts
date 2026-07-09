@@ -4777,6 +4777,47 @@ export type Database = {
           },
         ]
       }
+      sop_locations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sop_id: string
+          sort_order: number
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sop_id: string
+          sort_order?: number
+          updated_at?: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sop_id?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_locations_sop_id_fkey"
+            columns: ["sop_id"]
+            isOneToOne: false
+            referencedRelation: "sops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sop_step_files: {
         Row: {
           created_at: string
