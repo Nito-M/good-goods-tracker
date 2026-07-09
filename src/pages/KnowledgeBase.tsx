@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Plus, Search, Folder, FolderPlus, ChevronRight, ChevronDown, Trash2, Pencil, FileText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import * as LucideIcons from 'lucide-react';
+import { ArrowLeft, BookOpen, Plus, Search, Folder, FolderPlus, ChevronRight, ChevronDown, Trash2, Pencil, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
