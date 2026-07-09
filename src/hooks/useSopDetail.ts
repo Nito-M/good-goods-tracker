@@ -242,14 +242,45 @@ export function useSopDetail(sopId: string | null) {
     return data?.signedUrl || null;
   };
 
+
+  const addLocation = async (name = '', url = '') => {
+    if (!sopId || !user) return;
+    const nextOrder = locations.length;
+    const { data, error } = await supabase.from('sop_locations' as any).insert({
+      sop_id: sopId, user_id: user.id, name, url, sort_order: nextOrder,
+    }).select().single();
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    setLocations(prev => [...prev, data as any]);
+  };
+
+  const locPending = useRef<Record<string, Partial<SopLocation>>>({});
+  const updateLocation = (id: string, updates: Partial<SopLocation>) => {
+    setLocations(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
+    locPending.current[id] = { ...(locPending.current[id] || {}), ...updates };
+    const key = `loc:${id}`;
+    if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
+    saveTimers.current[key] = setTimeout(async () => {
+      const patch = locPending.current[id];
+      delete locPending.current[id];
+      const { error } = await supabase.from('sop_locations' as any).update(patch).eq('id', id);
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }, 500);
+  };
+
+  const removeLocation = async (id: string) => {
+    await supabase.from('sop_locations' as any).delete().eq('id', id);
+    setLocations(prev => prev.filter(l => l.id !== id));
+  };
+
   return {
-    sop, steps, stepFiles, stepItems, bom, attachments, loading,
+    sop, steps, stepFiles, stepItems, bom, attachments, locations, loading,
     refetch, updateSop,
     addStep, updateStep, deleteStep, reorderSteps,
     uploadStepFile, deleteStepFile,
     addStepItem, updateStepItem, removeStepItem,
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment,
+    addLocation, updateLocation, removeLocation,
     getSignedUrl,
   };
 }
