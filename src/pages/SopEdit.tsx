@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
-  AlertTriangle, Lightbulb, StickyNote, Wrench, Clock, ExternalLink,
+  AlertTriangle, Lightbulb, StickyNote, Wrench, Clock, ExternalLink, MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
