@@ -31,6 +31,7 @@ const menuItems = [
 { title: "Requests", url: "/requests", icon: ListTodo, pageKey: "requests" },
 { title: "Calendar", url: "/calendar", icon: CalendarDays, pageKey: "calendar" },
 { title: "Notes", url: "/notes", icon: StickyNote, pageKey: "notes" },
+{ title: "Knowledge Base", url: "/knowledge-base", icon: BookOpen, pageKey: "knowledge-base" },
 { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
 { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
 { title: "Business Info", url: "/assets", icon: Briefcase, pageKey: "assets" },
