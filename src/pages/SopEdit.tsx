@@ -230,22 +230,24 @@ export default function SopEdit() {
               <SortableContext items={steps.map(s => s.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-3">
                   {steps.map((step, idx) => (
-                    <StepRow
-                      key={step.id}
-                      step={step}
-                      index={idx}
-                      files={stepFiles.filter(f => f.step_id === step.id)}
-                      items={stepItems.filter(i => i.step_id === step.id)}
-                      itemsById={itemsById}
-                      signedUrls={signedUrls}
-                      onUpdate={(u) => updateStep(step.id, u)}
-                      onDelete={() => confirm('Delete this step?') && deleteStep(step.id)}
-                      onUpload={(f) => uploadStepFile(step.id, f)}
-                      onDeleteFile={deleteStepFile}
-                      onOpenPicker={() => openStepPicker(step.id)}
-                      onRemoveItem={removeStepItem}
-                      onUpdateItem={updateStepItem}
-                    />
+                  <StepRow
+                    key={step.id}
+                    step={step}
+                    index={idx}
+                    isExpanded={expandedSteps.has(step.id)}
+                    onToggleExpand={() => toggleStep(step.id)}
+                    files={stepFiles.filter(f => f.step_id === step.id)}
+                    items={stepItems.filter(i => i.step_id === step.id)}
+                    itemsById={itemsById}
+                    signedUrls={signedUrls}
+                    onUpdate={(u) => updateStep(step.id, u)}
+                    onDelete={() => confirm('Delete this step?') && deleteStep(step.id)}
+                    onUpload={(f) => uploadStepFile(step.id, f)}
+                    onDeleteFile={deleteStepFile}
+                    onOpenPicker={() => openStepPicker(step.id)}
+                    onRemoveItem={removeStepItem}
+                    onUpdateItem={updateStepItem}
+                  />
                   ))}
                 </div>
               </SortableContext>
