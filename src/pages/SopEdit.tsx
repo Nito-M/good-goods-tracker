@@ -410,11 +410,13 @@ export default function SopEdit() {
 }
 
 function StepRow({
-  step, index, files, items, itemsById, signedUrls,
+  step, index, isExpanded, onToggleExpand, files, items, itemsById, signedUrls,
   onUpdate, onDelete, onUpload, onDeleteFile, onOpenPicker, onRemoveItem, onUpdateItem,
 }: {
   step: SopStep;
   index: number;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   files: any[];
   items: any[];
   itemsById: Map<string, any>;
