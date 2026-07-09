@@ -83,12 +83,14 @@ export function useSopDetail(sopId: string | null) {
       setStepItems((items as any) || []);
     } else { setStepFiles([]); setStepItems([]); }
 
-    const [{ data: bomRows }, { data: attachRows }] = await Promise.all([
+    const [{ data: bomRows }, { data: attachRows }, { data: locRows }] = await Promise.all([
       supabase.from('sop_bom_items' as any).select('*').eq('sop_id', sopId).order('sort_order'),
       supabase.from('sop_attachments' as any).select('*').eq('sop_id', sopId),
+      supabase.from('sop_locations' as any).select('*').eq('sop_id', sopId).order('sort_order'),
     ]);
     setBom((bomRows as any) || []);
     setAttachments((attachRows as any) || []);
+    setLocations((locRows as any) || []);
     setLoading(false);
   }, [sopId]);
 
