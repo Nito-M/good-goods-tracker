@@ -39,6 +39,10 @@ export interface SopAttachment {
   file_name: string; mime_type: string | null; size_bytes: number | null;
 }
 
+export interface SopLocation {
+  id: string; sop_id: string; name: string; url: string | null; sort_order: number;
+}
+
 export interface SopRecord {
   id: string; user_id: string; category_id: string | null;
   title: string; sop_number: string | null; department: string | null;
@@ -56,6 +60,7 @@ export function useSopDetail(sopId: string | null) {
   const [stepItems, setStepItems] = useState<SopStepItem[]>([]);
   const [bom, setBom] = useState<SopBomItem[]>([]);
   const [attachments, setAttachments] = useState<SopAttachment[]>([]);
+  const [locations, setLocations] = useState<SopLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
@@ -78,12 +83,14 @@ export function useSopDetail(sopId: string | null) {
       setStepItems((items as any) || []);
     } else { setStepFiles([]); setStepItems([]); }
 
-    const [{ data: bomRows }, { data: attachRows }] = await Promise.all([
+    const [{ data: bomRows }, { data: attachRows }, { data: locRows }] = await Promise.all([
       supabase.from('sop_bom_items' as any).select('*').eq('sop_id', sopId).order('sort_order'),
       supabase.from('sop_attachments' as any).select('*').eq('sop_id', sopId),
+      supabase.from('sop_locations' as any).select('*').eq('sop_id', sopId).order('sort_order'),
     ]);
     setBom((bomRows as any) || []);
     setAttachments((attachRows as any) || []);
+    setLocations((locRows as any) || []);
     setLoading(false);
   }, [sopId]);
 
@@ -235,14 +242,45 @@ export function useSopDetail(sopId: string | null) {
     return data?.signedUrl || null;
   };
 
+
+  const addLocation = async (name = '', url = '') => {
+    if (!sopId || !user) return;
+    const nextOrder = locations.length;
+    const { data, error } = await supabase.from('sop_locations' as any).insert({
+      sop_id: sopId, user_id: user.id, name, url, sort_order: nextOrder,
+    }).select().single();
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    setLocations(prev => [...prev, data as any]);
+  };
+
+  const locPending = useRef<Record<string, Partial<SopLocation>>>({});
+  const updateLocation = (id: string, updates: Partial<SopLocation>) => {
+    setLocations(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
+    locPending.current[id] = { ...(locPending.current[id] || {}), ...updates };
+    const key = `loc:${id}`;
+    if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
+    saveTimers.current[key] = setTimeout(async () => {
+      const patch = locPending.current[id];
+      delete locPending.current[id];
+      const { error } = await supabase.from('sop_locations' as any).update(patch).eq('id', id);
+      if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }, 500);
+  };
+
+  const removeLocation = async (id: string) => {
+    await supabase.from('sop_locations' as any).delete().eq('id', id);
+    setLocations(prev => prev.filter(l => l.id !== id));
+  };
+
   return {
-    sop, steps, stepFiles, stepItems, bom, attachments, loading,
+    sop, steps, stepFiles, stepItems, bom, attachments, locations, loading,
     refetch, updateSop,
     addStep, updateStep, deleteStep, reorderSteps,
     uploadStepFile, deleteStepFile,
     addStepItem, updateStepItem, removeStepItem,
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment,
+    addLocation, updateLocation, removeLocation,
     getSignedUrl,
   };
 }
