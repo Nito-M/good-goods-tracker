@@ -257,7 +257,7 @@ export default function KnowledgeBase() {
 
 function SopCard({ sop, onDelete }: { sop: SopListItem; onDelete: () => void }) {
   return (
-    <Link to={`/knowledge-base/${sop.id}`}>
+    <Link to={`/knowledge-base/sop/${sop.id}`}>
       <Card className="p-4 hover:border-primary transition-colors h-full flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
