@@ -60,6 +60,7 @@ export function useSopDetail(sopId: string | null) {
   const [stepItems, setStepItems] = useState<SopStepItem[]>([]);
   const [bom, setBom] = useState<SopBomItem[]>([]);
   const [attachments, setAttachments] = useState<SopAttachment[]>([]);
+  const [locations, setLocations] = useState<SopLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
