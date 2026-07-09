@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Plus, Search, Folder, FolderPlus, ChevronRight, ChevronDown, Trash2, Pencil, FileText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import * as LucideIcons from 'lucide-react';
+import { ArrowLeft, BookOpen, Plus, Search, Folder, FolderPlus, ChevronRight, ChevronDown, Trash2, Pencil, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -32,12 +33,24 @@ function statusColor(s: string) {
 }
 
 export default function KnowledgeBase() {
-  const { categories, sops, createCategory, renameCategory, deleteCategory, createSop, deleteSop } = useSops();
+  const { typeId } = useParams<{ typeId: string }>();
+  const { categories, sops, createCategory, renameCategory, deleteCategory, createSop, deleteSop } = useSops(typeId ?? null);
   const { allItems } = useInventory();
   const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const [type, setType] = useState<{ name: string; description: string | null; icon: string; color: string } | null>(null);
+  useEffect(() => {
+    if (!typeId) { setType(null); return; }
+    (async () => {
+      const { data } = await supabase.from('sop_types' as any).select('name, description, icon, color').eq('id', typeId).maybeSingle();
+      setType(data as any);
+    })();
+  }, [typeId]);
+
+  const TypeIcon = (type && (LucideIcons as any)[type.icon]) || BookOpen;
 
   const tree = useMemo(() => buildTree(categories), [categories]);
 
@@ -104,7 +117,7 @@ export default function KnowledgeBase() {
     if (!title?.trim()) return;
     const catId = selectedCat && selectedCat !== '__uncat__' ? selectedCat : null;
     const created = await createSop(title.trim(), catId);
-    if (created) navigate(`/knowledge-base/${created.id}`);
+    if (created) navigate(`/knowledge-base/sop/${created.id}`);
   };
 
   const renderNode = (node: CategoryNode, depth: number) => {
@@ -145,8 +158,32 @@ export default function KnowledgeBase() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 p-4 md:p-6 h-[calc(100vh-4rem)]">
-      {/* Sidebar */}
+    <div className="flex flex-col p-4 md:p-6 gap-3 h-[calc(100vh-4rem)]">
+      {/* Breadcrumb + back */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/knowledge-base')}>
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+        <div className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
+          <Link to="/knowledge-base" className="hover:text-foreground hover:underline">Knowledge Base</Link>
+          {type && <><ChevronRight className="h-3 w-3" /><span className="text-foreground font-medium">{type.name}</span></>}
+        </div>
+      </div>
+
+      {type && (
+        <div className="flex items-center gap-3 border-l-4 pl-3 py-1" style={{ borderColor: type.color }}>
+          <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
+               style={{ backgroundColor: `${type.color}20`, color: type.color }}>
+            <TypeIcon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-lg">{type.name}</div>
+            {type.description && <div className="text-xs text-muted-foreground line-clamp-1">{type.description}</div>}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
       <div className="w-full md:w-72 shrink-0 border border-border rounded-lg bg-card flex flex-col">
         <div className="p-3 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold">
@@ -213,13 +250,14 @@ export default function KnowledgeBase() {
           )}
         </div>
       </div>
+      </div>
     </div>
   );
 }
 
 function SopCard({ sop, onDelete }: { sop: SopListItem; onDelete: () => void }) {
   return (
-    <Link to={`/knowledge-base/${sop.id}`}>
+    <Link to={`/knowledge-base/sop/${sop.id}`}>
       <Card className="p-4 hover:border-primary transition-colors h-full flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">

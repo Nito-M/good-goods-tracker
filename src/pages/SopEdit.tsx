@@ -129,13 +129,21 @@ export default function SopEdit() {
   if (!sop) return <div className="p-6">SOP not found. <Link to="/knowledge-base" className="text-primary underline">Back</Link></div>;
 
   const bomTotal = bom.reduce((sum, b) => sum + b.quantity * (itemsById.get(b.inventory_item_id)?.cost || 0), 0);
+  const backTo = (sop as any).type_id ? `/knowledge-base/type/${(sop as any).type_id}` : '/knowledge-base';
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/knowledge-base')}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="ghost" size="sm" onClick={() => navigate(backTo)}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back
         </Button>
+        <div className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
+          <Link to="/knowledge-base" className="hover:text-foreground hover:underline">Knowledge Base</Link>
+          <span>›</span>
+          <Link to={backTo} className="hover:text-foreground hover:underline">{(sop as any).type_id ? 'Type' : 'All'}</Link>
+          <span>›</span>
+          <span className="text-foreground font-medium truncate max-w-[300px]">{sop.title}</span>
+        </div>
       </div>
 
       {/* Header / metadata */}

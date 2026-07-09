@@ -71,6 +71,7 @@ import { AddVendor } from "./pages/AddVendor";
 import { EditTripPlan } from "./pages/EditTripPlan";
 import { CompanyDetail } from "./pages/CompanyDetail";
 import KnowledgeBase from "./pages/KnowledgeBase";
+import KnowledgeBaseTypes from "./pages/KnowledgeBaseTypes";
 import SopEdit from "./pages/SopEdit";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
@@ -440,13 +441,23 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AppLayout>
+                <KnowledgeBaseTypes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/knowledge-base/type/:typeId"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
                 <KnowledgeBase />
               </AppLayout>
             </ProtectedRoute>
           }
         />
         <Route
-          path="/knowledge-base/:id"
+          path="/knowledge-base/sop/:id"
           element={
             <ProtectedRoute>
               <AppLayout>

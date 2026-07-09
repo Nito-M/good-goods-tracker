@@ -7,6 +7,7 @@ export interface SopCategory {
   id: string;
   user_id: string;
   parent_id: string | null;
+  type_id: string | null;
   name: string;
   sort_order: number;
   created_at: string;
@@ -16,6 +17,7 @@ export interface SopListItem {
   id: string;
   user_id: string;
   category_id: string | null;
+  type_id: string | null;
   title: string;
   sop_number: string | null;
   department: string | null;
@@ -29,7 +31,7 @@ export interface SopListItem {
   updated_at: string;
 }
 
-export function useSops() {
+export function useSops(typeId?: string | null) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [categories, setCategories] = useState<SopCategory[]>([]);
@@ -39,21 +41,29 @@ export function useSops() {
   const refetch = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const [{ data: cats }, { data: rows }] = await Promise.all([
-      supabase.from('sop_categories' as any).select('*').order('sort_order').order('name'),
-      supabase.from('sops' as any).select('*').order('updated_at', { ascending: false }),
-    ]);
+    let catsQ: any = supabase.from('sop_categories' as any).select('*').order('sort_order').order('name');
+    let sopsQ: any = supabase.from('sops' as any).select('*').order('updated_at', { ascending: false });
+    if (typeId !== undefined) {
+      if (typeId === null) {
+        catsQ = catsQ.is('type_id', null);
+        sopsQ = sopsQ.is('type_id', null);
+      } else {
+        catsQ = catsQ.eq('type_id', typeId);
+        sopsQ = sopsQ.eq('type_id', typeId);
+      }
+    }
+    const [{ data: cats }, { data: rows }] = await Promise.all([catsQ, sopsQ]);
     setCategories((cats as any) || []);
     setSops((rows as any) || []);
     setLoading(false);
-  }, [user]);
+  }, [user, typeId]);
 
   useEffect(() => { refetch(); }, [refetch]);
 
   const createCategory = async (name: string, parentId: string | null) => {
     if (!user) return null;
     const { data, error } = await supabase.from('sop_categories' as any)
-      .insert({ user_id: user.id, name, parent_id: parentId })
+      .insert({ user_id: user.id, name, parent_id: parentId, type_id: typeId ?? null })
       .select().single();
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return null; }
     await refetch();
@@ -76,7 +86,7 @@ export function useSops() {
     if (!user) return null;
     const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await supabase.from('sops' as any).insert({
-      user_id: user.id, title, category_id: categoryId,
+      user_id: user.id, title, category_id: categoryId, type_id: typeId ?? null,
       status: 'draft', last_updated_date: today,
     }).select().single();
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return null; }
