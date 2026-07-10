@@ -7,6 +7,7 @@ export interface Assembly {
   id: string;
   user_id: string;
   name: string;
+  sku: string | null;
   description: string | null;
   selling_price: number;
   status: string;
@@ -17,6 +18,7 @@ export interface Assembly {
   created_at: string;
   updated_at: string;
 }
+
 
 export interface AssemblyItem {
   id: string;
