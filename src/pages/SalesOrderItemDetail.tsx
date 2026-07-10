@@ -126,10 +126,74 @@ export function SalesOrderItemDetail() {
     } else {
       setAddons([]);
     }
+
+    const { data: nvisData } = await supabase
+      .from('so_item_nvis_files' as any)
+      .select('*')
+      .eq('quote_id', id)
+      .eq('quote_item_id', quoteItemId)
+      .eq('unit_index', unitIdx)
+      .order('created_at', { ascending: false });
+    setNvisFiles((nvisData as any as NvisFileRow[]) || []);
+
     setLoading(false);
   }, [id, quoteItemId, unitIdx, quote]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleUploadNvis = async (file: File) => {
+    if (!user || !id || !quoteItemId) return;
+    setUploadingNvis(true);
+    try {
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `${user.id}/${id}/${quoteItemId}-${unitIdx}-${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('so-item-nvis')
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { error: insErr } = await (supabase.from('so_item_nvis_files' as any) as any).insert([{
+        quote_id: id,
+        quote_item_id: quoteItemId,
+        unit_index: unitIdx,
+        user_id: user.id,
+        file_name: file.name,
+        file_path: path,
+        mime_type: file.type || null,
+        size_bytes: file.size,
+      }]);
+      if (insErr) throw insErr;
+      toast({ title: 'N.V.I.S file uploaded' });
+      await load();
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setUploadingNvis(false);
+    }
+  };
+
+  const handleOpenNvis = async (f: NvisFileRow) => {
+    const { data, error } = await supabase.storage
+      .from('so-item-nvis')
+      .createSignedUrl(f.file_path, 60 * 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Error opening file', description: error?.message, variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  };
+
+  const handleDeleteNvis = async (f: NvisFileRow) => {
+    if (!confirm(`Delete "${f.file_name}"?`)) return;
+    await supabase.storage.from('so-item-nvis').remove([f.file_path]);
+    const { error } = await (supabase.from('so_item_nvis_files' as any) as any).delete().eq('id', f.id);
+    if (error) {
+      toast({ title: 'Error deleting', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'File deleted' });
+    await load();
+  };
+
 
   const linkedJob = link?.job_id ? jobs.find((j) => j.id === link.job_id) : null;
 
