@@ -93,8 +93,10 @@ function AssemblyDetail({
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(assembly.name);
+  const [skuValue, setSkuValue] = useState(assembly.sku || '');
   const [descValue, setDescValue] = useState(assembly.description || '');
   const [sellingPriceValue, setSellingPriceValue] = useState(String(assembly.selling_price ?? 0));
+
   const [savingMeta, setSavingMeta] = useState(false);
   const [editingPrice, setEditingPrice] = useState(false);
   const [priceInput, setPriceInput] = useState(String(assembly.selling_price ?? 0));
