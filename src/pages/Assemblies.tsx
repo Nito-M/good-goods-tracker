@@ -1103,8 +1103,10 @@ export function Assemblies() {
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newSku, setNewSku] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newModel, setNewModel] = useState<string>('');
+
   const [newModelInput, setNewModelInput] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
