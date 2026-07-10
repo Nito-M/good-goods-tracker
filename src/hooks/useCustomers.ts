@@ -12,9 +12,13 @@ export interface Customer {
   email: string | null;
   address: string | null;
   notes: string | null;
+  link: string | null;
+  color: string | null;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
+
 
 export function useCustomers() {
   const { toast } = useToast();
