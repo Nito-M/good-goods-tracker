@@ -71,6 +71,8 @@ export function SalesOrderItemDetail() {
 
   const [link, setLink] = useState<ItemLinkRow | null>(null);
   const [addons, setAddons] = useState<Array<{ id: string; itemName: string; sku: string; notes: string | null }>>([]);
+  const [nvisFiles, setNvisFiles] = useState<NvisFileRow[]>([]);
+  const [uploadingNvis, setUploadingNvis] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
