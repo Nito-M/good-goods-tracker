@@ -197,10 +197,12 @@ export function PurchaseOrders() {
       const matchesPO = order.poNumber?.toLowerCase().includes(query);
       const matchesVendor = order.vendorId && vendors.find((v) => v.id === order.vendorId)?.name.toLowerCase().includes(query);
       const matchesItems = order.items?.some(
-        (item) => item.itemName?.toLowerCase().includes(query) || item.sku?.toLowerCase().includes(query)
+        (item) => item.itemName?.toLowerCase().includes(query) || item.sku?.toLowerCase().includes(query) || item.notes?.toLowerCase().includes(query)
       );
       const matchesJob = order.jobNumbers?.some((jn) => jn.toLowerCase().includes(query));
-      return matchesPO || matchesVendor || matchesItems || matchesJob;
+      const matchesNotes = order.notes?.toLowerCase().includes(query);
+      return matchesPO || matchesVendor || matchesItems || matchesJob || matchesNotes;
+
     });
   }, [orders, searchQuery, vendors]);
 
