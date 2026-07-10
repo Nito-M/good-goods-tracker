@@ -115,7 +115,7 @@ function AssemblyDetail({
 
   const handleSaveMeta = async () => {
     setSavingMeta(true);
-    await onUpdate(assembly.id, { name: nameValue.trim() || assembly.name, description: descValue.trim() || null, selling_price: parseFloat(sellingPriceValue) || 0 });
+    await onUpdate(assembly.id, { name: nameValue.trim() || assembly.name, sku: skuValue.trim() || null, description: descValue.trim() || null, selling_price: parseFloat(sellingPriceValue) || 0 });
     setSavingMeta(false);
     setEditingName(false);
   };
