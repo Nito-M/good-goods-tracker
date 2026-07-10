@@ -283,7 +283,8 @@ export function SalesOrderItemDetail() {
   const displayJobNumber = linkedJob?.jobNumber || link?.external_job_number || null;
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="h-full overflow-y-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <Link to={`/sales-orders/${id}`} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
