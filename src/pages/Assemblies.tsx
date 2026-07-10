@@ -1456,6 +1456,8 @@ export function Assemblies() {
           <DialogHeader><DialogTitle>New Assembly in "{activeType}"</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1"><Label>Name *</Label><Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. 16ft Flatbed Trailer" onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
+            <div className="space-y-1"><Label>Assembly SKU / Part #<span className="text-sky-400 ml-1">(optional)</span></Label><Input value={newSku} onChange={(e) => setNewSku(e.target.value)} placeholder="e.g. ASM-1001" onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
+
             <div className="space-y-1"><Label>Description</Label><Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Optional description..." rows={2} /></div>
             <div className="space-y-1">
               <Label className="flex items-center gap-1.5"><Tag className="h-3 w-3" /> Sub-type</Label>
