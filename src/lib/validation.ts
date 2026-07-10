@@ -30,7 +30,10 @@ export const customerSchema = z.object({
   email: optionalEmail,
   address: optionalAddress,
   notes: z.string().max(5000, 'Notes must be less than 5000 characters').optional().nullable(),
+  link: optionalUrl,
+  category: z.string().max(100, 'Category must be less than 100 characters').optional().nullable(),
 });
+
 
 export type CustomerInput = z.infer<typeof customerSchema>;
 

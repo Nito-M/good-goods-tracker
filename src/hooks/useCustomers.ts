@@ -12,9 +12,13 @@ export interface Customer {
   email: string | null;
   address: string | null;
   notes: string | null;
+  link: string | null;
+  color: string | null;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
+
 
 export function useCustomers() {
   const { toast } = useToast();
@@ -45,7 +49,7 @@ export function useCustomers() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
-  const addCustomer = async (customer: Omit<Customer, 'id' | 'created_at' | 'updated_at'>) => {
+  const addCustomer = async (customer: Partial<Omit<Customer, 'id' | 'created_at' | 'updated_at'>> & { name: string }) => {
     if (!user) return;
 
     const validation = validateInput(customerSchema, customer);
@@ -65,8 +69,12 @@ export function useCustomers() {
       email: validation.data.email ?? null,
       address: validation.data.address ?? null,
       notes: validation.data.notes ?? null,
+      link: validation.data.link ?? null,
+      category: validation.data.category ?? null,
+      color: (customer as any).color ?? null,
       user_id: user.id,
     }]);
+
 
     if (error) {
       console.error('Error adding customer:', error);
@@ -94,10 +102,14 @@ export function useCustomers() {
       return;
     }
 
+    const updateData: Record<string, any> = { ...validation.data };
+    if ('color' in updates) updateData.color = updates.color;
+
     const { error } = await supabase
       .from('customers')
-      .update(validation.data)
+      .update(updateData)
       .eq('id', id);
+
 
     if (error) {
       console.error('Error updating customer:', error);

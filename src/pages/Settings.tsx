@@ -260,6 +260,10 @@ export function Settings() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
+  const [customerLink, setCustomerLink] = useState('');
+  const [customerColor, setCustomerColor] = useState('');
+  const [customerCategory, setCustomerCategory] = useState('');
+
   const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
   // Filtered vendors
   const filteredVendors = vendors.filter((vendor) => {
@@ -318,6 +322,9 @@ export function Settings() {
       setCustomerEmail(customer.email || '');
       setCustomerAddress(customer.address || '');
       setCustomerNotes(customer.notes || '');
+      setCustomerLink(customer.link || '');
+      setCustomerColor(customer.color || '');
+      setCustomerCategory(customer.category || '');
     } else {
       setEditingCustomer(null);
       setCustomerName('');
@@ -326,6 +333,9 @@ export function Settings() {
       setCustomerEmail('');
       setCustomerAddress('');
       setCustomerNotes('');
+      setCustomerLink('');
+      setCustomerColor('');
+      setCustomerCategory('');
     }
     setCustomerDialogOpen(true);
   };
@@ -339,7 +349,11 @@ export function Settings() {
       email: customerEmail || null,
       address: customerAddress || null,
       notes: customerNotes || null,
+      link: customerLink || null,
+      color: customerColor || null,
+      category: customerCategory.trim() || null,
     };
+
 
     if (editingCustomer) {
       await updateCustomer(editingCustomer.id, customerData);
@@ -1464,6 +1478,44 @@ export function Settings() {
                 onChange={(e) => setCustomerAddress(e.target.value)}
                 placeholder="Full address"
                 rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customer-category">Category</Label>
+                <Input
+                  id="customer-category"
+                  value={customerCategory}
+                  onChange={(e) => setCustomerCategory(e.target.value)}
+                  placeholder="e.g. Wholesale, Retail"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customer-color">Color</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="customer-color"
+                    type="color"
+                    value={customerColor || '#000000'}
+                    onChange={(e) => setCustomerColor(e.target.value)}
+                    className="w-14 h-10 p-1"
+                  />
+                  <Input
+                    value={customerColor}
+                    onChange={(e) => setCustomerColor(e.target.value)}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-link">Link</Label>
+              <Input
+                id="customer-link"
+                type="url"
+                value={customerLink}
+                onChange={(e) => setCustomerLink(e.target.value)}
+                placeholder="https://..."
               />
             </div>
             <div className="space-y-2">
