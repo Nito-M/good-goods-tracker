@@ -44,6 +44,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { StatCard } from '@/components/StatCard';
 
 const CARD_COLORS = [
   { label: 'Blue', value: 'from-blue-600 to-blue-800' },
@@ -354,6 +355,15 @@ export function Bank() {
           </div>
         ) : (
           <>
+            {/* Stats */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="Total Balance" value={formatCurrency(balance)} icon={Wallet} variant="default" />
+              <StatCard title="Total Deposits" value={formatCurrency(totals.deposits)} icon={ArrowUpCircle} variant="success" />
+              <StatCard title="Total Withdrawals" value={formatCurrency(totals.withdrawals)} icon={ArrowDownCircle} variant="warning" />
+              <StatCard title="Sale Profits" value={formatCurrency(totals.profits)} icon={TrendingUp} variant="success" />
+            </div>
+
+
             {/* Bank Cards Section */}
             {cards.length > 0 && (
               <section>
