@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Loader2, Briefcase, CalendarIcon, Hash, FileText, ClipboardList, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Briefcase, CalendarIcon, Hash, FileText, ClipboardList, Save, Upload, Download, Trash2, FileIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useJobs } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
