@@ -69,8 +69,12 @@ export function useCustomers() {
       email: validation.data.email ?? null,
       address: validation.data.address ?? null,
       notes: validation.data.notes ?? null,
+      link: validation.data.link ?? null,
+      category: validation.data.category ?? null,
+      color: (customer as any).color ?? null,
       user_id: user.id,
     }]);
+
 
     if (error) {
       console.error('Error adding customer:', error);
