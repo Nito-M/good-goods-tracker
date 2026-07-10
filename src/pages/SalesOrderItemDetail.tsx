@@ -543,7 +543,9 @@ export function SalesOrderItemDetail() {
         </CardContent>
       </Card>
     </div>
+    </div>
   );
 }
+
 
 export default SalesOrderItemDetail;
