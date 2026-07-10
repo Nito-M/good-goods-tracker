@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Loader2, Briefcase, CalendarIcon, Hash, FileText, ClipboardList, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Briefcase, CalendarIcon, Hash, FileText, ClipboardList, Save, Upload, Download, Trash2, FileIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useJobs } from '@/hooks/useJobs';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,15 @@ interface ItemLinkRow {
   external_notes: string | null;
 }
 
+interface NvisFileRow {
+  id: string;
+  file_name: string;
+  file_path: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  created_at: string;
+}
+
 export function SalesOrderItemDetail() {
   const { id, quoteItemId, unitIndex } = useParams<{
     id: string;
@@ -48,6 +58,7 @@ export function SalesOrderItemDetail() {
   }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { quotes, loading: quotesLoading } = useQuotes();
   const { jobs } = useJobs();
 
@@ -60,6 +71,8 @@ export function SalesOrderItemDetail() {
 
   const [link, setLink] = useState<ItemLinkRow | null>(null);
   const [addons, setAddons] = useState<Array<{ id: string; itemName: string; sku: string; notes: string | null }>>([]);
+  const [nvisFiles, setNvisFiles] = useState<NvisFileRow[]>([]);
+  const [uploadingNvis, setUploadingNvis] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -113,10 +126,74 @@ export function SalesOrderItemDetail() {
     } else {
       setAddons([]);
     }
+
+    const { data: nvisData } = await supabase
+      .from('so_item_nvis_files' as any)
+      .select('*')
+      .eq('quote_id', id)
+      .eq('quote_item_id', quoteItemId)
+      .eq('unit_index', unitIdx)
+      .order('created_at', { ascending: false });
+    setNvisFiles((nvisData as any as NvisFileRow[]) || []);
+
     setLoading(false);
   }, [id, quoteItemId, unitIdx, quote]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleUploadNvis = async (file: File) => {
+    if (!user || !id || !quoteItemId) return;
+    setUploadingNvis(true);
+    try {
+      const ext = file.name.split('.').pop() || 'pdf';
+      const path = `${user.id}/${id}/${quoteItemId}-${unitIdx}-${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('so-item-nvis')
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { error: insErr } = await (supabase.from('so_item_nvis_files' as any) as any).insert([{
+        quote_id: id,
+        quote_item_id: quoteItemId,
+        unit_index: unitIdx,
+        user_id: user.id,
+        file_name: file.name,
+        file_path: path,
+        mime_type: file.type || null,
+        size_bytes: file.size,
+      }]);
+      if (insErr) throw insErr;
+      toast({ title: 'N.V.I.S file uploaded' });
+      await load();
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setUploadingNvis(false);
+    }
+  };
+
+  const handleOpenNvis = async (f: NvisFileRow) => {
+    const { data, error } = await supabase.storage
+      .from('so-item-nvis')
+      .createSignedUrl(f.file_path, 60 * 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: 'Error opening file', description: error?.message, variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  };
+
+  const handleDeleteNvis = async (f: NvisFileRow) => {
+    if (!confirm(`Delete "${f.file_name}"?`)) return;
+    await supabase.storage.from('so-item-nvis').remove([f.file_path]);
+    const { error } = await (supabase.from('so_item_nvis_files' as any) as any).delete().eq('id', f.id);
+    if (error) {
+      toast({ title: 'Error deleting', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'File deleted' });
+    await load();
+  };
+
 
   const linkedJob = link?.job_id ? jobs.find((j) => j.id === link.job_id) : null;
 
@@ -386,6 +463,64 @@ export function SalesOrderItemDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* N.V.I.S PDFs */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-lg">N.V.I.S PDFs ({nvisFiles.length})</CardTitle>
+            <label>
+              <input
+                type="file"
+                accept=".pdf,application/pdf,image/*"
+                className="hidden"
+                disabled={uploadingNvis}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUploadNvis(f);
+                  e.target.value = '';
+                }}
+              />
+              <Button size="sm" variant="outline" asChild disabled={uploadingNvis}>
+                <span className="cursor-pointer">
+                  {uploadingNvis ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                  Upload
+                </span>
+              </Button>
+            </label>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {nvisFiles.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No N.V.I.S files uploaded for this unit.</p>
+          ) : (
+            <ul className="space-y-2">
+              {nvisFiles.map((f) => (
+                <li key={f.id} className="flex items-center gap-2 border rounded-md p-2">
+                  <FileIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <button
+                    onClick={() => handleOpenNvis(f)}
+                    className="text-sm text-primary hover:underline truncate flex-1 text-left"
+                    title={f.file_name}
+                  >
+                    {f.file_name}
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(f.created_at), 'MMM d, yyyy')}
+                  </span>
+                  <Button size="icon" variant="ghost" onClick={() => handleOpenNvis(f)} title="Open">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDeleteNvis(f)} title="Delete" className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
 
       {/* Add-ons */}
       <Card>
