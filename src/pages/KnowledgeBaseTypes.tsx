@@ -121,15 +121,15 @@ export default function KnowledgeBaseTypes() {
               <Card
                 key={t.id}
                 onClick={() => navigate(`/knowledge-base/type/${t.id}`)}
-                className="group relative p-5 cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 border-l-4 overflow-hidden"
+                className="group relative p-5 cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 border-l-4 overflow-hidden min-h-[220px] flex flex-col"
                 style={{ borderLeftColor: t.color }}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className="h-12 w-12 rounded-lg flex items-center justify-center shrink-0"
+                    className="h-14 w-14 rounded-lg flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${t.color}20`, color: t.color }}
                   >
-                    {renderIcon(t.icon, 'h-6 w-6')}
+                    {renderIcon(t.icon, 'h-7 w-7')}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -138,12 +138,15 @@ export default function KnowledgeBaseTypes() {
                       {t.archived && <Badge variant="secondary" className="text-[10px]">Archived</Badge>}
                     </div>
                     {t.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{t.description}</p>
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-4">{t.description}</p>
+                    )}
+                    {!t.description && (
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-4 italic">No description provided.</p>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center gap-4 text-sm">
+                <div className="mt-auto pt-4 flex items-center gap-4 text-sm">
                   <div>
                     <div className="font-semibold text-base" style={{ color: t.color }}>{s.sopCount}</div>
                     <div className="text-xs text-muted-foreground">SOPs</div>
