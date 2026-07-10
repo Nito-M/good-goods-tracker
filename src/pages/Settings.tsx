@@ -260,6 +260,10 @@ export function Settings() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
+  const [customerLink, setCustomerLink] = useState('');
+  const [customerColor, setCustomerColor] = useState('');
+  const [customerCategory, setCustomerCategory] = useState('');
+
   const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
   // Filtered vendors
   const filteredVendors = vendors.filter((vendor) => {
