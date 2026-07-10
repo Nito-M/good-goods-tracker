@@ -307,6 +307,10 @@ function AssemblyDetail({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-semibold">{assembly.name}</h2>
+                {assembly.sku && (
+                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground" title="Assembly SKU / Part #">{assembly.sku}</span>
+                )}
+
                 <Popover open={modelPopoverOpen} onOpenChange={setModelPopoverOpen}>
                   <PopoverTrigger asChild>
                     {assembly.model ? (
