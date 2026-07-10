@@ -293,11 +293,13 @@ function AssemblyDetail({
         {editingName ? (
           <div className="space-y-3">
             <div className="space-y-1"><Label>Assembly Name</Label><Input value={nameValue} onChange={(e) => setNameValue(e.target.value)} /></div>
+            <div className="space-y-1"><Label>Assembly SKU / Part #<span className="text-sky-400 ml-1">(optional)</span></Label><Input value={skuValue} onChange={(e) => setSkuValue(e.target.value)} placeholder="e.g. ASM-1001" /></div>
             <div className="space-y-1"><Label>Description</Label><Textarea value={descValue} onChange={(e) => setDescValue(e.target.value)} placeholder="Optional description..." rows={2} /></div>
             {canViewAssemblyPricing && <div className="space-y-1"><Label>Selling Price ($)</Label><Input type="number" min={0} step="0.01" value={sellingPriceValue} onChange={(e) => setSellingPriceValue(e.target.value)} placeholder="0.00" /></div>}
             <div className="flex gap-2">
               <Button size="sm" onClick={handleSaveMeta} disabled={savingMeta}><Check className="h-3 w-3 mr-1" /> Save</Button>
-              <Button size="sm" variant="outline" onClick={() => { setEditingName(false); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}><X className="h-3 w-3 mr-1" /> Cancel</Button>
+              <Button size="sm" variant="outline" onClick={() => { setEditingName(false); setNameValue(assembly.name); setSkuValue(assembly.sku || ''); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}><X className="h-3 w-3 mr-1" /> Cancel</Button>
+
             </div>
           </div>
         ) : (
