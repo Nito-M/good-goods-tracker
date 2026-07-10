@@ -122,6 +122,8 @@ export function useAssemblies() {
         status_notes: source.status_notes,
         type: source.type,
         model: source.model,
+        sku: source.sku,
+
       } as any)
       .select()
       .single();
