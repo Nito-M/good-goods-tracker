@@ -44,6 +44,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { StatCard } from '@/components/StatCard';
 
 const CARD_COLORS = [
   { label: 'Blue', value: 'from-blue-600 to-blue-800' },
