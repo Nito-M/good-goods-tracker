@@ -322,6 +322,9 @@ export function Settings() {
       setCustomerEmail(customer.email || '');
       setCustomerAddress(customer.address || '');
       setCustomerNotes(customer.notes || '');
+      setCustomerLink(customer.link || '');
+      setCustomerColor(customer.color || '');
+      setCustomerCategory(customer.category || '');
     } else {
       setEditingCustomer(null);
       setCustomerName('');
@@ -330,6 +333,9 @@ export function Settings() {
       setCustomerEmail('');
       setCustomerAddress('');
       setCustomerNotes('');
+      setCustomerLink('');
+      setCustomerColor('');
+      setCustomerCategory('');
     }
     setCustomerDialogOpen(true);
   };
@@ -343,7 +349,11 @@ export function Settings() {
       email: customerEmail || null,
       address: customerAddress || null,
       notes: customerNotes || null,
+      link: customerLink || null,
+      color: customerColor || null,
+      category: customerCategory.trim() || null,
     };
+
 
     if (editingCustomer) {
       await updateCustomer(editingCustomer.id, customerData);
