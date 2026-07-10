@@ -464,7 +464,7 @@ function AssemblyDetail({
                   }}>
                     <Download className="h-3 w-3 mr-2" /> PDF
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
+                  <DropdownMenuItem onClick={() => { setEditingName(true); setNameValue(assembly.name); setSkuValue(assembly.sku || ''); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                     <Pencil className="h-3 w-3 mr-2" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onDuplicate(assembly.id)}>
