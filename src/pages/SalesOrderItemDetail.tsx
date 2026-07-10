@@ -58,6 +58,7 @@ export function SalesOrderItemDetail() {
   }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { quotes, loading: quotesLoading } = useQuotes();
   const { jobs } = useJobs();
 
