@@ -92,6 +92,7 @@ export type Database = {
           name: string
           selling_price: number
           selling_price_updated_at: string | null
+          sku: string | null
           status: string
           status_notes: string | null
           type: string
@@ -106,6 +107,7 @@ export type Database = {
           name: string
           selling_price?: number
           selling_price_updated_at?: string | null
+          sku?: string | null
           status?: string
           status_notes?: string | null
           type?: string
@@ -120,6 +122,7 @@ export type Database = {
           name?: string
           selling_price?: number
           selling_price_updated_at?: string | null
+          sku?: string | null
           status?: string
           status_notes?: string | null
           type?: string
