@@ -68,11 +68,11 @@ export function useAssemblies() {
     fetchAssemblies();
   }, [user]);
 
-  const createAssembly = async (name: string, description?: string, type?: string, model?: string | null): Promise<Assembly | null> => {
+  const createAssembly = async (name: string, description?: string, type?: string, model?: string | null, sku?: string | null): Promise<Assembly | null> => {
     if (!user) return null;
     const { data, error } = await supabase
       .from('assemblies')
-      .insert({ user_id: user.id, name, description: description || null, type: type || 'General', model: model || null } as any)
+      .insert({ user_id: user.id, name, description: description || null, type: type || 'General', model: model || null, sku: sku || null } as any)
       .select()
       .single();
     if (error) {
@@ -83,7 +83,7 @@ export function useAssemblies() {
     return data as Assembly;
   };
 
-  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string; model?: string | null }) => {
+  const updateAssembly = async (id: string, updates: { name?: string; sku?: string | null; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string; model?: string | null }) => {
     const { error } = await supabase
       .from('assemblies')
       .update(updates)
@@ -94,6 +94,7 @@ export function useAssemblies() {
       await fetchAssemblies();
     }
   };
+
 
   const deleteAssembly = async (id: string) => {
     const { error } = await supabase.from('assemblies').delete().eq('id', id);
