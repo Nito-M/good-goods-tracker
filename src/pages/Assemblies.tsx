@@ -1166,10 +1166,11 @@ export function Assemblies() {
   const handleCreate = async () => {
     if (!newName.trim()) return;
     setCreating(true);
-    const created = await createAssembly(newName.trim(), newDesc.trim() || undefined, activeType, newModel || null);
+    const created = await createAssembly(newName.trim(), newDesc.trim() || undefined, activeType, newModel || null, newSku.trim() || null);
     setCreating(false);
-    if (created) { setSelectedId(created.id); setCreateOpen(false); setNewName(''); setNewDesc(''); setNewModel(''); setNewModelInput(''); setTimeout(refetchSummaries, 300); }
+    if (created) { setSelectedId(created.id); setCreateOpen(false); setNewName(''); setNewSku(''); setNewDesc(''); setNewModel(''); setNewModelInput(''); setTimeout(refetchSummaries, 300); }
   };
+
 
   const handleAddModelInline = async () => {
     const trimmed = newModelInput.trim();
