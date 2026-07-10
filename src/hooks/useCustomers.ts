@@ -102,10 +102,14 @@ export function useCustomers() {
       return;
     }
 
+    const updateData: Record<string, any> = { ...validation.data };
+    if ('color' in updates) updateData.color = updates.color;
+
     const { error } = await supabase
       .from('customers')
-      .update(validation.data)
+      .update(updateData)
       .eq('id', id);
+
 
     if (error) {
       console.error('Error updating customer:', error);
