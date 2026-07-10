@@ -49,7 +49,7 @@ export function useCustomers() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey });
 
-  const addCustomer = async (customer: Omit<Customer, 'id' | 'created_at' | 'updated_at'>) => {
+  const addCustomer = async (customer: Partial<Omit<Customer, 'id' | 'created_at' | 'updated_at'>> & { name: string }) => {
     if (!user) return;
 
     const validation = validateInput(customerSchema, customer);
