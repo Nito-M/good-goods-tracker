@@ -132,8 +132,8 @@ export default function KnowledgeBaseTypes() {
                     {renderIcon(t.icon, 'h-7 w-7')}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg truncate">{t.name}</h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-lg leading-tight">{t.name}</h3>
                       {recent && <Badge variant="outline" className="text-[10px] bg-emerald-500/15 text-emerald-500 border-emerald-500/30">Recently updated</Badge>}
                       {t.archived && <Badge variant="secondary" className="text-[10px]">Archived</Badge>}
                     </div>
