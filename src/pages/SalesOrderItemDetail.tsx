@@ -464,6 +464,64 @@ export function SalesOrderItemDetail() {
         </Card>
       )}
 
+      {/* N.V.I.S PDFs */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-lg">N.V.I.S PDFs ({nvisFiles.length})</CardTitle>
+            <label>
+              <input
+                type="file"
+                accept=".pdf,application/pdf,image/*"
+                className="hidden"
+                disabled={uploadingNvis}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUploadNvis(f);
+                  e.target.value = '';
+                }}
+              />
+              <Button size="sm" variant="outline" asChild disabled={uploadingNvis}>
+                <span className="cursor-pointer">
+                  {uploadingNvis ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                  Upload
+                </span>
+              </Button>
+            </label>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {nvisFiles.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No N.V.I.S files uploaded for this unit.</p>
+          ) : (
+            <ul className="space-y-2">
+              {nvisFiles.map((f) => (
+                <li key={f.id} className="flex items-center gap-2 border rounded-md p-2">
+                  <FileIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <button
+                    onClick={() => handleOpenNvis(f)}
+                    className="text-sm text-primary hover:underline truncate flex-1 text-left"
+                    title={f.file_name}
+                  >
+                    {f.file_name}
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(f.created_at), 'MMM d, yyyy')}
+                  </span>
+                  <Button size="icon" variant="ghost" onClick={() => handleOpenNvis(f)} title="Open">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDeleteNvis(f)} title="Delete" className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+
       {/* Add-ons */}
       <Card>
         <CardHeader><CardTitle className="text-lg">Add-ons ({addons.length})</CardTitle></CardHeader>
