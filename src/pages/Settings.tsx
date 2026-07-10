@@ -1480,6 +1480,44 @@ export function Settings() {
                 rows={2}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customer-category">Category</Label>
+                <Input
+                  id="customer-category"
+                  value={customerCategory}
+                  onChange={(e) => setCustomerCategory(e.target.value)}
+                  placeholder="e.g. Wholesale, Retail"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customer-color">Color</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="customer-color"
+                    type="color"
+                    value={customerColor || '#000000'}
+                    onChange={(e) => setCustomerColor(e.target.value)}
+                    className="w-14 h-10 p-1"
+                  />
+                  <Input
+                    value={customerColor}
+                    onChange={(e) => setCustomerColor(e.target.value)}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-link">Link</Label>
+              <Input
+                id="customer-link"
+                type="url"
+                value={customerLink}
+                onChange={(e) => setCustomerLink(e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="customer-notes">Notes</Label>
               <Textarea
