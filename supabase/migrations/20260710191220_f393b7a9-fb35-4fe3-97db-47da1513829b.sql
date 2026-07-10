@@ -1,0 +1,1 @@
+ALTER TABLE public.assemblies ADD COLUMN IF NOT EXISTS sku text;
