@@ -4645,6 +4645,60 @@ export type Database = {
           },
         ]
       }
+      so_item_nvis_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          quote_id: string
+          quote_item_id: string
+          size_bytes: number | null
+          unit_index: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          quote_id: string
+          quote_item_id: string
+          size_bytes?: number | null
+          unit_index?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          quote_id?: string
+          quote_item_id?: string
+          size_bytes?: number | null
+          unit_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "so_item_nvis_files_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "so_item_nvis_files_quote_item_id_fkey"
+            columns: ["quote_item_id"]
+            isOneToOne: false
+            referencedRelation: "quote_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sop_attachments: {
         Row: {
           created_at: string
