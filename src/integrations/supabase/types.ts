@@ -1472,10 +1472,13 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          category: string | null
+          color: string | null
           company: string | null
           created_at: string
           email: string | null
           id: string
+          link: string | null
           name: string
           notes: string | null
           phone: string | null
@@ -1484,10 +1487,13 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          category?: string | null
+          color?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          link?: string | null
           name: string
           notes?: string | null
           phone?: string | null
@@ -1496,10 +1502,13 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          category?: string | null
+          color?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          link?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
