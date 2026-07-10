@@ -41,6 +41,15 @@ interface ItemLinkRow {
   external_notes: string | null;
 }
 
+interface NvisFileRow {
+  id: string;
+  file_name: string;
+  file_path: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  created_at: string;
+}
+
 export function SalesOrderItemDetail() {
   const { id, quoteItemId, unitIndex } = useParams<{
     id: string;
