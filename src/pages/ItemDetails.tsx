@@ -139,6 +139,14 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [consumeWarehouseId, setConsumeWarehouseId] = useState<string>('');
   const [isConsuming, setIsConsuming] = useState(false);
   const [showInStorefront, setShowInStorefront] = useState(false);
+  const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
+  const [newVendorId, setNewVendorId] = useState('');
+  const [newVendorPrice, setNewVendorPrice] = useState('');
+  const [newVendorSku, setNewVendorSku] = useState('');
+  const [newVendorLink, setNewVendorLink] = useState('');
+  const [newVendorLeadTime, setNewVendorLeadTime] = useState('');
+  const [newVendorNotes, setNewVendorNotes] = useState('');
+  const [savingVendor, setSavingVendor] = useState(false);
   
   const item = items.find((i) => i.id === id);
 
