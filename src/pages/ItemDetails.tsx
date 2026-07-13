@@ -989,14 +989,49 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Vendor</Label>
-              <Select value={newVendorId} onValueChange={setNewVendorId}>
-                <SelectTrigger><SelectValue placeholder="Select a vendor" /></SelectTrigger>
-                <SelectContent>
-                  {vendors.map(v => (
-                    <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={vendorOpen}
+                    className="w-full justify-between"
+                  >
+                    {newVendorId
+                      ? vendors.find((v) => v.id === newVendorId)?.name
+                      : 'Search vendors...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search vendors..." />
+                    <CommandList>
+                      <CommandEmpty>No vendor found.</CommandEmpty>
+                      <CommandGroup>
+                        {vendors.map((vendor) => (
+                          <CommandItem
+                            key={vendor.id}
+                            value={vendor.name}
+                            onSelect={() => {
+                              setNewVendorId(vendor.id);
+                              setVendorOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                newVendorId === vendor.id ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            {vendor.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
