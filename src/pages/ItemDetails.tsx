@@ -336,6 +336,10 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                   <Minus className="h-4 w-4 mr-2" />
                   Consume
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setAddVendorDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Vendor
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onSelect={() => setDeleteDialogOpen(true)}
