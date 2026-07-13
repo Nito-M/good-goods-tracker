@@ -92,6 +92,19 @@ export function AddPurchaseOrder() {
   const [vendorId, setVendorId] = useState<string>(editingOrder?.vendorId || '');
   const [vendorOpen, setVendorOpen] = useState(false);
   const [requestId, setRequestId] = useState<string>(editingOrder?.requestId || '');
+  const [showLinkRequest, setShowLinkRequest] = useState<boolean>(() => {
+    if (editingOrder?.requestId) return true;
+    try {
+      return localStorage.getItem('po_show_link_request') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const toggleShowLinkRequest = (val: boolean) => {
+    setShowLinkRequest(val);
+    try { localStorage.setItem('po_show_link_request', val ? 'true' : 'false'); } catch {}
+    if (!val) setRequestId('');
+  };
   const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
   const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
