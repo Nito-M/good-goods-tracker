@@ -107,6 +107,20 @@ export function AddPurchaseOrder() {
     if (!val) setRequestId('');
   };
   const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
+  const [showLinkJobs, setShowLinkJobs] = useState<boolean>(() => {
+    if ((editingOrder?.jobIds || []).length > 0) return true;
+    try {
+      return localStorage.getItem('po_show_link_jobs') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const toggleShowLinkJobs = (val: boolean) => {
+    setShowLinkJobs(val);
+    try { localStorage.setItem('po_show_link_jobs', val ? 'true' : 'false'); } catch {}
+    if (!val) setJobIds([]);
+  };
+
   const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [vendorChangeChooser, setVendorChangeChooser] = useState<Array<{
@@ -720,40 +734,52 @@ export function AddPurchaseOrder() {
               </div>
 
 
-              {/* Job Selection - Multi-select */}
+              {/* Job Selection - toggleable */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  Link to Jobs
-                </Label>
-                <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
-                  {jobs
-                    .filter(j => j.status !== 'completed' && j.status !== 'cancelled')
-                    .map((job) => (
-                      <label key={job.id} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-muted/50 rounded p-1">
-                        <input
-                          type="checkbox"
-                          checked={jobIds.includes(job.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setJobIds(prev => [...prev, job.id]);
-                            } else {
-                              setJobIds(prev => prev.filter(id => id !== job.id));
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <span>{job.jobNumber} - {job.title}</span>
-                      </label>
-                    ))}
-                  {jobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled').length === 0 && (
-                    <p className="text-sm text-muted-foreground">No active jobs</p>
-                  )}
+                <div className="flex items-center justify-between rounded-md border border-border/50 bg-muted/30 px-3 py-2">
+                  <Label htmlFor="toggle-link-jobs" className="flex items-center gap-2 cursor-pointer mb-0">
+                    <Briefcase className="h-4 w-4" />
+                    Link to Jobs
+                  </Label>
+                  <Switch
+                    id="toggle-link-jobs"
+                    checked={showLinkJobs}
+                    onCheckedChange={toggleShowLinkJobs}
+                  />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Optionally link this PO to one or more jobs
-                </p>
+                {showLinkJobs && (
+                  <div className="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto">
+                    {jobs
+                      .filter(j => j.status !== 'completed' && j.status !== 'cancelled')
+                      .map((job) => (
+                        <label key={job.id} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-muted/50 rounded p-1">
+                          <input
+                            type="checkbox"
+                            checked={jobIds.includes(job.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setJobIds(prev => [...prev, job.id]);
+                              } else {
+                                setJobIds(prev => prev.filter(id => id !== job.id));
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <span>{job.jobNumber} - {job.title}</span>
+                        </label>
+                      ))}
+                    {jobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled').length === 0 && (
+                      <p className="text-sm text-muted-foreground">No active jobs</p>
+                    )}
+                  </div>
+                )}
+                {showLinkJobs && (
+                  <p className="text-xs text-muted-foreground">
+                    Optionally link this PO to one or more jobs
+                  </p>
+                )}
               </div>
+
 
               {/* Bank Card Selection */}
               {bankCards.length > 0 && (
