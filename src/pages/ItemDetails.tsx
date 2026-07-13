@@ -143,6 +143,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [showInStorefront, setShowInStorefront] = useState(false);
   const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
   const [newVendorId, setNewVendorId] = useState('');
+  const [vendorOpen, setVendorOpen] = useState(false);
   const [newVendorPrice, setNewVendorPrice] = useState('');
   const [newVendorSku, setNewVendorSku] = useState('');
   const [newVendorLink, setNewVendorLink] = useState('');
