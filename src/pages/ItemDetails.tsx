@@ -971,6 +971,83 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         )}
       </main>
 
+      {/* Add Vendor Dialog */}
+      <Dialog open={addVendorDialogOpen} onOpenChange={(open) => {
+        setAddVendorDialogOpen(open);
+        if (!open) {
+          setNewVendorId(''); setNewVendorPrice(''); setNewVendorSku('');
+          setNewVendorLink(''); setNewVendorLeadTime(''); setNewVendorNotes('');
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Vendor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Vendor</Label>
+              <Select value={newVendorId} onValueChange={setNewVendorId}>
+                <SelectTrigger><SelectValue placeholder="Select a vendor" /></SelectTrigger>
+                <SelectContent>
+                  {vendors.map(v => (
+                    <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Price</Label>
+                <Input type="number" step="0.00001" placeholder="0.00" value={newVendorPrice} onChange={(e) => setNewVendorPrice(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Vendor SKU</Label>
+                <Input value={newVendorSku} onChange={(e) => setNewVendorSku(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Link</Label>
+              <Input type="url" placeholder="https://..." value={newVendorLink} onChange={(e) => setNewVendorLink(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Lead Time (days)</Label>
+              <Input type="number" min="0" value={newVendorLeadTime} onChange={(e) => setNewVendorLeadTime(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea value={newVendorNotes} onChange={(e) => setNewVendorNotes(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddVendorDialogOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!newVendorId || !newVendorPrice || savingVendor}
+              onClick={async () => {
+                setSavingVendor(true);
+                const ok = await insertPrice(
+                  newVendorId,
+                  parseFloat(newVendorPrice),
+                  newVendorLink || undefined,
+                  newVendorSku || undefined,
+                  newVendorLeadTime ? parseInt(newVendorLeadTime, 10) : null,
+                  newVendorNotes || null,
+                );
+                setSavingVendor(false);
+                if (ok) {
+                  toast({ title: 'Vendor added' });
+                  await refetchVendorPrices();
+                  setAddVendorDialogOpen(false);
+                  setNewVendorId(''); setNewVendorPrice(''); setNewVendorSku('');
+                  setNewVendorLink(''); setNewVendorLeadTime(''); setNewVendorNotes('');
+                }
+              }}
+            >
+              {savingVendor ? 'Adding...' : 'Add Vendor'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Consume Dialog */}
       <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
         <DialogContent className="sm:max-w-md">
