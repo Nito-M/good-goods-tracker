@@ -13,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -22,10 +24,10 @@ import { useRequests } from '@/hooks/useRequests';
 import { useJobs } from '@/hooks/useJobs';
 import { useBankCards } from '@/hooks/useBankCards';
 import { PurchaseOrderItem, PurchaseOrder } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, CreditCard, ShoppingCart } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, CreditCard, ShoppingCart, ChevronsUpDown, Check } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
 import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
