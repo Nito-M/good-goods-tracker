@@ -980,6 +980,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         if (!open) {
           setNewVendorId(''); setNewVendorPrice(''); setNewVendorSku('');
           setNewVendorLink(''); setNewVendorLeadTime(''); setNewVendorNotes('');
+          setVendorOpen(false);
         }
       }}>
         <DialogContent className="sm:max-w-md">
