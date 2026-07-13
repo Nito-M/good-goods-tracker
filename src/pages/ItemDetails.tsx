@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus, Globe, Undo2, Pencil, Check, X, MoreVertical, Plus } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus, Globe, Undo2, Pencil, Check, X, MoreVertical, Plus, ChevronsUpDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { DxfFileCard } from '@/components/DxfFileCard';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -43,7 +45,7 @@ import { useItemLocationQuantities } from '@/hooks/useItemLocationQuantities';
 import { useWarehouses } from '@/hooks/useWarehouses';
 import { useItemConsumptions } from '@/hooks/useItemConsumptions';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useInventoryPreferences } from '@/hooks/useInventoryPreferences';
 
@@ -141,6 +143,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [showInStorefront, setShowInStorefront] = useState(false);
   const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
   const [newVendorId, setNewVendorId] = useState('');
+  const [vendorOpen, setVendorOpen] = useState(false);
   const [newVendorPrice, setNewVendorPrice] = useState('');
   const [newVendorSku, setNewVendorSku] = useState('');
   const [newVendorLink, setNewVendorLink] = useState('');
@@ -977,6 +980,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
         if (!open) {
           setNewVendorId(''); setNewVendorPrice(''); setNewVendorSku('');
           setNewVendorLink(''); setNewVendorLeadTime(''); setNewVendorNotes('');
+          setVendorOpen(false);
         }
       }}>
         <DialogContent className="sm:max-w-md">
@@ -986,14 +990,49 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Vendor</Label>
-              <Select value={newVendorId} onValueChange={setNewVendorId}>
-                <SelectTrigger><SelectValue placeholder="Select a vendor" /></SelectTrigger>
-                <SelectContent>
-                  {vendors.map(v => (
-                    <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={vendorOpen}
+                    className="w-full justify-between"
+                  >
+                    {newVendorId
+                      ? vendors.find((v) => v.id === newVendorId)?.name
+                      : 'Search vendors...'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search vendors..." />
+                    <CommandList>
+                      <CommandEmpty>No vendor found.</CommandEmpty>
+                      <CommandGroup>
+                        {vendors.map((vendor) => (
+                          <CommandItem
+                            key={vendor.id}
+                            value={vendor.name}
+                            onSelect={() => {
+                              setNewVendorId(vendor.id);
+                              setVendorOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                newVendorId === vendor.id ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            {vendor.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
