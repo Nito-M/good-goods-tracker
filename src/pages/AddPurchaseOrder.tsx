@@ -90,6 +90,7 @@ export function AddPurchaseOrder() {
   );
   const [notes, setNotes] = useState(editingOrder?.notes || '');
   const [vendorId, setVendorId] = useState<string>(editingOrder?.vendorId || '');
+  const [vendorOpen, setVendorOpen] = useState(false);
   const [requestId, setRequestId] = useState<string>(editingOrder?.requestId || '');
   const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
   const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
