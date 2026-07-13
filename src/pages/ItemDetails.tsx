@@ -163,7 +163,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   }, [item?.dxfUrl]);
   
   // Fetch vendor prices, vendors, images, and last purchase for this item
-  const { prices: vendorPrices } = useItemVendorPrices(item?.id);
+  const { prices: vendorPrices, insertPrice, refetch: refetchVendorPrices } = useItemVendorPrices(item?.id);
   const { vendors } = useVendors();
   const { lastPurchase } = useLastPurchase(item?.sku);
   const { images: itemImages } = useItemImages(item?.id);
