@@ -13,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -22,10 +24,10 @@ import { useRequests } from '@/hooks/useRequests';
 import { useJobs } from '@/hooks/useJobs';
 import { useBankCards } from '@/hooks/useBankCards';
 import { PurchaseOrderItem, PurchaseOrder } from '@/types/purchaseOrder';
-import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, CreditCard, ShoppingCart } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, Plus, Trash2, ArrowLeft, ClipboardList, Briefcase, Percent, DollarSign, CreditCard, ShoppingCart, ChevronsUpDown, Check } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
 import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
@@ -88,6 +90,7 @@ export function AddPurchaseOrder() {
   );
   const [notes, setNotes] = useState(editingOrder?.notes || '');
   const [vendorId, setVendorId] = useState<string>(editingOrder?.vendorId || '');
+  const [vendorOpen, setVendorOpen] = useState(false);
   const [requestId, setRequestId] = useState<string>(editingOrder?.requestId || '');
   const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
   const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
@@ -437,19 +440,64 @@ export function AddPurchaseOrder() {
             <CardContent>
               <div className="space-y-2">
                 <Label htmlFor="vendor">Select Vendor *</Label>
-                <Select value={vendorId} onValueChange={handleVendorChange}>
-                  <SelectTrigger className="max-w-md">
-                    <SelectValue placeholder="Select a vendor first" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">-- No Vendor --</SelectItem>
-                    {vendors.map((vendor) => (
-                      <SelectItem key={vendor.id} value={vendor.id}>
-                        {vendor.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={vendorOpen}
+                      className="max-w-md w-full justify-between"
+                    >
+                      {vendorId && vendorId !== 'none'
+                        ? vendors.find((v) => v.id === vendorId)?.name
+                        : '-- No Vendor --'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command filter={(value, search) => value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0}>
+                      <CommandInput placeholder="Search vendors..." />
+                      <CommandList>
+                        <CommandEmpty>No vendor found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="none"
+                            onSelect={() => {
+                              handleVendorChange('none');
+                              setVendorOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                !vendorId || vendorId === 'none' ? 'opacity-100' : 'opacity-0'
+                              )}
+                            />
+                            -- No Vendor --
+                          </CommandItem>
+                          {vendors.map((vendor) => (
+                            <CommandItem
+                              key={vendor.id}
+                              value={vendor.name}
+                              onSelect={() => {
+                                handleVendorChange(vendor.id);
+                                setVendorOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  vendorId === vendor.id ? 'opacity-100' : 'opacity-0'
+                                )}
+                              />
+                              {vendor.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               {/* Contact Person */}
               {vendorId && vendorId !== 'none' && (
