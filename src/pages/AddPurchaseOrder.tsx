@@ -107,6 +107,20 @@ export function AddPurchaseOrder() {
     if (!val) setRequestId('');
   };
   const [jobIds, setJobIds] = useState<string[]>(editingOrder?.jobIds || []);
+  const [showLinkJobs, setShowLinkJobs] = useState<boolean>(() => {
+    if ((editingOrder?.jobIds || []).length > 0) return true;
+    try {
+      return localStorage.getItem('po_show_link_jobs') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const toggleShowLinkJobs = (val: boolean) => {
+    setShowLinkJobs(val);
+    try { localStorage.setItem('po_show_link_jobs', val ? 'true' : 'false'); } catch {}
+    if (!val) setJobIds([]);
+  };
+
   const [bankCardId, setBankCardId] = useState<string>(editingOrder?.bankCardId || '');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [vendorChangeChooser, setVendorChangeChooser] = useState<Array<{
