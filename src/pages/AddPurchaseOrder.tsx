@@ -681,31 +681,43 @@ export function AddPurchaseOrder() {
                 </div>
               </div>
 
-              {/* Request Selection */}
+              {/* Request Selection - toggleable */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4" />
-                  Link to Request
-                </Label>
-                <Select value={requestId} onValueChange={setRequestId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a request" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">-- No Request --</SelectItem>
-                    {requests
-                      .filter(r => r.status === 'approved' || r.status === 'pending')
-                      .map((request) => (
-                        <SelectItem key={request.id} value={request.id}>
-                          {request.requestNumber} - {request.itemName} ({request.quantity} {request.quantityUnit})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Optionally link this PO to an existing request
-                </p>
+                <div className="flex items-center justify-between rounded-md border border-border/50 bg-muted/30 px-3 py-2">
+                  <Label htmlFor="toggle-link-request" className="flex items-center gap-2 cursor-pointer mb-0">
+                    <ClipboardList className="h-4 w-4" />
+                    Link to Request
+                  </Label>
+                  <Switch
+                    id="toggle-link-request"
+                    checked={showLinkRequest}
+                    onCheckedChange={toggleShowLinkRequest}
+                  />
+                </div>
+                {showLinkRequest && (
+                  <>
+                    <Select value={requestId} onValueChange={setRequestId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a request" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">-- No Request --</SelectItem>
+                        {requests
+                          .filter(r => r.status === 'approved' || r.status === 'pending')
+                          .map((request) => (
+                            <SelectItem key={request.id} value={request.id}>
+                              {request.requestNumber} - {request.itemName} ({request.quantity} {request.quantityUnit})
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Optionally link this PO to an existing request
+                    </p>
+                  </>
+                )}
               </div>
+
 
               {/* Job Selection - Multi-select */}
               <div className="space-y-2">
