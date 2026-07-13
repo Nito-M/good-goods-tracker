@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus, Globe, Undo2, Pencil, Check, X, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Package, Edit2, Trash2, Store, TrendingDown, ExternalLink, MapPin, Minus, Globe, Undo2, Pencil, Check, X, MoreVertical, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -139,6 +139,14 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [consumeWarehouseId, setConsumeWarehouseId] = useState<string>('');
   const [isConsuming, setIsConsuming] = useState(false);
   const [showInStorefront, setShowInStorefront] = useState(false);
+  const [addVendorDialogOpen, setAddVendorDialogOpen] = useState(false);
+  const [newVendorId, setNewVendorId] = useState('');
+  const [newVendorPrice, setNewVendorPrice] = useState('');
+  const [newVendorSku, setNewVendorSku] = useState('');
+  const [newVendorLink, setNewVendorLink] = useState('');
+  const [newVendorLeadTime, setNewVendorLeadTime] = useState('');
+  const [newVendorNotes, setNewVendorNotes] = useState('');
+  const [savingVendor, setSavingVendor] = useState(false);
   
   const item = items.find((i) => i.id === id);
 
@@ -163,7 +171,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   }, [item?.dxfUrl]);
   
   // Fetch vendor prices, vendors, images, and last purchase for this item
-  const { prices: vendorPrices } = useItemVendorPrices(item?.id);
+  const { prices: vendorPrices, insertPrice, refetch: refetchVendorPrices } = useItemVendorPrices(item?.id);
   const { vendors } = useVendors();
   const { lastPurchase } = useLastPurchase(item?.sku);
   const { images: itemImages } = useItemImages(item?.id);
@@ -327,6 +335,10 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                 <DropdownMenuItem onSelect={() => setConsumeDialogOpen(true)}>
                   <Minus className="h-4 w-4 mr-2" />
                   Consume
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setAddVendorDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Vendor
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
@@ -958,6 +970,83 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
           </Card>
         )}
       </main>
+
+      {/* Add Vendor Dialog */}
+      <Dialog open={addVendorDialogOpen} onOpenChange={(open) => {
+        setAddVendorDialogOpen(open);
+        if (!open) {
+          setNewVendorId(''); setNewVendorPrice(''); setNewVendorSku('');
+          setNewVendorLink(''); setNewVendorLeadTime(''); setNewVendorNotes('');
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Vendor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Vendor</Label>
+              <Select value={newVendorId} onValueChange={setNewVendorId}>
+                <SelectTrigger><SelectValue placeholder="Select a vendor" /></SelectTrigger>
+                <SelectContent>
+                  {vendors.map(v => (
+                    <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Price</Label>
+                <Input type="number" step="0.00001" placeholder="0.00" value={newVendorPrice} onChange={(e) => setNewVendorPrice(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Vendor SKU</Label>
+                <Input value={newVendorSku} onChange={(e) => setNewVendorSku(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Link</Label>
+              <Input type="url" placeholder="https://..." value={newVendorLink} onChange={(e) => setNewVendorLink(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Lead Time (days)</Label>
+              <Input type="number" min="0" value={newVendorLeadTime} onChange={(e) => setNewVendorLeadTime(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea value={newVendorNotes} onChange={(e) => setNewVendorNotes(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddVendorDialogOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!newVendorId || !newVendorPrice || savingVendor}
+              onClick={async () => {
+                setSavingVendor(true);
+                const ok = await insertPrice(
+                  newVendorId,
+                  parseFloat(newVendorPrice),
+                  newVendorLink || undefined,
+                  newVendorSku || undefined,
+                  newVendorLeadTime ? parseInt(newVendorLeadTime, 10) : null,
+                  newVendorNotes || null,
+                );
+                setSavingVendor(false);
+                if (ok) {
+                  toast({ title: 'Vendor added' });
+                  await refetchVendorPrices();
+                  setAddVendorDialogOpen(false);
+                  setNewVendorId(''); setNewVendorPrice(''); setNewVendorSku('');
+                  setNewVendorLink(''); setNewVendorLeadTime(''); setNewVendorNotes('');
+                }
+              }}
+            >
+              {savingVendor ? 'Adding...' : 'Add Vendor'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Consume Dialog */}
       <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
