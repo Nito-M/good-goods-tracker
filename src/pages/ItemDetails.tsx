@@ -183,6 +183,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { consumptions, addConsumption } = useItemConsumptions(item?.id);
   const { warehouses } = useWarehouses();
   const { hasFeature } = useFeaturePermissions();
+  const { markupPercent } = useInventoryPreferences();
   const quantityOnly = hasFeature('items_quantity_only');
 
   const getVendorName = (vendorId: string) => {
@@ -348,7 +349,8 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
     }
   };
 
-  const { markupPercent } = useInventoryPreferences();
+
+
   const displayPrice = markupPercent > 0 && item.cost > 0
     ? item.cost * (1 + markupPercent / 100)
     : item.price;
