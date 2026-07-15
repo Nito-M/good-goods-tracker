@@ -64,6 +64,23 @@ export function Settings() {
   const { isPageAllowed } = usePagePermissions();
   const showUsersTab = isAdmin || isOrgAdmin;
   const showStorefrontTab = isPageAllowed('settings-storefront');
+  const showGeneralTab = isPageAllowed('settings-general');
+  const showCompaniesTab = isPageAllowed('settings-companies');
+  const showVendorsTab = isPageAllowed('settings-vendors');
+  const showCustomersTab = isPageAllowed('settings-customers');
+  const showCategoriesTab = isPageAllowed('settings-categories');
+  const showTagsTab = isPageAllowed('settings-tags');
+  const firstTab =
+    showGeneralTab ? 'general'
+    : showCompaniesTab ? 'companies'
+    : showStorefrontTab ? 'storefront'
+    : showVendorsTab ? 'vendors'
+    : showCustomersTab ? 'customers'
+    : showCategoriesTab ? 'categories'
+    : showTagsTab ? 'tags'
+    : showUsersTab ? 'users'
+    : isAdmin ? 'organizations'
+    : 'general';
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, borderColor, setBorderColor } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
