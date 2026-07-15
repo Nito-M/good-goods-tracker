@@ -26,6 +26,7 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useBulkItemTags } from '@/hooks/useItemTags';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { useInventoryPreferences, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 
 interface InventoryTableProps {
   items: InventoryItem[];
