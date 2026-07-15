@@ -140,14 +140,14 @@ export default function KnowledgeBase() {
           </button>
           <Folder className="h-4 w-4 shrink-0 opacity-70" />
           <span className="flex-1 truncate">{node.name}</span>
-          <div className="hidden group-hover:flex items-center gap-0.5">
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); handleNewCategory(node.id); }} title="Add subfolder">
+          <div className="flex items-center gap-0.5 opacity-70">
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); handleNewCategory(node.id); }} title="Add subcategory">
               <FolderPlus className="h-3 w-3" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); handleRename(node); }} title="Rename">
+            <Button size="icon" variant="ghost" className="h-6 w-6 md:opacity-0 md:group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); handleRename(node); }} title="Rename">
               <Pencil className="h-3 w-3" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(node); }} title="Delete">
+            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive md:opacity-0 md:group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); handleDelete(node); }} title="Delete">
               <Trash2 className="h-3 w-3" />
             </Button>
           </div>
