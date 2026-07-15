@@ -61,6 +61,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     price: Number(db.price),
     cost: Number(db.cost),
     minStock: db.min_stock,
+    maxStock: db.max_stock ?? 0,
     weight: Number(db.weight),
     weightUnit: db.weight_unit as 'lb' | 'kg',
     dimensions: {
