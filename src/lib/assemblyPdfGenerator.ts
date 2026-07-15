@@ -19,7 +19,7 @@ export interface AssemblyPdfData {
   }[];
 }
 
-export async function generateAssemblyPDF(assembly: AssemblyPdfData) {
+export async function generateAssemblyPDF(assembly: AssemblyPdfData, mode: 'download' | 'print' = 'download') {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -165,5 +165,15 @@ export async function generateAssemblyPDF(assembly: AssemblyPdfData) {
   doc.setTextColor(128, 128, 128);
   doc.text(`Generated ${new Date().toLocaleDateString()}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
 
+  if (mode === 'print') {
+    const blobUrl = doc.output('bloburl');
+    const w = window.open(blobUrl as unknown as string, '_blank');
+    if (w) {
+      w.addEventListener('load', () => {
+        try { w.focus(); w.print(); } catch {}
+      });
+    }
+    return;
+  }
   await savePdfBlob(doc, `${assembly.name} - Parts List.pdf`);
 }
