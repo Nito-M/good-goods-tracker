@@ -739,7 +739,7 @@ export function Requests() {
             className="pl-9" />
         </div>
 
-        {uniqueVendors.length > 0 && (
+        {canViewVendor && uniqueVendors.length > 0 && (
           <Select value={filterVendor} onValueChange={setFilterVendor}>
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center gap-2">
