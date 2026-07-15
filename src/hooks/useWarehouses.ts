@@ -94,7 +94,8 @@ export function useWarehouses() {
   };
 
   return {
-    warehouses: data ?? [],
+    warehouses: data?.list ?? [],
+    restrictedByPermission: data?.restricted ?? false,
     loading: !!user && isPending,
     addWarehouse,
     updateWarehouse,
