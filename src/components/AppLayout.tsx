@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useIsOrgAdmin } from "@/hooks/useIsOrgAdmin";
 
 interface OrgShop {
   id: string;
