@@ -707,6 +707,51 @@ export default function BoardDetail() {
       .map((r) => r.id);
   }, [mergeRects, selectionRect]);
 
+  const selectedRowIds = useMemo(() => {
+    if (!selectionRect) return [] as string[];
+    return renderedRowIds.slice(selectionRect.r1, selectionRect.r2 + 1);
+  }, [selectionRect, renderedRowIds]);
+
+  const selectedColIds = useMemo(() => {
+    if (!selectionRect) return [] as string[];
+    return visibleColumnIds.slice(selectionRect.c1, selectionRect.c2 + 1);
+  }, [selectionRect, visibleColumnIds]);
+
+  const fullRowsSelected = !!selectionRect
+    && selectionRect.c1 === 0
+    && selectionRect.c2 === visibleColumnIds.length - 1
+    && selectedRowIds.length > 0;
+
+  const fullColsSelected = !!selectionRect
+    && selectionRect.r1 === 0
+    && selectionRect.r2 === renderedRowIds.length - 1
+    && selectedColIds.length > 0
+    // Prevent deleting the primary column (index 0) via bulk action
+    && selectionRect.c1 > 0
+    && visibleColumns.length - selectedColIds.length >= 1;
+
+  const [deleteRowsConfirmOpen, setDeleteRowsConfirmOpen] = useState(false);
+  const [deleteColsConfirmOpen, setDeleteColsConfirmOpen] = useState(false);
+  const [pdfSubsetOpen, setPdfSubsetOpen] = useState(false);
+
+  const handleDeleteSelectedRows = useCallback(async () => {
+    for (const rid of selectedRowIds) {
+      await deleteRow(rid);
+    }
+    setDeleteRowsConfirmOpen(false);
+    clearSelection();
+    toast.success(`Deleted ${selectedRowIds.length} row${selectedRowIds.length === 1 ? '' : 's'}`);
+  }, [selectedRowIds, deleteRow]);
+
+  const handleDeleteSelectedColumns = useCallback(async () => {
+    for (const cid of selectedColIds) {
+      await deleteColumn(cid);
+    }
+    setDeleteColsConfirmOpen(false);
+    clearSelection();
+    toast.success(`Deleted ${selectedColIds.length} column${selectedColIds.length === 1 ? '' : 's'}`);
+  }, [selectedColIds, deleteColumn]);
+
   const handleCellMouseDown = useCallback(
     (rowId: string, colId: string, shiftKey: boolean) => {
       if (shiftKey && selectionAnchor) {
