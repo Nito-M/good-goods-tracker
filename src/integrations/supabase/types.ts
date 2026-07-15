@@ -3757,6 +3757,7 @@ export type Database = {
           discount_amount: number
           discount_type: string
           discount_value: number
+          gst_enabled: boolean
           id: string
           image_url: string | null
           internal_notes: string | null
@@ -3786,6 +3787,7 @@ export type Database = {
           discount_amount?: number
           discount_type?: string
           discount_value?: number
+          gst_enabled?: boolean
           id?: string
           image_url?: string | null
           internal_notes?: string | null
@@ -3815,6 +3817,7 @@ export type Database = {
           discount_amount?: number
           discount_type?: string
           discount_value?: number
+          gst_enabled?: boolean
           id?: string
           image_url?: string | null
           internal_notes?: string | null
