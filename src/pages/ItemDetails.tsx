@@ -67,7 +67,6 @@ function LocationQuantityRow({ warehouseName, quantity, quantityUnit, locationId
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!locationId) return;
     const newQty = parseFloat(editValue);
     if (isNaN(newQty) || newQty < 0) return;
     setSaving(true);
