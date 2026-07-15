@@ -25,6 +25,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 import { formatCurrency } from '@/lib/utils';
 import { SopOptionSelect } from '@/components/SopOptionSelect';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function SopEdit() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,30 @@ export default function SopEdit() {
 
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
   const attachRef = useRef<HTMLInputElement>(null);
+
+  const [categoryOptions, setCategoryOptions] = useState<{ id: string; label: string }[]>([]);
+  useEffect(() => {
+    const typeId = (sop as any)?.type_id ?? null;
+    if (!sop) return;
+    (async () => {
+      let q: any = supabase.from('sop_categories' as any).select('id,name,parent_id,type_id').order('sort_order').order('name');
+      q = typeId ? q.eq('type_id', typeId) : q.is('type_id', null);
+      const { data } = await q;
+      const rows = (data as any[]) || [];
+      const byId = new Map(rows.map(r => [r.id, r]));
+      const pathOf = (r: any): string => {
+        const parts = [r.name];
+        let cur = r;
+        while (cur.parent_id && byId.get(cur.parent_id)) {
+          cur = byId.get(cur.parent_id);
+          parts.unshift(cur.name);
+        }
+        return parts.join(' / ');
+      };
+      setCategoryOptions(rows.map(r => ({ id: r.id, label: pathOf(r) })).sort((a, b) => a.label.localeCompare(b.label)));
+    })();
+  }, [(sop as any)?.type_id, sop?.id]);
+
 
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const hasInitializedExpanded = useRef(false);
@@ -191,6 +216,21 @@ export default function SopEdit() {
             <Label>Revision #</Label>
             <SopOptionSelect kind="revision" value={sop.revision_number || ''} onChange={v => updateSop({ revision_number: v })} placeholder="Select revision" />
 
+          </div>
+          <div>
+            <Label>Category</Label>
+            <Select
+              value={sop.category_id ?? '__none__'}
+              onValueChange={v => updateSop({ category_id: v === '__none__' ? null : v })}
+            >
+              <SelectTrigger><SelectValue placeholder="Uncategorized" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Uncategorized</SelectItem>
+                {categoryOptions.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label>Status</Label>
