@@ -94,5 +94,38 @@ export function useItemLocationQuantities(itemId?: string) {
     await fetchLocations();
   }, [user, fetchLocations]);
 
-  return { locations, loading, saveLocations, updateSingleLocation, refetch: fetchLocations };
+  const upsertLocation = useCallback(async (
+    targetItemId: string,
+    warehouseId: string,
+    newQuantity: number,
+  ) => {
+    if (!user || !targetItemId || !warehouseId) return;
+    const { data: existing } = await supabase
+      .from('item_location_quantities')
+      .select('id')
+      .eq('item_id', targetItemId)
+      .eq('warehouse_id', warehouseId)
+      .maybeSingle();
+
+    if (existing?.id) {
+      const { error } = await supabase
+        .from('item_location_quantities')
+        .update({ quantity: newQuantity })
+        .eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('item_location_quantities')
+        .insert({
+          item_id: targetItemId,
+          warehouse_id: warehouseId,
+          quantity: newQuantity,
+          user_id: user.id,
+        });
+      if (error) throw error;
+    }
+    await fetchLocations();
+  }, [user, fetchLocations]);
+
+  return { locations, loading, saveLocations, updateSingleLocation, upsertLocation, refetch: fetchLocations };
 }

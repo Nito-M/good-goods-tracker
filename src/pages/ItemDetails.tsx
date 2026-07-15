@@ -67,7 +67,6 @@ function LocationQuantityRow({ warehouseName, quantity, quantityUnit, locationId
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!locationId) return;
     const newQty = parseFloat(editValue);
     if (isNaN(newQty) || newQty < 0) return;
     setSaving(true);
@@ -113,16 +112,14 @@ function LocationQuantityRow({ warehouseName, quantity, quantityUnit, locationId
         <Badge variant={quantity > 0 ? 'secondary' : 'outline'}>
           {quantity} {unitLabel}
         </Badge>
-        {locationId && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => { setEditValue(String(quantity)); setEditing(true); }}
-          >
-            <Pencil className="h-3 w-3 text-muted-foreground" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={() => { setEditValue(String(quantity)); setEditing(true); }}
+        >
+          <Pencil className="h-3 w-3 text-muted-foreground" />
+        </Button>
       </div>
     </div>
   );
@@ -181,7 +178,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { selectedTagIds } = useItemTags(item?.id);
   const { tagCategories } = useTagCategories();
   const { tags, getTagsByCategory } = useTags();
-  const { locations: itemLocations, refetch: refetchLocations, updateSingleLocation } = useItemLocationQuantities(item?.id);
+  const { locations: itemLocations, refetch: refetchLocations, updateSingleLocation, upsertLocation } = useItemLocationQuantities(item?.id);
   const { consumptions, addConsumption } = useItemConsumptions(item?.id);
   const { warehouses } = useWarehouses();
 
@@ -668,6 +665,8 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                       onSave={async (newQty) => {
                         if (loc) {
                           await updateSingleLocation(loc.id, newQty);
+                        } else {
+                          await upsertLocation(item.id, warehouse.id, newQty);
                         }
                       }}
                     />
