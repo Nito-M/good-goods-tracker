@@ -26,6 +26,7 @@ import { useItemThumbnails } from '@/hooks/useItemThumbnails';
 import { useBulkItemTags } from '@/hooks/useItemTags';
 import { ImageViewerDialog } from '@/components/ImageViewerDialog';
 import { useInventoryPreferences, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 
 interface InventoryTableProps {
   items: InventoryItem[];
@@ -63,6 +64,9 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
   const { getTagsForItem } = useBulkItemTags(pagedItemIds);
   const [viewerImage, setViewerImage] = useState<{url: string;alt: string;} | null>(null);
   const { priceDisplay, showTags, showImages, showSku, showQuantity, showPrice, columnOrder, markupPercent } = useInventoryPreferences();
+  const { hasFeature } = useFeaturePermissions();
+  const quantityOnly = hasFeature('items_quantity_only');
+  const effectiveShowPrice = showPrice && !quantityOnly;
   const showCost = priceDisplay === 'cost';
 
   const visibleColumns = useMemo<InventoryColumnKey[]>(() => {
@@ -70,10 +74,10 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
       if (k === 'image') return showImages;
       if (k === 'sku') return showSku;
       if (k === 'quantity') return showQuantity;
-      if (k === 'price') return showPrice;
+      if (k === 'price') return effectiveShowPrice;
       return true; // name always visible
     });
-  }, [columnOrder, showImages, showSku, showQuantity, showPrice]);
+  }, [columnOrder, showImages, showSku, showQuantity, effectiveShowPrice]);
 
   const renderHeader = (key: InventoryColumnKey) => {
     switch (key) {
