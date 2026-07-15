@@ -126,6 +126,167 @@ function LocationQuantityRow({ warehouseName, quantity, quantityUnit, locationId
   );
 }
 
+function QuantityOnlyView({
+  item,
+  itemImages,
+  warehouses,
+  itemLocations,
+  onBack,
+  onConsume,
+}: {
+  item: InventoryItem;
+  itemImages: any[];
+  warehouses: any[];
+  itemLocations: any[];
+  onBack: () => void;
+  onConsume: (warehouseId: string, remaining: number) => Promise<void>;
+}) {
+  const [openWarehouseId, setOpenWarehouseId] = useState<string | null>(null);
+  const [remainingValue, setRemainingValue] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const activeWarehouse = warehouses.find((w) => w.id === openWarehouseId);
+  const activeLoc = itemLocations.find((l) => l.warehouse_id === openWarehouseId);
+  const currentQty = activeLoc ? activeLoc.quantity : 0;
+  const remainingNum = parseFloat(remainingValue);
+  const consumedPreview =
+    !isNaN(remainingNum) && remainingNum >= 0 && remainingNum < currentQty
+      ? currentQty - remainingNum
+      : null;
+
+  const closeDialog = () => {
+    setOpenWarehouseId(null);
+    setRemainingValue('');
+  };
+
+  const handleSubmit = async () => {
+    if (!openWarehouseId || isNaN(remainingNum) || remainingNum < 0) return;
+    setSaving(true);
+    await onConsume(openWarehouseId, remainingNum);
+    setSaving(false);
+    closeDialog();
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center">
+            <Button variant="ghost" onClick={onBack} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Items & Inventory
+            </Button>
+          </div>
+        </div>
+      </header>
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <ItemImageGallery
+              images={itemImages}
+              itemName={item.name}
+              fallbackImageUrl={item.imageUrl}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">{item.name}</CardTitle>
+            <p className="text-sm text-muted-foreground">Part #: {item.sku}</p>
+          </CardHeader>
+        </Card>
+        {warehouses.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Stock by Location
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {warehouses.map((warehouse) => {
+                const loc = itemLocations.find((l) => l.warehouse_id === warehouse.id);
+                const qty = loc ? loc.quantity : 0;
+                const unitLabel =
+                  item.quantityUnit && item.quantityUnit !== 'pcs'
+                    ? QUANTITY_UNIT_LABELS[item.quantityUnit]
+                    : '';
+                return (
+                  <div key={warehouse.id} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-card-foreground">{warehouse.name}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={qty > 0 ? 'secondary' : 'outline'}>
+                        {qty} {unitLabel}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => {
+                          setOpenWarehouseId(warehouse.id);
+                          setRemainingValue('');
+                        }}
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                        Consume
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+      </main>
+
+      <Dialog open={!!openWarehouseId} onOpenChange={(o) => !o && closeDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Consume from {activeWarehouse?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="text-sm text-muted-foreground">
+              Current stock at this location: <span className="font-semibold text-foreground">{currentQty}</span>
+            </div>
+            <div className="space-y-2">
+              <Label>How many are left in stock?</Label>
+              <Input
+                type="number"
+                min="0"
+                step="any"
+                value={remainingValue}
+                onChange={(e) => setRemainingValue(e.target.value)}
+                autoFocus
+                placeholder="Enter remaining quantity"
+              />
+            </div>
+            {consumedPreview !== null && (
+              <div className="text-sm rounded-md bg-muted px-3 py-2">
+                Will consume <span className="font-semibold">{consumedPreview}</span>.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDialog} disabled={saving}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                saving ||
+                isNaN(remainingNum) ||
+                remainingNum < 0 ||
+                remainingNum >= currentQty
+              }
+            >
+              {saving ? 'Saving...' : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+
 export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [dxfUrl, setDxfUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
