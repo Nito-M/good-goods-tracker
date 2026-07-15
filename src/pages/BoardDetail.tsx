@@ -707,6 +707,51 @@ export default function BoardDetail() {
       .map((r) => r.id);
   }, [mergeRects, selectionRect]);
 
+  const selectedRowIds = useMemo(() => {
+    if (!selectionRect) return [] as string[];
+    return renderedRowIds.slice(selectionRect.r1, selectionRect.r2 + 1);
+  }, [selectionRect, renderedRowIds]);
+
+  const selectedColIds = useMemo(() => {
+    if (!selectionRect) return [] as string[];
+    return visibleColumnIds.slice(selectionRect.c1, selectionRect.c2 + 1);
+  }, [selectionRect, visibleColumnIds]);
+
+  const fullRowsSelected = !!selectionRect
+    && selectionRect.c1 === 0
+    && selectionRect.c2 === visibleColumnIds.length - 1
+    && selectedRowIds.length > 0;
+
+  const fullColsSelected = !!selectionRect
+    && selectionRect.r1 === 0
+    && selectionRect.r2 === renderedRowIds.length - 1
+    && selectedColIds.length > 0
+    // Prevent deleting the primary column (index 0) via bulk action
+    && selectionRect.c1 > 0
+    && visibleColumns.length - selectedColIds.length >= 1;
+
+  const [deleteRowsConfirmOpen, setDeleteRowsConfirmOpen] = useState(false);
+  const [deleteColsConfirmOpen, setDeleteColsConfirmOpen] = useState(false);
+  const [pdfSubsetOpen, setPdfSubsetOpen] = useState(false);
+
+  const handleDeleteSelectedRows = useCallback(async () => {
+    for (const rid of selectedRowIds) {
+      await deleteRow(rid);
+    }
+    setDeleteRowsConfirmOpen(false);
+    clearSelection();
+    toast.success(`Deleted ${selectedRowIds.length} row${selectedRowIds.length === 1 ? '' : 's'}`);
+  }, [selectedRowIds, deleteRow]);
+
+  const handleDeleteSelectedColumns = useCallback(async () => {
+    for (const cid of selectedColIds) {
+      await deleteColumn(cid);
+    }
+    setDeleteColsConfirmOpen(false);
+    clearSelection();
+    toast.success(`Deleted ${selectedColIds.length} column${selectedColIds.length === 1 ? '' : 's'}`);
+  }, [selectedColIds, deleteColumn]);
+
   const handleCellMouseDown = useCallback(
     (rowId: string, colId: string, shiftKey: boolean) => {
       if (shiftKey && selectionAnchor) {
@@ -1040,6 +1085,24 @@ export default function BoardDetail() {
                     : 'Apply to selected cell'
               }
             />
+          )}
+          {fullRowsSelected && (
+            <Button variant="destructive" size="sm" onClick={() => setDeleteRowsConfirmOpen(true)}>
+              <Trash2 className="h-4 w-4" />
+              Delete {selectedRowIds.length} row{selectedRowIds.length === 1 ? '' : 's'}
+            </Button>
+          )}
+          {fullColsSelected && (
+            <Button variant="destructive" size="sm" onClick={() => setDeleteColsConfirmOpen(true)}>
+              <Trash2 className="h-4 w-4" />
+              Delete {selectedColIds.length} column{selectedColIds.length === 1 ? '' : 's'}
+            </Button>
+          )}
+          {selectionRect && (
+            <Button variant="outline" size="sm" onClick={() => setPdfSubsetOpen(true)}>
+              <Download className="h-4 w-4" />
+              Download selection
+            </Button>
           )}
           {(selectionAnchor || selectionFocus || headerRowSelected) && (
             <Button variant="ghost" size="sm" onClick={clearSelection}>
@@ -1439,6 +1502,89 @@ export default function BoardDetail() {
                     boardName: board.name,
                     columns: visibleColumns,
                     groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
+                    getCellValue,
+                    getCellTextAlign,
+                    getCellBgColor,
+                    getFiles,
+                    refreshFileUrl: refreshSignedUrl,
+                    merges,
+                    logoUrl: pdfLogoUrl,
+                  });
+                } catch (err) {
+                  console.error('Board PDF export failed', err);
+                  toast.error('Failed to export PDF');
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteRowsConfirmOpen} onOpenChange={setDeleteRowsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected rows?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selectedRowIds.length} row{selectedRowIds.length === 1 ? '' : 's'} and all their cell data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSelectedRows} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteColsConfirmOpen} onOpenChange={setDeleteColsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected columns?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selectedColIds.length} column{selectedColIds.length === 1 ? '' : 's'} and all their cell data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSelectedColumns} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={pdfSubsetOpen} onOpenChange={setPdfSubsetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Export selection to PDF</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-foreground">
+                {selectedColIds.length} column{selectedColIds.length === 1 ? '' : 's'} × {selectedRowIds.length} row{selectedRowIds.length === 1 ? '' : 's'}
+              </span>{' '}
+              will be exported.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                try {
+                  const colSet = new Set(selectedColIds);
+                  const rowSet = new Set(selectedRowIds);
+                  const subsetCols = visibleColumns.filter((c) => colSet.has(c.id));
+                  const subsetGroups = grouped
+                    .map((g) => ({ label: g.label, rows: g.rows.filter((r) => rowSet.has(r.id)) }))
+                    .filter((g) => g.rows.length > 0);
+                  await generateBoardPdf({
+                    boardName: board.name,
+                    columns: subsetCols,
+                    groups: subsetGroups,
                     getCellValue,
                     getCellTextAlign,
                     getCellBgColor,
