@@ -49,6 +49,7 @@ export function AddPurchaseOrder() {
   const navigate = useNavigate();
   const location = useLocation();
   const editingOrder = (location.state as { editingOrder?: PurchaseOrder })?.editingOrder ?? null;
+  const prefillItems = (location.state as { prefillItems?: Array<{ inventory_item_id: string; name: string; sku: string | null; quantity: number; unit_cost: number; notes?: string }> })?.prefillItems ?? null;
   const { createOrder, updateOrder } = usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { rows: allVendorPriceRows } = useAllItemVendorPrices();
@@ -77,6 +78,19 @@ export function AddPurchaseOrder() {
           notes: item.notes || '',
         };
       });
+    }
+    if (prefillItems && prefillItems.length) {
+      return prefillItems.map(p => ({
+        id: crypto.randomUUID(),
+        inventoryItemId: p.inventory_item_id,
+        itemName: p.name,
+        sku: p.sku || '',
+        quantity: p.quantity,
+        quantityUnit: 'pcs' as const,
+        unitPrice: p.unit_cost ?? 0,
+        unitCost: p.unit_cost ?? 0,
+        notes: p.notes || '',
+      }));
     }
     return [];
   };
