@@ -286,6 +286,9 @@ function QuantityOnlyView({
       </Dialog>
     </div>
   );
+}
+
+
 
 export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const [dxfUrl, setDxfUrl] = useState<string | null>(null);
