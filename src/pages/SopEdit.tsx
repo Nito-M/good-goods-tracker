@@ -3,9 +3,11 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
   AlertTriangle, Lightbulb, StickyNote, Wrench, Clock, ExternalLink, MapPin,
-  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download,
+  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download, Printer,
 } from 'lucide-react';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
+import { generateSopPDF } from '@/lib/sopPdfGenerator';
+import { SopPdfOptionsDialog } from '@/components/SopPdfOptionsDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,6 +47,7 @@ export default function SopEdit() {
 
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
   const attachRef = useRef<HTMLInputElement>(null);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
 
   const [categoryOptions, setCategoryOptions] = useState<{ id: string; label: string }[]>([]);
   useEffect(() => {
@@ -195,7 +198,60 @@ export default function SopEdit() {
           <span>›</span>
           <span className="text-foreground font-medium truncate max-w-[300px]">{sop.title}</span>
         </div>
+        <div className="ml-auto flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setPdfDialogOpen(true)}>
+            <Download className="h-4 w-4 mr-1" /> Download / Print PDF
+          </Button>
+        </div>
       </div>
+
+      <SopPdfOptionsDialog
+        open={pdfDialogOpen}
+        onOpenChange={setPdfDialogOpen}
+        onConfirm={async (sections) => {
+          const categoryLabel = categoryOptions.find(c => c.id === sop.category_id)?.label || null;
+          await generateSopPDF({
+            title: sop.title,
+            sopNumber: sop.sop_number,
+            department: sop.department,
+            revisionNumber: sop.revision_number,
+            category: categoryLabel,
+            status: sop.status,
+            effectiveDate: sop.effective_date,
+            lastUpdatedDate: sop.last_updated_date,
+            author: sop.author,
+            approvedBy: sop.approved_by,
+            steps: steps.map((s, i) => ({
+              index: i,
+              content: s.content,
+              warnings: s.warnings,
+              notes: s.notes,
+              tips: s.tips,
+              requiredTools: s.required_tools,
+              estimatedMinutes: s.estimated_minutes,
+              links: s.links,
+              items: stepItems.filter(it => it.step_id === s.id).map(it => {
+                const inv = itemsById.get(it.inventory_item_id);
+                return { name: inv?.name || 'Unknown', sku: inv?.sku, quantity: it.quantity, notes: it.notes };
+              }),
+            })),
+            bom: bom.map(b => {
+              const inv = itemsById.get(b.inventory_item_id);
+              return {
+                name: inv?.name || 'Unknown',
+                sku: inv?.sku,
+                quantity: b.quantity,
+                unitCost: inv?.cost || 0,
+                isOptional: b.is_optional,
+                notes: b.notes,
+              };
+            }),
+            bomTotal,
+            locations: locations.map(l => ({ name: l.name, url: l.url })),
+            attachments: attachments.map(a => ({ fileName: a.file_name })),
+          }, sections);
+        }}
+      />
 
       {/* Header / metadata */}
       <Card>
