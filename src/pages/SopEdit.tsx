@@ -185,7 +185,7 @@ export default function SopEdit() {
           </div>
           <div>
             <Label>Department</Label>
-            <Input value={sop.department || ''} onChange={e => updateSop({ department: e.target.value })} />
+            <SopOptionSelect kind="department" value={sop.department || ''} onChange={v => updateSop({ department: v })} placeholder="Select department" />
           </div>
           <div>
             <Label>Revision #</Label>
