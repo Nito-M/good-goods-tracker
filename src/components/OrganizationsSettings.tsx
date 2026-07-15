@@ -699,6 +699,28 @@ export function OrganizationsSettings() {
                             );
                           })}
                         </div>
+                        <div className="mt-3 rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Settings Tabs</p>
+                            <p className="text-xs text-muted-foreground">Choose which Settings tabs this organization can access.</p>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {ORG_SETTINGS_SUBPAGES.map(sub => {
+                              const restricted = (orgPagePerms[org.id]?.length || 0) > 0;
+                              const checked = !restricted || orgPagePerms[org.id].includes(sub.key);
+                              return (
+                                <label key={sub.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                                  <Checkbox
+                                    checked={checked}
+                                    disabled={savingPermsOrgId === org.id}
+                                    onCheckedChange={(v) => handleToggleOrgPagePermission(org.id, sub.key, !!v)}
+                                  />
+                                  <span>{sub.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </CardContent>
