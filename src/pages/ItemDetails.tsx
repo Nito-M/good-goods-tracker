@@ -183,6 +183,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { consumptions, addConsumption } = useItemConsumptions(item?.id);
   const { warehouses } = useWarehouses();
   const { hasFeature } = useFeaturePermissions();
+  const { markupPercent } = useInventoryPreferences();
   const quantityOnly = hasFeature('items_quantity_only');
 
   const getVendorName = (vendorId: string) => {
