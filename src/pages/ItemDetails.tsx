@@ -221,69 +221,46 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
 
   if (quantityOnly) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 items-center">
-              <Button variant="ghost" onClick={() => navigate('/items')} className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Items & Inventory
-              </Button>
-            </div>
-          </div>
-        </header>
-        <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
-          <Card>
-            <CardContent className="pt-6">
-              <ItemImageGallery
-                images={itemImages}
-                itemName={item.name}
-                fallbackImageUrl={item.imageUrl}
-              />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">{item.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">Part #: {item.sku}</p>
-            </CardHeader>
-          </Card>
-          {warehouses.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Stock by Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {warehouses.map((warehouse) => {
-                  const loc = itemLocations.find(l => l.warehouse_id === warehouse.id);
-                  const qty = loc ? loc.quantity : 0;
-                  return (
-                    <LocationQuantityRow
-                      key={warehouse.id}
-                      warehouseName={warehouse.name}
-                      quantity={qty}
-                      quantityUnit={item.quantityUnit}
-                      locationId={loc?.id}
-                      onSave={async (newQty) => {
-                        if (loc) {
-                          await updateSingleLocation(loc.id, newQty);
-                        } else {
-                          await upsertLocation(item.id, warehouse.id, newQty);
-                        }
-                      }}
-                    />
-                  );
-                })}
-              </CardContent>
-            </Card>
-          )}
-        </main>
-      </div>
+      <QuantityOnlyView
+        item={item}
+        itemImages={itemImages}
+        warehouses={warehouses}
+        itemLocations={itemLocations}
+        onBack={() => navigate('/items')}
+        onConsume={async (warehouseId, remaining) => {
+          const locationEntry = itemLocations.find((l) => l.warehouse_id === warehouseId);
+          const currentQty = locationEntry ? locationEntry.quantity : 0;
+          const consumed = currentQty - remaining;
+          if (consumed <= 0) {
+            toast({ title: 'Remaining must be less than current stock', variant: 'destructive' });
+            return;
+          }
+          try {
+            const newTotal = Math.max(0, item.quantity - consumed);
+            await onUpdate(item.id, { quantity: newTotal });
+            await addConsumption({
+              itemId: item.id,
+              quantity: consumed,
+              warehouseId,
+            });
+            if (locationEntry) {
+              await supabase
+                .from('item_location_quantities')
+                .update({ quantity: remaining, updated_at: new Date().toISOString() })
+                .eq('id', locationEntry.id);
+            } else {
+              await upsertLocation(item.id, warehouseId, remaining);
+            }
+            await refetchLocations();
+            toast({ title: `Consumed ${consumed} — ${remaining} left` });
+          } catch {
+            toast({ title: 'Error recording consumption', variant: 'destructive' });
+          }
+        }}
+      />
     );
   }
+
 
 
   const handleConsume = async () => {
