@@ -792,7 +792,7 @@ export function UsersSettings() {
                         <span className="text-base font-semibold text-foreground">{page.label}</span>
                       </label>
 
-                      {(pageExtras.length > 0 || showWorkerAccess) && (
+                      {(pageExtras.length > 0 || showWorkerAccess || showLocationAccess) && (
                         <div className="pl-6 space-y-3 border-l-2 border-border">
                           {pageExtras.map(extra => (
                             <label key={extra.key} className="flex items-start gap-2 cursor-pointer">
