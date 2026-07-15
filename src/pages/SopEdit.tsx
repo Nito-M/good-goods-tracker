@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
   AlertTriangle, Lightbulb, StickyNote, Wrench, Clock, ExternalLink, MapPin,
-  ChevronRight, ChevronDown, ShoppingCart,
+  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
