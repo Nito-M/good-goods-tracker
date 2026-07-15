@@ -191,7 +191,7 @@ export const Items = ({
       }
     }
     return result;
-  }, [items, tagFilter, itemTagsMap, warehouseFilter, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
+  }, [items, tagFilter, itemTagsMap, warehouseFilter, warehouseItemMap, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
 
   const orgList = organizations ?? [];
   const itemList = items ?? [];
