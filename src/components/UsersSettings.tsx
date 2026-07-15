@@ -807,8 +807,29 @@ export function UsersSettings() {
                         <span className="text-base font-semibold text-foreground">{page.label}</span>
                       </label>
 
-                      {(pageExtras.length > 0 || showWorkerAccess || showLocationAccess) && (
+                      {(pageExtras.length > 0 || showWorkerAccess || showLocationAccess || showSettingsSubpages) && (
                         <div className="pl-6 space-y-3 border-l-2 border-border">
+                          {showSettingsSubpages && (
+                            <div className="space-y-2">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">Settings Tabs</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Choose which Settings tabs this user can access.
+                                </p>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1.5">
+                                {SETTINGS_SUBPAGES.map(sub => (
+                                  <label key={sub.key} className="flex items-center gap-2 cursor-pointer">
+                                    <Checkbox
+                                      checked={editPages.includes(sub.key)}
+                                      onCheckedChange={() => togglePage(sub.key, editPages, setEditPages)}
+                                    />
+                                    <span className="text-sm">{sub.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           {pageExtras.map(extra => (
                             <label key={extra.key} className="flex items-start gap-2 cursor-pointer">
                               <Checkbox
