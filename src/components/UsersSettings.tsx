@@ -905,63 +905,15 @@ export function UsersSettings() {
                               )}
                             </div>
                           )}
-
+                        </div>
                       )}
                     </div>
                   );
                 })}
               </div>
-
-              {/* Location (Warehouse) Access */}
-              <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-                <div>
-                  <p className="text-base font-semibold text-foreground">Location Access</p>
-                  <p className="text-xs text-muted-foreground">
-                    Choose which inventory locations this user can see. "All locations" gives full access; "Only selected" restricts them to just the checked ones.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={warehouseMode === 'all'}
-                      onChange={() => setWarehouseMode('all')}
-                    />
-                    <span className="text-sm">All locations</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={warehouseMode === 'restricted'}
-                      onChange={() => setWarehouseMode('restricted')}
-                    />
-                    <span className="text-sm">Only selected</span>
-                  </label>
-                </div>
-                {warehouseMode === 'restricted' && (
-                  allWarehouses.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No locations exist yet.</p>
-                  ) : (
-                    <div className="max-h-56 overflow-y-auto border border-border rounded-md p-2 space-y-1 bg-muted/20">
-                      {allWarehouses.map(w => (
-                        <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
-                          <Checkbox
-                            checked={editWarehouseIds.includes(w.id)}
-                            onCheckedChange={(c) => {
-                              setEditWarehouseIds(prev =>
-                                c ? [...prev, w.id] : prev.filter(id => id !== w.id)
-                              );
-                            }}
-                          />
-                          <span className="text-sm">{w.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )
-                )}
-              </div>
             </div>
           </div>
+
 
           <DialogFooter className="px-6 py-4 border-t border-border shrink-0">
             <Button variant="outline" onClick={() => setEditUser(null)}>
