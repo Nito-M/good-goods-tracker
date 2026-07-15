@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useIsOrgAdmin } from "@/hooks/useIsOrgAdmin";
 
 interface OrgShop {
   id: string;
@@ -30,6 +31,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const [orgName, setOrgName] = useState<string | null>(null);
   const [shops, setShops] = useState<OrgShop[]>([]);
+  const { isOrgAdmin } = useIsOrgAdmin();
+  const visibleShops = isOrgAdmin ? shops : [];
 
   useEffect(() => {
     const fetchOrgInfo = async () => {
@@ -75,12 +78,12 @@ export function AppLayout({ children }: AppLayoutProps) {
     window.location.reload();
   };
 
-  const firstShopSlug = shops.length > 0 ? shops[0].slug : null;
+  const firstShopSlug = visibleShops.length > 0 ? visibleShops[0].slug : null;
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AppSidebar shopSlug={firstShopSlug} shops={shops} />
+        <AppSidebar shopSlug={firstShopSlug} shops={visibleShops} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Mobile header */}
           <header className="md:hidden flex items-center justify-between h-14 border-b border-border px-4 bg-background sticky top-0 z-40">
@@ -97,14 +100,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {shops.length === 1 && (
+              {visibleShops.length === 1 && (
                 <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
-                  <a href={`/shop/${shops[0].slug}`} target="_blank" rel="noopener noreferrer" title="View Public Shop">
+                  <a href={`/shop/${visibleShops[0].slug}`} target="_blank" rel="noopener noreferrer" title="View Public Shop">
                     <Store className="h-4 w-4" />
                   </a>
                 </Button>
               )}
-              {shops.length > 1 && (
+              {visibleShops.length > 1 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -112,7 +115,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {shops.map(shop => (
+                    {visibleShops.map(shop => (
                       <DropdownMenuItem key={shop.id} asChild>
                         <a 
                           href={`/shop/${shop.slug}`} 
@@ -151,9 +154,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </span>
               ) : <span />}
 
-              {shops.length === 1 && (
+              {visibleShops.length === 1 && (
                 <a
-                  href={`/shop/${shops[0].slug}`}
+                  href={`/shop/${visibleShops[0].slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-sm text-primary hover:underline"
@@ -163,7 +166,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <ExternalLink className="h-3 w-3" />
                 </a>
               )}
-              {shops.length > 1 && (
+              {visibleShops.length > 1 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-primary">
@@ -173,7 +176,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    {shops.map(shop => (
+                    {visibleShops.map(shop => (
                       <DropdownMenuItem key={shop.id} asChild>
                         <a 
                           href={`/shop/${shop.slug}`} 
