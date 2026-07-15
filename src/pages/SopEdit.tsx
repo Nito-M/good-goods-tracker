@@ -189,7 +189,8 @@ export default function SopEdit() {
           </div>
           <div>
             <Label>Revision #</Label>
-            <Input value={sop.revision_number || ''} onChange={e => updateSop({ revision_number: e.target.value })} />
+            <SopOptionSelect kind="revision" value={sop.revision_number || ''} onChange={v => updateSop({ revision_number: v })} placeholder="Select revision" />
+
           </div>
           <div>
             <Label>Status</Label>
