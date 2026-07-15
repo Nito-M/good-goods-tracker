@@ -84,7 +84,7 @@ export const Items = ({
 
   const { tagCategories } = useTagCategories();
   const { tags } = useTags();
-  const { warehouses, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
+  const { warehouses, restrictedByPermission, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const { itemTagsMap } = useBulkItemTags(itemIds);
   const { warehouseItemMap, warehouseItemQtyMap } = useBulkItemLocationQuantities(itemIds);
