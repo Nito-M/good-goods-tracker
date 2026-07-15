@@ -775,9 +775,14 @@ export function Requests() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RequestStatus)} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-6">
-          {(Object.keys(STATUS_CONFIG) as RequestStatus[]).map((status) =>
+      {(() => {
+        const visibleStatuses = (Object.keys(STATUS_CONFIG) as RequestStatus[]).filter(
+          (s) => isAdminUser || s === 'pending' || s === 'approved' || s === 'ordered'
+        );
+        return (
+      <Tabs value={visibleStatuses.includes(activeTab) ? activeTab : 'pending'} onValueChange={(v) => setActiveTab(v as RequestStatus)} className="w-full">
+        <TabsList className={`grid w-full mb-6`} style={{ gridTemplateColumns: `repeat(${visibleStatuses.length}, minmax(0, 1fr))` }}>
+          {visibleStatuses.map((status) =>
           <TabsTrigger key={status} value={status} className="flex items-center gap-1.5 py-1.5 px-2">
               {STATUS_CONFIG[status].icon}
               <span className="hidden sm:inline">{STATUS_CONFIG[status].label}</span>
@@ -793,11 +798,12 @@ export function Requests() {
           )}
         </TabsList>
 
-        {(Object.keys(STATUS_CONFIG) as RequestStatus[]).map((status) =>
+        {visibleStatuses.map((status) =>
         <TabsContent key={status} value={status}>
             {viewMode === 'lines' ? renderRequestList(status) : renderRequestGrid(status)}
           </TabsContent>
         )}
+
       </Tabs>
 
     </div>);
