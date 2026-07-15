@@ -942,8 +942,10 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* Categories Tab */}
+          {showCategoriesTab && (
           <TabsContent value="categories" className="mt-6">
             <Card>
               <CardHeader>
