@@ -536,9 +536,11 @@ export function Settings() {
           </TabsList>
 
           {/* Companies Tab */}
-          <TabsContent value="companies" className="mt-6">
-            <CompaniesSettings />
-          </TabsContent>
+          {showCompaniesTab && (
+            <TabsContent value="companies" className="mt-6">
+              <CompaniesSettings />
+            </TabsContent>
+          )}
 
           {/* Storefront Tab */}
           {showStorefrontTab && (
@@ -548,6 +550,7 @@ export function Settings() {
           )}
 
           {/* General Tab */}
+          {showGeneralTab && (
           <TabsContent value="general" className="mt-6">
             <Card>
               <CardHeader>
