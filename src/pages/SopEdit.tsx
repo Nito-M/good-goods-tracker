@@ -25,6 +25,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 import { formatCurrency } from '@/lib/utils';
 import { SopOptionSelect } from '@/components/SopOptionSelect';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function SopEdit() {
   const { id } = useParams<{ id: string }>();
