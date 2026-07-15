@@ -99,6 +99,8 @@ export function Requests() {
   });
 
   const canViewAll = isAdminUser || hasFeature('view_all_requests');
+  const canViewPricing = isAdminUser || hasFeature('view_request_pricing');
+  const canViewVendor = isAdminUser || hasFeature('view_request_vendor');
 
   // For regular members, only show their own requester name; admins/permitted users see all
   const visibleRequesterNames = canViewAll ?
