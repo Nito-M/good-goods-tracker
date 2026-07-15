@@ -112,16 +112,14 @@ function LocationQuantityRow({ warehouseName, quantity, quantityUnit, locationId
         <Badge variant={quantity > 0 ? 'secondary' : 'outline'}>
           {quantity} {unitLabel}
         </Badge>
-        {locationId && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={() => { setEditValue(String(quantity)); setEditing(true); }}
-          >
-            <Pencil className="h-3 w-3 text-muted-foreground" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={() => { setEditValue(String(quantity)); setEditing(true); }}
+        >
+          <Pencil className="h-3 w-3 text-muted-foreground" />
+        </Button>
       </div>
     </div>
   );
