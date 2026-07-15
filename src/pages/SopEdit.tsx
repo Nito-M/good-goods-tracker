@@ -212,11 +212,11 @@ export default function SopEdit() {
           </div>
           <div>
             <Label>Author</Label>
-            <Input value={sop.author || ''} onChange={e => updateSop({ author: e.target.value })} />
+            <SopOptionSelect kind="author" value={sop.author || ''} onChange={v => updateSop({ author: v })} placeholder="Select author" />
           </div>
           <div>
             <Label>Approved By</Label>
-            <Input value={sop.approved_by || ''} onChange={e => updateSop({ approved_by: e.target.value })} />
+            <SopOptionSelect kind="approver" value={sop.approved_by || ''} onChange={v => updateSop({ approved_by: v })} placeholder="Select approver" />
           </div>
         </CardContent>
       </Card>
