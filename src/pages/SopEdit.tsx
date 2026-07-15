@@ -47,6 +47,7 @@ export default function SopEdit() {
 
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
   const attachRef = useRef<HTMLInputElement>(null);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
 
   const [categoryOptions, setCategoryOptions] = useState<{ id: string; label: string }[]>([]);
   useEffect(() => {
