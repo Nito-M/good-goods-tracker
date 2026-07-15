@@ -73,6 +73,7 @@ function RequestItemForm({
   canRemove,
   isOpen,
   onToggle,
+  simple = false,
 }: {
   line: RequestLineItem;
   index: number;
@@ -82,7 +83,9 @@ function RequestItemForm({
   canRemove: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  simple?: boolean;
 }) {
+
   const [itemSearchOpen, setItemSearchOpen] = useState(false);
 
   const handleItemSelect = (value: string) => {
