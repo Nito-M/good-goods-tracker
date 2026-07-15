@@ -311,6 +311,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       price: parseFloat(price) || 0,
       cost: parseFloat(cost) || 0,
       minStock: parseFloat(minStock) || 0,
+      maxStock: parseFloat(maxStock) || 0,
       weight: parseFloat(weight) || 0,
       weightUnit,
       dimensions: finalDimensions,
