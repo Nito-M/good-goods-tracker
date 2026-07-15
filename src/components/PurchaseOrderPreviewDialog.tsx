@@ -34,7 +34,7 @@ export function PurchaseOrderPreviewDialog({
   const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
-  const taxAmount = afterDiscount * TAX_RATE;
+  const taxAmount = (order.gstEnabled ?? true) ? afterDiscount * TAX_RATE : 0;
   const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
   const totalCost = afterDiscount + taxAmount + pstAmount;
 
@@ -184,10 +184,12 @@ export function PurchaseOrderPreviewDialog({
                         <span>-{formatCurrency(discountAmount)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between py-1">
-                      <span>Tax (5%):</span>
-                      <span>{formatCurrency(taxAmount)}</span>
-                    </div>
+                    {(order.gstEnabled ?? true) && (
+                      <div className="flex justify-between py-1">
+                        <span>Tax (5%):</span>
+                        <span>{formatCurrency(taxAmount)}</span>
+                      </div>
+                    )}
                     {pstAmount > 0 && (
                       <div className="flex justify-between py-1">
                         <span>PST ({order.pstPercent}%):</span>

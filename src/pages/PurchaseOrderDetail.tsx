@@ -95,7 +95,7 @@ export default function PurchaseOrderDetail() {
   const subtotal = order.items.reduce((s, i) => s + (i.unitCost || 0) * i.quantity, 0);
   const discountAmount = order.discountAmount || 0;
   const afterDiscount = Math.max(0, subtotal - discountAmount);
-  const taxAmount = afterDiscount * TAX_RATE;
+  const taxAmount = (order.gstEnabled ?? true) ? afterDiscount * TAX_RATE : 0;
   const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
   const total = afterDiscount + taxAmount + pstAmount;
   const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
@@ -235,7 +235,9 @@ export default function PurchaseOrderDetail() {
             {discountAmount > 0 && (
               <Row label={`Discount${order.discountType === 'percentage' ? ` (${order.discountValue}%)` : ''}`} value={`-${formatCurrency(discountAmount)}`} muted />
             )}
-            <Row label="Tax (5%)" value={formatCurrency(taxAmount)} muted />
+            {(order.gstEnabled ?? true) && (
+              <Row label="Tax (5%)" value={formatCurrency(taxAmount)} muted />
+            )}
             {pstAmount > 0 && (
               <Row label={`PST (${order.pstPercent}%)`} value={formatCurrency(pstAmount)} muted />
             )}

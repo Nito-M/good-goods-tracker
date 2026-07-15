@@ -80,6 +80,7 @@ export interface PurchaseOrder {
   discountValue: number;
   discountAmount: number;
   pstPercent: number;
+  gstEnabled: boolean;
   companyId: string | null;
   companyName?: string | null;
   bankCardId: string | null;
@@ -144,6 +145,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     discountValue: db.discount_value || 0,
     discountAmount: db.discount_amount || 0,
     pstPercent: Number((db as any).pst_percent) || 0,
+    gstEnabled: (db as any).gst_enabled ?? true,
     companyId: (db as any).company_id || null,
     companyName,
     bankCardId: (db as any).bank_card_id || null,

@@ -148,6 +148,7 @@ export function AddPurchaseOrder() {
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>(editingOrder?.discountType || 'percentage');
   const [discountValue, setDiscountValue] = useState<string>(editingOrder?.discountValue ? String(editingOrder.discountValue) : '');
   const [pstPercent, setPstPercent] = useState<string>(editingOrder?.pstPercent ? String(editingOrder.pstPercent) : '');
+  const [gstEnabled, setGstEnabled] = useState<boolean>(editingOrder?.gstEnabled ?? true);
   const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
   const [contactPersonName, setContactPersonName] = useState<string>(editingOrder?.contactPersonName || '');
   const { companies, defaultCompany } = useCompanies();
@@ -173,7 +174,7 @@ export function AddPurchaseOrder() {
     : parseFloat(discountValue) || 0;
   
   const afterDiscount = Math.max(0, subtotal - discountAmount);
-  const taxAmount = Math.round(afterDiscount * 5) / 100;
+  const taxAmount = gstEnabled ? Math.round(afterDiscount * 5) / 100 : 0;
   const pstNum = parseFloat(pstPercent) || 0;
   const pstAmount = Math.round(afterDiscount * pstNum * 100) / 10000;
   const grandTotal = afterDiscount + taxAmount + pstAmount;
@@ -396,6 +397,7 @@ export function AddPurchaseOrder() {
           discountValue: parseFloat(discountValue) || 0,
           discountAmount,
           pstPercent: pstNum,
+          gstEnabled,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
@@ -418,6 +420,7 @@ export function AddPurchaseOrder() {
           discountValue: parseFloat(discountValue) || 0,
           discountAmount,
           pstPercent: pstNum,
+          gstEnabled,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
@@ -972,8 +975,13 @@ export function AddPurchaseOrder() {
                     </div>
                   )}
                   
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (5%)</span>
+                  <div className="flex justify-between items-center text-sm gap-3">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={gstEnabled} onCheckedChange={setGstEnabled} id="gst-toggle" />
+                      <label htmlFor="gst-toggle" className="text-muted-foreground cursor-pointer">
+                        Tax / GST (5%) {!gstEnabled && <span className="text-xs">— off</span>}
+                      </label>
+                    </div>
                     <span className="font-medium">${taxAmount.toFixed(2)}</span>
                   </div>
 
