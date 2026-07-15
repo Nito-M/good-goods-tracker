@@ -53,7 +53,7 @@ export interface SopPdfData {
   attachments: { fileName: string }[];
 }
 
-export async function generateSopPDF(data: SopPdfData, sections: SopPdfSections) {
+export async function generateSopPDF(data: SopPdfData, sections: SopPdfSections, mode: 'download' | 'print' = 'download') {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -240,5 +240,15 @@ export async function generateSopPDF(data: SopPdfData, sections: SopPdfSections)
     doc.text(`Generated ${new Date().toLocaleDateString()} — Page ${i} of ${pages}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
   }
 
+  if (mode === 'print') {
+    const blobUrl = doc.output('bloburl');
+    const w = window.open(blobUrl as unknown as string, '_blank');
+    if (w) {
+      w.addEventListener('load', () => {
+        try { w.focus(); w.print(); } catch {}
+      });
+    }
+    return;
+  }
   await savePdfBlob(doc, `${data.title} - SOP.pdf`);
 }

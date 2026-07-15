@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Download, Printer } from 'lucide-react';
 import { SopPdfSections, DEFAULT_SOP_PDF_SECTIONS } from '@/lib/sopPdfGenerator';
 
 const FIELDS: { key: keyof SopPdfSections; label: string }[] = [
@@ -16,16 +17,20 @@ const FIELDS: { key: keyof SopPdfSections; label: string }[] = [
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (sections: SopPdfSections) => void;
+  onConfirm: (sections: SopPdfSections, mode: 'download' | 'print') => void;
 }
 
 export function SopPdfOptionsDialog({ open, onOpenChange, onConfirm }: Props) {
   const [sections, setSections] = useState<SopPdfSections>(DEFAULT_SOP_PDF_SECTIONS);
   const toggle = (k: keyof SopPdfSections) => setSections(s => ({ ...s, [k]: !s[k] }));
+  const handle = (mode: 'download' | 'print') => {
+    onConfirm(sections, mode);
+    onOpenChange(false);
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
-        <DialogHeader><DialogTitle>Download SOP PDF</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>SOP PDF</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <p className="text-sm text-muted-foreground">Choose which sections to include:</p>
           {FIELDS.map(f => (
@@ -35,9 +40,14 @@ export function SopPdfOptionsDialog({ open, onOpenChange, onConfirm }: Props) {
             </label>
           ))}
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => { onConfirm(sections); onOpenChange(false); }}>Download</Button>
+          <Button variant="secondary" onClick={() => handle('print')}>
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
+          <Button onClick={() => handle('download')}>
+            <Download className="h-4 w-4 mr-1" /> Download
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
