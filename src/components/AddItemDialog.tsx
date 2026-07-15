@@ -74,6 +74,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
       setPrice('');
       setCost('');
       setMinStock('');
+      setMaxStock('');
       setWeight('');
       setWeightUnit('lb');
       setDimensions(DEFAULT_DIMENSIONS);
