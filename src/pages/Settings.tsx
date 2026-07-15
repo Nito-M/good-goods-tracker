@@ -1295,11 +1295,14 @@ export function Settings() {
               </AlertDialogContent>
             </AlertDialog>
           </TabsContent>
+          )}
 
           {/* Tags Tab */}
-          <TabsContent value="tags" className="mt-6">
-            <TagsSettings />
-          </TabsContent>
+          {showTagsTab && (
+            <TabsContent value="tags" className="mt-6">
+              <TagsSettings />
+            </TabsContent>
+          )}
 
           {/* Users Tab (Org Admin + Super Admin) */}
           {showUsersTab && (
