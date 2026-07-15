@@ -80,6 +80,7 @@ export interface PurchaseOrder {
   discountValue: number;
   discountAmount: number;
   pstPercent: number;
+  gstEnabled: boolean;
   companyId: string | null;
   companyName?: string | null;
   bankCardId: string | null;
