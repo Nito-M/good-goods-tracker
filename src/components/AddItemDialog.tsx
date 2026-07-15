@@ -59,6 +59,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
       setPrice(String(editItem.price));
       setCost(String(editItem.cost));
       setMinStock(String(editItem.minStock));
+      setMaxStock(String(editItem.maxStock || ''));
       setWeight(String(editItem.weight));
       setWeightUnit(editItem.weightUnit);
       setDimensions(editItem.dimensions);
