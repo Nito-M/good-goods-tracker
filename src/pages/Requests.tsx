@@ -257,6 +257,7 @@ export function Requests() {
               )}
 
               {/* Vendor - inline select */}
+              {canViewVendor && (
               <div className="shrink-0 hidden lg:block w-32" onClick={(e) => e.stopPropagation()}>
                 <Select
                   value={firstReq.vendorName || "__none__"}
@@ -284,6 +285,7 @@ export function Requests() {
                   </SelectContent>
                 </Select>
               </div>
+              )}
 
               {/* Card - inline select */}
               <div className="shrink-0 hidden lg:block w-28" onClick={(e) => e.stopPropagation()}>
