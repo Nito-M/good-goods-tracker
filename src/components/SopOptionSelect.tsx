@@ -92,21 +92,51 @@ export function SopOptionSelect({
           )}
           {options.map(opt => (
             <div key={opt.id} className="flex items-center gap-1 px-2 py-1 hover:bg-accent group">
-              <button
-                type="button"
-                className="flex-1 flex items-center gap-2 text-left text-sm px-1 py-1"
-                onClick={() => { onChange(opt.value); setOpen(false); }}
-              >
-                <Check className={cn('h-3.5 w-3.5', value === opt.value ? 'opacity-100' : 'opacity-0')} />
-                <span className="truncate">{opt.value}</span>
-              </button>
-              <Button
-                size="icon" variant="ghost"
-                className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100"
-                onClick={(e) => { e.stopPropagation(); removeOption(opt); }}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {editingId === opt.id ? (
+                <>
+                  <Input
+                    autoFocus
+                    value={editingValue}
+                    onChange={e => setEditingValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') { e.preventDefault(); saveEdit(opt); }
+                      else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+                    }}
+                    className="h-7 text-sm flex-1"
+                  />
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => saveEdit(opt)}>
+                    <Check className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={cancelEdit}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="flex-1 flex items-center gap-2 text-left text-sm px-1 py-1"
+                    onClick={() => { onChange(opt.value); setOpen(false); }}
+                  >
+                    <Check className={cn('h-3.5 w-3.5', value === opt.value ? 'opacity-100' : 'opacity-0')} />
+                    <span className="truncate">{opt.value}</span>
+                  </button>
+                  <Button
+                    size="icon" variant="ghost"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => { e.stopPropagation(); startEdit(opt); }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="icon" variant="ghost"
+                    className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100"
+                    onClick={(e) => { e.stopPropagation(); removeOption(opt); }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </>
+              )}
             </div>
           ))}
         </div>
