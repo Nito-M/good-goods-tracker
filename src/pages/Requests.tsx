@@ -784,9 +784,11 @@ export function Requests() {
               <Badge variant="secondary" className="h-5 min-w-5 px-1.5">
                 {getStatusCount(status)}
               </Badge>
-              <span className="hidden sm:inline text-[11px] text-muted-foreground font-medium opacity-75">
-                {formatCurrency(getStatusTotal(status))}
-              </span>
+              {canViewPricing && (
+                <span className="hidden sm:inline text-[11px] text-muted-foreground font-medium opacity-75">
+                  {formatCurrency(getStatusTotal(status))}
+                </span>
+              )}
             </TabsTrigger>
           )}
         </TabsList>
