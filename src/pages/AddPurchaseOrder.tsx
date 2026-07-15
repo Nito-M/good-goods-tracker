@@ -49,6 +49,7 @@ export function AddPurchaseOrder() {
   const navigate = useNavigate();
   const location = useLocation();
   const editingOrder = (location.state as { editingOrder?: PurchaseOrder })?.editingOrder ?? null;
+  const prefillItems = (location.state as { prefillItems?: Array<{ inventory_item_id: string; name: string; sku: string | null; quantity: number; unit_cost: number; notes?: string }> })?.prefillItems ?? null;
   const { createOrder, updateOrder } = usePurchaseOrders();
   const { allItems: inventoryItems } = useInventory();
   const { rows: allVendorPriceRows } = useAllItemVendorPrices();
