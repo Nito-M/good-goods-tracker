@@ -208,7 +208,7 @@ export default function SopEdit() {
       <SopPdfOptionsDialog
         open={pdfDialogOpen}
         onOpenChange={setPdfDialogOpen}
-        onConfirm={async (sections) => {
+        onConfirm={async (sections, mode) => {
           const categoryLabel = categoryOptions.find(c => c.id === sop.category_id)?.label || null;
           await generateSopPDF({
             title: sop.title,
@@ -249,7 +249,7 @@ export default function SopEdit() {
             bomTotal,
             locations: locations.map(l => ({ name: l.name, url: l.url })),
             attachments: attachments.map(a => ({ fileName: a.file_name })),
-          }, sections);
+          }, sections, mode);
         }}
       />
 
