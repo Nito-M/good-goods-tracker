@@ -887,6 +887,15 @@ export function UsersSettings() {
                                   <p className="text-xs text-muted-foreground">No locations exist yet.</p>
                                 ) : (
                                   <div className="max-h-56 overflow-y-auto border border-border rounded-md p-2 space-y-1 bg-muted/20">
+                                    <label className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50 border-b border-border">
+                                      <Checkbox
+                                        checked={editWarehouseIds.length === allWarehouses.length}
+                                        onCheckedChange={(c) => {
+                                          setEditWarehouseIds(c ? allWarehouses.map(w => w.id) : []);
+                                        }}
+                                      />
+                                      <span className="text-sm font-medium">All locations</span>
+                                    </label>
                                     {allWarehouses.map(w => (
                                       <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
                                         <Checkbox
