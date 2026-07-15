@@ -86,6 +86,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [price, setPrice] = useState('');
   const [cost, setCost] = useState('');
   const [minStock, setMinStock] = useState('');
+  const [maxStock, setMaxStock] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<'lb' | 'kg'>('lb');
   const [dimensions, setDimensions] = useState<Dimensions>(DEFAULT_DIMENSIONS);
