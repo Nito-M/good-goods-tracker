@@ -64,6 +64,23 @@ export function Settings() {
   const { isPageAllowed } = usePagePermissions();
   const showUsersTab = isAdmin || isOrgAdmin;
   const showStorefrontTab = isPageAllowed('settings-storefront');
+  const showGeneralTab = isPageAllowed('settings-general');
+  const showCompaniesTab = isPageAllowed('settings-companies');
+  const showVendorsTab = isPageAllowed('settings-vendors');
+  const showCustomersTab = isPageAllowed('settings-customers');
+  const showCategoriesTab = isPageAllowed('settings-categories');
+  const showTagsTab = isPageAllowed('settings-tags');
+  const firstTab =
+    showGeneralTab ? 'general'
+    : showCompaniesTab ? 'companies'
+    : showStorefrontTab ? 'storefront'
+    : showVendorsTab ? 'vendors'
+    : showCustomersTab ? 'customers'
+    : showCategoriesTab ? 'categories'
+    : showTagsTab ? 'tags'
+    : showUsersTab ? 'users'
+    : isAdmin ? 'organizations'
+    : 'general';
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, borderColor, setBorderColor } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
@@ -460,38 +477,50 @@ export function Settings() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="general" className="w-full">
+        <Tabs defaultValue={firstTab} className="w-full">
           <TabsList className="flex w-full max-w-5xl overflow-x-auto">
-            <TabsTrigger value="general" className="gap-2 shrink-0">
-              <Monitor className="h-4 w-4 hidden sm:inline" />
-              General
-            </TabsTrigger>
-            <TabsTrigger value="companies" className="gap-2 shrink-0">
-              <Briefcase className="h-4 w-4 hidden sm:inline" />
-              Companies
-            </TabsTrigger>
+            {showGeneralTab && (
+              <TabsTrigger value="general" className="gap-2 shrink-0">
+                <Monitor className="h-4 w-4 hidden sm:inline" />
+                General
+              </TabsTrigger>
+            )}
+            {showCompaniesTab && (
+              <TabsTrigger value="companies" className="gap-2 shrink-0">
+                <Briefcase className="h-4 w-4 hidden sm:inline" />
+                Companies
+              </TabsTrigger>
+            )}
             {showStorefrontTab && (
               <TabsTrigger value="storefront" className="gap-2 shrink-0">
                 <Store className="h-4 w-4 hidden sm:inline" />
                 Storefront
               </TabsTrigger>
             )}
-            <TabsTrigger value="vendors" className="gap-2 shrink-0">
-              <Building2 className="h-4 w-4 hidden sm:inline" />
-              Vendors
-            </TabsTrigger>
-            <TabsTrigger value="customers" className="gap-2 shrink-0">
-              <Contact className="h-4 w-4 hidden sm:inline" />
-              Customers
-            </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2 shrink-0">
-              <Tags className="h-4 w-4 hidden sm:inline" />
-              Categories
-            </TabsTrigger>
-            <TabsTrigger value="tags" className="gap-2 shrink-0">
-              <Tag className="h-4 w-4 hidden sm:inline" />
-              Tags
-            </TabsTrigger>
+            {showVendorsTab && (
+              <TabsTrigger value="vendors" className="gap-2 shrink-0">
+                <Building2 className="h-4 w-4 hidden sm:inline" />
+                Vendors
+              </TabsTrigger>
+            )}
+            {showCustomersTab && (
+              <TabsTrigger value="customers" className="gap-2 shrink-0">
+                <Contact className="h-4 w-4 hidden sm:inline" />
+                Customers
+              </TabsTrigger>
+            )}
+            {showCategoriesTab && (
+              <TabsTrigger value="categories" className="gap-2 shrink-0">
+                <Tags className="h-4 w-4 hidden sm:inline" />
+                Categories
+              </TabsTrigger>
+            )}
+            {showTagsTab && (
+              <TabsTrigger value="tags" className="gap-2 shrink-0">
+                <Tag className="h-4 w-4 hidden sm:inline" />
+                Tags
+              </TabsTrigger>
+            )}
             {showUsersTab && (
               <TabsTrigger value="users" className="gap-2 shrink-0">
                 <Users className="h-4 w-4 hidden sm:inline" />
@@ -507,9 +536,11 @@ export function Settings() {
           </TabsList>
 
           {/* Companies Tab */}
-          <TabsContent value="companies" className="mt-6">
-            <CompaniesSettings />
-          </TabsContent>
+          {showCompaniesTab && (
+            <TabsContent value="companies" className="mt-6">
+              <CompaniesSettings />
+            </TabsContent>
+          )}
 
           {/* Storefront Tab */}
           {showStorefrontTab && (
@@ -519,6 +550,7 @@ export function Settings() {
           )}
 
           {/* General Tab */}
+          {showGeneralTab && (
           <TabsContent value="general" className="mt-6">
             <Card>
               <CardHeader>
@@ -763,8 +795,10 @@ export function Settings() {
             {isAdmin && <WelcomeScreenSettings />}
 
           </TabsContent>
+          )}
 
           {/* Vendors Tab */}
+          {showVendorsTab && (
           <TabsContent value="vendors" className="mt-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -843,8 +877,10 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* Customers Tab */}
+          {showCustomersTab && (
           <TabsContent value="customers" className="mt-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -906,8 +942,10 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* Categories Tab */}
+          {showCategoriesTab && (
           <TabsContent value="categories" className="mt-6">
             <Card>
               <CardHeader>
@@ -1257,11 +1295,14 @@ export function Settings() {
               </AlertDialogContent>
             </AlertDialog>
           </TabsContent>
+          )}
 
           {/* Tags Tab */}
-          <TabsContent value="tags" className="mt-6">
-            <TagsSettings />
-          </TabsContent>
+          {showTagsTab && (
+            <TabsContent value="tags" className="mt-6">
+              <TagsSettings />
+            </TabsContent>
+          )}
 
           {/* Users Tab (Org Admin + Super Admin) */}
           {showUsersTab && (
