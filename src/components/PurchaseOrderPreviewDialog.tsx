@@ -184,10 +184,12 @@ export function PurchaseOrderPreviewDialog({
                         <span>-{formatCurrency(discountAmount)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between py-1">
-                      <span>Tax (5%):</span>
-                      <span>{formatCurrency(taxAmount)}</span>
-                    </div>
+                    {(order.gstEnabled ?? true) && (
+                      <div className="flex justify-between py-1">
+                        <span>Tax (5%):</span>
+                        <span>{formatCurrency(taxAmount)}</span>
+                      </div>
+                    )}
                     {pstAmount > 0 && (
                       <div className="flex justify-between py-1">
                         <span>PST ({order.pstPercent}%):</span>
