@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
   AlertTriangle, Lightbulb, StickyNote, Wrench, Clock, ExternalLink, MapPin,
-  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download,
+  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download, Printer,
 } from 'lucide-react';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { generateSopPDF } from '@/lib/sopPdfGenerator';
