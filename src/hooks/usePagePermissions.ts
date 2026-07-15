@@ -96,15 +96,18 @@ export function usePagePermissions() {
         if (!orgAllowed.includes('settings')) orgAllowed.push('settings');
       }
 
-      // Org admins bypass per-user permissions but still respect org-level restrictions
+      // Per-user restrictions apply even to org admins (super admins bypassed above).
+      // This lets an org owner intentionally hide pages from themselves.
       let userAllowed: string[] | null;
-      if (isOrgAdmin || !userPerms || userPerms.length === 0) {
+      if (!userPerms || userPerms.length === 0) {
         userAllowed = null;
       } else {
         userAllowed = userPerms.map(d => d.page_key);
         if (workerGrants && workerGrants.length > 0 && !userAllowed.includes('assets')) {
           userAllowed.push('assets');
         }
+        // Settings always accessible so admins can restore access
+        if (!userAllowed.includes('settings')) userAllowed.push('settings');
       }
 
       // Intersect user-level and org-level restrictions
