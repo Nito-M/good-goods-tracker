@@ -1828,6 +1828,7 @@ export type Database = {
           id: string
           image_url: string | null
           internal_part_number: string | null
+          max_stock: number
           min_stock: number
           name: string
           organization_id: string | null
@@ -1863,6 +1864,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           internal_part_number?: string | null
+          max_stock?: number
           min_stock?: number
           name: string
           organization_id?: string | null
@@ -1898,6 +1900,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           internal_part_number?: string | null
+          max_stock?: number
           min_stock?: number
           name?: string
           organization_id?: string | null

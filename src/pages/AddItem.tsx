@@ -86,6 +86,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const [price, setPrice] = useState('');
   const [cost, setCost] = useState('');
   const [minStock, setMinStock] = useState('');
+  const [maxStock, setMaxStock] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<'lb' | 'kg'>('lb');
   const [dimensions, setDimensions] = useState<Dimensions>(DEFAULT_DIMENSIONS);
@@ -160,6 +161,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setPrice(String(editItem.price));
       setCost(String(editItem.cost));
       setMinStock(String(editItem.minStock));
+      setMaxStock(String(editItem.maxStock || ''));
       setWeight(String(editItem.weight));
       setWeightUnit(editItem.weightUnit);
       setDimensions(editItem.dimensions);
@@ -309,6 +311,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       price: parseFloat(price) || 0,
       cost: parseFloat(cost) || 0,
       minStock: parseFloat(minStock) || 0,
+      maxStock: parseFloat(maxStock) || 0,
       weight: parseFloat(weight) || 0,
       weightUnit,
       dimensions: finalDimensions,
@@ -704,6 +707,18 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   onChange={(e) => setMinStock(e.target.value)}
                   placeholder="0"
                   required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxStock">Max Stock Level</Label>
+                <Input
+                  id="maxStock"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={maxStock}
+                  onChange={(e) => setMaxStock(e.target.value)}
+                  placeholder="0"
                 />
               </div>
             </CardContent>

@@ -25,6 +25,7 @@ interface DbInventoryItem {
   price: number;
   cost: number;
   min_stock: number;
+  max_stock: number;
   weight: number;
   weight_unit: string;
   dimensions_length: number;
@@ -60,6 +61,7 @@ function dbToInventoryItem(db: DbInventoryItem): InventoryItem {
     price: Number(db.price),
     cost: Number(db.cost),
     minStock: db.min_stock,
+    maxStock: db.max_stock ?? 0,
     weight: Number(db.weight),
     weightUnit: db.weight_unit as 'lb' | 'kg',
     dimensions: {
@@ -101,6 +103,7 @@ function inventoryItemToDb(
     price: item.price,
     cost: item.cost,
     min_stock: item.minStock,
+    max_stock: item.maxStock ?? 0,
     weight: item.weight,
     weight_unit: item.weightUnit,
     dimensions_length: item.dimensions.length,
@@ -318,6 +321,7 @@ export function useInventory(activeOrgId?: string | null) {
         price: item.price,
         cost: item.cost,
         min_stock: item.minStock,
+        max_stock: item.maxStock ?? 0,
         weight: item.weight,
         weight_unit: item.weightUnit,
         dimensions_length: item.dimensions.length,
@@ -378,6 +382,7 @@ export function useInventory(activeOrgId?: string | null) {
     if (updates.price !== undefined) dbUpdates.price = updates.price;
     if (updates.cost !== undefined) dbUpdates.cost = updates.cost;
     if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
+    if (updates.maxStock !== undefined) dbUpdates.max_stock = updates.maxStock;
     if (updates.weight !== undefined) dbUpdates.weight = updates.weight;
     if (updates.weightUnit !== undefined) dbUpdates.weight_unit = updates.weightUnit;
     if (updates.dimensions !== undefined) {
@@ -622,6 +627,7 @@ export function useInventory(activeOrgId?: string | null) {
       price: src.price,
       cost: src.cost,
       min_stock: src.min_stock,
+      max_stock: (src as unknown as { max_stock?: number }).max_stock ?? 0,
       weight: src.weight,
       weight_unit: src.weight_unit,
       dimensions_length: src.dimensions_length,

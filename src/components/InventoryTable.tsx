@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, AlertTriangle } from 'lucide-react';
 import {
   Pagination,
   PaginationContent,
@@ -150,12 +150,24 @@ export function InventoryTable({ items, onDelete, warehouseFilter, warehouseItem
             {item.sku}
           </TableCell>
         );
-      case 'quantity':
+      case 'quantity': {
+        const isLow = item.minStock > 0 && displayQty <= item.minStock;
         return (
           <TableCell key={key} className="text-right tabular-nums">
-            {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+            <span className="inline-flex items-center gap-1.5 justify-end">
+              {isLow && (
+                <AlertTriangle
+                  className="h-4 w-4 text-destructive"
+                  aria-label={`Low stock (min ${item.minStock})`}
+                />
+              )}
+              <span className={cn(isLow && 'text-destructive font-medium')}>
+                {displayQty} {item.quantityUnit !== 'pcs' ? QUANTITY_UNIT_LABELS[item.quantityUnit] : ''}
+              </span>
+            </span>
           </TableCell>
         );
+      }
       case 'price': {
         const rawPrice = showCost
           ? item.cost

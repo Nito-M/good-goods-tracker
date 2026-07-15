@@ -211,6 +211,7 @@ export function ItemCsvImport({ addItem }: Props) {
           price: 0,
           cost: 0,
           minStock: 0,
+          maxStock: 0,
           weight: 0,
           weightUnit: 'lb',
           dimensions: { length: 0, width: 0, height: 0, unit: 'in' },
