@@ -538,6 +538,7 @@ export function Requests() {
                 />
 
                 {/* Vendor selector — highly visible */}
+                {canViewVendor && (
                 <div className="p-2 bg-accent/50 rounded-lg border border-accent space-y-2" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <Store className="h-4 w-4 text-primary shrink-0" />
@@ -587,6 +588,7 @@ export function Requests() {
                     }}
                   />
                 </div>
+                )}
 
                 {/* Card selector */}
                 {cards.length > 0 && (
