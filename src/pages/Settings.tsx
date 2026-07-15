@@ -477,38 +477,50 @@ export function Settings() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue="general" className="w-full">
+        <Tabs defaultValue={firstTab} className="w-full">
           <TabsList className="flex w-full max-w-5xl overflow-x-auto">
-            <TabsTrigger value="general" className="gap-2 shrink-0">
-              <Monitor className="h-4 w-4 hidden sm:inline" />
-              General
-            </TabsTrigger>
-            <TabsTrigger value="companies" className="gap-2 shrink-0">
-              <Briefcase className="h-4 w-4 hidden sm:inline" />
-              Companies
-            </TabsTrigger>
+            {showGeneralTab && (
+              <TabsTrigger value="general" className="gap-2 shrink-0">
+                <Monitor className="h-4 w-4 hidden sm:inline" />
+                General
+              </TabsTrigger>
+            )}
+            {showCompaniesTab && (
+              <TabsTrigger value="companies" className="gap-2 shrink-0">
+                <Briefcase className="h-4 w-4 hidden sm:inline" />
+                Companies
+              </TabsTrigger>
+            )}
             {showStorefrontTab && (
               <TabsTrigger value="storefront" className="gap-2 shrink-0">
                 <Store className="h-4 w-4 hidden sm:inline" />
                 Storefront
               </TabsTrigger>
             )}
-            <TabsTrigger value="vendors" className="gap-2 shrink-0">
-              <Building2 className="h-4 w-4 hidden sm:inline" />
-              Vendors
-            </TabsTrigger>
-            <TabsTrigger value="customers" className="gap-2 shrink-0">
-              <Contact className="h-4 w-4 hidden sm:inline" />
-              Customers
-            </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2 shrink-0">
-              <Tags className="h-4 w-4 hidden sm:inline" />
-              Categories
-            </TabsTrigger>
-            <TabsTrigger value="tags" className="gap-2 shrink-0">
-              <Tag className="h-4 w-4 hidden sm:inline" />
-              Tags
-            </TabsTrigger>
+            {showVendorsTab && (
+              <TabsTrigger value="vendors" className="gap-2 shrink-0">
+                <Building2 className="h-4 w-4 hidden sm:inline" />
+                Vendors
+              </TabsTrigger>
+            )}
+            {showCustomersTab && (
+              <TabsTrigger value="customers" className="gap-2 shrink-0">
+                <Contact className="h-4 w-4 hidden sm:inline" />
+                Customers
+              </TabsTrigger>
+            )}
+            {showCategoriesTab && (
+              <TabsTrigger value="categories" className="gap-2 shrink-0">
+                <Tags className="h-4 w-4 hidden sm:inline" />
+                Categories
+              </TabsTrigger>
+            )}
+            {showTagsTab && (
+              <TabsTrigger value="tags" className="gap-2 shrink-0">
+                <Tag className="h-4 w-4 hidden sm:inline" />
+                Tags
+              </TabsTrigger>
+            )}
             {showUsersTab && (
               <TabsTrigger value="users" className="gap-2 shrink-0">
                 <Users className="h-4 w-4 hidden sm:inline" />
