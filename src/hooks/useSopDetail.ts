@@ -16,6 +16,7 @@ export interface SopStep {
   tips: string | null;
   required_tools: string | null;
   estimated_minutes: number | null;
+  links: { name?: string; url: string }[] | null;
 }
 
 export interface SopStepFile {

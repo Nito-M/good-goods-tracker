@@ -4997,6 +4997,7 @@ export type Database = {
           created_at: string
           estimated_minutes: number | null
           id: string
+          links: Json
           notes: string | null
           required_tools: string | null
           sop_id: string
@@ -5010,6 +5011,7 @@ export type Database = {
           created_at?: string
           estimated_minutes?: number | null
           id?: string
+          links?: Json
           notes?: string | null
           required_tools?: string | null
           sop_id: string
@@ -5023,6 +5025,7 @@ export type Database = {
           created_at?: string
           estimated_minutes?: number | null
           id?: string
+          links?: Json
           notes?: string | null
           required_tools?: string | null
           sop_id?: string

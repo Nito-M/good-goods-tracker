@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
   AlertTriangle, Lightbulb, StickyNote, Wrench, Clock, ExternalLink, MapPin,
-  ChevronRight, ChevronDown, ShoppingCart,
+  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -642,7 +642,51 @@ function StepRow({
               </div>
             )}
 
-            <div className="flex gap-2 pt-1">
+            {/* Links */}
+            {(step.links && step.links.length > 0) ? (
+              <div className="space-y-1 border-t border-border pt-2">
+                <div className="text-xs font-semibold text-muted-foreground">Links</div>
+                {step.links.map((lnk, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      value={lnk.name || ''}
+                      placeholder="Label"
+                      onChange={e => {
+                        const next = [...(step.links || [])];
+                        next[i] = { ...next[i], name: e.target.value };
+                        onUpdate({ links: next } as any);
+                      }}
+                      className="h-7 w-40 text-sm"
+                    />
+                    <Input
+                      value={lnk.url}
+                      placeholder="https://…"
+                      onChange={e => {
+                        const next = [...(step.links || [])];
+                        next[i] = { ...next[i], url: e.target.value };
+                        onUpdate({ links: next } as any);
+                      }}
+                      className="h-7 flex-1 text-sm"
+                    />
+                    {lnk.url && (
+                      <a href={/^https?:\/\//i.test(lnk.url) ? lnk.url : `https://${lnk.url}`}
+                        target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary" title="Open">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive"
+                      onClick={() => {
+                        const next = (step.links || []).filter((_, j) => j !== i);
+                        onUpdate({ links: next } as any);
+                      }}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="flex gap-2 pt-1 flex-wrap">
               <input ref={fileRef} type="file" multiple className="hidden"
                 onChange={async e => {
                   if (!e.target.files) return;
@@ -654,6 +698,10 @@ function StepRow({
               </Button>
               <Button size="sm" variant="outline" onClick={onOpenPicker}>
                 <Package className="h-3.5 w-3.5 mr-1" /> Link Inventory
+              </Button>
+              <Button size="sm" variant="outline"
+                onClick={() => onUpdate({ links: [...(step.links || []), { name: '', url: '' }] } as any)}>
+                <LinkIcon className="h-3.5 w-3.5 mr-1" /> Add Link
               </Button>
             </div>
           </div>
