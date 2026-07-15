@@ -24,6 +24,7 @@ import { useSopDetail, SopStep } from '@/hooks/useSopDetail';
 import { useInventory } from '@/hooks/useInventory';
 import { FullScreenItemPicker, PickerCartItem } from '@/components/FullScreenItemPicker';
 import { formatCurrency } from '@/lib/utils';
+import { SopOptionSelect } from '@/components/SopOptionSelect';
 
 export default function SopEdit() {
   const { id } = useParams<{ id: string }>();
@@ -184,7 +185,7 @@ export default function SopEdit() {
           </div>
           <div>
             <Label>Department</Label>
-            <Input value={sop.department || ''} onChange={e => updateSop({ department: e.target.value })} />
+            <SopOptionSelect kind="department" value={sop.department || ''} onChange={v => updateSop({ department: v })} placeholder="Select department" />
           </div>
           <div>
             <Label>Revision #</Label>
@@ -211,11 +212,11 @@ export default function SopEdit() {
           </div>
           <div>
             <Label>Author</Label>
-            <Input value={sop.author || ''} onChange={e => updateSop({ author: e.target.value })} />
+            <SopOptionSelect kind="author" value={sop.author || ''} onChange={v => updateSop({ author: v })} placeholder="Select author" />
           </div>
           <div>
             <Label>Approved By</Label>
-            <Input value={sop.approved_by || ''} onChange={e => updateSop({ approved_by: e.target.value })} />
+            <SopOptionSelect kind="approver" value={sop.approved_by || ''} onChange={v => updateSop({ approved_by: v })} placeholder="Select approver" />
           </div>
         </CardContent>
       </Card>
