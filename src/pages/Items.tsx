@@ -84,7 +84,7 @@ export const Items = ({
 
   const { tagCategories } = useTagCategories();
   const { tags } = useTags();
-  const { warehouses, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
+  const { warehouses, restrictedByPermission, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const { itemTagsMap } = useBulkItemTags(itemIds);
   const { warehouseItemMap, warehouseItemQtyMap } = useBulkItemLocationQuantities(itemIds);
@@ -183,6 +183,17 @@ export const Items = ({
       result = result.filter((item) =>
         itemsInWarehouse?.has(item.id) || item.warehouseId === warehouseFilter
       );
+    } else if (restrictedByPermission) {
+      // User only has access to specific locations - hide items not in any allowed location
+      const allowedIds = new Set(warehouses.map(w => w.id));
+      const allowedItemIds = new Set<string>();
+      warehouses.forEach(w => {
+        const inWh = warehouseItemMap.get(w.id);
+        inWh?.forEach(id => allowedItemIds.add(id));
+      });
+      result = result.filter((item) =>
+        allowedItemIds.has(item.id) || (item.warehouseId && allowedIds.has(item.warehouseId))
+      );
     }
     if (subcategoryFilter !== 'all') {
       const subName = subcategoryOptions.find(s => s.id === subcategoryFilter)?.name;
@@ -191,7 +202,7 @@ export const Items = ({
       }
     }
     return result;
-  }, [items, tagFilter, itemTagsMap, warehouseFilter, warehouseItemMap, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
+  }, [items, tagFilter, itemTagsMap, warehouseFilter, warehouseItemMap, warehouses, restrictedByPermission, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
 
   const orgList = organizations ?? [];
   const itemList = items ?? [];

@@ -35,9 +35,10 @@ export function useWarehouses() {
       }
       const all = (whRes.data || []) as Warehouse[];
       const perms = (permRes.data || []) as { warehouse_id: string }[];
-      if (perms.length === 0) return all;
+      const restricted = perms.length > 0;
       const allowed = new Set(perms.map(p => p.warehouse_id));
-      return all.filter(w => allowed.has(w.id));
+      const list = restricted ? all.filter(w => allowed.has(w.id)) : all;
+      return { list, restricted };
     },
   });
 
@@ -93,7 +94,8 @@ export function useWarehouses() {
   };
 
   return {
-    warehouses: data ?? [],
+    warehouses: data?.list ?? [],
+    restrictedByPermission: data?.restricted ?? false,
     loading: !!user && isPending,
     addWarehouse,
     updateWarehouse,
