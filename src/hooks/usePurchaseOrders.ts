@@ -797,7 +797,7 @@ export function usePurchaseOrders() {
       const TAX_RATE = 0.05;
       const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
       const afterDiscount = Math.max(0, subtotal - (order.discountAmount || 0));
-      const totalCost = afterDiscount + (afterDiscount * TAX_RATE) + (afterDiscount * (order.pstPercent || 0) / 100);
+      const totalCost = afterDiscount + ((order.gstEnabled ?? true) ? afterDiscount * TAX_RATE : 0) + (afterDiscount * (order.pstPercent || 0) / 100);
       
       if (totalCost > 0) {
         const poLabel = order.poNumber || `PO-${order.id.slice(0, 8).toUpperCase()}`;
