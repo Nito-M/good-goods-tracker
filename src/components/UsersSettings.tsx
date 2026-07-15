@@ -40,6 +40,7 @@ const PAGE_KEYS = [
   { key: 'calendar', label: 'Calendar' },
   { key: 'notes', label: 'Notes' },
   { key: 'boards', label: 'Boards' },
+  { key: 'knowledge-base', label: 'Knowledge Base' },
   { key: 'bank', label: 'Bank' },
   { key: 'jobs', label: 'Jobs' },
   { key: 'assemblies', label: 'Assemblies' },
