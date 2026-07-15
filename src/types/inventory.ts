@@ -31,6 +31,7 @@ export interface InventoryItem {
   price: number;
   cost: number;
   minStock: number;
+  maxStock: number;
   weight: number;
   weightUnit: 'lb' | 'kg';
   dimensions: Dimensions;
