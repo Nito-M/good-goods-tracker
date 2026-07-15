@@ -31,6 +31,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const [orgName, setOrgName] = useState<string | null>(null);
   const [shops, setShops] = useState<OrgShop[]>([]);
+  const { isOrgAdmin } = useIsOrgAdmin();
+  const visibleShops = isOrgAdmin ? shops : [];
 
   useEffect(() => {
     const fetchOrgInfo = async () => {
