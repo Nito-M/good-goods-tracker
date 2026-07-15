@@ -182,6 +182,8 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { locations: itemLocations, refetch: refetchLocations, updateSingleLocation, upsertLocation } = useItemLocationQuantities(item?.id);
   const { consumptions, addConsumption } = useItemConsumptions(item?.id);
   const { warehouses } = useWarehouses();
+  const { hasFeature } = useFeaturePermissions();
+  const quantityOnly = hasFeature('items_quantity_only');
 
   const getVendorName = (vendorId: string) => {
     return vendors.find((v) => v.id === vendorId)?.name || 'Unknown Vendor';
