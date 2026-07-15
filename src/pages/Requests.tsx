@@ -99,6 +99,8 @@ export function Requests() {
   });
 
   const canViewAll = isAdminUser || hasFeature('view_all_requests');
+  const canViewPricing = isAdminUser || hasFeature('view_request_pricing');
+  const canViewVendor = isAdminUser || hasFeature('view_request_vendor');
 
   // For regular members, only show their own requester name; admins/permitted users see all
   const visibleRequesterNames = canViewAll ?
@@ -255,6 +257,7 @@ export function Requests() {
               )}
 
               {/* Vendor - inline select */}
+              {canViewVendor && (
               <div className="shrink-0 hidden lg:block w-32" onClick={(e) => e.stopPropagation()}>
                 <Select
                   value={firstReq.vendorName || "__none__"}
@@ -282,6 +285,7 @@ export function Requests() {
                   </SelectContent>
                 </Select>
               </div>
+              )}
 
               {/* Card - inline select */}
               <div className="shrink-0 hidden lg:block w-28" onClick={(e) => e.stopPropagation()}>
@@ -363,9 +367,11 @@ export function Requests() {
               )}
 
               {/* Total */}
-              <span className="text-sm font-medium text-primary w-20 text-right shrink-0">
-                {formatCurrency(groupTotal)}
-              </span>
+              {canViewPricing && (
+                <span className="text-sm font-medium text-primary w-20 text-right shrink-0">
+                  {formatCurrency(groupTotal)}
+                </span>
+              )}
             </div>
           );
         })}
@@ -477,7 +483,9 @@ export function Requests() {
                     <div key={r.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0 border-border/50">
                       <span className="truncate flex-1 mr-2">{r.itemName}</span>
                       <span className="text-muted-foreground whitespace-nowrap mr-3">×{r.quantity}</span>
-                      <span className="font-medium whitespace-nowrap mr-1">{formatCurrency(getRequestTotal(r))}</span>
+                      {canViewPricing && (
+                        <span className="font-medium whitespace-nowrap mr-1">{formatCurrency(getRequestTotal(r))}</span>
+                      )}
                       {canManageGroup && group.requests.length > 1 && (
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive shrink-0"
                           onClick={async (e) => {
@@ -490,10 +498,12 @@ export function Requests() {
                       )}
                     </div>
                   ))}
-                  <div className="flex items-center justify-between pt-2 border-t font-semibold">
-                    <span>Total</span>
-                    <span className="text-green-600">{formatCurrency(groupTotal)}</span>
-                  </div>
+                  {canViewPricing && (
+                    <div className="flex items-center justify-between pt-2 border-t font-semibold">
+                      <span>Total</span>
+                      <span className="text-green-600">{formatCurrency(groupTotal)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* PDF attachments display */}
@@ -528,6 +538,7 @@ export function Requests() {
                 />
 
                 {/* Vendor selector — highly visible */}
+                {canViewVendor && (
                 <div className="p-2 bg-accent/50 rounded-lg border border-accent space-y-2" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <Store className="h-4 w-4 text-primary shrink-0" />
@@ -577,6 +588,7 @@ export function Requests() {
                     }}
                   />
                 </div>
+                )}
 
                 {/* Card selector */}
                 {cards.length > 0 && (
@@ -727,7 +739,7 @@ export function Requests() {
             className="pl-9" />
         </div>
 
-        {uniqueVendors.length > 0 && (
+        {canViewVendor && uniqueVendors.length > 0 && (
           <Select value={filterVendor} onValueChange={setFilterVendor}>
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center gap-2">
@@ -772,9 +784,11 @@ export function Requests() {
               <Badge variant="secondary" className="h-5 min-w-5 px-1.5">
                 {getStatusCount(status)}
               </Badge>
-              <span className="hidden sm:inline text-[11px] text-muted-foreground font-medium opacity-75">
-                {formatCurrency(getStatusTotal(status))}
-              </span>
+              {canViewPricing && (
+                <span className="hidden sm:inline text-[11px] text-muted-foreground font-medium opacity-75">
+                  {formatCurrency(getStatusTotal(status))}
+                </span>
+              )}
             </TabsTrigger>
           )}
         </TabsList>
