@@ -420,6 +420,7 @@ export function AddPurchaseOrder() {
           discountValue: parseFloat(discountValue) || 0,
           discountAmount,
           pstPercent: pstNum,
+          gstEnabled,
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
