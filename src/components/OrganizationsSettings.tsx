@@ -46,13 +46,17 @@ const ORG_PAGE_KEYS = [
   { key: 'parts', label: 'Parts Library' },
   { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'trailer-config', label: 'Trailer Configurator' },
-  { key: 'settings-general', label: 'Settings → General' },
-  { key: 'settings-companies', label: 'Settings → Companies' },
-  { key: 'settings-storefront', label: 'Settings → Storefront' },
-  { key: 'settings-vendors', label: 'Settings → Vendors' },
-  { key: 'settings-customers', label: 'Settings → Customers' },
-  { key: 'settings-categories', label: 'Settings → Categories' },
-  { key: 'settings-tags', label: 'Settings → Tags' },
+  { key: 'settings', label: 'Settings' },
+];
+
+const ORG_SETTINGS_SUBPAGES = [
+  { key: 'settings-general', label: 'General' },
+  { key: 'settings-companies', label: 'Companies' },
+  { key: 'settings-storefront', label: 'Storefront' },
+  { key: 'settings-vendors', label: 'Vendors' },
+  { key: 'settings-customers', label: 'Customers' },
+  { key: 'settings-categories', label: 'Categories' },
+  { key: 'settings-tags', label: 'Tags' },
 ];
 
 interface Organization {
