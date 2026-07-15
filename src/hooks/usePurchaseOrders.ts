@@ -268,6 +268,7 @@ export function usePurchaseOrders() {
       discountValue?: number;
       discountAmount?: number;
       pstPercent?: number;
+      gstEnabled?: boolean;
       companyId?: string | null;
       bankCardId?: string | null;
       contactPersonName?: string | null;
