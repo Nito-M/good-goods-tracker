@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InventoryItem, QUANTITY_UNIT_LABELS } from '@/types/inventory';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, AlertTriangle } from 'lucide-react';
 import {
   Pagination,
   PaginationContent,
