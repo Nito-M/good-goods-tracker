@@ -280,18 +280,15 @@ export default function SopEdit() {
                   .map(b => {
                     const inv = itemsById.get(b.inventory_item_id);
                     if (!inv) return null;
-                    const notesParts: string[] = [];
-                    if (b.is_optional) notesParts.push('(optional)');
-                    if (b.notes) notesParts.push(b.notes);
-                    if (sop?.title) notesParts.push(`From SOP: ${sop.title}`);
                     return {
                       inventory_item_id: inv.id,
                       name: inv.name,
                       sku: inv.sku || null,
                       quantity: b.quantity,
                       unit_cost: inv.cost || 0,
-                      notes: notesParts.join(' — '),
+                      notes: b.notes || '',
                     };
+
                   })
                   .filter(Boolean);
                 navigate('/purchase-orders/new', { state: { prefillItems } });
