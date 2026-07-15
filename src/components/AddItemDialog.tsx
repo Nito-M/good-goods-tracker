@@ -42,6 +42,7 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
   const [price, setPrice] = useState('');
   const [cost, setCost] = useState('');
   const [minStock, setMinStock] = useState('');
+  const [maxStock, setMaxStock] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<'lb' | 'kg'>('lb');
   const [dimensions, setDimensions] = useState<Dimensions>(DEFAULT_DIMENSIONS);
