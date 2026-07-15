@@ -1086,6 +1086,24 @@ export default function BoardDetail() {
               }
             />
           )}
+          {fullRowsSelected && (
+            <Button variant="destructive" size="sm" onClick={() => setDeleteRowsConfirmOpen(true)}>
+              <Trash2 className="h-4 w-4" />
+              Delete {selectedRowIds.length} row{selectedRowIds.length === 1 ? '' : 's'}
+            </Button>
+          )}
+          {fullColsSelected && (
+            <Button variant="destructive" size="sm" onClick={() => setDeleteColsConfirmOpen(true)}>
+              <Trash2 className="h-4 w-4" />
+              Delete {selectedColIds.length} column{selectedColIds.length === 1 ? '' : 's'}
+            </Button>
+          )}
+          {selectionRect && (
+            <Button variant="outline" size="sm" onClick={() => setPdfSubsetOpen(true)}>
+              <Download className="h-4 w-4" />
+              Download selection
+            </Button>
+          )}
           {(selectionAnchor || selectionFocus || headerRowSelected) && (
             <Button variant="ghost" size="sm" onClick={clearSelection}>
               <X className="h-4 w-4" />
