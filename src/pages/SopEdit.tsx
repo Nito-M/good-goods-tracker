@@ -441,6 +441,36 @@ export default function SopEdit() {
   );
 }
 
+function TimeInput({ minutes, onChange }: { minutes: number | null; onChange: (m: number | null) => void }) {
+  const [unit, setUnit] = useState<'min' | 'hr'>(() => (minutes != null && minutes % 60 === 0 && minutes >= 60 ? 'hr' : 'min'));
+  const display = minutes == null ? '' : unit === 'hr' ? String(minutes / 60) : String(minutes);
+  return (
+    <div className="flex items-center gap-1">
+      <Clock className="h-4 w-4 text-muted-foreground" />
+      <Input
+        type="number" min="0" step="0.01" placeholder="Time"
+        value={display}
+        onChange={e => {
+          const v = e.target.value;
+          if (v === '') { onChange(null); return; }
+          const n = Number(v);
+          onChange(unit === 'hr' ? Math.round(n * 60) : n);
+        }}
+        className="w-24 h-8"
+      />
+      <select
+        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+        value={unit}
+        onChange={e => setUnit(e.target.value as 'min' | 'hr')}
+      >
+        <option value="min">minutes</option>
+        <option value="hr">hours</option>
+      </select>
+    </div>
+  );
+}
+
+
 function StepRow({
   step, index, isExpanded, onToggleExpand, files, items, itemsById, signedUrls,
   onUpdate, onDelete, onUpload, onDeleteFile, onOpenPicker, onRemoveItem, onUpdateItem,
