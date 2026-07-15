@@ -237,6 +237,18 @@ export function AddItemDialog({ open, onOpenChange, onSave, editItem, onUpdate, 
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="maxStock">Max Stock Level</Label>
+                <Input
+                  id="maxStock"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={maxStock}
+                  onChange={(e) => setMaxStock(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="weight">Weight</Label>
                 <div className="flex gap-2">
                   <Input
