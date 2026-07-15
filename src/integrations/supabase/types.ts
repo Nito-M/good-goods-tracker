@@ -4884,6 +4884,30 @@ export type Database = {
           },
         ]
       }
+      sop_options: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
       sop_step_files: {
         Row: {
           created_at: string
