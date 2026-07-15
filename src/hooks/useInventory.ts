@@ -321,6 +321,7 @@ export function useInventory(activeOrgId?: string | null) {
         price: item.price,
         cost: item.cost,
         min_stock: item.minStock,
+        max_stock: item.maxStock ?? 0,
         weight: item.weight,
         weight_unit: item.weightUnit,
         dimensions_length: item.dimensions.length,
