@@ -349,7 +349,8 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
     }
   };
 
-  const { markupPercent } = useInventoryPreferences();
+
+
   const displayPrice = markupPercent > 0 && item.cost > 0
     ? item.cost * (1 + markupPercent / 100)
     : item.price;
