@@ -795,8 +795,10 @@ export function Settings() {
             {isAdmin && <WelcomeScreenSettings />}
 
           </TabsContent>
+          )}
 
           {/* Vendors Tab */}
+          {showVendorsTab && (
           <TabsContent value="vendors" className="mt-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
