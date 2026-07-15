@@ -185,15 +185,22 @@ export const Items = ({
       );
     } else if (restrictedByPermission) {
       // User only has access to specific locations - hide items not in any allowed location
+      // BUT always show orphan items (no location assignment at all) so items never disappear entirely
       const allowedIds = new Set(warehouses.map(w => w.id));
       const allowedItemIds = new Set<string>();
+      const anyLocationItemIds = new Set<string>();
+      warehouseItemMap.forEach((itemSet) => {
+        itemSet.forEach(id => anyLocationItemIds.add(id));
+      });
       warehouses.forEach(w => {
         const inWh = warehouseItemMap.get(w.id);
         inWh?.forEach(id => allowedItemIds.add(id));
       });
-      result = result.filter((item) =>
-        allowedItemIds.has(item.id) || (item.warehouseId && allowedIds.has(item.warehouseId))
-      );
+      result = result.filter((item) => {
+        const hasAnyLocation = anyLocationItemIds.has(item.id) || !!item.warehouseId;
+        if (!hasAnyLocation) return true; // orphan - always visible
+        return allowedItemIds.has(item.id) || (item.warehouseId && allowedIds.has(item.warehouseId));
+      });
     }
     if (subcategoryFilter !== 'all') {
       const subName = subcategoryOptions.find(s => s.id === subcategoryFilter)?.name;
