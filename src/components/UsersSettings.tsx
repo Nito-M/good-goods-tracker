@@ -431,6 +431,21 @@ export function UsersSettings() {
           .in('worker_id', toRemove);
       }
 
+      // Sync warehouse (location) permissions
+      await supabase
+        .from('user_warehouse_permissions')
+        .delete()
+        .eq('user_id', editUser.userId);
+      if (warehouseMode === 'restricted' && editWarehouseIds.length > 0) {
+        await supabase.from('user_warehouse_permissions').insert(
+          editWarehouseIds.map(warehouseId => ({
+            user_id: editUser.userId,
+            warehouse_id: warehouseId,
+          }))
+        );
+      }
+
+
       toast({ title: 'Permissions updated' });
       setEditUser(null);
       await fetchData();
