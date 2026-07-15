@@ -46,13 +46,17 @@ const ORG_PAGE_KEYS = [
   { key: 'parts', label: 'Parts Library' },
   { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'trailer-config', label: 'Trailer Configurator' },
-  { key: 'settings-general', label: 'Settings → General' },
-  { key: 'settings-companies', label: 'Settings → Companies' },
-  { key: 'settings-storefront', label: 'Settings → Storefront' },
-  { key: 'settings-vendors', label: 'Settings → Vendors' },
-  { key: 'settings-customers', label: 'Settings → Customers' },
-  { key: 'settings-categories', label: 'Settings → Categories' },
-  { key: 'settings-tags', label: 'Settings → Tags' },
+  { key: 'settings', label: 'Settings' },
+];
+
+const ORG_SETTINGS_SUBPAGES = [
+  { key: 'settings-general', label: 'General' },
+  { key: 'settings-companies', label: 'Companies' },
+  { key: 'settings-storefront', label: 'Storefront' },
+  { key: 'settings-vendors', label: 'Vendors' },
+  { key: 'settings-customers', label: 'Customers' },
+  { key: 'settings-categories', label: 'Categories' },
+  { key: 'settings-tags', label: 'Tags' },
 ];
 
 interface Organization {
@@ -694,6 +698,28 @@ export function OrganizationsSettings() {
                               </label>
                             );
                           })}
+                        </div>
+                        <div className="mt-3 rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Settings Tabs</p>
+                            <p className="text-xs text-muted-foreground">Choose which Settings tabs this organization can access.</p>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {ORG_SETTINGS_SUBPAGES.map(sub => {
+                              const restricted = (orgPagePerms[org.id]?.length || 0) > 0;
+                              const checked = !restricted || orgPagePerms[org.id].includes(sub.key);
+                              return (
+                                <label key={sub.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                                  <Checkbox
+                                    checked={checked}
+                                    disabled={savingPermsOrgId === org.id}
+                                    onCheckedChange={(v) => handleToggleOrgPagePermission(org.id, sub.key, !!v)}
+                                  />
+                                  <span>{sub.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     )}

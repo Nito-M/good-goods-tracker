@@ -49,13 +49,16 @@ const PAGE_KEYS = [
   { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'trailer-config', label: 'Trailer Configurator' },
   { key: 'settings', label: 'Settings' },
-  { key: 'settings-general', label: 'Settings → General' },
-  { key: 'settings-companies', label: 'Settings → Companies' },
-  { key: 'settings-storefront', label: 'Settings → Storefront' },
-  { key: 'settings-vendors', label: 'Settings → Vendors' },
-  { key: 'settings-customers', label: 'Settings → Customers' },
-  { key: 'settings-categories', label: 'Settings → Categories' },
-  { key: 'settings-tags', label: 'Settings → Tags' },
+];
+
+const SETTINGS_SUBPAGES: { key: string; label: string }[] = [
+  { key: 'settings-general', label: 'General' },
+  { key: 'settings-companies', label: 'Companies' },
+  { key: 'settings-storefront', label: 'Storefront' },
+  { key: 'settings-vendors', label: 'Vendors' },
+  { key: 'settings-customers', label: 'Customers' },
+  { key: 'settings-categories', label: 'Categories' },
+  { key: 'settings-tags', label: 'Tags' },
 ];
 
 interface OrgRequester {
@@ -789,6 +792,7 @@ export function UsersSettings() {
 
                   const showWorkerAccess = page.key === 'assets';
                   const showLocationAccess = page.key === 'items';
+                  const showSettingsSubpages = page.key === 'settings';
 
                   return (
                     <div
@@ -803,8 +807,29 @@ export function UsersSettings() {
                         <span className="text-base font-semibold text-foreground">{page.label}</span>
                       </label>
 
-                      {(pageExtras.length > 0 || showWorkerAccess || showLocationAccess) && (
+                      {(pageExtras.length > 0 || showWorkerAccess || showLocationAccess || showSettingsSubpages) && (
                         <div className="pl-6 space-y-3 border-l-2 border-border">
+                          {showSettingsSubpages && (
+                            <div className="space-y-2">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">Settings Tabs</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Choose which Settings tabs this user can access.
+                                </p>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1.5">
+                                {SETTINGS_SUBPAGES.map(sub => (
+                                  <label key={sub.key} className="flex items-center gap-2 cursor-pointer">
+                                    <Checkbox
+                                      checked={editPages.includes(sub.key)}
+                                      onCheckedChange={() => togglePage(sub.key, editPages, setEditPages)}
+                                    />
+                                    <span className="text-sm">{sub.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           {pageExtras.map(extra => (
                             <label key={extra.key} className="flex items-start gap-2 cursor-pointer">
                               <Checkbox
