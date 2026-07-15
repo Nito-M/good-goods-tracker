@@ -178,7 +178,7 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
   const { selectedTagIds } = useItemTags(item?.id);
   const { tagCategories } = useTagCategories();
   const { tags, getTagsByCategory } = useTags();
-  const { locations: itemLocations, refetch: refetchLocations, updateSingleLocation } = useItemLocationQuantities(item?.id);
+  const { locations: itemLocations, refetch: refetchLocations, updateSingleLocation, upsertLocation } = useItemLocationQuantities(item?.id);
   const { consumptions, addConsumption } = useItemConsumptions(item?.id);
   const { warehouses } = useWarehouses();
 
