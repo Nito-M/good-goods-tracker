@@ -94,6 +94,9 @@ export function UsersSettings() {
   const [editWorkerIds, setEditWorkerIds] = useState<string[]>([]);
   const [orgWorkers, setOrgWorkers] = useState<{ id: string; name: string }[]>([]);
   const [workerSearch, setWorkerSearch] = useState('');
+  const [allWarehouses, setAllWarehouses] = useState<{ id: string; name: string }[]>([]);
+  const [editWarehouseIds, setEditWarehouseIds] = useState<string[]>([]);
+  const [warehouseMode, setWarehouseMode] = useState<'all' | 'restricted'>('all');
   const [saving, setSaving] = useState(false);
 
   // Delete confirmation
