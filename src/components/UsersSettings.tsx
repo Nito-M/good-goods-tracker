@@ -777,6 +777,7 @@ export function UsersSettings() {
                   }
 
                   const showWorkerAccess = page.key === 'assets';
+                  const showLocationAccess = page.key === 'items';
 
                   return (
                     <div
@@ -791,7 +792,7 @@ export function UsersSettings() {
                         <span className="text-base font-semibold text-foreground">{page.label}</span>
                       </label>
 
-                      {(pageExtras.length > 0 || showWorkerAccess) && (
+                      {(pageExtras.length > 0 || showWorkerAccess || showLocationAccess) && (
                         <div className="pl-6 space-y-3 border-l-2 border-border">
                           {pageExtras.map(extra => (
                             <label key={extra.key} className="flex items-start gap-2 cursor-pointer">
@@ -854,7 +855,57 @@ export function UsersSettings() {
                               )}
                             </div>
                           )}
-                        </div>
+
+                          {showLocationAccess && (
+                            <div className="space-y-2">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">Location Access</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Choose which inventory locations this user can see. "All locations" gives full access; "Only selected" restricts them to just the checked ones.
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={warehouseMode === 'all'}
+                                    onChange={() => setWarehouseMode('all')}
+                                  />
+                                  <span className="text-sm">All locations</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    checked={warehouseMode === 'restricted'}
+                                    onChange={() => setWarehouseMode('restricted')}
+                                  />
+                                  <span className="text-sm">Only selected</span>
+                                </label>
+                              </div>
+                              {warehouseMode === 'restricted' && (
+                                allWarehouses.length === 0 ? (
+                                  <p className="text-xs text-muted-foreground">No locations exist yet.</p>
+                                ) : (
+                                  <div className="max-h-56 overflow-y-auto border border-border rounded-md p-2 space-y-1 bg-muted/20">
+                                    {allWarehouses.map(w => (
+                                      <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
+                                        <Checkbox
+                                          checked={editWarehouseIds.includes(w.id)}
+                                          onCheckedChange={(c) => {
+                                            setEditWarehouseIds(prev =>
+                                              c ? [...prev, w.id] : prev.filter(id => id !== w.id)
+                                            );
+                                          }}
+                                        />
+                                        <span className="text-sm">{w.name}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )}
+
                       )}
                     </div>
                   );
