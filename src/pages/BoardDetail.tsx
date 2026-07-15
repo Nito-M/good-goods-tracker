@@ -337,6 +337,8 @@ export default function BoardDetail() {
   const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
   const [accessSheetOpen, setAccessSheetOpen] = useState(false);
   const [pdfConfirmOpen, setPdfConfirmOpen] = useState(false);
+  const [pdfMaxCols, setPdfMaxCols] = useState<string>('');
+  const [pdfMaxRows, setPdfMaxRows] = useState<string>('');
   const { copyToClipboard } = useBoardClipboard();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
@@ -1486,11 +1488,40 @@ export default function BoardDetail() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Export board to PDF</AlertDialogTitle>
-            <AlertDialogDescription>
-              <span className="font-medium text-foreground">
-                {visibleColumns.length} columns × {grouped.reduce((s, g) => s + g.rows.length, 0)} rows
-              </span>{' '}
-              will be exported.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <div>
+                  Board has{' '}
+                  <span className="font-medium text-foreground">
+                    {visibleColumns.length} columns × {grouped.reduce((s, g) => s + g.rows.length, 0)} rows
+                  </span>
+                  . Leave a field blank to export all.
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-foreground">Max columns</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      inputMode="numeric"
+                      placeholder={`All (${visibleColumns.length})`}
+                      value={pdfMaxCols}
+                      onChange={(e) => setPdfMaxCols(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-foreground">Max rows</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      inputMode="numeric"
+                      placeholder={`All (${grouped.reduce((s, g) => s + g.rows.length, 0)})`}
+                      value={pdfMaxRows}
+                      onChange={(e) => setPdfMaxRows(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1498,10 +1529,23 @@ export default function BoardDetail() {
             <AlertDialogAction
               onClick={async () => {
                 try {
+                  const maxCols = pdfMaxCols.trim() ? Math.max(1, parseInt(pdfMaxCols, 10) || 0) : visibleColumns.length;
+                  const maxRows = pdfMaxRows.trim() ? Math.max(1, parseInt(pdfMaxRows, 10) || 0) : Infinity;
+                  const subsetCols = visibleColumns.slice(0, maxCols);
+                  let remaining = maxRows;
+                  const subsetGroups = [] as { label: string; rows: typeof grouped[number]['rows'] }[];
+                  for (const g of grouped) {
+                    if (remaining <= 0) break;
+                    const take = Math.min(g.rows.length, remaining);
+                    if (take > 0) {
+                      subsetGroups.push({ label: g.label, rows: g.rows.slice(0, take) });
+                      remaining -= take;
+                    }
+                  }
                   await generateBoardPdf({
                     boardName: board.name,
-                    columns: visibleColumns,
-                    groups: grouped.map((g) => ({ label: g.label, rows: g.rows })),
+                    columns: subsetCols,
+                    groups: subsetGroups,
                     getCellValue,
                     getCellTextAlign,
                     getCellBgColor,
@@ -1522,6 +1566,7 @@ export default function BoardDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
       <AlertDialog open={deleteRowsConfirmOpen} onOpenChange={setDeleteRowsConfirmOpen}>
         <AlertDialogContent>
