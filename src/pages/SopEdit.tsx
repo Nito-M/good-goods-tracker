@@ -338,6 +338,33 @@ export default function SopEdit() {
             >
               <ShoppingCart className="h-4 w-4 mr-1" /> Create PO from BOM
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bom.length === 0}
+              onClick={async () => {
+                await generateAssemblyPDF({
+                  name: `${sop?.title || 'SOP'} - Bill of Materials`,
+                  description: null,
+                  sellingPrice: 0,
+                  status: '',
+                  statusNotes: null,
+                  totalCost: bomTotal,
+                  items: bom.map(b => {
+                    const inv = itemsById.get(b.inventory_item_id);
+                    return {
+                      itemName: inv?.name || 'Unknown',
+                      sku: inv?.sku || '',
+                      quantity: b.quantity,
+                      unitCost: inv?.cost || 0,
+                      notes: b.notes,
+                    };
+                  }),
+                });
+              }}
+            >
+              <Download className="h-4 w-4 mr-1" /> Download PDF
+            </Button>
             <Button size="sm" variant="outline" onClick={openBomPicker}><Package className="h-4 w-4 mr-1" /> Add Parts</Button>
           </div>
         </CardHeader>
