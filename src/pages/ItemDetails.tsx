@@ -665,6 +665,8 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
                       onSave={async (newQty) => {
                         if (loc) {
                           await updateSingleLocation(loc.id, newQty);
+                        } else {
+                          await upsertLocation(item.id, warehouse.id, newQty);
                         }
                       }}
                     />
