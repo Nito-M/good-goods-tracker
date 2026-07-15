@@ -975,8 +975,13 @@ export function AddPurchaseOrder() {
                     </div>
                   )}
                   
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (5%)</span>
+                  <div className="flex justify-between items-center text-sm gap-3">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={gstEnabled} onCheckedChange={setGstEnabled} id="gst-toggle" />
+                      <label htmlFor="gst-toggle" className="text-muted-foreground cursor-pointer">
+                        Tax / GST (5%) {!gstEnabled && <span className="text-xs">— off</span>}
+                      </label>
+                    </div>
                     <span className="font-medium">${taxAmount.toFixed(2)}</span>
                   </div>
 
