@@ -877,8 +877,10 @@ export function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           {/* Customers Tab */}
+          {showCustomersTab && (
           <TabsContent value="customers" className="mt-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
