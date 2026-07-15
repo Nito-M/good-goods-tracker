@@ -337,6 +337,8 @@ export default function BoardDetail() {
   const canManageAccess = !!user && !!board && (board.user_id === user.id || isOwnerOrAdmin(user.id));
   const [accessSheetOpen, setAccessSheetOpen] = useState(false);
   const [pdfConfirmOpen, setPdfConfirmOpen] = useState(false);
+  const [pdfMaxCols, setPdfMaxCols] = useState<string>('');
+  const [pdfMaxRows, setPdfMaxRows] = useState<string>('');
   const { copyToClipboard } = useBoardClipboard();
 
   const rowIds = useMemo(() => rows.map((r) => r.id), [rows]);
