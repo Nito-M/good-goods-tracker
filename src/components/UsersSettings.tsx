@@ -94,6 +94,9 @@ export function UsersSettings() {
   const [editWorkerIds, setEditWorkerIds] = useState<string[]>([]);
   const [orgWorkers, setOrgWorkers] = useState<{ id: string; name: string }[]>([]);
   const [workerSearch, setWorkerSearch] = useState('');
+  const [allWarehouses, setAllWarehouses] = useState<{ id: string; name: string }[]>([]);
+  const [editWarehouseIds, setEditWarehouseIds] = useState<string[]>([]);
+  const [warehouseMode, setWarehouseMode] = useState<'all' | 'restricted'>('all');
   const [saving, setSaving] = useState(false);
 
   // Delete confirmation
@@ -352,6 +355,19 @@ export function UsersSettings() {
       .select('worker_id')
       .eq('user_id', u.userId);
     setEditWorkerIds((grants || []).map((g: any) => g.worker_id));
+
+    // Load all warehouses + this user's warehouse permissions
+    const [{ data: whs }, { data: whPerms }] = await Promise.all([
+      supabase.from('warehouses').select('id, name').order('name'),
+      supabase
+        .from('user_warehouse_permissions')
+        .select('warehouse_id')
+        .eq('user_id', u.userId),
+    ]);
+    setAllWarehouses((whs || []) as any);
+    const permIds = (whPerms || []).map((p: any) => p.warehouse_id);
+    setEditWarehouseIds(permIds);
+    setWarehouseMode(permIds.length > 0 ? 'restricted' : 'all');
   };
 
   const handleSavePermissions = async () => {
@@ -414,6 +430,21 @@ export function UsersSettings() {
           .eq('user_id', editUser.userId)
           .in('worker_id', toRemove);
       }
+
+      // Sync warehouse (location) permissions
+      await supabase
+        .from('user_warehouse_permissions')
+        .delete()
+        .eq('user_id', editUser.userId);
+      if (warehouseMode === 'restricted' && editWarehouseIds.length > 0) {
+        await supabase.from('user_warehouse_permissions').insert(
+          editWarehouseIds.map(warehouseId => ({
+            user_id: editUser.userId,
+            warehouse_id: warehouseId,
+          }))
+        );
+      }
+
 
       toast({ title: 'Permissions updated' });
       setEditUser(null);
@@ -827,6 +858,55 @@ export function UsersSettings() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Location (Warehouse) Access */}
+              <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+                <div>
+                  <p className="text-base font-semibold text-foreground">Location Access</p>
+                  <p className="text-xs text-muted-foreground">
+                    Choose which inventory locations this user can see. "All locations" gives full access; "Only selected" restricts them to just the checked ones.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={warehouseMode === 'all'}
+                      onChange={() => setWarehouseMode('all')}
+                    />
+                    <span className="text-sm">All locations</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={warehouseMode === 'restricted'}
+                      onChange={() => setWarehouseMode('restricted')}
+                    />
+                    <span className="text-sm">Only selected</span>
+                  </label>
+                </div>
+                {warehouseMode === 'restricted' && (
+                  allWarehouses.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No locations exist yet.</p>
+                  ) : (
+                    <div className="max-h-56 overflow-y-auto border border-border rounded-md p-2 space-y-1 bg-muted/20">
+                      {allWarehouses.map(w => (
+                        <label key={w.id} className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded hover:bg-muted/50">
+                          <Checkbox
+                            checked={editWarehouseIds.includes(w.id)}
+                            onCheckedChange={(c) => {
+                              setEditWarehouseIds(prev =>
+                                c ? [...prev, w.id] : prev.filter(id => id !== w.id)
+                              );
+                            }}
+                          />
+                          <span className="text-sm">{w.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </div>

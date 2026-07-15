@@ -5841,6 +5841,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_warehouse_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_warehouse_permissions_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_contacts: {
         Row: {
           created_at: string

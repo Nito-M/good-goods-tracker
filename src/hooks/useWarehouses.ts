@@ -22,15 +22,22 @@ export function useWarehouses() {
     queryKey,
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('warehouses')
-        .select('*')
-        .order('name');
-      if (error) {
-        console.error('Error fetching warehouses:', error);
-        throw error;
+      const [whRes, permRes] = await Promise.all([
+        supabase.from('warehouses').select('*').order('name'),
+        supabase
+          .from('user_warehouse_permissions')
+          .select('warehouse_id')
+          .eq('user_id', user!.id),
+      ]);
+      if (whRes.error) {
+        console.error('Error fetching warehouses:', whRes.error);
+        throw whRes.error;
       }
-      return (data || []) as Warehouse[];
+      const all = (whRes.data || []) as Warehouse[];
+      const perms = (permRes.data || []) as { warehouse_id: string }[];
+      if (perms.length === 0) return all;
+      const allowed = new Set(perms.map(p => p.warehouse_id));
+      return all.filter(w => allowed.has(w.id));
     },
   });
 
