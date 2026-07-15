@@ -6,6 +6,8 @@ import {
   ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download,
 } from 'lucide-react';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
+import { generateSopPDF } from '@/lib/sopPdfGenerator';
+import { SopPdfOptionsDialog } from '@/components/SopPdfOptionsDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
