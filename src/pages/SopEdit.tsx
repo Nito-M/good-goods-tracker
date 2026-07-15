@@ -218,6 +218,21 @@ export default function SopEdit() {
 
           </div>
           <div>
+            <Label>Category</Label>
+            <Select
+              value={sop.category_id ?? '__none__'}
+              onValueChange={v => updateSop({ category_id: v === '__none__' ? null : v })}
+            >
+              <SelectTrigger><SelectValue placeholder="Uncategorized" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Uncategorized</SelectItem>
+                {categoryOptions.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>Status</Label>
             <Select value={sop.status} onValueChange={v => updateSop({ status: v as any })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
