@@ -270,7 +270,37 @@ export default function SopEdit() {
               Estimated total: <span className="font-semibold text-foreground">{formatCurrency(bomTotal)}</span>
             </div>
           </div>
-          <Button size="sm" variant="outline" onClick={openBomPicker}><Package className="h-4 w-4 mr-1" /> Add Parts</Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bom.length === 0}
+              onClick={() => {
+                const prefillItems = bom
+                  .map(b => {
+                    const inv = itemsById.get(b.inventory_item_id);
+                    if (!inv) return null;
+                    const notesParts: string[] = [];
+                    if (b.is_optional) notesParts.push('(optional)');
+                    if (b.notes) notesParts.push(b.notes);
+                    if (sop?.title) notesParts.push(`From SOP: ${sop.title}`);
+                    return {
+                      inventory_item_id: inv.id,
+                      name: inv.name,
+                      sku: inv.sku || null,
+                      quantity: b.quantity,
+                      unit_cost: inv.cost || 0,
+                      notes: notesParts.join(' — '),
+                    };
+                  })
+                  .filter(Boolean);
+                navigate('/purchase-orders/new', { state: { prefillItems } });
+              }}
+            >
+              <ShoppingCart className="h-4 w-4 mr-1" /> Create PO from BOM
+            </Button>
+            <Button size="sm" variant="outline" onClick={openBomPicker}><Package className="h-4 w-4 mr-1" /> Add Parts</Button>
+          </div>
         </CardHeader>
         <CardContent>
           {bom.length === 0 ? (
