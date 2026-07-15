@@ -49,13 +49,16 @@ const PAGE_KEYS = [
   { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'trailer-config', label: 'Trailer Configurator' },
   { key: 'settings', label: 'Settings' },
-  { key: 'settings-general', label: 'Settings → General' },
-  { key: 'settings-companies', label: 'Settings → Companies' },
-  { key: 'settings-storefront', label: 'Settings → Storefront' },
-  { key: 'settings-vendors', label: 'Settings → Vendors' },
-  { key: 'settings-customers', label: 'Settings → Customers' },
-  { key: 'settings-categories', label: 'Settings → Categories' },
-  { key: 'settings-tags', label: 'Settings → Tags' },
+];
+
+const SETTINGS_SUBPAGES: { key: string; label: string }[] = [
+  { key: 'settings-general', label: 'General' },
+  { key: 'settings-companies', label: 'Companies' },
+  { key: 'settings-storefront', label: 'Storefront' },
+  { key: 'settings-vendors', label: 'Vendors' },
+  { key: 'settings-customers', label: 'Customers' },
+  { key: 'settings-categories', label: 'Categories' },
+  { key: 'settings-tags', label: 'Tags' },
 ];
 
 interface OrgRequester {
