@@ -498,10 +498,12 @@ export function Requests() {
                       )}
                     </div>
                   ))}
-                  <div className="flex items-center justify-between pt-2 border-t font-semibold">
-                    <span>Total</span>
-                    <span className="text-green-600">{formatCurrency(groupTotal)}</span>
-                  </div>
+                  {canViewPricing && (
+                    <div className="flex items-center justify-between pt-2 border-t font-semibold">
+                      <span>Total</span>
+                      <span className="text-green-600">{formatCurrency(groupTotal)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* PDF attachments display */}
