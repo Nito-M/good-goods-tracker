@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-type Kind = 'department' | 'author' | 'approver';
+type Kind = 'department' | 'author' | 'approver' | 'revision';
 
 interface Option { id: string; value: string; }
 
