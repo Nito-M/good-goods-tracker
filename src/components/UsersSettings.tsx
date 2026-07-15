@@ -792,6 +792,7 @@ export function UsersSettings() {
 
                   const showWorkerAccess = page.key === 'assets';
                   const showLocationAccess = page.key === 'items';
+                  const showSettingsSubpages = page.key === 'settings';
 
                   return (
                     <div
