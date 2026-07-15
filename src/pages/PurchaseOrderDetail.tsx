@@ -235,7 +235,9 @@ export default function PurchaseOrderDetail() {
             {discountAmount > 0 && (
               <Row label={`Discount${order.discountType === 'percentage' ? ` (${order.discountValue}%)` : ''}`} value={`-${formatCurrency(discountAmount)}`} muted />
             )}
-            <Row label="Tax (5%)" value={formatCurrency(taxAmount)} muted />
+            {(order.gstEnabled ?? true) && (
+              <Row label="Tax (5%)" value={formatCurrency(taxAmount)} muted />
+            )}
             {pstAmount > 0 && (
               <Row label={`PST (${order.pstPercent}%)`} value={formatCurrency(pstAmount)} muted />
             )}
