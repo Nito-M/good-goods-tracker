@@ -367,9 +367,11 @@ export function Requests() {
               )}
 
               {/* Total */}
-              <span className="text-sm font-medium text-primary w-20 text-right shrink-0">
-                {formatCurrency(groupTotal)}
-              </span>
+              {canViewPricing && (
+                <span className="text-sm font-medium text-primary w-20 text-right shrink-0">
+                  {formatCurrency(groupTotal)}
+                </span>
+              )}
             </div>
           );
         })}
