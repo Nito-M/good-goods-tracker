@@ -25,6 +25,7 @@ interface DbInventoryItem {
   price: number;
   cost: number;
   min_stock: number;
+  max_stock: number;
   weight: number;
   weight_unit: string;
   dimensions_length: number;
