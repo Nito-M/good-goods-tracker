@@ -220,9 +220,11 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
         doc.setTextColor(0, 0, 0);
       }
 
-      y += 7;
-      doc.text('Tax (5%):', totalsX, y);
-      doc.text(formatCurrency(taxAmount), pageWidth - 22, y, { align: 'right' });
+      if (gstOn) {
+        y += 7;
+        doc.text('Tax (5%):', totalsX, y);
+        doc.text(formatCurrency(taxAmount), pageWidth - 22, y, { align: 'right' });
+      }
 
       if (pstAmount > 0) {
         y += 7;
