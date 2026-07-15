@@ -775,6 +775,10 @@ export function UsersSettings() {
                   if (page.key === 'assemblies') {
                     pageExtras.push({ key: 'view_assembly_pricing', label: 'View Assembly Pricing', description: 'See cost, selling price, and margin on assemblies.' });
                   }
+                  if (page.key === 'items') {
+                    pageExtras.push({ key: 'items_quantity_only', label: 'Quantity-Only Mode', description: 'On the Item Details page they can only see the image, name, part #, and stock-by-location — and can only change quantities.' });
+                  }
+
 
                   const showWorkerAccess = page.key === 'assets';
                   const showLocationAccess = page.key === 'items';
