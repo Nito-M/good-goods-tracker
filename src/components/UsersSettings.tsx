@@ -355,6 +355,19 @@ export function UsersSettings() {
       .select('worker_id')
       .eq('user_id', u.userId);
     setEditWorkerIds((grants || []).map((g: any) => g.worker_id));
+
+    // Load all warehouses + this user's warehouse permissions
+    const [{ data: whs }, { data: whPerms }] = await Promise.all([
+      supabase.from('warehouses').select('id, name').order('name'),
+      supabase
+        .from('user_warehouse_permissions')
+        .select('warehouse_id')
+        .eq('user_id', u.userId),
+    ]);
+    setAllWarehouses((whs || []) as any);
+    const permIds = (whPerms || []).map((p: any) => p.warehouse_id);
+    setEditWarehouseIds(permIds);
+    setWarehouseMode(permIds.length > 0 ? 'restricted' : 'all');
   };
 
   const handleSavePermissions = async () => {
