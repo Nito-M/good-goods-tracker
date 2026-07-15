@@ -483,7 +483,9 @@ export function Requests() {
                     <div key={r.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0 border-border/50">
                       <span className="truncate flex-1 mr-2">{r.itemName}</span>
                       <span className="text-muted-foreground whitespace-nowrap mr-3">×{r.quantity}</span>
-                      <span className="font-medium whitespace-nowrap mr-1">{formatCurrency(getRequestTotal(r))}</span>
+                      {canViewPricing && (
+                        <span className="font-medium whitespace-nowrap mr-1">{formatCurrency(getRequestTotal(r))}</span>
+                      )}
                       {canManageGroup && group.requests.length > 1 && (
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive shrink-0"
                           onClick={async (e) => {
