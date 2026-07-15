@@ -772,6 +772,8 @@ export function UsersSettings() {
                   const pageExtras: { key: string; label: string; description?: string }[] = [];
                   if (page.key === 'requests') {
                     pageExtras.push({ key: 'view_all_requests', label: 'View All Requests', description: 'See requests created by other members.' });
+                    pageExtras.push({ key: 'view_request_pricing', label: 'View Request Pricing', description: 'See unit prices, totals, and GST on requests.' });
+                    pageExtras.push({ key: 'view_request_vendor', label: 'View Request Vendor', description: 'See and change the vendor on each request.' });
                   }
                   if (page.key === 'assets') {
                     pageExtras.push({ key: 'view_all_workers', label: 'View All Workers & Vendor Accounts', description: 'See every worker in the organization, not just ones they created.' });
