@@ -45,6 +45,30 @@ export default function SopEdit() {
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
   const attachRef = useRef<HTMLInputElement>(null);
 
+  const [categoryOptions, setCategoryOptions] = useState<{ id: string; label: string }[]>([]);
+  useEffect(() => {
+    const typeId = (sop as any)?.type_id ?? null;
+    if (!sop) return;
+    (async () => {
+      let q: any = supabase.from('sop_categories' as any).select('id,name,parent_id,type_id').order('sort_order').order('name');
+      q = typeId ? q.eq('type_id', typeId) : q.is('type_id', null);
+      const { data } = await q;
+      const rows = (data as any[]) || [];
+      const byId = new Map(rows.map(r => [r.id, r]));
+      const pathOf = (r: any): string => {
+        const parts = [r.name];
+        let cur = r;
+        while (cur.parent_id && byId.get(cur.parent_id)) {
+          cur = byId.get(cur.parent_id);
+          parts.unshift(cur.name);
+        }
+        return parts.join(' / ');
+      };
+      setCategoryOptions(rows.map(r => ({ id: r.id, label: pathOf(r) })).sort((a, b) => a.label.localeCompare(b.label)));
+    })();
+  }, [(sop as any)?.type_id, sop?.id]);
+
+
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const hasInitializedExpanded = useRef(false);
   useEffect(() => {
