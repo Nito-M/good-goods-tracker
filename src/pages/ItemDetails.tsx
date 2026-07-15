@@ -48,6 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useInventoryPreferences } from '@/hooks/useInventoryPreferences';
+import { useFeaturePermissions } from '@/hooks/useFeaturePermissions';
 
 interface ItemDetailsProps {
   items: InventoryItem[];
