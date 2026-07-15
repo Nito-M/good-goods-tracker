@@ -59,6 +59,22 @@ export function SopOptionSelect({
     if (value === opt.value) onChange('');
   };
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState('');
+
+  const startEdit = (opt: Option) => { setEditingId(opt.id); setEditingValue(opt.value); };
+  const cancelEdit = () => { setEditingId(null); setEditingValue(''); };
+  const saveEdit = async (opt: Option) => {
+    const v = editingValue.trim();
+    if (!v) return;
+    if (v === opt.value) { cancelEdit(); return; }
+    const { error } = await supabase.from('sop_options' as any).update({ value: v }).eq('id', opt.id);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    setOptions(prev => prev.map(o => o.id === opt.id ? { ...o, value: v } : o).sort((a, b) => a.value.localeCompare(b.value)));
+    if (value === opt.value) onChange(v);
+    cancelEdit();
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
