@@ -382,6 +382,7 @@ export function useInventory(activeOrgId?: string | null) {
     if (updates.price !== undefined) dbUpdates.price = updates.price;
     if (updates.cost !== undefined) dbUpdates.cost = updates.cost;
     if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
+    if (updates.maxStock !== undefined) dbUpdates.max_stock = updates.maxStock;
     if (updates.weight !== undefined) dbUpdates.weight = updates.weight;
     if (updates.weightUnit !== undefined) dbUpdates.weight_unit = updates.weightUnit;
     if (updates.dimensions !== undefined) {
