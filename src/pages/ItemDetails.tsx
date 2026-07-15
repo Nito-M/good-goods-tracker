@@ -195,6 +195,14 @@ export function ItemDetails({ items, onDelete, onUpdate }: ItemDetailsProps) {
     return vendors.find((v) => v.id === vendorId)?.link || null;
   };
 
+  if (featuresLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Package className="h-10 w-10 text-muted-foreground animate-pulse" />
+      </div>
+    );
+  }
+
   if (!item) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
