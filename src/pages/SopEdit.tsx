@@ -501,39 +501,13 @@ function StepRow({
                 value={step.required_tools || ''} onChange={v => onUpdate({ required_tools: v })} />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <Input type="number" min="0" step="0.01" placeholder="Time"
-                  value={
-                    step.estimated_minutes == null
-                      ? ''
-                      : step.estimated_minutes % 60 === 0 && step.estimated_minutes >= 60
-                        ? step.estimated_minutes / 60
-                        : step.estimated_minutes
-                  }
-                  onChange={e => {
-                    const v = e.target.value;
-                    if (v === '') { onUpdate({ estimated_minutes: null }); return; }
-                    const isHr = (step.estimated_minutes ?? 0) % 60 === 0 && (step.estimated_minutes ?? 0) >= 60;
-                    onUpdate({ estimated_minutes: isHr ? Math.round(Number(v) * 60) : Number(v) });
-                  }}
-                  className="w-24 h-8" />
-                <select
-                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                  value={(step.estimated_minutes ?? 0) % 60 === 0 && (step.estimated_minutes ?? 0) >= 60 ? 'hr' : 'min'}
-                  onChange={e => {
-                    const cur = step.estimated_minutes ?? 0;
-                    if (cur === 0) return;
-                    if (e.target.value === 'hr') onUpdate({ estimated_minutes: Math.round((cur / 60) * 60) });
-                    else onUpdate({ estimated_minutes: cur });
-                  }}
-                >
-                  <option value="min">minutes</option>
-                  <option value="hr">hours</option>
-                </select>
-                <span className="text-xs text-muted-foreground">estimated</span>
-              </div>
+              <TimeInput
+                minutes={step.estimated_minutes ?? null}
+                onChange={m => onUpdate({ estimated_minutes: m })}
+              />
+              <span className="text-xs text-muted-foreground">estimated</span>
             </div>
+
 
             {/* Linked items */}
             {items.length > 0 && (
