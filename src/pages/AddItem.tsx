@@ -709,6 +709,18 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxStock">Max Stock Level</Label>
+                <Input
+                  id="maxStock"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={maxStock}
+                  onChange={(e) => setMaxStock(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
             </CardContent>
           </Card>
 
