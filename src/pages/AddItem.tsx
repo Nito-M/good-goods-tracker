@@ -161,6 +161,7 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
       setPrice(String(editItem.price));
       setCost(String(editItem.cost));
       setMinStock(String(editItem.minStock));
+      setMaxStock(String(editItem.maxStock || ''));
       setWeight(String(editItem.weight));
       setWeightUnit(editItem.weightUnit);
       setDimensions(editItem.dimensions);
