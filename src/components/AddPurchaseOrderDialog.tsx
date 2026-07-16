@@ -155,6 +155,7 @@ export function AddPurchaseOrderDialog({
   );
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
+  const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState('');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
