@@ -151,6 +151,7 @@ export function AddPurchaseOrder() {
   const [gstEnabled, setGstEnabled] = useState<boolean>(editingOrder?.gstEnabled ?? true);
   const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
   const [contactPersonName, setContactPersonName] = useState<string>(editingOrder?.contactPersonName || '');
+  const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState<string>(editingOrder?.vendorInvoiceNumber || '');
   const { companies, defaultCompany } = useCompanies();
   const { contacts: vendorContacts } = useVendorContacts(vendorId && vendorId !== 'none' ? vendorId : undefined);
 
