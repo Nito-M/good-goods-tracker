@@ -452,7 +452,7 @@ function AssemblyDetail({
                       status: assembly.status,
                       statusNotes: assembly.status_notes,
                       totalCost,
-                      hidePrices: hidePricesOnPdf,
+                      hidePrices: hidePricesOnPdf || !canViewAssemblyPricing,
                       items: items.map(i => ({
                         itemName: i.item_name,
                         sku: i.sku,
@@ -477,10 +477,12 @@ function AssemblyDetail({
                 </DropdownMenuContent>
               </DropdownMenu>
               </div>
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-                <input type="checkbox" checked={hidePricesOnPdf} onChange={(e) => setHidePricesOnPdf(e.target.checked)} className="rounded border-input" />
-                Hide prices on PDF
-              </label>
+              {canViewAssemblyPricing && (
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                  <input type="checkbox" checked={hidePricesOnPdf} onChange={(e) => setHidePricesOnPdf(e.target.checked)} className="rounded border-input" />
+                  Hide prices on PDF
+                </label>
+              )}
             </div>
           </div>
         )}

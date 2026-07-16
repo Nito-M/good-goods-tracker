@@ -6,6 +6,7 @@ import {
   ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download, Printer,
 } from 'lucide-react';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
+import { useCanViewAssemblyPricing } from '@/hooks/useCanViewAssemblyPricing';
 import { generateSopPDF } from '@/lib/sopPdfGenerator';
 import { SopPdfOptionsDialog } from '@/components/SopPdfOptionsDialog';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ export default function SopEdit() {
     addLocation, updateLocation, removeLocation,
   } = useSopDetail(id ?? null);
   const { allItems } = useInventory();
+  const { canViewAssemblyPricing } = useCanViewAssemblyPricing();
   const itemsById = useMemo(() => new Map(allItems.map(i => [i.id, i])), [allItems]);
 
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
@@ -413,6 +415,7 @@ export default function SopEdit() {
                         status: '',
                         statusNotes: null,
                         totalCost: bomTotal,
+                        hidePrices: !canViewAssemblyPricing,
                         items: bom.map(b => {
                           const inv = itemsById.get(b.inventory_item_id);
                           return {
