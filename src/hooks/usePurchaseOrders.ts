@@ -272,6 +272,7 @@ export function usePurchaseOrders() {
       companyId?: string | null;
       bankCardId?: string | null;
       contactPersonName?: string | null;
+      vendorInvoiceNumber?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
