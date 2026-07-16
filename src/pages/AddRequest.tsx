@@ -205,11 +205,9 @@ function RequestItemForm({
         </div>
 
         {/* Item Name & SKU */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-        {/* Item Name & SKU */}
         <div className={cn("grid gap-4", simple ? "grid-cols-1" : "grid-cols-2")}>
           <div className="space-y-2">
+
             <Label>Item Name *</Label>
             <Input value={line.itemName} onChange={(e) => onChange(line.id, { itemName: e.target.value })} placeholder="Enter item name" required />
           </div>
