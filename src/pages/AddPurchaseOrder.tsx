@@ -716,6 +716,16 @@ export function AddPurchaseOrder() {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="vendorInvoiceNumber">Vendor Invoice #</Label>
+                <Input
+                  id="vendorInvoiceNumber"
+                  value={vendorInvoiceNumber}
+                  onChange={(e) => setVendorInvoiceNumber(e.target.value)}
+                  placeholder="Vendor's invoice or reference number (optional)"
+                />
+              </div>
+
               {/* Request Selection - toggleable */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-md border border-border/50 bg-muted/30 px-3 py-2">
