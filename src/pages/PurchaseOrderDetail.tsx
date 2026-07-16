@@ -35,7 +35,7 @@ export default function PurchaseOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { orders, loading, updateInternalNotes } = usePurchaseOrders();
+  const { orders, loading, updateInternalNotes, updateVendorInvoiceNumber } = usePurchaseOrders();
   const { profile } = useProfile();
   const { companies } = useCompanies();
   const { cards: bankCards } = useBankCards();
