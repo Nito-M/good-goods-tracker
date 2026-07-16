@@ -151,6 +151,7 @@ export function AddPurchaseOrder() {
   const [gstEnabled, setGstEnabled] = useState<boolean>(editingOrder?.gstEnabled ?? true);
   const [companyId, setCompanyId] = useState<string>(editingOrder?.companyId || '');
   const [contactPersonName, setContactPersonName] = useState<string>(editingOrder?.contactPersonName || '');
+  const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState<string>(editingOrder?.vendorInvoiceNumber || '');
   const { companies, defaultCompany } = useCompanies();
   const { contacts: vendorContacts } = useVendorContacts(vendorId && vendorId !== 'none' ? vendorId : undefined);
 
@@ -401,6 +402,7 @@ export function AddPurchaseOrder() {
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
+          vendorInvoiceNumber: vendorInvoiceNumber || null,
         },
         pdfFile,
         imageFile
@@ -424,6 +426,7 @@ export function AddPurchaseOrder() {
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
+          vendorInvoiceNumber: vendorInvoiceNumber || null,
         },
         pdfFile,
         imageFile
@@ -711,6 +714,16 @@ export function AddPurchaseOrder() {
                     onChange={(e) => setOrderedAt(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="vendorInvoiceNumber">Vendor Invoice #</Label>
+                <Input
+                  id="vendorInvoiceNumber"
+                  value={vendorInvoiceNumber}
+                  onChange={(e) => setVendorInvoiceNumber(e.target.value)}
+                  placeholder="Vendor's invoice or reference number (optional)"
+                />
               </div>
 
               {/* Request Selection - toggleable */}

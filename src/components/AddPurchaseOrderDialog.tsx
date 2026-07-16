@@ -40,6 +40,7 @@ interface AddPurchaseOrderDialogProps {
       notes?: string;
       vendorId?: string | null;
       poNumber?: string;
+      vendorInvoiceNumber?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -154,6 +155,7 @@ export function AddPurchaseOrderDialog({
   );
   const [notes, setNotes] = useState('');
   const [vendorId, setVendorId] = useState<string>('');
+  const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState('');
   const [vendorPrices, setVendorPrices] = useState<VendorPrice[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -291,6 +293,7 @@ export function AddPurchaseOrderDialog({
         notes: notes || undefined,
         vendorId: vendorId || null,
         poNumber: poNumber || undefined,
+        vendorInvoiceNumber: vendorInvoiceNumber || null,
       },
       pdfFile,
       imageFile
@@ -306,6 +309,7 @@ export function AddPurchaseOrderDialog({
     setOrderedAt(new Date().toISOString().split('T')[0]);
     setNotes('');
     setVendorId('');
+    setVendorInvoiceNumber('');
     setPdfFile(null);
     setImageFile(null);
   };
@@ -505,6 +509,17 @@ export function AddPurchaseOrderDialog({
               type="date"
               value={orderedAt}
               onChange={(e) => setOrderedAt(e.target.value)}
+            />
+          </div>
+
+          {/* Vendor Invoice # */}
+          <div className="space-y-2">
+            <Label htmlFor="vendorInvoiceNumber">Vendor Invoice #</Label>
+            <Input
+              id="vendorInvoiceNumber"
+              value={vendorInvoiceNumber}
+              onChange={(e) => setVendorInvoiceNumber(e.target.value)}
+              placeholder="Vendor's invoice or reference number (optional)"
             />
           </div>
 

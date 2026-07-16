@@ -272,6 +272,7 @@ export function usePurchaseOrders() {
       companyId?: string | null;
       bankCardId?: string | null;
       contactPersonName?: string | null;
+      vendorInvoiceNumber?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -361,6 +362,7 @@ export function usePurchaseOrders() {
       company_id: order.companyId || null,
       bank_card_id: order.bankCardId || null,
       contact_person_name: order.contactPersonName || null,
+      vendor_invoice_number: order.vendorInvoiceNumber || null,
     }]).select('id').single();
 
     if (error) {
@@ -595,6 +597,7 @@ export function usePurchaseOrders() {
       companyId?: string | null;
       bankCardId?: string | null;
       contactPersonName?: string | null;
+      vendorInvoiceNumber?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
@@ -678,6 +681,7 @@ export function usePurchaseOrders() {
       company_id: updates.companyId !== undefined ? (updates.companyId || null) : undefined,
       bank_card_id: updates.bankCardId !== undefined ? (updates.bankCardId || null) : undefined,
       contact_person_name: updates.contactPersonName !== undefined ? (updates.contactPersonName || null) : undefined,
+      vendor_invoice_number: updates.vendorInvoiceNumber !== undefined ? (updates.vendorInvoiceNumber || null) : undefined,
     };
 
     if (pdfUrl) updateData.pdf_url = pdfUrl;
