@@ -452,7 +452,7 @@ function AssemblyDetail({
                       status: assembly.status,
                       statusNotes: assembly.status_notes,
                       totalCost,
-                      hidePrices: hidePricesOnPdf,
+                      hidePrices: hidePricesOnPdf || !canViewAssemblyPricing,
                       items: items.map(i => ({
                         itemName: i.item_name,
                         sku: i.sku,
