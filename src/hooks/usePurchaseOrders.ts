@@ -1282,6 +1282,7 @@ export function usePurchaseOrders() {
     addAttachment,
     deleteAttachment,
     updateInternalNotes,
+    updateVendorInvoiceNumber,
     refetch: fetchOrders,
   };
 }
