@@ -362,6 +362,7 @@ export function usePurchaseOrders() {
       company_id: order.companyId || null,
       bank_card_id: order.bankCardId || null,
       contact_person_name: order.contactPersonName || null,
+      vendor_invoice_number: order.vendorInvoiceNumber || null,
     }]).select('id').single();
 
     if (error) {
