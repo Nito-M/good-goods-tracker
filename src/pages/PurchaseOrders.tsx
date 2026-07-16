@@ -201,7 +201,8 @@ export function PurchaseOrders() {
       );
       const matchesJob = order.jobNumbers?.some((jn) => jn.toLowerCase().includes(query));
       const matchesNotes = order.notes?.toLowerCase().includes(query);
-      return matchesPO || matchesVendor || matchesItems || matchesJob || matchesNotes;
+      const matchesVendorInvoice = order.vendorInvoiceNumber?.toLowerCase().includes(query);
+      return matchesPO || matchesVendor || matchesItems || matchesJob || matchesNotes || matchesVendorInvoice;
 
     });
   }, [orders, searchQuery, vendors]);
