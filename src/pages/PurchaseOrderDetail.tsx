@@ -128,6 +128,13 @@ export default function PurchaseOrderDetail() {
     if (ok) toast({ title: 'Internal notes saved' });
   };
 
+  const handleSaveInvoice = async () => {
+    setSavingInvoice(true);
+    const ok = await updateVendorInvoiceNumber(order.id, vendorInvoice.trim() ? vendorInvoice.trim() : null);
+    setSavingInvoice(false);
+    if (ok) toast({ title: 'Vendor invoice # saved' });
+  };
+
   const handleDownload = async () => {
     try { await generatePurchaseOrderPDF(order, settings); }
     catch (e) { console.error(e); toast({ title: 'Failed to generate PDF', variant: 'destructive' }); }
