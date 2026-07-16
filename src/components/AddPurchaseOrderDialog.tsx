@@ -293,6 +293,7 @@ export function AddPurchaseOrderDialog({
         notes: notes || undefined,
         vendorId: vendorId || null,
         poNumber: poNumber || undefined,
+        vendorInvoiceNumber: vendorInvoiceNumber || null,
       },
       pdfFile,
       imageFile
