@@ -415,6 +415,7 @@ export default function SopEdit() {
                         status: '',
                         statusNotes: null,
                         totalCost: bomTotal,
+                        hidePrices: !canViewAssemblyPricing,
                         items: bom.map(b => {
                           const inv = itemsById.get(b.inventory_item_id);
                           return {
