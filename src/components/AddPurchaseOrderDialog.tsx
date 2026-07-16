@@ -512,6 +512,17 @@ export function AddPurchaseOrderDialog({
             />
           </div>
 
+          {/* Vendor Invoice # */}
+          <div className="space-y-2">
+            <Label htmlFor="vendorInvoiceNumber">Vendor Invoice #</Label>
+            <Input
+              id="vendorInvoiceNumber"
+              value={vendorInvoiceNumber}
+              onChange={(e) => setVendorInvoiceNumber(e.target.value)}
+              placeholder="Vendor's invoice or reference number (optional)"
+            />
+          </div>
+
           {/* PDF Upload */}
           <div className="space-y-2">
             <Label>PDF Document</Label>
