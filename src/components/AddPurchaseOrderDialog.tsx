@@ -308,6 +308,7 @@ export function AddPurchaseOrderDialog({
     setOrderedAt(new Date().toISOString().split('T')[0]);
     setNotes('');
     setVendorId('');
+    setVendorInvoiceNumber('');
     setPdfFile(null);
     setImageFile(null);
   };
