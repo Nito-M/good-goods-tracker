@@ -40,6 +40,7 @@ interface AddPurchaseOrderDialogProps {
       notes?: string;
       vendorId?: string | null;
       poNumber?: string;
+      vendorInvoiceNumber?: string | null;
     },
     pdfFile?: File | null,
     imageFile?: File | null
