@@ -45,6 +45,7 @@ export default function SopEdit() {
     addLocation, updateLocation, removeLocation,
   } = useSopDetail(id ?? null);
   const { allItems } = useInventory();
+  const { canViewAssemblyPricing } = useCanViewAssemblyPricing();
   const itemsById = useMemo(() => new Map(allItems.map(i => [i.id, i])), [allItems]);
 
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
