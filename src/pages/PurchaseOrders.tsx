@@ -201,7 +201,8 @@ export function PurchaseOrders() {
       );
       const matchesJob = order.jobNumbers?.some((jn) => jn.toLowerCase().includes(query));
       const matchesNotes = order.notes?.toLowerCase().includes(query);
-      return matchesPO || matchesVendor || matchesItems || matchesJob || matchesNotes;
+      const matchesVendorInvoice = order.vendorInvoiceNumber?.toLowerCase().includes(query);
+      return matchesPO || matchesVendor || matchesItems || matchesJob || matchesNotes || matchesVendorInvoice;
 
     });
   }, [orders, searchQuery, vendors]);
@@ -291,7 +292,7 @@ export function PurchaseOrders() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
               type="text"
-              placeholder="Search by PO number, vendor, or item..."
+              placeholder="Search by PO number, vendor, invoice #, or item..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 pl-10 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm" />
