@@ -561,7 +561,9 @@ export function AddRequest() {
             canRemove={lines.length > 1}
             isOpen={openItems.has(line.id)}
             onToggle={() => toggleItem(line.id)}
+            simple={!isAdminUser}
           />
+
         ))}
 
         {/* Add another item */}
