@@ -402,6 +402,7 @@ export function AddPurchaseOrder() {
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
+          vendorInvoiceNumber: vendorInvoiceNumber || null,
         },
         pdfFile,
         imageFile
@@ -425,6 +426,7 @@ export function AddPurchaseOrder() {
           companyId: companyId || null,
           bankCardId: bankCardId && bankCardId !== 'none' ? bankCardId : null,
           contactPersonName: contactPersonName || null,
+          vendorInvoiceNumber: vendorInvoiceNumber || null,
         },
         pdfFile,
         imageFile
