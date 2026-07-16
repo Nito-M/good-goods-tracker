@@ -311,6 +311,31 @@ export default function PurchaseOrderDetail() {
         </CardContent>
       </Card>
 
+      {/* Vendor Invoice # */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Hash className="h-4 w-4" /> Vendor Invoice #
+            <span className="text-xs font-normal text-muted-foreground">(from the vendor's invoice)</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center gap-2">
+          <Input
+            value={vendorInvoice}
+            onChange={(e) => setVendorInvoice(e.target.value)}
+            placeholder="e.g. INV-12345"
+            className="max-w-xs"
+          />
+          <Button
+            size="sm"
+            onClick={handleSaveInvoice}
+            disabled={savingInvoice || vendorInvoice === (order.vendorInvoiceNumber || '')}
+          >
+            {savingInvoice ? 'Saving…' : 'Save'}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Internal Notes */}
       <Card>
         <CardHeader>
