@@ -207,17 +207,22 @@ function RequestItemForm({
         {/* Item Name & SKU */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
+        {/* Item Name & SKU */}
+        <div className={cn("grid gap-4", simple ? "grid-cols-1" : "grid-cols-2")}>
+          <div className="space-y-2">
             <Label>Item Name *</Label>
             <Input value={line.itemName} onChange={(e) => onChange(line.id, { itemName: e.target.value })} placeholder="Enter item name" required />
           </div>
-          <div className="space-y-2">
-            <Label>SKU</Label>
-            <Input value={line.sku} onChange={(e) => onChange(line.id, { sku: e.target.value })} placeholder="Enter SKU" />
-          </div>
+          {!simple && (
+            <div className="space-y-2">
+              <Label>SKU</Label>
+              <Input value={line.sku} onChange={(e) => onChange(line.id, { sku: e.target.value })} placeholder="Enter SKU" />
+            </div>
+          )}
         </div>
 
         {/* Quantity, Unit, Price, GST */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className={cn("grid gap-4", simple ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
           <div className="space-y-2">
             <Label>Quantity</Label>
             <Input type="number" min={0.01} step="0.01" value={line.quantity} onChange={(e) => onChange(line.id, { quantity: e.target.value ? parseFloat(e.target.value) : "" })} placeholder="1" />
@@ -233,30 +238,36 @@ function RequestItemForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Unit Price ($)</Label>
-            <Input type="number" min={0} step={0.00001} value={line.price} onChange={(e) => onChange(line.id, { price: e.target.value ? parseFloat(e.target.value) : 0 })} placeholder="0.00" />
-          </div>
-          <div className="space-y-2">
-            <Label>GST (%)</Label>
-            <Input type="number" min={0} max={100} step={0.1} value={line.gstRate} onChange={(e) => onChange(line.id, { gstRate: e.target.value ? parseFloat(e.target.value) : 0 })} placeholder="0" />
-          </div>
+          {!simple && (
+            <>
+              <div className="space-y-2">
+                <Label>Unit Price ($)</Label>
+                <Input type="number" min={0} step={0.00001} value={line.price} onChange={(e) => onChange(line.id, { price: e.target.value ? parseFloat(e.target.value) : 0 })} placeholder="0.00" />
+              </div>
+              <div className="space-y-2">
+                <Label>GST (%)</Label>
+                <Input type="number" min={0} max={100} step={0.1} value={line.gstRate} onChange={(e) => onChange(line.id, { gstRate: e.target.value ? parseFloat(e.target.value) : 0 })} placeholder="0" />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Extra Cost */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Extra Cost Label</Label>
-            <Input value={line.extraCostLabel} onChange={(e) => onChange(line.id, { extraCostLabel: e.target.value })} placeholder="e.g. Shipping" />
+        {!simple && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Extra Cost Label</Label>
+              <Input value={line.extraCostLabel} onChange={(e) => onChange(line.id, { extraCostLabel: e.target.value })} placeholder="e.g. Shipping" />
+            </div>
+            <div className="space-y-2">
+              <Label>Extra Cost ($)</Label>
+              <Input type="number" min={0} step={0.01} value={line.extraCost} onChange={(e) => onChange(line.id, { extraCost: e.target.value ? parseFloat(e.target.value) : 0 })} placeholder="0.00" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Extra Cost ($)</Label>
-            <Input type="number" min={0} step={0.01} value={line.extraCost} onChange={(e) => onChange(line.id, { extraCost: e.target.value ? parseFloat(e.target.value) : 0 })} placeholder="0.00" />
-          </div>
-        </div>
+        )}
 
         {/* Price Breakdown */}
-        {unitPriceVal > 0 && (
+        {!simple && unitPriceVal > 0 && (
           <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal ({qtyVal || 1} × {formatCurrency(unitPriceVal)})</span>
@@ -282,7 +293,7 @@ function RequestItemForm({
         )}
 
         {/* Need By Date & Link */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className={cn("grid gap-4", simple ? "grid-cols-1" : "grid-cols-2")}>
           <div className="space-y-2">
             <Label>Need By Date</Label>
             <Popover>
@@ -297,11 +308,14 @@ function RequestItemForm({
               </PopoverContent>
             </Popover>
           </div>
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2"><LinkIcon className="h-4 w-4" /> Link</Label>
-            <Input type="url" value={line.link} onChange={(e) => onChange(line.id, { link: e.target.value })} placeholder="https://example.com/product" />
-          </div>
+          {!simple && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><LinkIcon className="h-4 w-4" /> Link</Label>
+              <Input type="url" value={line.link} onChange={(e) => onChange(line.id, { link: e.target.value })} placeholder="https://example.com/product" />
+            </div>
+          )}
         </div>
+
 
         {/* Notes */}
         <div className="space-y-2">
