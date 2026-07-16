@@ -1197,6 +1197,19 @@ export function usePurchaseOrders() {
     return true;
   };
 
+  const updateVendorInvoiceNumber = async (orderId: string, value: string | null) => {
+    const { error } = await supabase
+      .from('purchase_orders')
+      .update({ vendor_invoice_number: value })
+      .eq('id', orderId);
+    if (error) {
+      toast({ title: 'Error saving vendor invoice #', variant: 'destructive' });
+      return false;
+    }
+    setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, vendorInvoiceNumber: value } : o));
+    return true;
+  };
+
   const revertPaid = async (orderId: string) => {
     const order = orders.find((o) => o.id === orderId);
     if (!order || !order.paidAt) return false;
@@ -1269,6 +1282,7 @@ export function usePurchaseOrders() {
     addAttachment,
     deleteAttachment,
     updateInternalNotes,
+    updateVendorInvoiceNumber,
     refetch: fetchOrders,
   };
 }

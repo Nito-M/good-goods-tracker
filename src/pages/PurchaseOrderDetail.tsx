@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
 import { useProfile } from '@/hooks/useProfile';
@@ -34,7 +35,7 @@ export default function PurchaseOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { orders, loading, updateInternalNotes } = usePurchaseOrders();
+  const { orders, loading, updateInternalNotes, updateVendorInvoiceNumber } = usePurchaseOrders();
   const { profile } = useProfile();
   const { companies } = useCompanies();
   const { cards: bankCards } = useBankCards();
@@ -44,10 +45,13 @@ export default function PurchaseOrderDetail() {
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [vendorInvoice, setVendorInvoice] = useState('');
+  const [savingInvoice, setSavingInvoice] = useState(false);
 
   useEffect(() => {
     setInternalNotes(order?.internalNotes || '');
-  }, [order?.id, order?.internalNotes]);
+    setVendorInvoice(order?.vendorInvoiceNumber || '');
+  }, [order?.id, order?.internalNotes, order?.vendorInvoiceNumber]);
 
   const settings = useMemo(() => {
     if (!order) return undefined;
@@ -122,6 +126,13 @@ export default function PurchaseOrderDetail() {
     const ok = await updateInternalNotes(order.id, internalNotes.trim() ? internalNotes : null);
     setSavingNotes(false);
     if (ok) toast({ title: 'Internal notes saved' });
+  };
+
+  const handleSaveInvoice = async () => {
+    setSavingInvoice(true);
+    const ok = await updateVendorInvoiceNumber(order.id, vendorInvoice.trim() ? vendorInvoice.trim() : null);
+    setSavingInvoice(false);
+    if (ok) toast({ title: 'Vendor invoice # saved' });
   };
 
   const handleDownload = async () => {
@@ -297,6 +308,31 @@ export default function PurchaseOrderDetail() {
           {order.notes
             ? <p className="whitespace-pre-line text-sm">{order.notes}</p>
             : <p className="text-sm text-muted-foreground italic">No PO notes. Edit the PO to add notes that appear on the PDF.</p>}
+        </CardContent>
+      </Card>
+
+      {/* Vendor Invoice # */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Hash className="h-4 w-4" /> Vendor Invoice #
+            <span className="text-xs font-normal text-muted-foreground">(from the vendor's invoice)</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center gap-2">
+          <Input
+            value={vendorInvoice}
+            onChange={(e) => setVendorInvoice(e.target.value)}
+            placeholder="e.g. INV-12345"
+            className="max-w-xs"
+          />
+          <Button
+            size="sm"
+            onClick={handleSaveInvoice}
+            disabled={savingInvoice || vendorInvoice === (order.vendorInvoiceNumber || '')}
+          >
+            {savingInvoice ? 'Saving…' : 'Save'}
+          </Button>
         </CardContent>
       </Card>
 

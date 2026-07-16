@@ -85,6 +85,7 @@ export interface PurchaseOrder {
   companyName?: string | null;
   bankCardId: string | null;
   contactPersonName: string | null;
+  vendorInvoiceNumber: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -150,6 +151,7 @@ export function dbToPurchaseOrder(db: DbPurchaseOrder, vendorName?: string | nul
     companyName,
     bankCardId: (db as any).bank_card_id || null,
     contactPersonName: (db as any).contact_person_name || null,
+    vendorInvoiceNumber: (db as any).vendor_invoice_number || null,
     createdAt: new Date(db.created_at),
     updatedAt: new Date(db.updated_at),
   };
