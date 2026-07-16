@@ -6,6 +6,7 @@ import {
   ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download, Printer,
 } from 'lucide-react';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
+import { useCanViewAssemblyPricing } from '@/hooks/useCanViewAssemblyPricing';
 import { generateSopPDF } from '@/lib/sopPdfGenerator';
 import { SopPdfOptionsDialog } from '@/components/SopPdfOptionsDialog';
 import { Button } from '@/components/ui/button';
