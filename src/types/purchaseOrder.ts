@@ -85,6 +85,7 @@ export interface PurchaseOrder {
   companyName?: string | null;
   bankCardId: string | null;
   contactPersonName: string | null;
+  vendorInvoiceNumber: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
