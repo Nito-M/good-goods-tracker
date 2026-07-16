@@ -45,10 +45,13 @@ export default function PurchaseOrderDetail() {
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [vendorInvoice, setVendorInvoice] = useState('');
+  const [savingInvoice, setSavingInvoice] = useState(false);
 
   useEffect(() => {
     setInternalNotes(order?.internalNotes || '');
-  }, [order?.id, order?.internalNotes]);
+    setVendorInvoice(order?.vendorInvoiceNumber || '');
+  }, [order?.id, order?.internalNotes, order?.vendorInvoiceNumber]);
 
   const settings = useMemo(() => {
     if (!order) return undefined;
