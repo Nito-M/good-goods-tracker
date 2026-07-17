@@ -22,6 +22,7 @@ import { AddItemToRequestDialog } from "@/components/AddItemToRequestDialog";
 import { Request, RequestStatus } from "@/types/request";
 import { formatCurrency } from "@/lib/utils";
 import { downloadFileFromUrl, getFileNameFromUrl } from "@/lib/fileDownload";
+import { RequestNotesList } from "@/components/RequestNotesList";
 
 const statusColors: Record<RequestStatus, string> = {
   pending: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
@@ -440,6 +441,10 @@ export function RequestDetail() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Request Notes */}
+      <RequestNotesList requestNumber={decodedNumber} canManage={!!canManage} />
+
 
       {/* Request Images */}
       {(groupRequests.some(r => r.imageUrl) || requestImages.length > 0) && (
