@@ -191,19 +191,24 @@ export const Items = ({
         itemsInWarehouse?.has(item.id) || item.warehouseId === warehouseFilter
       );
     } else if (restrictedByPermission) {
-      // User only has access to specific locations - hide items not in any allowed location.
-      // Orphan items (no location assignment) are also hidden for restricted users so they
-      // strictly only see stock from their permitted locations.
+      // User only has access to specific locations - hide items assigned only to
+      // locations they can't see. Orphan items (no location assignment at all)
+      // remain visible so newly created / unassigned items never disappear.
       const allowedIds = new Set(warehouses.map(w => w.id));
       const allowedItemIds = new Set<string>();
       warehouses.forEach(w => {
         const inWh = warehouseItemMap.get(w.id);
         inWh?.forEach(id => allowedItemIds.add(id));
       });
-      result = result.filter((item) =>
-        allowedItemIds.has(item.id) || (item.warehouseId && allowedIds.has(item.warehouseId))
-      );
+      result = result.filter((item) => {
+        if (allowedItemIds.has(item.id)) return true;
+        if (item.warehouseId && allowedIds.has(item.warehouseId)) return true;
+        // Orphan: no rows in warehouseItemMap for any warehouse and no legacy warehouseId
+        const hasAnyLocation = Array.from(warehouseItemMap.values()).some(set => set.has(item.id));
+        return !hasAnyLocation && !item.warehouseId;
+      });
     }
+
     if (subcategoryFilter !== 'all') {
       const subName = subcategoryOptions.find(s => s.id === subcategoryFilter)?.name;
       if (subName) {
