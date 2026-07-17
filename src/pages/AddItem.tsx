@@ -279,6 +279,19 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Require at least one location assignment when creating a new item
+    if (!editItem) {
+      const hasValidLocation = locationEntries.some(le => le.warehouseId);
+      if (!hasValidLocation) {
+        toast({
+          title: 'Location required',
+          description: 'Please assign at least one location before creating the item.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     let finalImageUrl = imageUrl;
 
     // Upload new image if selected
