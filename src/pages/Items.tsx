@@ -110,6 +110,13 @@ export const Items = ({
     setSearchParams(searchParams);
   };
 
+  const singleLocationOnly = restrictedByPermission && warehouses.length === 1;
+  useEffect(() => {
+    if (singleLocationOnly && warehouseFilter === 'all') {
+      setWarehouseFilter(warehouses[0].id);
+    }
+  }, [singleLocationOnly, warehouseFilter, warehouses]);
+
   const openAddLocation = () => {
     setEditingWarehouse(null);
     setLocName('');
