@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Pencil, Trash2, MapPin, Building2, Settings as SettingsIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -109,6 +109,13 @@ export const Items = ({
     }
     setSearchParams(searchParams);
   };
+
+  const singleLocationOnly = restrictedByPermission && warehouses.length === 1;
+  useEffect(() => {
+    if (singleLocationOnly && warehouseFilter === 'all') {
+      setWarehouseFilter(warehouses[0].id);
+    }
+  }, [singleLocationOnly, warehouseFilter, warehouses]);
 
   const openAddLocation = () => {
     setEditingWarehouse(null);
@@ -306,13 +313,15 @@ export const Items = ({
         {/* Location selector bar */}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          <Button
-            variant={warehouseFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setWarehouseFilter('all')}
-          >
-            All
-          </Button>
+          {!singleLocationOnly && (
+            <Button
+              variant={warehouseFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setWarehouseFilter('all')}
+            >
+              All
+            </Button>
+          )}
           {warehouses.map((w) => (
             <DropdownMenu key={w.id}>
               <div className="flex items-center">
