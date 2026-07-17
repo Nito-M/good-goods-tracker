@@ -433,7 +433,8 @@ export function AddPurchaseOrder() {
       );
     }
     setSaving(false);
-    navigate('/purchase-orders');
+    const returnToPo = poNumber || editingOrder?.poNumber || '';
+    navigate(`/purchase-orders?po=${encodeURIComponent(returnToPo)}`);
   };
 
   const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -456,7 +457,7 @@ export function AddPurchaseOrder() {
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center gap-4">
-            <Link to="/purchase-orders">
+            <Link to={editingOrder ? `/purchase-orders?po=${encodeURIComponent(poNumber || editingOrder.poNumber || '')}` : '/purchase-orders'}>
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
