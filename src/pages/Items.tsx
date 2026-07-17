@@ -313,13 +313,15 @@ export const Items = ({
         {/* Location selector bar */}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          <Button
-            variant={warehouseFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setWarehouseFilter('all')}
-          >
-            All
-          </Button>
+          {!singleLocationOnly && (
+            <Button
+              variant={warehouseFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setWarehouseFilter('all')}
+            >
+              All
+            </Button>
+          )}
           {warehouses.map((w) => (
             <DropdownMenu key={w.id}>
               <div className="flex items-center">
