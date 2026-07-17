@@ -58,6 +58,18 @@ export function useWarehouses() {
       return null;
     }
 
+    // If this user has restricted warehouse access, auto-grant themselves
+    // permission to the newly created location so it appears in their list.
+    const { data: existingPerms } = await supabase
+      .from('user_warehouse_permissions')
+      .select('warehouse_id')
+      .eq('user_id', user.id);
+    if ((existingPerms?.length ?? 0) > 0) {
+      await supabase
+        .from('user_warehouse_permissions')
+        .insert({ user_id: user.id, warehouse_id: (data as Warehouse).id });
+    }
+
     toast({ title: 'Location created' });
     invalidate();
     return data as Warehouse;
