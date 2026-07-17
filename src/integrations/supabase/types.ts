@@ -4148,6 +4148,33 @@ export type Database = {
           },
         ]
       }
+      request_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          request_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          request_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          request_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       request_sub_items: {
         Row: {
           created_at: string
