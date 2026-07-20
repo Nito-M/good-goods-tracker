@@ -1167,7 +1167,7 @@ export function Assemblies() {
     a.name.toLowerCase().includes(searchTerm) ||
     (a.description ?? '').toLowerCase().includes(searchTerm)
   );
-  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost }));
+  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost, category: i.category, subcategory: i.subcategory }));
   const sortedParts = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }));
   const partsWithFolder = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price, folderId: p.folderId }));
   const sortedFolders = [...folders].sort((a, b) => a.name.localeCompare(b.name));
