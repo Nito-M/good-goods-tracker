@@ -36,7 +36,7 @@ export function AssemblyPreviewDialog({ open, onOpenChange, name, description, s
 
           {/* Description */}
           {description && (
-            <p className="text-sm" style={{ color: '#646464' }}>{description}</p>
+            <p className="text-sm whitespace-pre-wrap break-words" style={{ color: '#646464' }}>{description}</p>
           )}
 
           {/* Pricing info */}

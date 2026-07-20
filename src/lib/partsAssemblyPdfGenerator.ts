@@ -65,7 +65,7 @@ export async function generatePartsAssemblyPDF(assembly: PartsAssemblyPdfData) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 100, 100);
-    const descLines = doc.splitTextToSize(assembly.description, contentWidth);
+    const descLines = assembly.description.split('\n').flatMap(line => doc.splitTextToSize(line || ' ', contentWidth));
     doc.text(descLines, margin, y);
     y += descLines.length * 5 + 3;
   }
