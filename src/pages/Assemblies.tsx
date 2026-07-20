@@ -65,7 +65,7 @@ function AssemblyDetail({
   partsItems?: { id: string; name: string; sku: string; price: number }[];
   partsRaw?: { id: string; name: string; sku: string; price: number; folderId: string | null }[];
   folders?: { id: string; name: string; parentId: string | null }[];
-  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string; cost?: number }[];
+  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string; cost?: number; category?: string; subcategory?: string | null }[];
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; sku?: string | null; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string; model?: string | null }) => Promise<void>;
