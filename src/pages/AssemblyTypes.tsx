@@ -118,18 +118,24 @@ export function AssemblyTypes() {
 
   const handleDeleteType = async (type: string) => {
     setDeletingType(true);
-    // Move all assemblies of this type to "General" (or delete them?)
-    // We'll move to General to be safe
+    // Move all assemblies of this type to "General"
     const { error } = await supabase
       .from('assemblies')
       .update({ type: 'General' })
       .eq('type', type);
     if (error) {
       toast({ title: 'Error deleting type', variant: 'destructive' });
-    } else {
-      await refetch();
-      toast({ title: 'Type deleted', description: 'Assemblies moved to General' });
+      setDeletingType(false);
+      setDeleteType(null);
+      return;
     }
+    // Also remove the matching assembly_categories row(s) so empty types disappear
+    const matching = assemblyCategories.filter(c => c.name === type);
+    for (const c of matching) {
+      await deleteAssemblyCategory(c.id);
+    }
+    await refetch();
+    toast({ title: 'Type deleted', description: 'Assemblies moved to General' });
     setDeletingType(false);
     setDeleteType(null);
   };
