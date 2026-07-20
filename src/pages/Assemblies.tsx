@@ -65,7 +65,7 @@ function AssemblyDetail({
   partsItems?: { id: string; name: string; sku: string; price: number }[];
   partsRaw?: { id: string; name: string; sku: string; price: number; folderId: string | null }[];
   folders?: { id: string; name: string; parentId: string | null }[];
-  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string; cost?: number }[];
+  inventoryItems: { id: string; name: string; sku: string; quantityUnit?: string; cost?: number; category?: string; subcategory?: string | null }[];
   summary?: AssemblySummary;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; sku?: string | null; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string; model?: string | null }) => Promise<void>;
@@ -143,7 +143,7 @@ function AssemblyDetail({
   };
 
   const startEditQty = (item: { id: string; quantity: number }) => { setEditingId(item.id); setEditQty(item.quantity); };
-  const handleSaveQty = async (id: string) => { await updateItem(id, { quantity: editQty }); setEditingId(null); };
+  const handleSaveQty = async (id: string) => { setEditingId(null); await updateItem(id, { quantity: editQty }); onItemsChanged?.(); };
   const startEditNote = (item: { id: string; notes: string | null }) => { setEditingNoteId(item.id); setEditNoteValue(item.notes || ''); };
   const handleSaveNote = async (id: string) => { await updateItem(id, { notes: editNoteValue.trim() || null }); setEditingNoteId(null); };
 
@@ -694,70 +694,98 @@ function AssemblyDetail({
             <div className={`grid ${canViewAssemblyPricing ? 'grid-cols-[1fr_auto_auto_auto_auto_auto]' : 'grid-cols-[1fr_auto_auto_auto]'} gap-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wide`}>
               <span>Item</span><span className="w-20 text-center">SKU</span>{canViewAssemblyPricing && <span className="w-20 text-right">Cost</span>}<span className="w-16 text-center">Qty</span>{canViewAssemblyPricing && <span className="w-20 text-right">Total</span>}<span className="w-8" />
             </div>
-            {items.map((item) => {
-              const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : (item.unit_cost > 0 ? item.unit_cost : null);
-              return (
-              <div key={item.id} className={`grid ${canViewAssemblyPricing ? 'grid-cols-[1fr_auto_auto_auto_auto_auto]' : 'grid-cols-[1fr_auto_auto_auto]'} gap-3 items-center px-3 py-2.5 rounded-lg border bg-card`}>
-                <div>
-                  {(() => {
-                    const partMatch = item.part_id
-                      ? partsRaw?.find(p => p.id === item.part_id)
-                      : !item.inventory_item_id
-                        ? partsRaw?.find(p => p.sku === item.sku) ?? partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku)
-                        : undefined;
-                    const nestedAssembly = item.nested_assembly_id ? allAssemblies.find(a => a.id === item.nested_assembly_id) : null;
-                    const assemblyMatch = nestedAssembly || (!item.inventory_item_id && !partMatch ? allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name) : null);
-                    const partsAssemblyMatch = !item.inventory_item_id && !partMatch && !assemblyMatch && partsAssemblies?.find(pa => pa.name === item.item_name);
-                    const linkTo = item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : partsAssemblyMatch ? `/parts/assemblies/${encodeURIComponent(partsAssemblyMatch.type)}?id=${partsAssemblyMatch.id}` : null;
-                    return (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {linkTo ? (
-                          <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
-                        ) : (
-                          <p className="font-medium text-sm">{item.item_name}</p>
-                        )}
-                        {assemblyMatch && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-medium uppercase tracking-wide">Assembly</span>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  {editingNoteId === item.id ? (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Input value={editNoteValue} onChange={(e) => setEditNoteValue(e.target.value)} placeholder="Add a note..." className="h-6 text-xs px-2 flex-1" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleSaveNote(item.id); if (e.key === 'Escape') setEditingNoteId(null); }} />
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleSaveNote(item.id)}><Check className="h-3 w-3" /></Button>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingNoteId(null)}><X className="h-3 w-3" /></Button>
+            {(() => {
+              // Group items by subcategory (inventory-linked) → category → "Other".
+              const groups = new Map<string, typeof items>();
+              for (const it of items) {
+                const inv = it.inventory_item_id ? inventoryItems.find(i => i.id === it.inventory_item_id) : null;
+                const key = inv?.subcategory?.trim() || inv?.category?.trim() || 'Other';
+                const arr = groups.get(key) || [];
+                arr.push(it);
+                groups.set(key, arr);
+              }
+              const sortedGroupNames = Array.from(groups.keys()).sort((a, b) => {
+                if (a === 'Other') return 1;
+                if (b === 'Other') return -1;
+                return a.localeCompare(b);
+              });
+              return sortedGroupNames.map(groupName => {
+                const groupItems = groups.get(groupName)!;
+                return (
+                  <div key={groupName} className="space-y-2">
+                    <div className="flex items-center gap-2 px-3 pt-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{groupName}</h4>
+                      <span className="text-xs text-muted-foreground">({groupItems.length})</span>
+                      <div className="flex-1 h-px bg-border" />
                     </div>
-                  ) : (
-                    <button className="text-xs text-muted-foreground hover:text-foreground cursor-pointer mt-0.5 flex items-center gap-1" onClick={() => startEditNote(item)}>
-                      {item.notes ? <><Pencil className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />{item.notes}</> : <span className="opacity-50 hover:opacity-100">+ Add note</span>}
-                    </button>
-                  )}
-                </div>
-                <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.sku || '—'}</span>
-                {canViewAssemblyPricing && <span className="w-20 text-right text-sm text-muted-foreground">{itemCost !== null ? formatCurrency(itemCost) : '—'}</span>}
-                {editingId === item.id ? (
-                  <div className="flex items-center gap-1 w-24">
-                    <Input type="number" min={1} value={editQty} onChange={(e) => setEditQty(Number(e.target.value))} className="h-7 w-16 text-center text-sm px-1" />
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleSaveQty(item.id)}><Check className="h-3 w-3" /></Button>
+                    {groupItems.map((item) => {
+                      const itemCost = item.inventory_item_id ? (inventoryCostMap.get(item.inventory_item_id) ?? null) : (item.unit_cost > 0 ? item.unit_cost : null);
+                      return (
+                      <div key={item.id} className={`grid ${canViewAssemblyPricing ? 'grid-cols-[1fr_auto_auto_auto_auto_auto]' : 'grid-cols-[1fr_auto_auto_auto]'} gap-3 items-center px-3 py-2.5 rounded-lg border bg-card`}>
+                        <div>
+                          {(() => {
+                            const partMatch = item.part_id
+                              ? partsRaw?.find(p => p.id === item.part_id)
+                              : !item.inventory_item_id
+                                ? partsRaw?.find(p => p.sku === item.sku) ?? partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku)
+                                : undefined;
+                            const nestedAssembly = item.nested_assembly_id ? allAssemblies.find(a => a.id === item.nested_assembly_id) : null;
+                            const assemblyMatch = nestedAssembly || (!item.inventory_item_id && !partMatch ? allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name) : null);
+                            const partsAssemblyMatch = !item.inventory_item_id && !partMatch && !assemblyMatch && partsAssemblies?.find(pa => pa.name === item.item_name);
+                            const linkTo = item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : partsAssemblyMatch ? `/parts/assemblies/${encodeURIComponent(partsAssemblyMatch.type)}?id=${partsAssemblyMatch.id}` : null;
+                            return (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {linkTo ? (
+                                  <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
+                                ) : (
+                                  <p className="font-medium text-sm">{item.item_name}</p>
+                                )}
+                                {assemblyMatch && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-medium uppercase tracking-wide">Assembly</span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                          {editingNoteId === item.id ? (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Input value={editNoteValue} onChange={(e) => setEditNoteValue(e.target.value)} placeholder="Add a note..." className="h-6 text-xs px-2 flex-1" autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handleSaveNote(item.id); if (e.key === 'Escape') setEditingNoteId(null); }} />
+                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleSaveNote(item.id)}><Check className="h-3 w-3" /></Button>
+                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingNoteId(null)}><X className="h-3 w-3" /></Button>
+                            </div>
+                          ) : (
+                            <button className="text-xs text-muted-foreground hover:text-foreground cursor-pointer mt-0.5 flex items-center gap-1" onClick={() => startEditNote(item)}>
+                              {item.notes ? <><Pencil className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />{item.notes}</> : <span className="opacity-50 hover:opacity-100">+ Add note</span>}
+                            </button>
+                          )}
+                        </div>
+                        <span className="w-20 text-xs text-muted-foreground text-center font-mono">{item.sku || '—'}</span>
+                        {canViewAssemblyPricing && <span className="w-20 text-right text-sm text-muted-foreground">{itemCost !== null ? formatCurrency(itemCost) : '—'}</span>}
+                        {editingId === item.id ? (
+                          <div className="flex items-center gap-1 w-24">
+                            <Input type="number" min={1} value={editQty} onChange={(e) => setEditQty(Number(e.target.value))} className="h-7 w-16 text-center text-sm px-1" onKeyDown={(e) => { if (e.key === 'Enter') handleSaveQty(item.id); if (e.key === 'Escape') setEditingId(null); }} />
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleSaveQty(item.id)}><Check className="h-3 w-3" /></Button>
+                          </div>
+                        ) : (
+                          <button className="w-16 text-center text-sm font-medium hover:underline cursor-pointer" onClick={() => startEditQty(item)}>
+                            {item.quantity}
+                            {(() => {
+                              const linked = inventoryItems.find(inv => inv.id === item.inventory_item_id);
+                              const unit = linked?.quantityUnit as QuantityUnit | undefined;
+                              return unit && unit !== 'pcs' ? <span className="text-xs text-muted-foreground ml-1">{QUANTITY_UNIT_LABELS[unit]}</span> : null;
+                            })()}
+                          </button>
+                        )}
+                        {canViewAssemblyPricing && <span className="w-20 text-right text-sm font-medium">{itemCost !== null ? formatCurrency(itemCost * item.quantity) : '—'}</span>}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteItemId(item.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <button className="w-16 text-center text-sm font-medium hover:underline cursor-pointer" onClick={() => startEditQty(item)}>
-                    {item.quantity}
-                    {(() => {
-                      const linked = inventoryItems.find(inv => inv.id === item.inventory_item_id);
-                      const unit = linked?.quantityUnit as QuantityUnit | undefined;
-                      return unit && unit !== 'pcs' ? <span className="text-xs text-muted-foreground ml-1">{QUANTITY_UNIT_LABELS[unit]}</span> : null;
-                    })()}
-                  </button>
-                )}
-                {canViewAssemblyPricing && <span className="w-20 text-right text-sm font-medium">{itemCost !== null ? formatCurrency(itemCost * item.quantity) : '—'}</span>}
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteItemId(item.id)}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
         )}
       </div>
@@ -1167,7 +1195,7 @@ export function Assemblies() {
     a.name.toLowerCase().includes(searchTerm) ||
     (a.description ?? '').toLowerCase().includes(searchTerm)
   );
-  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost }));
+  const sortedInventory = [...inventoryItems].sort((a, b) => a.name.localeCompare(b.name)).map((i) => ({ id: i.id, name: i.name, sku: i.sku, quantityUnit: i.quantityUnit, cost: i.cost, category: i.category, subcategory: i.subcategory }));
   const sortedParts = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price }));
   const partsWithFolder = [...parts].sort((a, b) => a.name.localeCompare(b.name)).map((p) => ({ id: p.id, name: p.name, sku: p.sku, price: p.price, folderId: p.folderId }));
   const sortedFolders = [...folders].sort((a, b) => a.name.localeCompare(b.name));
