@@ -16,6 +16,7 @@ export interface AssemblyPdfData {
     quantity: number;
     unitCost: number;
     notes: string | null;
+    groupName?: string;
   }[];
 }
 
