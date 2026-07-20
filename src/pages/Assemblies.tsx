@@ -382,7 +382,7 @@ function AssemblyDetail({
                   </PopoverContent>
                 </Popover>
               </div>
-              {assembly.description && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap break-words">{assembly.description}</p>}
+              {assembly.description && <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap break-words max-h-48 overflow-y-auto pr-1">{assembly.description}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-4">
                 {canViewAssemblyPricing && summary && summary.itemCount > 0 && (
                   <div className="flex items-center gap-1.5 text-sm">
