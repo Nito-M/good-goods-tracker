@@ -517,6 +517,23 @@ export default function SopEdit() {
         </CardContent>
       </Card>
 
+      {/* Notes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><StickyNote className="h-4 w-4" /> Notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={sop?.notes || ''}
+            onChange={e => updateSop({ notes: e.target.value })}
+            placeholder="Add any additional notes for this SOP..."
+            className="min-h-[120px]"
+          />
+        </CardContent>
+      </Card>
+
+
+
       {/* Attachments */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
