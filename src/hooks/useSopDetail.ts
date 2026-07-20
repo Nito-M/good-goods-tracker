@@ -50,6 +50,7 @@ export interface SopRecord {
   revision_number: string | null; effective_date: string | null;
   last_updated_date: string | null; author: string | null; approved_by: string | null;
   status: 'draft' | 'active' | 'obsolete';
+  notes: string | null;
 }
 
 export function useSopDetail(sopId: string | null) {
