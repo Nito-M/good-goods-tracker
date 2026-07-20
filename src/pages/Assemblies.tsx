@@ -453,13 +453,17 @@ function AssemblyDetail({
                       statusNotes: assembly.status_notes,
                       totalCost,
                       hidePrices: hidePricesOnPdf || !canViewAssemblyPricing,
-                      items: items.map(i => ({
-                        itemName: i.item_name,
-                        sku: i.sku,
-                        quantity: i.quantity,
-                        unitCost: i.unit_cost,
-                        notes: i.notes,
-                      })),
+                      items: items.map(i => {
+                        const inv = i.inventory_item_id ? inventoryItems.find(x => x.id === i.inventory_item_id) : null;
+                        return {
+                          itemName: i.item_name,
+                          sku: i.sku,
+                          quantity: i.quantity,
+                          unitCost: i.unit_cost,
+                          notes: i.notes,
+                          groupName: inv?.subcategory?.trim() || inv?.category?.trim() || 'Other',
+                        };
+                      }),
                     });
                   }}>
                     <Download className="h-3 w-3 mr-2" /> PDF

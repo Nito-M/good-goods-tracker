@@ -16,6 +16,7 @@ export interface AssemblyPdfData {
     quantity: number;
     unitCost: number;
     notes: string | null;
+    groupName?: string;
   }[];
 }
 
@@ -120,7 +121,51 @@ export async function generateAssemblyPDF(assembly: AssemblyPdfData, mode: 'down
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
 
-  for (const item of assembly.items) {
+  // Group items by groupName (preserving group order by first appearance)
+  const groupOrder: string[] = [];
+  const groupMap = new Map<string, typeof assembly.items>();
+  for (const it of assembly.items) {
+    const key = (it.groupName || 'Other').trim() || 'Other';
+    if (!groupMap.has(key)) { groupMap.set(key, []); groupOrder.push(key); }
+    groupMap.get(key)!.push(it);
+  }
+  const sortedGroups = groupOrder.sort((a, b) => {
+    if (a === 'Other') return 1;
+    if (b === 'Other') return -1;
+    return a.localeCompare(b);
+  });
+  const hasGroups = sortedGroups.length > 1 || (sortedGroups[0] && sortedGroups[0] !== 'Other');
+
+  const flatItems: Array<{ type: 'header'; label: string } | { type: 'row'; item: typeof assembly.items[number] }> = [];
+  for (const g of sortedGroups) {
+    if (hasGroups) flatItems.push({ type: 'header', label: g });
+    for (const it of groupMap.get(g)!) flatItems.push({ type: 'row', item: it });
+  }
+
+  for (const entry of flatItems) {
+    if (entry.type === 'header') {
+      const headerRowH = 7;
+      if (y + headerRowH > pageHeight - 25) {
+        doc.addPage();
+        y = margin;
+        y = drawTableHeader(y);
+      }
+      doc.setFillColor(225, 225, 225);
+      doc.rect(col1X, y, tableRight - col1X, headerRowH, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(entry.label, col1X + 2, y + 5);
+      doc.setDrawColor(180, 180, 180);
+      doc.line(col1X, y, tableRight, y);
+      doc.line(col1X, y + headerRowH, tableRight, y + headerRowH);
+      doc.line(col1X, y, col1X, y + headerRowH);
+      doc.line(tableRight, y, tableRight, y + headerRowH);
+      y += headerRowH;
+      doc.setFont('helvetica', 'normal');
+      continue;
+    }
+    const item = entry.item;
     const nameLines = doc.splitTextToSize(item.itemName, nameColW);
     const skuLines = doc.splitTextToSize(item.sku || '—', skuColW);
     const notesLines = item.notes ? doc.splitTextToSize(item.notes, notesColW) : [];
