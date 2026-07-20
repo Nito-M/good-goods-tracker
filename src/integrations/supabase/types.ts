@@ -5129,6 +5129,7 @@ export type Database = {
           effective_date: string | null
           id: string
           last_updated_date: string | null
+          notes: string | null
           revision_number: string | null
           sop_number: string | null
           status: string
@@ -5146,6 +5147,7 @@ export type Database = {
           effective_date?: string | null
           id?: string
           last_updated_date?: string | null
+          notes?: string | null
           revision_number?: string | null
           sop_number?: string | null
           status?: string
@@ -5163,6 +5165,7 @@ export type Database = {
           effective_date?: string | null
           id?: string
           last_updated_date?: string | null
+          notes?: string | null
           revision_number?: string | null
           sop_number?: string | null
           status?: string
