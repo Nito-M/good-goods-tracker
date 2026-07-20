@@ -215,10 +215,11 @@ export function useAssemblyItems(assemblyId: string | null) {
   };
 
   const updateItem = async (id: string, updates: { quantity?: number; notes?: string | null; unit_cost?: number }) => {
+    // Optimistic local update — avoids full re-render/refetch flicker.
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...updates } as AssemblyItem : i)));
     const { error } = await supabase.from('assembly_items').update(updates).eq('id', id);
     if (error) {
       toast({ title: 'Error', description: 'Failed to update item.', variant: 'destructive' });
-    } else {
       await fetchItems();
     }
   };
