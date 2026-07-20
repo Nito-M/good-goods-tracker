@@ -143,7 +143,7 @@ function AssemblyDetail({
   };
 
   const startEditQty = (item: { id: string; quantity: number }) => { setEditingId(item.id); setEditQty(item.quantity); };
-  const handleSaveQty = async (id: string) => { setEditingId(null); await updateItem(id, { quantity: editQty }); onItemsChanged?.(); };
+  const handleSaveQty = async (id: string) => { setEditingId(null); await updateItem(id, { quantity: editQty }); };
   const startEditNote = (item: { id: string; notes: string | null }) => { setEditingNoteId(item.id); setEditNoteValue(item.notes || ''); };
   const handleSaveNote = async (id: string) => { await updateItem(id, { notes: editNoteValue.trim() || null }); setEditingNoteId(null); };
 
