@@ -302,7 +302,20 @@ export function useInventory(activeOrgId?: string | null) {
       return;
     }
 
-    const dbItem = inventoryItemToDb(validation.data as Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>, user.id, activeOrgId ?? null);
+    // Resolve org id — if not passed in yet (orgs still loading), look it up so we
+    // never create orphan items for users who belong to an organization.
+    let orgIdToUse: string | null = activeOrgId ?? null;
+    if (!orgIdToUse) {
+      const { data: memberships } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', user.id);
+      if (memberships && memberships.length > 0) {
+        orgIdToUse = memberships[0].organization_id as string;
+      }
+    }
+
+    const dbItem = inventoryItemToDb(validation.data as Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>, user.id, orgIdToUse);
 
     // Save locally first
     await put('inventory_items', dbItem as unknown as Record<string, unknown>);
@@ -332,7 +345,7 @@ export function useInventory(activeOrgId?: string | null) {
         description: item.description,
         image_url: item.imageUrl || null,
         user_id: user.id,
-        organization_id: activeOrgId ?? null,
+        organization_id: orgIdToUse,
         warehouse_id: item.warehouseId || null,
         internal_part_number: item.internalPartNumber || null,
         pallet_amount: item.palletAmount || 0,
