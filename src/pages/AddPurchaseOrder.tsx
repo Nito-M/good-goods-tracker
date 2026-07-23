@@ -713,11 +713,13 @@ export function AddPurchaseOrder() {
                     id="poNumber"
                     value={poNumber}
                     onChange={(e) => setPoNumber(e.target.value)}
-                    placeholder="Auto-generated if left empty"
+                    placeholder={editingOrder ? 'PO Number' : nextPoNumber}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Leave empty to auto-generate (e.g., PO-0001)
-                  </p>
+                  {!editingOrder && (
+                    <p className="text-xs text-muted-foreground">
+                      Next auto-generated: <span className="font-mono font-semibold text-foreground">{nextPoNumber}</span> (leave empty to use)
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="orderedAt">Order Date *</Label>
