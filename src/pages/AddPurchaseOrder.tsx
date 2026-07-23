@@ -50,7 +50,20 @@ export function AddPurchaseOrder() {
   const location = useLocation();
   const editingOrder = (location.state as { editingOrder?: PurchaseOrder })?.editingOrder ?? null;
   const prefillItems = (location.state as { prefillItems?: Array<{ inventory_item_id: string; name: string; sku: string | null; quantity: number; unit_cost: number; notes?: string }> })?.prefillItems ?? null;
-  const { createOrder, updateOrder } = usePurchaseOrders();
+  const { createOrder, updateOrder, orders: existingOrders } = usePurchaseOrders();
+
+  // Compute next auto-generated PO number for preview
+  const nextPoNumber = useMemo(() => {
+    let max = 0;
+    for (const o of existingOrders) {
+      const m = o.poNumber?.match(/^PO-(\d+)$/i);
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (n > max) max = n;
+      }
+    }
+    return `PO-${String(max + 1).padStart(4, '0')}`;
+  }, [existingOrders]);
   const { allItems: inventoryItems } = useInventory();
   const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors } = useVendors();
