@@ -344,7 +344,7 @@ export function SalesOrderDetail() {
       const job = await createJob(
         item.itemName,
         buildJobDescription(item),
-        'open',
+        'in-progress',
         {
           name: quote.vendorName || undefined,
           email: vendor?.contact_email || undefined,
@@ -389,7 +389,7 @@ export function SalesOrderDetail() {
         const job = await createJob(
           item.itemName,
           buildJobDescription(item),
-          'open',
+          'in-progress',
           {
             name: quote.vendorName || undefined,
             email: vendor?.contact_email || undefined,
