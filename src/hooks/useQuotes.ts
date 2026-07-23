@@ -420,33 +420,57 @@ export function useQuotes() {
 
       if (quoteError) throw quoteError;
 
-      // Delete existing quote items
-      await supabase.from('quote_items').delete().eq('quote_id', quoteId);
+      // Diff quote items: UPDATE existing (preserving IDs so sales-order
+      // add-ons and job links stay attached), INSERT new, DELETE removed.
+      const { data: existingRows } = await supabase
+        .from('quote_items')
+        .select('id')
+        .eq('quote_id', quoteId);
+      const existingIds = new Set((existingRows || []).map((r: any) => r.id as string));
+      const keptIds = new Set<string>();
 
-      // Create new quote items
       for (let i = 0; i < input.items.length; i++) {
         const item = input.items[i];
         const itemDisc = item.discountRate || 0;
         const qty = item.quantity || 0;
         const lineNet = qty * item.unitPrice * (1 - itemDisc / 100);
-        const { error: itemError } = await supabase
-          .from('quote_items')
-          .insert({
-            quote_id: quoteId,
-            inventory_item_id: item.inventoryItemId,
-            item_name: item.itemName,
-            sku: item.sku || 'CUSTOM',
-            quantity: qty,
-            quantity_unit: item.quantityUnit,
-            unit_price: item.unitPrice,
-            unit_cost: item.unitCost,
-            discount_rate: itemDisc,
-            total_price: lineNet,
-            notes: item.notes || null,
-            sort_order: i,
-          } as any);
+        const payload: any = {
+          quote_id: quoteId,
+          inventory_item_id: item.inventoryItemId,
+          item_name: item.itemName,
+          sku: item.sku || 'CUSTOM',
+          quantity: qty,
+          quantity_unit: item.quantityUnit,
+          unit_price: item.unitPrice,
+          unit_cost: item.unitCost,
+          discount_rate: itemDisc,
+          total_price: lineNet,
+          notes: item.notes || null,
+          sort_order: i,
+        };
 
-        if (itemError) throw itemError;
+        if (existingIds.has(item.id)) {
+          keptIds.add(item.id);
+          const { error: updErr } = await supabase
+            .from('quote_items')
+            .update(payload)
+            .eq('id', item.id);
+          if (updErr) throw updErr;
+        } else {
+          const { error: insErr } = await supabase
+            .from('quote_items')
+            .insert(payload);
+          if (insErr) throw insErr;
+        }
+      }
+
+      const toDelete = [...existingIds].filter((id) => !keptIds.has(id));
+      if (toDelete.length > 0) {
+        const { error: delErr } = await supabase
+          .from('quote_items')
+          .delete()
+          .in('id', toDelete);
+        if (delErr) throw delErr;
       }
 
       toast({
