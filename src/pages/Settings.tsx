@@ -9,7 +9,7 @@ import { UsersSettings } from '@/components/UsersSettings';
 import { TagsSettings } from '@/components/TagsSettings';
 import { CompaniesSettings } from '@/components/CompaniesSettings';
 import { StorefrontSettings } from '@/components/StorefrontSettings';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,6 +81,14 @@ export function Settings() {
     : showUsersTab ? 'users'
     : isAdmin ? 'organizations'
     : 'general';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab = tabParam || firstTab;
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', value);
+    setSearchParams(next, { replace: true });
+  };
   const { theme, setTheme } = useTheme();
   const { colorTheme, setColorTheme, backgroundTheme, setBackgroundTheme, backgroundImageUrl, setCustomBackgroundImage, customBgLight, setCustomBgLight, customTextColor, setCustomTextColor, cardOpacity, setCardOpacity, borderColor, setBorderColor } = useColorTheme();
   const { vendors, loading: vendorsLoading, addVendor, updateVendor, deleteVendor } = useVendors();
@@ -477,7 +485,7 @@ export function Settings() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue={firstTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="flex w-full max-w-5xl overflow-x-auto">
             {showGeneralTab && (
               <TabsTrigger value="general" className="gap-2 shrink-0">

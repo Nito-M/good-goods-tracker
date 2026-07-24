@@ -156,7 +156,7 @@ export function CompanyDetail() {
   const handleDelete = async () => {
     if (!company) return;
     await deleteCompany(company.id);
-    navigate('/settings');
+    navigate('/settings?tab=companies');
   };
 
   const cancelEditing = () => {
@@ -192,7 +192,7 @@ export function CompanyDetail() {
   if (!company) {
     return (
       <div className="p-6">
-        <Button variant="ghost" onClick={() => navigate('/settings')} className="gap-2 mb-4">
+        <Button variant="ghost" onClick={() => navigate('/settings?tab=companies')} className="gap-2 mb-4">
           <ArrowLeft className="h-4 w-4" /> Back to Settings
         </Button>
         <p className="text-muted-foreground text-center py-8">Company not found.</p>
@@ -204,7 +204,7 @@ export function CompanyDetail() {
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/settings?tab=companies')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-3 flex-1 min-w-0">

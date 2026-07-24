@@ -67,7 +67,7 @@ export function VendorDetail() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground">Vendor not found</p>
-        <Button variant="outline" onClick={() => navigate('/settings')}>
+        <Button variant="outline" onClick={() => navigate('/settings?tab=vendors')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Settings
         </Button>
@@ -90,7 +90,7 @@ export function VendorDetail() {
 
   const handleDelete = async () => {
     await deleteVendor(vendor.id);
-    navigate('/settings');
+    navigate('/settings?tab=vendors');
   };
 
   return (
@@ -99,7 +99,7 @@ export function VendorDetail() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/settings?tab=vendors')}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex items-center gap-3">
