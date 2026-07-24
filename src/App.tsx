@@ -67,6 +67,7 @@ import { TrailerConfigAdmin } from "./pages/TrailerConfigAdmin";
 import { PrebuiltAssemblyDetail } from "./pages/PrebuiltAssemblyDetail";
 import { TripPlanDetail } from "./pages/TripPlanDetail";
 import { VendorDetail } from "./pages/VendorDetail";
+import { CustomerDetail } from "./pages/CustomerDetail";
 import { AddVendor } from "./pages/AddVendor";
 import { EditTripPlan } from "./pages/EditTripPlan";
 import { CompanyDetail } from "./pages/CompanyDetail";
@@ -804,6 +805,17 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/customers/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <CustomerDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/trailer-configurator"
           element={
