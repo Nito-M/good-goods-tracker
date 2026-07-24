@@ -485,7 +485,7 @@ export function Settings() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs defaultValue={firstTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="flex w-full max-w-5xl overflow-x-auto">
             {showGeneralTab && (
               <TabsTrigger value="general" className="gap-2 shrink-0">
