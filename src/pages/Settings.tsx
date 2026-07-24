@@ -916,13 +916,16 @@ export function Settings() {
                   <div className="divide-y divide-border">
                     {filteredCustomers.map((customer) => (
                       <div key={customer.id} className="flex items-center justify-between py-4">
-                        <div>
+                        <Link to={`/customers/${customer.id}`} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
                           <div className="font-medium">{customer.name}</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-muted-foreground truncate">
                             {[customer.company, customer.email, customer.phone].filter(Boolean).join(' • ') || 'No contact info'}
                           </div>
-                        </div>
+                        </Link>
                         <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/customers/${customer.id}`}>View</Link>
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => openCustomerDialog(customer)}>
                             Edit
                           </Button>

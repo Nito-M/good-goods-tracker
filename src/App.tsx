@@ -805,6 +805,17 @@ function AppContent() {
           }
         />
         <Route
+          path="/customers/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <CustomerDetail />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/trailer-configurator"
           element={
             <ProtectedRoute>
