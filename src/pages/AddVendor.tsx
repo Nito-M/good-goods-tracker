@@ -58,7 +58,7 @@ export function AddVendor() {
       navigate(`/vendors/${id}`);
     } else {
       await addVendor(vendorData);
-      navigate('/settings');
+      navigate('/settings?tab=vendors');
     }
   };
 
@@ -74,7 +74,7 @@ export function AddVendor() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground">Vendor not found</p>
-        <Button variant="outline" onClick={() => navigate('/settings')}>
+        <Button variant="outline" onClick={() => navigate('/settings?tab=vendors')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Settings
         </Button>

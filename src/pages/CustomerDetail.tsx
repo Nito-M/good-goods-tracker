@@ -44,7 +44,7 @@ export function CustomerDetail() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground">Customer not found</p>
-        <Button variant="outline" onClick={() => navigate('/settings')}>
+        <Button variant="outline" onClick={() => navigate('/settings?tab=customers')}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Settings
         </Button>
       </div>
@@ -76,7 +76,7 @@ export function CustomerDetail() {
 
   const handleDelete = async () => {
     await deleteCustomer(customer.id);
-    navigate('/settings');
+    navigate('/settings?tab=customers');
   };
 
   return (
@@ -85,7 +85,7 @@ export function CustomerDetail() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+              <Button variant="ghost" size="icon" onClick={() => navigate('/settings?tab=customers')}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex items-center gap-3">
