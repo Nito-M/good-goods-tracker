@@ -1,29 +1,34 @@
-## Problem
+Give customers the same rich detail view that vendors have: a dedicated Customer Detail page with Contacts, Links, Files & PDFs, multi-Notes, and a grouped history of sales/quotes — matching the vendor screenshot.
 
-When a quote that has been converted to a sales order is edited, all `quote_items` rows are deleted and recreated with new UUIDs. Sales-order features key off `quote_item_id`:
+## What to build
 
-- `so_item_attachments` (add-on parent/child links) → orphaned/lost, so add-ons detach.
-- `so_item_job_links` (created jobs, statuses, external job numbers) → orphaned/lost, so job links disappear from the sales order.
-- `so_item_nvis_files` and `so_item_attachments` (per-unit NVIS PDFs) — same problem.
+1. **New `CustomerDetail` page** at `/customers/:id`
+   - Header with color swatch, name, Edit / Delete buttons (Edit opens existing customer dialog logic, or a new `/customers/:id/edit` page)
+   - Contact Information card (email, phone, address, link)
+   - Summary card (Sales count, Total Invoiced, Quotes count, Total Quoted, color)
+   - Contacts, Links, Files & PDFs, Notes sections
+   - Sales history grouped by Year → Month (collapsible), like vendor POs
+   - Recent Quotes list
 
-## Fix
+2. **New DB tables** (mirroring vendor equivalents), each with GRANTs + RLS scoped via `users_share_org`:
+   - `customer_contacts` (name, role, email, phone, notes)
+   - `customer_links` (label, url)
+   - `customer_notes` (content, timestamps)
+   - `customer_files` already exists — reuse
 
-Change `updateQuote` in `src/hooks/useQuotes.ts` from delete-all + insert-all to a diff-based upsert so existing item rows keep their IDs:
+3. **New hooks**: `useCustomerContacts`, `useCustomerLinks`, `useCustomerNotes`
 
-1. Fetch the current `quote_items` for the quote (ids only).
-2. Split incoming `input.items` into:
-   - **Existing** — id is a real UUID present in the current list → `UPDATE` that row with the new field values and new `sort_order`.
-   - **New** — id starts with `new-` (matches the temp id pattern used in `EditQuoteDialog`) or isn't in the current list → `INSERT` with a fresh row.
-3. Any current row whose id is not in the incoming list → `DELETE` (only truly removed items; their attachments/job links legitimately go away).
-4. Recompute totals exactly as today and update the parent `quotes` row unchanged.
+4. **New components** (parallel to vendor versions):
+   - `CustomerContactsManager`
+   - `CustomerLinksSection`
+   - `CustomerNotesList`
 
-Because add-ons and job links reference `quote_item_id`, keeping the IDs stable preserves them across edits. No schema change and no touch to `SalesOrderDetail` / `SalesOrderItemDetail` needed.
+5. **Wire-up**
+   - Add route in `src/App.tsx`
+   - In `Settings.tsx` customers list, make each customer row clickable → navigate to `/customers/:id` (keep existing edit dialog available from the detail page action)
 
-## Scope
+## Technical notes
 
-- `src/hooks/useQuotes.ts` — rewrite the item persistence block inside `updateQuote`. Everything else (create flow, sales-order UI, jobs, attachments) is unchanged.
-
-## Notes
-
-- `EditQuoteDialog` already passes each item's original id through unchanged for existing rows and uses `new-<timestamp>` for added rows, so no dialog changes are needed.
-- Removing an item in the editor will still (correctly) drop its add-on/job link, matching current expectations for intentional deletions.
+- Sales/quotes history pulls from existing `useSales` / `useQuotes` filtered by `customerId`.
+- RLS pattern: `GRANT SELECT/INSERT/UPDATE/DELETE ... TO authenticated`, `GRANT ALL ... TO service_role`, policies via `users_share_org(auth.uid(), user_id)` — identical to `vendor_notes`/`vendor_links`.
+- No changes to vendor code; components are duplicated (not generified) to avoid regressions.
