@@ -1437,10 +1437,11 @@ export type Database = {
           customer_id: string
           email: string | null
           id: string
+          is_primary: boolean
+          job_position: string | null
           name: string
           notes: string | null
           phone: string | null
-          role: string | null
           updated_at: string
           user_id: string
         }
@@ -1449,10 +1450,11 @@ export type Database = {
           customer_id: string
           email?: string | null
           id?: string
+          is_primary?: boolean
+          job_position?: string | null
           name: string
           notes?: string | null
           phone?: string | null
-          role?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1461,10 +1463,11 @@ export type Database = {
           customer_id?: string
           email?: string | null
           id?: string
+          is_primary?: boolean
+          job_position?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
-          role?: string | null
           updated_at?: string
           user_id?: string
         }
