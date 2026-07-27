@@ -253,12 +253,13 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
     });
   };
 
-  const totalPurchased = purchases
+  const round5 = (n: number) => Math.round(n * 100000) / 100000;
+  const totalPurchased = round5(purchases
     .filter(p => isReceived(p.status))
-    .reduce((sum, p) => sum + p.quantity, 0);
-  const totalSold = soldItems.reduce((sum, s) => sum + s.quantity, 0);
-  const totalConsumed = purchases.reduce((sum, p) => sum + p.consumedQuantity, 0);
-  const totalReserved = purchases.reduce((sum, p) => sum + p.reservedQuantity, 0);
+    .reduce((sum, p) => sum + p.quantity, 0));
+  const totalSold = round5(soldItems.reduce((sum, s) => sum + s.quantity, 0));
+  const totalConsumed = round5(purchases.reduce((sum, p) => sum + p.consumedQuantity, 0));
+  const totalReserved = round5(purchases.reduce((sum, p) => sum + p.reservedQuantity, 0));
   const totalProfit = soldItems.reduce((sum, s) => sum + s.profit, 0);
 
   if (loading) {
