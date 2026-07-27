@@ -253,12 +253,13 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
     });
   };
 
-  const totalPurchased = purchases
+  const round5 = (n: number) => Math.round(n * 100000) / 100000;
+  const totalPurchased = round5(purchases
     .filter(p => isReceived(p.status))
-    .reduce((sum, p) => sum + p.quantity, 0);
-  const totalSold = soldItems.reduce((sum, s) => sum + s.quantity, 0);
-  const totalConsumed = purchases.reduce((sum, p) => sum + p.consumedQuantity, 0);
-  const totalReserved = purchases.reduce((sum, p) => sum + p.reservedQuantity, 0);
+    .reduce((sum, p) => sum + p.quantity, 0));
+  const totalSold = round5(soldItems.reduce((sum, s) => sum + s.quantity, 0));
+  const totalConsumed = round5(purchases.reduce((sum, p) => sum + p.consumedQuantity, 0));
+  const totalReserved = round5(purchases.reduce((sum, p) => sum + p.reservedQuantity, 0));
   const totalProfit = soldItems.reduce((sum, s) => sum + s.profit, 0);
 
   if (loading) {
@@ -353,20 +354,20 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                       <TableRow key={purchase.id}>
                         <TableCell className="font-medium">{purchase.poNumber || 'N/A'}</TableCell>
                         <TableCell>{formatDate(purchase.orderedAt)}</TableCell>
-                        <TableCell className="text-right">{purchase.quantity}</TableCell>
-                        <TableCell className="text-right">{purchase.soldQuantity}</TableCell>
+                        <TableCell className="text-right">{Math.round(purchase.quantity * 100000) / 100000}</TableCell>
+                        <TableCell className="text-right">{Math.round(purchase.soldQuantity * 100000) / 100000}</TableCell>
                         <TableCell className="text-right">
                           {isReceived(purchase.status) && purchase.consumedQuantity > 0
-                            ? <span className="text-orange-500 font-medium">{purchase.consumedQuantity}</span>
+                            ? <span className="text-orange-500 font-medium">{Math.round(purchase.consumedQuantity * 100000) / 100000}</span>
                             : isReceived(purchase.status) ? '0' : '-'}
                         </TableCell>
                         <TableCell className="text-right">
                           {isReceived(purchase.status) && purchase.reservedQuantity > 0
-                            ? <span className="text-warning font-medium">{purchase.reservedQuantity}</span>
+                            ? <span className="text-warning font-medium">{Math.round(purchase.reservedQuantity * 100000) / 100000}</span>
                             : isReceived(purchase.status) ? '0' : '-'}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {isReceived(purchase.status) ? purchase.remainingQuantity : '-'}
+                          {isReceived(purchase.status) ? Math.round(purchase.remainingQuantity * 100000) / 100000 : '-'}
                         </TableCell>
                         <TableCell className="text-right">{formatCurrency(purchase.unitCost)}</TableCell>
                         <TableCell>
