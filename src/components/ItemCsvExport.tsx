@@ -24,7 +24,7 @@ export function ItemCsvExport() {
       while (true) {
         const { data, error } = await supabase
           .from('inventory_items')
-          .select('name, sku, description, category, subcategory, quantity, quantity_unit, price, cost, min_stock, max_stock, weight, weight_unit')
+          .select('id, name, sku, description, category, subcategory, quantity, quantity_unit, price, cost, min_stock, max_stock, weight, weight_unit')
           .is('deleted_at', null)
           .order('name', { ascending: true })
           .range(from, from + pageSize - 1);
@@ -34,12 +34,6 @@ export function ItemCsvExport() {
         if (data.length < pageSize) break;
         from += pageSize;
       }
-
-      // Fetch vendor names per item
-      const ids = all.map((i) => (i as any).id).filter(Boolean);
-      const itemIds = all.length ? (await supabase.from('inventory_items').select('id, name').is('deleted_at', null)).data ?? [] : [];
-      const idByName = new Map<string, string>();
-      itemIds.forEach((r: any) => idByName.set(`${r.name}`, r.id));
 
       const { data: vps } = await supabase
         .from('item_vendor_prices')
