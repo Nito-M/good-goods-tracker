@@ -289,6 +289,68 @@ export function SalesOrderItemDetail() {
     await load();
   };
 
+  const handleSaveUnitNotes = async () => {
+    setSavingNotes(true);
+    const ok = await upsertLink({ unit_notes: unitNotes.trim() || null });
+    setSavingNotes(false);
+    if (ok) {
+      toast({ title: 'Notes saved' });
+      await load();
+    }
+  };
+
+  // Available units to attach as add-ons: expand all quote items into units,
+  // exclude this unit and units already attached anywhere.
+  const availableAddonCandidates = useMemo(() => {
+    if (!quote) return [] as Array<{ linkKey: string; quoteItemId: string; unitIndex: number; itemName: string; sku: string }>;
+    const attachedChildren = new Set(allAttachments.map((a) => `${a.child_quote_item_id}-${a.child_unit_index}`));
+    const out: Array<{ linkKey: string; quoteItemId: string; unitIndex: number; itemName: string; sku: string }> = [];
+    quote.items.forEach((qi) => {
+      const qty = Math.max(1, Math.floor(qi.quantity || 1));
+      for (let u = 0; u < qty; u++) {
+        const key = `${qi.id}-${u}`;
+        if (key === linkKey) continue;
+        if (attachedChildren.has(key)) continue;
+        out.push({ linkKey: key, quoteItemId: qi.id, unitIndex: u, itemName: qi.itemName, sku: qi.sku });
+      }
+    });
+    return out;
+  }, [quote, allAttachments, linkKey]);
+
+  const handleAttachAddon = async (candidate: { quoteItemId: string; unitIndex: number }) => {
+    if (!id) return;
+    const { error } = await (supabase.from('so_item_attachments' as any) as any).upsert(
+      {
+        quote_id: id,
+        child_quote_item_id: candidate.quoteItemId,
+        child_unit_index: candidate.unitIndex,
+        parent_quote_item_id: quoteItemId,
+        parent_unit_index: unitIdx,
+      },
+      { onConflict: 'child_quote_item_id,child_unit_index' }
+    );
+    if (error) {
+      toast({ title: 'Error attaching', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Add-on attached' });
+    setAddonPickerOpen(false);
+    await load();
+  };
+
+  const handleDetachAddon = async (addon: AddonRow) => {
+    const { error } = await supabase
+      .from('so_item_attachments' as any)
+      .delete()
+      .eq('id', addon.attachmentId);
+    if (error) {
+      toast({ title: 'Error detaching', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Add-on detached' });
+    await load();
+  };
+
   if (quotesLoading || loading) {
     return (
       <div className="flex items-center justify-center h-64">
