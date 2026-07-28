@@ -4752,6 +4752,7 @@ export type Database = {
           quote_item_id: string
           status: string
           unit_index: number
+          unit_notes: string | null
           updated_at: string
         }
         Insert: {
@@ -4765,6 +4766,7 @@ export type Database = {
           quote_item_id: string
           status?: string
           unit_index?: number
+          unit_notes?: string | null
           updated_at?: string
         }
         Update: {
@@ -4778,6 +4780,7 @@ export type Database = {
           quote_item_id?: string
           status?: string
           unit_index?: number
+          unit_notes?: string | null
           updated_at?: string
         }
         Relationships: [
