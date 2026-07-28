@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCategories } from '@/hooks/useCategories';
 
 function csvEscape(v: unknown): string {
   const s = v === null || v === undefined ? '' : String(v);
@@ -12,7 +14,9 @@ function csvEscape(v: unknown): string {
 
 export function ItemCsvExport() {
   const { toast } = useToast();
+  const { categories } = useCategories();
   const [busy, setBusy] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('__all__');
 
   const handleExport = async () => {
     setBusy(true);
@@ -20,14 +24,17 @@ export function ItemCsvExport() {
       const pageSize = 1000;
       let from = 0;
       const all: any[] = [];
-      // Paginate to bypass Supabase default row cap
       while (true) {
-        const { data, error } = await supabase
+        let query = supabase
           .from('inventory_items')
           .select('id, name, sku, description, category, subcategory, quantity, quantity_unit, price, cost, min_stock, max_stock, weight, weight_unit')
           .is('deleted_at', null)
           .order('name', { ascending: true })
           .range(from, from + pageSize - 1);
+        if (selectedCategory !== '__all__') {
+          query = query.eq('category', selectedCategory);
+        }
+        const { data, error } = await query;
         if (error) throw error;
         if (!data || data.length === 0) break;
         all.push(...data);
@@ -35,25 +42,31 @@ export function ItemCsvExport() {
         from += pageSize;
       }
 
-      const { data: vps } = await supabase
-        .from('item_vendor_prices')
-        .select('item_id, vendors:vendor_id(name)');
+      const itemIds = all.map((i: any) => i.id);
       const vendorsByItem = new Map<string, string[]>();
-      (vps || []).forEach((r: any) => {
-        const list = vendorsByItem.get(r.item_id) || [];
-        if (r.vendors?.name) list.push(r.vendors.name);
-        vendorsByItem.set(r.item_id, list);
-      });
-
-      const { data: tags } = await supabase
-        .from('item_tags')
-        .select('item_id, tag');
       const tagsByItem = new Map<string, string[]>();
-      (tags || []).forEach((r: any) => {
-        const list = tagsByItem.get(r.item_id) || [];
-        list.push(r.tag);
-        tagsByItem.set(r.item_id, list);
-      });
+
+      if (itemIds.length > 0) {
+        const { data: vps } = await supabase
+          .from('item_vendor_prices')
+          .select('item_id, vendors:vendor_id(name)')
+          .in('item_id', itemIds);
+        (vps || []).forEach((r: any) => {
+          const list = vendorsByItem.get(r.item_id) || [];
+          if (r.vendors?.name) list.push(r.vendors.name);
+          vendorsByItem.set(r.item_id, list);
+        });
+
+        const { data: tags } = await supabase
+          .from('item_tags')
+          .select('item_id, tag')
+          .in('item_id', itemIds);
+        (tags || []).forEach((r: any) => {
+          const list = tagsByItem.get(r.item_id) || [];
+          list.push(r.tag);
+          tagsByItem.set(r.item_id, list);
+        });
+      }
 
       const headers = [
         'Name', 'Description', 'Tags', 'Unit', 'Vendors',
@@ -87,8 +100,9 @@ export function ItemCsvExport() {
       const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
+      const catSlug = selectedCategory === '__all__' ? 'all' : selectedCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       a.href = url;
-      a.download = `inventory-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `inventory-${catSlug}-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -103,8 +117,21 @@ export function ItemCsvExport() {
   };
 
   return (
-    <Button variant="outline" className="gap-2" onClick={handleExport} disabled={busy}>
-      <Download className="h-4 w-4" /> {busy ? 'Exporting...' : 'Export CSV'}
-    </Button>
+    <div className="flex flex-wrap items-center gap-2">
+      <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={busy}>
+        <SelectTrigger className="w-[200px]">
+          <SelectValue placeholder="All categories" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__all__">All categories</SelectItem>
+          {categories.map((c) => (
+            <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button variant="outline" className="gap-2" onClick={handleExport} disabled={busy}>
+        <Download className="h-4 w-4" /> {busy ? 'Exporting...' : 'Export CSV'}
+      </Button>
+    </div>
   );
 }
