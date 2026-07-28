@@ -634,17 +634,63 @@ export function SalesOrderItemDetail() {
 
       {/* Add-ons */}
       <Card>
-        <CardHeader><CardTitle className="text-lg">Add-ons ({addons.length})</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-lg">Add-ons ({addons.length})</CardTitle>
+            <Popover open={addonPickerOpen} onOpenChange={setAddonPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button size="sm" variant="outline" disabled={availableAddonCandidates.length === 0}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add add-on
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-2 border-b text-xs text-muted-foreground">
+                  Attach another unit from this order as an add-on
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {availableAddonCandidates.length === 0 ? (
+                    <p className="p-3 text-sm text-muted-foreground">No available units to attach.</p>
+                  ) : (
+                    availableAddonCandidates.map((c) => (
+                      <button
+                        key={c.linkKey}
+                        onClick={() => handleAttachAddon(c)}
+                        className="w-full text-left px-3 py-2 hover:bg-muted text-sm border-b last:border-b-0"
+                      >
+                        <div className="font-medium">{c.itemName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {c.sku ? `SKU: ${c.sku} · ` : ''}Unit {c.unitIndex + 1}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </CardHeader>
         <CardContent>
           {addons.length === 0 ? (
             <p className="text-sm text-muted-foreground">No add-ons attached to this unit.</p>
           ) : (
             <ul className="space-y-2">
               {addons.map((a) => (
-                <li key={a.id} className="border rounded-md p-3">
-                  <div className="font-medium text-sm">{a.itemName}</div>
-                  {a.sku && <div className="text-xs text-muted-foreground">SKU: {a.sku}</div>}
-                  {a.notes && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{a.notes}</p>}
+                <li key={a.linkKey} className="flex items-start gap-2 border rounded-md p-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{a.itemName}</div>
+                    {a.sku && <div className="text-xs text-muted-foreground">SKU: {a.sku} · Unit {a.unitIndex + 1}</div>}
+                    {a.notes && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{a.notes}</p>}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDetachAddon(a)}
+                    title="Detach add-on"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </li>
               ))}
             </ul>
