@@ -81,16 +81,20 @@ export function SalesOrderItemDetail() {
   );
 
   const [link, setLink] = useState<ItemLinkRow | null>(null);
-  const [addons, setAddons] = useState<Array<{ id: string; itemName: string; sku: string; notes: string | null }>>([]);
+  const [addons, setAddons] = useState<AddonRow[]>([]);
+  const [allAttachments, setAllAttachments] = useState<any[]>([]);
   const [nvisFiles, setNvisFiles] = useState<NvisFileRow[]>([]);
   const [uploadingNvis, setUploadingNvis] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [addonPickerOpen, setAddonPickerOpen] = useState(false);
 
   // Editable external fields
   const [externalJobNumber, setExternalJobNumber] = useState('');
   const [externalDueDate, setExternalDueDate] = useState<Date | undefined>();
   const [externalNotes, setExternalNotes] = useState('');
+  const [unitNotes, setUnitNotes] = useState('');
   const [status, setStatus] = useState('pending');
 
   const linkKey = `${quoteItemId}-${unitIdx}`;
@@ -113,26 +117,39 @@ export function SalesOrderItemDetail() {
       setStatus(l.status || 'pending');
       setExternalJobNumber(l.external_job_number || '');
       setExternalNotes(l.external_notes || '');
+      setUnitNotes(l.unit_notes || '');
       setExternalDueDate(l.external_due_date ? new Date(l.external_due_date) : undefined);
     } else {
       setLink(null);
       setStatus('pending');
+      setUnitNotes('');
     }
 
-    const { data: attachData } = await supabase
+    // All attachments for this quote (used for both current add-ons and the picker)
+    const { data: allAttachData } = await supabase
       .from('so_item_attachments' as any)
       .select('*')
-      .eq('quote_id', id)
-      .eq('parent_quote_item_id', quoteItemId)
-      .eq('parent_unit_index', unitIdx);
+      .eq('quote_id', id);
+    const attachRows = (allAttachData as any[]) || [];
+    setAllAttachments(attachRows);
 
-    if (attachData && quote) {
-      const rows = (attachData as any[]).map((a) => {
-        const childItem = quote.items.find((qi) => qi.id === a.child_quote_item_id);
-        return childItem
-          ? { id: `${childItem.id}-${a.child_unit_index}`, itemName: childItem.itemName, sku: childItem.sku, notes: childItem.notes }
-          : null;
-      }).filter(Boolean) as any[];
+    if (quote) {
+      const rows: AddonRow[] = attachRows
+        .filter((a) => a.parent_quote_item_id === quoteItemId && a.parent_unit_index === unitIdx)
+        .map((a) => {
+          const childItem = quote.items.find((qi) => qi.id === a.child_quote_item_id);
+          if (!childItem) return null;
+          return {
+            attachmentId: a.id,
+            linkKey: `${childItem.id}-${a.child_unit_index}`,
+            quoteItemId: childItem.id,
+            unitIndex: a.child_unit_index,
+            itemName: childItem.itemName,
+            sku: childItem.sku,
+            notes: childItem.notes,
+          };
+        })
+        .filter(Boolean) as AddonRow[];
       setAddons(rows);
     } else {
       setAddons([]);
