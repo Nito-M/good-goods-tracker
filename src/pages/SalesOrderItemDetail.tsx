@@ -39,6 +39,17 @@ interface ItemLinkRow {
   external_job_number: string | null;
   external_due_date: string | null;
   external_notes: string | null;
+  unit_notes: string | null;
+}
+
+interface AddonRow {
+  attachmentId: string;
+  linkKey: string;
+  quoteItemId: string;
+  unitIndex: number;
+  itemName: string;
+  sku: string;
+  notes: string | null;
 }
 
 interface NvisFileRow {
