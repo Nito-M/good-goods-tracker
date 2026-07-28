@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { useInventoryPreferences, InventoryPriceDisplay, InventoryColumnKey } from '@/hooks/useInventoryPreferences';
 import { ItemCsvImport } from '@/components/ItemCsvImport';
+import { ItemCsvExport } from '@/components/ItemCsvExport';
 import { InventoryItem } from '@/types/inventory';
 
 const COLUMN_LABELS: Record<InventoryColumnKey, string> = {
