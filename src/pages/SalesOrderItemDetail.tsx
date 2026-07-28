@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Loader2, Briefcase, CalendarIcon, Hash, FileText, ClipboardList, Save, Upload, Download, Trash2, FileIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, Briefcase, CalendarIcon, Hash, FileText, ClipboardList, Save, Upload, Download, Trash2, FileIcon, Plus, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useJobs } from '@/hooks/useJobs';
@@ -39,6 +39,17 @@ interface ItemLinkRow {
   external_job_number: string | null;
   external_due_date: string | null;
   external_notes: string | null;
+  unit_notes: string | null;
+}
+
+interface AddonRow {
+  attachmentId: string;
+  linkKey: string;
+  quoteItemId: string;
+  unitIndex: number;
+  itemName: string;
+  sku: string;
+  notes: string | null;
 }
 
 interface NvisFileRow {
@@ -70,16 +81,20 @@ export function SalesOrderItemDetail() {
   );
 
   const [link, setLink] = useState<ItemLinkRow | null>(null);
-  const [addons, setAddons] = useState<Array<{ id: string; itemName: string; sku: string; notes: string | null }>>([]);
+  const [addons, setAddons] = useState<AddonRow[]>([]);
+  const [allAttachments, setAllAttachments] = useState<any[]>([]);
   const [nvisFiles, setNvisFiles] = useState<NvisFileRow[]>([]);
   const [uploadingNvis, setUploadingNvis] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [addonPickerOpen, setAddonPickerOpen] = useState(false);
 
   // Editable external fields
   const [externalJobNumber, setExternalJobNumber] = useState('');
   const [externalDueDate, setExternalDueDate] = useState<Date | undefined>();
   const [externalNotes, setExternalNotes] = useState('');
+  const [unitNotes, setUnitNotes] = useState('');
   const [status, setStatus] = useState('pending');
 
   const linkKey = `${quoteItemId}-${unitIdx}`;
@@ -102,26 +117,39 @@ export function SalesOrderItemDetail() {
       setStatus(l.status || 'pending');
       setExternalJobNumber(l.external_job_number || '');
       setExternalNotes(l.external_notes || '');
+      setUnitNotes(l.unit_notes || '');
       setExternalDueDate(l.external_due_date ? new Date(l.external_due_date) : undefined);
     } else {
       setLink(null);
       setStatus('pending');
+      setUnitNotes('');
     }
 
-    const { data: attachData } = await supabase
+    // All attachments for this quote (used for both current add-ons and the picker)
+    const { data: allAttachData } = await supabase
       .from('so_item_attachments' as any)
       .select('*')
-      .eq('quote_id', id)
-      .eq('parent_quote_item_id', quoteItemId)
-      .eq('parent_unit_index', unitIdx);
+      .eq('quote_id', id);
+    const attachRows = (allAttachData as any[]) || [];
+    setAllAttachments(attachRows);
 
-    if (attachData && quote) {
-      const rows = (attachData as any[]).map((a) => {
-        const childItem = quote.items.find((qi) => qi.id === a.child_quote_item_id);
-        return childItem
-          ? { id: `${childItem.id}-${a.child_unit_index}`, itemName: childItem.itemName, sku: childItem.sku, notes: childItem.notes }
-          : null;
-      }).filter(Boolean) as any[];
+    if (quote) {
+      const rows: AddonRow[] = attachRows
+        .filter((a) => a.parent_quote_item_id === quoteItemId && a.parent_unit_index === unitIdx)
+        .map((a) => {
+          const childItem = quote.items.find((qi) => qi.id === a.child_quote_item_id);
+          if (!childItem) return null;
+          return {
+            attachmentId: a.id,
+            linkKey: `${childItem.id}-${a.child_unit_index}`,
+            quoteItemId: childItem.id,
+            unitIndex: a.child_unit_index,
+            itemName: childItem.itemName,
+            sku: childItem.sku,
+            notes: childItem.notes,
+          };
+        })
+        .filter(Boolean) as AddonRow[];
       setAddons(rows);
     } else {
       setAddons([]);
@@ -258,6 +286,68 @@ export function SalesOrderItemDetail() {
     if (!link) return;
     await supabase.from('so_item_job_links' as any).delete().eq('id', link.id);
     toast({ title: 'Marker removed' });
+    await load();
+  };
+
+  const handleSaveUnitNotes = async () => {
+    setSavingNotes(true);
+    const ok = await upsertLink({ unit_notes: unitNotes.trim() || null });
+    setSavingNotes(false);
+    if (ok) {
+      toast({ title: 'Notes saved' });
+      await load();
+    }
+  };
+
+  // Available units to attach as add-ons: expand all quote items into units,
+  // exclude this unit and units already attached anywhere.
+  const availableAddonCandidates = useMemo(() => {
+    if (!quote) return [] as Array<{ linkKey: string; quoteItemId: string; unitIndex: number; itemName: string; sku: string }>;
+    const attachedChildren = new Set(allAttachments.map((a) => `${a.child_quote_item_id}-${a.child_unit_index}`));
+    const out: Array<{ linkKey: string; quoteItemId: string; unitIndex: number; itemName: string; sku: string }> = [];
+    quote.items.forEach((qi) => {
+      const qty = Math.max(1, Math.floor(qi.quantity || 1));
+      for (let u = 0; u < qty; u++) {
+        const key = `${qi.id}-${u}`;
+        if (key === linkKey) continue;
+        if (attachedChildren.has(key)) continue;
+        out.push({ linkKey: key, quoteItemId: qi.id, unitIndex: u, itemName: qi.itemName, sku: qi.sku });
+      }
+    });
+    return out;
+  }, [quote, allAttachments, linkKey]);
+
+  const handleAttachAddon = async (candidate: { quoteItemId: string; unitIndex: number }) => {
+    if (!id) return;
+    const { error } = await (supabase.from('so_item_attachments' as any) as any).upsert(
+      {
+        quote_id: id,
+        child_quote_item_id: candidate.quoteItemId,
+        child_unit_index: candidate.unitIndex,
+        parent_quote_item_id: quoteItemId,
+        parent_unit_index: unitIdx,
+      },
+      { onConflict: 'child_quote_item_id,child_unit_index' }
+    );
+    if (error) {
+      toast({ title: 'Error attaching', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Add-on attached' });
+    setAddonPickerOpen(false);
+    await load();
+  };
+
+  const handleDetachAddon = async (addon: AddonRow) => {
+    const { error } = await supabase
+      .from('so_item_attachments' as any)
+      .delete()
+      .eq('id', addon.attachmentId);
+    if (error) {
+      toast({ title: 'Error detaching', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Add-on detached' });
     await load();
   };
 
@@ -455,15 +545,34 @@ export function SalesOrderItemDetail() {
         </CardContent>
       </Card>
 
-      {/* Item notes */}
-      {item.notes && (
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Item Notes</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{item.notes}</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Unit notes (editable) */}
+      <Card>
+        <CardHeader><CardTitle className="text-lg">Notes</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {item.notes && (
+            <div className="rounded-md bg-muted p-3">
+              <div className="text-xs font-medium text-muted-foreground mb-1">Original item note</div>
+              <p className="text-sm whitespace-pre-wrap">{item.notes}</p>
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="unit-notes">Notes for this unit</Label>
+            <Textarea
+              id="unit-notes"
+              value={unitNotes}
+              onChange={(e) => setUnitNotes(e.target.value)}
+              placeholder="Add notes specific to this unit…"
+              rows={4}
+            />
+            <div className="flex justify-end">
+              <Button size="sm" onClick={handleSaveUnitNotes} disabled={savingNotes}>
+                {savingNotes ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Save notes
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* N.V.I.S PDFs */}
       <Card>
@@ -525,17 +634,63 @@ export function SalesOrderItemDetail() {
 
       {/* Add-ons */}
       <Card>
-        <CardHeader><CardTitle className="text-lg">Add-ons ({addons.length})</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-lg">Add-ons ({addons.length})</CardTitle>
+            <Popover open={addonPickerOpen} onOpenChange={setAddonPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button size="sm" variant="outline" disabled={availableAddonCandidates.length === 0}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add add-on
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-2 border-b text-xs text-muted-foreground">
+                  Attach another unit from this order as an add-on
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {availableAddonCandidates.length === 0 ? (
+                    <p className="p-3 text-sm text-muted-foreground">No available units to attach.</p>
+                  ) : (
+                    availableAddonCandidates.map((c) => (
+                      <button
+                        key={c.linkKey}
+                        onClick={() => handleAttachAddon(c)}
+                        className="w-full text-left px-3 py-2 hover:bg-muted text-sm border-b last:border-b-0"
+                      >
+                        <div className="font-medium">{c.itemName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {c.sku ? `SKU: ${c.sku} · ` : ''}Unit {c.unitIndex + 1}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </CardHeader>
         <CardContent>
           {addons.length === 0 ? (
             <p className="text-sm text-muted-foreground">No add-ons attached to this unit.</p>
           ) : (
             <ul className="space-y-2">
               {addons.map((a) => (
-                <li key={a.id} className="border rounded-md p-3">
-                  <div className="font-medium text-sm">{a.itemName}</div>
-                  {a.sku && <div className="text-xs text-muted-foreground">SKU: {a.sku}</div>}
-                  {a.notes && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{a.notes}</p>}
+                <li key={a.linkKey} className="flex items-start gap-2 border rounded-md p-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{a.itemName}</div>
+                    {a.sku && <div className="text-xs text-muted-foreground">SKU: {a.sku} · Unit {a.unitIndex + 1}</div>}
+                    {a.notes && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{a.notes}</p>}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDetachAddon(a)}
+                    title="Detach add-on"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </li>
               ))}
             </ul>
