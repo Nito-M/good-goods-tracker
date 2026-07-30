@@ -1100,6 +1100,14 @@ export function AddPurchaseOrder() {
         </div>
       </main>
 
+      {/* Add BOM to PO */}
+      <AddBomToPoDialog
+        open={bomDialogOpen}
+        onOpenChange={setBomDialogOpen}
+        inventoryItems={inventoryItems}
+        onAdd={addBomItemsToCart}
+      />
+
       {/* Full Screen Item Picker */}
       <FullScreenItemPicker
         open={pickerOpen}
