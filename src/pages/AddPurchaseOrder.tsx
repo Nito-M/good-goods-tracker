@@ -605,18 +605,30 @@ export function AddPurchaseOrder() {
           {/* Items Card - Full Screen Picker Style */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg">Items</CardTitle>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  onClick={() => setPickerOpen(true)}
-                  className="gap-2"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Add Items from Inventory
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBomDialogOpen(true)}
+                    className="gap-2"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Add BOM
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={() => setPickerOpen(true)}
+                    className="gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Add Items from Inventory
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
