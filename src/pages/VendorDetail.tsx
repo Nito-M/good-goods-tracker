@@ -33,7 +33,7 @@ function poTotal(o: PurchaseOrder): number {
     (s, it) => s + Number(it.unitCost || 0) * Number(it.quantity || 0),
     0
   );
-  const afterDiscount = Math.max(0, subtotal - Number(o.discountAmount || 0));
+  const afterDiscount = (subtotal < 0 ? subtotal - Number(o.discountAmount || 0) : Math.max(0, subtotal - Number(o.discountAmount || 0)));
   const tax = afterDiscount * 0.05;
   const pst = afterDiscount * (Number(o.pstPercent || 0) / 100);
   return afterDiscount + tax + pst;

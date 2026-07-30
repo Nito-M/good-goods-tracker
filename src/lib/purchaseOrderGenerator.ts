@@ -200,7 +200,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
     const totalsX = pageWidth - 70;
     const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
     const discountAmount = order.discountAmount || 0;
-    const afterDiscount = Math.max(0, subtotal - discountAmount);
+    const afterDiscount = (subtotal < 0 ? subtotal - discountAmount : Math.max(0, subtotal - discountAmount));
     const gstOn = (order.gstEnabled ?? true);
     const taxAmount = gstOn ? afterDiscount * TAX_RATE : 0;
     const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
