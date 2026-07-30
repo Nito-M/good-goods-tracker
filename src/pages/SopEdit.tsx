@@ -49,6 +49,7 @@ export default function SopEdit() {
   const itemsById = useMemo(() => new Map(allItems.map(i => [i.id, i])), [allItems]);
 
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
+  const [bomMultiplier, setBomMultiplier] = useState('1');
   const attachRef = useRef<HTMLInputElement>(null);
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
 
