@@ -33,6 +33,7 @@ import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
 import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
 import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
+import { AddBomToPoDialog, BomPrefillItem } from '@/components/AddBomToPoDialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface VendorPrice {
