@@ -373,7 +373,7 @@ export default function SopEdit() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
+
             <div className="flex items-center gap-1">
               <Label htmlFor="bom-multiplier" className="text-xs text-muted-foreground whitespace-nowrap">Qty x</Label>
               <Input
