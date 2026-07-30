@@ -227,7 +227,7 @@ export function AddPurchaseOrder() {
     ? Math.round(subtotalCents * (parseFloat(discountValue) || 0) / 100) / 100
     : parseFloat(discountValue) || 0;
   
-  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const afterDiscount = (subtotal < 0 ? subtotal - discountAmount : Math.max(0, subtotal - discountAmount));
   const taxAmount = gstEnabled ? Math.round(afterDiscount * 5) / 100 : 0;
   const pstNum = parseFloat(pstPercent) || 0;
   const pstAmount = Math.round(afterDiscount * pstNum * 100) / 10000;

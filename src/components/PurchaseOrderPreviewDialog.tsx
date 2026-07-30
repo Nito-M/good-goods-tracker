@@ -33,7 +33,7 @@ export function PurchaseOrderPreviewDialog({
   
   const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
   const discountAmount = order.discountAmount || 0;
-  const afterDiscount = Math.max(0, subtotal - discountAmount);
+  const afterDiscount = (subtotal < 0 ? subtotal - discountAmount : Math.max(0, subtotal - discountAmount));
   const taxAmount = (order.gstEnabled ?? true) ? afterDiscount * TAX_RATE : 0;
   const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
   const totalCost = afterDiscount + taxAmount + pstAmount;
