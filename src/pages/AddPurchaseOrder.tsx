@@ -111,6 +111,24 @@ export function AddPurchaseOrder() {
 
   const [cart, setCart] = useState<POCartItem[]>(initCart);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [bomDialogOpen, setBomDialogOpen] = useState(false);
+
+  const addBomItemsToCart = (items: BomPrefillItem[]) => {
+    setCart((prev) => [
+      ...prev,
+      ...items.map((p) => ({
+        id: crypto.randomUUID(),
+        inventoryItemId: p.inventory_item_id,
+        itemName: p.name,
+        sku: p.sku || '',
+        quantity: p.quantity,
+        quantityUnit: 'pcs' as const,
+        unitPrice: p.unit_cost ?? 0,
+        unitCost: p.unit_cost ?? 0,
+        notes: p.notes || '',
+      })),
+    ]);
+  };
   const [poNumber, setPoNumber] = useState(editingOrder?.poNumber || '');
   const [orderedAt, setOrderedAt] = useState(
     editingOrder
