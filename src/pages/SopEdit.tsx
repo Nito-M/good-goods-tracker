@@ -373,11 +373,26 @@ export default function SopEdit() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="bom-multiplier" className="text-xs text-muted-foreground whitespace-nowrap">Qty x</Label>
+              <Input
+                id="bom-multiplier"
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-16 h-9"
+                value={bomMultiplier}
+                onChange={(e) => setBomMultiplier(e.target.value)}
+              />
+            </div>
             <Button
               size="sm"
               variant="outline"
               disabled={bom.length === 0}
               onClick={() => {
+                const mult = parseFloat(bomMultiplier);
+                const factor = Number.isFinite(mult) && mult > 0 ? mult : 1;
                 const prefillItems = bom
                   .map(b => {
                     const inv = itemsById.get(b.inventory_item_id);
@@ -386,7 +401,7 @@ export default function SopEdit() {
                       inventory_item_id: inv.id,
                       name: inv.name,
                       sku: inv.sku || null,
-                      quantity: b.quantity,
+                      quantity: Math.round(b.quantity * factor * 100000) / 100000,
                       unit_cost: inv.cost || 0,
                       notes: b.notes || '',
                     };
