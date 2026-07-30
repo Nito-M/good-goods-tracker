@@ -114,21 +114,42 @@ export function AddPurchaseOrder() {
   const [bomDialogOpen, setBomDialogOpen] = useState(false);
 
   const addBomItemsToCart = (items: BomPrefillItem[]) => {
-    setCart((prev) => [
-      ...prev,
-      ...items.map((p) => ({
-        id: crypto.randomUUID(),
-        inventoryItemId: p.inventory_item_id,
-        itemName: p.name,
-        sku: p.sku || '',
-        quantity: p.quantity,
-        quantityUnit: 'pcs' as const,
-        unitPrice: p.unit_cost ?? 0,
-        unitCost: p.unit_cost ?? 0,
-        notes: p.notes || '',
-      })),
-    ]);
+    setCart((prev) => {
+      const next = [...prev];
+      for (const p of items) {
+        const idx = p.inventory_item_id
+          ? next.findIndex((c) => c.inventoryItemId === p.inventory_item_id)
+          : -1;
+        if (idx >= 0) {
+          const existing = next[idx];
+          const mergedNotes = [existing.notes, p.notes]
+            .map((n) => (n || '').trim())
+            .filter(Boolean)
+            .filter((n, i, arr) => arr.indexOf(n) === i)
+            .join(' | ');
+          next[idx] = {
+            ...existing,
+            quantity: Math.round((existing.quantity + p.quantity) * 100000) / 100000,
+            notes: mergedNotes,
+          };
+        } else {
+          next.push({
+            id: crypto.randomUUID(),
+            inventoryItemId: p.inventory_item_id,
+            itemName: p.name,
+            sku: p.sku || '',
+            quantity: p.quantity,
+            quantityUnit: 'pcs' as const,
+            unitPrice: p.unit_cost ?? 0,
+            unitCost: p.unit_cost ?? 0,
+            notes: p.notes || '',
+          });
+        }
+      }
+      return next;
+    });
   };
+
   const [poNumber, setPoNumber] = useState(editingOrder?.poNumber || '');
   const [orderedAt, setOrderedAt] = useState(
     editingOrder
