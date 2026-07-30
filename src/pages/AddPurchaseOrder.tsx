@@ -33,6 +33,7 @@ import { CompanySelector } from '@/components/CompanySelector';
 import { useCompanies } from '@/hooks/useCompanies';
 import { FullScreenItemPicker, PickerCartItem, PickerAddOverride } from '@/components/FullScreenItemPicker';
 import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
+import { AddBomToPoDialog, BomPrefillItem } from '@/components/AddBomToPoDialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface VendorPrice {
@@ -110,6 +111,24 @@ export function AddPurchaseOrder() {
 
   const [cart, setCart] = useState<POCartItem[]>(initCart);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [bomDialogOpen, setBomDialogOpen] = useState(false);
+
+  const addBomItemsToCart = (items: BomPrefillItem[]) => {
+    setCart((prev) => [
+      ...prev,
+      ...items.map((p) => ({
+        id: crypto.randomUUID(),
+        inventoryItemId: p.inventory_item_id,
+        itemName: p.name,
+        sku: p.sku || '',
+        quantity: p.quantity,
+        quantityUnit: 'pcs' as const,
+        unitPrice: p.unit_cost ?? 0,
+        unitCost: p.unit_cost ?? 0,
+        notes: p.notes || '',
+      })),
+    ]);
+  };
   const [poNumber, setPoNumber] = useState(editingOrder?.poNumber || '');
   const [orderedAt, setOrderedAt] = useState(
     editingOrder
@@ -586,18 +605,30 @@ export function AddPurchaseOrder() {
           {/* Items Card - Full Screen Picker Style */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg">Items</CardTitle>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  onClick={() => setPickerOpen(true)}
-                  className="gap-2"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Add Items from Inventory
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBomDialogOpen(true)}
+                    className="gap-2"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Add BOM
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={() => setPickerOpen(true)}
+                    className="gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Add Items from Inventory
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -1068,6 +1099,14 @@ export function AddPurchaseOrder() {
           </div>
         </div>
       </main>
+
+      {/* Add BOM to PO */}
+      <AddBomToPoDialog
+        open={bomDialogOpen}
+        onOpenChange={setBomDialogOpen}
+        inventoryItems={inventoryItems}
+        onAdd={addBomItemsToCart}
+      />
 
       {/* Full Screen Item Picker */}
       <FullScreenItemPicker
