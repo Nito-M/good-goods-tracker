@@ -168,21 +168,12 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <Index
-                  items={items}
-                  stats={stats}
-                  loading={loading}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  categoryFilter={categoryFilter}
-                  setCategoryFilter={setCategoryFilter}
-                  categories={allCategories}
-                  onDelete={deleteItem}
-                />
+                <Dashboard items={items} loading={loading} setSearchQuery={setSearchQuery} />
               </AppLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/items"
           element={
