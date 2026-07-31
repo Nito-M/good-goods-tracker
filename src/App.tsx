@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
+import { Dashboard } from "./pages/Dashboard";
+
 import { Welcome } from "./pages/Welcome";
 import { Items } from "./pages/Items";
 import { InventorySettings } from "./pages/InventorySettings";
@@ -168,21 +170,12 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <Index
-                  items={items}
-                  stats={stats}
-                  loading={loading}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  categoryFilter={categoryFilter}
-                  setCategoryFilter={setCategoryFilter}
-                  categories={allCategories}
-                  onDelete={deleteItem}
-                />
+                <Dashboard items={items} loading={loading} setSearchQuery={setSearchQuery} />
               </AppLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/items"
           element={
