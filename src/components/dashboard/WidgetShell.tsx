@@ -1,29 +1,16 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import {
   GripVertical,
   Maximize2,
+  RefreshCw,
   Settings2,
   X,
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import {
-  WIDGET_SIZE_CLASSES,
-  WIDGET_SIZE_LABELS,
-  WidgetSize,
-} from '@/types/dashboard';
+import { WIDGET_SIZE_CLASSES, WidgetSize } from '@/lib/dashboard/types';
 
 interface WidgetShellProps {
   id: string;
@@ -31,11 +18,12 @@ interface WidgetShellProps {
   icon?: LucideIcon;
   size: WidgetSize;
   editing: boolean;
-  onSizeChange: (size: WidgetSize) => void;
-  onTitleChange: (title: string) => void;
+  /** seconds; 0 disables auto refresh */
+  refreshInterval?: number;
+  onOpenSettings: () => void;
   onRemove: () => void;
   onDropWidget: (fromId: string) => void;
-  children: ReactNode;
+  children: (refreshKey: number) => ReactNode;
 }
 
 export function WidgetShell({
@@ -44,8 +32,8 @@ export function WidgetShell({
   icon: Icon,
   size,
   editing,
-  onSizeChange,
-  onTitleChange,
+  refreshInterval = 0,
+  onOpenSettings,
   onRemove,
   onDropWidget,
   children,
@@ -53,7 +41,13 @@ export function WidgetShell({
   const [draggable, setDraggable] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(title);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (!refreshInterval || refreshInterval <= 0) return;
+    const t = window.setInterval(() => setRefreshKey((k) => k + 1), refreshInterval * 1000);
+    return () => window.clearInterval(t);
+  }, [refreshInterval]);
 
   return (
     <>
@@ -97,6 +91,7 @@ export function WidgetShell({
           </span>
           {Icon && <Icon className="h-4 w-4 text-primary" />}
           <h3 className="flex-1 truncate text-sm font-semibold text-card-foreground">{title}</h3>
+
           <div
             className={cn(
               'flex items-center gap-0.5 transition-opacity',
@@ -107,45 +102,29 @@ export function WidgetShell({
               size="icon"
               variant="ghost"
               className="h-7 w-7"
+              aria-label="Refresh widget"
+              onClick={() => setRefreshKey((k) => k + 1)}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
               aria-label="Expand widget"
               onClick={() => setExpanded(true)}
             >
               <Maximize2 className="h-3.5 w-3.5" />
             </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Widget settings">
-                  <Settings2 className="h-3.5 w-3.5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-64 space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Title</Label>
-                  <Input
-                    value={titleDraft}
-                    onChange={(e) => setTitleDraft(e.target.value)}
-                    onBlur={() => onTitleChange(titleDraft)}
-                    onKeyDown={(e) => e.key === 'Enter' && onTitleChange(titleDraft)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Size</Label>
-                  <Select value={size} onValueChange={(v) => onSizeChange(v as WidgetSize)}>
-                    <SelectTrigger className="h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(WIDGET_SIZE_LABELS) as WidgetSize[]).map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {WIDGET_SIZE_LABELS[s]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              aria-label="Widget settings"
+              onClick={onOpenSettings}
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+            </Button>
             <Button
               size="icon"
               variant="ghost"
@@ -157,18 +136,15 @@ export function WidgetShell({
             </Button>
           </div>
         </header>
-        <div className="flex-1 p-4">{children}</div>
+        <div className="flex-1 p-4">{children(refreshKey)}</div>
       </section>
 
       <Dialog open={expanded} onOpenChange={setExpanded}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {Icon && <Icon className="h-4 w-4 text-primary" />}
-              {title}
-            </DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
-          <div className="pt-2">{children}</div>
+          <div>{children(refreshKey)}</div>
         </DialogContent>
       </Dialog>
     </>
