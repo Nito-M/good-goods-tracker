@@ -8,7 +8,15 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export function TasksWidget() {
+export function TasksWidget({
+  limit = 6,
+  showStats = true,
+  showLink = true,
+}: {
+  limit?: number;
+  showStats?: boolean;
+  showLink?: boolean;
+}) {
   const { todos, loading } = useTodos();
   const today = todayStr();
 
@@ -19,18 +27,20 @@ export function TasksWidget() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-2">
-        <StatPill label="Overdue" value={overdue.length} tone="danger" icon={AlertTriangle} />
-        <StatPill label="Due today" value={dueToday.length} tone="warning" icon={CalendarCheck} />
-        <StatPill label="Completed" value={completed.length} tone="success" icon={CheckCircle2} />
-      </div>
+      {showStats && (
+        <div className="grid grid-cols-3 gap-2">
+          <StatPill label="Overdue" value={overdue.length} tone="danger" icon={AlertTriangle} />
+          <StatPill label="Due today" value={dueToday.length} tone="warning" icon={CalendarCheck} />
+          <StatPill label="Completed" value={completed.length} tone="success" icon={CheckCircle2} />
+        </div>
+      )}
       {loading ? (
         <WidgetEmpty>Loading tasks…</WidgetEmpty>
       ) : overdue.length + dueToday.length === 0 ? (
         <WidgetEmpty>Nothing due — you're all caught up.</WidgetEmpty>
       ) : (
         <WidgetList
-          items={[...overdue, ...dueToday].slice(0, 6).map((t) => ({
+          items={[...overdue, ...dueToday].slice(0, limit).map((t) => ({
             id: t.id,
             primary: t.title,
             secondary: t.dueDate
@@ -42,9 +52,11 @@ export function TasksWidget() {
           }))}
         />
       )}
-      <Link to="/notes" className="block text-xs font-medium text-primary hover:underline">
-        Open to-do list →
-      </Link>
+      {showLink && (
+        <Link to="/notes" className="block text-xs font-medium text-primary hover:underline">
+          Open to-do list →
+        </Link>
+      )}
     </div>
   );
 }

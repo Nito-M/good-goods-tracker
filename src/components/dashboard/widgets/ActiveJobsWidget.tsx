@@ -7,22 +7,32 @@ const IN_PROGRESS = ['in-progress', 'open'];
 const WAITING = ['on-hold'];
 const READY = ['finished', 'painting-done'];
 
-export function ActiveJobsWidget() {
+export function ActiveJobsWidget({
+  limit = 8,
+  showStats = true,
+  showLink = true,
+}: {
+  limit?: number;
+  showStats?: boolean;
+  showLink?: boolean;
+}) {
   const { jobs, loading } = useJobs();
 
   const inProgress = jobs.filter((j) => IN_PROGRESS.includes(j.status));
   const waiting = jobs.filter((j) => WAITING.includes(j.status));
   const ready = jobs.filter((j) => READY.includes(j.status));
 
-  const list = [...inProgress, ...waiting, ...ready].slice(0, 8);
+  const list = [...inProgress, ...waiting, ...ready].slice(0, limit);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-2">
-        <StatPill label="In progress" value={inProgress.length} tone="info" icon={Hammer} />
-        <StatPill label="Waiting on parts" value={waiting.length} tone="warning" icon={PackageX} />
-        <StatPill label="Ready for delivery" value={ready.length} tone="success" icon={Truck} />
-      </div>
+      {showStats && (
+        <div className="grid grid-cols-3 gap-2">
+          <StatPill label="In progress" value={inProgress.length} tone="info" icon={Hammer} />
+          <StatPill label="Waiting on parts" value={waiting.length} tone="warning" icon={PackageX} />
+          <StatPill label="Ready for delivery" value={ready.length} tone="success" icon={Truck} />
+        </div>
+      )}
       {loading ? (
         <WidgetEmpty>Loading jobs…</WidgetEmpty>
       ) : list.length === 0 ? (
@@ -42,9 +52,11 @@ export function ActiveJobsWidget() {
           }))}
         />
       )}
-      <Link to="/jobs" className="block text-xs font-medium text-primary hover:underline">
-        View all jobs →
-      </Link>
+      {showLink && (
+        <Link to="/jobs" className="block text-xs font-medium text-primary hover:underline">
+          View all jobs →
+        </Link>
+      )}
     </div>
   );
 }

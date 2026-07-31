@@ -1,34 +1,47 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, PackageX, Layers } from 'lucide-react';
-import { InventoryItem } from '@/types/inventory';
+import { useInventory } from '@/hooks/useInventory';
 import { StatPill, WidgetEmpty, WidgetList } from './primitives';
 
 export function InventoryAlertsWidget({
-  items,
-  loading,
+  threshold = 0,
+  limit = 8,
+  showStats = true,
+  showLink = true,
 }: {
-  items: InventoryItem[];
-  loading?: boolean;
+  threshold?: number;
+  limit?: number;
+  showStats?: boolean;
+  showLink?: boolean;
 }) {
+  const { allItems, loading } = useInventory();
+  const items = allItems || [];
+
+  const lowLimitFor = (min: number) => (threshold > 0 ? threshold : min);
+
   const outOfStock = items.filter((i) => (i.quantity ?? 0) <= 0);
-  const lowStock = items.filter(
-    (i) => (i.quantity ?? 0) > 0 && i.minStock > 0 && (i.quantity ?? 0) <= i.minStock
-  );
+  const lowStock = items.filter((i) => {
+    const q = i.quantity ?? 0;
+    const lim = lowLimitFor(i.minStock);
+    return q > 0 && lim > 0 && q <= lim;
+  });
   const overstock = items.filter((i) => i.maxStock > 0 && (i.quantity ?? 0) > i.maxStock);
 
   const list = [
     ...outOfStock.map((i) => ({ item: i, label: 'Out of stock', tone: 'danger' as const })),
     ...lowStock.map((i) => ({ item: i, label: 'Low stock', tone: 'warning' as const })),
     ...overstock.map((i) => ({ item: i, label: 'Overstock', tone: 'info' as const })),
-  ].slice(0, 8);
+  ].slice(0, limit);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-2">
-        <StatPill label="Low stock" value={lowStock.length} tone="warning" icon={AlertTriangle} />
-        <StatPill label="Out of stock" value={outOfStock.length} tone="danger" icon={PackageX} />
-        <StatPill label="Overstock" value={overstock.length} tone="info" icon={Layers} />
-      </div>
+      {showStats && (
+        <div className="grid grid-cols-3 gap-2">
+          <StatPill label="Low stock" value={lowStock.length} tone="warning" icon={AlertTriangle} />
+          <StatPill label="Out of stock" value={outOfStock.length} tone="danger" icon={PackageX} />
+          <StatPill label="Overstock" value={overstock.length} tone="info" icon={Layers} />
+        </div>
+      )}
       {loading ? (
         <WidgetEmpty>Loading inventory…</WidgetEmpty>
       ) : list.length === 0 ? (
@@ -44,9 +57,11 @@ export function InventoryAlertsWidget({
           }))}
         />
       )}
-      <Link to="/items" className="block text-xs font-medium text-primary hover:underline">
-        Manage inventory →
-      </Link>
+      {showLink && (
+        <Link to="/items" className="block text-xs font-medium text-primary hover:underline">
+          Manage inventory →
+        </Link>
+      )}
     </div>
   );
 }

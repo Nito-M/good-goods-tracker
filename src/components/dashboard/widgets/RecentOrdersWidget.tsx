@@ -3,12 +3,18 @@ import { useSales } from '@/hooks/useSales';
 import { formatCurrencyPdf } from '@/lib/utils';
 import { WidgetEmpty, WidgetList } from './primitives';
 
-export function RecentOrdersWidget() {
+export function RecentOrdersWidget({
+  limit = 7,
+  showLink = true,
+}: {
+  limit?: number;
+  showLink?: boolean;
+}) {
   const { sales, loading } = useSales();
 
   const recent = [...sales]
     .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
-    .slice(0, 7);
+    .slice(0, limit);
 
   return (
     <div className="space-y-3">
@@ -27,9 +33,11 @@ export function RecentOrdersWidget() {
           }))}
         />
       )}
-      <Link to="/sales" className="block text-xs font-medium text-primary hover:underline">
-        View all orders →
-      </Link>
+      {showLink && (
+        <Link to="/sales" className="block text-xs font-medium text-primary hover:underline">
+          View all orders →
+        </Link>
+      )}
     </div>
   );
 }

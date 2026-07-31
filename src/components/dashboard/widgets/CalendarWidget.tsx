@@ -9,16 +9,24 @@ function ymd(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export function CalendarWidget() {
+export function CalendarWidget({
+  daysAhead = 14,
+  limit = 6,
+  showStats = true,
+}: {
+  daysAhead?: number;
+  limit?: number;
+  showStats?: boolean;
+}) {
   const { events, loading } = useCalendarEvents();
   const { jobs } = useJobs();
 
   const today = ymd(new Date());
   const horizon = useMemo(() => {
     const d = new Date();
-    d.setDate(d.getDate() + 14);
+    d.setDate(d.getDate() + daysAhead);
     return ymd(d);
-  }, []);
+  }, [daysAhead]);
 
   const todays = events.filter((e) => e.eventDate === today);
   const upcomingEvents = events
@@ -35,10 +43,11 @@ export function CalendarWidget() {
 
   const upcoming = [...upcomingEvents, ...upcomingJobs]
     .sort((a, b) => (a.secondary || '').localeCompare(b.secondary || ''))
-    .slice(0, 6);
+    .slice(0, limit);
 
   return (
     <div className="space-y-4">
+      {showStats && (
       <div className="grid grid-cols-2 gap-2">
         <StatPill label="Today's schedule" value={todays.length} tone="info" icon={CalendarDays} />
         <StatPill
@@ -48,6 +57,7 @@ export function CalendarWidget() {
           icon={CalendarClock}
         />
       </div>
+      )}
 
       <div className="space-y-1">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -71,7 +81,7 @@ export function CalendarWidget() {
 
       <div className="space-y-1">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Next 14 days
+          Upcoming
         </p>
         {upcoming.length === 0 ? (
           <WidgetEmpty>Nothing upcoming.</WidgetEmpty>
