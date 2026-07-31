@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
+import { Dashboard } from "./pages/Dashboard";
+
 import { Welcome } from "./pages/Welcome";
 import { Items } from "./pages/Items";
 import { InventorySettings } from "./pages/InventorySettings";
