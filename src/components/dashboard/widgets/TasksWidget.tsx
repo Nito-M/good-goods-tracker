@@ -29,10 +29,8 @@ export function TasksWidget({
   const dueToday = open.filter((t) => t.dueDate === today);
   const completed = scoped.filter((t) => t.isDone);
 
-  const visible =
-    group === 'all'
-      ? [...overdue, ...dueToday]
-      : [...overdue, ...dueToday, ...open.filter((t) => !t.dueDate || t.dueDate > today)];
+  const rest = open.filter((t) => !t.dueDate || t.dueDate > today);
+  const visible = [...overdue, ...dueToday, ...rest];
 
   return (
     <div className="space-y-4">
@@ -47,9 +45,7 @@ export function TasksWidget({
         <WidgetEmpty>Loading tasks…</WidgetEmpty>
       ) : visible.length === 0 ? (
         <WidgetEmpty>
-          {group === 'all'
-            ? "Nothing due — you're all caught up."
-            : `No open ${group} tasks.`}
+          {group === 'all' ? 'No open tasks.' : `No open ${group} tasks.`}
         </WidgetEmpty>
       ) : (
         <WidgetList
@@ -64,8 +60,13 @@ export function TasksWidget({
                   : `Due ${t.dueDate}`
               : t.priorityGroup
                 ? `Priority: ${t.priorityGroup}`
-                : undefined,
-            tone: t.dueDate && t.dueDate < today ? 'danger' : 'warning',
+                : 'No due date',
+            tone:
+              t.dueDate && t.dueDate < today
+                ? 'danger'
+                : t.dueDate === today
+                  ? 'warning'
+                  : 'info',
           }))}
         />
       )}
