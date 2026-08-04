@@ -64,7 +64,7 @@ export interface WidgetSettingField {
   step?: number;
   options?: WidgetSettingOption[];
   /** Dynamic option source resolved by the settings dialog. */
-  optionsSource?: 'companies' | 'categories';
+  optionsSource?: 'companies' | 'categories' | 'warehouses';
   default: SettingValue;
 }
 
