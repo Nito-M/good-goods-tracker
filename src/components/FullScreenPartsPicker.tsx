@@ -261,13 +261,13 @@ export function FullScreenPartsPicker({
             </div>
           </div>
 
-          <ScrollArea className="flex-1">
-            <Table>
+          <ScrollArea className="flex-1 w-full [&>div>div]:!block">
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">{source === 'parts' ? 'Price' : 'Cost'}</TableHead>
+                  <TableHead className="w-32">SKU</TableHead>
+                  <TableHead className="w-28 text-right">{source === 'parts' ? 'Price' : 'Cost'}</TableHead>
                   <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -288,11 +288,11 @@ export function FullScreenPartsPicker({
                         className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''} ${added ? 'opacity-50' : ''}`}
                         onClick={() => !added && handleAddFromList(index)}
                       >
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium break-words">
                           {item.name}
                           {added && <Badge variant="outline" className="ml-2 text-xs">Added</Badge>}
                         </TableCell>
-                        <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
+                        <TableCell className="break-all"><Badge variant="secondary" className="whitespace-normal break-all">{item.sku}</Badge></TableCell>
                         <TableCell className="text-right font-medium">{formatCurrency(cost)}</TableCell>
                         <TableCell>
                           {!added && (
