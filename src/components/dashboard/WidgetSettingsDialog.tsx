@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useWarehouses } from '@/hooks/useWarehouses';
 import { useCategories } from '@/hooks/useCategories';
 import {
   SettingValue,
@@ -51,6 +52,7 @@ export function WidgetSettingsDialog({
 }: Props) {
   const { companies } = useCompanies();
   const { categories } = useCategories();
+  const { warehouses } = useWarehouses();
   const [titleDraft, setTitleDraft] = useState(title);
   const [sizeDraft, setSizeDraft] = useState<WidgetSize>(size);
   const [values, setValues] = useState<WidgetSettings>(() => resolveSettings(definition, settings));
@@ -76,8 +78,12 @@ export function WidgetSettingsDialog({
           label: typeof c === 'string' ? c : c.name,
         })),
       ],
+      warehouses: [
+        { value: 'all', label: 'All locations' },
+        ...(warehouses || []).map((w) => ({ value: w.id, label: w.name })),
+      ],
     }),
-    [companies, categories]
+    [companies, categories, warehouses]
   );
 
   const set = (key: string, value: SettingValue) =>

@@ -17,7 +17,10 @@ import {
   showLinkField,
   showStatsField,
   thresholdField,
+  warehouseField,
+  onlyFlaggedField,
   boolSetting,
+  strSetting,
   numSetting,
 } from '../types';
 import { InventoryAlertsWidget } from '@/components/dashboard/widgets/InventoryAlertsWidget';
@@ -45,6 +48,8 @@ function LowStockW({ settings }: WidgetProps) {
       limit={limitOf(settings, 8)}
       showStats={boolSetting(settings, 'showStats')}
       showLink={boolSetting(settings, 'showLink')}
+      warehouseId={strSetting(settings, 'warehouseId', 'all')}
+      onlyWithMin={boolSetting(settings, 'onlyWithMin', false)}
     />
   );
 }
@@ -306,7 +311,15 @@ registerWidgets([
     category: 'inventory',
     defaultSize: 'md',
     component: LowStockW,
-    settings: [refreshField(), thresholdField(), limitField(8), showStatsField(), showLinkField()],
+    settings: [
+      refreshField(),
+      warehouseField(),
+      thresholdField(),
+      onlyFlaggedField(),
+      limitField(8),
+      showStatsField(),
+      showLinkField(),
+    ],
   },
   {
     type: 'recentlyAddedItems',
