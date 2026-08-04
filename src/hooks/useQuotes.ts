@@ -579,7 +579,13 @@ export function useQuotes() {
 
       // Update invoiced_percentage on quote
       const newInvoicedPercentage = quote.invoicedPercentage + percentage;
-      const newStatus = newInvoicedPercentage >= 100 ? 'converted' : quote.status;
+      // Sales orders must remain sales orders permanently, even when fully invoiced
+      const newStatus =
+        quote.status === 'sales_order'
+          ? 'sales_order'
+          : newInvoicedPercentage >= 100
+            ? 'converted'
+            : quote.status;
 
       await supabase
         .from('quotes')
