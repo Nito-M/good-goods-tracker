@@ -29,10 +29,8 @@ export function TasksWidget({
   const dueToday = open.filter((t) => t.dueDate === today);
   const completed = scoped.filter((t) => t.isDone);
 
-  const visible =
-    group === 'all'
-      ? [...overdue, ...dueToday]
-      : [...overdue, ...dueToday, ...open.filter((t) => !t.dueDate || t.dueDate > today)];
+  const rest = open.filter((t) => !t.dueDate || t.dueDate > today);
+  const visible = [...overdue, ...dueToday, ...rest];
 
   return (
     <div className="space-y-4">
