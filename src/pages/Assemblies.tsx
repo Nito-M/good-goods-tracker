@@ -1364,7 +1364,8 @@ export function Assemblies() {
                     {!collapsed && list.map((a) => {
                       const s = summaries.get(a.id);
                       return (
-                        <button key={a.id} onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-muted/50 text-foreground')}>
+                        <div key={a.id} className={cn('group/row relative rounded-md transition-colors', selectedId === a.id ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-muted/50')}>
+                        <button onClick={() => setSelectedId(a.id)} className={cn('w-full text-left px-3 py-2.5 pr-9 text-sm', selectedId === a.id && 'font-medium')}>
                           <div className="flex items-center gap-1.5">
                             <p className="font-medium truncate flex-1" title={a.name}>{a.name}</p>
                             {a.status === 'finished' ? <CheckCircle2 className="h-3 w-3 text-primary shrink-0" /> : <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
@@ -1384,8 +1385,44 @@ export function Assemblies() {
                             ) : null
                           )}
                         </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="absolute right-1 top-1.5 h-6 w-6 opacity-0 group-hover/row:opacity-100 focus:opacity-100 data-[state=open]:opacity-100"
+                              title="Change sub-type"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <div className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Move to sub-type</div>
+                            <DropdownMenuItem
+                              disabled={!a.model}
+                              onClick={async () => { await updateAssembly(a.id, { model: null }); }}
+                            >
+                              <span className="italic text-muted-foreground">No sub-type</span>
+                              {!a.model && <Check className="ml-auto h-3 w-3" />}
+                            </DropdownMenuItem>
+                            {assemblyModels.length > 0 && <DropdownMenuSeparator />}
+                            {assemblyModels.map((m) => (
+                              <DropdownMenuItem
+                                key={m.id}
+                                disabled={a.model === m.name}
+                                onClick={async () => { await updateAssembly(a.id, { model: m.name }); }}
+                              >
+                                <span className="truncate">{m.name}</span>
+                                {a.model === m.name && <Check className="ml-auto h-3 w-3" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        </div>
                       );
                     })}
+
                   </div>
                 );
               })
