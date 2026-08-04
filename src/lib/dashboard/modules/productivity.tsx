@@ -22,6 +22,9 @@ function TasksW({ settings }: WidgetProps) {
       limit={limitOf(settings, 6)}
       showStats={boolSetting(settings, 'showStats')}
       showLink={boolSetting(settings, 'showLink')}
+      group={
+        strSetting(settings, 'group', 'all') as 'all' | 'urgent' | 'soon' | 'eventually'
+      }
     />
   );
 }
