@@ -22,6 +22,9 @@ function TasksW({ settings }: WidgetProps) {
       limit={limitOf(settings, 6)}
       showStats={boolSetting(settings, 'showStats')}
       showLink={boolSetting(settings, 'showLink')}
+      group={
+        strSetting(settings, 'group', 'all') as 'all' | 'urgent' | 'soon' | 'eventually'
+      }
     />
   );
 }
@@ -90,7 +93,25 @@ registerWidgets([
     category: 'productivity',
     defaultSize: 'md',
     component: TasksW,
-    settings: [refreshField(), limitField(6), showStatsField(), showLinkField()],
+    settings: [
+      refreshField(),
+      {
+        key: 'group',
+        label: 'Priority filter',
+        type: 'select',
+        default: 'all',
+        options: [
+          { value: 'all', label: 'All tasks' },
+          { value: 'urgent', label: 'Urgent' },
+          { value: 'soon', label: 'Soon' },
+          { value: 'eventually', label: 'Eventually' },
+        ],
+        help: 'Show only tasks in a priority group.',
+      },
+      limitField(6),
+      showStatsField(),
+      showLinkField(),
+    ],
   },
   {
     type: 'calendar',
