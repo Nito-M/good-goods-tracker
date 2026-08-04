@@ -261,13 +261,13 @@ export function FullScreenPartsPicker({
             </div>
           </div>
 
-          <ScrollArea className="flex-1">
-            <Table>
+          <ScrollArea className="flex-1 w-full [&>div>div]:!block">
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead className="text-right">{source === 'parts' ? 'Price' : 'Cost'}</TableHead>
+                  <TableHead className="w-32">SKU</TableHead>
+                  <TableHead className="w-28 text-right">{source === 'parts' ? 'Price' : 'Cost'}</TableHead>
                   <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -288,11 +288,11 @@ export function FullScreenPartsPicker({
                         className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''} ${added ? 'opacity-50' : ''}`}
                         onClick={() => !added && handleAddFromList(index)}
                       >
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium break-words">
                           {item.name}
                           {added && <Badge variant="outline" className="ml-2 text-xs">Added</Badge>}
                         </TableCell>
-                        <TableCell><Badge variant="secondary">{item.sku}</Badge></TableCell>
+                        <TableCell className="break-all"><Badge variant="secondary" className="whitespace-normal break-all">{item.sku}</Badge></TableCell>
                         <TableCell className="text-right font-medium">{formatCurrency(cost)}</TableCell>
                         <TableCell>
                           {!added && (
@@ -317,7 +317,7 @@ export function FullScreenPartsPicker({
         </div>
 
         {/* Right: Cart */}
-        <div className="w-96 flex flex-col bg-card shrink-0">
+        <div className="w-72 lg:w-96 max-w-[45vw] flex flex-col bg-card shrink-0 overflow-hidden">
           <div className="p-4 border-b border-border shrink-0">
             <h3 className="font-semibold text-card-foreground">Assembly Parts</h3>
             <p className="text-sm text-muted-foreground">
@@ -337,11 +337,12 @@ export function FullScreenPartsPicker({
                   <div key={c.id} className="border border-border rounded-lg p-3 space-y-2 bg-background">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1">
-                          {c.inventory_item_id && <Package className="h-3 w-3 text-muted-foreground shrink-0" />}
-                          <p className="font-medium text-sm truncate">{c.part_name}</p>
+                        <div className="flex items-start gap-1">
+                          {c.inventory_item_id && <Package className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />}
+                          <p className="font-medium text-sm break-words">{c.part_name}</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">{c.part_sku || 'No SKU'}</p>
+                        <p className="text-xs text-muted-foreground break-all">{c.part_sku || 'No SKU'}</p>
+
                       </div>
                       <Button
                         size="icon"
