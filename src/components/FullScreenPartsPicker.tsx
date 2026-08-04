@@ -317,7 +317,7 @@ export function FullScreenPartsPicker({
         </div>
 
         {/* Right: Cart */}
-        <div className="w-96 flex flex-col bg-card shrink-0">
+        <div className="w-72 lg:w-96 max-w-[45vw] flex flex-col bg-card shrink-0 overflow-hidden">
           <div className="p-4 border-b border-border shrink-0">
             <h3 className="font-semibold text-card-foreground">Assembly Parts</h3>
             <p className="text-sm text-muted-foreground">
