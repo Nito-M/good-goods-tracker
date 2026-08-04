@@ -93,7 +93,25 @@ registerWidgets([
     category: 'productivity',
     defaultSize: 'md',
     component: TasksW,
-    settings: [refreshField(), limitField(6), showStatsField(), showLinkField()],
+    settings: [
+      refreshField(),
+      {
+        key: 'group',
+        label: 'Priority filter',
+        type: 'select',
+        default: 'all',
+        options: [
+          { value: 'all', label: 'All tasks' },
+          { value: 'urgent', label: 'Urgent' },
+          { value: 'soon', label: 'Soon' },
+          { value: 'eventually', label: 'Eventually' },
+        ],
+        help: 'Show only tasks in a priority group.',
+      },
+      limitField(6),
+      showStatsField(),
+      showLinkField(),
+    ],
   },
   {
     type: 'calendar',
