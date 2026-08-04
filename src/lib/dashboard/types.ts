@@ -168,6 +168,24 @@ export const companyField = (): WidgetSettingField => ({
   optionsSource: 'companies',
 });
 
+export const warehouseField = (): WidgetSettingField => ({
+  key: 'warehouseId',
+  label: 'Stock location',
+  type: 'select',
+  default: 'all',
+  optionsSource: 'warehouses',
+  help: 'Use quantities from a single location instead of total stock.',
+});
+
+export const onlyFlaggedField = (): WidgetSettingField => ({
+  key: 'onlyWithMin',
+  label: 'Only items with a minimum set',
+  type: 'switch',
+  default: false,
+  help: 'Show low stock only for items that have their own minimum quantity set.',
+});
+
+
 export const showStatsField = (def = true): WidgetSettingField => ({
   key: 'showStats',
   label: 'Show summary tiles',
