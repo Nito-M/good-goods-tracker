@@ -230,10 +230,20 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     flowY = y;
   }
 
+  // Helper: make sure `y` fits on the page, otherwise start a new page
+  const ensureSpace = (y: number, needed: number) => {
+    if (y + needed > pageHeight - 25) {
+      doc.addPage();
+      return 20;
+    }
+    return y;
+  };
+
   // Totals
   if (layout.totals.visible) {
-    const totalsY = layout.totals.y > 0 ? layout.totals.y : flowY;
-    let y = totalsY;
+    // Never place totals above the flowing content (long item lists push it down)
+    const totalsY = Math.max(layout.totals.y > 0 ? layout.totals.y : 0, flowY);
+    let y = ensureSpace(totalsY, 60);
     const totalsX = pageWidth - 70;
     
     doc.setFontSize(10);
@@ -289,15 +299,21 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
   }
 
   // Notes
-  if (layout.notes.visible && sale.notes) {
-    const notesY = layout.notes.y > 0 ? layout.notes.y : flowY + 10;
+  if (layout.notes.visible && sale.notes && sale.notes.trim()) {
     doc.setFontSize(10);
+    const splitNotes = doc.splitTextToSize(
+      sale.notes,
+      pageWidth - layout.notes.x - 20,
+    );
+    // Keep notes below the flowing content and move to a new page if they don't fit
+    const desiredY = Math.max(layout.notes.y > 0 ? layout.notes.y : 0, flowY + 10);
+    const notesY = ensureSpace(desiredY, splitNotes.length * 5 + 12);
+
     doc.setFont('helvetica', 'bold');
     doc.text('Notes:', layout.notes.x, notesY);
     doc.setFont('helvetica', 'normal');
-    
-    const splitNotes = doc.splitTextToSize(sale.notes, pageWidth - layout.notes.x - 20);
     doc.text(splitNotes, layout.notes.x, notesY + 6);
+    flowY = notesY + 6 + splitNotes.length * 5;
   }
 
   // Footer
