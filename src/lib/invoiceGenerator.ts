@@ -230,10 +230,20 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     flowY = y;
   }
 
+  // Helper: make sure `y` fits on the page, otherwise start a new page
+  const ensureSpace = (y: number, needed: number) => {
+    if (y + needed > pageHeight - 25) {
+      doc.addPage();
+      return 20;
+    }
+    return y;
+  };
+
   // Totals
   if (layout.totals.visible) {
-    const totalsY = layout.totals.y > 0 ? layout.totals.y : flowY;
-    let y = totalsY;
+    // Never place totals above the flowing content (long item lists push it down)
+    const totalsY = Math.max(layout.totals.y > 0 ? layout.totals.y : 0, flowY);
+    let y = ensureSpace(totalsY, 60);
     const totalsX = pageWidth - 70;
     
     doc.setFontSize(10);
