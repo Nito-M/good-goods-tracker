@@ -337,11 +337,12 @@ export function FullScreenPartsPicker({
                   <div key={c.id} className="border border-border rounded-lg p-3 space-y-2 bg-background">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1">
-                          {c.inventory_item_id && <Package className="h-3 w-3 text-muted-foreground shrink-0" />}
-                          <p className="font-medium text-sm truncate">{c.part_name}</p>
+                        <div className="flex items-start gap-1">
+                          {c.inventory_item_id && <Package className="h-3 w-3 mt-0.5 text-muted-foreground shrink-0" />}
+                          <p className="font-medium text-sm break-words">{c.part_name}</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">{c.part_sku || 'No SKU'}</p>
+                        <p className="text-xs text-muted-foreground break-all">{c.part_sku || 'No SKU'}</p>
+
                       </div>
                       <Button
                         size="icon"
