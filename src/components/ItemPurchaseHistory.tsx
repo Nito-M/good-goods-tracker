@@ -126,6 +126,7 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                 poNumber: po.po_number,
                 vendorName: (po as any).vendor_id ? vendorNameById.get((po as any).vendor_id) || null : null,
 
+                unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
                 soldQuantity: isReceived(po.status) ? soldQty : 0,
                 consumedQuantity: 0, // will be computed below via FIFO
