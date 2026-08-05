@@ -33,6 +33,11 @@ interface SubcategoryOption {
   name: string;
 }
 
+interface VendorOption {
+  id: string;
+  name: string;
+}
+
 interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -48,6 +53,9 @@ interface SearchFilterProps {
   subcategoryFilter?: string;
   onSubcategoryChange?: (value: string) => void;
   subcategoryOptions?: SubcategoryOption[];
+  vendorFilter?: string;
+  onVendorChange?: (value: string) => void;
+  vendorOptions?: VendorOption[];
 }
 
 export function SearchFilter({
