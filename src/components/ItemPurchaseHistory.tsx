@@ -194,22 +194,27 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
           sale_item_id,
           quantity_allocated,
           unit_cost,
-          purchase_orders (po_number)
+          purchase_order_id,
+          purchase_orders (po_number, vendor_id)
         `)
         .eq('sku', sku);
 
-      const allocationsBySaleItem = new Map<string, Array<{ poNumber: string | null; quantity: number; unitCost: number }>>();
+      const allocationsBySaleItem = new Map<string, Array<{ poNumber: string | null; poId: string | null; vendorName: string | null; quantity: number; unitCost: number }>>();
       if (saleAllocations) {
         for (const alloc of saleAllocations as any[]) {
           const current = allocationsBySaleItem.get(alloc.sale_item_id) || [];
+          const vId = alloc.purchase_orders?.vendor_id;
           current.push({
             poNumber: alloc.purchase_orders?.po_number || null,
+            poId: alloc.purchase_order_id || null,
+            vendorName: vId ? vendorNameById.get(vId) || null : null,
             quantity: alloc.quantity_allocated,
             unitCost: alloc.unit_cost,
           });
           allocationsBySaleItem.set(alloc.sale_item_id, current);
         }
       }
+
 
       if (saleItemsData) {
         const sold: SoldItem[] = [];
