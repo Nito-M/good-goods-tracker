@@ -5,7 +5,7 @@ import { formatCurrencyPdf as formatCurrency } from '@/lib/utils';
 import { savePdfBlob } from '@/lib/pdfSave';
 
 const PAGE_MARGIN_BOTTOM = 30;
-const LINE_HEIGHT = 6;
+const LINE_HEIGHT = 4.5;
 
 export interface PackingSlipRow {
   itemName: string;
