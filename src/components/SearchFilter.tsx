@@ -73,11 +73,15 @@ export function SearchFilter({
   subcategoryFilter,
   onSubcategoryChange,
   subcategoryOptions,
+  vendorFilter,
+  onVendorChange,
+  vendorOptions,
 }: SearchFilterProps) {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
   const [warehouseOpen, setWarehouseOpen] = useState(false);
   const [subcategoryOpen, setSubcategoryOpen] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState(false);
 
   const selectedCategoryLabel =
     categoryFilter === 'all' || !categoryFilter ? 'All Categories' : categoryFilter;
@@ -86,6 +90,11 @@ export function SearchFilter({
   const selectedTagLabel = selectedTag
     ? `${selectedTag.categoryName}: ${selectedTag.name}`
     : 'All Tags';
+
+  const selectedVendor = vendorOptions?.find((v) => v.id === vendorFilter);
+  const selectedVendorLabel = selectedVendor
+    ? selectedVendor.name
+    : 'All Vendors';
 
   return (
     <div className="flex flex-col sm:flex-row gap-3">
