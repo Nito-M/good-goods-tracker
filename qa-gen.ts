@@ -9,7 +9,7 @@ let out: Buffer|null=null;
 const origOutput = (jsPDF as any).prototype.output;
 (jsPDF as any).prototype.output = function(t:string){ if(t==='blob'){ out = Buffer.from(origOutput.call(this,'arraybuffer')); return new Blob([]);} return origOutput.call(this,t); };
 try{await generatePackingSlipPDF(quote, settings, { includePrices: true, rows });}catch(e){}
-require('fs').writeFileSync('/tmp/qa/prices.pdf', out!);
+(await import('fs')).writeFileSync('/tmp/qa/prices.pdf', out!);
 try{await generatePackingSlipPDF(quote, settings, { includePrices: false, rows });}catch(e){}
-require('fs').writeFileSync('/tmp/qa/noprices.pdf', out!);
+(await import('fs')).writeFileSync('/tmp/qa/noprices.pdf', out!);
 console.log('ok');
