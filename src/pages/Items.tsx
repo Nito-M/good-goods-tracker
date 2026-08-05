@@ -172,6 +172,31 @@ export const Items = ({
     return subcategoriesByCategory.get(categoryFilter) || [];
   }, [categoryFilter, subcategoriesByCategory]);
 
+  // Map of item -> vendor names and unique vendor options for filter
+  const itemVendorMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const row of vendorPriceRows) {
+      const existing = map.get(row.itemId) || [];
+      if (!existing.includes(row.vendorName)) {
+        existing.push(row.vendorName);
+        map.set(row.itemId, existing);
+      }
+    }
+    return map;
+  }, [vendorPriceRows]);
+
+  const vendorOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const row of vendorPriceRows) {
+      if (!seen.has(row.vendorId)) {
+        seen.set(row.vendorId, row.vendorName);
+      }
+    }
+    return Array.from(seen.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [vendorPriceRows]);
+
   const handleCategoryChange = (cat: string) => {
     setCategoryFilter(cat);
     setSubcategoryFilter('all');
