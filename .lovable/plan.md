@@ -1,34 +1,27 @@
-Give customers the same rich detail view that vendors have: a dedicated Customer Detail page with Contacts, Links, Files & PDFs, multi-Notes, and a grouped history of sales/quotes — matching the vendor screenshot.
+# Packing / Delivery Slip for Sales Orders
 
-## What to build
+Add a way to print a packing/delivery slip from a sales order that lists each unit being delivered with its trailer/item name, VIN, quantity, and (optionally) price.
 
-1. **New `CustomerDetail` page** at `/customers/:id`
-   - Header with color swatch, name, Edit / Delete buttons (Edit opens existing customer dialog logic, or a new `/customers/:id/edit` page)
-   - Contact Information card (email, phone, address, link)
-   - Summary card (Sales count, Total Invoiced, Quotes count, Total Quoted, color)
-   - Contacts, Links, Files & PDFs, Notes sections
-   - Sales history grouped by Year → Month (collapsible), like vendor POs
-   - Recent Quotes list
+## What you get
 
-2. **New DB tables** (mirroring vendor equivalents), each with GRANTs + RLS scoped via `users_share_org`:
-   - `customer_contacts` (name, role, email, phone, notes)
-   - `customer_links` (label, url)
-   - `customer_notes` (content, timestamps)
-   - `customer_files` already exists — reuse
+On the sales order detail page, a new **Packing Slip** button in the header opens a small dialog:
 
-3. **New hooks**: `useCustomerContacts`, `useCustomerLinks`, `useCustomerNotes`
+- Checkbox: **Include prices** (on by default; unchecked = quantities and VINs only)
+- Preview of the rows that will print, so you can see which units still have no VIN
+- **Download PDF** button
 
-4. **New components** (parallel to vendor versions):
-   - `CustomerContactsManager`
-   - `CustomerLinksSection`
-   - `CustomerNotesList`
+The slip prints one row per unit (a qty-3 line item becomes 3 rows, matching how sales order units already work), showing:
 
-5. **Wire-up**
-   - Add route in `src/App.tsx`
-   - In `Settings.tsx` customers list, make each customer row clickable → navigate to `/customers/:id` (keep existing edit dialog available from the detail page action)
+| Item / Trailer | VIN | Stock # | Job # | Qty | Unit Price | Total |
+
+- VIN, Stock #, and Job # come automatically from the job linked to each unit. If a unit has no linked job or the job has no VIN yet, the VIN cell prints blank so it can be filled in by hand.
+- Header carries the company info/logo, SO number, quote number, date, and the ship-to customer name and address (same data the sales order PDF uses).
+- Footer has signature lines: Delivered By / Received By / Date.
+- With prices off, the price columns and grand total are omitted entirely.
 
 ## Technical notes
 
-- Sales/quotes history pulls from existing `useSales` / `useQuotes` filtered by `customerId`.
-- RLS pattern: `GRANT SELECT/INSERT/UPDATE/DELETE ... TO authenticated`, `GRANT ALL ... TO service_role`, policies via `users_share_org(auth.uid(), user_id)` — identical to `vendor_notes`/`vendor_links`.
-- No changes to vendor code; components are duplicated (not generified) to avoid regressions.
+- New file `src/lib/packingSlipGenerator.ts` — jsPDF generator modeled on `src/lib/quoteGenerator.ts` (same layout/logo/company-header handling, `pdfSave` for download, 2-decimal currency, dynamic row heights with text wrapping and page breaks).
+- New component `src/components/PackingSlipDialog.tsx` — the include-prices toggle plus row preview, then calls the generator.
+- `src/pages/SalesOrderDetail.tsx`: add the header button and dialog. It already loads `so_item_job_links` per `quote_item_id`/`unit_index`; extend that fetch (or join via `useJobs`) to pull `job_number`, `vin`, and `stock_number` for the linked jobs so the slip rows can be built without new tables.
+- No database changes required.
