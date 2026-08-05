@@ -19,6 +19,7 @@ export interface PackingSlipRow {
 
 export interface PackingSlipOptions {
   includePrices: boolean;
+  includeStockNumber?: boolean;
   rows: PackingSlipRow[];
 }
 
@@ -37,7 +38,7 @@ export const generatePackingSlipPDF = async (
   settings: QuoteSettings,
   options: PackingSlipOptions
 ) => {
-  const { includePrices, rows } = options;
+  const { includePrices, rows, includeStockNumber = true } = options;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -60,7 +61,7 @@ export const generatePackingSlipPDF = async (
   const colName = tableX + 2;
   const colVin = includePrices ? tableX + 46 : tableX + 66;
   const colStock = includePrices ? tableX + 82 : tableX + 118;
-  const colJob = includePrices ? tableX + 100 : tableX + 138;
+  const colJob = includeStockNumber ? (includePrices ? tableX + 100 : tableX + 138) : colStock;
   const colQty = includePrices ? tableX + 120 : tableX + 160;
   const colPrice = tableX + 145;
   const colTotal = tableRight - 2;
@@ -76,7 +77,7 @@ export const generatePackingSlipPDF = async (
     doc.setTextColor(0, 0, 0);
     doc.text('Item / Trailer', colName, y);
     doc.text('VIN', colVin, y);
-    doc.text('Stock #', colStock, y);
+    if (includeStockNumber) doc.text('Stock #', colStock, y);
     doc.text('Job #', colJob, y);
     doc.text('Qty', colQty, y, { align: 'center' });
     if (includePrices) {
@@ -210,7 +211,7 @@ export const generatePackingSlipPDF = async (
       doc.line(colVin, y + 1, colVin + vinWidth, y + 1);
     }
     doc.setTextColor(90, 90, 90);
-    doc.text(row.stockNumber || '—', colStock, y);
+    if (includeStockNumber) doc.text(row.stockNumber || '—', colStock, y);
     doc.text(row.jobNumber || '—', colJob, y);
     doc.setTextColor(0, 0, 0);
     doc.text(String(row.quantity), colQty, y, { align: 'center' });

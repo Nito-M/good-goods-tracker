@@ -487,7 +487,7 @@ export function SalesOrderDetail() {
   const allJobsCreated =
     topLevelItems.length > 0 && topLevelItems.every((it) => !!itemLinks[it.linkKey]?.jobId);
 
-  const packingSlipRows: PackingSlipRow[] = expandedItems.map((it) => {
+  const packingSlipRows: PackingSlipRow[] = topLevelItems.map((it) => {
     const link = itemLinks[it.linkKey];
     const job = link?.jobId ? jobs.find((j) => j.id === link.jobId) : null;
     return {

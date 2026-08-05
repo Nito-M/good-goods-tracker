@@ -27,6 +27,7 @@ interface PackingSlipDialogProps {
 
 export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }: PackingSlipDialogProps) {
   const [includePrices, setIncludePrices] = useState(true);
+  const [includeStockNumber, setIncludeStockNumber] = useState(true);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -35,7 +36,7 @@ export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }:
   const handleDownload = async () => {
     setGenerating(true);
     try {
-      await generatePackingSlipPDF(quote, settings, { includePrices, rows });
+      await generatePackingSlipPDF(quote, settings, { includePrices, includeStockNumber, rows });
       onOpenChange(false);
     } catch (err) {
       console.error('Failed to generate packing slip:', err);
@@ -55,13 +56,23 @@ export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }:
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="includePrices"
-            checked={includePrices}
-            onCheckedChange={(v) => setIncludePrices(v === true)}
-          />
-          <Label htmlFor="includePrices" className="cursor-pointer">Include prices</Label>
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="includePrices"
+              checked={includePrices}
+              onCheckedChange={(v) => setIncludePrices(v === true)}
+            />
+            <Label htmlFor="includePrices" className="cursor-pointer">Include prices</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="includeStockNumber"
+              checked={includeStockNumber}
+              onCheckedChange={(v) => setIncludeStockNumber(v === true)}
+            />
+            <Label htmlFor="includeStockNumber" className="cursor-pointer">Include stock #</Label>
+          </div>
         </div>
 
         {missingVins > 0 && (
@@ -76,7 +87,7 @@ export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }:
               <TableRow>
                 <TableHead>Item / Trailer</TableHead>
                 <TableHead>VIN</TableHead>
-                <TableHead>Stock #</TableHead>
+                {includeStockNumber && <TableHead>Stock #</TableHead>}
                 <TableHead>Job #</TableHead>
                 <TableHead className="text-right">Qty</TableHead>
                 {includePrices && <TableHead className="text-right">Unit Price</TableHead>}
@@ -86,7 +97,7 @@ export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }:
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={includePrices ? 7 : 5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={(includePrices ? 7 : 5) - (includeStockNumber ? 0 : 1)} className="text-center text-muted-foreground">
                     No units on this sales order.
                   </TableCell>
                 </TableRow>
@@ -97,7 +108,7 @@ export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }:
                     <TableCell className={row.vin ? '' : 'text-muted-foreground italic'}>
                       {row.vin || 'blank'}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{row.stockNumber || '—'}</TableCell>
+                    {includeStockNumber && <TableCell className="text-muted-foreground">{row.stockNumber || '—'}</TableCell>}
                     <TableCell className="text-muted-foreground">{row.jobNumber || '—'}</TableCell>
                     <TableCell className="text-right">{row.quantity}</TableCell>
                     {includePrices && <TableCell className="text-right">{formatCurrency(row.unitPrice)}</TableCell>}
