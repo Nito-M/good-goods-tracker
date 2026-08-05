@@ -211,7 +211,7 @@ export const generatePackingSlipPDF = async (
       doc.line(colVin, y + 1, colVin + vinWidth, y + 1);
     }
     doc.setTextColor(90, 90, 90);
-    doc.text(row.stockNumber || '—', colStock, y);
+    if (includeStockNumber) doc.text(row.stockNumber || '—', colStock, y);
     doc.text(row.jobNumber || '—', colJob, y);
     doc.setTextColor(0, 0, 0);
     doc.text(String(row.quantity), colQty, y, { align: 'center' });
