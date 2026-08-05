@@ -13,6 +13,7 @@ import { useTags } from '@/hooks/useTags';
 import { useBulkItemTags } from '@/hooks/useItemTags';
 import { useBulkItemLocationQuantities } from '@/hooks/useBulkItemLocationQuantities';
 import { useWarehouses, Warehouse } from '@/hooks/useWarehouses';
+import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
 import { UserOrganization } from '@/hooks/useUserOrganizations';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
