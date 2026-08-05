@@ -369,6 +369,7 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                   <TableHeader>
                     <TableRow>
                       <TableHead>PO Number</TableHead>
+                      <TableHead>Vendor</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Qty Ordered</TableHead>
                       <TableHead className="text-right">Qty Sold</TableHead>
@@ -382,8 +383,19 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                   <TableBody>
                     {purchases.map((purchase) => (
                       <TableRow key={purchase.id}>
-                        <TableCell className="font-medium">{purchase.poNumber || 'N/A'}</TableCell>
+                        <TableCell className="font-medium">
+                          <Link
+                            to={`/purchase-orders/${purchase.id}`}
+                            className="text-primary hover:underline"
+                          >
+                            {purchase.poNumber || 'N/A'}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {purchase.vendorName || <span className="text-muted-foreground">—</span>}
+                        </TableCell>
                         <TableCell>{formatDate(purchase.orderedAt)}</TableCell>
+
                         <TableCell className="text-right">{Math.round(purchase.quantity * 100000) / 100000}</TableCell>
                         <TableCell className="text-right">{Math.round(purchase.soldQuantity * 100000) / 100000}</TableCell>
                         <TableCell className="text-right">
