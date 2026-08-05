@@ -8,6 +8,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useSales } from '@/hooks/useSales';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
+import { PackingSlipRow } from '@/lib/packingSlipGenerator';
+import { PackingSlipDialog } from '@/components/PackingSlipDialog';
 import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -143,6 +145,7 @@ export function SalesOrderDetail() {
   // Per-item link state
   const [itemJobNumbers, setItemJobNumbers] = useState<Record<string, string>>({});
   const [itemLinks, setItemLinks] = useState<Record<string, ItemLink>>({});
+  const [showPackingSlipDialog, setShowPackingSlipDialog] = useState(false);
   // childLinkKey -> parentLinkKey
   const [attachments, setAttachments] = useState<Record<string, string>>({});
   const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
@@ -484,6 +487,20 @@ export function SalesOrderDetail() {
   const allJobsCreated =
     topLevelItems.length > 0 && topLevelItems.every((it) => !!itemLinks[it.linkKey]?.jobId);
 
+  const packingSlipRows: PackingSlipRow[] = expandedItems.map((it) => {
+    const link = itemLinks[it.linkKey];
+    const job = link?.jobId ? jobs.find((j) => j.id === link.jobId) : null;
+    return {
+      itemName: it.itemName,
+      vin: job?.vin || '',
+      stockNumber: job?.stockNumber || '',
+      jobNumber: job?.jobNumber || link?.externalJobNumber || '',
+      quantity: it.quantity,
+      unitPrice: it.unitPrice,
+      totalPrice: it.totalPrice,
+    };
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -554,6 +571,10 @@ export function SalesOrderDetail() {
             <Button variant="outline" size="sm" onClick={handleDownloadSalesOrder} className="h-9">
               <Download className="h-4 w-4 mr-2" />
               Download PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowPackingSlipDialog(true)} className="h-9">
+              <FileText className="h-4 w-4 mr-2" />
+              Packing Slip
             </Button>
             <div className="flex items-center gap-1.5">
               <Label htmlFor="jobNumber" className="text-sm whitespace-nowrap flex items-center gap-1">
@@ -1381,6 +1402,13 @@ export function SalesOrderDetail() {
         </TabsContent>
       </Tabs>
 
+      <PackingSlipDialog
+        open={showPackingSlipDialog}
+        onOpenChange={setShowPackingSlipDialog}
+        quote={quote}
+        settings={getQuoteSettingsForQuote(quote)}
+        rows={packingSlipRows}
+      />
     </div>
   );
 }
