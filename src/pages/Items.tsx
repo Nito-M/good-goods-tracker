@@ -81,11 +81,13 @@ export const Items = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const [tagFilter, setTagFilter] = useState('all');
   const [subcategoryFilter, setSubcategoryFilter] = useState('all');
+  const [vendorFilter, setVendorFilter] = useState('all');
   const warehouseFilter = searchParams.get('warehouse') || 'all';
 
   const { tagCategories } = useTagCategories();
   const { tags } = useTags();
   const { warehouses, restrictedByPermission, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
+  const { rows: vendorPriceRows } = useAllItemVendorPrices();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const { itemTagsMap } = useBulkItemTags(itemIds);
   const { warehouseItemMap, warehouseItemQtyMap } = useBulkItemLocationQuantities(itemIds);
