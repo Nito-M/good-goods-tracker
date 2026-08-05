@@ -33,6 +33,11 @@ interface SubcategoryOption {
   name: string;
 }
 
+interface VendorOption {
+  id: string;
+  name: string;
+}
+
 interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -48,6 +53,9 @@ interface SearchFilterProps {
   subcategoryFilter?: string;
   onSubcategoryChange?: (value: string) => void;
   subcategoryOptions?: SubcategoryOption[];
+  vendorFilter?: string;
+  onVendorChange?: (value: string) => void;
+  vendorOptions?: VendorOption[];
 }
 
 export function SearchFilter({
@@ -65,11 +73,15 @@ export function SearchFilter({
   subcategoryFilter,
   onSubcategoryChange,
   subcategoryOptions,
+  vendorFilter,
+  onVendorChange,
+  vendorOptions,
 }: SearchFilterProps) {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
   const [warehouseOpen, setWarehouseOpen] = useState(false);
   const [subcategoryOpen, setSubcategoryOpen] = useState(false);
+  const [vendorOpen, setVendorOpen] = useState(false);
 
   const selectedCategoryLabel =
     categoryFilter === 'all' || !categoryFilter ? 'All Categories' : categoryFilter;
@@ -79,13 +91,18 @@ export function SearchFilter({
     ? `${selectedTag.categoryName}: ${selectedTag.name}`
     : 'All Tags';
 
+  const selectedVendor = vendorOptions?.find((v) => v.id === vendorFilter);
+  const selectedVendorLabel = selectedVendor
+    ? selectedVendor.name
+    : 'All Vendors';
+
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       {/* Search input */}
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search products..."
+          placeholder="Search products, part #, or vendor..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10"
@@ -329,6 +346,65 @@ export function SearchFilter({
                         )}
                       />
                       {w.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
+      {/* Vendor combobox */}
+      {vendorOptions && vendorOptions.length > 0 && onVendorChange && (
+        <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={vendorOpen}
+              className="w-full sm:w-48 justify-between font-normal"
+            >
+              <span className="truncate">{selectedVendorLabel}</span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search vendors..." />
+              <CommandList>
+                <CommandEmpty>No vendor found.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="all"
+                    onSelect={() => {
+                      onVendorChange('all');
+                      setVendorOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        !vendorFilter || vendorFilter === 'all' ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    All Vendors
+                  </CommandItem>
+                  {vendorOptions.map((vendor) => (
+                    <CommandItem
+                      key={vendor.id}
+                      value={vendor.name}
+                      onSelect={() => {
+                        onVendorChange(vendor.id);
+                        setVendorOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          vendorFilter === vendor.id ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      {vendor.name}
                     </CommandItem>
                   ))}
                 </CommandGroup>

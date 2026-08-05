@@ -13,6 +13,7 @@ import { useTags } from '@/hooks/useTags';
 import { useBulkItemTags } from '@/hooks/useItemTags';
 import { useBulkItemLocationQuantities } from '@/hooks/useBulkItemLocationQuantities';
 import { useWarehouses, Warehouse } from '@/hooks/useWarehouses';
+import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
 import { UserOrganization } from '@/hooks/useUserOrganizations';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -80,11 +81,13 @@ export const Items = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const [tagFilter, setTagFilter] = useState('all');
   const [subcategoryFilter, setSubcategoryFilter] = useState('all');
+  const [vendorFilter, setVendorFilter] = useState('all');
   const warehouseFilter = searchParams.get('warehouse') || 'all';
 
   const { tagCategories } = useTagCategories();
   const { tags } = useTags();
   const { warehouses, restrictedByPermission, addWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses();
+  const { rows: vendorPriceRows } = useAllItemVendorPrices();
   const itemIds = useMemo(() => items.map((item) => item.id), [items]);
   const { itemTagsMap } = useBulkItemTags(itemIds);
   const { warehouseItemMap, warehouseItemQtyMap } = useBulkItemLocationQuantities(itemIds);
@@ -169,6 +172,31 @@ export const Items = ({
     return subcategoriesByCategory.get(categoryFilter) || [];
   }, [categoryFilter, subcategoriesByCategory]);
 
+  // Map of item -> vendor names and unique vendor options for filter
+  const itemVendorMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const row of vendorPriceRows) {
+      const existing = map.get(row.itemId) || [];
+      if (!existing.includes(row.vendorName)) {
+        existing.push(row.vendorName);
+        map.set(row.itemId, existing);
+      }
+    }
+    return map;
+  }, [vendorPriceRows]);
+
+  const vendorOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const row of vendorPriceRows) {
+      if (!seen.has(row.vendorId)) {
+        seen.set(row.vendorId, row.vendorName);
+      }
+    }
+    return Array.from(seen.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [vendorPriceRows]);
+
   const handleCategoryChange = (cat: string) => {
     setCategoryFilter(cat);
     setSubcategoryFilter('all');
@@ -183,6 +211,13 @@ export const Items = ({
       result = result.filter((item) => {
         const tagIds = itemTagsMap.get(item.id) || [];
         return tagIds.includes(tagFilter);
+      });
+    }
+    if (vendorFilter !== 'all') {
+      const vendorName = vendorOptions.find((v) => v.id === vendorFilter)?.name;
+      result = result.filter((item) => {
+        const vendors = itemVendorMap.get(item.id);
+        return vendors?.some((v) => v === vendorName || v === vendorFilter) ?? false;
       });
     }
     if (warehouseFilter !== 'all') {
@@ -216,7 +251,7 @@ export const Items = ({
       }
     }
     return result;
-  }, [items, tagFilter, itemTagsMap, warehouseFilter, warehouseItemMap, warehouses, restrictedByPermission, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
+  }, [items, tagFilter, itemTagsMap, vendorFilter, vendorOptions, itemVendorMap, warehouseFilter, warehouseItemMap, warehouses, restrictedByPermission, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
 
   const orgList = organizations ?? [];
   const itemList = items ?? [];
@@ -383,6 +418,9 @@ export const Items = ({
             subcategoryFilter={subcategoryFilter}
             onSubcategoryChange={setSubcategoryFilter}
             subcategoryOptions={subcategoryOptions.map(s => ({ id: s.id, name: s.name }))}
+            vendorFilter={vendorFilter}
+            onVendorChange={setVendorFilter}
+            vendorOptions={vendorOptions}
           />
         </div>
 
