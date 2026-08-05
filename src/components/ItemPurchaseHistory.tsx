@@ -463,6 +463,7 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                     <TableRow>
                       <TableHead>Invoice #</TableHead>
                       <TableHead>From PO</TableHead>
+                      <TableHead>Vendor</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Sale Price</TableHead>
@@ -476,12 +477,24 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                         <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
                         <TableCell>
                           {sale.poNumber ? (
-                            <Badge variant="outline">{sale.poNumber}</Badge>
+                            sale.poId ? (
+                              <Link to={`/purchase-orders/${sale.poId}`}>
+                                <Badge variant="outline" className="hover:bg-muted cursor-pointer">
+                                  {sale.poNumber}
+                                </Badge>
+                              </Link>
+                            ) : (
+                              <Badge variant="outline">{sale.poNumber}</Badge>
+                            )
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </TableCell>
+                        <TableCell className="text-sm">
+                          {sale.vendorName || <span className="text-muted-foreground">—</span>}
+                        </TableCell>
                         <TableCell>{formatDate(sale.createdAt)}</TableCell>
+
                         <TableCell className="text-right">{sale.quantity}</TableCell>
                         <TableCell className="text-right">{formatCurrency(sale.unitPrice)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(sale.unitCost)}</TableCell>
