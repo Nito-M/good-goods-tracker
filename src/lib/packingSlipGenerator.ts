@@ -56,17 +56,17 @@ export const generatePackingSlipPDF = async (
   const tableX = 20;
   const tableRight = pageWidth - 20;
 
-  // Column layout (mm from tableX)
+  // Column layout (absolute mm)
   const colName = tableX + 2;
-  const colVin = tableX + 62;
-  const colStock = tableX + 108;
-  const colJob = tableX + 130;
-  const colQty = includePrices ? tableX + 148 : tableX + 155;
-  const colPrice = tableX + 168;
+  const colVin = includePrices ? tableX + 46 : tableX + 66;
+  const colStock = includePrices ? tableX + 82 : tableX + 118;
+  const colJob = includePrices ? tableX + 100 : tableX + 138;
+  const colQty = includePrices ? tableX + 120 : tableX + 160;
+  const colPrice = tableX + 145;
   const colTotal = tableRight - 2;
 
-  const nameWidth = 58;
-  const vinWidth = 44;
+  const nameWidth = includePrices ? 42 : 62;
+  const vinWidth = includePrices ? 34 : 50;
 
   const drawTableHeader = (y: number): number => {
     doc.setFillColor(240, 240, 240);
@@ -80,7 +80,7 @@ export const generatePackingSlipPDF = async (
     doc.text('Job #', colJob, y);
     doc.text('Qty', colQty, y, { align: 'center' });
     if (includePrices) {
-      doc.text('Unit Price', colPrice, y, { align: 'right' });
+      doc.text('Price', colPrice, y, { align: 'right' });
       doc.text('Total', colTotal, y, { align: 'right' });
     }
     doc.setFont('helvetica', 'normal');
