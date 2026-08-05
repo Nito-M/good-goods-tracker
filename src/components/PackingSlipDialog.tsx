@@ -27,6 +27,7 @@ interface PackingSlipDialogProps {
 
 export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }: PackingSlipDialogProps) {
   const [includePrices, setIncludePrices] = useState(true);
+  const [includeStockNumber, setIncludeStockNumber] = useState(true);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
 
@@ -35,7 +36,7 @@ export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }:
   const handleDownload = async () => {
     setGenerating(true);
     try {
-      await generatePackingSlipPDF(quote, settings, { includePrices, rows });
+      await generatePackingSlipPDF(quote, settings, { includePrices, includeStockNumber, rows });
       onOpenChange(false);
     } catch (err) {
       console.error('Failed to generate packing slip:', err);
