@@ -208,9 +208,12 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
     }
   }, [isEditing, selectedTagIds, tagsInitialized]);
 
-  // Initialize vendor prices from existing data when editing
+  // Initialize vendor prices from existing data when editing (once, so removing
+  // the last vendor row doesn't get re-populated from the DB copy)
+  const [vendorPricesInitialized, setVendorPricesInitialized] = useState(false);
   useEffect(() => {
-    if (isEditing && existingPrices.length > 0 && vendorPrices.length === 0) {
+    if (isEditing && existingPrices.length > 0 && !vendorPricesInitialized) {
+      setVendorPricesInitialized(true);
       setVendorPrices(
         existingPrices.map((p) => ({
           id: p.id,
@@ -224,7 +227,8 @@ export function AddItemPage({ categories, onSave, onUpdate, onDelete, items, upl
         }))
       );
     }
-  }, [isEditing, existingPrices, vendorPrices.length]);
+  }, [isEditing, existingPrices, vendorPricesInitialized]);
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
