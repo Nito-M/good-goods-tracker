@@ -164,11 +164,14 @@ export async function updateVendorPriceFromPO(
   userId: string,
   itemId: string,
   vendorId: string,
-  price: number
+  price: number,
+  vendorSku?: string | null
 ): Promise<boolean> {
+  const sku = vendorSku?.trim() || null;
+
   const { data: existing } = await supabase
     .from('item_vendor_prices')
-    .select('id')
+    .select('id, vendor_sku')
     .eq('item_id', itemId)
     .eq('vendor_id', vendorId)
     .order('updated_at', { ascending: false })
@@ -176,9 +179,15 @@ export async function updateVendorPriceFromPO(
     .maybeSingle();
 
   if (existing) {
+    const updates: Record<string, unknown> = { price, updated_at: new Date().toISOString() };
+    // Only fill in the vendor part number when it's currently empty — never overwrite a manual value
+    if (sku && !((existing as any).vendor_sku || '').trim()) {
+      updates.vendor_sku = sku;
+    }
+
     const { error } = await supabase
       .from('item_vendor_prices')
-      .update({ price, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', existing.id);
 
     return !error;
@@ -189,9 +198,11 @@ export async function updateVendorPriceFromPO(
         item_id: itemId,
         vendor_id: vendorId,
         price,
+        vendor_sku: sku,
         user_id: userId,
       });
 
     return !error;
   }
 }
+

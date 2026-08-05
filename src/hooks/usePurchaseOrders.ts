@@ -525,7 +525,7 @@ export function usePurchaseOrders() {
         updates.cost = item.unitCost;
 
         if (order.vendorId) {
-          await updateVendorPriceFromPO(user!.id, inventoryItem.id, order.vendorId, item.unitCost);
+          await updateVendorPriceFromPO(user!.id, inventoryItem.id, order.vendorId, item.unitCost, item.sku);
         }
       }
 
