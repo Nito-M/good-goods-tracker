@@ -28,6 +28,8 @@ export function AddVendor() {
   const [link, setLink] = useState('');
   const [color, setColor] = useState('');
   const [category, setCategory] = useState('');
+  const [catOpen, setCatOpen] = useState(false);
+  const [catSearch, setCatSearch] = useState('');
 
   useEffect(() => {
     if (existingVendor) {
