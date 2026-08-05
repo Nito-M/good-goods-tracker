@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { ShoppingCart, Package, CheckCircle } from 'lucide-react';
 interface PurchaseHistoryItem {
   id: string;
   poNumber: string | null;
+  vendorName: string | null;
   unitCost: number;
   quantity: number;
   soldQuantity: number;
@@ -32,7 +34,10 @@ interface SoldItem {
   profit: number;
   createdAt: Date;
   poNumber: string | null;
+  poId: string | null;
+  vendorName: string | null;
 }
+
 
 interface ItemPurchaseHistoryProps {
   sku: string;
@@ -52,8 +57,22 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
       // Fetch purchase orders containing this SKU
       const { data: poData } = await supabase
         .from('purchase_orders')
-        .select('id, po_number, items, ordered_at, received_at, status')
+        .select('id, po_number, vendor_id, items, ordered_at, received_at, status')
         .order('received_at', { ascending: true, nullsFirst: false });
+
+      // Resolve vendor names in one batch query
+      const vendorIds = Array.from(
+        new Set((poData || []).map((po: any) => po.vendor_id).filter(Boolean))
+      ) as string[];
+      const vendorNameById = new Map<string, string>();
+      if (vendorIds.length > 0) {
+        const { data: vendorRows } = await supabase
+          .from('vendors')
+          .select('id, name')
+          .in('id', vendorIds);
+        for (const v of vendorRows || []) vendorNameById.set(v.id, v.name);
+      }
+
 
       // Fetch allocations for this SKU to determine sold quantities per PO
       const { data: allocations } = await supabase
@@ -105,6 +124,8 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
               purchaseItems.push({
                 id: po.id,
                 poNumber: po.po_number,
+                vendorName: (po as any).vendor_id ? vendorNameById.get((po as any).vendor_id) || null : null,
+
                 unitCost: matchingItem.unitCost || 0,
                 quantity: matchingItem.quantity,
                 soldQuantity: isReceived(po.status) ? soldQty : 0,
@@ -173,22 +194,27 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
           sale_item_id,
           quantity_allocated,
           unit_cost,
-          purchase_orders (po_number)
+          purchase_order_id,
+          purchase_orders (po_number, vendor_id)
         `)
         .eq('sku', sku);
 
-      const allocationsBySaleItem = new Map<string, Array<{ poNumber: string | null; quantity: number; unitCost: number }>>();
+      const allocationsBySaleItem = new Map<string, Array<{ poNumber: string | null; poId: string | null; vendorName: string | null; quantity: number; unitCost: number }>>();
       if (saleAllocations) {
         for (const alloc of saleAllocations as any[]) {
           const current = allocationsBySaleItem.get(alloc.sale_item_id) || [];
+          const vId = alloc.purchase_orders?.vendor_id;
           current.push({
             poNumber: alloc.purchase_orders?.po_number || null,
+            poId: alloc.purchase_order_id || null,
+            vendorName: vId ? vendorNameById.get(vId) || null : null,
             quantity: alloc.quantity_allocated,
             unitCost: alloc.unit_cost,
           });
           allocationsBySaleItem.set(alloc.sale_item_id, current);
         }
       }
+
 
       if (saleItemsData) {
         const sold: SoldItem[] = [];
@@ -210,6 +236,8 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                 profit: (item.unit_price - alloc.unitCost) * alloc.quantity,
                 createdAt: new Date(item.created_at),
                 poNumber: alloc.poNumber,
+                poId: alloc.poId,
+                vendorName: alloc.vendorName,
               });
             }
           } else {
@@ -223,6 +251,8 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
               profit: (item.unit_price - item.unit_cost) * item.quantity,
               createdAt: new Date(item.created_at),
               poNumber: null,
+              poId: null,
+              vendorName: null,
             });
           }
         }
@@ -339,6 +369,7 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                   <TableHeader>
                     <TableRow>
                       <TableHead>PO Number</TableHead>
+                      <TableHead>Vendor</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Qty Ordered</TableHead>
                       <TableHead className="text-right">Qty Sold</TableHead>
@@ -352,8 +383,19 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                   <TableBody>
                     {purchases.map((purchase) => (
                       <TableRow key={purchase.id}>
-                        <TableCell className="font-medium">{purchase.poNumber || 'N/A'}</TableCell>
+                        <TableCell className="font-medium">
+                          <Link
+                            to={`/purchase-orders/${purchase.id}`}
+                            className="text-primary hover:underline"
+                          >
+                            {purchase.poNumber || 'N/A'}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {purchase.vendorName || <span className="text-muted-foreground">—</span>}
+                        </TableCell>
                         <TableCell>{formatDate(purchase.orderedAt)}</TableCell>
+
                         <TableCell className="text-right">{Math.round(purchase.quantity * 100000) / 100000}</TableCell>
                         <TableCell className="text-right">{Math.round(purchase.soldQuantity * 100000) / 100000}</TableCell>
                         <TableCell className="text-right">
@@ -421,6 +463,7 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                     <TableRow>
                       <TableHead>Invoice #</TableHead>
                       <TableHead>From PO</TableHead>
+                      <TableHead>Vendor</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Sale Price</TableHead>
@@ -434,12 +477,24 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                         <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
                         <TableCell>
                           {sale.poNumber ? (
-                            <Badge variant="outline">{sale.poNumber}</Badge>
+                            sale.poId ? (
+                              <Link to={`/purchase-orders/${sale.poId}`}>
+                                <Badge variant="outline" className="hover:bg-muted cursor-pointer">
+                                  {sale.poNumber}
+                                </Badge>
+                              </Link>
+                            ) : (
+                              <Badge variant="outline">{sale.poNumber}</Badge>
+                            )
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </TableCell>
+                        <TableCell className="text-sm">
+                          {sale.vendorName || <span className="text-muted-foreground">—</span>}
+                        </TableCell>
                         <TableCell>{formatDate(sale.createdAt)}</TableCell>
+
                         <TableCell className="text-right">{sale.quantity}</TableCell>
                         <TableCell className="text-right">{formatCurrency(sale.unitPrice)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(sale.unitCost)}</TableCell>
