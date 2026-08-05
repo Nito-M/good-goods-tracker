@@ -236,6 +236,8 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
                 profit: (item.unit_price - alloc.unitCost) * alloc.quantity,
                 createdAt: new Date(item.created_at),
                 poNumber: alloc.poNumber,
+                poId: alloc.poId,
+                vendorName: alloc.vendorName,
               });
             }
           } else {
