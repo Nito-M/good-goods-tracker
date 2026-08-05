@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { ShoppingCart, Package, CheckCircle } from 'lucide-react';
 interface PurchaseHistoryItem {
   id: string;
   poNumber: string | null;
+  vendorName: string | null;
   unitCost: number;
   quantity: number;
   soldQuantity: number;
@@ -32,7 +34,10 @@ interface SoldItem {
   profit: number;
   createdAt: Date;
   poNumber: string | null;
+  poId: string | null;
+  vendorName: string | null;
 }
+
 
 interface ItemPurchaseHistoryProps {
   sku: string;
