@@ -8,6 +8,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useSales } from '@/hooks/useSales';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
+import { PackingSlipRow } from '@/lib/packingSlipGenerator';
+import { PackingSlipDialog } from '@/components/PackingSlipDialog';
 import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
