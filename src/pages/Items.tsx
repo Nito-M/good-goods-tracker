@@ -418,6 +418,9 @@ export const Items = ({
             subcategoryFilter={subcategoryFilter}
             onSubcategoryChange={setSubcategoryFilter}
             subcategoryOptions={subcategoryOptions.map(s => ({ id: s.id, name: s.name }))}
+            vendorFilter={vendorFilter}
+            onVendorChange={setVendorFilter}
+            vendorOptions={vendorOptions}
           />
         </div>
 
