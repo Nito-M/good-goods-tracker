@@ -57,8 +57,22 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
       // Fetch purchase orders containing this SKU
       const { data: poData } = await supabase
         .from('purchase_orders')
-        .select('id, po_number, items, ordered_at, received_at, status')
+        .select('id, po_number, vendor_id, items, ordered_at, received_at, status')
         .order('received_at', { ascending: true, nullsFirst: false });
+
+      // Resolve vendor names in one batch query
+      const vendorIds = Array.from(
+        new Set((poData || []).map((po: any) => po.vendor_id).filter(Boolean))
+      ) as string[];
+      const vendorNameById = new Map<string, string>();
+      if (vendorIds.length > 0) {
+        const { data: vendorRows } = await supabase
+          .from('vendors')
+          .select('id, name')
+          .in('id', vendorIds);
+        for (const v of vendorRows || []) vendorNameById.set(v.id, v.name);
+      }
+
 
       // Fetch allocations for this SKU to determine sold quantities per PO
       const { data: allocations } = await supabase
