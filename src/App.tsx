@@ -113,7 +113,6 @@ function AppContent() {
 
   const {
     items,
-    filteredItems,
     allItems,
     stats,
     loading,
