@@ -484,6 +484,20 @@ export function SalesOrderDetail() {
   const allJobsCreated =
     topLevelItems.length > 0 && topLevelItems.every((it) => !!itemLinks[it.linkKey]?.jobId);
 
+  const packingSlipRows: PackingSlipRow[] = expandedItems.map((it) => {
+    const link = itemLinks[it.linkKey];
+    const job = link?.jobId ? jobs.find((j) => j.id === link.jobId) : null;
+    return {
+      itemName: it.itemName,
+      vin: job?.vin || '',
+      stockNumber: job?.stockNumber || '',
+      jobNumber: job?.jobNumber || link?.externalJobNumber || '',
+      quantity: it.quantity,
+      unitPrice: it.unitPrice,
+      totalPrice: it.totalPrice,
+    };
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
