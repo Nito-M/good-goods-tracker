@@ -56,13 +56,23 @@ export function PackingSlipDialog({ open, onOpenChange, quote, settings, rows }:
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="includePrices"
-            checked={includePrices}
-            onCheckedChange={(v) => setIncludePrices(v === true)}
-          />
-          <Label htmlFor="includePrices" className="cursor-pointer">Include prices</Label>
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="includePrices"
+              checked={includePrices}
+              onCheckedChange={(v) => setIncludePrices(v === true)}
+            />
+            <Label htmlFor="includePrices" className="cursor-pointer">Include prices</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="includeStockNumber"
+              checked={includeStockNumber}
+              onCheckedChange={(v) => setIncludeStockNumber(v === true)}
+            />
+            <Label htmlFor="includeStockNumber" className="cursor-pointer">Include stock #</Label>
+          </div>
         </div>
 
         {missingVins > 0 && (
