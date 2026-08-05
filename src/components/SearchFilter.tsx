@@ -354,6 +354,65 @@ export function SearchFilter({
           </PopoverContent>
         </Popover>
       )}
+      {/* Vendor combobox */}
+      {vendorOptions && vendorOptions.length > 0 && onVendorChange && (
+        <Popover open={vendorOpen} onOpenChange={setVendorOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={vendorOpen}
+              className="w-full sm:w-48 justify-between font-normal"
+            >
+              <span className="truncate">{selectedVendorLabel}</span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search vendors..." />
+              <CommandList>
+                <CommandEmpty>No vendor found.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="all"
+                    onSelect={() => {
+                      onVendorChange('all');
+                      setVendorOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        !vendorFilter || vendorFilter === 'all' ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    All Vendors
+                  </CommandItem>
+                  {vendorOptions.map((vendor) => (
+                    <CommandItem
+                      key={vendor.id}
+                      value={vendor.name}
+                      onSelect={() => {
+                        onVendorChange(vendor.id);
+                        setVendorOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          vendorFilter === vendor.id ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      {vendor.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }
