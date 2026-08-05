@@ -251,6 +251,8 @@ export function ItemPurchaseHistory({ sku, itemId, currentStock }: ItemPurchaseH
               profit: (item.unit_price - item.unit_cost) * item.quantity,
               createdAt: new Date(item.created_at),
               poNumber: null,
+              poId: null,
+              vendorName: null,
             });
           }
         }
