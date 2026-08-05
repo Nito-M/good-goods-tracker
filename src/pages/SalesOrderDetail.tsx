@@ -1402,6 +1402,13 @@ export function SalesOrderDetail() {
         </TabsContent>
       </Tabs>
 
+      <PackingSlipDialog
+        open={showPackingSlipDialog}
+        onOpenChange={setShowPackingSlipDialog}
+        quote={quote}
+        settings={getQuoteSettingsForQuote(quote)}
+        rows={packingSlipRows}
+      />
     </div>
   );
 }
