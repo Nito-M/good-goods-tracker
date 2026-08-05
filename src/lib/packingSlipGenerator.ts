@@ -19,6 +19,7 @@ export interface PackingSlipRow {
 
 export interface PackingSlipOptions {
   includePrices: boolean;
+  includeStockNumber?: boolean;
   rows: PackingSlipRow[];
 }
 
