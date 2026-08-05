@@ -213,6 +213,13 @@ export const Items = ({
         return tagIds.includes(tagFilter);
       });
     }
+    if (vendorFilter !== 'all') {
+      const vendorName = vendorOptions.find((v) => v.id === vendorFilter)?.name;
+      result = result.filter((item) => {
+        const vendors = itemVendorMap.get(item.id);
+        return vendors?.some((v) => v === vendorName || v === vendorFilter) ?? false;
+      });
+    }
     if (warehouseFilter !== 'all') {
       const itemsInWarehouse = warehouseItemMap.get(warehouseFilter);
       result = result.filter((item) =>
@@ -244,7 +251,7 @@ export const Items = ({
       }
     }
     return result;
-  }, [items, tagFilter, itemTagsMap, warehouseFilter, warehouseItemMap, warehouses, restrictedByPermission, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
+  }, [items, tagFilter, itemTagsMap, vendorFilter, vendorOptions, itemVendorMap, warehouseFilter, warehouseItemMap, warehouses, restrictedByPermission, subcategoryFilter, subcategoryOptions, mustPickSubcategory]);
 
   const orgList = organizations ?? [];
   const itemList = items ?? [];
