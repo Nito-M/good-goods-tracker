@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check, ChevronsUpDown, Plus, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +28,8 @@ export function AddVendor() {
   const [link, setLink] = useState('');
   const [color, setColor] = useState('');
   const [category, setCategory] = useState('');
+  const [catOpen, setCatOpen] = useState(false);
+  const [catSearch, setCatSearch] = useState('');
 
   useEffect(() => {
     if (existingVendor) {
@@ -144,20 +148,86 @@ export function AddVendor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="vendor-category">Category</Label>
-                <Input
-                  id="vendor-category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="e.g. Steel, Hardware, Electrical"
-                  list="vendor-category-options"
-                />
-                <datalist id="vendor-category-options">
-                  {existingCategories.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
+                <Label>Category</Label>
+                <Popover open={catOpen} onOpenChange={setCatOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      <span className={category ? '' : 'text-muted-foreground'}>
+                        {category || 'Select or add a category'}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-popover" align="start">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search or type new category..."
+                        value={catSearch}
+                        onValueChange={setCatSearch}
+                      />
+                      <CommandList>
+                        <CommandEmpty className="py-2 px-2 text-sm text-muted-foreground">
+                          No matching category.
+                        </CommandEmpty>
+                        {catSearch.trim() &&
+                          !existingCategories.some(
+                            (c) => c.toLowerCase() === catSearch.trim().toLowerCase()
+                          ) && (
+                            <CommandGroup>
+                              <CommandItem
+                                value={`__add__${catSearch}`}
+                                onSelect={() => {
+                                  setCategory(catSearch.trim());
+                                  setCatSearch('');
+                                  setCatOpen(false);
+                                }}
+                              >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add "{catSearch.trim()}"
+                              </CommandItem>
+                            </CommandGroup>
+                          )}
+                        <CommandGroup heading="Categories">
+                          {category && (
+                            <CommandItem
+                              value="__clear__"
+                              onSelect={() => {
+                                setCategory('');
+                                setCatOpen(false);
+                              }}
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              Clear category
+                            </CommandItem>
+                          )}
+                          {existingCategories.map((c) => (
+                            <CommandItem
+                              key={c}
+                              value={c}
+                              onSelect={() => {
+                                setCategory(c);
+                                setCatSearch('');
+                                setCatOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${category === c ? 'opacity-100' : 'opacity-0'}`}
+                              />
+                              {c}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
+
 
 
 
