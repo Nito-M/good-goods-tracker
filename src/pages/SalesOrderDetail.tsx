@@ -145,6 +145,7 @@ export function SalesOrderDetail() {
   // Per-item link state
   const [itemJobNumbers, setItemJobNumbers] = useState<Record<string, string>>({});
   const [itemLinks, setItemLinks] = useState<Record<string, ItemLink>>({});
+  const [showPackingSlipDialog, setShowPackingSlipDialog] = useState(false);
   // childLinkKey -> parentLinkKey
   const [attachments, setAttachments] = useState<Record<string, string>>({});
   const [collapsedParents, setCollapsedParents] = useState<Set<string>>(new Set());
