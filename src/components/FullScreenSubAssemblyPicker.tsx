@@ -88,8 +88,9 @@ export function FullScreenSubAssemblyPicker({
 
   const applyFilter = (rows: SubAssemblyRow[]) => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return rows;
-    return rows.filter(
+    const byType = selectedType ? rows.filter((a) => (a.type || 'Uncategorized') === selectedType) : rows;
+    if (!q) return byType;
+    return byType.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
         (a.description ?? '').toLowerCase().includes(q) ||
@@ -97,9 +98,21 @@ export function FullScreenSubAssemblyPicker({
     );
   };
 
-  const filtered1 = useMemo(() => applyFilter(subAssemblies1), [subAssemblies1, searchQuery]);
-  const filtered2 = useMemo(() => applyFilter(subAssemblies2), [subAssemblies2, searchQuery]);
-  const filteredFull = useMemo(() => applyFilter(fullAssemblies), [fullAssemblies, searchQuery]);
+  const typeGroups = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of [...subAssemblies1, ...subAssemblies2]) {
+      const t = r.type || 'Uncategorized';
+      counts.set(t, (counts.get(t) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => a.type.localeCompare(b.type));
+  }, [subAssemblies1, subAssemblies2]);
+
+  const filtered1 = useMemo(() => applyFilter(subAssemblies1), [subAssemblies1, searchQuery, selectedType]);
+  const filtered2 = useMemo(() => applyFilter(subAssemblies2), [subAssemblies2, searchQuery, selectedType]);
+  const filteredFull = useMemo(() => applyFilter(fullAssemblies), [fullAssemblies, searchQuery, selectedType]);
+
 
   const renderSection = (
     label: string,
