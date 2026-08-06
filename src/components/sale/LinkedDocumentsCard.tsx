@@ -20,14 +20,19 @@ import { Quote } from '@/types/quote';
 
 interface Props {
   sale: Sale;
+  onUpdateLinks?: (
+    saleId: string,
+    links: { linkedQuoteId?: string | null; linkedSalesOrderId?: string | null }
+  ) => Promise<boolean | void>;
 }
 
 type Kind = 'quote' | 'sales_order';
 
-export function LinkedDocumentsCard({ sale }: Props) {
+export function LinkedDocumentsCard({ sale, onUpdateLinks }: Props) {
   const navigate = useNavigate();
   const { quotes } = useQuotes();
-  const { updateLinks } = useSales();
+  const { updateLinks: fallbackUpdateLinks } = useSales();
+  const updateLinks = onUpdateLinks || fallbackUpdateLinks;
 
   // Quote picker: all quotes (including converted/sales_order). Label by quote number.
   const quoteOptions = useMemo(() => quotes, [quotes]);
