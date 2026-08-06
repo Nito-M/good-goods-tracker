@@ -53,8 +53,6 @@ import { PartsLibrary } from "./pages/PartsLibrary";
 import { PartsLanding } from "./pages/PartsLanding";
 import { PartsAssemblies } from "./pages/PartsAssemblies";
 import { PartsAssembliesDetail } from "./pages/PartsAssembliesDetail";
-import { PartsAssembliesV2 } from "./pages/PartsAssembliesV2";
-import { PartsAssembliesDetailV2 } from "./pages/PartsAssembliesDetailV2";
 import { AddPart } from "./pages/AddPart";
 import { PartDetail } from "./pages/PartDetail";
 import { TaxDocuments } from "./pages/TaxDocuments";
