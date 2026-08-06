@@ -48,8 +48,8 @@ export function FullScreenSubAssemblyPicker({
   existingSubAssemblyIds = [],
   existingSubAssembly2Ids = [],
   existingFullAssemblyIds = [],
-  label1 = 'Parts Assemblies',
-  label2 = 'Parts Assemblies 2',
+  label1 = 'Sub Assemblies',
+  label2 = 'Sub Assemblies 2',
   labelFullAssemblies = 'Assemblies',
 }: FullScreenSubAssemblyPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
