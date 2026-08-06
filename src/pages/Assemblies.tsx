@@ -215,8 +215,19 @@ function AssemblyDetail({
 
   const handleAddSubAssemblies = async (selections: { id: string; source: 'parts1' | 'parts2' | 'assembly' }[]) => {
     setAddingSubAssemblyId('batch');
+    // Prevent adding the same sub assembly twice
+    const alreadyPresent = new Set<string>();
+    for (const item of items) {
+      if ((item as any).parts_assembly_id) alreadyPresent.add((item as any).parts_assembly_id);
+      if ((item as any).nested_assembly_id) alreadyPresent.add((item as any).nested_assembly_id);
+      const fromName = (item.notes || '').startsWith('From: ') ? (item.notes || '').slice(6).trim() : null;
+      const match = (partsAssemblies || []).find(pa => pa.name === item.item_name || (fromName && pa.name === fromName));
+      if (match) alreadyPresent.add(match.id);
+    }
     try {
       for (const { id: selectedId, source } of selections) {
+        if (alreadyPresent.has(selectedId)) continue;
+        alreadyPresent.add(selectedId);
         if (source === 'assembly') {
           const sub = allAssemblies.find(a => a.id === selectedId);
           if (!sub || sub.id === assembly.id) continue;
@@ -639,17 +650,18 @@ function AssemblyDetail({
           label1="Sub Assemblies"
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {
-            const ids: string[] = [];
+            const ids = new Set<string>();
             const allPA = partsAssemblies || [];
             for (const item of items) {
-              if (item.parts_assembly_id) {
-                ids.push(item.parts_assembly_id);
-              } else {
-                const match = allPA.find(pa => pa.name === item.item_name);
-                if (match) ids.push(match.id);
+              if ((item as any).parts_assembly_id) {
+                ids.add((item as any).parts_assembly_id);
+                continue;
               }
+              const fromName = (item.notes || '').startsWith('From: ') ? (item.notes || '').slice(6).trim() : null;
+              const match = allPA.find(pa => pa.name === item.item_name || (fromName && pa.name === fromName));
+              if (match) ids.add(match.id);
             }
-            return ids;
+            return Array.from(ids);
           })()}
         />
 
