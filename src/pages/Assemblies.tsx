@@ -742,19 +742,13 @@ function AssemblyDetail({
                               : !item.inventory_item_id
                                 ? partsRaw?.find(p => p.sku === item.sku) ?? partsRaw?.find(p => p.name === item.item_name && p.sku === item.sku)
                                 : undefined;
-                            const nestedAssembly = item.nested_assembly_id ? allAssemblies.find(a => a.id === item.nested_assembly_id) : null;
-                            const assemblyMatch = nestedAssembly || (!item.inventory_item_id && !partMatch ? allAssemblies.find(a => a.id !== assembly.id && a.name === item.item_name) : null);
-                            const partsAssemblyMatch = !item.inventory_item_id && !partMatch && !assemblyMatch && partsAssemblies?.find(pa => pa.name === item.item_name);
-                            const linkTo = item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : assemblyMatch ? `/assemblies/${encodeURIComponent(assemblyMatch.type)}?id=${assemblyMatch.id}` : partsAssemblyMatch ? `/parts/assemblies/${encodeURIComponent(partsAssemblyMatch.type)}?id=${partsAssemblyMatch.id}` : null;
+                            const linkTo = item.inventory_item_id ? `/item/${item.inventory_item_id}` : partMatch ? `/parts/library/${partMatch.id}` : null;
                             return (
                               <div className="flex items-center gap-2 flex-wrap">
                                 {linkTo ? (
                                   <Link to={linkTo} className="font-medium text-sm text-primary hover:underline">{item.item_name}</Link>
                                 ) : (
                                   <p className="font-medium text-sm">{item.item_name}</p>
-                                )}
-                                {assemblyMatch && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-medium uppercase tracking-wide">Assembly</span>
                                 )}
                               </div>
                             );
