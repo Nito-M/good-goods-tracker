@@ -143,6 +143,13 @@ function AssemblyDetail({
                   <span className="text-muted-foreground">Cost:</span>
                   <span className="font-semibold">{totalCost > 0 ? formatCurrency(totalCost) : '—'}</span>
                 </div>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-muted-foreground">Category:</span>
+                  <SubAssemblyCategorySelect
+                    value={assembly.category ?? null}
+                    onChange={(v) => onUpdate(assembly.id, { category: v })}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
