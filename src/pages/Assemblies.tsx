@@ -286,7 +286,7 @@ function AssemblyDetail({
             sku,
             quantity: (row.quantity || 1) * multiplier,
             unit_cost: cost,
-            notes: `From: ${pa.name}`,
+            parts_assembly_id: pa.id,
           });
         }
       }
