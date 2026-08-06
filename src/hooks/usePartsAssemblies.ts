@@ -68,7 +68,7 @@ export function usePartsAssemblies() {
     return data as PartsAssembly;
   };
 
-  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string }) => {
+  const updateAssembly = async (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; type?: string; category?: string | null }) => {
     const { error } = await (supabase as any)
       .from('parts_assemblies')
       .update(updates)
