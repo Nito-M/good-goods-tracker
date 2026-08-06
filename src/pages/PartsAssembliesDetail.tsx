@@ -581,7 +581,7 @@ export function PartsAssembliesDetail() {
                inventoryItems={invItemsList}
                allParts={parts.map(p => ({ id: p.id, price: p.price }))}
                allInventoryItems={inventoryItemsList.map(i => ({ id: i.id, cost: i.cost }))}
-               allAssembliesV2={assembliesV2.map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+               
                onDelete={handleDelete}
                onUpdate={updateAssembly}
              />
