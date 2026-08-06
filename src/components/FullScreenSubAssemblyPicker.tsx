@@ -171,6 +171,7 @@ export function FullScreenSubAssemblyPicker({
                   {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {a.type}
+                    {a.category && <span className="ml-2">· {a.category}</span>}
                     {alreadyAdded && <span className="ml-2 text-primary">(already added)</span>}
                   </p>
                 </div>
