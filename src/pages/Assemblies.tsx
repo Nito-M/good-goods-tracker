@@ -637,7 +637,7 @@ function AssemblyDetail({
           onConfirm={(selections) => handleAddSubAssemblies(selections)}
           subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           fullAssemblies={otherAssemblies.map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
-          label1={(() => { try { const s = localStorage.getItem('parts-landing-names'); const n = s ? JSON.parse(s) : {}; return n['parts-assemblies'] || 'Parts Assemblies'; } catch { return 'Parts Assemblies'; } })()}
+          label1="Sub Assemblies"
           labelFullAssemblies="Assemblies"
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {

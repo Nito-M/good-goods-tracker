@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package, Upload } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { usePartsAssemblies, usePartsAssemblyItems, PartsAssembly, PartsAssemblyItem } from '@/hooks/usePartsAssemblies';
-import { usePartsAssembliesV2 } from '@/hooks/usePartsAssembliesV2';
+
 import { useParts } from '@/hooks/useParts';
 import { useInventory } from '@/hooks/useInventory';
 import { supabase } from '@/integrations/supabase/client';
 import { FullScreenPartsPicker } from '@/components/FullScreenPartsPicker';
-import { FullScreenSubAssemblyPicker } from '@/components/FullScreenSubAssemblyPicker';
+
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { generatePartsAssemblyPDF } from '@/lib/partsAssemblyPdfGenerator';
@@ -24,21 +24,21 @@ import {
 
 
 function AssemblyDetail({
-  assembly, parts, inventoryItems, allParts, allInventoryItems, allAssembliesV2, onDelete, onUpdate,
+  assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onUpdate,
 }: {
   assembly: PartsAssembly;
   parts: { id: string; name: string; sku: string; price: number }[];
   inventoryItems: { id: string; name: string; sku: string; cost: number }[];
   allParts: { id: string; price: number }[];
   allInventoryItems: { id: string; cost: number }[];
-  allAssembliesV2: { id: string; name: string; description: string | null; selling_price: number; type: string }[];
+  
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
 }) {
   const navigate = useNavigate();
   const { items, loading, addItem, addItems, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
   const [showPicker, setShowPicker] = useState(false);
-  const [showSubAssemblyPicker, setShowSubAssemblyPicker] = useState(false);
+  
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState(1);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
@@ -64,10 +64,6 @@ function AssemblyDetail({
     if (item.inventory_item_id) {
       const i = allInventoryItems.find(x => x.id === item.inventory_item_id);
       return i?.cost ?? 0;
-    }
-    if (item.parts_assembly_v2_id) {
-      const a = allAssembliesV2.find(x => x.id === item.parts_assembly_v2_id);
-      return a?.selling_price ?? 0;
     }
     return 0;
   };
@@ -228,7 +224,7 @@ function AssemblyDetail({
          <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setShowSubAssemblyPicker(true)} className="gap-1"><Layers className="h-4 w-4" /> Add Assembly 2</Button>
+            
             <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Parts</Button>
           </div>
         </div>
@@ -333,7 +329,7 @@ export function PartsAssembliesDetail() {
   const { toast } = useToast();
   const decodedType = decodeURIComponent(type || 'General');
   const { assemblies, loading, createAssembly, updateAssembly, deleteAssembly, refetch } = usePartsAssemblies();
-  const { assemblies: assembliesV2 } = usePartsAssembliesV2();
+  
   const { parts } = useParts();
   const { items: inventoryItemsList } = useInventory();
 
@@ -585,7 +581,7 @@ export function PartsAssembliesDetail() {
                inventoryItems={invItemsList}
                allParts={parts.map(p => ({ id: p.id, price: p.price }))}
                allInventoryItems={inventoryItemsList.map(i => ({ id: i.id, cost: i.cost }))}
-               allAssembliesV2={assembliesV2.map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+               
                onDelete={handleDelete}
                onUpdate={updateAssembly}
              />

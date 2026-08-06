@@ -64,8 +64,8 @@ export function PartsAssemblies() {
               </Button>
               <Layers className="h-6 w-6 text-primary" />
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-card-foreground">Parts Assemblies</h1>
-                <p className="text-xs text-muted-foreground">Choose a type to view its assemblies</p>
+                <h1 className="text-xl font-bold tracking-tight text-card-foreground">Sub Assemblies</h1>
+                <p className="text-xs text-muted-foreground">Choose a type to view its sub assemblies</p>
               </div>
             </div>
             <Button onClick={() => setCreateOpen(true)} className="gap-2">

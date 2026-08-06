@@ -10,14 +10,19 @@ const STORAGE_KEY = 'parts-landing-names';
 
 const defaultNames: Record<string, string> = {
   'parts-library': 'Parts Library',
-  'parts-assemblies': 'Parts Assemblies',
-  'parts-assemblies-v2': 'Parts Assemblies 2',
+  'parts-assemblies': 'Sub Assemblies',
 };
+
+// Sections whose name is fixed and cannot be renamed
+const lockedNames = new Set(['parts-assemblies']);
 
 function getSavedNames(): Record<string, string> {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? { ...defaultNames, ...JSON.parse(saved) } : { ...defaultNames };
+    const merged = saved ? { ...defaultNames, ...JSON.parse(saved) } : { ...defaultNames };
+    // Locked sections always use their fixed name
+    for (const key of lockedNames) merged[key] = defaultNames[key];
+    return merged;
   } catch {
     return { ...defaultNames };
   }
@@ -66,16 +71,9 @@ export function PartsLanding() {
     },
     {
       key: 'parts-assemblies',
-      description: 'Create reusable assemblies from your parts library',
+      description: 'Create reusable sub assemblies from your parts library',
       icon: Layers,
       url: '/parts/assemblies',
-      stat: null,
-    },
-    {
-      key: 'parts-assemblies-v2',
-      description: 'Build a second assembly layer from Parts Library 1 and Parts Assemblies 1',
-      icon: Layers,
-      url: '/parts/assemblies-v2',
       stat: null,
     },
   ];
@@ -108,7 +106,7 @@ export function PartsLanding() {
                     <section.icon className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    {editingKey === section.key ? (
+                    {editingKey === section.key && !lockedNames.has(section.key) ? (
                       <div className="flex items-center gap-1.5 mb-1">
                         <Input
                           value={editValue}
@@ -131,14 +129,16 @@ export function PartsLanding() {
                     ) : (
                       <div className="flex items-center gap-1.5 mb-1">
                         <h3 className="font-semibold text-lg text-foreground">{names[section.key]}</h3>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                          onClick={(e) => startEdit(section.key, e)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
+                        {!lockedNames.has(section.key) && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                            onClick={(e) => startEdit(section.key, e)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground mb-3">{section.description}</p>
