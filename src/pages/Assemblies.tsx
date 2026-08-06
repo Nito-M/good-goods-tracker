@@ -651,7 +651,6 @@ function AssemblyDetail({
             }
             return ids;
           })()}
-          existingFullAssemblyIds={items.map(i => i.nested_assembly_id).filter((x): x is string => !!x)}
         />
 
         <FullScreenPartsPicker
