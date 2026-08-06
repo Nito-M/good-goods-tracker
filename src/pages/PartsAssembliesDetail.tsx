@@ -341,7 +341,14 @@ export function PartsAssembliesDetail() {
   const { parts } = useParts();
   const { items: inventoryItemsList } = useInventory();
 
-  const filtered = assemblies.filter(a => (a.type || 'General') === decodedType);
+  const inType = assemblies.filter(a => (a.type || 'General') === decodedType);
+  const [selectedCategory, setSelectedCategory] = useState<string>('__all__');
+  const categoriesInType = Array.from(new Set(inType.map(a => a.category).filter(Boolean) as string[])).sort();
+  const filtered = selectedCategory === '__all__'
+    ? inType
+    : selectedCategory === '__none__'
+      ? inType.filter(a => !a.category)
+      : inType.filter(a => a.category === selectedCategory);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
