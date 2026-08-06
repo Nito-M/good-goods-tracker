@@ -59,25 +59,41 @@ export function FullScreenSubAssemblyPicker({
   const [selections, setSelections] = useState<SelectedSubAssembly[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const pushedRef = useRef(false);
+
   useEffect(() => {
     if (open) {
       setSearchQuery('');
       setSelections([]);
       setSelectedType(null);
       setSelectedCategory(null);
-      window.history.pushState({ picker: 'subassembly' }, '');
+      if ((window.history.state as any)?.picker !== 'subassembly') {
+        window.history.pushState({ picker: 'subassembly' }, '');
+        pushedRef.current = true;
+      }
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [open]);
 
-
+  const handleClose = () => {
+    if (pushedRef.current && (window.history.state as any)?.picker === 'subassembly') {
+      pushedRef.current = false;
+      window.history.back();
+      return;
+    }
+    onClose();
+  };
 
   useEffect(() => {
     if (!open) return;
-    const handler = () => onClose();
+    const handler = () => {
+      pushedRef.current = false;
+      onClose();
+    };
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
   }, [open, onClose]);
+
 
   const toggleSelection = (id: string, source: SubAssemblySource) => {
     setSelections(prev => {
@@ -191,7 +207,7 @@ export function FullScreenSubAssemblyPicker({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-card shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => (selectedType ? (setSelectedType(null), setSelectedCategory(null)) : window.history.back())}>
+        <Button variant="ghost" size="icon" onClick={() => (selectedType ? (setSelectedType(null), setSelectedCategory(null)) : handleClose())}>
           {selectedType ? <ChevronLeft className="h-5 w-5" /> : <X className="h-5 w-5" />}
         </Button>
         <h2 className="text-lg font-semibold flex-1 truncate">{selectedType ?? 'Sub Assemblies'}</h2>
