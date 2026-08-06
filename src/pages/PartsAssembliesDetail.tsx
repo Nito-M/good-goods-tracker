@@ -224,7 +224,7 @@ function AssemblyDetail({
          <div className="flex items-center justify-between">
           <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Parts List ({items.length})</h3>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setShowSubAssemblyPicker(true)} className="gap-1"><Layers className="h-4 w-4" /> Add Assembly 2</Button>
+            
             <Button size="sm" onClick={() => setShowPicker(true)} className="gap-1"><Plus className="h-4 w-4" /> Add Parts</Button>
           </div>
         </div>
