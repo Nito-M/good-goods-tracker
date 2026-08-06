@@ -53,6 +53,7 @@ export function FullScreenSubAssemblyPicker({
   labelFullAssemblies = 'Assemblies',
 }: FullScreenSubAssemblyPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selections, setSelections] = useState<SelectedSubAssembly[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -60,10 +61,12 @@ export function FullScreenSubAssemblyPicker({
     if (open) {
       setSearchQuery('');
       setSelections([]);
+      setSelectedType(null);
       window.history.pushState({ picker: 'subassembly' }, '');
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [open]);
+
 
   useEffect(() => {
     if (!open) return;
