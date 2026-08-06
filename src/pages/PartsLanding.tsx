@@ -10,9 +10,11 @@ const STORAGE_KEY = 'parts-landing-names';
 
 const defaultNames: Record<string, string> = {
   'parts-library': 'Parts Library',
-  'parts-assemblies': 'Parts Assemblies',
-  'parts-assemblies-v2': 'Parts Assemblies 2',
+  'parts-assemblies': 'Sub Assemblies',
 };
+
+// Sections whose name is fixed and cannot be renamed
+const lockedNames = new Set(['parts-assemblies']);
 
 function getSavedNames(): Record<string, string> {
   try {
