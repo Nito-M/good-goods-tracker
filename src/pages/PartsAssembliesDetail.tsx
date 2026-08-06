@@ -65,10 +65,6 @@ function AssemblyDetail({
       const i = allInventoryItems.find(x => x.id === item.inventory_item_id);
       return i?.cost ?? 0;
     }
-    if (item.parts_assembly_v2_id) {
-      const a = allAssembliesV2.find(x => x.id === item.parts_assembly_v2_id);
-      return a?.selling_price ?? 0;
-    }
     return 0;
   };
 
