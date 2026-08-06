@@ -7,6 +7,7 @@ import { useParts } from '@/hooks/useParts';
 import { useInventory } from '@/hooks/useInventory';
 import { supabase } from '@/integrations/supabase/client';
 import { FullScreenPartsPicker } from '@/components/FullScreenPartsPicker';
+import { SubAssemblyCategorySelect } from '@/components/SubAssemblyCategorySelect';
 
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
@@ -33,7 +34,7 @@ function AssemblyDetail({
   allInventoryItems: { id: string; cost: number }[];
   
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
+  onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; category?: string | null }) => Promise<void>;
 }) {
   const navigate = useNavigate();
   const { items, loading, addItem, addItems, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
@@ -142,6 +143,13 @@ function AssemblyDetail({
                 <div className="flex items-center gap-1.5 text-sm">
                   <span className="text-muted-foreground">Cost:</span>
                   <span className="font-semibold">{totalCost > 0 ? formatCurrency(totalCost) : '—'}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-muted-foreground">Category:</span>
+                  <SubAssemblyCategorySelect
+                    value={assembly.category ?? null}
+                    onChange={(v) => onUpdate(assembly.id, { category: v })}
+                  />
                 </div>
               </div>
             </div>
@@ -565,6 +573,9 @@ export function PartsAssembliesDetail() {
                     <span className="font-medium text-sm truncate">{a.name}</span>
                     {a.status === 'finished' ? <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> : <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
                   </div>
+                  {a.category && (
+                    <span className="mt-1 inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{a.category}</span>
+                  )}
                   {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
                 </button>
               ))}

@@ -3246,6 +3246,7 @@ export type Database = {
       }
       parts_assemblies: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
           id: string
@@ -3258,6 +3259,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -3270,6 +3272,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -3317,6 +3320,30 @@ export type Database = {
           status?: string
           status_notes?: string | null
           type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      parts_assembly_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
           user_id?: string
         }
