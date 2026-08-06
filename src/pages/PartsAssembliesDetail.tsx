@@ -24,7 +24,7 @@ import {
 
 
 function AssemblyDetail({
-  assembly, parts, inventoryItems, allParts, allInventoryItems, allAssembliesV2, onDelete, onUpdate,
+  assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onUpdate,
 }: {
   assembly: PartsAssembly;
   parts: { id: string; name: string; sku: string; price: number }[];
