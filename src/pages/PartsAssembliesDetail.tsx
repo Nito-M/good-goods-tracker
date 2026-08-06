@@ -370,7 +370,7 @@ export function PartsAssembliesDetail() {
   const [deleteTypeOpen, setDeleteTypeOpen] = useState(false);
   const [deletingType, setDeletingType] = useState(false);
 
-  const selected = filtered.find(a => a.id === selectedId) || null;
+  const selected = inType.find(a => a.id === selectedId) || null;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
