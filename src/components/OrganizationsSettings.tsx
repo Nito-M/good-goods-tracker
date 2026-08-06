@@ -43,7 +43,7 @@ const ORG_PAGE_KEYS = [
   { key: 'jobs', label: 'Jobs' },
   { key: 'assemblies', label: 'Assemblies' },
   { key: 'assets', label: 'Business Info' },
-  { key: 'parts', label: 'Parts Library' },
+  { key: 'parts', label: 'Sub Assemblies' },
   { key: 'tax-documents', label: 'Tax Documents' },
   { key: 'trailer-config', label: 'Trailer Configurator' },
   { key: 'settings', label: 'Settings' },
