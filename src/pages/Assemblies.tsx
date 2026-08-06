@@ -752,8 +752,6 @@ function AssemblyDetail({
                                 )}
                               </div>
                             );
-                              </div>
-                            );
                           })()}
                           {editingNoteId === item.id ? (
                             <div className="flex items-center gap-1 mt-1">
