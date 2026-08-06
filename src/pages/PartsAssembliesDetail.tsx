@@ -573,6 +573,9 @@ export function PartsAssembliesDetail() {
                     <span className="font-medium text-sm truncate">{a.name}</span>
                     {a.status === 'finished' ? <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" /> : <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
                   </div>
+                  {a.category && (
+                    <span className="mt-1 inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{a.category}</span>
+                  )}
                   {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
                 </button>
               ))}
