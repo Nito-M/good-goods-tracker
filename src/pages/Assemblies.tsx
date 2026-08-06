@@ -636,9 +636,7 @@ function AssemblyDetail({
           onClose={() => setShowSubAssemblyPicker(false)}
           onConfirm={(selections) => handleAddSubAssemblies(selections)}
           subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
-          fullAssemblies={otherAssemblies.map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
           label1="Sub Assemblies"
-          labelFullAssemblies="Assemblies"
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {
             const ids: string[] = [];
