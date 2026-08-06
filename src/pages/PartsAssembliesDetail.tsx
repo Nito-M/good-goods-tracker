@@ -528,25 +528,47 @@ export function PartsAssembliesDetail() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {!editingType && (
-                <>
-                  <Button variant="outline" size="sm" onClick={() => { setEditingType(true); setEditTypeName(decodedType); }}>
-                    <Pencil className="h-3 w-3 mr-1" /> Rename
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="h-8 w-44 text-xs">
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All categories ({inType.length})</SelectItem>
+                  {categoriesInType.map(c => (
+                    <SelectItem key={c} value={c}>{c} ({inType.filter(a => a.category === c).length})</SelectItem>
+                  ))}
+                  <SelectItem value="__none__">Uncategorized ({inType.filter(a => !a.category).length})</SelectItem>
+                </SelectContent>
+              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    Actions <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
-                  {decodedType !== 'General' && (
-                    <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => setDeleteTypeOpen(true)}>
-                      <Trash2 className="h-3 w-3 mr-1" /> Delete Type
-                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setCreateOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> New Assembly
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-4 w-4 mr-2" /> Import JSON
+                  </DropdownMenuItem>
+                  {!editingType && (
+                    <DropdownMenuItem onClick={() => { setEditingType(true); setEditTypeName(decodedType); }}>
+                      <Pencil className="h-4 w-4 mr-2" /> Rename Type
+                    </DropdownMenuItem>
                   )}
-                </>
-              )}
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1">
-                <Upload className="h-3 w-3" /> Import JSON
-              </Button>
+                  {!editingType && decodedType !== 'General' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTypeOpen(true)}>
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete Type
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <input ref={fileInputRef} type="file" accept=".json" multiple className="hidden" onChange={handleFileInput} />
-              <Button onClick={() => setCreateOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" /> New Assembly
-              </Button>
             </div>
           </div>
         </div>
