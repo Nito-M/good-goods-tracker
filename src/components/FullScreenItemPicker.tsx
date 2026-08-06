@@ -125,9 +125,9 @@ function CartItemRow({
               className="h-7 text-sm font-medium"
             />
           ) : (
-            <p className="font-medium text-sm truncate">{c.itemName}</p>
+            <p className="font-medium text-sm break-words">{c.itemName}</p>
           )}
-          <p className="text-xs text-muted-foreground">{c.sku || 'No SKU'}</p>
+          <p className="text-xs text-muted-foreground break-all">{c.sku || 'No SKU'}</p>
         </div>
         <Button
           size="icon"
@@ -532,10 +532,10 @@ export function FullScreenItemPicker({
                     </Button>
                     <span className="font-medium">{selectedAssemblyType}</span>
                   </div>
-                  <Table>
+                  <Table className="table-fixed w-full">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Assembly</TableHead>
+                        <TableHead className="w-[40%]">Assembly</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead className="text-right">MSRP</TableHead>
                         <TableHead className="w-16"></TableHead>
@@ -555,7 +555,7 @@ export function FullScreenItemPicker({
                             className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
                             onClick={() => onAddAssembly?.(assembly)}
                           >
-                            <TableCell className="font-medium">{assembly.name}</TableCell>
+                            <TableCell className="font-medium break-words">{assembly.name}</TableCell>
                             <TableCell className="text-muted-foreground text-sm max-w-xs truncate">
                               {assembly.description || '—'}
                             </TableCell>
@@ -575,13 +575,13 @@ export function FullScreenItemPicker({
                 </div>
               )
             ) : (
-              <Table>
+              <Table className="table-fixed w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Item Name</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead className="text-right">Stock</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
+                    <TableHead className="w-[45%]">Item Name</TableHead>
+                    <TableHead className="w-[22%]">SKU</TableHead>
+                    <TableHead className="w-[11%] text-right">Stock</TableHead>
+                    <TableHead className="w-[16%] text-right">Unit Price</TableHead>
                     <TableHead className="w-16"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -603,17 +603,17 @@ export function FullScreenItemPicker({
                         onClick={() => handleItemClick(item)}
                       >
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <span>{item.name}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="break-words min-w-0">{item.name}</span>
                             {hasMultiple && (
-                              <Badge variant="outline" className="text-[10px] h-5">
+                              <Badge variant="outline" className="text-[10px] h-5 shrink-0">
                                 {itemRows.length} vendor prices
                               </Badge>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{item.sku}</Badge>
+                          <Badge variant="secondary" className="break-all whitespace-normal text-left">{item.sku}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <span className={item.quantity <= item.minStock ? 'text-destructive font-medium' : ''}>
@@ -653,7 +653,7 @@ export function FullScreenItemPicker({
         </div>
 
         {/* Right: Live Cart Panel */}
-        <div className="w-96 flex flex-col bg-card shrink-0">
+        <div className="w-72 lg:w-96 flex flex-col bg-card shrink-0 min-w-0">
           <div className="p-4 border-b border-border shrink-0">
             <h3 className="font-semibold text-card-foreground">
               {documentType} Items
