@@ -190,7 +190,7 @@ export function FullScreenSubAssemblyPicker({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-card shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => (selectedType ? setSelectedType(null) : window.history.back())}>
+        <Button variant="ghost" size="icon" onClick={() => (selectedType ? (setSelectedType(null), setSelectedCategory(null)) : window.history.back())}>
           {selectedType ? <ChevronLeft className="h-5 w-5" /> : <X className="h-5 w-5" />}
         </Button>
         <h2 className="text-lg font-semibold flex-1 truncate">{selectedType ?? 'Sub Assemblies'}</h2>
@@ -200,8 +200,8 @@ export function FullScreenSubAssemblyPicker({
       </div>
 
       {selectedType && (
-        <div className="px-4 py-3 border-b bg-card shrink-0">
-          <div className="relative max-w-xl">
+        <div className="px-4 py-3 border-b bg-card shrink-0 flex flex-wrap items-center gap-3">
+          <div className="relative w-full sm:w-80 shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchInputRef}
@@ -211,8 +211,34 @@ export function FullScreenSubAssemblyPicker({
               className="pl-10"
             />
           </div>
+          {categoryGroups.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground shrink-0">Category</span>
+              <Button
+                variant={selectedCategory === null ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 shrink-0"
+                onClick={() => setSelectedCategory(null)}
+              >
+                All
+              </Button>
+              {categoryGroups.map((c) => (
+                <Button
+                  key={c.category}
+                  variant={selectedCategory === c.category ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-8 shrink-0 gap-1.5"
+                  onClick={() => setSelectedCategory(selectedCategory === c.category ? null : c.category)}
+                >
+                  {c.category}
+                  <span className="text-xs opacity-70">{c.count}</span>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       )}
+
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6 max-w-3xl mx-auto">
