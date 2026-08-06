@@ -254,30 +254,30 @@ function AssemblyDetail({
         const pa = list.find(a => a.id === selectedId);
         if (!pa) continue;
 
+        // Explode the sub assembly into its individual parts/items, each linked to its root record.
         const { data: paItems } = await (await import('@/integrations/supabase/client')).supabase
           .from('parts_assembly_items' as any)
-          .select(`quantity, part_id, inventory_item_id, parts ( price ), inventory_items ( cost )`)
+          .select(`quantity, part_id, inventory_item_id, part_name, part_sku, parts ( name, sku, price ), inventory_items ( name, sku, cost )`)
           .eq('assembly_id', selectedId);
 
-        let totalCost = 0;
-        if (paItems) {
-          for (const row of paItems as any[]) {
-            const cost = row.parts?.price ?? row.inventory_items?.cost ?? 0;
-            totalCost += row.quantity * cost;
-          }
+        const rows = (paItems as any[]) || [];
+        if (rows.length === 0) continue;
+
+        const multiplier = 1; // sub assemblies are added one at a time from the picker
+        for (const row of rows) {
+          const cost = row.parts?.price ?? row.inventory_items?.cost ?? 0;
+          const name = row.part_name || row.parts?.name || row.inventory_items?.name || 'Item';
+          const sku = row.part_sku || row.parts?.sku || row.inventory_items?.sku || '';
+          await addItem({
+            inventory_item_id: row.inventory_item_id || null,
+            part_id: row.part_id || null,
+            item_name: name,
+            sku,
+            quantity: (row.quantity || 1) * multiplier,
+            unit_cost: cost,
+            notes: `From: ${pa.name}`,
+          });
         }
-
-        const price = pa.selling_price > 0 ? pa.selling_price : totalCost;
-
-        await addItem({
-          inventory_item_id: null,
-          item_name: pa.name,
-          sku: '',
-          quantity: 1,
-          unit_cost: price,
-          notes: pa.description || undefined,
-          parts_assembly_id: pa.id,
-        });
       }
       onItemsChanged?.();
     } finally {
