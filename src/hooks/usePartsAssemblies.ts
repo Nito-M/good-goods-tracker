@@ -12,6 +12,7 @@ export interface PartsAssembly {
   status: string;
   status_notes: string | null;
   type: string;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
