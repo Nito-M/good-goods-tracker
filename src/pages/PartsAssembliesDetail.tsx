@@ -33,7 +33,7 @@ function AssemblyDetail({
   allInventoryItems: { id: string; cost: number }[];
   
   onDelete: (id: string) => void;
-  onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
+  onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; category?: string | null }) => Promise<void>;
 }) {
   const navigate = useNavigate();
   const { items, loading, addItem, addItems, updateItem, removeItem } = usePartsAssemblyItems(assembly.id);
