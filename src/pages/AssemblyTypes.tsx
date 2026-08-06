@@ -36,7 +36,11 @@ export function AssemblyTypes() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { assemblies, loading, refetch } = useAssemblies();
-  const { categories: assemblyCategories, addCategory: addAssemblyCategory, deleteCategory: deleteAssemblyCategory } = useAssemblyCategories();
+  const {
+    categories: assemblyCategories,
+    addCategory: addAssemblyCategory,
+    refetch: refetchAssemblyCategories,
+  } = useAssemblyCategories();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
@@ -129,12 +133,27 @@ export function AssemblyTypes() {
       setDeleteType(null);
       return;
     }
-    // Also remove the matching assembly_categories row(s) so empty types disappear
+    // Remove every matching category row. Older shared organizations can have
+    // duplicate rows created by different members.
     const matching = assemblyCategories.filter(c => c.name === type);
-    for (const c of matching) {
-      await deleteAssemblyCategory(c.id);
+    if (matching.length > 0) {
+      const { error: categoryError } = await supabase
+        .from('assembly_categories')
+        .delete()
+        .in('id', matching.map(category => category.id));
+
+      if (categoryError) {
+        toast({
+          title: 'Could not delete type',
+          description: categoryError.message,
+          variant: 'destructive',
+        });
+        setDeletingType(false);
+        return;
+      }
     }
-    await refetch();
+
+    await Promise.all([refetch(), refetchAssemblyCategories()]);
     toast({ title: 'Type deleted', description: 'Assemblies moved to General' });
     setDeletingType(false);
     setDeleteType(null);
