@@ -635,7 +635,7 @@ function AssemblyDetail({
           open={showSubAssemblyPicker}
           onClose={() => setShowSubAssemblyPicker(false)}
           onConfirm={(selections) => handleAddSubAssemblies(selections)}
-          subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type }))}
+          subAssemblies1={(partsAssemblies || []).map(a => ({ id: a.id, name: a.name, description: a.description, selling_price: a.selling_price, type: a.type, category: (a as any).category ?? null }))}
           label1="Sub Assemblies"
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {
