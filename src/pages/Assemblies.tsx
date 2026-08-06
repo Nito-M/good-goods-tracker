@@ -639,17 +639,18 @@ function AssemblyDetail({
           label1="Sub Assemblies"
           adding={!!addingSubAssemblyId}
           existingSubAssemblyIds={(() => {
-            const ids: string[] = [];
+            const ids = new Set<string>();
             const allPA = partsAssemblies || [];
             for (const item of items) {
-              if (item.parts_assembly_id) {
-                ids.push(item.parts_assembly_id);
-              } else {
-                const match = allPA.find(pa => pa.name === item.item_name);
-                if (match) ids.push(match.id);
+              if ((item as any).parts_assembly_id) {
+                ids.add((item as any).parts_assembly_id);
+                continue;
               }
+              const fromName = (item.notes || '').startsWith('From: ') ? (item.notes || '').slice(6).trim() : null;
+              const match = allPA.find(pa => pa.name === item.item_name || (fromName && pa.name === fromName));
+              if (match) ids.add(match.id);
             }
-            return ids;
+            return Array.from(ids);
           })()}
         />
 
