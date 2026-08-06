@@ -168,41 +168,72 @@ export function FullScreenSubAssemblyPicker({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-card shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => window.history.back()}>
-          <X className="h-5 w-5" />
+        <Button variant="ghost" size="icon" onClick={() => (selectedType ? setSelectedType(null) : window.history.back())}>
+          {selectedType ? <ChevronLeft className="h-5 w-5" /> : <X className="h-5 w-5" />}
         </Button>
-        <h2 className="text-lg font-semibold flex-1">Sub Assemblies</h2>
+        <h2 className="text-lg font-semibold flex-1 truncate">{selectedType ?? 'Sub Assemblies'}</h2>
         {selections.length > 0 && (
           <Badge variant="secondary" className="mr-2">{selections.length} selected</Badge>
         )}
       </div>
 
-      <div className="px-4 py-3 border-b bg-card shrink-0">
-        <div className="relative max-w-xl">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            ref={searchInputRef}
-            placeholder="Search sub assemblies..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+      {selectedType && (
+        <div className="px-4 py-3 border-b bg-card shrink-0">
+          <div className="relative max-w-xl">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              placeholder="Search sub assemblies..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6 max-w-3xl mx-auto">
-          {renderSection(labelFullAssemblies, filteredFull, 'assembly', existingFullAssemblyIds)}
-          {renderSection(label1, filtered1, 'parts1', existingSubAssemblyIds)}
-          {renderSection(label2, filtered2, 'parts2', existingSubAssembly2Ids)}
+          {!selectedType ? (
+            typeGroups.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <PackagePlus className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No sub assemblies found.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Choose a sub assembly group</p>
+                {typeGroups.map((g) => (
+                  <button
+                    key={g.type}
+                    onClick={() => { setSearchQuery(''); setSelectedType(g.type); setTimeout(() => searchInputRef.current?.focus(), 100); }}
+                    className="w-full text-left px-4 py-3 rounded-lg border bg-card hover:bg-accent transition-colors flex items-center justify-between gap-4"
+                  >
+                    <span className="font-medium text-sm truncate">{g.type}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="secondary">{g.count}</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )
+          ) : (
+            <>
+              {renderSection(labelFullAssemblies, filteredFull, 'assembly', existingFullAssemblyIds)}
+              {renderSection(label1, filtered1, 'parts1', existingSubAssemblyIds)}
+              {renderSection(label2, filtered2, 'parts2', existingSubAssembly2Ids)}
 
-          {filtered1.length === 0 && filtered2.length === 0 && filteredFull.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground">
-              <PackagePlus className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No sub assemblies found.</p>
-            </div>
+              {filtered1.length === 0 && filtered2.length === 0 && filteredFull.length === 0 && (
+                <div className="text-center py-16 text-muted-foreground">
+                  <PackagePlus className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">No sub assemblies found.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
+
       </ScrollArea>
 
       {selections.length > 0 && (
