@@ -254,7 +254,7 @@ export function FullScreenSubAssemblyPicker({
                 {typeGroups.map((g) => (
                   <button
                     key={g.type}
-                    onClick={() => { setSearchQuery(''); setSelectedType(g.type); setTimeout(() => searchInputRef.current?.focus(), 100); }}
+                    onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedType(g.type); setTimeout(() => searchInputRef.current?.focus(), 100); }}
                     className="w-full text-left px-4 py-3 rounded-lg border bg-card hover:bg-accent transition-colors flex items-center justify-between gap-4"
                   >
                     <span className="font-medium text-sm truncate">{g.type}</span>
