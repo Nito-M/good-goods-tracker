@@ -7,6 +7,7 @@ import { useParts } from '@/hooks/useParts';
 import { useInventory } from '@/hooks/useInventory';
 import { supabase } from '@/integrations/supabase/client';
 import { FullScreenPartsPicker } from '@/components/FullScreenPartsPicker';
+import { SubAssemblyCategorySelect } from '@/components/SubAssemblyCategorySelect';
 
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
