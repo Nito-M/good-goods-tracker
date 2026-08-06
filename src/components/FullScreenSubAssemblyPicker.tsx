@@ -59,25 +59,41 @@ export function FullScreenSubAssemblyPicker({
   const [selections, setSelections] = useState<SelectedSubAssembly[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const pushedRef = useRef(false);
+
   useEffect(() => {
     if (open) {
       setSearchQuery('');
       setSelections([]);
       setSelectedType(null);
       setSelectedCategory(null);
-      window.history.pushState({ picker: 'subassembly' }, '');
+      if ((window.history.state as any)?.picker !== 'subassembly') {
+        window.history.pushState({ picker: 'subassembly' }, '');
+        pushedRef.current = true;
+      }
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [open]);
 
-
+  const handleClose = () => {
+    if (pushedRef.current && (window.history.state as any)?.picker === 'subassembly') {
+      pushedRef.current = false;
+      window.history.back();
+      return;
+    }
+    onClose();
+  };
 
   useEffect(() => {
     if (!open) return;
-    const handler = () => onClose();
+    const handler = () => {
+      pushedRef.current = false;
+      onClose();
+    };
     window.addEventListener('popstate', handler);
     return () => window.removeEventListener('popstate', handler);
   }, [open, onClose]);
+
 
   const toggleSelection = (id: string, source: SubAssemblySource) => {
     setSelections(prev => {
