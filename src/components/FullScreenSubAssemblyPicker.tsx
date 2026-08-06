@@ -12,6 +12,7 @@ interface SubAssemblyRow {
   description: string | null;
   selling_price: number;
   type: string;
+  category?: string | null;
 }
 
 export type SubAssemblySource = 'parts1' | 'parts2' | 'assembly';
@@ -54,6 +55,7 @@ export function FullScreenSubAssemblyPicker({
 }: FullScreenSubAssemblyPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selections, setSelections] = useState<SelectedSubAssembly[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,10 +64,12 @@ export function FullScreenSubAssemblyPicker({
       setSearchQuery('');
       setSelections([]);
       setSelectedType(null);
+      setSelectedCategory(null);
       window.history.pushState({ picker: 'subassembly' }, '');
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [open]);
+
 
 
   useEffect(() => {
@@ -89,11 +93,15 @@ export function FullScreenSubAssemblyPicker({
   const applyFilter = (rows: SubAssemblyRow[]) => {
     const q = searchQuery.toLowerCase().trim();
     const byType = selectedType ? rows.filter((a) => (a.type || 'Uncategorized') === selectedType) : rows;
-    if (!q) return byType;
-    return byType.filter(
+    const byCategory = selectedCategory
+      ? byType.filter((a) => (a.category || 'Uncategorized') === selectedCategory)
+      : byType;
+    if (!q) return byCategory;
+    return byCategory.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
         (a.description ?? '').toLowerCase().includes(q) ||
+        (a.category ?? '').toLowerCase().includes(q) ||
         a.type.toLowerCase().includes(q)
     );
   };
@@ -109,9 +117,23 @@ export function FullScreenSubAssemblyPicker({
       .sort((a, b) => a.type.localeCompare(b.type));
   }, [subAssemblies1, subAssemblies2]);
 
-  const filtered1 = useMemo(() => applyFilter(subAssemblies1), [subAssemblies1, searchQuery, selectedType]);
-  const filtered2 = useMemo(() => applyFilter(subAssemblies2), [subAssemblies2, searchQuery, selectedType]);
-  const filteredFull = useMemo(() => applyFilter(fullAssemblies), [fullAssemblies, searchQuery, selectedType]);
+  // Categories available inside the selected type
+  const categoryGroups = useMemo(() => {
+    if (!selectedType) return [];
+    const counts = new Map<string, number>();
+    for (const r of [...subAssemblies1, ...subAssemblies2, ...fullAssemblies]) {
+      if ((r.type || 'Uncategorized') !== selectedType) continue;
+      const c = r.category || 'Uncategorized';
+      counts.set(c, (counts.get(c) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .map(([category, count]) => ({ category, count }))
+      .sort((a, b) => a.category.localeCompare(b.category));
+  }, [subAssemblies1, subAssemblies2, fullAssemblies, selectedType]);
+
+  const filtered1 = useMemo(() => applyFilter(subAssemblies1), [subAssemblies1, searchQuery, selectedType, selectedCategory]);
+  const filtered2 = useMemo(() => applyFilter(subAssemblies2), [subAssemblies2, searchQuery, selectedType, selectedCategory]);
+  const filteredFull = useMemo(() => applyFilter(fullAssemblies), [fullAssemblies, searchQuery, selectedType, selectedCategory]);
 
 
   const renderSection = (
@@ -149,6 +171,7 @@ export function FullScreenSubAssemblyPicker({
                   {a.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{a.description}</p>}
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {a.type}
+                    {a.category && <span className="ml-2">· {a.category}</span>}
                     {alreadyAdded && <span className="ml-2 text-primary">(already added)</span>}
                   </p>
                 </div>
@@ -168,7 +191,7 @@ export function FullScreenSubAssemblyPicker({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-card shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => (selectedType ? setSelectedType(null) : window.history.back())}>
+        <Button variant="ghost" size="icon" onClick={() => (selectedType ? (setSelectedType(null), setSelectedCategory(null)) : window.history.back())}>
           {selectedType ? <ChevronLeft className="h-5 w-5" /> : <X className="h-5 w-5" />}
         </Button>
         <h2 className="text-lg font-semibold flex-1 truncate">{selectedType ?? 'Sub Assemblies'}</h2>
@@ -178,8 +201,8 @@ export function FullScreenSubAssemblyPicker({
       </div>
 
       {selectedType && (
-        <div className="px-4 py-3 border-b bg-card shrink-0">
-          <div className="relative max-w-xl">
+        <div className="px-4 py-3 border-b bg-card shrink-0 flex flex-wrap items-center gap-3">
+          <div className="relative w-full sm:w-80 shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchInputRef}
@@ -189,8 +212,34 @@ export function FullScreenSubAssemblyPicker({
               className="pl-10"
             />
           </div>
+          {categoryGroups.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground shrink-0">Category</span>
+              <Button
+                variant={selectedCategory === null ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 shrink-0"
+                onClick={() => setSelectedCategory(null)}
+              >
+                All
+              </Button>
+              {categoryGroups.map((c) => (
+                <Button
+                  key={c.category}
+                  variant={selectedCategory === c.category ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-8 shrink-0 gap-1.5"
+                  onClick={() => setSelectedCategory(selectedCategory === c.category ? null : c.category)}
+                >
+                  {c.category}
+                  <span className="text-xs opacity-70">{c.count}</span>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       )}
+
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6 max-w-3xl mx-auto">
@@ -206,7 +255,7 @@ export function FullScreenSubAssemblyPicker({
                 {typeGroups.map((g) => (
                   <button
                     key={g.type}
-                    onClick={() => { setSearchQuery(''); setSelectedType(g.type); setTimeout(() => searchInputRef.current?.focus(), 100); }}
+                    onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedType(g.type); setTimeout(() => searchInputRef.current?.focus(), 100); }}
                     className="w-full text-left px-4 py-3 rounded-lg border bg-card hover:bg-accent transition-colors flex items-center justify-between gap-4"
                   >
                     <span className="font-medium text-sm truncate">{g.type}</span>
