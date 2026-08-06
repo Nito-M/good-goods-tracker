@@ -12,6 +12,7 @@ interface SubAssemblyRow {
   description: string | null;
   selling_price: number;
   type: string;
+  category?: string | null;
 }
 
 export type SubAssemblySource = 'parts1' | 'parts2' | 'assembly';
