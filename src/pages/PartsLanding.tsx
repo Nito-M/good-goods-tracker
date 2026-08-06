@@ -19,7 +19,10 @@ const lockedNames = new Set(['parts-assemblies']);
 function getSavedNames(): Record<string, string> {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? { ...defaultNames, ...JSON.parse(saved) } : { ...defaultNames };
+    const merged = saved ? { ...defaultNames, ...JSON.parse(saved) } : { ...defaultNames };
+    // Locked sections always use their fixed name
+    for (const key of lockedNames) merged[key] = defaultNames[key];
+    return merged;
   } catch {
     return { ...defaultNames };
   }
