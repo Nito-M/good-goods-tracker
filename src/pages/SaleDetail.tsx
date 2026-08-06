@@ -41,7 +41,7 @@ export default function SaleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { sales, loading, updateInternalNotes } = useSales();
+  const { sales, loading, updateInternalNotes, updateLinks } = useSales();
   const { profile } = useProfile();
   const { companies } = useCompanies();
   
@@ -188,7 +188,7 @@ export default function SaleDetail() {
         </CardContent>
       </Card>
 
-      <LinkedDocumentsCard sale={sale} />
+      <LinkedDocumentsCard sale={sale} onUpdateLinks={updateLinks} />
 
 
 
