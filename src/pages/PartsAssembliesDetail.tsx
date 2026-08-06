@@ -31,7 +31,7 @@ function AssemblyDetail({
   inventoryItems: { id: string; name: string; sku: string; cost: number }[];
   allParts: { id: string; price: number }[];
   allInventoryItems: { id: string; cost: number }[];
-  allAssembliesV2: { id: string; name: string; description: string | null; selling_price: number; type: string }[];
+  
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null }) => Promise<void>;
 }) {
