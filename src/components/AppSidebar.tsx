@@ -35,7 +35,7 @@ const menuItems = [
 { title: "Bank", url: "/bank", icon: Wallet, pageKey: "bank" },
 { title: "Assemblies", url: "/assemblies", icon: Layers, pageKey: "assemblies" },
 { title: "Business Info", url: "/assets", icon: Briefcase, pageKey: "assets" },
-{ title: "Parts Library", url: "/parts", icon: Puzzle, pageKey: "parts" },
+{ title: "Sub Assemblies", url: "/parts", icon: Puzzle, pageKey: "parts" },
 { title: "Tax Documents", url: "/tax-documents", icon: FileText, pageKey: "tax-documents" },
 { title: "Storefront", url: "/storefront", icon: ShoppingCart, pageKey: "storefront" },
 { title: "Configuration", url: "/trailer-configurator", icon: Wrench, pageKey: "trailer-config" }];
