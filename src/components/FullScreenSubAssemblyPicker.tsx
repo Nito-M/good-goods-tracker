@@ -207,7 +207,7 @@ export function FullScreenSubAssemblyPicker({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3 border-b bg-card shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => (selectedType ? (setSelectedType(null), setSelectedCategory(null)) : window.history.back())}>
+        <Button variant="ghost" size="icon" onClick={() => (selectedType ? (setSelectedType(null), setSelectedCategory(null)) : handleClose())}>
           {selectedType ? <ChevronLeft className="h-5 w-5" /> : <X className="h-5 w-5" />}
         </Button>
         <h2 className="text-lg font-semibold flex-1 truncate">{selectedType ?? 'Sub Assemblies'}</h2>
