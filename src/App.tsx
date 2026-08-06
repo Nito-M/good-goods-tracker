@@ -723,26 +723,6 @@ function AppContent() {
           }
         />
         <Route
-          path="/parts/assemblies-v2"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <PartsAssembliesV2 />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/parts/assemblies-v2/:type"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <PartsAssembliesDetailV2 />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/tax-documents"
           element={
             <ProtectedRoute>
