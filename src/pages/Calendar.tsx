@@ -686,6 +686,12 @@ export function Calendar() {
         purchaseOrders={purchaseOrders}
         selectedDate={selectedDate} />
 
+      <CalendarPrintDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        monthLabel={format(currentMonth, "MMMM yyyy")}
+        onConfirm={handlePrint} />
+
     </div>);
 
 }
