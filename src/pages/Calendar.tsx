@@ -283,6 +283,9 @@ export function Calendar() {
           <p className="text-muted-foreground"> View requests and events by date</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setPrintOpen(true)}>
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
           <Button variant="outline" size="sm" onClick={goToToday}>
             Today
           </Button>
