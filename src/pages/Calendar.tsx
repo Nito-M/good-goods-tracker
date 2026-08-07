@@ -18,6 +18,8 @@ import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarPrintDialog } from "@/components/CalendarPrintDialog";
+import { generateCalendarPdf, CalendarPdfSections, CalendarPdfDay } from "@/lib/calendarPdfGenerator";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft,
@@ -33,7 +35,8 @@ import {
   Repeat,
   Briefcase,
   MapPinned,
-  ListChecks } from
+  ListChecks,
+  Printer } from
 "lucide-react";
 import {
   format,
@@ -107,6 +110,7 @@ export function Calendar() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addTripOpen, setAddTripOpen] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
 
   const parseLocalDate = (dateString: string): Date => {
     const [year, month, day] = dateString.split("T")[0].split("-").map(Number);
@@ -206,6 +210,67 @@ export function Calendar() {
     yearly: "Yearly"
   };
 
+  const handlePrint = (sections: CalendarPdfSections, mode: "download" | "print") => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const days: CalendarPdfDay[] = eachDayOfInterval({ start: monthStart, end: monthEnd }).map((day) => {
+      const dateKey = format(day, "yyyy-MM-dd");
+      const entries: CalendarPdfDay["entries"] = [];
+
+      getEventsForDay(day).forEach((e) =>
+        entries.push({
+          kind: "events",
+          title: e.title,
+          detail: [e.description, e.recurrence !== "none" ? RECURRENCE_LABELS[e.recurrence] : ""].
+            filter(Boolean).join(" · ") || undefined
+        })
+      );
+
+      tripPlans.
+        filter((tp) => tp.endDate ? dateKey >= tp.startDate && dateKey <= tp.endDate : tp.startDate === dateKey).
+        forEach((tp) =>
+        entries.push({
+          kind: "trips",
+          title: tp.title,
+          detail: [
+          tp.endDate && tp.endDate !== tp.startDate ? `${tp.startDate} → ${tp.endDate}` : null,
+          tp.locations.length > 0 ? tp.locations.map((l) => l.name).join(", ") : null,
+          tp.notes || null].
+          filter(Boolean).join(" · ") || undefined
+        })
+        );
+
+      (jobsByDate.get(dateKey) || []).forEach((job) =>
+        entries.push({
+          kind: "jobs",
+          title: `${job.jobNumber ? `#${job.jobNumber} ` : ""}${job.title}`,
+          detail: job.status || undefined
+        })
+      );
+
+      (requestsByDate.get(dateKey) || []).forEach((r) =>
+        entries.push({
+          kind: "requests",
+          title: r.itemName,
+          detail: STATUS_CONFIG[r.status].label
+        })
+      );
+
+      (todosByDate.get(dateKey) || []).forEach((t) =>
+        entries.push({
+          kind: "todos",
+          title: t.title,
+          detail: t.isDone ? "Done" : undefined
+        })
+      );
+
+      return { label: format(day, "EEE, MMM d"), entries };
+    });
+
+    generateCalendarPdf(format(currentMonth, "MMMM yyyy"), days, sections, mode);
+  };
+
+
   return (
     <div className="space-y-6 h-full">
       {/* Header */}
@@ -218,6 +283,9 @@ export function Calendar() {
           <p className="text-muted-foreground"> View requests and events by date</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setPrintOpen(true)}>
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
           <Button variant="outline" size="sm" onClick={goToToday}>
             Today
           </Button>
@@ -617,6 +685,12 @@ export function Calendar() {
         onSave={createTripPlan}
         purchaseOrders={purchaseOrders}
         selectedDate={selectedDate} />
+
+      <CalendarPrintDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        monthLabel={format(currentMonth, "MMMM yyyy")}
+        onConfirm={handlePrint} />
 
     </div>);
 
