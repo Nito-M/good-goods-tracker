@@ -210,6 +210,67 @@ export function Calendar() {
     yearly: "Yearly"
   };
 
+  const handlePrint = (sections: CalendarPdfSections, mode: "download" | "print") => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const days: CalendarPdfDay[] = eachDayOfInterval({ start: monthStart, end: monthEnd }).map((day) => {
+      const dateKey = format(day, "yyyy-MM-dd");
+      const entries: CalendarPdfDay["entries"] = [];
+
+      getEventsForDay(day).forEach((e) =>
+        entries.push({
+          kind: "events",
+          title: e.title,
+          detail: [e.description, e.recurrence !== "none" ? RECURRENCE_LABELS[e.recurrence] : ""].
+            filter(Boolean).join(" · ") || undefined
+        })
+      );
+
+      tripPlans.
+        filter((tp) => tp.endDate ? dateKey >= tp.startDate && dateKey <= tp.endDate : tp.startDate === dateKey).
+        forEach((tp) =>
+        entries.push({
+          kind: "trips",
+          title: tp.title,
+          detail: [
+          tp.endDate && tp.endDate !== tp.startDate ? `${tp.startDate} → ${tp.endDate}` : null,
+          tp.locations.length > 0 ? tp.locations.map((l) => l.name).join(", ") : null,
+          tp.notes || null].
+          filter(Boolean).join(" · ") || undefined
+        })
+        );
+
+      (jobsByDate.get(dateKey) || []).forEach((job) =>
+        entries.push({
+          kind: "jobs",
+          title: `${job.jobNumber ? `#${job.jobNumber} ` : ""}${job.title}`,
+          detail: job.status || undefined
+        })
+      );
+
+      (requestsByDate.get(dateKey) || []).forEach((r) =>
+        entries.push({
+          kind: "requests",
+          title: r.itemName,
+          detail: STATUS_CONFIG[r.status].label
+        })
+      );
+
+      (todosByDate.get(dateKey) || []).forEach((t) =>
+        entries.push({
+          kind: "todos",
+          title: t.title,
+          detail: t.isDone ? "Done" : undefined
+        })
+      );
+
+      return { label: format(day, "EEE, MMM d"), entries };
+    });
+
+    generateCalendarPdf(format(currentMonth, "MMMM yyyy"), days, sections, mode);
+  };
+
+
   return (
     <div className="space-y-6 h-full">
       {/* Header */}
