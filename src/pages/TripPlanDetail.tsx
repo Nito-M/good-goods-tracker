@@ -176,6 +176,36 @@ export function TripPlanDetail() {
   const tripLevelPos = trip.pos.filter((po) => po.locationIndex === null);
   const getPosForLocation = (idx: number) => trip.pos.filter((po) => po.locationIndex === idx);
 
+  const mapPo = (tp: { purchaseOrderId: string; poNumber?: string | null; vendorName?: string | null }) => {
+    const po = poLookup.get(tp.purchaseOrderId);
+    return {
+      poNumber: tp.poNumber,
+      vendorName: tp.vendorName,
+      total: po ? getPoTotal(po) : undefined,
+      isPaid: !!po?.paidAt,
+    };
+  };
+
+  const handleExport = (mode: "download" | "print") => {
+    generateTripPlanPdf(
+      {
+        title: trip.title,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        notes: trip.notes,
+        tripPos: tripLevelPos.map(mapPo),
+        locations: trip.locations.map((loc, i) => ({
+          name: loc.name,
+          address: loc.address,
+          notes: loc.notes,
+          pos: getPosForLocation(i).map(mapPo),
+        })),
+        totals: { total: grandTotal, paid: grandPaid, unpaid: grandUnpaid },
+      },
+      mode,
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
