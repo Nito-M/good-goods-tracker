@@ -36,6 +36,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Printer, Download } from "lucide-react";
+import { generateTripPlanPdf } from "@/lib/tripPlanPdfGenerator";
 
 function getPoTotal(po: PurchaseOrder) {
   const subtotal = po.items.reduce((sum, item) => sum + item.quantity * (item.unitCost || 0), 0);
