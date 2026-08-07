@@ -36,6 +36,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Printer, Download } from "lucide-react";
+import { generateTripPlanPdf } from "@/lib/tripPlanPdfGenerator";
 
 function getPoTotal(po: PurchaseOrder) {
   const subtotal = po.items.reduce((sum, item) => sum + item.quantity * (item.unitCost || 0), 0);
@@ -176,6 +178,36 @@ export function TripPlanDetail() {
   const tripLevelPos = trip.pos.filter((po) => po.locationIndex === null);
   const getPosForLocation = (idx: number) => trip.pos.filter((po) => po.locationIndex === idx);
 
+  const mapPo = (tp: { purchaseOrderId: string; poNumber?: string | null; vendorName?: string | null }) => {
+    const po = poLookup.get(tp.purchaseOrderId);
+    return {
+      poNumber: tp.poNumber,
+      vendorName: tp.vendorName,
+      total: po ? getPoTotal(po) : undefined,
+      isPaid: !!po?.paidAt,
+    };
+  };
+
+  const handleExport = (mode: "download" | "print") => {
+    generateTripPlanPdf(
+      {
+        title: trip.title,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        notes: trip.notes,
+        tripPos: tripLevelPos.map(mapPo),
+        locations: trip.locations.map((loc, i) => ({
+          name: loc.name,
+          address: loc.address,
+          notes: loc.notes,
+          pos: getPosForLocation(i).map(mapPo),
+        })),
+        totals: { total: grandTotal, paid: grandPaid, unpaid: grandUnpaid },
+      },
+      mode,
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -190,6 +222,12 @@ export function TripPlanDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => handleExport("print")}>
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport("download")}>
+            <Download className="h-4 w-4 mr-1" /> PDF
+          </Button>
           <Button variant="outline" size="sm" onClick={() => navigate(`/calendar/trip/${trip.id}/edit`)}>
             <Pencil className="h-4 w-4 mr-1" /> Edit
           </Button>
