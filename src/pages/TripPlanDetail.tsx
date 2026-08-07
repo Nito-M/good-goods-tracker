@@ -222,6 +222,12 @@ export function TripPlanDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => handleExport("print")}>
+            <Printer className="h-4 w-4 mr-1" /> Print
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport("download")}>
+            <Download className="h-4 w-4 mr-1" /> PDF
+          </Button>
           <Button variant="outline" size="sm" onClick={() => navigate(`/calendar/trip/${trip.id}/edit`)}>
             <Pencil className="h-4 w-4 mr-1" /> Edit
           </Button>
