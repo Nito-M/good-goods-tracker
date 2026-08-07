@@ -110,6 +110,7 @@ export function Calendar() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addTripOpen, setAddTripOpen] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
 
   const parseLocalDate = (dateString: string): Date => {
     const [year, month, day] = dateString.split("T")[0].split("-").map(Number);
