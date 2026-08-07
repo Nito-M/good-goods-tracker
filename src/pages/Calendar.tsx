@@ -35,7 +35,8 @@ import {
   Repeat,
   Briefcase,
   MapPinned,
-  ListChecks } from
+  ListChecks,
+  Printer } from
 "lucide-react";
 import {
   format,
