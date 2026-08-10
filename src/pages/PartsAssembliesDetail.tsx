@@ -355,6 +355,7 @@ export function PartsAssembliesDetail() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [newCategory, setNewCategory] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [searchParams] = useSearchParams();
   const idFromUrl = searchParams.get('id');
