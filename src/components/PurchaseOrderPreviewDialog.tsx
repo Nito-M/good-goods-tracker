@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { PurchaseOrder } from '@/types/purchaseOrder';
 import { InvoiceSettings } from '@/types/sale';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
@@ -8,9 +9,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrencyPdf as formatCurrency } from '@/lib/utils';
+import { getPoPdfShowPricing, setPoPdfShowPricing } from '@/lib/purchaseOrderGenerator';
 
 interface PurchaseOrderPreviewDialogProps {
   open: boolean;
@@ -29,7 +33,18 @@ export function PurchaseOrderPreviewDialog({
 }: PurchaseOrderPreviewDialogProps) {
   const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) };
   const TAX_RATE = 0.05;
-  const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
+  const [showPricing, setShowPricing] = useState(true);
+
+  useEffect(() => {
+    if (open) setShowPricing(getPoPdfShowPricing());
+  }, [open]);
+
+  const togglePricing = (v: boolean) => {
+    setShowPricing(v);
+    setPoPdfShowPricing(v);
+  };
+
+  const hasAnyCost = showPricing && order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
   
   const subtotal = order.items.reduce((sum, item) => sum + (item.unitCost || 0) * item.quantity, 0);
   const discountAmount = order.discountAmount || 0;
@@ -37,6 +52,7 @@ export function PurchaseOrderPreviewDialog({
   const taxAmount = (order.gstEnabled ?? true) ? afterDiscount * TAX_RATE : 0;
   const pstAmount = afterDiscount * (order.pstPercent || 0) / 100;
   const totalCost = afterDiscount + taxAmount + pstAmount;
+
 
   const formatDate = (date: Date | string) => {
     const d = typeof date === 'string' ? new Date(date) : date;
