@@ -161,6 +161,15 @@ export function VendorDetail() {
                   <a href={`mailto:${vendor.contact_email}`} className="text-sm hover:underline text-primary">
                     {vendor.contact_email}
                   </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-auto"
+                    onClick={() => handleCopy(vendor.contact_email!, 'Email')}
+                    title="Copy email"
+                  >
+                    {copiedField === 'Email' ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
                 </div>
               )}
               {vendor.contact_phone && (
@@ -169,6 +178,15 @@ export function VendorDetail() {
                   <a href={`tel:${vendor.contact_phone}`} className="text-sm hover:underline text-primary">
                     {vendor.contact_phone}
                   </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-auto"
+                    onClick={() => handleCopy(vendor.contact_phone!, 'Phone')}
+                    title="Copy phone"
+                  >
+                    {copiedField === 'Phone' ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
                 </div>
               )}
               {vendor.address && (
