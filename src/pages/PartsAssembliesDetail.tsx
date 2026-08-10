@@ -648,6 +648,10 @@ export function PartsAssembliesDetail() {
           <DialogHeader><DialogTitle>New Parts Assembly</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1"><Label>Name</Label><Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Assembly name" autoFocus onKeyDown={e => e.key === 'Enter' && handleCreate()} /></div>
+            <div className="space-y-1">
+              <Label>Category <span className="text-sky-400">(optional)</span></Label>
+              <SubAssemblyCategorySelect value={newCategory} onChange={setNewCategory} className="w-full" />
+            </div>
             <div className="space-y-1"><Label>Description</Label><Textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Optional..." rows={2} /></div>
           </div>
           <DialogFooter>
