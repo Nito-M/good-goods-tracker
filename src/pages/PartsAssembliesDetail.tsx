@@ -439,12 +439,16 @@ export function PartsAssembliesDetail() {
     if (!newName.trim()) return;
     setCreating(true);
     const result = await createAssembly(newName.trim(), newDesc.trim() || undefined, decodedType);
+    if (result && newCategory) {
+      await updateAssembly(result.id, { category: newCategory });
+    }
     setCreating(false);
     if (result) {
       setSelectedId(result.id);
       setCreateOpen(false);
       setNewName('');
       setNewDesc('');
+      setNewCategory(null);
     }
   };
 
