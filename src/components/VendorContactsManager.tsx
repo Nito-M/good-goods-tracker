@@ -208,16 +208,38 @@ export function VendorContactsManager({ vendorId, readOnly = false }: VendorCont
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 {contact.email && (
-                  <a href={`mailto:${contact.email}`} className="flex items-center gap-1 hover:text-primary">
-                    <Mail className="h-3 w-3" />
-                    {contact.email}
-                  </a>
+                  <div className="flex items-center gap-1">
+                    <a href={`mailto:${contact.email}`} className="flex items-center gap-1 hover:text-primary">
+                      <Mail className="h-3 w-3" />
+                      {contact.email}
+                    </a>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => handleCopy(contact.email!, 'Email', contact.id)}
+                      title="Copy email"
+                    >
+                      {copiedId === `${contact.id}-Email` ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                    </Button>
+                  </div>
                 )}
                 {contact.phone && (
-                  <a href={`tel:${contact.phone}`} className="flex items-center gap-1 hover:text-primary">
-                    <Phone className="h-3 w-3" />
-                    {contact.phone}
-                  </a>
+                  <div className="flex items-center gap-1">
+                    <a href={`tel:${contact.phone}`} className="flex items-center gap-1 hover:text-primary">
+                      <Phone className="h-3 w-3" />
+                      {contact.phone}
+                    </a>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => handleCopy(contact.phone!, 'Phone', contact.id)}
+                      title="Copy phone"
+                    >
+                      {copiedId === `${contact.id}-Phone` ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                    </Button>
+                  </div>
                 )}
               </div>
               {contact.notes && (
