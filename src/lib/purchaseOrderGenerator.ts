@@ -6,7 +6,22 @@ import { format } from 'date-fns';
 import { formatCurrencyPdf as formatCurrency } from '@/lib/utils';
 import { savePdfBlob } from '@/lib/pdfSave';
 
-export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: InvoiceSettings) {
+export const PO_PDF_PRICING_KEY = 'po_pdf_show_pricing';
+
+export function getPoPdfShowPricing(): boolean {
+  try {
+    const raw = localStorage.getItem(PO_PDF_PRICING_KEY);
+    return raw === null ? true : raw === 'true';
+  } catch {
+    return true;
+  }
+}
+
+export function setPoPdfShowPricing(value: boolean) {
+  try { localStorage.setItem(PO_PDF_PRICING_KEY, String(value)); } catch { /* ignore */ }
+}
+
+export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: InvoiceSettings, showPricing?: boolean) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -14,7 +29,9 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrder, settings?: 
   const layout: InvoiceLayout = { ...defaultInvoiceLayout, ...(settings?.layout || {}) };
 
   const TAX_RATE = 0.05;
-  const hasAnyCost = order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
+  const pricingEnabled = showPricing ?? getPoPdfShowPricing();
+  const hasAnyCost = pricingEnabled && order.items.some(item => item.unitCost !== undefined && item.unitCost > 0);
+
 
   const formatDate = (date: Date | string) => {
     const d = typeof date === 'string' ? new Date(date) : date;
