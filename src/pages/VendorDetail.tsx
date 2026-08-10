@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, ExternalLink, Mail, Phone, MapPin, FileText, Palette } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, ExternalLink, Mail, Phone, MapPin, FileText, Palette, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ import { VendorLinksSection } from '@/components/VendorLinksSection';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import type { PurchaseOrder } from '@/types/purchaseOrder';
 
 function poTotal(o: PurchaseOrder): number {
@@ -48,6 +49,19 @@ export function VendorDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleCopy = async (value: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(field);
+      toast({ title: `${field} copied to clipboard` });
+      setTimeout(() => setCopiedField(null), 1500);
+    } catch {
+      toast({ title: 'Failed to copy', variant: 'destructive' });
+    }
+  };
 
   const vendor = vendors.find((v) => v.id === id);
 
@@ -147,6 +161,15 @@ export function VendorDetail() {
                   <a href={`mailto:${vendor.contact_email}`} className="text-sm hover:underline text-primary">
                     {vendor.contact_email}
                   </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-auto"
+                    onClick={() => handleCopy(vendor.contact_email!, 'Email')}
+                    title="Copy email"
+                  >
+                    {copiedField === 'Email' ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
                 </div>
               )}
               {vendor.contact_phone && (
@@ -155,6 +178,15 @@ export function VendorDetail() {
                   <a href={`tel:${vendor.contact_phone}`} className="text-sm hover:underline text-primary">
                     {vendor.contact_phone}
                   </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 ml-auto"
+                    onClick={() => handleCopy(vendor.contact_phone!, 'Phone')}
+                    title="Copy phone"
+                  >
+                    {copiedField === 'Phone' ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
                 </div>
               )}
               {vendor.address && (
