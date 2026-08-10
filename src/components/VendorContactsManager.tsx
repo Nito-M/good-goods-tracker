@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Plus, Trash2, Pencil, User, Briefcase, Mail, Phone, Star, X, Check, StickyNote } from 'lucide-react';
+import { Plus, Trash2, Pencil, User, Briefcase, Mail, Phone, Star, X, Check, StickyNote, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useVendorContacts, VendorContact } from '@/hooks/useVendorContacts';
+import { useToast } from '@/hooks/use-toast';
 
 interface ContactFormData {
   name: string;
