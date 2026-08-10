@@ -49,6 +49,19 @@ export function VendorDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleCopy = async (value: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(field);
+      toast({ title: `${field} copied to clipboard` });
+      setTimeout(() => setCopiedField(null), 1500);
+    } catch {
+      toast({ title: 'Failed to copy', variant: 'destructive' });
+    }
+  };
 
   const vendor = vendors.find((v) => v.id === id);
 
