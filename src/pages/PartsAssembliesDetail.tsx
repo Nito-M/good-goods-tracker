@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package, Upload, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Layers, Pencil, Check, X, CheckCircle2, Clock, MessageSquare, ArrowLeft, Download, Package, Upload, ChevronDown, Copy } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -27,7 +27,7 @@ import {
 
 
 function AssemblyDetail({
-  assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onUpdate,
+  assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onDuplicate, onUpdate,
 }: {
   assembly: PartsAssembly;
   parts: { id: string; name: string; sku: string; price: number }[];
@@ -36,6 +36,7 @@ function AssemblyDetail({
   allInventoryItems: { id: string; cost: number }[];
   
   onDelete: (id: string) => void;
+  onDuplicate: (assembly: PartsAssembly) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; category?: string | null }) => Promise<void>;
 }) {
   const navigate = useNavigate();
@@ -182,6 +183,9 @@ function AssemblyDetail({
                 URL.revokeObjectURL(url);
               }}>
                 <Download className="h-3 w-3 mr-1" /> JSON
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onDuplicate(assembly)}>
+                <Copy className="h-3 w-3 mr-1" /> Duplicate
               </Button>
               <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                 <Pencil className="h-3 w-3 mr-1" /> Edit
@@ -456,6 +460,60 @@ export function PartsAssembliesDetail() {
     setDeleteId(id);
   };
 
+  const [dupSource, setDupSource] = useState<PartsAssembly | null>(null);
+  const [dupName, setDupName] = useState('');
+  const [duplicating, setDuplicating] = useState(false);
+
+  const openDuplicate = (a: PartsAssembly) => {
+    setDupSource(a);
+    setDupName(`${a.name} (Copy)`);
+  };
+
+  const handleDuplicate = async () => {
+    if (!dupSource) return;
+    const name = dupName.trim();
+    if (!name) return;
+    if (name.toLowerCase() === dupSource.name.toLowerCase()) {
+      toast({ title: 'Choose a different name', description: 'The duplicate must have a new name.', variant: 'destructive' });
+      return;
+    }
+    if (inType.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+      toast({ title: 'Name already used', description: 'Another sub assembly in this type already has that name.', variant: 'destructive' });
+      return;
+    }
+    setDuplicating(true);
+    const created = await createAssembly(name, dupSource.description || undefined, decodedType);
+    if (!created) { setDuplicating(false); return; }
+    await updateAssembly(created.id, {
+      category: dupSource.category ?? null,
+      selling_price: dupSource.selling_price ?? 0,
+    });
+    const { data: srcItems } = await (supabase as any)
+      .from('parts_assembly_items')
+      .select('*')
+      .eq('assembly_id', dupSource.id);
+    if (srcItems && srcItems.length > 0) {
+      const rows = (srcItems as any[]).map(i => ({
+        assembly_id: created.id,
+        part_id: i.part_id,
+        inventory_item_id: i.inventory_item_id,
+        part_name: i.part_name,
+        part_sku: i.part_sku,
+        quantity: i.quantity,
+        notes: i.notes,
+      }));
+      const { error } = await (supabase as any).from('parts_assembly_items').insert(rows);
+      if (error) {
+        toast({ title: 'Partly duplicated', description: 'Assembly created but parts failed to copy.', variant: 'destructive' });
+      }
+    }
+    setDuplicating(false);
+    setDupSource(null);
+    setSelectedId(created.id);
+    toast({ title: 'Duplicated', description: `"${name}" created with ${srcItems?.length || 0} part${(srcItems?.length || 0) !== 1 ? 's' : ''}.` });
+  };
+
+
   const confirmDelete = async () => {
     if (!deleteId) return;
     await deleteAssembly(deleteId);
@@ -630,6 +688,7 @@ export function PartsAssembliesDetail() {
                allInventoryItems={inventoryItemsList.map(i => ({ id: i.id, cost: i.cost }))}
                
                onDelete={handleDelete}
+               onDuplicate={openDuplicate}
                onUpdate={updateAssembly}
              />
           ) : (
@@ -660,6 +719,36 @@ export function PartsAssembliesDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!dupSource} onOpenChange={(o) => { if (!o) setDupSource(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>Duplicate Sub Assembly</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            <Label>New Name</Label>
+            <Input
+              value={dupName}
+              onChange={e => setDupName(e.target.value)}
+              placeholder="New assembly name"
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') handleDuplicate(); }}
+            />
+            <p className="text-xs text-muted-foreground">
+              Copies the description, price, category and all parts from "{dupSource?.name}". The name must be different.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDupSource(null)}>Cancel</Button>
+            <Button
+              onClick={handleDuplicate}
+              disabled={duplicating || !dupName.trim() || dupName.trim().toLowerCase() === (dupSource?.name || '').toLowerCase()}
+            >
+              {duplicating ? 'Duplicating...' : 'Duplicate'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
