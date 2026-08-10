@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, ExternalLink, Mail, Phone, MapPin, FileText, Palette } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, ExternalLink, Mail, Phone, MapPin, FileText, Palette, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ import { VendorLinksSection } from '@/components/VendorLinksSection';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import type { PurchaseOrder } from '@/types/purchaseOrder';
 
 function poTotal(o: PurchaseOrder): number {
