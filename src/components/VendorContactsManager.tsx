@@ -36,6 +36,19 @@ export function VendorContactsManager({ vendorId, readOnly = false }: VendorCont
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ContactFormData>(emptyForm);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleCopy = async (value: string, label: string, contactId: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(`${contactId}-${label}`);
+      toast({ title: `${label} copied to clipboard` });
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch {
+      toast({ title: 'Failed to copy', variant: 'destructive' });
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
