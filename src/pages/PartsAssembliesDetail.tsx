@@ -460,6 +460,60 @@ export function PartsAssembliesDetail() {
     setDeleteId(id);
   };
 
+  const [dupSource, setDupSource] = useState<PartsAssembly | null>(null);
+  const [dupName, setDupName] = useState('');
+  const [duplicating, setDuplicating] = useState(false);
+
+  const openDuplicate = (a: PartsAssembly) => {
+    setDupSource(a);
+    setDupName(`${a.name} (Copy)`);
+  };
+
+  const handleDuplicate = async () => {
+    if (!dupSource) return;
+    const name = dupName.trim();
+    if (!name) return;
+    if (name.toLowerCase() === dupSource.name.toLowerCase()) {
+      toast({ title: 'Choose a different name', description: 'The duplicate must have a new name.', variant: 'destructive' });
+      return;
+    }
+    if (inType.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+      toast({ title: 'Name already used', description: 'Another sub assembly in this type already has that name.', variant: 'destructive' });
+      return;
+    }
+    setDuplicating(true);
+    const created = await createAssembly(name, dupSource.description || undefined, decodedType);
+    if (!created) { setDuplicating(false); return; }
+    await updateAssembly(created.id, {
+      category: dupSource.category ?? null,
+      selling_price: dupSource.selling_price ?? 0,
+    });
+    const { data: srcItems } = await (supabase as any)
+      .from('parts_assembly_items')
+      .select('*')
+      .eq('assembly_id', dupSource.id);
+    if (srcItems && srcItems.length > 0) {
+      const rows = (srcItems as any[]).map(i => ({
+        assembly_id: created.id,
+        part_id: i.part_id,
+        inventory_item_id: i.inventory_item_id,
+        part_name: i.part_name,
+        part_sku: i.part_sku,
+        quantity: i.quantity,
+        notes: i.notes,
+      }));
+      const { error } = await (supabase as any).from('parts_assembly_items').insert(rows);
+      if (error) {
+        toast({ title: 'Partly duplicated', description: 'Assembly created but parts failed to copy.', variant: 'destructive' });
+      }
+    }
+    setDuplicating(false);
+    setDupSource(null);
+    setSelectedId(created.id);
+    toast({ title: 'Duplicated', description: `"${name}" created with ${srcItems?.length || 0} part${(srcItems?.length || 0) !== 1 ? 's' : ''}.` });
+  };
+
+
   const confirmDelete = async () => {
     if (!deleteId) return;
     await deleteAssembly(deleteId);
