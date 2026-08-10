@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Plus, Trash2, Pencil, User, Briefcase, Mail, Phone, Star, X, Check, StickyNote } from 'lucide-react';
+import { Plus, Trash2, Pencil, User, Briefcase, Mail, Phone, Star, X, Check, StickyNote, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useVendorContacts, VendorContact } from '@/hooks/useVendorContacts';
+import { useToast } from '@/hooks/use-toast';
 
 interface ContactFormData {
   name: string;
@@ -35,6 +36,19 @@ export function VendorContactsManager({ vendorId, readOnly = false }: VendorCont
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ContactFormData>(emptyForm);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleCopy = async (value: string, label: string, contactId: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(`${contactId}-${label}`);
+      toast({ title: `${label} copied to clipboard` });
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch {
+      toast({ title: 'Failed to copy', variant: 'destructive' });
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
@@ -194,16 +208,38 @@ export function VendorContactsManager({ vendorId, readOnly = false }: VendorCont
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 {contact.email && (
-                  <a href={`mailto:${contact.email}`} className="flex items-center gap-1 hover:text-primary">
-                    <Mail className="h-3 w-3" />
-                    {contact.email}
-                  </a>
+                  <div className="flex items-center gap-1">
+                    <a href={`mailto:${contact.email}`} className="flex items-center gap-1 hover:text-primary">
+                      <Mail className="h-3 w-3" />
+                      {contact.email}
+                    </a>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => handleCopy(contact.email!, 'Email', contact.id)}
+                      title="Copy email"
+                    >
+                      {copiedId === `${contact.id}-Email` ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                    </Button>
+                  </div>
                 )}
                 {contact.phone && (
-                  <a href={`tel:${contact.phone}`} className="flex items-center gap-1 hover:text-primary">
-                    <Phone className="h-3 w-3" />
-                    {contact.phone}
-                  </a>
+                  <div className="flex items-center gap-1">
+                    <a href={`tel:${contact.phone}`} className="flex items-center gap-1 hover:text-primary">
+                      <Phone className="h-3 w-3" />
+                      {contact.phone}
+                    </a>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => handleCopy(contact.phone!, 'Phone', contact.id)}
+                      title="Copy phone"
+                    >
+                      {copiedId === `${contact.id}-Phone` ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                    </Button>
+                  </div>
                 )}
               </div>
               {contact.notes && (
