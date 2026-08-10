@@ -66,12 +66,17 @@ export function PurchaseOrderPreviewDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle>Purchase Order Preview</DialogTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch id="po-pdf-pricing" checked={showPricing} onCheckedChange={togglePricing} />
+              <Label htmlFor="po-pdf-pricing" className="text-sm whitespace-nowrap cursor-pointer">Show pricing</Label>
+            </div>
             <Button onClick={onDownload} className="gap-2">
               <Download className="h-4 w-4" />
               Download PDF
             </Button>
           </div>
+
         </DialogHeader>
 
         <div className="flex-1 overflow-auto bg-muted/50 p-4 rounded-lg">
