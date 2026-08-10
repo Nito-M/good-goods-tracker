@@ -184,6 +184,9 @@ function AssemblyDetail({
               }}>
                 <Download className="h-3 w-3 mr-1" /> JSON
               </Button>
+              <Button variant="outline" size="sm" onClick={() => onDuplicate(assembly)}>
+                <Copy className="h-3 w-3 mr-1" /> Duplicate
+              </Button>
               <Button variant="outline" size="sm" onClick={() => { setEditingName(true); setNameValue(assembly.name); setDescValue(assembly.description || ''); setSellingPriceValue(String(assembly.selling_price ?? 0)); }}>
                 <Pencil className="h-3 w-3 mr-1" /> Edit
               </Button>
