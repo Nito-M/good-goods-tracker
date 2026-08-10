@@ -688,6 +688,7 @@ export function PartsAssembliesDetail() {
                allInventoryItems={inventoryItemsList.map(i => ({ id: i.id, cost: i.cost }))}
                
                onDelete={handleDelete}
+               onDuplicate={openDuplicate}
                onUpdate={updateAssembly}
              />
           ) : (
