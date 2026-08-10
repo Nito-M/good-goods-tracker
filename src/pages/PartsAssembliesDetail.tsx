@@ -720,6 +720,36 @@ export function PartsAssembliesDetail() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!dupSource} onOpenChange={(o) => { if (!o) setDupSource(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>Duplicate Sub Assembly</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            <Label>New Name</Label>
+            <Input
+              value={dupName}
+              onChange={e => setDupName(e.target.value)}
+              placeholder="New assembly name"
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') handleDuplicate(); }}
+            />
+            <p className="text-xs text-muted-foreground">
+              Copies the description, price, category and all parts from "{dupSource?.name}". The name must be different.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDupSource(null)}>Cancel</Button>
+            <Button
+              onClick={handleDuplicate}
+              disabled={duplicating || !dupName.trim() || dupName.trim().toLowerCase() === (dupSource?.name || '').toLowerCase()}
+            >
+              {duplicating ? 'Duplicating...' : 'Duplicate'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
