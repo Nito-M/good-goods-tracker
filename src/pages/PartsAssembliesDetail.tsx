@@ -27,7 +27,7 @@ import {
 
 
 function AssemblyDetail({
-  assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onUpdate,
+  assembly, parts, inventoryItems, allParts, allInventoryItems, onDelete, onDuplicate, onUpdate,
 }: {
   assembly: PartsAssembly;
   parts: { id: string; name: string; sku: string; price: number }[];
@@ -36,6 +36,7 @@ function AssemblyDetail({
   allInventoryItems: { id: string; cost: number }[];
   
   onDelete: (id: string) => void;
+  onDuplicate: (assembly: PartsAssembly) => void;
   onUpdate: (id: string, updates: { name?: string; description?: string | null; selling_price?: number; status?: string; status_notes?: string | null; category?: string | null }) => Promise<void>;
 }) {
   const navigate = useNavigate();
