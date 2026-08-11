@@ -91,13 +91,15 @@ function BankCardVisual({ card, transactions }: {
         <div className="flex items-start justify-between mb-6">
           <CreditCard className="h-7 w-7 opacity-80" />
         </div>
-        <div className="text-2xl font-bold tracking-tight mb-1">
-          {formatCurrency(card.balance)}
+        <div className="text-xl font-bold tracking-tight truncate mb-1">
+          {card.name}
         </div>
-        <div className="text-sm font-medium opacity-80 truncate">{card.name}</div>
         {card.category && (
-          <div className="text-xs opacity-60 truncate">{card.category}</div>
+          <div className="text-xs opacity-60 truncate mb-3">{card.category}</div>
         )}
+        <div className="text-3xl font-bold tracking-tight">
+          {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(card.balance)}
+        </div>
         <div className="mt-3 text-xs opacity-70 flex items-center gap-1">
           <DollarSign className="h-3 w-3" />
           {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} — tap to view
