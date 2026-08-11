@@ -421,7 +421,7 @@ export function Bank() {
                           .filter((t) => t.type === 'withdrawal')
                           .reduce((s, t) => s + t.amount, 0);
                         return (
-                          <Collapsible key={month.key} defaultOpen>
+                          <Collapsible key={month.key}>
                             <CollapsibleTrigger asChild>
                               <button className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3 text-left hover:bg-muted transition-colors">
                                 <div className="flex items-center gap-2">
