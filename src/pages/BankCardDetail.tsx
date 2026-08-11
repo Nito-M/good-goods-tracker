@@ -441,10 +441,12 @@ export function BankCardDetail() {
           <div className="flex items-start justify-between mb-6">
             <CreditCard className="h-8 w-8 opacity-80" />
           </div>
-          <div className="text-3xl font-bold tracking-tight mb-1">
-            {formatCurrency(card.balance)}
+          <div className="text-2xl font-bold tracking-tight truncate mb-1">
+            {card.name}
           </div>
-          <div className="text-sm font-medium opacity-80">{card.name}</div>
+          <div className="text-4xl font-bold tracking-tight">
+            {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(card.balance)}
+          </div>
         </div>
 
         {/* Summary Cards */}
