@@ -98,10 +98,7 @@ function groupTransactionsByMonth(transactions: BankTransaction[]) {
 }
 
 
-function BankCardVisual({ card, transactions }: {
-  card: BankCard; 
-  transactions: import('@/hooks/useBank').BankTransaction[];
-}) {
+function BankCardVisual({ card }: { card: BankCard }) {
   const navigate = useNavigate();
 
   return (
@@ -390,11 +387,7 @@ export function Bank() {
                 </h2>
                 <div className="flex gap-4 flex-wrap">
                   {cards.map((card) => (
-                    <BankCardVisual
-                      key={card.id}
-                      card={card}
-                      transactions={transactions.filter(t => t.bankCardId === card.id)}
-                    />
+                    <BankCardVisual key={card.id} card={card} />
                   ))}
                 </div>
               </section>
