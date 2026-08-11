@@ -29,8 +29,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import {
   Wallet,
   Plus,
@@ -42,6 +47,7 @@ import {
   Trash2,
   CreditCard,
   ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { StatCard } from '@/components/StatCard';
@@ -75,8 +81,24 @@ const CARD_COLORS = [
   { label: 'Crimson', value: 'from-red-700 to-rose-900' },
 ];
 
+function groupTransactionsByMonth(transactions: BankTransaction[]) {
+  const groups = new Map<string, BankTransaction[]>();
+  for (const t of transactions) {
+    const key = format(parseISO(t.createdAt), 'yyyy-MM');
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(t);
+  }
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([key, items]) => ({
+      key,
+      label: format(parseISO(items[0].createdAt), 'MMMM yyyy'),
+      items: items.sort((x, y) => new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime()),
+    }));
+}
 
-function BankCardVisual({ card, transactions }: { 
+
+function BankCardVisual({ card, transactions }: {
   card: BankCard; 
   transactions: import('@/hooks/useBank').BankTransaction[];
 }) {
@@ -404,97 +426,126 @@ export function Bank() {
                       No transactions yet. Add a deposit to get started.
                     </div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Card</TableHead>
-                          <TableHead>Link</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {transactions.map((t) => {
-                          const linkedCard = t.bankCardId ? cards.find((c) => c.id === t.bankCardId) : null;
-                          const linkedPo = findPoForTransaction(t);
-                          return (
-                          <TableRow key={t.id}>
-                            <TableCell className="whitespace-nowrap">
-                              {format(new Date(t.createdAt), 'MMM d, yyyy h:mm a')}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {getTypeIcon(t.type)}
-                                {getTypeBadge(t.type)}
-                              </div>
-                            </TableCell>
-                            <TableCell>{t.description || '-'}</TableCell>
-                            <TableCell>
-                              {linkedCard ? (
-                                <button
-                                  onClick={() => navigate(`/bank/card/${linkedCard.id}`)}
-                                  className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-                                >
-                                  <CreditCard className="h-3.5 w-3.5" />
-                                  {linkedCard.name}
-                                </button>
-                              ) : cards.length > 0 ? (
-                                <Select
-                                  value=""
-                                  onValueChange={async (cardId) => {
-                                    const ok = await assignCardToTransaction(t.id, cardId);
-                                    if (ok) refetchCards();
-                                  }}
-                                >
-                                  <SelectTrigger className="h-7 w-[130px] text-xs">
-                                    <SelectValue placeholder="Assign card" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {cards.map((c) => (
-                                      <SelectItem key={c.id} value={c.id} className="text-xs">
-                                        {c.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {linkedPo ? (
-                                <button
-                                  onClick={() => navigate(`/purchase-orders?po=${encodeURIComponent(linkedPo.poNumber)}`)}
-                                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-                                  title={`Go to ${linkedPo.poNumber}`}
-                                >
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                  {linkedPo.poNumber}
-                                </button>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell className={`text-right font-medium ${
-                              t.type === 'withdrawal' ? 'text-destructive' : 'text-success'
-                            }`}>
-                              {t.type === 'withdrawal' ? '-' : '+'}{formatCurrency(t.amount)}
-                            </TableCell>
-                            <TableCell>
-                              {t.type !== 'sale_profit' && (
-                                <Button variant="ghost" size="icon" onClick={() => deleteTransaction(t.id)}>
-                                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                                </Button>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                    <div className="space-y-2">
+                      {groupTransactionsByMonth(transactions).map((month) => {
+                        const monthDeposits = month.items
+                          .filter((t) => t.type === 'deposit' || t.type === 'sale_profit')
+                          .reduce((s, t) => s + t.amount, 0);
+                        const monthWithdrawals = month.items
+                          .filter((t) => t.type === 'withdrawal')
+                          .reduce((s, t) => s + t.amount, 0);
+                        return (
+                          <Collapsible key={month.key} defaultOpen>
+                            <CollapsibleTrigger asChild>
+                              <button className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3 text-left hover:bg-muted transition-colors">
+                                <div className="flex items-center gap-2">
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                                  <span className="font-semibold text-foreground">{month.label}</span>
+                                  <span className="text-sm text-muted-foreground">({month.items.length} transaction{month.items.length !== 1 ? 's' : ''})</span>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <span className="text-success">+{formatCurrency(monthDeposits)}</span>
+                                  <span className="text-destructive">-{formatCurrency(monthWithdrawals)}</span>
+                                </div>
+                              </button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead>Card</TableHead>
+                                    <TableHead>Link</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="w-[50px]"></TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {month.items.map((t) => {
+                                    const linkedCard = t.bankCardId ? cards.find((c) => c.id === t.bankCardId) : null;
+                                    const linkedPo = findPoForTransaction(t);
+                                    return (
+                                      <TableRow key={t.id}>
+                                        <TableCell className="whitespace-nowrap">
+                                          {format(parseISO(t.createdAt), 'MMM d, yyyy h:mm a')}
+                                        </TableCell>
+                                        <TableCell>
+                                          <div className="flex items-center gap-2">
+                                            {getTypeIcon(t.type)}
+                                            {getTypeBadge(t.type)}
+                                          </div>
+                                        </TableCell>
+                                        <TableCell>{t.description || '-'}</TableCell>
+                                        <TableCell>
+                                          {linkedCard ? (
+                                            <button
+                                              onClick={() => navigate(`/bank/card/${linkedCard.id}`)}
+                                              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                                            >
+                                              <CreditCard className="h-3.5 w-3.5" />
+                                              {linkedCard.name}
+                                            </button>
+                                          ) : cards.length > 0 ? (
+                                            <Select
+                                              value=""
+                                              onValueChange={async (cardId) => {
+                                                const ok = await assignCardToTransaction(t.id, cardId);
+                                                if (ok) refetchCards();
+                                              }}
+                                            >
+                                              <SelectTrigger className="h-7 w-[130px] text-xs">
+                                                <SelectValue placeholder="Assign card" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {cards.map((c) => (
+                                                  <SelectItem key={c.id} value={c.id} className="text-xs">
+                                                    {c.name}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          ) : (
+                                            <span className="text-muted-foreground text-xs">—</span>
+                                          )}
+                                        </TableCell>
+                                        <TableCell>
+                                          {linkedPo ? (
+                                            <button
+                                              onClick={() => navigate(`/purchase-orders?po=${encodeURIComponent(linkedPo.poNumber)}`)}
+                                              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                                              title={`Go to ${linkedPo.poNumber}`}
+                                            >
+                                              <ExternalLink className="h-3.5 w-3.5" />
+                                              {linkedPo.poNumber}
+                                            </button>
+                                          ) : (
+                                            <span className="text-muted-foreground text-xs">—</span>
+                                          )}
+                                        </TableCell>
+                                        <TableCell className={`text-right font-medium ${
+                                          t.type === 'withdrawal' ? 'text-destructive' : 'text-success'
+                                        }`}>
+                                          {t.type === 'withdrawal' ? '-' : '+'}{formatCurrency(t.amount)}
+                                        </TableCell>
+                                        <TableCell>
+                                          {t.type !== 'sale_profit' && (
+                                            <Button variant="ghost" size="icon" onClick={() => deleteTransaction(t.id)}>
+                                              <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                            </Button>
+                                          )}
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                                </TableBody>
+                              </Table>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        );
+                      })}
+                    </div>
                   )}
                 </CardContent>
               </Card>
