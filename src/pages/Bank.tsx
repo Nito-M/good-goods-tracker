@@ -98,10 +98,7 @@ function groupTransactionsByMonth(transactions: BankTransaction[]) {
 }
 
 
-function BankCardVisual({ card, transactions }: {
-  card: BankCard; 
-  transactions: import('@/hooks/useBank').BankTransaction[];
-}) {
+function BankCardVisual({ card }: { card: BankCard }) {
   const navigate = useNavigate();
 
   return (
@@ -113,19 +110,12 @@ function BankCardVisual({ card, transactions }: {
         <div className="flex items-start justify-between mb-6">
           <CreditCard className="h-7 w-7 opacity-80" />
         </div>
-        <div className="text-xl font-bold tracking-tight truncate mb-1">
+        <div className="text-2xl font-bold tracking-tight truncate">
           {card.name}
         </div>
         {card.category && (
-          <div className="text-xs opacity-60 truncate mb-3">{card.category}</div>
+          <div className="text-sm opacity-70 truncate mt-1">{card.category}</div>
         )}
-        <div className="text-3xl font-bold tracking-tight">
-          {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(card.balance)}
-        </div>
-        <div className="mt-3 text-xs opacity-70 flex items-center gap-1">
-          <DollarSign className="h-3 w-3" />
-          {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} — tap to view
-        </div>
       </div>
     </div>
   );
@@ -397,11 +387,7 @@ export function Bank() {
                 </h2>
                 <div className="flex gap-4 flex-wrap">
                   {cards.map((card) => (
-                    <BankCardVisual
-                      key={card.id}
-                      card={card}
-                      transactions={transactions.filter(t => t.bankCardId === card.id)}
-                    />
+                    <BankCardVisual key={card.id} card={card} />
                   ))}
                 </div>
               </section>
