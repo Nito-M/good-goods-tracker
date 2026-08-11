@@ -81,8 +81,24 @@ const CARD_COLORS = [
   { label: 'Crimson', value: 'from-red-700 to-rose-900' },
 ];
 
+function groupTransactionsByMonth(transactions: BankTransaction[]) {
+  const groups = new Map<string, BankTransaction[]>();
+  for (const t of transactions) {
+    const key = format(parseISO(t.createdAt), 'yyyy-MM');
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(t);
+  }
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([key, items]) => ({
+      key,
+      label: format(parseISO(items[0].createdAt), 'MMMM yyyy'),
+      items: items.sort((x, y) => new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime()),
+    }));
+}
 
-function BankCardVisual({ card, transactions }: { 
+
+function BankCardVisual({ card, transactions }: {
   card: BankCard; 
   transactions: import('@/hooks/useBank').BankTransaction[];
 }) {
