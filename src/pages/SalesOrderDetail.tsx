@@ -56,6 +56,7 @@ interface ItemLink {
   jobId: string | null;
   status: string;
   externalJobNumber: string | null;
+  unitNotes: string | null;
 }
 
 type ExpandedItem = {
@@ -225,6 +226,7 @@ export function SalesOrderDetail() {
           jobId: link.job_id,
           status: link.status,
           externalJobNumber: link.external_job_number ?? null,
+          unitNotes: link.unit_notes ?? null,
         };
       });
       setItemLinks(map);
@@ -326,11 +328,15 @@ export function SalesOrderDetail() {
     const children = expandedItems.filter((it) => childKeys.includes(it.linkKey));
     const lines: string[] = [];
     if (parent.notes) lines.push(parent.notes);
+    const parentUnitNotes = itemLinks[parent.linkKey]?.unitNotes;
+    if (parentUnitNotes) lines.push(parentUnitNotes);
     if (children.length > 0) {
       lines.push('');
       lines.push('Add-ons:');
       for (const c of children) {
-        lines.push(`• ${c.itemName}${c.notes ? ` — ${c.notes}` : ''}`);
+        const cUnitNotes = itemLinks[c.linkKey]?.unitNotes;
+        const extra = [c.notes, cUnitNotes].filter(Boolean).join(' — ');
+        lines.push(`• ${c.itemName}${extra ? ` — ${extra}` : ''}`);
       }
     }
     return lines.length > 0 ? lines.join('\n') : undefined;
