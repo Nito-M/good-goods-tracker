@@ -135,7 +135,12 @@ export function SalesOrderDetail() {
   const handleDownloadSalesOrder = () => {
     if (!quote) return;
     const settings = getQuoteSettingsForQuote(quote);
-    generateQuotePDF(quote, settings, { isSalesOrder: true });
+    const unitNotes: Record<string, (string | null)[]> = {};
+    quote.items.forEach((qi) => {
+      const units = Math.max(1, Math.floor(qi.quantity || 1));
+      unitNotes[qi.id] = Array.from({ length: units }, (_, i) => itemLinks[`${qi.id}-${i}`]?.unitNotes ?? null);
+    });
+    generateQuotePDF(quote, settings, { isSalesOrder: true, unitNotes });
   };
 
   const [creating, setCreating] = useState(false);
