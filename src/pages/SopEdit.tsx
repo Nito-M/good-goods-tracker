@@ -386,43 +386,32 @@ export default function SopEdit() {
                 onChange={(e) => setBomMultiplier(e.target.value)}
               />
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={bom.length === 0}
-              onClick={() => {
-                const mult = parseFloat(bomMultiplier);
-                const factor = Number.isFinite(mult) && mult > 0 ? mult : 1;
-                const prefillItems = bom
-                  .map(b => {
-                    const inv = itemsById.get(b.inventory_item_id);
-                    if (!inv) return null;
-                    return {
-                      inventory_item_id: inv.id,
-                      name: inv.name,
-                      sku: inv.sku || null,
-                      quantity: Math.round(b.quantity * factor * 100000) / 100000,
-                      unit_cost: inv.cost || 0,
-                      notes: b.notes || '',
-                    };
-
-                  })
-                  .filter(Boolean);
-                navigate('/purchase-orders/new', { state: { prefillItems } });
-              }}
-            >
-              <ShoppingCart className="h-4 w-4 mr-1" /> Create PO from BOM
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" disabled={bom.length === 0}>
-                  <Download className="h-4 w-4 mr-1" /> PDF
+                <Button size="sm" variant="outline">
+                  Actions <ChevronDown className="h-4 w-4 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={openBomPicker}>
+                  <Package className="h-4 w-4 mr-2" /> Add Parts
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={bom.length === 0}
+                  onClick={() => navigate('/purchase-orders/new', { state: { prefillItems: buildBomPrefill() } })}
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" /> Create PO from BOM
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={bom.length === 0}
+                  onClick={() => navigate('/quotes', { state: { prefillItems: buildBomPrefill() } })}
+                >
+                  <FileText className="h-4 w-4 mr-2" /> Create Quote from BOM
+                </DropdownMenuItem>
                 {(['download', 'print'] as const).map(mode => (
                   <DropdownMenuItem
                     key={mode}
+                    disabled={bom.length === 0}
                     onClick={async () => {
                       await generateAssemblyPDF({
                         name: `${sop?.title || 'SOP'} - Bill of Materials`,
@@ -451,8 +440,8 @@ export default function SopEdit() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" variant="outline" onClick={openBomPicker}><Package className="h-4 w-4 mr-1" /> Add Parts</Button>
           </div>
+
         </CardHeader>
         <CardContent>
           {bom.length === 0 ? (
