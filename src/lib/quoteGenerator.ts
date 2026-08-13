@@ -284,7 +284,7 @@ export const generateQuotePDF = async (
       }
       y += rowHeight;
 
-      if (item.notes && noteLines.length > 0) {
+      if (noteLines.length > 0) {
         doc.setFontSize(8);
         doc.setTextColor(120, 120, 120);
         doc.text(noteLines, tableX + 4, y);
