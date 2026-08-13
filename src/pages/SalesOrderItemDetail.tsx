@@ -545,17 +545,30 @@ export function SalesOrderItemDetail() {
         </CardContent>
       </Card>
 
-      {/* Unit notes (editable) */}
+      {/* Notes (editable) */}
       <Card>
         <CardHeader><CardTitle className="text-lg">Notes</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {item.notes && (
-            <div className="rounded-md bg-muted p-3">
-              <div className="text-xs font-medium text-muted-foreground mb-1">Original item note</div>
-              <p className="text-sm whitespace-pre-wrap">{item.notes}</p>
-            </div>
-          )}
+        <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="item-note">Item note</Label>
+            <Textarea
+              id="item-note"
+              value={itemNote}
+              onChange={(e) => setItemNote(e.target.value)}
+              placeholder="Note shown with the item name on the sales order and on PDFs…"
+              rows={3}
+            />
+            <p className="text-xs text-muted-foreground">
+              Applies to every unit of this item and appears on quote/sales order PDFs.
+            </p>
+            <div className="flex justify-end">
+              <Button size="sm" onClick={handleSaveItemNote} disabled={savingItemNote}>
+                {savingItemNote ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Save item note
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2 border-t pt-4">
             <Label htmlFor="unit-notes">Notes for this unit</Label>
             <Textarea
               id="unit-notes"
