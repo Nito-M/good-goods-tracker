@@ -278,6 +278,7 @@ export function Quotes() {
   const { orders: purchaseOrders } = usePurchaseOrders();
   const { companies } = useCompanies();
   const { assemblies } = useAssemblies();
+  const { boms: sopBoms } = useSopBoms();
 
   // Build lookup maps for linked documents
   const invoiceNumberMap = useMemo(() => {
