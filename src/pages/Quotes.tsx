@@ -31,7 +31,7 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useProfile } from '@/hooks/useProfile';
 import { useSales } from '@/hooks/useSales';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { addDays, format } from 'date-fns';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
