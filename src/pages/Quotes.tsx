@@ -594,26 +594,58 @@ export function Quotes() {
   };
 
   const addBomToCart = (bom: { id: string; title: string; items: Array<{ inventoryItemId: string; name: string; sku: string | null; quantity: number; unitCost: number; notes: string | null }> }) => {
-    const newItems: CartItem[] = [];
+    // Collapse duplicates inside the BOM itself first
+    const merged = new Map<string, { inventoryItemId: string; name: string; sku: string | null; quantity: number; unitCost: number; notes: string | null }>();
     bom.items.forEach((item, idx) => {
-      const inv = inventoryItems.find((i) => i.id === item.inventoryItemId);
-      const basePrice = inv?.price ?? item.unitCost ?? 0;
-      const cartId = `bom-${bom.id}-${item.inventoryItemId}-${idx}-${Date.now()}`;
-      setCartBasePrices((prev) => ({ ...prev, [cartId]: basePrice }));
-      newItems.push({
-        id: cartId,
-        inventoryItemId: item.inventoryItemId,
-        itemName: inv?.name || item.name,
-        sku: inv?.sku || item.sku || '',
-        quantity: item.quantity || null,
-        quantityUnit: (inv?.quantityUnit ?? 'pcs') as QuantityUnit,
-        unitPrice: markupPercent !== '' ? calculateMarkupPrice(basePrice, markupPercent as number) : basePrice,
-        unitCost: item.unitCost ?? inv?.cost ?? 0,
-        notes: item.notes || `From BOM: ${bom.title}`,
-      });
+      const key = item.inventoryItemId || `no-id-${item.name}-${idx}`;
+      const existing = merged.get(key);
+      if (existing) {
+        existing.quantity = (existing.quantity || 0) + (item.quantity || 0);
+        if (item.notes && existing.notes && !existing.notes.includes(item.notes)) {
+          existing.notes = `${existing.notes}; ${item.notes}`;
+        } else if (item.notes && !existing.notes) {
+          existing.notes = item.notes;
+        }
+      } else {
+        merged.set(key, { ...item });
+      }
     });
-    setCart((prev) => [...prev, ...newItems]);
+
+    setCart((prev) => {
+      const next = [...prev];
+      merged.forEach((item, key) => {
+        // Stack onto an identical item already in the cart (e.g. from another BOM)
+        const existingIdx = item.inventoryItemId
+          ? next.findIndex((c) => c.inventoryItemId === item.inventoryItemId)
+          : -1;
+        if (existingIdx >= 0) {
+          const existing = next[existingIdx];
+          next[existingIdx] = {
+            ...existing,
+            quantity: (existing.quantity || 0) + (item.quantity || 0),
+          };
+          return;
+        }
+        const inv = inventoryItems.find((i) => i.id === item.inventoryItemId);
+        const basePrice = inv?.price ?? item.unitCost ?? 0;
+        const cartId = `bom-${bom.id}-${key}-${Date.now()}`;
+        setCartBasePrices((prevPrices) => ({ ...prevPrices, [cartId]: basePrice }));
+        next.push({
+          id: cartId,
+          inventoryItemId: item.inventoryItemId,
+          itemName: inv?.name || item.name,
+          sku: inv?.sku || item.sku || '',
+          quantity: item.quantity || null,
+          quantityUnit: (inv?.quantityUnit ?? 'pcs') as QuantityUnit,
+          unitPrice: markupPercent !== '' ? calculateMarkupPrice(basePrice, markupPercent as number) : basePrice,
+          unitCost: item.unitCost ?? inv?.cost ?? 0,
+          notes: item.notes || `From BOM: ${bom.title}`,
+        });
+      });
+      return next;
+    });
   };
+
 
   const updateCartItem = (itemId: string, updates: Partial<CartItem>) => {
     if (updates.unitPrice !== undefined && updates.excludeMarkup === undefined) {
