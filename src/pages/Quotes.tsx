@@ -264,6 +264,7 @@ import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { FullScreenItemPicker, PickerAddOverride } from '@/components/FullScreenItemPicker';
 import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
+import { useSopBoms } from '@/hooks/useSopBoms';
 
 export function Quotes() {
   // signOut moved to sidebar
@@ -277,6 +278,7 @@ export function Quotes() {
   const { orders: purchaseOrders } = usePurchaseOrders();
   const { companies } = useCompanies();
   const { assemblies } = useAssemblies();
+  const { boms: sopBoms } = useSopBoms();
 
   // Build lookup maps for linked documents
   const invoiceNumberMap = useMemo(() => {
@@ -589,6 +591,28 @@ export function Quotes() {
       notes: assembly.description || '',
     }]);
     setShowAssemblyPicker(false);
+  };
+
+  const addBomToCart = (bom: { id: string; title: string; items: Array<{ inventoryItemId: string; name: string; sku: string | null; quantity: number; unitCost: number; notes: string | null }> }) => {
+    const newItems: CartItem[] = [];
+    bom.items.forEach((item, idx) => {
+      const inv = inventoryItems.find((i) => i.id === item.inventoryItemId);
+      const basePrice = inv?.price ?? item.unitCost ?? 0;
+      const cartId = `bom-${bom.id}-${item.inventoryItemId}-${idx}-${Date.now()}`;
+      setCartBasePrices((prev) => ({ ...prev, [cartId]: basePrice }));
+      newItems.push({
+        id: cartId,
+        inventoryItemId: item.inventoryItemId,
+        itemName: inv?.name || item.name,
+        sku: inv?.sku || item.sku || '',
+        quantity: item.quantity || null,
+        quantityUnit: (inv?.quantityUnit ?? 'pcs') as QuantityUnit,
+        unitPrice: markupPercent !== '' ? calculateMarkupPrice(basePrice, markupPercent as number) : basePrice,
+        unitCost: item.unitCost ?? inv?.cost ?? 0,
+        notes: item.notes || `From BOM: ${bom.title}`,
+      });
+    });
+    setCart((prev) => [...prev, ...newItems]);
   };
 
   const updateCartItem = (itemId: string, updates: Partial<CartItem>) => {
@@ -1284,10 +1308,12 @@ export function Quotes() {
         onAddItem={addToCart}
         onAddCustomItem={addCustomItem}
         onAddAssembly={addAssemblyToCart}
+        onAddBom={addBomToCart}
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
         onUpdateItem={updateCartItem}
         assemblies={assemblies}
+        boms={sopBoms}
         documentType="Quote"
         formatPrice={formatCurrency}
         vendorPriceRows={allVendorPriceRows}

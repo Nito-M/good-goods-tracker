@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Plus, X, Search, Trash2, Minus, Layers, PackagePlus, Check, ArrowLeft, Filter } from 'lucide-react';
+import { Plus, X, Search, Trash2, Minus, Layers, PackagePlus, Check, ArrowLeft, Filter, Package, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +64,22 @@ export interface PickerAddOverride {
   vendorSku: string | null;
 }
 
+export interface BomOption {
+  id: string;
+  title: string;
+  sopNumber: string | null;
+  status: 'draft' | 'active' | 'obsolete';
+  itemCount: number;
+  items: Array<{
+    inventoryItemId: string;
+    name: string;
+    sku: string | null;
+    quantity: number;
+    unitCost: number;
+    notes: string | null;
+  }>;
+}
+
 interface FullScreenItemPickerProps {
   open: boolean;
   onClose: () => void;
@@ -72,10 +88,12 @@ interface FullScreenItemPickerProps {
   onAddItem: (item: InventoryItem, override?: PickerAddOverride) => void;
   onAddCustomItem: () => void;
   onAddAssembly?: (assembly: Assembly) => void;
+  onAddBom?: (bom: BomOption) => void;
   onUpdateQuantity: (itemId: string, quantity: number | null) => void;
   onRemoveItem: (itemId: string) => void;
   onUpdateItem?: (itemId: string, updates: Partial<PickerCartItem>) => void;
   assemblies?: Assembly[];
+  boms?: BomOption[];
   documentType: 'Quote' | 'Invoice' | 'Part' | 'Purchase Order';
   formatPrice?: (value: number) => string;
   vendorItemIds?: string[] | null;
@@ -204,10 +222,12 @@ export function FullScreenItemPicker({
   onAddItem,
   onAddCustomItem,
   onAddAssembly,
+  onAddBom,
   onUpdateQuantity,
   onRemoveItem,
   onUpdateItem,
   assemblies = [],
+  boms = [],
   documentType,
   formatPrice = formatCurrency,
   vendorItemIds,
@@ -216,7 +236,7 @@ export function FullScreenItemPicker({
   selectedVendorId,
 }: FullScreenItemPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAssemblies, setShowAssemblies] = useState(false);
+  const [mode, setMode] = useState<'items' | 'assemblies' | 'boms'>('items');
   const [selectedAssemblyType, setSelectedAssemblyType] = useState<string | null>(null);
   const [vendorOnly, setVendorOnly] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -387,9 +407,18 @@ export function FullScreenItemPicker({
     });
   }, [assemblies, searchQuery, selectedAssemblyType]);
 
+  const filteredBoms = useMemo(() => {
+    if (!searchQuery.trim()) return boms;
+    const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    return boms.filter((b) => {
+      const haystack = `${b.title} ${b.sopNumber || ''}`.toLowerCase();
+      return tokens.every((t) => haystack.includes(t));
+    });
+  }, [boms, searchQuery]);
+
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const items = showAssemblies ? filteredAssemblies : filteredItems;
+    const items = mode === 'assemblies' ? filteredAssemblies : mode === 'boms' ? filteredBoms : filteredItems;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.min(prev + 1, items.length - 1));
@@ -398,9 +427,12 @@ export function FullScreenItemPicker({
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter' && items.length > 0) {
       e.preventDefault();
-      if (showAssemblies) {
+      if (mode === 'assemblies') {
         const assembly = filteredAssemblies[selectedIndex];
         if (assembly && onAddAssembly) onAddAssembly(assembly);
+      } else if (mode === 'boms') {
+        const bom = filteredBoms[selectedIndex];
+        if (bom && onAddBom) onAddBom(bom);
       } else {
         const item = filteredItems[selectedIndex];
         if (item) handleItemClick(item);
@@ -408,12 +440,12 @@ export function FullScreenItemPicker({
     } else if (e.key === 'Escape') {
       handleDone();
     }
-  }, [showAssemblies, filteredAssemblies, filteredItems, selectedIndex, handleItemClick, onAddAssembly, onClose]);
+  }, [mode, filteredAssemblies, filteredItems, filteredBoms, selectedIndex, handleItemClick, onAddAssembly, onAddBom, onClose]);
 
   // Reset selected index when results change
   useEffect(() => {
     setSelectedIndex(0);
-  }, [searchQuery, showAssemblies]);
+  }, [searchQuery, mode]);
 
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, c) => sum + (c.quantity || 0) * c.unitPrice, 0),
@@ -435,20 +467,38 @@ export function FullScreenItemPicker({
           </Badge>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onAddCustomItem}>
-            <Plus className="h-4 w-4 mr-1" />
-            Custom Item
+          <Button
+            variant={mode === 'items' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => { setMode('items'); setSelectedAssemblyType(null); }}
+          >
+            <Package className="h-4 w-4 mr-1" />
+            Inventory / Items
           </Button>
           {onAddAssembly && assemblies.length > 0 && (
             <Button
-              variant={showAssemblies ? 'default' : 'outline'}
+              variant={mode === 'assemblies' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { setShowAssemblies(!showAssemblies); setSelectedAssemblyType(null); }}
+              onClick={() => { setMode('assemblies'); setSelectedAssemblyType(null); }}
             >
               <Layers className="h-4 w-4 mr-1" />
               Assemblies
             </Button>
           )}
+          {onAddBom && boms.length > 0 && (
+            <Button
+              variant={mode === 'boms' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setMode('boms'); setSelectedAssemblyType(null); }}
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              BOMs
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={onAddCustomItem}>
+            <Plus className="h-4 w-4 mr-1" />
+            Custom Item
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -491,7 +541,7 @@ export function FullScreenItemPicker({
                 </Button>
               )}
             </div>
-            {vendorItemIds && vendorItemIds.length > 0 && !showAssemblies && (
+            {vendorItemIds && vendorItemIds.length > 0 && mode === 'items' && (
               <Button
                 variant={vendorOnly ? 'default' : 'outline'}
                 size="sm"
@@ -506,7 +556,44 @@ export function FullScreenItemPicker({
 
           {/* Results Table */}
           <ScrollArea className="flex-1">
-            {showAssemblies ? (
+            {mode === 'boms' ? (
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[55%]">SOP / BOM</TableHead>
+                    <TableHead className="w-[20%]">SOP #</TableHead>
+                    <TableHead className="w-[15%] text-right">Items</TableHead>
+                    <TableHead className="w-16"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBoms.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                        {searchQuery ? 'No BOMs match your search' : 'No BOMs available'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredBoms.map((bom, index) => (
+                      <TableRow
+                        key={bom.id}
+                        className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
+                        onClick={() => onAddBom?.(bom)}
+                      >
+                        <TableCell className="font-medium break-words">{bom.title}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{bom.sopNumber || '—'}</TableCell>
+                        <TableCell className="text-right font-medium">{bom.itemCount}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAddBom?.(bom); }}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            ) : mode === 'assemblies' ? (
               !selectedAssemblyType ? (
                 <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-4">
                   {assemblyTypes.map(({ name, count }) => (
@@ -643,8 +730,10 @@ export function FullScreenItemPicker({
 
           {/* Results footer */}
           <div className="border-t border-border px-4 py-2 text-sm text-muted-foreground shrink-0">
-            {showAssemblies
+            {mode === 'assemblies'
               ? `${filteredAssemblies.length} assemblies`
+              : mode === 'boms'
+              ? `${filteredBoms.length} BOMs`
               : `${filteredItems.length} items`
             }
             {searchQuery && ` matching "${searchQuery}"`}
