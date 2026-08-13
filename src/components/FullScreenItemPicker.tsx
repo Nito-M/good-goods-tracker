@@ -64,6 +64,22 @@ export interface PickerAddOverride {
   vendorSku: string | null;
 }
 
+export interface BomOption {
+  id: string;
+  title: string;
+  sopNumber: string | null;
+  status: 'draft' | 'active' | 'obsolete';
+  itemCount: number;
+  items: Array<{
+    inventoryItemId: string;
+    name: string;
+    sku: string | null;
+    quantity: number;
+    unitCost: number;
+    notes: string | null;
+  }>;
+}
+
 interface FullScreenItemPickerProps {
   open: boolean;
   onClose: () => void;
@@ -72,10 +88,12 @@ interface FullScreenItemPickerProps {
   onAddItem: (item: InventoryItem, override?: PickerAddOverride) => void;
   onAddCustomItem: () => void;
   onAddAssembly?: (assembly: Assembly) => void;
+  onAddBom?: (bom: BomOption) => void;
   onUpdateQuantity: (itemId: string, quantity: number | null) => void;
   onRemoveItem: (itemId: string) => void;
   onUpdateItem?: (itemId: string, updates: Partial<PickerCartItem>) => void;
   assemblies?: Assembly[];
+  boms?: BomOption[];
   documentType: 'Quote' | 'Invoice' | 'Part' | 'Purchase Order';
   formatPrice?: (value: number) => string;
   vendorItemIds?: string[] | null;
