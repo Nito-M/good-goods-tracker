@@ -135,7 +135,12 @@ export function SalesOrderDetail() {
   const handleDownloadSalesOrder = () => {
     if (!quote) return;
     const settings = getQuoteSettingsForQuote(quote);
-    generateQuotePDF(quote, settings, { isSalesOrder: true });
+    const unitNotes: Record<string, (string | null)[]> = {};
+    quote.items.forEach((qi) => {
+      const units = Math.max(1, Math.floor(qi.quantity || 1));
+      unitNotes[qi.id] = Array.from({ length: units }, (_, i) => itemLinks[`${qi.id}-${i}`]?.unitNotes ?? null);
+    });
+    generateQuotePDF(quote, settings, { isSalesOrder: true, unitNotes });
   };
 
   const [creating, setCreating] = useState(false);
@@ -327,15 +332,13 @@ export function SalesOrderDetail() {
       .map(([k]) => k);
     const children = expandedItems.filter((it) => childKeys.includes(it.linkKey));
     const lines: string[] = [];
-    if (parent.notes) lines.push(parent.notes);
-    const parentUnitNotes = itemLinks[parent.linkKey]?.unitNotes;
-    if (parentUnitNotes) lines.push(parentUnitNotes);
+    const parentNote = itemLinks[parent.linkKey]?.unitNotes ?? parent.notes;
+    if (parentNote) lines.push(parentNote);
     if (children.length > 0) {
       lines.push('');
       lines.push('Add-ons:');
       for (const c of children) {
-        const cUnitNotes = itemLinks[c.linkKey]?.unitNotes;
-        const extra = [c.notes, cUnitNotes].filter(Boolean).join(' — ');
+        const extra = itemLinks[c.linkKey]?.unitNotes ?? c.notes;
         lines.push(`• ${c.itemName}${extra ? ` — ${extra}` : ''}`);
       }
     }
@@ -685,6 +688,7 @@ export function SalesOrderDetail() {
                         const isUpdatingThis = updatingStatusFor === item.linkKey;
                         const hasChildren = !!childrenByParent[item.linkKey]?.length;
                         const parentKey = attachments[item.linkKey];
+                        const resolvedNote = link?.unitNotes ?? item.notes ?? null;
 
                         // Items eligible as attach targets:
                         // - not self
@@ -733,7 +737,7 @@ export function SalesOrderDetail() {
                                       ({childrenByParent[item.linkKey].length} add-on{childrenByParent[item.linkKey].length === 1 ? '' : 's'})
                                     </span>
                                   )}
-                                  {(item.notes || link?.unitNotes) && (
+                                  {resolvedNote && (
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -755,19 +759,12 @@ export function SalesOrderDetail() {
                                       details
                                     </button>
                                   )}
-                                  {expandedNotes.has(item.linkKey) && (item.notes || link?.unitNotes) && (
-                                    <div className="mt-0.5 space-y-1">
-                                      {item.notes && (
-                                        <p className="text-xs text-muted-foreground font-normal whitespace-pre-wrap">{item.notes}</p>
-                                      )}
-                                      {link?.unitNotes && (
-                                        <p className="text-xs text-muted-foreground font-normal whitespace-pre-wrap">
-                                          <span className="font-medium">This unit: </span>
-                                          {link.unitNotes}
-                                        </p>
-                                      )}
+                                  {expandedNotes.has(item.linkKey) && resolvedNote && (
+                                    <div className="mt-0.5">
+                                      <p className="text-xs text-muted-foreground font-normal whitespace-pre-wrap">{resolvedNote}</p>
                                     </div>
                                   )}
+
                                 </div>
                               </div>
                             </TableCell>

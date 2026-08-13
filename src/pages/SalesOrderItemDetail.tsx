@@ -88,8 +88,7 @@ export function SalesOrderItemDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
-  const [savingItemNote, setSavingItemNote] = useState(false);
-  const [itemNote, setItemNote] = useState('');
+
   const [addonPickerOpen, setAddonPickerOpen] = useState(false);
 
   // Editable external fields
@@ -119,12 +118,12 @@ export function SalesOrderItemDetail() {
       setStatus(l.status || 'pending');
       setExternalJobNumber(l.external_job_number || '');
       setExternalNotes(l.external_notes || '');
-      setUnitNotes(l.unit_notes || '');
+      setUnitNotes(l.unit_notes ?? item?.notes ?? '');
       setExternalDueDate(l.external_due_date ? new Date(l.external_due_date) : undefined);
     } else {
       setLink(null);
       setStatus('pending');
-      setUnitNotes('');
+      setUnitNotes(item?.notes || '');
     }
 
     // All attachments for this quote (used for both current add-ons and the picker)
@@ -171,9 +170,6 @@ export function SalesOrderItemDetail() {
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    setItemNote(item?.notes || '');
-  }, [item?.id, item?.notes]);
 
   const handleUploadNvis = async (file: File) => {
     if (!user || !id || !quoteItemId) return;
@@ -305,21 +301,6 @@ export function SalesOrderItemDetail() {
     }
   };
 
-  const handleSaveItemNote = async () => {
-    if (!quoteItemId) return;
-    setSavingItemNote(true);
-    const { error } = await supabase
-      .from('quote_items')
-      .update({ notes: itemNote.trim() || null })
-      .eq('id', quoteItemId);
-    setSavingItemNote(false);
-    if (error) {
-      toast({ title: 'Error saving item note', description: error.message, variant: 'destructive' });
-      return;
-    }
-    toast({ title: 'Item note saved' });
-    await refetchQuotes();
-  };
 
   // Available units to attach as add-ons: expand all quote items into units,
   // exclude this unit and units already attached anywhere.
@@ -572,33 +553,18 @@ export function SalesOrderItemDetail() {
         <CardHeader><CardTitle className="text-lg">Notes</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="item-note">Item note</Label>
-            <Textarea
-              id="item-note"
-              value={itemNote}
-              onChange={(e) => setItemNote(e.target.value)}
-              placeholder="Note shown with the item name on the sales order and on PDFs…"
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground">
-              Applies to every unit of this item and appears on quote/sales order PDFs.
-            </p>
-            <div className="flex justify-end">
-              <Button size="sm" onClick={handleSaveItemNote} disabled={savingItemNote}>
-                {savingItemNote ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                Save item note
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2 border-t pt-4">
             <Label htmlFor="unit-notes">Notes for this unit</Label>
             <Textarea
               id="unit-notes"
               value={unitNotes}
               onChange={(e) => setUnitNotes(e.target.value)}
               placeholder="Add notes specific to this unit…"
-              rows={4}
+              rows={12}
             />
+            <p className="text-xs text-muted-foreground">
+              Applies only to this unit. Shows on the sales order page, created jobs, and the sales order PDF.
+            </p>
+
             <div className="flex justify-end">
               <Button size="sm" onClick={handleSaveUnitNotes} disabled={savingNotes}>
                 {savingNotes ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}

@@ -8,8 +8,23 @@ const PAGE_MARGIN_BOTTOM = 20; // mm from bottom edge where we trigger a new pag
 const LINE_HEIGHT = 7;
 const NOTE_LINE_HEIGHT = 4;
 
-export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings, options?: { isSalesOrder?: boolean }) => {
+export const generateQuotePDF = async (
+  quote: Quote,
+  settings: QuoteSettings,
+  options?: { isSalesOrder?: boolean; unitNotes?: Record<string, (string | null)[]> },
+) => {
   const isSalesOrder = options?.isSalesOrder ?? false;
+  const unitNotesByItem = options?.unitNotes ?? {};
+
+  /** Note text lines for an item: per-unit notes when present, else the item note */
+  const buildNoteText = (itemId: string, itemNotes: string | null): string[] => {
+    const units = unitNotesByItem[itemId] ?? [];
+    const filled = units.map((n, i) => ({ note: (n ?? '').trim(), index: i })).filter((u) => u.note);
+    if (filled.length === 0) return itemNotes ? [`Note: ${itemNotes}`] : [];
+    const unique = new Set(filled.map((u) => u.note));
+    if (unique.size === 1 && filled.length === units.length) return [`Note: ${filled[0].note}`];
+    return filled.map((u) => `Unit ${u.index + 1}: ${u.note}`);
+  };
   const documentTitle = isSalesOrder ? 'SALES ORDER' : 'QUOTE';
   const documentLabel = isSalesOrder ? 'Sales Order #' : 'Quote #';
   const billToLabel = isSalesOrder ? 'Sales Order For:' : 'Quote For:';
@@ -221,8 +236,9 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings, op
       // Calculate total height this item needs (name/sku rows + optional note rows)
       let itemTotalHeight = rowHeight;
       let noteLines: string[] = [];
-      if (item.notes) {
-        noteLines = doc.splitTextToSize(`Note: ${item.notes}`, pageWidth - tableX - 24);
+      const rawNoteTexts = buildNoteText(item.id, item.notes);
+      if (rawNoteTexts.length > 0) {
+        noteLines = rawNoteTexts.flatMap((t) => doc.splitTextToSize(t, pageWidth - tableX - 24) as string[]);
         itemTotalHeight += noteLines.length * NOTE_LINE_HEIGHT + 2;
       }
 
@@ -268,7 +284,7 @@ export const generateQuotePDF = async (quote: Quote, settings: QuoteSettings, op
       }
       y += rowHeight;
 
-      if (item.notes && noteLines.length > 0) {
+      if (noteLines.length > 0) {
         doc.setFontSize(8);
         doc.setTextColor(120, 120, 120);
         doc.text(noteLines, tableX + 4, y);
