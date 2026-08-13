@@ -264,6 +264,7 @@ import { CompanySelector } from '@/components/CompanySelector';
 import { useAssemblies } from '@/hooks/useAssemblies';
 import { FullScreenItemPicker, PickerAddOverride } from '@/components/FullScreenItemPicker';
 import { useAllItemVendorPrices } from '@/hooks/useAllItemVendorPrices';
+import { useSopBoms } from '@/hooks/useSopBoms';
 
 export function Quotes() {
   // signOut moved to sidebar
