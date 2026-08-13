@@ -406,9 +406,18 @@ export function FullScreenItemPicker({
     });
   }, [assemblies, searchQuery, selectedAssemblyType]);
 
+  const filteredBoms = useMemo(() => {
+    if (!searchQuery.trim()) return boms;
+    const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    return boms.filter((b) => {
+      const haystack = `${b.title} ${b.sopNumber || ''}`.toLowerCase();
+      return tokens.every((t) => haystack.includes(t));
+    });
+  }, [boms, searchQuery]);
+
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const items = showAssemblies ? filteredAssemblies : filteredItems;
+    const items = mode === 'assemblies' ? filteredAssemblies : mode === 'boms' ? filteredBoms : filteredItems;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex((prev) => Math.min(prev + 1, items.length - 1));
@@ -417,9 +426,12 @@ export function FullScreenItemPicker({
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter' && items.length > 0) {
       e.preventDefault();
-      if (showAssemblies) {
+      if (mode === 'assemblies') {
         const assembly = filteredAssemblies[selectedIndex];
         if (assembly && onAddAssembly) onAddAssembly(assembly);
+      } else if (mode === 'boms') {
+        const bom = filteredBoms[selectedIndex];
+        if (bom && onAddBom) onAddBom(bom);
       } else {
         const item = filteredItems[selectedIndex];
         if (item) handleItemClick(item);
@@ -427,12 +439,12 @@ export function FullScreenItemPicker({
     } else if (e.key === 'Escape') {
       handleDone();
     }
-  }, [showAssemblies, filteredAssemblies, filteredItems, selectedIndex, handleItemClick, onAddAssembly, onClose]);
+  }, [mode, filteredAssemblies, filteredItems, filteredBoms, selectedIndex, handleItemClick, onAddAssembly, onAddBom, onClose]);
 
   // Reset selected index when results change
   useEffect(() => {
     setSelectedIndex(0);
-  }, [searchQuery, showAssemblies]);
+  }, [searchQuery, mode]);
 
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, c) => sum + (c.quantity || 0) * c.unitPrice, 0),
