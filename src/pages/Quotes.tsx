@@ -1308,10 +1308,12 @@ export function Quotes() {
         onAddItem={addToCart}
         onAddCustomItem={addCustomItem}
         onAddAssembly={addAssemblyToCart}
+        onAddBom={addBomToCart}
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
         onUpdateItem={updateCartItem}
         assemblies={assemblies}
+        boms={sopBoms}
         documentType="Quote"
         formatPrice={formatCurrency}
         vendorPriceRows={allVendorPriceRows}
