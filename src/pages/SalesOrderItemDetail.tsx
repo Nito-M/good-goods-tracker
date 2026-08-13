@@ -572,33 +572,18 @@ export function SalesOrderItemDetail() {
         <CardHeader><CardTitle className="text-lg">Notes</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="item-note">Item note</Label>
-            <Textarea
-              id="item-note"
-              value={itemNote}
-              onChange={(e) => setItemNote(e.target.value)}
-              placeholder="Note shown with the item name on the sales order and on PDFs…"
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground">
-              Applies to every unit of this item and appears on quote/sales order PDFs.
-            </p>
-            <div className="flex justify-end">
-              <Button size="sm" onClick={handleSaveItemNote} disabled={savingItemNote}>
-                {savingItemNote ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                Save item note
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2 border-t pt-4">
             <Label htmlFor="unit-notes">Notes for this unit</Label>
             <Textarea
               id="unit-notes"
               value={unitNotes}
               onChange={(e) => setUnitNotes(e.target.value)}
               placeholder="Add notes specific to this unit…"
-              rows={4}
+              rows={12}
             />
+            <p className="text-xs text-muted-foreground">
+              Applies only to this unit. Shows on the sales order page, created jobs, and the sales order PDF.
+            </p>
+
             <div className="flex justify-end">
               <Button size="sm" onClick={handleSaveUnitNotes} disabled={savingNotes}>
                 {savingNotes ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
