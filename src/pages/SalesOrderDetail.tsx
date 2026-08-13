@@ -136,12 +136,31 @@ export function SalesOrderDetail() {
     if (!quote) return;
     const settings = getQuoteSettingsForQuote(quote);
     const unitNotes: Record<string, (string | null)[]> = {};
+    const splitItems: typeof quote.items = [];
+
     quote.items.forEach((qi) => {
-      const units = Math.max(1, Math.floor(qi.quantity || 1));
-      unitNotes[qi.id] = Array.from({ length: units }, (_, i) => itemLinks[`${qi.id}-${i}`]?.unitNotes ?? null);
+      const qty = qi.quantity || 0;
+      const isWholeMulti = Number.isInteger(qty) && qty > 1;
+      if (!isWholeMulti) {
+        unitNotes[qi.id] = [itemLinks[`${qi.id}-0`]?.unitNotes ?? null];
+        splitItems.push(qi);
+        return;
+      }
+      for (let i = 0; i < qty; i++) {
+        const rowId = `${qi.id}-u${i}`;
+        unitNotes[rowId] = [itemLinks[`${qi.id}-${i}`]?.unitNotes ?? null];
+        splitItems.push({
+          ...qi,
+          id: rowId,
+          quantity: 1,
+          totalPrice: qi.totalPrice / qty,
+        });
+      }
     });
-    generateQuotePDF(quote, settings, { isSalesOrder: true, unitNotes });
+
+    generateQuotePDF({ ...quote, items: splitItems }, settings, { isSalesOrder: true, unitNotes });
   };
+
 
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
