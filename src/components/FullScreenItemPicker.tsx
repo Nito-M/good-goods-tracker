@@ -541,7 +541,7 @@ export function FullScreenItemPicker({
                 </Button>
               )}
             </div>
-            {vendorItemIds && vendorItemIds.length > 0 && !showAssemblies && (
+            {vendorItemIds && vendorItemIds.length > 0 && mode === 'items' && (
               <Button
                 variant={vendorOnly ? 'default' : 'outline'}
                 size="sm"
@@ -556,7 +556,44 @@ export function FullScreenItemPicker({
 
           {/* Results Table */}
           <ScrollArea className="flex-1">
-            {showAssemblies ? (
+            {mode === 'boms' ? (
+              <Table className="table-fixed w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[55%]">SOP / BOM</TableHead>
+                    <TableHead className="w-[20%]">SOP #</TableHead>
+                    <TableHead className="w-[15%] text-right">Items</TableHead>
+                    <TableHead className="w-16"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBoms.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                        {searchQuery ? 'No BOMs match your search' : 'No BOMs available'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredBoms.map((bom, index) => (
+                      <TableRow
+                        key={bom.id}
+                        className={`cursor-pointer ${index === selectedIndex ? 'bg-accent' : ''}`}
+                        onClick={() => onAddBom?.(bom)}
+                      >
+                        <TableCell className="font-medium break-words">{bom.title}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{bom.sopNumber || '—'}</TableCell>
+                        <TableCell className="text-right font-medium">{bom.itemCount}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onAddBom?.(bom); }}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            ) : mode === 'assemblies' ? (
               !selectedAssemblyType ? (
                 <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-4">
                   {assemblyTypes.map(({ name, count }) => (
