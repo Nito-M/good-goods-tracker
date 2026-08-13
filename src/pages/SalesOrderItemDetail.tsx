@@ -118,12 +118,12 @@ export function SalesOrderItemDetail() {
       setStatus(l.status || 'pending');
       setExternalJobNumber(l.external_job_number || '');
       setExternalNotes(l.external_notes || '');
-      setUnitNotes(l.unit_notes || '');
+      setUnitNotes(l.unit_notes ?? item?.notes ?? '');
       setExternalDueDate(l.external_due_date ? new Date(l.external_due_date) : undefined);
     } else {
       setLink(null);
       setStatus('pending');
-      setUnitNotes('');
+      setUnitNotes(item?.notes || '');
     }
 
     // All attachments for this quote (used for both current add-ons and the picker)
