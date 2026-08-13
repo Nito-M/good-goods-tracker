@@ -305,21 +305,6 @@ export function SalesOrderItemDetail() {
     }
   };
 
-  const handleSaveItemNote = async () => {
-    if (!quoteItemId) return;
-    setSavingItemNote(true);
-    const { error } = await supabase
-      .from('quote_items')
-      .update({ notes: itemNote.trim() || null })
-      .eq('id', quoteItemId);
-    setSavingItemNote(false);
-    if (error) {
-      toast({ title: 'Error saving item note', description: error.message, variant: 'destructive' });
-      return;
-    }
-    toast({ title: 'Item note saved' });
-    await refetchQuotes();
-  };
 
   // Available units to attach as add-ons: expand all quote items into units,
   // exclude this unit and units already attached anywhere.
