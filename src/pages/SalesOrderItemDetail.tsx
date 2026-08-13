@@ -88,6 +88,8 @@ export function SalesOrderItemDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
+  const [savingItemNote, setSavingItemNote] = useState(false);
+  const [itemNote, setItemNote] = useState('');
   const [addonPickerOpen, setAddonPickerOpen] = useState(false);
 
   // Editable external fields
