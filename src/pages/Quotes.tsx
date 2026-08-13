@@ -593,6 +593,28 @@ export function Quotes() {
     setShowAssemblyPicker(false);
   };
 
+  const addBomToCart = (bom: { id: string; title: string; items: Array<{ inventoryItemId: string; name: string; sku: string | null; quantity: number; unitCost: number; notes: string | null }> }) => {
+    const newItems: CartItem[] = [];
+    bom.items.forEach((item, idx) => {
+      const inv = inventoryItems.find((i) => i.id === item.inventoryItemId);
+      const basePrice = inv?.price ?? item.unitCost ?? 0;
+      const cartId = `bom-${bom.id}-${item.inventoryItemId}-${idx}-${Date.now()}`;
+      setCartBasePrices((prev) => ({ ...prev, [cartId]: basePrice }));
+      newItems.push({
+        id: cartId,
+        inventoryItemId: item.inventoryItemId,
+        itemName: inv?.name || item.name,
+        sku: inv?.sku || item.sku || '',
+        quantity: item.quantity || null,
+        quantityUnit: (inv?.quantityUnit ?? 'pcs') as QuantityUnit,
+        unitPrice: markupPercent !== '' ? calculateMarkupPrice(basePrice, markupPercent as number) : basePrice,
+        unitCost: item.unitCost ?? inv?.cost ?? 0,
+        notes: item.notes || `From BOM: ${bom.title}`,
+      });
+    });
+    setCart((prev) => [...prev, ...newItems]);
+  };
+
   const updateCartItem = (itemId: string, updates: Partial<CartItem>) => {
     if (updates.unitPrice !== undefined && updates.excludeMarkup === undefined) {
       setCartBasePrices(prev => ({ ...prev, [itemId]: updates.unitPrice as number }));
