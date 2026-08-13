@@ -126,6 +126,25 @@ export default function SopEdit() {
   const openStepPicker = (stepId: string) => setPickerContext({ mode: 'step', stepId });
   const openBomPicker = () => setPickerContext({ mode: 'bom' });
 
+  const buildBomPrefill = () => {
+    const mult = parseFloat(bomMultiplier);
+    const factor = Number.isFinite(mult) && mult > 0 ? mult : 1;
+    return bom
+      .map(b => {
+        const inv = itemsById.get(b.inventory_item_id);
+        if (!inv) return null;
+        return {
+          inventory_item_id: inv.id,
+          name: inv.name,
+          sku: inv.sku || null,
+          quantity: Math.round(b.quantity * factor * 100000) / 100000,
+          unit_cost: inv.cost || 0,
+          notes: b.notes || '',
+        };
+      })
+      .filter(Boolean);
+  };
+
   const pickerCart: PickerCartItem[] = useMemo(() => {
     if (!pickerContext) return [];
     if (pickerContext.mode === 'step' && pickerContext.stepId) {
