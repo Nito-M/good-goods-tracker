@@ -70,7 +70,7 @@ export function SalesOrderItemDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { quotes, loading: quotesLoading } = useQuotes();
+  const { quotes, loading: quotesLoading, refetch: refetchQuotes } = useQuotes();
   const { jobs } = useJobs();
 
   const unitIdx = parseInt(unitIndex || '0', 10);
