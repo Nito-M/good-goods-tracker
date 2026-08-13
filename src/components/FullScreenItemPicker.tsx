@@ -730,8 +730,10 @@ export function FullScreenItemPicker({
 
           {/* Results footer */}
           <div className="border-t border-border px-4 py-2 text-sm text-muted-foreground shrink-0">
-            {showAssemblies
+            {mode === 'assemblies'
               ? `${filteredAssemblies.length} assemblies`
+              : mode === 'boms'
+              ? `${filteredBoms.length} BOMs`
               : `${filteredItems.length} items`
             }
             {searchQuery && ` matching "${searchQuery}"`}
