@@ -467,20 +467,38 @@ export function FullScreenItemPicker({
           </Badge>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onAddCustomItem}>
-            <Plus className="h-4 w-4 mr-1" />
-            Custom Item
+          <Button
+            variant={mode === 'items' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => { setMode('items'); setSelectedAssemblyType(null); }}
+          >
+            <Package className="h-4 w-4 mr-1" />
+            Inventory / Items
           </Button>
           {onAddAssembly && assemblies.length > 0 && (
             <Button
-              variant={showAssemblies ? 'default' : 'outline'}
+              variant={mode === 'assemblies' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { setShowAssemblies(!showAssemblies); setSelectedAssemblyType(null); }}
+              onClick={() => { setMode('assemblies'); setSelectedAssemblyType(null); }}
             >
               <Layers className="h-4 w-4 mr-1" />
               Assemblies
             </Button>
           )}
+          {onAddBom && boms.length > 0 && (
+            <Button
+              variant={mode === 'boms' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setMode('boms'); setSelectedAssemblyType(null); }}
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              BOMs
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={onAddCustomItem}>
+            <Plus className="h-4 w-4 mr-1" />
+            Custom Item
+          </Button>
           <Button
             variant="outline"
             size="sm"
