@@ -226,6 +226,7 @@ export function FullScreenItemPicker({
   onRemoveItem,
   onUpdateItem,
   assemblies = [],
+  boms = [],
   documentType,
   formatPrice = formatCurrency,
   vendorItemIds,
@@ -234,7 +235,7 @@ export function FullScreenItemPicker({
   selectedVendorId,
 }: FullScreenItemPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAssemblies, setShowAssemblies] = useState(false);
+  const [mode, setMode] = useState<'items' | 'assemblies' | 'boms'>('items');
   const [selectedAssemblyType, setSelectedAssemblyType] = useState<string | null>(null);
   const [vendorOnly, setVendorOnly] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
