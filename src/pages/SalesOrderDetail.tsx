@@ -327,15 +327,13 @@ export function SalesOrderDetail() {
       .map(([k]) => k);
     const children = expandedItems.filter((it) => childKeys.includes(it.linkKey));
     const lines: string[] = [];
-    if (parent.notes) lines.push(parent.notes);
-    const parentUnitNotes = itemLinks[parent.linkKey]?.unitNotes;
-    if (parentUnitNotes) lines.push(parentUnitNotes);
+    const parentNote = itemLinks[parent.linkKey]?.unitNotes ?? parent.notes;
+    if (parentNote) lines.push(parentNote);
     if (children.length > 0) {
       lines.push('');
       lines.push('Add-ons:');
       for (const c of children) {
-        const cUnitNotes = itemLinks[c.linkKey]?.unitNotes;
-        const extra = [c.notes, cUnitNotes].filter(Boolean).join(' — ');
+        const extra = itemLinks[c.linkKey]?.unitNotes ?? c.notes;
         lines.push(`• ${c.itemName}${extra ? ` — ${extra}` : ''}`);
       }
     }
