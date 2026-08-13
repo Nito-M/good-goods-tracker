@@ -31,7 +31,7 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useProfile } from '@/hooks/useProfile';
 import { useSales } from '@/hooks/useSales';
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { addDays, format } from 'date-fns';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -400,6 +400,34 @@ export function Quotes() {
   const [openMonths, setOpenMonths] = useState<string[]>([]);
   const [highlightedQuoteId, setHighlightedQuoteId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Prefill the new-quote cart when navigated to with items (e.g. from an SOP bill of materials)
+  const location = useLocation();
+  const navigate = useNavigate();
+  const prefillQuoteItems = (location.state as {
+    prefillItems?: Array<{ inventory_item_id: string; name: string; sku: string | null; quantity: number; unit_cost: number; notes?: string }>;
+  } | null)?.prefillItems ?? null;
+  useEffect(() => {
+    if (!prefillQuoteItems || prefillQuoteItems.length === 0) return;
+    setCart(prefillQuoteItems.map((p, idx) => {
+      const inv = inventoryItems.find(i => i.id === p.inventory_item_id);
+      return {
+        id: `${p.inventory_item_id || 'custom'}-${idx}`,
+        inventoryItemId: p.inventory_item_id || null,
+        itemName: p.name,
+        sku: p.sku || '',
+        quantity: p.quantity,
+        quantityUnit: (inv?.quantityUnit ?? 'pieces') as QuantityUnit,
+        unitPrice: inv?.price ?? p.unit_cost ?? 0,
+        unitCost: p.unit_cost ?? 0,
+        notes: p.notes || '',
+      };
+    }));
+    setActiveTab('new-quote');
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillQuoteItems, inventoryItems.length]);
+
 
   const { defaultCompany } = useCompanies();
   useEffect(() => {
