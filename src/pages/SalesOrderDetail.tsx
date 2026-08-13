@@ -733,7 +733,7 @@ export function SalesOrderDetail() {
                                       ({childrenByParent[item.linkKey].length} add-on{childrenByParent[item.linkKey].length === 1 ? '' : 's'})
                                     </span>
                                   )}
-                                  {item.notes && (
+                                  {(item.notes || link?.unitNotes) && (
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -755,8 +755,18 @@ export function SalesOrderDetail() {
                                       details
                                     </button>
                                   )}
-                                  {item.notes && expandedNotes.has(item.linkKey) && (
-                                    <p className="text-xs text-muted-foreground font-normal mt-0.5 whitespace-pre-wrap">{item.notes}</p>
+                                  {expandedNotes.has(item.linkKey) && (item.notes || link?.unitNotes) && (
+                                    <div className="mt-0.5 space-y-1">
+                                      {item.notes && (
+                                        <p className="text-xs text-muted-foreground font-normal whitespace-pre-wrap">{item.notes}</p>
+                                      )}
+                                      {link?.unitNotes && (
+                                        <p className="text-xs text-muted-foreground font-normal whitespace-pre-wrap">
+                                          <span className="font-medium">This unit: </span>
+                                          {link.unitNotes}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </div>
