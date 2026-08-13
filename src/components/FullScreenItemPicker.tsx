@@ -222,6 +222,7 @@ export function FullScreenItemPicker({
   onAddItem,
   onAddCustomItem,
   onAddAssembly,
+  onAddBom,
   onUpdateQuantity,
   onRemoveItem,
   onUpdateItem,
