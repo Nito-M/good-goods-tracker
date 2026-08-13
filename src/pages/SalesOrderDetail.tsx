@@ -685,6 +685,7 @@ export function SalesOrderDetail() {
                         const isUpdatingThis = updatingStatusFor === item.linkKey;
                         const hasChildren = !!childrenByParent[item.linkKey]?.length;
                         const parentKey = attachments[item.linkKey];
+                        const resolvedNote = link?.unitNotes ?? item.notes ?? null;
 
                         // Items eligible as attach targets:
                         // - not self
