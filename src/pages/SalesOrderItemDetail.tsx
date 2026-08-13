@@ -70,7 +70,7 @@ export function SalesOrderItemDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { quotes, loading: quotesLoading } = useQuotes();
+  const { quotes, loading: quotesLoading, refetch: refetchQuotes } = useQuotes();
   const { jobs } = useJobs();
 
   const unitIdx = parseInt(unitIndex || '0', 10);
@@ -88,6 +88,8 @@ export function SalesOrderItemDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
+  const [savingItemNote, setSavingItemNote] = useState(false);
+  const [itemNote, setItemNote] = useState('');
   const [addonPickerOpen, setAddonPickerOpen] = useState(false);
 
   // Editable external fields
@@ -168,6 +170,10 @@ export function SalesOrderItemDetail() {
   }, [id, quoteItemId, unitIdx, quote]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    setItemNote(item?.notes || '');
+  }, [item?.id, item?.notes]);
 
   const handleUploadNvis = async (file: File) => {
     if (!user || !id || !quoteItemId) return;
@@ -297,6 +303,22 @@ export function SalesOrderItemDetail() {
       toast({ title: 'Notes saved' });
       await load();
     }
+  };
+
+  const handleSaveItemNote = async () => {
+    if (!quoteItemId) return;
+    setSavingItemNote(true);
+    const { error } = await supabase
+      .from('quote_items')
+      .update({ notes: itemNote.trim() || null })
+      .eq('id', quoteItemId);
+    setSavingItemNote(false);
+    if (error) {
+      toast({ title: 'Error saving item note', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Item note saved' });
+    await refetchQuotes();
   };
 
   // Available units to attach as add-ons: expand all quote items into units,
@@ -545,17 +567,30 @@ export function SalesOrderItemDetail() {
         </CardContent>
       </Card>
 
-      {/* Unit notes (editable) */}
+      {/* Notes (editable) */}
       <Card>
         <CardHeader><CardTitle className="text-lg">Notes</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {item.notes && (
-            <div className="rounded-md bg-muted p-3">
-              <div className="text-xs font-medium text-muted-foreground mb-1">Original item note</div>
-              <p className="text-sm whitespace-pre-wrap">{item.notes}</p>
-            </div>
-          )}
+        <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="item-note">Item note</Label>
+            <Textarea
+              id="item-note"
+              value={itemNote}
+              onChange={(e) => setItemNote(e.target.value)}
+              placeholder="Note shown with the item name on the sales order and on PDFs…"
+              rows={3}
+            />
+            <p className="text-xs text-muted-foreground">
+              Applies to every unit of this item and appears on quote/sales order PDFs.
+            </p>
+            <div className="flex justify-end">
+              <Button size="sm" onClick={handleSaveItemNote} disabled={savingItemNote}>
+                {savingItemNote ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Save item note
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2 border-t pt-4">
             <Label htmlFor="unit-notes">Notes for this unit</Label>
             <Textarea
               id="unit-notes"
