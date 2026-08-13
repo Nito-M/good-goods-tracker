@@ -171,9 +171,6 @@ export function SalesOrderItemDetail() {
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    setItemNote(item?.notes || '');
-  }, [item?.id, item?.notes]);
 
   const handleUploadNvis = async (file: File) => {
     if (!user || !id || !quoteItemId) return;
