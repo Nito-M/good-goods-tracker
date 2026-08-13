@@ -236,8 +236,9 @@ export const generateQuotePDF = async (
       // Calculate total height this item needs (name/sku rows + optional note rows)
       let itemTotalHeight = rowHeight;
       let noteLines: string[] = [];
-      if (item.notes) {
-        noteLines = doc.splitTextToSize(`Note: ${item.notes}`, pageWidth - tableX - 24);
+      const rawNoteTexts = buildNoteText(item.id, item.notes);
+      if (rawNoteTexts.length > 0) {
+        noteLines = rawNoteTexts.flatMap((t) => doc.splitTextToSize(t, pageWidth - tableX - 24) as string[]);
         itemTotalHeight += noteLines.length * NOTE_LINE_HEIGHT + 2;
       }
 
