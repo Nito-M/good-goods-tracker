@@ -59,11 +59,12 @@ const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; va
   cancelled: { label: 'Cancelled', variant: 'secondary' },
 };
 
-export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp }: SaleCardProps) {
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp, onPickUpNewItems }: SaleCardProps) {
   const navigate = useNavigate();
   const [revertOpen, setRevertOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const stop = (e: React.MouseEvent | React.PointerEvent) => e.stopPropagation();
+  const pendingPickupCount = sale.items.filter((i) => !i.pickedUpAt).length;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
