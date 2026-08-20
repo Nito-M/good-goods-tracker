@@ -638,7 +638,7 @@ export function useSales() {
       for (let i = 0; i < normalizedItems.length; i++) {
         const item = normalizedItems[i];
         const line = itemLineTotals[i];
-        const carriedPickedUpAt = pickupById.get(item.id) ?? null;
+        const carriedPickedUpAt = pickupById.get(input.items[i]?.id) ?? null;
         const { data: insertedItem, error: itemError } = await supabase
           .from('sale_items')
           .insert({
