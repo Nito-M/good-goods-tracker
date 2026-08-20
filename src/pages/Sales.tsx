@@ -76,6 +76,7 @@ interface CartItem {
   isCustom?: boolean;
   discountRate?: number; // Per-item discount %
   notes?: string;
+  saleItemId?: string; // existing sale_items row id when editing an invoice
 }
 
 const INVOICE_DRAFT_STORAGE_KEY = 'sales-invoice-draft-v1';
