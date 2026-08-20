@@ -1080,6 +1080,7 @@ export function useSales() {
     updateStatus,
     togglePickedUp,
     processPendingPickupItems,
+    setItemsPickupState,
     deleteSale,
     revertSale,
     updateInternalNotes,
