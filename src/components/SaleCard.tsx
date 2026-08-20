@@ -48,6 +48,7 @@ interface SaleCardProps {
   onEdit: (sale: Sale) => void;
   onStatusChange?: (id: string, status: SaleStatus) => void;
   onTogglePickedUp?: (id: string) => void;
+  onPickUpNewItems?: (id: string) => void;
 }
 
 const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
