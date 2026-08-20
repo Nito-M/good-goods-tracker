@@ -76,6 +76,7 @@ interface CartItem {
   isCustom?: boolean;
   discountRate?: number; // Per-item discount %
   notes?: string;
+  saleItemId?: string; // existing sale_items row id when editing an invoice
 }
 
 const INVOICE_DRAFT_STORAGE_KEY = 'sales-invoice-draft-v1';
@@ -453,6 +454,7 @@ export function Sales() {
         isCustom: !item.inventoryItemId,
         discountRate: item.discountRate || 0,
         notes: item.notes ?? '',
+        saleItemId: item.id,
       };
     });
 
@@ -650,6 +652,7 @@ export function Sales() {
       const itemName = c.inventoryItem.name.trim();
       const isCustomLine = c.isCustom || c.inventoryItem.id.startsWith('custom-') || c.inventoryItem.id.startsWith('assembly-');
       return {
+        saleItemId: c.saleItemId,
         inventoryItemId: isCustomLine ? null : c.inventoryItem.id,
         itemName: itemName || `Custom Item ${index + 1}`,
         sku: c.inventoryItem.sku.trim() || (isCustomLine ? `CUSTOM-${index + 1}` : c.inventoryItem.id),
@@ -668,7 +671,11 @@ export function Sales() {
       const updated = await updateSale(editingSaleId, {
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || '',
-        items: invoiceItems.map((item) => ({ ...item, id: `updated-${item.inventoryItemId || item.sku}-${Date.now()}` })),
+        items: invoiceItems.map(({ saleItemId, ...item }, idx) => ({
+          ...item,
+          // Preserve the original sale_items row id so per-item pickup state survives the edit
+          id: saleItemId || `new-${idx}-${Date.now()}`,
+        })),
         taxRate,
         discountRate,
         notes: notes || null,
@@ -688,7 +695,7 @@ export function Sales() {
       const sale = await createSale({
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || null,
-        items: invoiceItems,
+        items: invoiceItems.map(({ saleItemId, ...item }) => item),
         taxRate,
         discountRate,
         notes: notes || null,
