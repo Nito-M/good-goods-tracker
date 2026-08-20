@@ -622,6 +622,15 @@ export function useSales() {
 
       if (saleError) throw saleError;
 
+      // Capture per-item pickup state so it survives the item rebuild below
+      const { data: existingItems } = await supabase
+        .from('sale_items')
+        .select('id, picked_up_at')
+        .eq('sale_id', saleId);
+      const pickupById = new Map<string, string | null>(
+        ((existingItems as any[]) || []).map((r) => [r.id, r.picked_up_at ?? null]),
+      );
+
       // Delete existing sale items (and their PO allocations via cascade)
       await supabase.from('sale_items').delete().eq('sale_id', saleId);
 
@@ -629,7 +638,8 @@ export function useSales() {
       for (let i = 0; i < normalizedItems.length; i++) {
         const item = normalizedItems[i];
         const line = itemLineTotals[i];
-        const { error: itemError } = await supabase
+        const carriedPickedUpAt = pickupById.get(item.id) ?? null;
+        const { data: insertedItem, error: itemError } = await supabase
           .from('sale_items')
           .insert({
             sale_id: saleId,
@@ -644,9 +654,18 @@ export function useSales() {
             total_price: line.lineTotal,
             sort_order: i,
             notes: (item as any).notes ?? null,
-          } as any);
+            picked_up_at: carriedPickedUpAt,
+          } as any)
+          .select('id')
+          .single();
 
         if (itemError) throw itemError;
+
+        // Re-create FIFO allocations for items that were already picked up
+        // (the originals were removed by the cascade above)
+        if (carriedPickedUpAt && insertedItem) {
+          await allocateFromPOs((insertedItem as any).id, item.sku || 'CUSTOM', item.quantity);
+        }
       }
 
       // Replace adjustments
