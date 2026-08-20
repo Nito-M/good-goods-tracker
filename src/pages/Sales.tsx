@@ -454,6 +454,7 @@ export function Sales() {
         isCustom: !item.inventoryItemId,
         discountRate: item.discountRate || 0,
         notes: item.notes ?? '',
+        saleItemId: item.id,
       };
     });
 
