@@ -695,7 +695,7 @@ export function Sales() {
       const sale = await createSale({
         vendorId: selectedVendorId || null,
         invoiceNumber: customInvoiceNumber.trim() || null,
-        items: invoiceItems,
+        items: invoiceItems.map(({ saleItemId, ...item }) => item),
         taxRate,
         discountRate,
         notes: notes || null,
