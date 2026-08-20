@@ -788,6 +788,81 @@ export function useSales() {
     }
   };
 
+  // Explicitly set which sale items are picked up (applies the difference)
+  const setItemsPickupState = async (saleId: string, pickedItemIds: string[]) => {
+    try {
+      const { data: saleItems } = await supabase
+        .from('sale_items')
+        .select('id, sku, quantity, inventory_item_id, picked_up_at')
+        .eq('sale_id', saleId);
+
+      if (!saleItems) return false;
+
+      const wanted = new Set(pickedItemIds);
+      const toPick = saleItems.filter((i) => wanted.has(i.id) && !(i as any).picked_up_at);
+      const toUnpick = saleItems.filter((i) => !wanted.has(i.id) && !!(i as any).picked_up_at);
+
+      if (toPick.length > 0) {
+        await processPickupForItems(toPick as any, new Date().toISOString());
+      }
+
+      for (const saleItem of toUnpick) {
+        await supabase.from('po_item_allocations').delete().eq('sale_item_id', saleItem.id);
+
+        if (saleItem.inventory_item_id) {
+          const { data: currentItem } = await supabase
+            .from('inventory_items')
+            .select('quantity')
+            .eq('id', saleItem.inventory_item_id)
+            .single();
+
+          if (currentItem) {
+            await supabase
+              .from('inventory_items')
+              .update({ quantity: currentItem.quantity + saleItem.quantity })
+              .eq('id', saleItem.inventory_item_id);
+          }
+        }
+
+        await supabase
+          .from('sale_items')
+          .update({ picked_up_at: null } as any)
+          .eq('id', saleItem.id);
+      }
+
+      // Keep the sale-level flag in sync: set when any item is picked up, clear when none
+      const anyPicked = wanted.size > 0 && saleItems.some((i) => wanted.has(i.id));
+      const { data: saleRow } = await supabase
+        .from('sales')
+        .select('picked_up_at')
+        .eq('id', saleId)
+        .single();
+
+      if (anyPicked && !saleRow?.picked_up_at) {
+        await supabase.from('sales').update({ picked_up_at: new Date().toISOString() }).eq('id', saleId);
+      } else if (!anyPicked && saleRow?.picked_up_at) {
+        await supabase.from('sales').update({ picked_up_at: null }).eq('id', saleId);
+      }
+
+      toast({
+        title: 'Pickup updated',
+        description: `${toPick.length} item(s) picked up, ${toUnpick.length} item(s) restored`,
+      });
+
+      await fetchSales();
+      return true;
+    } catch (error: unknown) {
+      console.error('Error setting item pickup state:', error);
+      toast({
+        title: 'Error updating pickup status',
+        description: 'Unable to update. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+
   const togglePickedUp = async (saleId: string) => {
     try {
       const sale = sales.find((s) => s.id === saleId);
