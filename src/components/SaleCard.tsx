@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Sale, SaleStatus } from '@/types/sale';
+import { ManagePickupDialog } from '@/components/sale/ManagePickupDialog';
 import { formatCurrency } from '@/lib/utils';
 
 interface SaleCardProps {
@@ -49,6 +50,7 @@ interface SaleCardProps {
   onStatusChange?: (id: string, status: SaleStatus) => void;
   onTogglePickedUp?: (id: string) => void;
   onPickUpNewItems?: (id: string) => void;
+  onSetItemsPickup?: (id: string, pickedItemIds: string[]) => Promise<boolean | void>;
 }
 
 const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -59,10 +61,11 @@ const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; va
   cancelled: { label: 'Cancelled', variant: 'secondary' },
 };
 
-export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp, onPickUpNewItems }: SaleCardProps) {
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp, onPickUpNewItems, onSetItemsPickup }: SaleCardProps) {
   const navigate = useNavigate();
   const [revertOpen, setRevertOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pickupOpen, setPickupOpen] = useState(false);
   const stop = (e: React.MouseEvent | React.PointerEvent) => e.stopPropagation();
   const pendingPickupCount = sale.items.filter((i) => !i.pickedUpAt).length;
 
@@ -196,6 +199,17 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
                 <Download className="h-4 w-4 mr-2" />
                 Download Invoice
               </DropdownMenuItem>
+              {onSetItemsPickup && sale.status !== 'cancelled' && (
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setPickupOpen(true);
+                  }}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Manage Pickup
+                </DropdownMenuItem>
+              )}
               {sale.status !== 'cancelled' && (
                 <DropdownMenuItem
                   onSelect={(e) => {
@@ -220,6 +234,15 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {onSetItemsPickup && (
+            <ManagePickupDialog
+              open={pickupOpen}
+              onOpenChange={setPickupOpen}
+              sale={sale}
+              onSave={onSetItemsPickup}
+            />
+          )}
 
           <AlertDialog open={revertOpen} onOpenChange={setRevertOpen}>
             <AlertDialogContent>
