@@ -72,6 +72,7 @@ export function useSales() {
               totalCost,
               profit: totalPrice - totalCost,
               notes: (item as any).notes ?? null,
+              pickedUpAt: (item as any).picked_up_at ?? null,
               createdAt: item.created_at,
             };
           });
@@ -621,6 +622,15 @@ export function useSales() {
 
       if (saleError) throw saleError;
 
+      // Capture per-item pickup state so it survives the item rebuild below
+      const { data: existingItems } = await supabase
+        .from('sale_items')
+        .select('id, picked_up_at')
+        .eq('sale_id', saleId);
+      const pickupById = new Map<string, string | null>(
+        ((existingItems as any[]) || []).map((r) => [r.id, r.picked_up_at ?? null]),
+      );
+
       // Delete existing sale items (and their PO allocations via cascade)
       await supabase.from('sale_items').delete().eq('sale_id', saleId);
 
@@ -628,7 +638,8 @@ export function useSales() {
       for (let i = 0; i < normalizedItems.length; i++) {
         const item = normalizedItems[i];
         const line = itemLineTotals[i];
-        const { error: itemError } = await supabase
+        const carriedPickedUpAt = pickupById.get(input.items[i]?.id) ?? null;
+        const { data: insertedItem, error: itemError } = await supabase
           .from('sale_items')
           .insert({
             sale_id: saleId,
@@ -643,9 +654,18 @@ export function useSales() {
             total_price: line.lineTotal,
             sort_order: i,
             notes: (item as any).notes ?? null,
-          } as any);
+            picked_up_at: carriedPickedUpAt,
+          } as any)
+          .select('id')
+          .single();
 
         if (itemError) throw itemError;
+
+        // Re-create FIFO allocations for items that were already picked up
+        // (the originals were removed by the cascade above)
+        if (carriedPickedUpAt && insertedItem) {
+          await allocateFromPOs((insertedItem as any).id, item.sku || 'CUSTOM', item.quantity);
+        }
       }
 
       // Replace adjustments
@@ -682,6 +702,92 @@ export function useSales() {
     }
   };
 
+  // Allocate a sale item's quantity against received POs (FIFO)
+  const allocateFromPOs = async (saleItemId: string, sku: string, quantity: number) => {
+    const availablePOs = await getAvailablePOItems(sku);
+    let remainingQty = quantity;
+    for (const po of availablePOs) {
+      if (remainingQty <= 0) break;
+      const qtyFromThisPO = Math.min(remainingQty, po.availableQty);
+      await supabase.from('po_item_allocations').insert({
+        sale_item_id: saleItemId,
+        purchase_order_id: po.poId,
+        sku,
+        quantity_allocated: qtyFromThisPO,
+        unit_cost: po.unitCost,
+      });
+      remainingQty -= qtyFromThisPO;
+    }
+  };
+
+  // Deduct inventory + allocate POs for a set of sale items, then flag them picked up
+  const processPickupForItems = async (
+    saleItems: Array<{ id: string; sku: string; quantity: number; inventory_item_id: string | null }>,
+    pickedUpAt: string,
+  ) => {
+    for (const saleItem of saleItems) {
+      await allocateFromPOs(saleItem.id, saleItem.sku, saleItem.quantity);
+
+      if (saleItem.inventory_item_id) {
+        const { data: currentItem } = await supabase
+          .from('inventory_items')
+          .select('quantity')
+          .eq('id', saleItem.inventory_item_id)
+          .single();
+
+        if (currentItem) {
+          await supabase
+            .from('inventory_items')
+            .update({ quantity: Math.max(0, currentItem.quantity - saleItem.quantity) })
+            .eq('id', saleItem.inventory_item_id);
+        }
+      }
+
+      await supabase
+        .from('sale_items')
+        .update({ picked_up_at: pickedUpAt } as any)
+        .eq('id', saleItem.id);
+    }
+  };
+
+  // Process any items added to an already-picked-up invoice
+  const processPendingPickupItems = async (saleId: string) => {
+    try {
+      const sale = sales.find((s) => s.id === saleId);
+      if (!sale || !sale.pickedUpAt) return;
+
+      const { data: pendingItems } = await supabase
+        .from('sale_items')
+        .select('id, sku, quantity, inventory_item_id, picked_up_at')
+        .eq('sale_id', saleId)
+        .is('picked_up_at', null);
+
+      if (!pendingItems || pendingItems.length === 0) {
+        toast({
+          title: 'Nothing to process',
+          description: 'All items on this invoice are already picked up',
+        });
+        return;
+      }
+
+      await processPickupForItems(pendingItems as any, new Date().toISOString());
+
+      toast({
+        title: 'New items picked up',
+        description: `${pendingItems.length} item(s) reduced from inventory`,
+      });
+
+      await fetchSales();
+    } catch (error: unknown) {
+      console.error('Error processing pending pickup items:', error);
+      toast({
+        title: 'Error updating pickup status',
+        description: 'Unable to update. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const togglePickedUp = async (saleId: string) => {
     try {
       const sale = sales.find((s) => s.id === saleId);
@@ -690,11 +796,12 @@ export function useSales() {
       const isCurrentlyPickedUp = !!sale.pickedUpAt;
 
       if (isCurrentlyPickedUp) {
-        // Un-picking: restore inventory and clear allocations
+        // Un-picking: restore inventory and clear allocations (only for processed items)
         const { data: saleItems } = await supabase
           .from('sale_items')
-          .select('id, inventory_item_id, quantity')
-          .eq('sale_id', saleId);
+          .select('id, inventory_item_id, quantity, picked_up_at')
+          .eq('sale_id', saleId)
+          .not('picked_up_at', 'is', null);
 
         if (saleItems) {
           for (const saleItem of saleItems) {
@@ -719,6 +826,11 @@ export function useSales() {
                   .eq('id', saleItem.inventory_item_id);
               }
             }
+
+            await supabase
+              .from('sale_items')
+              .update({ picked_up_at: null } as any)
+              .eq('id', saleItem.id);
           }
         }
 
@@ -735,58 +847,21 @@ export function useSales() {
           description: 'Items restored to inventory',
         });
 
-        setSales((prev) =>
-          prev.map((s) =>
-            s.id === saleId ? { ...s, pickedUpAt: null } : s
-          )
-        );
+        await fetchSales();
       } else {
-        // Marking as picked up: reduce inventory and allocate from POs
+        // Marking as picked up: process only items not yet processed
         const { data: saleItems } = await supabase
           .from('sale_items')
-          .select('id, sku, quantity, inventory_item_id')
-          .eq('sale_id', saleId);
-
-        if (saleItems) {
-          for (const saleItem of saleItems) {
-            // Get available PO items for FIFO allocation
-            const availablePOs = await getAvailablePOItems(saleItem.sku);
-            let remainingQty = saleItem.quantity;
-
-            // Allocate from POs in FIFO order
-            for (const po of availablePOs) {
-              if (remainingQty <= 0) break;
-
-              const qtyFromThisPO = Math.min(remainingQty, po.availableQty);
-              await supabase.from('po_item_allocations').insert({
-                sale_item_id: saleItem.id,
-                purchase_order_id: po.poId,
-                sku: saleItem.sku,
-                quantity_allocated: qtyFromThisPO,
-                unit_cost: po.unitCost,
-              });
-              remainingQty -= qtyFromThisPO;
-            }
-
-            // Update inventory quantity
-            if (saleItem.inventory_item_id) {
-              const { data: currentItem } = await supabase
-                .from('inventory_items')
-                .select('quantity')
-                .eq('id', saleItem.inventory_item_id)
-                .single();
-
-              if (currentItem) {
-                await supabase
-                  .from('inventory_items')
-                  .update({ quantity: Math.max(0, currentItem.quantity - saleItem.quantity) })
-                  .eq('id', saleItem.inventory_item_id);
-              }
-            }
-          }
-        }
+          .select('id, sku, quantity, inventory_item_id, picked_up_at')
+          .eq('sale_id', saleId)
+          .is('picked_up_at', null);
 
         const pickedUpAt = new Date().toISOString();
+
+        if (saleItems && saleItems.length > 0) {
+          await processPickupForItems(saleItems as any, pickedUpAt);
+        }
+
         const { error } = await supabase
           .from('sales')
           .update({ picked_up_at: pickedUpAt })
@@ -799,11 +874,7 @@ export function useSales() {
           description: 'Inventory reduced and allocations recorded',
         });
 
-        setSales((prev) =>
-          prev.map((s) =>
-            s.id === saleId ? { ...s, pickedUpAt } : s
-          )
-        );
+        await fetchSales();
       }
     } catch (error: unknown) {
       console.error('Error toggling picked up:', error);
@@ -933,6 +1004,7 @@ export function useSales() {
     updateSale,
     updateStatus,
     togglePickedUp,
+    processPendingPickupItems,
     deleteSale,
     revertSale,
     updateInternalNotes,

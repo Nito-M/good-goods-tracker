@@ -48,6 +48,7 @@ interface SaleCardProps {
   onEdit: (sale: Sale) => void;
   onStatusChange?: (id: string, status: SaleStatus) => void;
   onTogglePickedUp?: (id: string) => void;
+  onPickUpNewItems?: (id: string) => void;
 }
 
 const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -58,11 +59,12 @@ const statusConfig: Record<Exclude<SaleStatus, 'picked_up'>, { label: string; va
   cancelled: { label: 'Cancelled', variant: 'secondary' },
 };
 
-export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp }: SaleCardProps) {
+export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPreviewInvoice, onEdit, onStatusChange, onTogglePickedUp, onPickUpNewItems }: SaleCardProps) {
   const navigate = useNavigate();
   const [revertOpen, setRevertOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const stop = (e: React.MouseEvent | React.PointerEvent) => e.stopPropagation();
+  const pendingPickupCount = sale.items.filter((i) => !i.pickedUpAt).length;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -141,6 +143,20 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               </label>
             </div>
           )}
+
+          {/* Items added after pickup still need to be pulled from inventory */}
+          {onPickUpNewItems && isPickedUp && sale.status !== 'cancelled' && pendingPickupCount > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onPickUpNewItems(sale.id)}
+            >
+              <Package className="h-4 w-4 mr-2" />
+              Pick Up {pendingPickupCount} New Item{pendingPickupCount > 1 ? 's' : ''}
+            </Button>
+          )}
+          
+
           
           {/* Status Selector - hide if already paid (can only revert) */}
           {onStatusChange && sale.status !== 'cancelled' && sale.status !== 'paid' && (

@@ -253,7 +253,7 @@ function SortableSaleRow({ item: c, formatCurrency, updateCartQuantity, removeFr
 }
 
 export function Sales() {
-  const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, deleteSale, revertSale } = useSales();
+  const { sales, loading, createSale, updateSale, updateStatus, togglePickedUp, processPendingPickupItems, deleteSale, revertSale } = useSales();
   const { allItems: inventoryItems } = useInventory();
   const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors, addVendor } = useVendors();
@@ -1347,6 +1347,7 @@ export function Sales() {
                                 onEdit={handleEditSale}
                                   onStatusChange={(id, status) => updateStatus(id, status, addSaleRevenue)}
                                   onTogglePickedUp={togglePickedUp}
+                                  onPickUpNewItems={processPendingPickupItems}
                                 />
                               ))}
                             </AccordionContent>

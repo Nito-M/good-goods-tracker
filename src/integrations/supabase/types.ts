@@ -4521,6 +4521,7 @@ export type Database = {
           inventory_item_id: string | null
           item_name: string
           notes: string | null
+          picked_up_at: string | null
           quantity: number
           sale_id: string
           sku: string
@@ -4537,6 +4538,7 @@ export type Database = {
           inventory_item_id?: string | null
           item_name: string
           notes?: string | null
+          picked_up_at?: string | null
           quantity?: number
           sale_id: string
           sku: string
@@ -4553,6 +4555,7 @@ export type Database = {
           inventory_item_id?: string | null
           item_name?: string
           notes?: string | null
+          picked_up_at?: string | null
           quantity?: number
           sale_id?: string
           sku?: string
