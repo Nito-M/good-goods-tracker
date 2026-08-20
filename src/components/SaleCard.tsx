@@ -143,6 +143,20 @@ export function SaleCard({ sale, onDelete, onRevert, onDownloadInvoice, onPrevie
               </label>
             </div>
           )}
+
+          {/* Items added after pickup still need to be pulled from inventory */}
+          {onPickUpNewItems && isPickedUp && sale.status !== 'cancelled' && pendingPickupCount > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onPickUpNewItems(sale.id)}
+            >
+              <Package className="h-4 w-4 mr-2" />
+              Pick Up {pendingPickupCount} New Item{pendingPickupCount > 1 ? 's' : ''}
+            </Button>
+          )}
+          
+
           
           {/* Status Selector - hide if already paid (can only revert) */}
           {onStatusChange && sale.status !== 'cancelled' && sale.status !== 'paid' && (
