@@ -72,6 +72,7 @@ export function useSales() {
               totalCost,
               profit: totalPrice - totalCost,
               notes: (item as any).notes ?? null,
+              pickedUpAt: (item as any).picked_up_at ?? null,
               createdAt: item.created_at,
             };
           });
