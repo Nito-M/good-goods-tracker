@@ -1274,26 +1274,35 @@ export function SalesOrderDetail() {
                   </Badge>
                 )}
               </CardTitle>
-              {quote.invoicedPercentage < 100 && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setInvoiceRemainingPct(100 - quote.invoicedPercentage);
-                      setShowInvoiceRemainingDialog(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Invoice Remaining ({100 - quote.invoicedPercentage}%)
-                  </Button>
-                  {quote.items.length > 0 && (
-                    <Button size="sm" variant="outline" onClick={() => setShowInvoiceItemsDialog(true)}>
+              <div className="flex flex-wrap items-center gap-2">
+                {quote.invoicedPercentage < 100 && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setInvoiceRemainingPct(100 - quote.invoicedPercentage);
+                        setShowInvoiceRemainingDialog(true);
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-1" />
-                      Invoice Selected Items
+                      Invoice Remaining ({100 - quote.invoicedPercentage}%)
                     </Button>
-                  )}
-                </div>
-              )}
+                    {quote.items.length > 0 && (
+                      <Button size="sm" variant="outline" onClick={() => setShowInvoiceItemsDialog(true)}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Invoice Selected Items
+                      </Button>
+                    )}
+                  </>
+                )}
+                {quote.items.length > 0 && (
+                  <Button size="sm" variant="outline" onClick={() => setShowMarkInvoicedDialog(true)}>
+                    <Check className="h-4 w-4 mr-1" />
+                    Mark Items as Invoiced
+                  </Button>
+                )}
+              </div>
+
 
             </CardHeader>
             <CardContent>
