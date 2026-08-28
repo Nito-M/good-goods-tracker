@@ -182,6 +182,38 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
                           : `${item.invoicedQuantity} already invoiced · ${remaining} remaining`}
                       </p>
                     )}
+                    {(() => {
+                      const qty = Math.min(quantities[item.id] ?? remaining, remaining);
+                      const units = Array.from(
+                        { length: Math.max(1, Math.ceil(qty || remaining)) },
+                        (_, i) => unitNotes[item.id]?.[i] ?? null,
+                      );
+                      const noteText = composeUnitNotes(units, item.notes);
+                      const addOns = isSelected ? addOnsFor(item.id, qty) : [];
+                      return (
+                        <>
+                          {noteText && (
+                            <p className="text-xs mt-1 italic text-muted-foreground whitespace-pre-wrap break-words">
+                              {noteText}
+                            </p>
+                          )}
+                          {addOns.length > 0 && (
+                            <div className="mt-2 pl-2 border-l space-y-0.5">
+                              <p className="text-xs text-muted-foreground">
+                                Add-ons included with this item:
+                              </p>
+                              {addOns.map((a, idx) => (
+                                <p key={`${a.item.id}-${idx}`} className="text-xs break-words">
+                                  • {a.item.itemName}
+                                  {a.note ? ` — ${a.note}` : ''}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+
                   </div>
                   <div className="w-28 space-y-1">
                     <Label className="text-xs">Qty to invoice</Label>
