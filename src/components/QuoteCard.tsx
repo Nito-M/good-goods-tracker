@@ -39,6 +39,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Quote, QuoteSettings, QuoteStatus } from '@/types/quote';
 import { ConvertItemsDialog } from '@/components/quote/ConvertItemsDialog';
+import { MarkInvoicedDialog } from '@/components/quote/MarkInvoicedDialog';
+
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 import { formatCurrency } from '@/lib/utils';
 
