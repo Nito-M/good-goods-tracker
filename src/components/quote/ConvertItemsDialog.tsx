@@ -13,6 +13,9 @@ import {
 } from '@/components/ui/dialog';
 import { Quote } from '@/types/quote';
 import { formatCurrency } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { composeUnitNotes } from '@/lib/unitNotes';
+
 
 interface ConvertItemsDialogProps {
   quote: Quote | null;
