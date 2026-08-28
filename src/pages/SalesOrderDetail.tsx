@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { ConvertItemsDialog } from '@/components/quote/ConvertItemsDialog';
+import { MarkInvoicedDialog } from '@/components/quote/MarkInvoicedDialog';
 import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { useProfile } from '@/hooks/useProfile';
@@ -15,7 +16,7 @@ import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, ChevronRight, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt, Link2, X, CornerDownRight } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, ChevronRight, CheckCircle, Check, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt, Link2, X, CornerDownRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
