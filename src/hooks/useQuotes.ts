@@ -717,6 +717,16 @@ export function useQuotes() {
         percentage,
       } as any);
 
+      // Mark the invoiced quantity on each line so it can't be invoiced twice
+      for (const c of chosen) {
+        await supabase
+          .from('quote_items')
+          .update({
+            invoiced_quantity: (c.item.invoicedQuantity || 0) + c.quantity,
+          } as any)
+          .eq('id', c.item.id);
+      }
+
       const newInvoicedPercentage = quote.invoicedPercentage + percentage;
       const newStatus =
         quote.status === 'sales_order'
