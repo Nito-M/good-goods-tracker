@@ -179,24 +179,27 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
     doc.setFont('helvetica', 'normal');
     const nameColWidth = showSku ? 55 : 88;
     const skuColWidth = 30;
+    const PAGE_BOTTOM = 260;
+    const PAGE_TOP = 20;
     sale.items.forEach((item) => {
       const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
       const skuLines = showSku ? doc.splitTextToSize(item.sku, skuColWidth) : [];
       const noteText = (item.notes || '').trim();
       const noteLines = noteText ? doc.splitTextToSize(`Note: ${noteText}`, nameColWidth) : [];
-      const rowLineCount = Math.max(nameLines.length, skuLines.length || 1);
-      const rowHeight = rowLineCount * 5 + (noteLines.length ? noteLines.length * 4 + 1 : 0);
 
-      if (y + rowHeight > 260) {
+      // Only break before the row if there isn't room for at least the row's
+      // first few lines — tall rows flow across pages instead of being pushed.
+      const minChunk = Math.max(skuLines.length || 1, Math.min(nameLines.length, 3)) * 5;
+      if (y + minChunk > PAGE_BOTTOM) {
         doc.addPage();
-        y = 20;
+        y = PAGE_TOP;
       }
 
       const rate = item.discountRate || 0;
       const gross = item.quantity * item.unitPrice;
       const lineTotal = gross - gross * (rate / 100);
 
-      doc.text(nameLines, layout.itemsTable.x + 2, y);
+      // Right-hand columns render on the row's starting page
       if (showSku) {
         doc.text(skuLines, skuX, y);
       }
@@ -207,19 +210,37 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
       }
       doc.text(formatCurrency(lineTotal), pageWidth - 22, y, { align: 'right' });
 
+      // Flow the name (and note) lines, paginating as needed
+      const flowLines = (lines: string[], lineHeight: number) => {
+        lines.forEach((line: string) => {
+          if (y + lineHeight > PAGE_BOTTOM) {
+            doc.addPage();
+            y = PAGE_TOP;
+          }
+          doc.text(line, layout.itemsTable.x + 2, y);
+          y += lineHeight;
+        });
+      };
+
+      flowLines(nameLines, 5);
+      if (skuLines.length > nameLines.length) {
+        y += (skuLines.length - nameLines.length) * 5;
+      }
+
       if (noteLines.length) {
-        const noteY = y + nameLines.length * 5;
+        y += 1;
         doc.setFontSize(8);
         doc.setTextColor(110, 110, 110);
         doc.setFont('helvetica', 'italic');
-        doc.text(noteLines, layout.itemsTable.x + 2, noteY);
+        flowLines(noteLines, 4);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(10);
       }
 
-      y += rowHeight + 2;
+      y += 2;
     });
+
 
     // Line
     y += 5;
