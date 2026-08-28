@@ -51,8 +51,10 @@ interface QuoteCardProps {
   onRemoveAttachment: (quoteId: string) => void;
   onEdit: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote, percentage: number) => void;
+  onConvertItemsToInvoice?: (quote: Quote, selections: { itemId: string; quantity: number }[]) => Promise<unknown> | void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
   onRevertInvoiceLink?: (quoteId: string, saleId: string, percentage: number) => void;
+
   onPreview?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
   linkedInvoiceNumber?: string | null;
