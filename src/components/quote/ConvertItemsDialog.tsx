@@ -26,10 +26,13 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  const remainingOf = (item: { quantity: number; invoicedQuantity?: number }) =>
+    Math.max(0, item.quantity - (item.invoicedQuantity || 0));
+
   useEffect(() => {
     if (open && quote) {
       setSelected({});
-      setQuantities(Object.fromEntries(quote.items.map((i) => [i.id, i.quantity])));
+      setQuantities(Object.fromEntries(quote.items.map((i) => [i.id, remainingOf(i)])));
     }
   }, [open, quote]);
 
@@ -40,7 +43,7 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
     if (!quote) return 0;
     const subtotal = quote.items.reduce((sum, item) => {
       if (!selected[item.id]) return sum;
-      const qty = Math.min(quantities[item.id] || 0, item.quantity);
+      const qty = Math.min(quantities[item.id] || 0, remainingOf(item));
       return sum + qty * netUnit(item.unitPrice, item.discountRate);
     }, 0);
     const afterDiscount = subtotal - subtotal * (quote.discountRate / 100);
@@ -51,7 +54,8 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
 
   if (!quote) return null;
 
-  const allSelected = selectedCount === quote.items.length && quote.items.length > 0;
+  const availableItems = quote.items.filter((i) => remainingOf(i) > 0);
+  const allSelected = selectedCount === availableItems.length && availableItems.length > 0;
 
   const handleConfirm = async () => {
     setSubmitting(true);
