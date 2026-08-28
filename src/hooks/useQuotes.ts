@@ -76,6 +76,7 @@ export function useQuotes() {
             discountRate: Number((item as any).discount_rate || 0),
             totalPrice: Number(item.total_price),
             notes: (item as any).notes || null,
+            invoicedQuantity: Number((item as any).invoiced_quantity || 0),
             createdAt: item.created_at,
           }));
 
