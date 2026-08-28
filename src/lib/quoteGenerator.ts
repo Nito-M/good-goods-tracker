@@ -3,6 +3,8 @@ import { Quote, QuoteSettings } from '@/types/quote';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 import { formatCurrencyPdf as formatCurrency } from '@/lib/utils';
 import { savePdfBlob } from '@/lib/pdfSave';
+import { buildUnitNoteLines } from '@/lib/unitNotes';
+
 
 const PAGE_MARGIN_BOTTOM = 20; // mm from bottom edge where we trigger a new page
 const LINE_HEIGHT = 7;
@@ -17,14 +19,9 @@ export const generateQuotePDF = async (
   const unitNotesByItem = options?.unitNotes ?? {};
 
   /** Note text lines for an item: per-unit notes when present, else the item note */
-  const buildNoteText = (itemId: string, itemNotes: string | null): string[] => {
-    const units = unitNotesByItem[itemId] ?? [];
-    const filled = units.map((n, i) => ({ note: (n ?? '').trim(), index: i })).filter((u) => u.note);
-    if (filled.length === 0) return itemNotes ? [`Note: ${itemNotes}`] : [];
-    const unique = new Set(filled.map((u) => u.note));
-    if (unique.size === 1 && filled.length === units.length) return [`Note: ${filled[0].note}`];
-    return filled.map((u) => `Unit ${u.index + 1}: ${u.note}`);
-  };
+  const buildNoteText = (itemId: string, itemNotes: string | null): string[] =>
+    buildUnitNoteLines(unitNotesByItem[itemId] ?? [], itemNotes);
+
   const documentTitle = isSalesOrder ? 'SALES ORDER' : 'QUOTE';
   const documentLabel = isSalesOrder ? 'Sales Order #' : 'Quote #';
   const billToLabel = isSalesOrder ? 'Sales Order For:' : 'Quote For:';
