@@ -502,6 +502,18 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           }}
         />
       )}
+
+      {onMarkItemsInvoiced && (
+        <MarkInvoicedDialog
+          quote={quote}
+          open={showMarkInvoicedDialog}
+          onOpenChange={setShowMarkInvoicedDialog}
+          onConfirm={async (updates) => {
+            await onMarkItemsInvoiced(quote, updates);
+          }}
+        />
+      )}
+
     </>
 
   );
