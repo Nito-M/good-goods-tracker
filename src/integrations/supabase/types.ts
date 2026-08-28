@@ -4071,6 +4071,7 @@ export type Database = {
           discount_rate: number
           id: string
           inventory_item_id: string | null
+          invoiced_quantity: number
           item_name: string
           notes: string | null
           quantity: number
@@ -4087,6 +4088,7 @@ export type Database = {
           discount_rate?: number
           id?: string
           inventory_item_id?: string | null
+          invoiced_quantity?: number
           item_name: string
           notes?: string | null
           quantity?: number
@@ -4103,6 +4105,7 @@ export type Database = {
           discount_rate?: number
           id?: string
           inventory_item_id?: string | null
+          invoiced_quantity?: number
           item_name?: string
           notes?: string | null
           quantity?: number

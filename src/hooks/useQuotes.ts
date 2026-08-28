@@ -76,6 +76,7 @@ export function useQuotes() {
             discountRate: Number((item as any).discount_rate || 0),
             totalPrice: Number(item.total_price),
             notes: (item as any).notes || null,
+            invoicedQuantity: Number((item as any).invoiced_quantity || 0),
             createdAt: item.created_at,
           }));
 
@@ -595,6 +596,16 @@ export function useQuotes() {
         } as any)
         .eq('id', quote.id);
 
+      // A fully invoiced quote leaves nothing left to invoice per line
+      if (newInvoicedPercentage >= 100) {
+        for (const item of quote.items) {
+          await supabase
+            .from('quote_items')
+            .update({ invoiced_quantity: item.quantity } as any)
+            .eq('id', item.id);
+        }
+      }
+
       toast({
         title: 'Invoice created',
         description: `Invoice ${sale.invoice_number} created (${percentage}% of ${quote.quoteNumber})`,
@@ -628,11 +639,22 @@ export function useQuotes() {
         .map((sel) => {
           const item = quote.items.find((i) => i.id === sel.itemId);
           if (!item || sel.quantity <= 0) return null;
-          return { item, quantity: Math.min(sel.quantity, item.quantity) };
+          // Never invoice more than what is still un-invoiced on this line
+          const remainingQty = Math.max(0, item.quantity - (item.invoicedQuantity || 0));
+          const quantity = Math.min(sel.quantity, remainingQty);
+          if (quantity <= 0) return null;
+          return { item, quantity };
         })
         .filter(Boolean) as { item: Quote['items'][number]; quantity: number }[];
 
-      if (chosen.length === 0) return null;
+      if (chosen.length === 0) {
+        toast({
+          title: 'Nothing left to invoice',
+          description: 'The selected items have already been fully invoiced.',
+          variant: 'destructive',
+        });
+        return null;
+      }
 
       const subtotal = chosen.reduce((sum, c) => sum + c.quantity * netUnit(c.item), 0);
       const discountAmount = subtotal * (quote.discountRate / 100);
@@ -704,6 +726,16 @@ export function useQuotes() {
         sale_id: sale.id,
         percentage,
       } as any);
+
+      // Mark the invoiced quantity on each line so it can't be invoiced twice
+      for (const c of chosen) {
+        await supabase
+          .from('quote_items')
+          .update({
+            invoiced_quantity: (c.item.invoicedQuantity || 0) + c.quantity,
+          } as any)
+          .eq('id', c.item.id);
+      }
 
       const newInvoicedPercentage = quote.invoicedPercentage + percentage;
       const newStatus =

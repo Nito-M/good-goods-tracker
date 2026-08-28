@@ -13,6 +13,7 @@ export interface QuoteItem {
   discountRate: number;
   totalPrice: number;
   notes: string | null;
+  invoicedQuantity: number;
   createdAt: string;
 }
 

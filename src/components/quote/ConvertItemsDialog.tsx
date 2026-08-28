@@ -26,10 +26,13 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  const remainingOf = (item: { quantity: number; invoicedQuantity?: number }) =>
+    Math.max(0, item.quantity - (item.invoicedQuantity || 0));
+
   useEffect(() => {
     if (open && quote) {
       setSelected({});
-      setQuantities(Object.fromEntries(quote.items.map((i) => [i.id, i.quantity])));
+      setQuantities(Object.fromEntries(quote.items.map((i) => [i.id, remainingOf(i)])));
     }
   }, [open, quote]);
 
@@ -40,7 +43,7 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
     if (!quote) return 0;
     const subtotal = quote.items.reduce((sum, item) => {
       if (!selected[item.id]) return sum;
-      const qty = Math.min(quantities[item.id] || 0, item.quantity);
+      const qty = Math.min(quantities[item.id] || 0, remainingOf(item));
       return sum + qty * netUnit(item.unitPrice, item.discountRate);
     }, 0);
     const afterDiscount = subtotal - subtotal * (quote.discountRate / 100);
@@ -51,13 +54,14 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
 
   if (!quote) return null;
 
-  const allSelected = selectedCount === quote.items.length && quote.items.length > 0;
+  const availableItems = quote.items.filter((i) => remainingOf(i) > 0);
+  const allSelected = selectedCount === availableItems.length && availableItems.length > 0;
 
   const handleConfirm = async () => {
     setSubmitting(true);
     const selections = quote.items
-      .filter((i) => selected[i.id] && (quantities[i.id] || 0) > 0)
-      .map((i) => ({ itemId: i.id, quantity: Math.min(quantities[i.id], i.quantity) }));
+      .filter((i) => selected[i.id] && (quantities[i.id] || 0) > 0 && remainingOf(i) > 0)
+      .map((i) => ({ itemId: i.id, quantity: Math.min(quantities[i.id], remainingOf(i)) }));
     await onConfirm(selections);
     setSubmitting(false);
     onOpenChange(false);
@@ -70,7 +74,7 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
           <DialogTitle>Invoice Selected Items</DialogTitle>
           <DialogDescription>
             Pick which line items of {quote.quoteNumber} to convert into an invoice. You can also
-            invoice part of a line's quantity.
+            invoice part of a line's quantity. Already invoiced quantities can't be invoiced again.
           </DialogDescription>
         </DialogHeader>
 
@@ -82,27 +86,30 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
               onCheckedChange={(checked) =>
                 setSelected(
                   checked
-                    ? Object.fromEntries(quote.items.map((i) => [i.id, true]))
+                    ? Object.fromEntries(availableItems.map((i) => [i.id, true]))
                     : {}
                 )
               }
             />
             <Label htmlFor="select-all-items" className="text-sm font-normal cursor-pointer">
-              Select all items
+              Select all remaining items
             </Label>
           </div>
 
           <div className="space-y-2">
             {quote.items.map((item) => {
-              const isSelected = !!selected[item.id];
+              const remaining = remainingOf(item);
+              const fullyInvoiced = remaining <= 0;
+              const isSelected = !fullyInvoiced && !!selected[item.id];
               return (
                 <div
                   key={item.id}
-                  className="border rounded-lg p-3 flex items-start gap-3 bg-card"
+                  className={`border rounded-lg p-3 flex items-start gap-3 bg-card ${fullyInvoiced ? 'opacity-60' : ''}`}
                 >
                   <Checkbox
                     className="mt-1"
                     checked={isSelected}
+                    disabled={fullyInvoiced}
                     onCheckedChange={(checked) =>
                       setSelected((prev) => ({ ...prev, [item.id]: !!checked }))
                     }
@@ -114,6 +121,13 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
                       {item.quantity} {item.quantityUnit || ''} ×{' '}
                       {formatCurrency(netUnit(item.unitPrice, item.discountRate))}
                     </p>
+                    {(item.invoicedQuantity || 0) > 0 && (
+                      <p className="text-xs mt-1 text-muted-foreground">
+                        {fullyInvoiced
+                          ? 'Fully invoiced'
+                          : `${item.invoicedQuantity} already invoiced · ${remaining} remaining`}
+                      </p>
+                    )}
                   </div>
                   <div className="w-28 space-y-1">
                     <Label className="text-xs">Qty to invoice</Label>
@@ -121,9 +135,9 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
                       type="number"
                       step="0.01"
                       min={0}
-                      max={item.quantity}
+                      max={remaining}
                       disabled={!isSelected}
-                      value={quantities[item.id] ?? item.quantity}
+                      value={fullyInvoiced ? 0 : quantities[item.id] ?? remaining}
                       onChange={(e) =>
                         setQuantities((prev) => ({
                           ...prev,
