@@ -887,6 +887,8 @@ export function useQuotes() {
     uploadAttachment,
     removeAttachment,
     convertToInvoice,
+    convertItemsToInvoice,
+
     convertToPurchaseOrder,
     revertInvoiceLink,
     refetch: fetchQuotes,
