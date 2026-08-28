@@ -268,7 +268,7 @@ import { useSopBoms } from '@/hooks/useSopBoms';
 
 export function Quotes() {
   // signOut moved to sidebar
-  const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertItemsToInvoice, convertToPurchaseOrder, revertInvoiceLink } = useQuotes();
+  const { quotes, loading, createQuote, updateQuote, deleteQuote, updateQuoteStatus, uploadAttachment, removeAttachment, convertToInvoice, convertItemsToInvoice, setItemsInvoicedQuantities, convertToPurchaseOrder, revertInvoiceLink } = useQuotes();
   const { allItems: inventoryItems } = useInventory();
   const { rows: allVendorPriceRows } = useAllItemVendorPrices();
   const { vendors, addVendor } = useVendors();
@@ -1299,6 +1299,7 @@ export function Quotes() {
                                   onEdit={handleEditQuote}
                                   onConvertToInvoice={(quote, percentage) => convertToInvoice(quote, percentage)}
                                   onConvertItemsToInvoice={(quote, selections) => convertItemsToInvoice(quote, selections)}
+                                  onMarkItemsInvoiced={(quote, updates) => setItemsInvoicedQuantities(quote, updates)}
                                   onConvertToPurchaseOrder={convertToPurchaseOrder}
                                   onRevertInvoiceLink={revertInvoiceLink}
                                   onPreview={setPreviewQuote}

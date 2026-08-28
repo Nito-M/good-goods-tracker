@@ -86,9 +86,10 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 export function SalesOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { quotes, loading: quotesLoading, convertToInvoice, convertItemsToInvoice, refetch: refetchQuotes } = useQuotes();
+  const { quotes, loading: quotesLoading, convertToInvoice, convertItemsToInvoice, setItemsInvoicedQuantities, refetch: refetchQuotes } = useQuotes();
   const [showInvoiceRemainingDialog, setShowInvoiceRemainingDialog] = useState(false);
   const [showInvoiceItemsDialog, setShowInvoiceItemsDialog] = useState(false);
+  const [showMarkInvoicedDialog, setShowMarkInvoicedDialog] = useState(false);
   const [invoiceRemainingPct, setInvoiceRemainingPct] = useState(100);
   const { vendors, loading: vendorsLoading, updateVendor } = useVendors();
   const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
@@ -1461,6 +1462,15 @@ export function SalesOrderDetail() {
         onOpenChange={setShowInvoiceItemsDialog}
         onConfirm={async (selections) => {
           await convertItemsToInvoice(quote, selections);
+        }}
+      />
+
+      <MarkInvoicedDialog
+        quote={quote}
+        open={showMarkInvoicedDialog}
+        onOpenChange={setShowMarkInvoicedDialog}
+        onConfirm={async (updates) => {
+          await setItemsInvoicedQuantities(quote, updates);
         }}
       />
 
