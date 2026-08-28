@@ -478,6 +478,18 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {onConvertItemsToInvoice && (
+        <ConvertItemsDialog
+          quote={quote}
+          open={showItemsInvoiceDialog}
+          onOpenChange={setShowItemsInvoiceDialog}
+          onConfirm={async (selections) => {
+            await onConvertItemsToInvoice(quote, selections);
+          }}
+        />
+      )}
     </>
+
   );
 }
