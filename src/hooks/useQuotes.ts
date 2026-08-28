@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Quote, QuoteItem, QuoteInvoiceLink, CreateQuoteInput, QuoteStatus } from '@/types/quote';
 import { dedupePurchaseOrderItems } from '@/types/purchaseOrder';
+import { composeUnitNotes } from '@/lib/unitNotes';
+
 
 export function useQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
