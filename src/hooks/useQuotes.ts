@@ -958,6 +958,8 @@ export function useQuotes() {
     removeAttachment,
     convertToInvoice,
     convertItemsToInvoice,
+    setItemsInvoicedQuantities,
+
 
     convertToPurchaseOrder,
     revertInvoiceLink,
