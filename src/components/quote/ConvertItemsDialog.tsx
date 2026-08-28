@@ -25,6 +25,11 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
+  // parent quote_item_id -> attached child units (parent unit index + child item id)
+  const [attachments, setAttachments] = useState<
+    { parentItemId: string; parentUnitIndex: number; childItemId: string; childUnitIndex: number }[]
+  >([]);
+  const [unitNotes, setUnitNotes] = useState<Record<string, Record<number, string | null>>>({});
 
   const remainingOf = (item: { quantity: number; invoicedQuantity?: number }) =>
     Math.max(0, item.quantity - (item.invoicedQuantity || 0));
@@ -33,22 +38,67 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
     if (open && quote) {
       setSelected({});
       setQuantities(Object.fromEntries(quote.items.map((i) => [i.id, remainingOf(i)])));
+      (async () => {
+        const [{ data: attachRows }, { data: linkRows }] = await Promise.all([
+          supabase.from('so_item_attachments' as any).select('*').eq('quote_id', quote.id),
+          supabase.from('so_item_job_links' as any).select('*').eq('quote_id', quote.id),
+        ]);
+        setAttachments(
+          ((attachRows as any[]) || []).map((a) => ({
+            parentItemId: a.parent_quote_item_id,
+            parentUnitIndex: a.parent_unit_index ?? 0,
+            childItemId: a.child_quote_item_id,
+            childUnitIndex: a.child_unit_index ?? 0,
+          })),
+        );
+        const notes: Record<string, Record<number, string | null>> = {};
+        ((linkRows as any[]) || []).forEach((l) => {
+          (notes[l.quote_item_id] ||= {})[l.unit_index ?? 0] = l.unit_notes ?? null;
+        });
+        setUnitNotes(notes);
+      })();
     }
   }, [open, quote]);
 
   const netUnit = (unitPrice: number, discountRate?: number) =>
     unitPrice * (1 - (discountRate || 0) / 100);
 
+  /** Add-on units that will be pulled in with a selected parent line */
+  const addOnsFor = (itemId: string, qty: number) => {
+    if (!quote) return [] as { item: Quote['items'][number]; note: string | null }[];
+    const units = Math.max(1, Math.ceil(qty));
+    const seen = new Set<string>();
+    const out: { item: Quote['items'][number]; note: string | null }[] = [];
+    attachments
+      .filter((a) => a.parentItemId === itemId && a.parentUnitIndex < units && !selected[a.childItemId])
+      .forEach((a) => {
+        const key = `${a.childItemId}-${a.childUnitIndex}`;
+        if (seen.has(key)) return;
+        const child = quote.items.find((i) => i.id === a.childItemId);
+        if (!child || remainingOf(child) <= 0) return;
+        seen.add(key);
+        out.push({
+          item: child,
+          note: (unitNotes[child.id]?.[a.childUnitIndex] ?? '').trim() || child.notes || null,
+        });
+      });
+    return out;
+  };
+
   const selectedTotal = useMemo(() => {
     if (!quote) return 0;
     const subtotal = quote.items.reduce((sum, item) => {
       if (!selected[item.id]) return sum;
       const qty = Math.min(quantities[item.id] || 0, remainingOf(item));
-      return sum + qty * netUnit(item.unitPrice, item.discountRate);
+      const addOnTotal = addOnsFor(item.id, qty).reduce(
+        (s, a) => s + netUnit(a.item.unitPrice, a.item.discountRate),
+        0,
+      );
+      return sum + qty * netUnit(item.unitPrice, item.discountRate) + addOnTotal;
     }, 0);
     const afterDiscount = subtotal - subtotal * (quote.discountRate / 100);
     return afterDiscount + afterDiscount * (quote.taxRate / 100);
-  }, [quote, selected, quantities]);
+  }, [quote, selected, quantities, attachments, unitNotes]);
 
   const selectedCount = Object.values(selected).filter(Boolean).length;
 
@@ -56,6 +106,7 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
 
   const availableItems = quote.items.filter((i) => remainingOf(i) > 0);
   const allSelected = selectedCount === availableItems.length && availableItems.length > 0;
+
 
   const handleConfirm = async () => {
     setSubmitting(true);
