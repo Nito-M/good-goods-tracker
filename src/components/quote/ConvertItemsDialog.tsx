@@ -127,9 +127,11 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
         <DialogHeader>
           <DialogTitle>Invoice Selected Items</DialogTitle>
           <DialogDescription>
-            Pick which line items of {quote.quoteNumber} to convert into an invoice. You can also
-            invoice part of a line's quantity. Already invoiced quantities can't be invoiced again.
+            Pick which line items of {quote.quoteNumber} to convert into an invoice. Item notes,
+            per-unit specs and any attached add-ons come along exactly as they appear on the
+            document. Already invoiced quantities can't be invoiced again.
           </DialogDescription>
+
         </DialogHeader>
 
         <div className="space-y-3">
