@@ -3,6 +3,8 @@ import { Quote, QuoteSettings } from '@/types/quote';
 import { InvoiceLayout, defaultInvoiceLayout } from '@/types/invoiceLayout';
 import { formatCurrencyPdf as formatCurrency } from '@/lib/utils';
 import { savePdfBlob } from '@/lib/pdfSave';
+import { buildUnitNoteLines } from '@/lib/unitNotes';
+
 
 const PAGE_MARGIN_BOTTOM = 20; // mm from bottom edge where we trigger a new page
 const LINE_HEIGHT = 7;
