@@ -61,10 +61,12 @@ interface QuoteCardProps {
   linkedPoNumber?: string | null;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertItemsToInvoice, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showItemsInvoiceDialog, setShowItemsInvoiceDialog] = useState(false);
+
   const [showPoDialog, setShowPoDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [invoicePercentage, setInvoicePercentage] = useState(100);
