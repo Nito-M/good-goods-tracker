@@ -656,7 +656,70 @@ export function useQuotes() {
         return null;
       }
 
-      const subtotal = chosen.reduce((sum, c) => sum + c.quantity * netUnit(c.item), 0);
+      // ---- Carry the item details (per-unit notes + attached add-ons) over ----
+      const [{ data: linkRows }, { data: attachmentRows }] = await Promise.all([
+        supabase.from('so_item_job_links' as any).select('*').eq('quote_id', quote.id),
+        supabase.from('so_item_attachments' as any).select('*').eq('quote_id', quote.id),
+      ]);
+
+      // quoteItemId -> unitIndex -> unit note
+      const unitNoteMap: Record<string, Record<number, string | null>> = {};
+      ((linkRows as any[]) || []).forEach((l) => {
+        const byUnit = (unitNoteMap[l.quote_item_id] ||= {});
+        byUnit[l.unit_index ?? 0] = l.unit_notes ?? null;
+      });
+
+      const unitNotesFor = (itemId: string, unitCount: number): (string | null)[] => {
+        const byUnit = unitNoteMap[itemId] || {};
+        const count = Math.max(1, Math.ceil(unitCount));
+        return Array.from({ length: count }, (_, i) => byUnit[i] ?? null);
+      };
+
+      const chosenIds = new Set(chosen.map((c) => c.item.id));
+
+      // Add-ons attached to the units being invoiced follow their parent line
+      type Row = { item: Quote['items'][number]; quantity: number; notes: string | null };
+      const rows: Row[] = [];
+      const addedChildKeys = new Set<string>();
+
+      for (const c of chosen) {
+        rows.push({
+          item: c.item,
+          quantity: c.quantity,
+          notes: composeUnitNotes(unitNotesFor(c.item.id, c.quantity), c.item.notes),
+        });
+
+        // children whose parent is one of this line's invoiced units (0..qty-1)
+        const invoicedUnits = Math.max(1, Math.ceil(c.quantity));
+        const childUnits = ((attachmentRows as any[]) || []).filter(
+          (a) =>
+            a.parent_quote_item_id === c.item.id &&
+            (a.parent_unit_index ?? 0) < invoicedUnits &&
+            !chosenIds.has(a.child_quote_item_id),
+        );
+
+        for (const a of childUnits) {
+          const child = quote.items.find((i) => i.id === a.child_quote_item_id);
+          if (!child) continue;
+          const key = `${a.child_quote_item_id}-${a.child_unit_index ?? 0}`;
+          if (addedChildKeys.has(key)) continue;
+          const alreadyAdded = rows
+            .filter((r) => r.item.id === child.id)
+            .reduce((s, r) => s + r.quantity, 0);
+          const childRemaining = Math.max(
+            0,
+            child.quantity - (child.invoicedQuantity || 0) - alreadyAdded,
+          );
+          if (childRemaining <= 0) continue;
+          const childQty = Math.min(1, childRemaining);
+          addedChildKeys.add(key);
+          const unitIdx = a.child_unit_index ?? 0;
+          const note = (unitNoteMap[child.id]?.[unitIdx] ?? '').trim() || child.notes || null;
+          rows.push({ item: child, quantity: childQty, notes: note });
+        }
+      }
+
+      const subtotal = rows.reduce((sum, r) => sum + r.quantity * netUnit(r.item), 0);
       const discountAmount = subtotal * (quote.discountRate / 100);
       const afterDiscount = subtotal - discountAmount;
       const taxAmount = afterDiscount * (quote.taxRate / 100);
@@ -700,8 +763,8 @@ export function useQuotes() {
 
       if (saleError) throw saleError;
 
-      for (let i = 0; i < chosen.length; i++) {
-        const { item, quantity } = chosen[i];
+      for (let i = 0; i < rows.length; i++) {
+        const { item, quantity, notes } = rows[i];
         const unitPrice = netUnit(item);
         const { error: itemError } = await supabase
           .from('sale_items')
@@ -714,7 +777,7 @@ export function useQuotes() {
             unit_price: unitPrice,
             unit_cost: item.unitCost,
             total_price: quantity * unitPrice,
-            notes: item.notes ?? null,
+            notes: notes ?? null,
             sort_order: i,
           } as any);
 
@@ -728,14 +791,23 @@ export function useQuotes() {
       } as any);
 
       // Mark the invoiced quantity on each line so it can't be invoiced twice
-      for (const c of chosen) {
+      const invoicedByItem: Record<string, { item: Quote['items'][number]; qty: number }> = {};
+      for (const r of rows) {
+        const entry = (invoicedByItem[r.item.id] ||= { item: r.item, qty: 0 });
+        entry.qty += r.quantity;
+      }
+      for (const entry of Object.values(invoicedByItem)) {
         await supabase
           .from('quote_items')
           .update({
-            invoiced_quantity: (c.item.invoicedQuantity || 0) + c.quantity,
+            invoiced_quantity: Math.min(
+              entry.item.quantity,
+              (entry.item.invoicedQuantity || 0) + entry.qty,
+            ),
           } as any)
-          .eq('id', c.item.id);
+          .eq('id', entry.item.id);
       }
+
 
       const newInvoicedPercentage = quote.invoicedPercentage + percentage;
       const newStatus =
