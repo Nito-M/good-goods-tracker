@@ -175,6 +175,13 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                   To Invoice {quote.invoicedPercentage > 0 ? `(${remainingPercentage}% left)` : ''}
                 </DropdownMenuItem>
               )}
+              {quote.invoicedPercentage < 100 && onConvertItemsToInvoice && quote.items.length > 0 && (
+                <DropdownMenuItem onClick={() => setShowItemsInvoiceDialog(true)}>
+                  <ListChecks className="h-4 w-4 mr-2" />
+                  Invoice Selected Items
+                </DropdownMenuItem>
+              )}
+
               {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
                 <DropdownMenuItem onClick={() => setShowPoDialog(true)}>
                   <ShoppingCart className="h-4 w-4 mr-2" />
