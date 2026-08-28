@@ -38,8 +38,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Quote, QuoteSettings, QuoteStatus } from '@/types/quote';
+import { ConvertItemsDialog } from '@/components/quote/ConvertItemsDialog';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 import { formatCurrency } from '@/lib/utils';
+
 
 interface QuoteCardProps {
   quote: Quote;
