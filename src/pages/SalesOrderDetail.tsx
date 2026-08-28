@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { ConvertItemsDialog } from '@/components/quote/ConvertItemsDialog';
+import { MarkInvoicedDialog } from '@/components/quote/MarkInvoicedDialog';
 import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { useProfile } from '@/hooks/useProfile';
@@ -15,7 +16,7 @@ import { QuoteSettings } from '@/types/quote';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/utils';
-import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, ChevronRight, CheckCircle, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt, Link2, X, CornerDownRight } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, User, Phone, Mail, MapPin, ChevronDown, ChevronRight, CheckCircle, Check, Clock, Hash, CalendarIcon, Trash2, Plus, Download, FileText, Receipt, Link2, X, CornerDownRight } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,9 +86,10 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 export function SalesOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { quotes, loading: quotesLoading, convertToInvoice, convertItemsToInvoice, refetch: refetchQuotes } = useQuotes();
+  const { quotes, loading: quotesLoading, convertToInvoice, convertItemsToInvoice, setItemsInvoicedQuantities, refetch: refetchQuotes } = useQuotes();
   const [showInvoiceRemainingDialog, setShowInvoiceRemainingDialog] = useState(false);
   const [showInvoiceItemsDialog, setShowInvoiceItemsDialog] = useState(false);
+  const [showMarkInvoicedDialog, setShowMarkInvoicedDialog] = useState(false);
   const [invoiceRemainingPct, setInvoiceRemainingPct] = useState(100);
   const { vendors, loading: vendorsLoading, updateVendor } = useVendors();
   const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
@@ -1274,26 +1276,35 @@ export function SalesOrderDetail() {
                   </Badge>
                 )}
               </CardTitle>
-              {quote.invoicedPercentage < 100 && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setInvoiceRemainingPct(100 - quote.invoicedPercentage);
-                      setShowInvoiceRemainingDialog(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Invoice Remaining ({100 - quote.invoicedPercentage}%)
-                  </Button>
-                  {quote.items.length > 0 && (
-                    <Button size="sm" variant="outline" onClick={() => setShowInvoiceItemsDialog(true)}>
+              <div className="flex flex-wrap items-center gap-2">
+                {quote.invoicedPercentage < 100 && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setInvoiceRemainingPct(100 - quote.invoicedPercentage);
+                        setShowInvoiceRemainingDialog(true);
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-1" />
-                      Invoice Selected Items
+                      Invoice Remaining ({100 - quote.invoicedPercentage}%)
                     </Button>
-                  )}
-                </div>
-              )}
+                    {quote.items.length > 0 && (
+                      <Button size="sm" variant="outline" onClick={() => setShowInvoiceItemsDialog(true)}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Invoice Selected Items
+                      </Button>
+                    )}
+                  </>
+                )}
+                {quote.items.length > 0 && (
+                  <Button size="sm" variant="outline" onClick={() => setShowMarkInvoicedDialog(true)}>
+                    <Check className="h-4 w-4 mr-1" />
+                    Mark Items as Invoiced
+                  </Button>
+                )}
+              </div>
+
 
             </CardHeader>
             <CardContent>
@@ -1451,6 +1462,15 @@ export function SalesOrderDetail() {
         onOpenChange={setShowInvoiceItemsDialog}
         onConfirm={async (selections) => {
           await convertItemsToInvoice(quote, selections);
+        }}
+      />
+
+      <MarkInvoicedDialog
+        quote={quote}
+        open={showMarkInvoicedDialog}
+        onOpenChange={setShowMarkInvoicedDialog}
+        onConfirm={async (updates) => {
+          await setItemsInvoicedQuantities(quote, updates);
         }}
       />
 

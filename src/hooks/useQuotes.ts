@@ -909,7 +909,45 @@ export function useQuotes() {
     }
   };
 
+  // Manually set how much of each line has already been invoiced (backfill for
+  // invoices created before per-line tracking existed)
+  const setItemsInvoicedQuantities = async (
+    quote: Quote,
+    updates: { itemId: string; quantity: number }[]
+  ): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      for (const upd of updates) {
+        const item = quote.items.find((i) => i.id === upd.itemId);
+        if (!item) continue;
+        const clamped = Math.min(Math.max(0, upd.quantity), item.quantity);
+        if (clamped === (item.invoicedQuantity || 0)) continue;
+        const { error } = await supabase
+          .from('quote_items')
+          .update({ invoiced_quantity: clamped } as any)
+          .eq('id', item.id);
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Invoiced items updated',
+        description: 'Line item invoiced quantities have been saved.',
+      });
+      await fetchQuotes();
+      return true;
+    } catch (error) {
+      console.error('Error updating invoiced quantities:', error);
+      toast({
+        title: 'Error updating items',
+        description: 'Unable to update invoiced quantities. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   return {
+
     quotes,
     loading,
     createQuote,
@@ -920,6 +958,8 @@ export function useQuotes() {
     removeAttachment,
     convertToInvoice,
     convertItemsToInvoice,
+    setItemsInvoicedQuantities,
+
 
     convertToPurchaseOrder,
     revertInvoiceLink,

@@ -39,6 +39,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Quote, QuoteSettings, QuoteStatus } from '@/types/quote';
 import { ConvertItemsDialog } from '@/components/quote/ConvertItemsDialog';
+import { MarkInvoicedDialog } from '@/components/quote/MarkInvoicedDialog';
+
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 import { formatCurrency } from '@/lib/utils';
 
@@ -52,7 +54,9 @@ interface QuoteCardProps {
   onEdit: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote, percentage: number) => void;
   onConvertItemsToInvoice?: (quote: Quote, selections: { itemId: string; quantity: number }[]) => Promise<unknown> | void;
+  onMarkItemsInvoiced?: (quote: Quote, updates: { itemId: string; quantity: number }[]) => Promise<unknown> | void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
+
   onRevertInvoiceLink?: (quoteId: string, saleId: string, percentage: number) => void;
 
   onPreview?: (quote: Quote) => void;
@@ -61,11 +65,13 @@ interface QuoteCardProps {
   linkedPoNumber?: string | null;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertItemsToInvoice, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertItemsToInvoice, onMarkItemsInvoiced, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [showItemsInvoiceDialog, setShowItemsInvoiceDialog] = useState(false);
+  const [showMarkInvoicedDialog, setShowMarkInvoicedDialog] = useState(false);
+
 
   const [showPoDialog, setShowPoDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -181,6 +187,13 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                   Invoice Selected Items
                 </DropdownMenuItem>
               )}
+              {onMarkItemsInvoiced && quote.items.length > 0 && (
+                <DropdownMenuItem onClick={() => setShowMarkInvoicedDialog(true)}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Mark Items as Invoiced
+                </DropdownMenuItem>
+              )}
+
 
               {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
                 <DropdownMenuItem onClick={() => setShowPoDialog(true)}>
@@ -363,9 +376,17 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                 {quote.items.map((item) => (
                   <div key={item.id}>
                     <div className="flex justify-between">
-                      <span>
-                        {item.itemName} × {item.quantity} {item.quantityUnit}
+                      <span className="flex items-center gap-2 flex-wrap">
+                        <span>{item.itemName} × {item.quantity} {item.quantityUnit}</span>
+                        {(item.invoicedQuantity || 0) >= item.quantity ? (
+                          <Badge className="bg-success text-success-foreground text-xs">Invoiced</Badge>
+                        ) : (item.invoicedQuantity || 0) > 0 ? (
+                          <Badge variant="secondary" className="text-xs">
+                            Invoiced {item.invoicedQuantity} of {item.quantity}
+                          </Badge>
+                        ) : null}
                       </span>
+
                       {quote.discountRate > 0 ? (
                         <span className="flex items-center gap-1">
                           <span>{formatCurrency(item.totalPrice * (1 - quote.discountRate / 100))}</span>
@@ -489,6 +510,18 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           }}
         />
       )}
+
+      {onMarkItemsInvoiced && (
+        <MarkInvoicedDialog
+          quote={quote}
+          open={showMarkInvoicedDialog}
+          onOpenChange={setShowMarkInvoicedDialog}
+          onConfirm={async (updates) => {
+            await onMarkItemsInvoiced(quote, updates);
+          }}
+        />
+      )}
+
     </>
 
   );
