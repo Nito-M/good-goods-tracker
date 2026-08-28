@@ -376,9 +376,17 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                 {quote.items.map((item) => (
                   <div key={item.id}>
                     <div className="flex justify-between">
-                      <span>
-                        {item.itemName} × {item.quantity} {item.quantityUnit}
+                      <span className="flex items-center gap-2 flex-wrap">
+                        <span>{item.itemName} × {item.quantity} {item.quantityUnit}</span>
+                        {(item.invoicedQuantity || 0) >= item.quantity ? (
+                          <Badge className="bg-success text-success-foreground text-xs">Invoiced</Badge>
+                        ) : (item.invoicedQuantity || 0) > 0 ? (
+                          <Badge variant="secondary" className="text-xs">
+                            Invoiced {item.invoicedQuantity} of {item.quantity}
+                          </Badge>
+                        ) : null}
                       </span>
+
                       {quote.discountRate > 0 ? (
                         <span className="flex items-center gap-1">
                           <span>{formatCurrency(item.totalPrice * (1 - quote.discountRate / 100))}</span>
