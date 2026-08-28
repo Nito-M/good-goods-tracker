@@ -187,6 +187,13 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                   Invoice Selected Items
                 </DropdownMenuItem>
               )}
+              {onMarkItemsInvoiced && quote.items.length > 0 && (
+                <DropdownMenuItem onClick={() => setShowMarkInvoicedDialog(true)}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Mark Items as Invoiced
+                </DropdownMenuItem>
+              )}
+
 
               {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
                 <DropdownMenuItem onClick={() => setShowPoDialog(true)}>
