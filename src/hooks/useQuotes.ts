@@ -596,6 +596,16 @@ export function useQuotes() {
         } as any)
         .eq('id', quote.id);
 
+      // A fully invoiced quote leaves nothing left to invoice per line
+      if (newInvoicedPercentage >= 100) {
+        for (const item of quote.items) {
+          await supabase
+            .from('quote_items')
+            .update({ invoiced_quantity: item.quantity } as any)
+            .eq('id', item.id);
+        }
+      }
+
       toast({
         title: 'Invoice created',
         description: `Invoice ${sale.invoice_number} created (${percentage}% of ${quote.quoteNumber})`,
