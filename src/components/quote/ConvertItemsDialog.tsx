@@ -60,8 +60,8 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
   const handleConfirm = async () => {
     setSubmitting(true);
     const selections = quote.items
-      .filter((i) => selected[i.id] && (quantities[i.id] || 0) > 0)
-      .map((i) => ({ itemId: i.id, quantity: Math.min(quantities[i.id], i.quantity) }));
+      .filter((i) => selected[i.id] && (quantities[i.id] || 0) > 0 && remainingOf(i) > 0)
+      .map((i) => ({ itemId: i.id, quantity: Math.min(quantities[i.id], remainingOf(i)) }));
     await onConfirm(selections);
     setSubmitting(false);
     onOpenChange(false);
@@ -74,7 +74,7 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
           <DialogTitle>Invoice Selected Items</DialogTitle>
           <DialogDescription>
             Pick which line items of {quote.quoteNumber} to convert into an invoice. You can also
-            invoice part of a line's quantity.
+            invoice part of a line's quantity. Already invoiced quantities can't be invoiced again.
           </DialogDescription>
         </DialogHeader>
 
@@ -86,27 +86,30 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
               onCheckedChange={(checked) =>
                 setSelected(
                   checked
-                    ? Object.fromEntries(quote.items.map((i) => [i.id, true]))
+                    ? Object.fromEntries(availableItems.map((i) => [i.id, true]))
                     : {}
                 )
               }
             />
             <Label htmlFor="select-all-items" className="text-sm font-normal cursor-pointer">
-              Select all items
+              Select all remaining items
             </Label>
           </div>
 
           <div className="space-y-2">
             {quote.items.map((item) => {
-              const isSelected = !!selected[item.id];
+              const remaining = remainingOf(item);
+              const fullyInvoiced = remaining <= 0;
+              const isSelected = !fullyInvoiced && !!selected[item.id];
               return (
                 <div
                   key={item.id}
-                  className="border rounded-lg p-3 flex items-start gap-3 bg-card"
+                  className={`border rounded-lg p-3 flex items-start gap-3 bg-card ${fullyInvoiced ? 'opacity-60' : ''}`}
                 >
                   <Checkbox
                     className="mt-1"
                     checked={isSelected}
+                    disabled={fullyInvoiced}
                     onCheckedChange={(checked) =>
                       setSelected((prev) => ({ ...prev, [item.id]: !!checked }))
                     }
@@ -118,6 +121,13 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
                       {item.quantity} {item.quantityUnit || ''} ×{' '}
                       {formatCurrency(netUnit(item.unitPrice, item.discountRate))}
                     </p>
+                    {(item.invoicedQuantity || 0) > 0 && (
+                      <p className="text-xs mt-1 text-muted-foreground">
+                        {fullyInvoiced
+                          ? 'Fully invoiced'
+                          : `${item.invoicedQuantity} already invoiced · ${remaining} remaining`}
+                      </p>
+                    )}
                   </div>
                   <div className="w-28 space-y-1">
                     <Label className="text-xs">Qty to invoice</Label>
@@ -125,9 +135,9 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
                       type="number"
                       step="0.01"
                       min={0}
-                      max={item.quantity}
+                      max={remaining}
                       disabled={!isSelected}
-                      value={quantities[item.id] ?? item.quantity}
+                      value={fullyInvoiced ? 0 : quantities[item.id] ?? remaining}
                       onChange={(e) =>
                         setQuantities((prev) => ({
                           ...prev,
