@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
+import { ConvertItemsDialog } from '@/components/quote/ConvertItemsDialog';
 import { useVendors } from '@/hooks/useVendors';
 import { useJobs } from '@/hooks/useJobs';
 import { useProfile } from '@/hooks/useProfile';
@@ -84,8 +85,9 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 export function SalesOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { quotes, loading: quotesLoading, convertToInvoice, refetch: refetchQuotes } = useQuotes();
+  const { quotes, loading: quotesLoading, convertToInvoice, convertItemsToInvoice, refetch: refetchQuotes } = useQuotes();
   const [showInvoiceRemainingDialog, setShowInvoiceRemainingDialog] = useState(false);
+  const [showInvoiceItemsDialog, setShowInvoiceItemsDialog] = useState(false);
   const [invoiceRemainingPct, setInvoiceRemainingPct] = useState(100);
   const { vendors, loading: vendorsLoading, updateVendor } = useVendors();
   const [showEditCustomerDialog, setShowEditCustomerDialog] = useState(false);
@@ -1273,17 +1275,26 @@ export function SalesOrderDetail() {
                 )}
               </CardTitle>
               {quote.invoicedPercentage < 100 && (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setInvoiceRemainingPct(100 - quote.invoicedPercentage);
-                    setShowInvoiceRemainingDialog(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Invoice Remaining ({100 - quote.invoicedPercentage}%)
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setInvoiceRemainingPct(100 - quote.invoicedPercentage);
+                      setShowInvoiceRemainingDialog(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Invoice Remaining ({100 - quote.invoicedPercentage}%)
+                  </Button>
+                  {quote.items.length > 0 && (
+                    <Button size="sm" variant="outline" onClick={() => setShowInvoiceItemsDialog(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Invoice Selected Items
+                    </Button>
+                  )}
+                </div>
               )}
+
             </CardHeader>
             <CardContent>
 
@@ -1433,6 +1444,15 @@ export function SalesOrderDetail() {
           </Dialog>
         </TabsContent>
       </Tabs>
+
+      <ConvertItemsDialog
+        quote={quote}
+        open={showInvoiceItemsDialog}
+        onOpenChange={setShowInvoiceItemsDialog}
+        onConfirm={async (selections) => {
+          await convertItemsToInvoice(quote, selections);
+        }}
+      />
 
       <PackingSlipDialog
         open={showPackingSlipDialog}

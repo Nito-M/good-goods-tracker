@@ -613,6 +613,134 @@ export function useQuotes() {
     }
   };
 
+  // Convert only selected line items (with optional partial quantities) into an invoice
+  const convertItemsToInvoice = async (
+    quote: Quote,
+    selections: { itemId: string; quantity: number }[]
+  ): Promise<string | null> => {
+    if (!user) return null;
+
+    try {
+      const netUnit = (item: { unitPrice: number; discountRate?: number }) =>
+        item.unitPrice * (1 - (item.discountRate || 0) / 100);
+
+      const chosen = selections
+        .map((sel) => {
+          const item = quote.items.find((i) => i.id === sel.itemId);
+          if (!item || sel.quantity <= 0) return null;
+          return { item, quantity: Math.min(sel.quantity, item.quantity) };
+        })
+        .filter(Boolean) as { item: Quote['items'][number]; quantity: number }[];
+
+      if (chosen.length === 0) return null;
+
+      const subtotal = chosen.reduce((sum, c) => sum + c.quantity * netUnit(c.item), 0);
+      const discountAmount = subtotal * (quote.discountRate / 100);
+      const afterDiscount = subtotal - discountAmount;
+      const taxAmount = afterDiscount * (quote.taxRate / 100);
+      const total = afterDiscount + taxAmount;
+
+      // Share of the quote this invoice represents (used for installment tracking)
+      const quoteNetSubtotal = quote.items.reduce(
+        (sum, i) => sum + i.quantity * netUnit(i),
+        0
+      );
+      const rawPct = quoteNetSubtotal > 0 ? (subtotal / quoteNetSubtotal) * 100 : 0;
+      const remaining = Math.max(0, 100 - quote.invoicedPercentage);
+      const percentage = Math.min(remaining, Math.round(rawPct * 100) / 100);
+
+      const invoiceNotes = [
+        `Selected items from Quote ${quote.quoteNumber}`,
+        quote.notes,
+      ].filter(Boolean).join('\n');
+
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert({
+          user_id: user.id,
+          vendor_id: quote.vendorId,
+          invoice_number: null,
+          status: 'draft',
+          subtotal,
+          tax_rate: quote.taxRate,
+          tax_amount: taxAmount,
+          discount_rate: quote.discountRate,
+          discount_amount: discountAmount,
+          total,
+          notes: invoiceNotes,
+          payment_terms: quote.paymentTerms,
+          due_date: null,
+          company_id: quote.companyId || null,
+          contact_person_name: (quote as any).contactPersonName || null,
+        })
+        .select()
+        .single();
+
+      if (saleError) throw saleError;
+
+      for (let i = 0; i < chosen.length; i++) {
+        const { item, quantity } = chosen[i];
+        const unitPrice = netUnit(item);
+        const { error: itemError } = await supabase
+          .from('sale_items')
+          .insert({
+            sale_id: sale.id,
+            inventory_item_id: item.inventoryItemId,
+            item_name: item.itemName,
+            sku: item.sku || 'CUSTOM',
+            quantity,
+            unit_price: unitPrice,
+            unit_cost: item.unitCost,
+            total_price: quantity * unitPrice,
+            notes: item.notes ?? null,
+            sort_order: i,
+          } as any);
+
+        if (itemError) throw itemError;
+      }
+
+      await supabase.from('quote_invoice_links').insert({
+        quote_id: quote.id,
+        sale_id: sale.id,
+        percentage,
+      } as any);
+
+      const newInvoicedPercentage = quote.invoicedPercentage + percentage;
+      const newStatus =
+        quote.status === 'sales_order'
+          ? 'sales_order'
+          : newInvoicedPercentage >= 100
+            ? 'converted'
+            : quote.status;
+
+      await supabase
+        .from('quotes')
+        .update({
+          invoiced_percentage: newInvoicedPercentage,
+          status: newStatus,
+        } as any)
+        .eq('id', quote.id);
+
+      toast({
+        title: 'Invoice created',
+        description: `Invoice created from ${chosen.length} item${chosen.length === 1 ? '' : 's'} of ${quote.quoteNumber}`,
+      });
+
+      await fetchQuotes();
+      return sale.id;
+    } catch (error: unknown) {
+      console.error('Error converting items to invoice:', error);
+      toast({
+        title: 'Error creating invoice',
+        description: 'Unable to create an invoice from the selected items. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+
+
   const convertToPurchaseOrder = async (quote: Quote): Promise<string | null> => {
     if (!user) return null;
 
@@ -759,6 +887,8 @@ export function useQuotes() {
     uploadAttachment,
     removeAttachment,
     convertToInvoice,
+    convertItemsToInvoice,
+
     convertToPurchaseOrder,
     revertInvoiceLink,
     refetch: fetchQuotes,

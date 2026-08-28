@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
-import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye, Undo2 } from 'lucide-react';
+import { Trash2, FileText, Send, Check, X, Clock, Paperclip, Upload, ExternalLink, Pencil, Calendar, Building2, Download, Receipt, ShoppingCart, Eye, Undo2, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,8 +38,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Quote, QuoteSettings, QuoteStatus } from '@/types/quote';
+import { ConvertItemsDialog } from '@/components/quote/ConvertItemsDialog';
 import { generateQuotePDF } from '@/lib/quoteGenerator';
 import { formatCurrency } from '@/lib/utils';
+
 
 interface QuoteCardProps {
   quote: Quote;
@@ -49,18 +51,22 @@ interface QuoteCardProps {
   onRemoveAttachment: (quoteId: string) => void;
   onEdit: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote, percentage: number) => void;
+  onConvertItemsToInvoice?: (quote: Quote, selections: { itemId: string; quantity: number }[]) => Promise<unknown> | void;
   onConvertToPurchaseOrder?: (quote: Quote) => void;
   onRevertInvoiceLink?: (quoteId: string, saleId: string, percentage: number) => void;
+
   onPreview?: (quote: Quote) => void;
   quoteSettings: QuoteSettings;
   linkedInvoiceNumber?: string | null;
   linkedPoNumber?: string | null;
 }
 
-export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
+export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment, onRemoveAttachment, onEdit, onConvertToInvoice, onConvertItemsToInvoice, onConvertToPurchaseOrder, onRevertInvoiceLink, onPreview, quoteSettings, linkedInvoiceNumber, linkedPoNumber }: QuoteCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showItemsInvoiceDialog, setShowItemsInvoiceDialog] = useState(false);
+
   const [showPoDialog, setShowPoDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [invoicePercentage, setInvoicePercentage] = useState(100);
@@ -169,6 +175,13 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
                   To Invoice {quote.invoicedPercentage > 0 ? `(${remainingPercentage}% left)` : ''}
                 </DropdownMenuItem>
               )}
+              {quote.invoicedPercentage < 100 && onConvertItemsToInvoice && quote.items.length > 0 && (
+                <DropdownMenuItem onClick={() => setShowItemsInvoiceDialog(true)}>
+                  <ListChecks className="h-4 w-4 mr-2" />
+                  Invoice Selected Items
+                </DropdownMenuItem>
+              )}
+
               {quote.invoicedPercentage < 100 && onConvertToPurchaseOrder && (
                 <DropdownMenuItem onClick={() => setShowPoDialog(true)}>
                   <ShoppingCart className="h-4 w-4 mr-2" />
@@ -465,6 +478,18 @@ export function QuoteCard({ quote, onDelete, onUpdateStatus, onUploadAttachment,
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {onConvertItemsToInvoice && (
+        <ConvertItemsDialog
+          quote={quote}
+          open={showItemsInvoiceDialog}
+          onOpenChange={setShowItemsInvoiceDialog}
+          onConfirm={async (selections) => {
+            await onConvertItemsToInvoice(quote, selections);
+          }}
+        />
+      )}
     </>
+
   );
 }
