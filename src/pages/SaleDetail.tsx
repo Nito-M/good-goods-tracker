@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSales } from '@/hooks/useSales';
 
@@ -41,7 +42,7 @@ export default function SaleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { sales, loading, updateInternalNotes, updateLinks } = useSales();
+  const { sales, loading, updateInternalNotes, updateLinks, updateTaxRate } = useSales();
   const { profile } = useProfile();
   const { companies } = useCompanies();
   
@@ -51,7 +52,13 @@ export default function SaleDetail() {
   const [internalNotes, setInternalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [taxRateInput, setTaxRateInput] = useState('5');
+  const [savingTax, setSavingTax] = useState(false);
 
+
+  useEffect(() => {
+    setTaxRateInput(String(sale?.taxRate ?? 5));
+  }, [sale?.id, sale?.taxRate]);
 
   useEffect(() => {
     setInternalNotes(sale?.internalNotes || '');
@@ -252,9 +259,32 @@ export default function SaleDetail() {
             {sale.discountAmount > 0 && (
               <Row label={`Discount (${sale.discountRate}%)`} value={`-${formatCurrency(sale.discountAmount)}`} muted />
             )}
-            {sale.taxAmount > 0 && (
-              <Row label={`Tax (${sale.taxRate}%)`} value={formatCurrency(sale.taxAmount)} />
-            )}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <span>Tax (GST)</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={taxRateInput}
+                  onChange={(e) => setTaxRateInput(e.target.value)}
+                  onBlur={async () => {
+                    const rate = parseFloat(taxRateInput);
+                    const next = isNaN(rate) ? 0 : rate;
+                    if (next === sale.taxRate) return;
+                    setSavingTax(true);
+                    await updateTaxRate(sale.id, next);
+                    setSavingTax(false);
+                  }}
+                  disabled={savingTax}
+                  className="h-7 w-16 text-right tabular-nums"
+                  aria-label="Tax rate percent"
+                />
+                <span>%</span>
+              </div>
+              <span>{formatCurrency(sale.taxAmount)}</span>
+            </div>
             {(sale.adjustments || []).map((adj, idx) => (
               <Row
                 key={adj.id}
