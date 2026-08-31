@@ -6,6 +6,9 @@ import { Quote, QuoteItem, QuoteInvoiceLink, CreateQuoteInput, QuoteStatus } fro
 import { dedupePurchaseOrderItems } from '@/types/purchaseOrder';
 import { composeUnitNotes } from '@/lib/unitNotes';
 
+/** Standard GST applied to invoices created from quotes / sales orders (editable afterwards). */
+export const DEFAULT_INVOICE_TAX_RATE = 5;
+
 
 export function useQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -519,7 +522,8 @@ export function useQuotes() {
       );
       const discountAmount = subtotal * (quote.discountRate / 100);
       const afterDiscount = subtotal - discountAmount;
-      const taxAmount = afterDiscount * (quote.taxRate / 100);
+      const invoiceTaxRate = DEFAULT_INVOICE_TAX_RATE;
+      const taxAmount = afterDiscount * (invoiceTaxRate / 100);
       const total = afterDiscount + taxAmount;
 
       // Build notes
@@ -537,7 +541,7 @@ export function useQuotes() {
           invoice_number: null,
           status: 'draft',
           subtotal,
-          tax_rate: quote.taxRate,
+          tax_rate: invoiceTaxRate,
           tax_amount: taxAmount,
           discount_rate: quote.discountRate,
           discount_amount: discountAmount,
@@ -724,7 +728,8 @@ export function useQuotes() {
       const subtotal = rows.reduce((sum, r) => sum + r.quantity * netUnit(r.item), 0);
       const discountAmount = subtotal * (quote.discountRate / 100);
       const afterDiscount = subtotal - discountAmount;
-      const taxAmount = afterDiscount * (quote.taxRate / 100);
+      const invoiceTaxRate = DEFAULT_INVOICE_TAX_RATE;
+      const taxAmount = afterDiscount * (invoiceTaxRate / 100);
       const total = afterDiscount + taxAmount;
 
       // Share of the quote this invoice represents (used for installment tracking)
@@ -749,7 +754,7 @@ export function useQuotes() {
           invoice_number: null,
           status: 'draft',
           subtotal,
-          tax_rate: quote.taxRate,
+          tax_rate: invoiceTaxRate,
           tax_amount: taxAmount,
           discount_rate: quote.discountRate,
           discount_amount: discountAmount,
