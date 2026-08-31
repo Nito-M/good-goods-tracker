@@ -185,7 +185,14 @@ export async function generateInvoicePDF(sale: Sale, settings?: InvoiceSettings)
       const nameLines = doc.splitTextToSize(item.itemName, nameColWidth);
       const skuLines = showSku ? doc.splitTextToSize(item.sku, skuColWidth) : [];
       const noteText = (item.notes || '').trim();
-      const noteLines = noteText ? doc.splitTextToSize(`Note: ${noteText}`, nameColWidth) : [];
+      const noteLines = noteText
+        ? noteText
+            .split('\n')
+            .flatMap((line, idx) =>
+              doc.splitTextToSize(idx === 0 ? `Note: ${line}` : line, nameColWidth),
+            )
+        : [];
+
 
       // Only break before the row if there isn't room for at least the row's
       // first few lines — tall rows flow across pages instead of being pushed.

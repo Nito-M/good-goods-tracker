@@ -31,3 +31,18 @@ export function composeUnitNotes(
   if (lines.length === 1) return lines[0].replace(/^Note:\s*/, '');
   return lines.join('\n');
 }
+
+/**
+ * Note text for a single unit: its own per-unit note when present, otherwise
+ * the item's shared note (same fallback the sales order PDF uses).
+ */
+export function resolveUnitNote(
+  unitNote: string | null | undefined,
+  itemNotes: string | null | undefined,
+): string | null {
+  const own = (unitNote ?? '').trim();
+  if (own) return own;
+  const shared = (itemNotes ?? '').trim();
+  return shared || null;
+}
+
