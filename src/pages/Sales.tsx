@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { DEFAULT_INVOICE_TAX_RATE } from '@/hooks/useQuotes';
 import {
   Plus,
   ArrowLeft,
@@ -298,7 +299,7 @@ export function Sales() {
   const [cart, setCart] = useState<CartItem[]>(initialDraft?.cart || []);
   const [selectedVendorId, setSelectedVendorId] = useState<string>(initialDraft?.selectedVendorId || '');
   const [contactPersonName, setContactPersonName] = useState<string>(initialDraft?.contactPersonName || '');
-  const [taxRate, setTaxRate] = useState(initialDraft?.taxRate ?? 5);
+  const [taxRate, setTaxRate] = useState(initialDraft?.taxRate ?? DEFAULT_INVOICE_TAX_RATE);
   const [discountRate, setDiscountRate] = useState(initialDraft?.discountRate ?? 0);
   const [adjustments, setAdjustments] = useState<Array<{ label: string; amount: number }>>(
     initialDraft?.adjustments || []
@@ -405,7 +406,7 @@ export function Sales() {
     setCart([]);
     setSelectedVendorId('');
     setCustomInvoiceNumber('');
-    setTaxRate(0);
+    setTaxRate(DEFAULT_INVOICE_TAX_RATE);
     setDiscountRate(0);
     setAdjustments([]);
     setMarkupPercent('');
