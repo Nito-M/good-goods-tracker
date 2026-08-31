@@ -697,20 +697,22 @@ export function useQuotes() {
           rows.push({
             item: c.item,
             quantity: splitPerUnit ? 1 : c.quantity,
-            notes: splitPerUnit
-              ? noteForUnit(c.item, unitIndex)
-              : composeUnitNotes(unitNotesFor(c.item.id, c.quantity), c.item.notes),
+            notes: noteForUnit(c.item, unitIndex),
           });
 
-          // Add-ons attached to this specific unit
+          // Add-ons attached to this specific unit (all covered units when the
+          // line isn't split per unit)
+          const unitEnd = splitPerUnit
+            ? unitIndex + 1
+            : startUnit + Math.max(1, Math.ceil(c.quantity));
           const childUnits = ((attachmentRows as any[]) || []).filter(
             (a) =>
               a.parent_quote_item_id === c.item.id &&
-              (a.parent_unit_index ?? 0) ===
-                (splitPerUnit ? unitIndex : (a.parent_unit_index ?? 0)) &&
-              (a.parent_unit_index ?? 0) < startUnit + Math.max(1, Math.ceil(c.quantity)) &&
+              (a.parent_unit_index ?? 0) >= unitIndex &&
+              (a.parent_unit_index ?? 0) < unitEnd &&
               !chosenIds.has(a.child_quote_item_id),
           );
+
 
           for (const a of childUnits) {
             const child = quote.items.find((i) => i.id === a.child_quote_item_id);
