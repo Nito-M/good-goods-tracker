@@ -405,7 +405,7 @@ export function Sales() {
     setCart([]);
     setSelectedVendorId('');
     setCustomInvoiceNumber('');
-    setTaxRate(0);
+    setTaxRate(DEFAULT_INVOICE_TAX_RATE);
     setDiscountRate(0);
     setAdjustments([]);
     setMarkupPercent('');
