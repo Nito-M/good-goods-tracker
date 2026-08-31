@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Quote, QuoteItem, QuoteInvoiceLink, CreateQuoteInput, QuoteStatus } from '@/types/quote';
 import { dedupePurchaseOrderItems } from '@/types/purchaseOrder';
-import { composeUnitNotes } from '@/lib/unitNotes';
+import { resolveUnitNote } from '@/lib/unitNotes';
 
 /** Standard GST applied to invoices created from quotes / sales orders (editable afterwards). */
 export const DEFAULT_INVOICE_TAX_RATE = 5;

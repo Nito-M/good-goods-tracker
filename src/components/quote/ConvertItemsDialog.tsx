@@ -14,7 +14,7 @@ import {
 import { Quote } from '@/types/quote';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { composeUnitNotes } from '@/lib/unitNotes';
+import { resolveUnitNote } from '@/lib/unitNotes';
 
 
 interface ConvertItemsDialogProps {
@@ -186,18 +186,29 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
                     )}
                     {(() => {
                       const qty = Math.min(quantities[item.id] ?? remaining, remaining);
-                      const units = Array.from(
-                        { length: Math.max(1, Math.ceil(qty || remaining)) },
-                        (_, i) => unitNotes[item.id]?.[i] ?? null,
+                      const startUnit = Math.floor(item.invoicedQuantity || 0);
+                      const splitPerUnit = Number.isInteger(qty) && qty > 1;
+                      const unitCount = splitPerUnit ? qty : 1;
+                      const previewUnits = Array.from({ length: Math.max(1, unitCount) }, (_, i) =>
+                        resolveUnitNote(unitNotes[item.id]?.[startUnit + i], item.notes),
                       );
-                      const noteText = composeUnitNotes(units, item.notes);
                       const addOns = isSelected ? addOnsFor(item.id, qty) : [];
                       return (
                         <>
-                          {noteText && (
-                            <p className="text-xs mt-1 italic text-muted-foreground whitespace-pre-wrap break-words">
-                              {noteText}
-                            </p>
+                          {previewUnits.some(Boolean) && (
+                            <div className="mt-1 space-y-0.5">
+                              {previewUnits.map((note, i) =>
+                                note ? (
+                                  <p
+                                    key={i}
+                                    className="text-xs italic text-muted-foreground whitespace-pre-wrap break-words"
+                                  >
+                                    {splitPerUnit ? `Line ${i + 1}: ` : ''}
+                                    {note}
+                                  </p>
+                                ) : null,
+                              )}
+                            </div>
                           )}
                           {addOns.length > 0 && (
                             <div className="mt-2 pl-2 border-l space-y-0.5">
@@ -215,6 +226,7 @@ export function ConvertItemsDialog({ quote, open, onOpenChange, onConfirm }: Con
                         </>
                       );
                     })()}
+
 
                   </div>
                   <div className="w-28 space-y-1">
