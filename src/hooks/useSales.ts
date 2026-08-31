@@ -1022,7 +1022,36 @@ export function useSales() {
     }
   };
 
+  const updateTaxRate = async (saleId: string, taxRate: number) => {
+    try {
+      const sale = sales.find((s) => s.id === saleId);
+      if (!sale) return false;
+      const rate = Math.max(0, Math.min(100, Number(taxRate) || 0));
+      const afterDiscount = sale.subtotal - sale.discountAmount;
+      const taxAmount = afterDiscount * (rate / 100);
+      const adjustmentsSum = (sale.adjustments || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      const total = afterDiscount + taxAmount + adjustmentsSum;
+
+      const { error } = await supabase
+        .from('sales')
+        .update({ tax_rate: rate, tax_amount: taxAmount, total } as any)
+        .eq('id', saleId);
+      if (error) throw error;
+
+      setSales((prev) =>
+        prev.map((s) => (s.id === saleId ? { ...s, taxRate: rate, taxAmount, total } : s)),
+      );
+      toast({ title: 'Tax rate updated', description: `Invoice tax set to ${rate}%` });
+      return true;
+    } catch (error) {
+      console.error('Error updating tax rate:', error);
+      toast({ title: 'Error updating tax rate', variant: 'destructive' });
+      return false;
+    }
+  };
+
   const updateInternalNotes = async (saleId: string, internalNotes: string | null) => {
+
     try {
       const { error } = await supabase
         .from('sales')
