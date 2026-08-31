@@ -1113,6 +1113,8 @@ export function useSales() {
     deleteSale,
     revertSale,
     updateInternalNotes,
+    updateTaxRate,
+
     updateLinks,
     refetch: fetchSales,
   };
