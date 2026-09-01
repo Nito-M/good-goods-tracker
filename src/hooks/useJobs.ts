@@ -185,11 +185,12 @@ export function useAllJobItems() {
   const fetchAllItems = useCallback(async () => {
     if (!user) { setItems([]); return; }
     setLoading(true);
+    const activeStatuses = ['in-progress', 'open', 'painting-done'];
     const { data, error } = await supabase
       .from('job_items')
       .select('*, jobs!inner(title, job_number, status, customer_id, customer_name), inventory_items(category, subcategory)')
-      .neq('jobs.status', 'finished')
-      .neq('jobs.status', 'on-hold');
+      .in('jobs.status', activeStatuses);
+
     if (error) {
       console.error('Error loading all job items:', error);
     } else {
