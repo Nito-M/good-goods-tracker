@@ -778,7 +778,16 @@ export function UsersSettings() {
               <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={adding || !newUserName.trim() || !newUserEmail.trim()}>
+              <Button
+                type="submit"
+                disabled={
+                  adding ||
+                  !newUserName.trim() ||
+                  !newUserEmail.trim() ||
+                  newUserPassword.length < 8 ||
+                  newUserPassword !== newUserPasswordConfirm
+                }
+              >
                 {adding ? 'Adding...' : 'Add User'}
               </Button>
             </DialogFooter>
