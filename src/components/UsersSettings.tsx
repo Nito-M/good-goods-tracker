@@ -724,6 +724,38 @@ export function UsersSettings() {
               />
             </div>
             <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="new-user-password">Initial Password *</Label>
+                <Button type="button" variant="ghost" size="sm" onClick={generatePassword}>
+                  Generate
+                </Button>
+              </div>
+              <Input
+                id="new-user-password"
+                type="text"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                required
+              />
+              <Input
+                id="new-user-password-confirm"
+                type="text"
+                value={newUserPasswordConfirm}
+                onChange={(e) => setNewUserPasswordConfirm(e.target.value)}
+                placeholder="Confirm password"
+                autoComplete="new-password"
+                required
+              />
+              {newUserPassword.length > 0 && newUserPassword.length < 8 && (
+                <p className="text-sm text-destructive">Password must be at least 8 characters.</p>
+              )}
+              {newUserPasswordConfirm.length > 0 && newUserPassword !== newUserPasswordConfirm && (
+                <p className="text-sm text-destructive">Passwords do not match.</p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label>Page Access</Label>
               <p className="text-sm text-muted-foreground">Select which pages this user can access</p>
               <div className="grid grid-cols-2 gap-2 pt-1">
@@ -739,7 +771,8 @@ export function UsersSettings() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              The user must already have an account.
+              A new account is created with this password so they can sign in right away. If the email
+              already has an account, it is simply added to this organization and the password is ignored.
             </p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
