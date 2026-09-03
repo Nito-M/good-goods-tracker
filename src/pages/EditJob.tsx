@@ -224,7 +224,21 @@ export function EditJob() {
             </div>
             <div>
               <Label className="flex items-center gap-1.5">NVIS Link</Label>
-              <Input value={formNvisLink} onChange={e => setFormNvisLink(e.target.value)} placeholder="https://example.com/nvis" />
+              <div className="flex gap-2">
+                <Input value={formNvisLink} onChange={e => setFormNvisLink(e.target.value)} placeholder="https://example.com/nvis" className="flex-1" />
+                {formNvisLink.trim() && (
+                  <Button asChild variant="outline" size="sm" className="h-10 px-3">
+                    <a
+                      href={/^https?:\/\//i.test(formNvisLink) ? formNvisLink : `https://${formNvisLink}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1.5" />
+                      Open Link
+                    </a>
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
