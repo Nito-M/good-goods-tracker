@@ -35,6 +35,17 @@ export function JobAddItems() {
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
   const [addingAssembly, setAddingAssembly] = useState<string | null>(null);
 
+  const addedStorageKey = `job-added-assemblies-${jobId || ''}`;
+  const [addedAssemblyIds, setAddedAssemblyIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(`job-added-assemblies-${jobId || ''}`);
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const addedAssemblySet = useMemo(() => new Set(addedAssemblyIds), [addedAssemblyIds]);
+
   const assemblyIds = useMemo(() => assemblies.map(a => a.id), [assemblies]);
   const { summaries } = useAssemblySummaries(assemblyIds);
 
