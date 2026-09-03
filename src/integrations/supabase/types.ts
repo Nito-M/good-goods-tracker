@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          created_at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          organization_id: string | null
+          record_id: string | null
+          record_label: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          organization_id?: string | null
+          record_id?: string | null
+          record_label?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          organization_id?: string | null
+          record_id?: string | null
+          record_label?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       app_welcome_settings: {
         Row: {
           background_image_url: string | null

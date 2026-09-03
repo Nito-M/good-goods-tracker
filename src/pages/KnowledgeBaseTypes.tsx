@@ -82,11 +82,14 @@ export default function KnowledgeBaseTypes() {
             Select a department to browse its Standard Operating Procedures.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2 text-sm">
             <Switch checked={showArchived} onCheckedChange={setShowArchived} id="archived" />
             <Label htmlFor="archived" className="cursor-pointer">Show archived</Label>
           </div>
+          <Button variant="outline" onClick={() => navigate('/knowledge-base/activity')}>
+            <LucideIcons.History className="h-4 w-4 mr-1" /> Activity Log
+          </Button>
           {isAdmin && (
             <Button onClick={openNew}>
               <Plus className="h-4 w-4 mr-1" /> New Type
