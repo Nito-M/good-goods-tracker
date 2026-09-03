@@ -209,7 +209,7 @@ export async function generateSopPDF(data: SopPdfData, sections: SopPdfSections,
 
   // Locations
   if (sections.locations && data.locations.length) {
-    sectionHeader('Locations');
+    sectionHeader('Locations / Links');
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     for (const l of data.locations) {

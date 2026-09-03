@@ -500,7 +500,7 @@ export default function SopEdit() {
       {/* Locations */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Locations</CardTitle>
+          <CardTitle className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Locations / Links</CardTitle>
           <Button size="sm" variant="outline" onClick={() => addLocation()}>
             <Plus className="h-4 w-4 mr-1" /> Add Location
           </Button>
