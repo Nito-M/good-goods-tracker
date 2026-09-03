@@ -345,10 +345,17 @@ export function UsersSettings() {
         console.error('Error creating staff directory entry:', workerErr);
       }
 
-      toast({ title: 'User added', description: `${newUserName.trim()} has been added.` });
+      toast({
+        title: accountCreated ? 'Account created' : 'Existing user added',
+        description: accountCreated
+          ? `${newUserName.trim()} can now sign in with the password you set.`
+          : `${newUserName.trim()} has been added to this organization.`,
+      });
       setAddDialogOpen(false);
       setNewUserName('');
       setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserPasswordConfirm('');
       setSelectedPages([...PAGE_KEYS.map(p => p.key)]);
       await fetchData();
     } catch (error: any) {
