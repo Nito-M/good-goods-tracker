@@ -127,6 +127,11 @@ export function JobAddItems() {
         }
       }
 
+      setAddedAssemblyIds(prev => {
+        const next = prev.includes(assemblyId) ? prev : [...prev, assemblyId];
+        try { localStorage.setItem(addedStorageKey, JSON.stringify(next)); } catch { /* ignore */ }
+        return next;
+      });
       toast({ title: 'Assembly items added to job' });
     } catch (err) {
       toast({ title: 'Error', description: 'Failed to add assembly items.', variant: 'destructive' });
