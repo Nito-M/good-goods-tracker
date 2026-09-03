@@ -73,6 +73,7 @@ import { EditTripPlan } from "./pages/EditTripPlan";
 import { CompanyDetail } from "./pages/CompanyDetail";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import KnowledgeBaseTypes from "./pages/KnowledgeBaseTypes";
+import ActivityLog from "./pages/ActivityLog";
 import SopEdit from "./pages/SopEdit";
 import { useInventory } from "@/hooks/useInventory";
 import { useCategories } from "@/hooks/useCategories";
