@@ -10,7 +10,7 @@ const FIELDS: { key: keyof SopPdfSections; label: string }[] = [
   { key: 'details', label: 'SOP Details' },
   { key: 'steps', label: 'Procedure Steps' },
   { key: 'bom', label: 'Bill of Materials' },
-  { key: 'locations', label: 'Locations' },
+  { key: 'locations', label: 'Locations / Links' },
   { key: 'attachments', label: 'Attachments' },
 ];
 
