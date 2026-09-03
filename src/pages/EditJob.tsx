@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, User, Mail, Phone, MapPin } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
