@@ -95,6 +95,8 @@ export function UsersSettings() {
   const [addOrgId, setAddOrgId] = useState<string | null>(null);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserPasswordConfirm, setNewUserPasswordConfirm] = useState('');
   const [selectedPages, setSelectedPages] = useState<string[]>([...PAGE_KEYS.map(p => p.key)]);
   const [adding, setAdding] = useState(false);
 
