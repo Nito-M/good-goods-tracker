@@ -35,6 +35,17 @@ export function JobAddItems() {
   const [viewerImage, setViewerImage] = useState<{ url: string; alt: string } | null>(null);
   const [addingAssembly, setAddingAssembly] = useState<string | null>(null);
 
+  const addedStorageKey = `job-added-assemblies-${jobId || ''}`;
+  const [addedAssemblyIds, setAddedAssemblyIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(`job-added-assemblies-${jobId || ''}`);
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const addedAssemblySet = useMemo(() => new Set(addedAssemblyIds), [addedAssemblyIds]);
+
   const assemblyIds = useMemo(() => assemblies.map(a => a.id), [assemblies]);
   const { summaries } = useAssemblySummaries(assemblyIds);
 
@@ -86,6 +97,7 @@ export function JobAddItems() {
   };
 
   const handleAddAssembly = async (assemblyId: string) => {
+    if (addedAssemblySet.has(assemblyId)) return;
     setAddingAssembly(assemblyId);
     try {
       const { data: asmItems, error } = await supabase
@@ -115,6 +127,11 @@ export function JobAddItems() {
         }
       }
 
+      setAddedAssemblyIds(prev => {
+        const next = prev.includes(assemblyId) ? prev : [...prev, assemblyId];
+        try { localStorage.setItem(addedStorageKey, JSON.stringify(next)); } catch { /* ignore */ }
+        return next;
+      });
       toast({ title: 'Assembly items added to job' });
     } catch (err) {
       toast({ title: 'Error', description: 'Failed to add assembly items.', variant: 'destructive' });
@@ -271,11 +288,19 @@ export function JobAddItems() {
                         filteredAssemblies.map(assembly => {
                           const summary = summaries.get(assembly.id);
                           const isAdding = addingAssembly === assembly.id;
+                          const alreadyAdded = addedAssemblySet.has(assembly.id);
                           return (
-                            <TableRow key={assembly.id}>
+                            <TableRow key={assembly.id} className={alreadyAdded ? 'opacity-70' : undefined}>
                               <TableCell>
                                 <div>
-                                  <p className="font-medium">{assembly.name}</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium">{assembly.name}</p>
+                                    {alreadyAdded && (
+                                      <Badge variant="secondary" className="gap-1">
+                                        <Check className="h-3 w-3" />Added
+                                      </Badge>
+                                    )}
+                                  </div>
                                   {assembly.description && (
                                     <p className="text-sm text-muted-foreground">{assembly.description}</p>
                                   )}
@@ -291,16 +316,19 @@ export function JobAddItems() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  disabled={isAdding || (summary?.itemCount ?? 0) === 0}
+                                  disabled={isAdding || alreadyAdded || (summary?.itemCount ?? 0) === 0}
                                   onClick={() => handleAddAssembly(assembly.id)}
                                 >
                                   {isAdding ? (
                                     'Adding...'
+                                  ) : alreadyAdded ? (
+                                    <><Check className="h-4 w-4 mr-1" />Already Added</>
                                   ) : (
                                     <><Plus className="h-4 w-4 mr-1" />Add All Items</>
                                   )}
                                 </Button>
                               </TableCell>
+
                             </TableRow>
                           );
                         })
