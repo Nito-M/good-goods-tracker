@@ -440,6 +440,17 @@ function AppContent() {
           }
         />
         <Route
+          path="/knowledge-base/activity"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ActivityLog />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/knowledge-base/type/:typeId"
           element={
             <ProtectedRoute>
