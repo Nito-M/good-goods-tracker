@@ -95,6 +95,8 @@ export function UsersSettings() {
   const [addOrgId, setAddOrgId] = useState<string | null>(null);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserPasswordConfirm, setNewUserPasswordConfirm] = useState('');
   const [selectedPages, setSelectedPages] = useState<string[]>([...PAGE_KEYS.map(p => p.key)]);
   const [adding, setAdding] = useState(false);
 
@@ -242,65 +244,86 @@ export function UsersSettings() {
     }
   }, [isAdmin, isOrgAdmin, orgIds]);
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+    const bytes = new Uint32Array(14);
+    crypto.getRandomValues(bytes);
+    const pwd = Array.from(bytes, b => chars[b % chars.length]).join('');
+    setNewUserPassword(pwd);
+    setNewUserPasswordConfirm(pwd);
+  };
+
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addOrgId || !newUserName.trim() || !newUserEmail.trim()) return;
+    if (newUserPassword.length < 8 || newUserPassword !== newUserPasswordConfirm) return;
     setAdding(true);
 
     try {
-      // Look up user by email
-      const { data: lookupData, error: lookupError } = await supabase.functions.invoke('lookup-user-by-email', {
-        body: { email: newUserEmail.trim() },
+      // Create the account (or detect that it already exists)
+      const { data: createData, error: createError } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          email: newUserEmail.trim(),
+          display_name: newUserName.trim(),
+          password: newUserPassword,
+          organization_id: addOrgId,
+          page_keys: selectedPages,
+        },
       });
 
-      const targetUserId = lookupData?.user_id;
-      if (lookupError || !targetUserId) {
-        toast({
-          title: 'User not found',
-          description: `No user found with email "${newUserEmail}". They must have an account first.`,
-          variant: 'destructive',
-        });
+      let targetUserId: string | undefined = createData?.user_id;
+      const accountCreated = createData?.created === true;
+
+      if (createError || !targetUserId) {
+        // Surface the function's error message when available
+        let message = 'Could not create the account.';
+        try {
+          const ctx: any = (createError as any)?.context;
+          const body = ctx ? await ctx.json?.() : null;
+          if (body?.error) message = typeof body.error === 'string' ? body.error : JSON.stringify(body.error);
+        } catch { /* ignore */ }
+        toast({ title: 'Error', description: message, variant: 'destructive' });
         setAdding(false);
         return;
       }
 
-      // Check if already a member
-      const existing = users.find(u => u.userId === targetUserId && u.orgId === addOrgId);
-      if (existing) {
-        toast({ title: 'Already a member', description: 'This user is already in this organization.', variant: 'destructive' });
-        setAdding(false);
-        return;
+      if (!accountCreated) {
+        // Existing account — link it into this organization
+        const existing = users.find(u => u.userId === targetUserId && u.orgId === addOrgId);
+        if (existing) {
+          toast({ title: 'Already a member', description: 'This user is already in this organization.', variant: 'destructive' });
+          setAdding(false);
+          return;
+        }
+
+        if (newUserName.trim()) {
+          await supabase
+            .from('profiles')
+            .update({ display_name: newUserName.trim() })
+            .eq('user_id', targetUserId);
+        }
+
+        const { error: memberError } = await supabase
+          .from('organization_members')
+          .insert({
+            organization_id: addOrgId,
+            user_id: targetUserId,
+            role: 'member',
+          });
+        if (memberError) throw memberError;
+
+        if (selectedPages.length > 0) {
+          const permRows = selectedPages.map(pageKey => ({
+            user_id: targetUserId!,
+            page_key: pageKey,
+          }));
+          const { error: permError } = await supabase
+            .from('user_page_permissions')
+            .insert(permRows);
+          if (permError) throw permError;
+        }
       }
 
-      // Update display name
-      if (newUserName.trim()) {
-        await supabase
-          .from('profiles')
-          .update({ display_name: newUserName.trim() })
-          .eq('user_id', targetUserId);
-      }
-
-      // Add as member
-      const { error: memberError } = await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: addOrgId,
-          user_id: targetUserId,
-          role: 'member',
-        });
-      if (memberError) throw memberError;
-
-      // Set page permissions
-      if (selectedPages.length > 0) {
-        const permRows = selectedPages.map(pageKey => ({
-          user_id: targetUserId,
-          page_key: pageKey,
-        }));
-        const { error: permError } = await supabase
-          .from('user_page_permissions')
-          .insert(permRows);
-        if (permError) throw permError;
-      }
 
       // Auto-create a Staff Directory (workers) entry for this user, if one doesn't already exist
       try {
@@ -322,10 +345,17 @@ export function UsersSettings() {
         console.error('Error creating staff directory entry:', workerErr);
       }
 
-      toast({ title: 'User added', description: `${newUserName.trim()} has been added.` });
+      toast({
+        title: accountCreated ? 'Account created' : 'Existing user added',
+        description: accountCreated
+          ? `${newUserName.trim()} can now sign in with the password you set.`
+          : `${newUserName.trim()} has been added to this organization.`,
+      });
       setAddDialogOpen(false);
       setNewUserName('');
       setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserPasswordConfirm('');
       setSelectedPages([...PAGE_KEYS.map(p => p.key)]);
       await fetchData();
     } catch (error: any) {
@@ -724,6 +754,38 @@ export function UsersSettings() {
               />
             </div>
             <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="new-user-password">Initial Password *</Label>
+                <Button type="button" variant="ghost" size="sm" onClick={generatePassword}>
+                  Generate
+                </Button>
+              </div>
+              <Input
+                id="new-user-password"
+                type="text"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                required
+              />
+              <Input
+                id="new-user-password-confirm"
+                type="text"
+                value={newUserPasswordConfirm}
+                onChange={(e) => setNewUserPasswordConfirm(e.target.value)}
+                placeholder="Confirm password"
+                autoComplete="new-password"
+                required
+              />
+              {newUserPassword.length > 0 && newUserPassword.length < 8 && (
+                <p className="text-sm text-destructive">Password must be at least 8 characters.</p>
+              )}
+              {newUserPasswordConfirm.length > 0 && newUserPassword !== newUserPasswordConfirm && (
+                <p className="text-sm text-destructive">Passwords do not match.</p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label>Page Access</Label>
               <p className="text-sm text-muted-foreground">Select which pages this user can access</p>
               <div className="grid grid-cols-2 gap-2 pt-1">
@@ -739,13 +801,23 @@ export function UsersSettings() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              The user must already have an account.
+              A new account is created with this password so they can sign in right away. If the email
+              already has an account, it is simply added to this organization and the password is ignored.
             </p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={adding || !newUserName.trim() || !newUserEmail.trim()}>
+              <Button
+                type="submit"
+                disabled={
+                  adding ||
+                  !newUserName.trim() ||
+                  !newUserEmail.trim() ||
+                  newUserPassword.length < 8 ||
+                  newUserPassword !== newUserPasswordConfirm
+                }
+              >
                 {adding ? 'Adding...' : 'Add User'}
               </Button>
             </DialogFooter>
