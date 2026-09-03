@@ -91,7 +91,7 @@ export function JobDescription() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-24 items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/jobs')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex flex-col">

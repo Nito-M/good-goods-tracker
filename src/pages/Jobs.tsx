@@ -125,8 +125,7 @@ export function Jobs() {
   }, [navigate]);
 
   const closeJob = useCallback(() => {
-    if (window.history.length > 1) navigate(-1);
-    else navigate('/jobs');
+    navigate('/jobs');
   }, [navigate]);
   const [searchQuery, setSearchQuery] = useState('');
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
