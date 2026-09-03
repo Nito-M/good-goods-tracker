@@ -97,8 +97,8 @@ export function JobAddItems() {
   };
 
   const handleAddAssembly = async (assemblyId: string) => {
+    if (addedAssemblySet.has(assemblyId)) return;
     setAddingAssembly(assemblyId);
-    try {
       const { data: asmItems, error } = await supabase
         .from('assembly_items')
         .select('*, inventory_items(price)')
