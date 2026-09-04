@@ -5,7 +5,6 @@ import {
   FileText,
   UserPlus,
   Truck,
-  ScanLine,
   PackageCheck,
   type LucideIcon,
 } from 'lucide-react';
@@ -23,7 +22,7 @@ const ACTIONS: Action[] = [
   { label: 'Purchase Order', icon: FileText, to: '/purchase-orders/new' },
   { label: 'Customer', icon: UserPlus, to: '/settings?tab=customers' },
   { label: 'Supplier', icon: Truck, to: '/settings?tab=vendors' },
-  { label: 'Scan Barcode', icon: ScanLine, to: '/items?scan=1' },
+  
   { label: 'Receive Shipment', icon: PackageCheck, to: '/purchase-orders' },
 ];
 
@@ -31,7 +30,7 @@ export function QuickActionsWidget() {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
       {ACTIONS.map((a) => (
         <button
           key={a.label}
