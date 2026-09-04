@@ -51,13 +51,7 @@ const ACTIONS: ActionSpec[] = [
     description: 'Add a supplier / vendor',
   },
   {
-    type: 'qaScanBarcode',
-    label: 'Scan Barcode',
-    icon: ScanLine,
-    to: '/items?scan=1',
-    description: 'Look up an item by barcode',
-  },
-  {
+
     type: 'qaReceiveShipment',
     label: 'Receive Shipment',
     icon: PackageCheck,
