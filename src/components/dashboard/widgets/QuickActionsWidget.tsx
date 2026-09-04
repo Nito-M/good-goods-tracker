@@ -23,7 +23,7 @@ const ACTIONS: Action[] = [
   { label: 'Purchase Order', icon: FileText, to: '/purchase-orders/new' },
   { label: 'Customer', icon: UserPlus, to: '/settings?tab=customers' },
   { label: 'Supplier', icon: Truck, to: '/settings?tab=vendors' },
-  { label: 'Scan Barcode', icon: ScanLine, to: '/items?scan=1' },
+  
   { label: 'Receive Shipment', icon: PackageCheck, to: '/purchase-orders' },
 ];
 
