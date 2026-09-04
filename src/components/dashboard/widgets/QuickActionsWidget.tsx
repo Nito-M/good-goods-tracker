@@ -5,7 +5,6 @@ import {
   FileText,
   UserPlus,
   Truck,
-  ScanLine,
   PackageCheck,
   type LucideIcon,
 } from 'lucide-react';
@@ -31,7 +30,7 @@ export function QuickActionsWidget() {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
       {ACTIONS.map((a) => (
         <button
           key={a.label}
