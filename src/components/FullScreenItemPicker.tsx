@@ -526,7 +526,7 @@ export function FullScreenItemPicker({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Search by item name, SKU, or barcode..."
+                placeholder="Search by item name or SKU..."
                 className="pl-12 h-12 text-base"
                 autoFocus
               />
