@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
@@ -695,8 +695,6 @@ export default function SopEdit() {
     </div>
   );
 }
-
-import { createContext, useContext } from 'react';
 
 const SectionCollapseContext = createContext(false);
 
