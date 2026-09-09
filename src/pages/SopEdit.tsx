@@ -406,7 +406,7 @@ export default function SopEdit() {
                     itemsById={itemsById}
                     signedUrls={signedUrls}
                     onUpdate={(u) => updateStep(step.id, u)}
-                    onDelete={() => confirm('Delete this step?') && deleteStep(step.id)}
+                    onDelete={() => deleteStep(step.id)}
                     onUpload={(f) => uploadStepFile(step.id, f)}
                     onDeleteFile={deleteStepFile}
                     onOpenPicker={() => openStepPicker(step.id)}
