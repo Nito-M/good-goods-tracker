@@ -947,9 +947,11 @@ function StepRow({
             </div>
           </div>
         )}
-        <Button size="icon" variant="ghost" className="text-destructive" onClick={onDelete}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <ConfirmDelete description="This will permanently delete this step and its files and linked items." onConfirm={onDelete}>
+          <Button size="icon" variant="ghost" className="text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </ConfirmDelete>
       </div>
     </div>
   );
