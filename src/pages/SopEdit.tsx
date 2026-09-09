@@ -316,7 +316,7 @@ export default function SopEdit() {
       <SortableSection id="details" order={sectionIndex('details')}>
       <Card>
         <CardHeader><CardTitle>SOP Details</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <CollapsibleCardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="md:col-span-2">
             <Label>Title</Label>
             <Input value={sop.title} onChange={e => updateSop({ title: e.target.value })} />
@@ -376,7 +376,7 @@ export default function SopEdit() {
             <Label>Approved By</Label>
             <SopOptionSelect kind="approver" value={sop.approved_by || ''} onChange={v => updateSop({ approved_by: v })} placeholder="Select approver" />
           </div>
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -387,7 +387,7 @@ export default function SopEdit() {
           <CardTitle>Procedure Steps</CardTitle>
           <Button size="sm" onClick={addStep}><Plus className="h-4 w-4 mr-1" /> Add Step</Button>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {steps.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-6">No steps yet. Click "Add Step" to begin.</div>
           ) : (
@@ -418,7 +418,7 @@ export default function SopEdit() {
               </SortableContext>
             </DndContext>
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -503,7 +503,7 @@ export default function SopEdit() {
           </div>
 
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {bom.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-4">No parts on the BOM yet.</div>
           ) : (
@@ -537,7 +537,7 @@ export default function SopEdit() {
               })}
             </div>
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -550,7 +550,7 @@ export default function SopEdit() {
             <Plus className="h-4 w-4 mr-1" /> Add Location
           </Button>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {locations.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-4">No locations yet.</div>
           ) : (
@@ -569,7 +569,7 @@ export default function SopEdit() {
             </div>
 
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -579,14 +579,14 @@ export default function SopEdit() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><StickyNote className="h-4 w-4" /> Notes</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           <Textarea
             value={sop?.notes || ''}
             onChange={e => updateSop({ notes: e.target.value })}
             placeholder="Add any additional notes for this SOP..."
             className="min-h-[120px]"
           />
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -602,7 +602,7 @@ export default function SopEdit() {
             </Button>
           </>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {attachments.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-4">No attachments.</div>
           ) : (
@@ -634,7 +634,7 @@ export default function SopEdit() {
               })}
             </div>
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
         </div>
