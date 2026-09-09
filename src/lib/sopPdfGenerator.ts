@@ -49,7 +49,7 @@ export interface SopPdfData {
     notes?: string | null;
   }[];
   bomTotal: number;
-  locations: { name: string; url?: string | null }[];
+  locations: { name: string; url?: string | null; notes?: string | null }[];
   attachments: { fileName: string }[];
 }
 
@@ -216,7 +216,16 @@ export async function generateSopPDF(data: SopPdfData, sections: SopPdfSections,
       ensureSpace(6);
       doc.text(`• ${l.name}${l.url ? ` — ${l.url}` : ''}`, margin, y);
       y += 5;
+      const notes = (l as any).notes as string | null | undefined;
+      if (notes && notes.trim()) {
+        for (const line of doc.splitTextToSize(notes.trim(), contentWidth - 6)) {
+          ensureSpace(5);
+          doc.text(String(line), margin + 4, y);
+          y += 4.5;
+        }
+      }
     }
+
   }
 
   // Attachments

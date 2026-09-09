@@ -5084,7 +5084,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          logo_url: string | null
           name: string
+          notes: string | null
           sop_id: string
           sort_order: number
           updated_at: string
@@ -5094,7 +5096,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name: string
+          notes?: string | null
           sop_id: string
           sort_order?: number
           updated_at?: string
@@ -5104,7 +5108,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name?: string
+          notes?: string | null
           sop_id?: string
           sort_order?: number
           updated_at?: string

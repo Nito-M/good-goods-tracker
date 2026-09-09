@@ -43,7 +43,7 @@ export default function SopEdit() {
     addStepItem, updateStepItem, removeStepItem,
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment, getSignedUrl,
-    addLocation, updateLocation, removeLocation,
+    addLocation, updateLocation, removeLocation, uploadLocationLogo, removeLocationLogo,
     deleteSop,
   } = useSopDetail(id ?? null);
   const { allItems } = useInventory();
@@ -113,6 +113,18 @@ export default function SopEdit() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepFiles, attachments]);
+
+  const [logoUrls, setLogoUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    locations.forEach(async (l: any) => {
+      if (!l.logo_url) return;
+      if (logoUrls[l.logo_url]) return;
+      const url = await getSignedUrl(l.logo_url);
+      if (url) setLogoUrls(prev => ({ ...prev, [l.logo_url]: url }));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locations]);
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -515,32 +527,18 @@ export default function SopEdit() {
           ) : (
             <div className="space-y-2">
               {locations.map(loc => (
-                <div key={loc.id} className="flex flex-wrap items-center gap-2 border border-border rounded-md p-2">
-                  <Input
-                    value={loc.name}
-                    onChange={e => updateLocation(loc.id, { name: e.target.value })}
-                    placeholder="Location name (e.g. Shop A)"
-                    className="flex-1 min-w-[160px] h-8"
-                  />
-                  <Input
-                    value={loc.url || ''}
-                    onChange={e => updateLocation(loc.id, { url: e.target.value })}
-                    placeholder="https://... (Google Maps, etc.)"
-                    className="flex-[2] min-w-[220px] h-8"
-                  />
-                  {loc.url && (
-                    <Button size="sm" variant="outline" asChild>
-                      <a href={loc.url} target="_blank" rel="noreferrer">
-                        <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open
-                      </a>
-                    </Button>
-                  )}
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeLocation(loc.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <SopLocationRow
+                  key={loc.id}
+                  loc={loc as any}
+                  logoUrl={(loc as any).logo_url ? logoUrls[(loc as any).logo_url] : undefined}
+                  onChange={(updates) => updateLocation(loc.id, updates as any)}
+                  onRemove={() => removeLocation(loc.id)}
+                  onUploadLogo={(file) => uploadLocationLogo(loc.id, file)}
+                  onRemoveLogo={() => removeLocationLogo(loc.id)}
+                />
               ))}
             </div>
+
           )}
         </CardContent>
       </Card>
@@ -900,6 +898,96 @@ function FieldWithIcon({ icon: Icon, label, color, value, onChange }: {
         <Icon className={`h-3 w-3 ${color || 'text-muted-foreground'}`} /> {label}
       </Label>
       <Textarea value={value} onChange={e => onChange(e.target.value)} className="min-h-[50px] text-sm" />
+    </div>
+  );
+}
+
+function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemoveLogo }: {
+  loc: { id: string; name: string; url: string | null; notes: string | null; logo_url: string | null };
+  logoUrl?: string;
+  onChange: (updates: { name?: string; url?: string; notes?: string }) => void;
+  onRemove: () => void;
+  onUploadLogo: (file: File) => void;
+  onRemoveLogo: () => void;
+}) {
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="space-y-2 border border-border rounded-md p-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) onUploadLogo(f); e.target.value = ''; }}
+        />
+        {loc.logo_url ? (
+          <button
+            type="button"
+            onClick={() => logoInputRef.current?.click()}
+            title="Change logo"
+            className="h-9 w-9 shrink-0 rounded-md border border-border bg-muted overflow-hidden flex items-center justify-center"
+          >
+            {logoUrl ? (
+              <img src={logoUrl} alt={`${loc.name || 'Location'} logo`} className="h-full w-full object-contain" />
+            ) : (
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+        ) : (
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            className="h-9 w-9 shrink-0"
+            title="Add logo"
+            onClick={() => logoInputRef.current?.click()}
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+        )}
+        {loc.logo_url && (
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground"
+            title="Remove logo"
+            onClick={onRemoveLogo}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        <Input
+          value={loc.name}
+          onChange={e => onChange({ name: e.target.value })}
+          placeholder="Location name (e.g. Shop A)"
+          className="flex-1 min-w-[160px] h-8"
+        />
+        <Input
+          value={loc.url || ''}
+          onChange={e => onChange({ url: e.target.value })}
+          placeholder="https://... (Google Maps, etc.)"
+          className="flex-[2] min-w-[220px] h-8"
+        />
+        {loc.url && (
+          <Button size="sm" variant="outline" asChild>
+            <a href={loc.url} target="_blank" rel="noreferrer">
+              <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open
+            </a>
+          </Button>
+        )}
+        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={onRemove}>
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      <Textarea
+        value={loc.notes || ''}
+        onChange={e => onChange({ notes: e.target.value })}
+        placeholder="Notes for this location / link..."
+        className="min-h-[52px] text-sm"
+      />
     </div>
   );
 }

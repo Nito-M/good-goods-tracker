@@ -42,6 +42,7 @@ export interface SopAttachment {
 
 export interface SopLocation {
   id: string; sop_id: string; name: string; url: string | null; sort_order: number;
+  notes: string | null; logo_url: string | null;
 }
 
 export interface SopRecord {
@@ -274,6 +275,25 @@ export function useSopDetail(sopId: string | null) {
     setLocations(prev => prev.filter(l => l.id !== id));
   };
 
+  const uploadLocationLogo = async (id: string, file: File) => {
+    if (!user) return;
+    const path = `${user.id}/${sopId}/locations/${id}-${Date.now()}-${file.name.replace(/[^\w.\-]+/g, '_')}`;
+    const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type });
+    if (upErr) { toast({ title: 'Upload failed', description: upErr.message, variant: 'destructive' }); return; }
+    const { error } = await supabase.from('sop_locations' as any).update({ logo_url: path }).eq('id', id);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    setLocations(prev => prev.map(l => l.id === id ? { ...l, logo_url: path } : l));
+  };
+
+  const removeLocationLogo = async (id: string) => {
+    const target = locations.find(l => l.id === id);
+    if (target?.logo_url) await supabase.storage.from(BUCKET).remove([target.logo_url]);
+    const { error } = await supabase.from('sop_locations' as any).update({ logo_url: null }).eq('id', id);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    setLocations(prev => prev.map(l => l.id === id ? { ...l, logo_url: null } : l));
+  };
+
+
   const deleteSop = async () => {
     if (!sopId) return;
     const { error } = await supabase.from('sops' as any).delete().eq('id', sopId);
@@ -288,7 +308,7 @@ export function useSopDetail(sopId: string | null) {
     addStepItem, updateStepItem, removeStepItem,
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment,
-    addLocation, updateLocation, removeLocation,
+    addLocation, updateLocation, removeLocation, uploadLocationLogo, removeLocationLogo,
     getSignedUrl,
   };
 }
