@@ -9,11 +9,12 @@ import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { useCanViewAssemblyPricing } from '@/hooks/useCanViewAssemblyPricing';
 import { generateSopPDF } from '@/lib/sopPdfGenerator';
 import { SopPdfOptionsDialog } from '@/components/SopPdfOptionsDialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -43,10 +44,13 @@ export default function SopEdit() {
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment, getSignedUrl,
     addLocation, updateLocation, removeLocation,
+    deleteSop,
   } = useSopDetail(id ?? null);
   const { allItems } = useInventory();
   const { canViewAssemblyPricing } = useCanViewAssemblyPricing();
   const itemsById = useMemo(() => new Map(allItems.map(i => [i.id, i])), [allItems]);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [pickerContext, setPickerContext] = useState<{ mode: 'step' | 'bom'; stepId?: string } | null>(null);
   const [bomMultiplier, setBomMultiplier] = useState('1');
@@ -599,6 +603,40 @@ export default function SopEdit() {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Delete SOP */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-destructive flex items-center gap-2"><Trash2 className="h-4 w-4" /> Delete SOP</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete SOP</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure you want to delete?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete "{sop?.title}" and all its steps, files, BOM items, locations, and attachments. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className={buttonVariants({ variant: 'destructive' })}
+                  onClick={async () => {
+                    await deleteSop();
+                    navigate(backTo);
+                  }}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 

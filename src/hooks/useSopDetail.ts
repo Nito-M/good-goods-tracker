@@ -274,9 +274,15 @@ export function useSopDetail(sopId: string | null) {
     setLocations(prev => prev.filter(l => l.id !== id));
   };
 
+  const deleteSop = async () => {
+    if (!sopId) return;
+    const { error } = await supabase.from('sops' as any).delete().eq('id', sopId);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+  };
+
   return {
     sop, steps, stepFiles, stepItems, bom, attachments, locations, loading,
-    refetch, updateSop,
+    refetch, updateSop, deleteSop,
     addStep, updateStep, deleteStep, reorderSteps,
     uploadStepFile, deleteStepFile,
     addStepItem, updateStepItem, removeStepItem,
