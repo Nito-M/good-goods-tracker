@@ -706,7 +706,7 @@ function CollapsibleCardContent({ className, children }: { className?: string; c
 
 function SortableSection({ id, order, children }: { id: string; order: number; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   return (
     <SectionCollapseContext.Provider value={collapsed}>
     <div
