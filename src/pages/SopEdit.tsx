@@ -44,7 +44,7 @@ export default function SopEdit() {
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment, getSignedUrl,
     addLocation, updateLocation, removeLocation, uploadLocationLogo, removeLocationLogo,
-    deleteSop,
+    deleteSop, setCardOrder,
   } = useSopDetail(id ?? null);
   const { allItems } = useInventory();
   const { canViewAssemblyPricing } = useCanViewAssemblyPricing();
@@ -224,6 +224,22 @@ export default function SopEdit() {
   const bomTotal = bom.reduce((sum, b) => sum + b.quantity * (itemsById.get(b.inventory_item_id)?.cost || 0), 0);
   const backTo = (sop as any).type_id ? `/knowledge-base/type/${(sop as any).type_id}` : '/knowledge-base';
 
+  const DEFAULT_SECTIONS = ['details', 'steps', 'bom', 'locations', 'notes', 'attachments'];
+  const savedOrder = ((sop as any).card_order as string[] | null) || [];
+  const sectionOrder = [
+    ...savedOrder.filter(id => DEFAULT_SECTIONS.includes(id)),
+    ...DEFAULT_SECTIONS.filter(id => !savedOrder.includes(id)),
+  ];
+  const sectionIndex = (id: string) => sectionOrder.indexOf(id);
+  const handleSectionDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = sectionOrder.indexOf(String(active.id));
+    const newIdx = sectionOrder.indexOf(String(over.id));
+    if (oldIdx < 0 || newIdx < 0) return;
+    setCardOrder(arrayMove(sectionOrder, oldIdx, newIdx));
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
@@ -292,7 +308,12 @@ export default function SopEdit() {
         }}
       />
 
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
+        <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-4">
+
       {/* Header / metadata */}
+      <SortableSection id="details" order={sectionIndex('details')}>
       <Card>
         <CardHeader><CardTitle>SOP Details</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -357,8 +378,10 @@ export default function SopEdit() {
           </div>
         </CardContent>
       </Card>
+      </SortableSection>
 
       {/* Steps */}
+      <SortableSection id="steps" order={sectionIndex('steps')}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>Procedure Steps</CardTitle>
@@ -397,8 +420,10 @@ export default function SopEdit() {
           )}
         </CardContent>
       </Card>
+      </SortableSection>
 
       {/* BOM */}
+      <SortableSection id="bom" order={sectionIndex('bom')}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -512,8 +537,10 @@ export default function SopEdit() {
           )}
         </CardContent>
       </Card>
+      </SortableSection>
 
       {/* Locations */}
+      <SortableSection id="locations" order={sectionIndex('locations')}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Locations / Links</CardTitle>
@@ -542,8 +569,10 @@ export default function SopEdit() {
           )}
         </CardContent>
       </Card>
+      </SortableSection>
 
       {/* Notes */}
+      <SortableSection id="notes" order={sectionIndex('notes')}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><StickyNote className="h-4 w-4" /> Notes</CardTitle>
@@ -557,10 +586,10 @@ export default function SopEdit() {
           />
         </CardContent>
       </Card>
-
-
+      </SortableSection>
 
       {/* Attachments */}
+      <SortableSection id="attachments" order={sectionIndex('attachments')}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>Attachments</CardTitle>
@@ -603,6 +632,12 @@ export default function SopEdit() {
           )}
         </CardContent>
       </Card>
+      </SortableSection>
+        </div>
+        </SortableContext>
+      </DndContext>
+
+
 
       {/* Delete SOP */}
       <Card className="border-destructive/30">
@@ -653,6 +688,33 @@ export default function SopEdit() {
           formatPrice={formatCurrency}
         />
       )}
+    </div>
+  );
+}
+
+function SortableSection({ id, order, children }: { id: string; order: number; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        order,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.6 : 1,
+        zIndex: isDragging ? 20 : undefined,
+      }}
+      className="relative"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        title="Drag to reorder this section"
+        className="absolute -top-2 left-3 z-10 flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground cursor-grab hover:text-foreground"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+      {children}
     </div>
   );
 }

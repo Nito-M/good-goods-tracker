@@ -5330,6 +5330,7 @@ export type Database = {
         Row: {
           approved_by: string | null
           author: string | null
+          card_order: string[] | null
           category_id: string | null
           created_at: string
           department: string | null
@@ -5348,6 +5349,7 @@ export type Database = {
         Insert: {
           approved_by?: string | null
           author?: string | null
+          card_order?: string[] | null
           category_id?: string | null
           created_at?: string
           department?: string | null
@@ -5366,6 +5368,7 @@ export type Database = {
         Update: {
           approved_by?: string | null
           author?: string | null
+          card_order?: string[] | null
           category_id?: string | null
           created_at?: string
           department?: string | null

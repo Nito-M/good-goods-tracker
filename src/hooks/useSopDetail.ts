@@ -52,6 +52,7 @@ export interface SopRecord {
   last_updated_date: string | null; author: string | null; approved_by: string | null;
   status: 'draft' | 'active' | 'obsolete';
   notes: string | null;
+  card_order: string[] | null;
 }
 
 export function useSopDetail(sopId: string | null) {
@@ -294,6 +295,13 @@ export function useSopDetail(sopId: string | null) {
   };
 
 
+  const setCardOrder = async (ids: string[]) => {
+    if (!sopId) return;
+    setSop(prev => prev ? { ...prev, card_order: ids } : prev);
+    const { error } = await supabase.from('sops' as any).update({ card_order: ids }).eq('id', sopId);
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+  };
+
   const deleteSop = async () => {
     if (!sopId) return;
     const { error } = await supabase.from('sops' as any).delete().eq('id', sopId);
@@ -302,7 +310,7 @@ export function useSopDetail(sopId: string | null) {
 
   return {
     sop, steps, stepFiles, stepItems, bom, attachments, locations, loading,
-    refetch, updateSop, deleteSop,
+    refetch, updateSop, deleteSop, setCardOrder,
     addStep, updateStep, deleteStep, reorderSteps,
     uploadStepFile, deleteStepFile,
     addStepItem, updateStepItem, removeStepItem,
