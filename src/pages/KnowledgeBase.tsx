@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
-import { ArrowLeft, BookOpen, Plus, Search, Folder, FolderPlus, ChevronRight, ChevronDown, Trash2, Pencil, FileText } from 'lucide-react';
+import { ArrowLeft, BookOpen, Plus, Search, Folder, FolderPlus, ChevronRight, ChevronDown, Trash2, Pencil, FileText, LayoutGrid, Rows3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -38,6 +38,12 @@ export default function KnowledgeBase() {
   const { allItems } = useInventory();
   const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'full'>(() =>
+    (localStorage.getItem('kb_sop_view_mode') as 'grid' | 'full') || 'grid');
+  const changeViewMode = (m: 'grid' | 'full') => {
+    setViewMode(m);
+    localStorage.setItem('kb_sop_view_mode', m);
+  };
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -229,6 +235,20 @@ export default function KnowledgeBase() {
               className="pl-9"
             />
           </div>
+          <div className="flex items-center border border-border rounded-md overflow-hidden">
+            <Button
+              size="icon" variant="ghost" className={`h-9 w-9 rounded-none ${viewMode === 'grid' ? 'bg-muted' : ''}`}
+              onClick={() => changeViewMode('grid')} title="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon" variant="ghost" className={`h-9 w-9 rounded-none ${viewMode === 'full' ? 'bg-muted' : ''}`}
+              onClick={() => changeViewMode('full')} title="Full-width rows"
+            >
+              <Rows3 className="h-4 w-4" />
+            </Button>
+          </div>
           <Button onClick={handleNewSop}>
             <Plus className="h-4 w-4 mr-1" /> New SOP
           </Button>
@@ -242,9 +262,11 @@ export default function KnowledgeBase() {
               <div className="text-sm mt-1">Create one to start capturing procedures.</div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className={viewMode === 'grid'
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'
+              : 'flex flex-col gap-2'}>
               {filteredSops.map(s => (
-                <SopCard key={s.id} sop={s} />
+                <SopCard key={s.id} sop={s} fullWidth={viewMode === 'full'} />
               ))}
             </div>
           )}
@@ -255,13 +277,13 @@ export default function KnowledgeBase() {
   );
 }
 
-function SopCard({ sop }: { sop: SopListItem }) {
+function SopCard({ sop, fullWidth }: { sop: SopListItem; fullWidth?: boolean }) {
   return (
     <Link to={`/knowledge-base/sop/${sop.id}`}>
-      <Card className="p-4 hover:border-primary transition-colors h-full flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
+      <Card className={`p-4 hover:border-primary transition-colors h-full flex gap-2 ${fullWidth ? 'flex-row items-center justify-between w-full' : 'flex-col'}`}>
+        <div className={`flex items-start justify-between gap-2 ${fullWidth ? 'flex-1 min-w-0 items-center' : ''}`}>
           <div className="min-w-0 flex-1">
-            <div className="font-semibold truncate">{sop.title}</div>
+            <div className={`font-semibold break-words ${fullWidth ? '' : ''}`}>{sop.title}</div>
             {sop.sop_number && <div className="text-xs text-muted-foreground">#{sop.sop_number}</div>}
           </div>
           <Badge variant="outline" className={statusColor(sop.status)}>{sop.status}</Badge>
