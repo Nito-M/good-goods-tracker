@@ -308,7 +308,7 @@ export function useSopDetail(sopId: string | null) {
     addStepItem, updateStepItem, removeStepItem,
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment,
-    addLocation, updateLocation, removeLocation,
+    addLocation, updateLocation, removeLocation, uploadLocationLogo, removeLocationLogo,
     getSignedUrl,
   };
 }
