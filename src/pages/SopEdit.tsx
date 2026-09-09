@@ -873,10 +873,12 @@ function StepRow({
                           <FileText className="h-6 w-6 text-muted-foreground" />
                         </a>
                       )}
-                      <button onClick={() => onDeleteFile(f.id)}
-                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100">
-                        <X className="h-3 w-3" />
-                      </button>
+                      <ConfirmDelete description={`This will permanently delete "${f.file_name}".`} onConfirm={() => onDeleteFile(f.id)}>
+                        <button
+                          className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </ConfirmDelete>
                     </div>
                   );
                 })}
