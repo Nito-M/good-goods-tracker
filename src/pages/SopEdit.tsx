@@ -1075,9 +1075,11 @@ function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemo
             </Button>
           </>
         )}
-        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={onRemove}>
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        <ConfirmDelete description={`This will remove "${loc.name || 'this location'}" from Locations / Links.`} onConfirm={onRemove}>
+          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </ConfirmDelete>
       </div>
       <Textarea
         value={loc.notes || ''}
