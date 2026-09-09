@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
@@ -316,7 +316,7 @@ export default function SopEdit() {
       <SortableSection id="details" order={sectionIndex('details')}>
       <Card>
         <CardHeader><CardTitle>SOP Details</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <CollapsibleCardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="md:col-span-2">
             <Label>Title</Label>
             <Input value={sop.title} onChange={e => updateSop({ title: e.target.value })} />
@@ -376,7 +376,7 @@ export default function SopEdit() {
             <Label>Approved By</Label>
             <SopOptionSelect kind="approver" value={sop.approved_by || ''} onChange={v => updateSop({ approved_by: v })} placeholder="Select approver" />
           </div>
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -387,7 +387,7 @@ export default function SopEdit() {
           <CardTitle>Procedure Steps</CardTitle>
           <Button size="sm" onClick={addStep}><Plus className="h-4 w-4 mr-1" /> Add Step</Button>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {steps.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-6">No steps yet. Click "Add Step" to begin.</div>
           ) : (
@@ -418,7 +418,7 @@ export default function SopEdit() {
               </SortableContext>
             </DndContext>
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -503,7 +503,7 @@ export default function SopEdit() {
           </div>
 
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {bom.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-4">No parts on the BOM yet.</div>
           ) : (
@@ -537,7 +537,7 @@ export default function SopEdit() {
               })}
             </div>
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -550,7 +550,7 @@ export default function SopEdit() {
             <Plus className="h-4 w-4 mr-1" /> Add Location
           </Button>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {locations.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-4">No locations yet.</div>
           ) : (
@@ -569,7 +569,7 @@ export default function SopEdit() {
             </div>
 
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -579,14 +579,14 @@ export default function SopEdit() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><StickyNote className="h-4 w-4" /> Notes</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           <Textarea
             value={sop?.notes || ''}
             onChange={e => updateSop({ notes: e.target.value })}
             placeholder="Add any additional notes for this SOP..."
             className="min-h-[120px]"
           />
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
 
@@ -602,7 +602,7 @@ export default function SopEdit() {
             </Button>
           </>
         </CardHeader>
-        <CardContent>
+        <CollapsibleCardContent>
           {attachments.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-4">No attachments.</div>
           ) : (
@@ -634,7 +634,7 @@ export default function SopEdit() {
               })}
             </div>
           )}
-        </CardContent>
+        </CollapsibleCardContent>
       </Card>
       </SortableSection>
         </div>
@@ -696,9 +696,19 @@ export default function SopEdit() {
   );
 }
 
+const SectionCollapseContext = createContext(false);
+
+function CollapsibleCardContent({ className, children }: { className?: string; children: React.ReactNode }) {
+  const collapsed = useContext(SectionCollapseContext);
+  if (collapsed) return null;
+  return <CardContent className={className}>{children}</CardContent>;
+}
+
 function SortableSection({ id, order, children }: { id: string; order: number; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const [collapsed, setCollapsed] = useState(false);
   return (
+    <SectionCollapseContext.Provider value={collapsed}>
     <div
       ref={setNodeRef}
       style={{
@@ -710,16 +720,27 @@ function SortableSection({ id, order, children }: { id: string; order: number; c
       }}
       className="relative"
     >
-      <button
-        {...attributes}
-        {...listeners}
-        title="Drag to reorder this section"
-        className="absolute -top-2 left-3 z-10 flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground cursor-grab hover:text-foreground"
-      >
-        <GripVertical className="h-3.5 w-3.5" />
-      </button>
+      <div className="absolute -top-2 left-3 z-10 flex items-center gap-1">
+        <button
+          {...attributes}
+          {...listeners}
+          title="Drag to reorder this section"
+          className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground cursor-grab hover:text-foreground"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          title={collapsed ? 'Expand this section' : 'Collapse this section'}
+          onClick={() => setCollapsed(c => !c)}
+          className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
+        >
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+      </div>
       {children}
     </div>
+    </SectionCollapseContext.Provider>
   );
 }
 
