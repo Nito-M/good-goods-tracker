@@ -901,3 +901,93 @@ function FieldWithIcon({ icon: Icon, label, color, value, onChange }: {
     </div>
   );
 }
+
+function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemoveLogo }: {
+  loc: { id: string; name: string; url: string | null; notes: string | null; logo_url: string | null };
+  logoUrl?: string;
+  onChange: (updates: { name?: string; url?: string; notes?: string }) => void;
+  onRemove: () => void;
+  onUploadLogo: (file: File) => void;
+  onRemoveLogo: () => void;
+}) {
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="space-y-2 border border-border rounded-md p-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) onUploadLogo(f); e.target.value = ''; }}
+        />
+        {loc.logo_url ? (
+          <button
+            type="button"
+            onClick={() => logoInputRef.current?.click()}
+            title="Change logo"
+            className="h-9 w-9 shrink-0 rounded-md border border-border bg-muted overflow-hidden flex items-center justify-center"
+          >
+            {logoUrl ? (
+              <img src={logoUrl} alt={`${loc.name || 'Location'} logo`} className="h-full w-full object-contain" />
+            ) : (
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+        ) : (
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            className="h-9 w-9 shrink-0"
+            title="Add logo"
+            onClick={() => logoInputRef.current?.click()}
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+        )}
+        {loc.logo_url && (
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground"
+            title="Remove logo"
+            onClick={onRemoveLogo}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        <Input
+          value={loc.name}
+          onChange={e => onChange({ name: e.target.value })}
+          placeholder="Location name (e.g. Shop A)"
+          className="flex-1 min-w-[160px] h-8"
+        />
+        <Input
+          value={loc.url || ''}
+          onChange={e => onChange({ url: e.target.value })}
+          placeholder="https://... (Google Maps, etc.)"
+          className="flex-[2] min-w-[220px] h-8"
+        />
+        {loc.url && (
+          <Button size="sm" variant="outline" asChild>
+            <a href={loc.url} target="_blank" rel="noreferrer">
+              <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open
+            </a>
+          </Button>
+        )}
+        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={onRemove}>
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      <Textarea
+        value={loc.notes || ''}
+        onChange={e => onChange({ notes: e.target.value })}
+        placeholder="Notes for this location / link..."
+        className="min-h-[52px] text-sm"
+      />
+    </div>
+  );
+}
