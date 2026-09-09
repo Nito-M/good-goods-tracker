@@ -406,7 +406,7 @@ export default function SopEdit() {
                     itemsById={itemsById}
                     signedUrls={signedUrls}
                     onUpdate={(u) => updateStep(step.id, u)}
-                    onDelete={() => confirm('Delete this step?') && deleteStep(step.id)}
+                    onDelete={() => deleteStep(step.id)}
                     onUpload={(f) => uploadStepFile(step.id, f)}
                     onDeleteFile={deleteStepFile}
                     onOpenPicker={() => openStepPicker(step.id)}
@@ -527,9 +527,11 @@ export default function SopEdit() {
                     <Input value={b.notes || ''} onChange={e => updateBomItem(b.id, { notes: e.target.value })}
                       placeholder="Notes / substitute of..." className="flex-1 min-w-[140px] h-8" />
                     <span className="text-sm text-muted-foreground w-20 text-right">{formatCurrency(lineCost)}</span>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeBomItem(b.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <ConfirmDelete description="This will remove this item from the bill of materials." onConfirm={() => removeBomItem(b.id)}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </ConfirmDelete>
                   </div>
                 );
               })}
@@ -621,9 +623,11 @@ export default function SopEdit() {
                     )}
                     <div className="text-xs truncate flex items-center gap-1">
                       <span className="flex-1 truncate">{a.file_name}</span>
-                      <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive" onClick={() => deleteAttachment(a.id)}>
-                        <X className="h-3 w-3" />
-                      </Button>
+                      <ConfirmDelete description={`This will permanently delete "${a.file_name}".`} onConfirm={() => deleteAttachment(a.id)}>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive">
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </ConfirmDelete>
                     </div>
                   </div>
                 );
@@ -841,10 +845,13 @@ function StepRow({
                       <Link to={`/item/${it.inventory_item_id}`} className="text-muted-foreground hover:text-primary" title="Open item">
                         <ExternalLink className="h-3 w-3" />
                       </Link>
-                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive ml-auto"
-                        onClick={() => onRemoveItem(it.id)}>
-                        <X className="h-3 w-3" />
-                      </Button>
+                      <div className="ml-auto">
+                        <ConfirmDelete description="This will remove this linked item from the step." onConfirm={() => onRemoveItem(it.id)}>
+                          <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </ConfirmDelete>
+                      </div>
                     </div>
                   );
                 })}
@@ -869,10 +876,12 @@ function StepRow({
                           <FileText className="h-6 w-6 text-muted-foreground" />
                         </a>
                       )}
-                      <button onClick={() => onDeleteFile(f.id)}
-                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100">
-                        <X className="h-3 w-3" />
-                      </button>
+                      <ConfirmDelete description={`This will permanently delete "${f.file_name}".`} onConfirm={() => onDeleteFile(f.id)}>
+                        <button
+                          className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </ConfirmDelete>
                     </div>
                   );
                 })}
@@ -943,9 +952,11 @@ function StepRow({
             </div>
           </div>
         )}
-        <Button size="icon" variant="ghost" className="text-destructive" onClick={onDelete}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <ConfirmDelete description="This will permanently delete this step and its files and linked items." onConfirm={onDelete}>
+          <Button size="icon" variant="ghost" className="text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </ConfirmDelete>
       </div>
     </div>
   );
@@ -1071,9 +1082,11 @@ function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemo
             </Button>
           </>
         )}
-        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={onRemove}>
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        <ConfirmDelete description={`This will remove "${loc.name || 'this location'}" from Locations / Links.`} onConfirm={onRemove}>
+          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </ConfirmDelete>
       </div>
       <Textarea
         value={loc.notes || ''}
@@ -1082,5 +1095,27 @@ function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemo
         className="min-h-[52px] text-sm"
       />
     </div>
+  );
+}
+
+function ConfirmDelete({ description, onConfirm, children }: {
+  description?: string;
+  onConfirm: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure you want to delete?</AlertDialogTitle>
+          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
