@@ -43,7 +43,7 @@ export default function SopEdit() {
     addStepItem, updateStepItem, removeStepItem,
     addBomItem, updateBomItem, removeBomItem,
     uploadAttachment, deleteAttachment, getSignedUrl,
-    addLocation, updateLocation, removeLocation,
+    addLocation, updateLocation, removeLocation, uploadLocationLogo, removeLocationLogo,
     deleteSop,
   } = useSopDetail(id ?? null);
   const { allItems } = useInventory();
