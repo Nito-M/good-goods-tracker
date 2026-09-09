@@ -244,7 +244,7 @@ export default function KnowledgeBase() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredSops.map(s => (
-                <SopCard key={s.id} sop={s} onDelete={() => confirm(`Delete "${s.title}"?`) && deleteSop(s.id)} />
+                <SopCard key={s.id} sop={s} />
               ))}
             </div>
           )}
