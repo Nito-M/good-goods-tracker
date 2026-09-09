@@ -114,6 +114,18 @@ export default function SopEdit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepFiles, attachments]);
 
+  const [logoUrls, setLogoUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    locations.forEach(async (l: any) => {
+      if (!l.logo_url) return;
+      if (logoUrls[l.logo_url]) return;
+      const url = await getSignedUrl(l.logo_url);
+      if (url) setLogoUrls(prev => ({ ...prev, [l.logo_url]: url }));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locations]);
+
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
