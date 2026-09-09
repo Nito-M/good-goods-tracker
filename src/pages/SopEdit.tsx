@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Upload, GripVertical, Package, X, FileText, Image as ImageIcon,
   AlertTriangle, Lightbulb, StickyNote, Wrench, Clock, ExternalLink, MapPin,
-  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download, Printer,
+  ChevronRight, ChevronDown, ShoppingCart, Link as LinkIcon, Download, Printer, Pencil, Check,
 } from 'lucide-react';
 import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { useCanViewAssemblyPricing } from '@/hooks/useCanViewAssemblyPricing';
@@ -973,6 +973,7 @@ function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemo
   onRemoveLogo: () => void;
 }) {
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [editing, setEditing] = useState(!loc.url);
 
   return (
     <div className="space-y-2 border border-border rounded-md p-2">
