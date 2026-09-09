@@ -9,7 +9,7 @@ import { generateAssemblyPDF } from '@/lib/assemblyPdfGenerator';
 import { useCanViewAssemblyPricing } from '@/hooks/useCanViewAssemblyPricing';
 import { generateSopPDF } from '@/lib/sopPdfGenerator';
 import { SopPdfOptionsDialog } from '@/components/SopPdfOptionsDialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
