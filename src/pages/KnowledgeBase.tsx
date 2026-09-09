@@ -255,7 +255,7 @@ export default function KnowledgeBase() {
   );
 }
 
-function SopCard({ sop, onDelete }: { sop: SopListItem; onDelete: () => void }) {
+function SopCard({ sop }: { sop: SopListItem }) {
   return (
     <Link to={`/knowledge-base/sop/${sop.id}`}>
       <Card className="p-4 hover:border-primary transition-colors h-full flex flex-col gap-2">
@@ -270,11 +270,6 @@ function SopCard({ sop, onDelete }: { sop: SopListItem; onDelete: () => void }) 
           {sop.department && <span>Dept: {sop.department}</span>}
           {sop.revision_number && <span>Rev: {sop.revision_number}</span>}
           {sop.last_updated_date && <span>Updated {sop.last_updated_date}</span>}
-        </div>
-        <div className="flex justify-end">
-          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
         </div>
       </Card>
     </Link>
