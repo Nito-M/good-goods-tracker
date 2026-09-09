@@ -527,9 +527,11 @@ export default function SopEdit() {
                     <Input value={b.notes || ''} onChange={e => updateBomItem(b.id, { notes: e.target.value })}
                       placeholder="Notes / substitute of..." className="flex-1 min-w-[140px] h-8" />
                     <span className="text-sm text-muted-foreground w-20 text-right">{formatCurrency(lineCost)}</span>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeBomItem(b.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <ConfirmDelete description="This will remove this item from the bill of materials." onConfirm={() => removeBomItem(b.id)}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </ConfirmDelete>
                   </div>
                 );
               })}
