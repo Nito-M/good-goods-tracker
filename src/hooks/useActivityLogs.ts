@@ -94,10 +94,10 @@ export function useActivityLogs(filters: ActivityFilters) {
       if (userIds.length) {
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('user_id, display_name, email')
+          .select('user_id, display_name')
           .in('user_id', userIds);
         nameMap = Object.fromEntries(
-          (profiles || []).map((p: any) => [p.user_id, p.display_name || p.email || 'Unknown user'])
+          (profiles || []).map((p: any) => [p.user_id, p.display_name || 'Unknown user'])
         );
       }
 
@@ -168,13 +168,13 @@ export function useActivityLogUsers() {
       if (!ids.length) return;
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, display_name, email')
+        .select('user_id, display_name')
         .in('user_id', ids);
       if (cancelled) return;
       setUsers(
         (profiles || []).map((p: any) => ({
           id: p.user_id,
-          name: p.display_name || p.email || 'Unknown user',
+          name: p.display_name || 'Unknown user',
         }))
       );
     })();
