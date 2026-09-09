@@ -42,6 +42,7 @@ export interface SopAttachment {
 
 export interface SopLocation {
   id: string; sop_id: string; name: string; url: string | null; sort_order: number;
+  notes: string | null; logo_url: string | null;
 }
 
 export interface SopRecord {
