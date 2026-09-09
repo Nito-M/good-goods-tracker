@@ -623,9 +623,11 @@ export default function SopEdit() {
                     )}
                     <div className="text-xs truncate flex items-center gap-1">
                       <span className="flex-1 truncate">{a.file_name}</span>
-                      <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive" onClick={() => deleteAttachment(a.id)}>
-                        <X className="h-3 w-3" />
-                      </Button>
+                      <ConfirmDelete description={`This will permanently delete "${a.file_name}".`} onConfirm={() => deleteAttachment(a.id)}>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 text-destructive">
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </ConfirmDelete>
                     </div>
                   </div>
                 );
