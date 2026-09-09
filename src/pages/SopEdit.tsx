@@ -692,6 +692,33 @@ export default function SopEdit() {
   );
 }
 
+function SortableSection({ id, order, children }: { id: string; order: number; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        order,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.6 : 1,
+        zIndex: isDragging ? 20 : undefined,
+      }}
+      className="relative"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        title="Drag to reorder this section"
+        className="absolute -top-2 left-3 z-10 flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground cursor-grab hover:text-foreground"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+      {children}
+    </div>
+  );
+}
+
 function TimeInput({ minutes, onChange }: { minutes: number | null; onChange: (m: number | null) => void }) {
   const [unit, setUnit] = useState<'min' | 'hr'>(() => (minutes != null && minutes % 60 === 0 && minutes >= 60 ? 'hr' : 'min'));
   const display = minutes == null ? '' : unit === 'hr' ? String(minutes / 60) : String(minutes);
