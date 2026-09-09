@@ -1011,17 +1011,33 @@ function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemo
           </Button>
         )}
         {loc.logo_url && (
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-muted-foreground"
-            title="Remove logo"
-            onClick={onRemoveLogo}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-muted-foreground"
+                title="Remove logo"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure you want to delete?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will remove the logo from {loc.name || 'this location'}.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onRemoveLogo}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
+
         {editing ? (
           <>
             <Input
