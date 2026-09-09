@@ -606,6 +606,40 @@ export default function SopEdit() {
         </CardContent>
       </Card>
 
+      {/* Delete SOP */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-destructive flex items-center gap-2"><Trash2 className="h-4 w-4" /> Delete SOP</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete SOP</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure you want to delete?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete "{sop?.title}" and all its steps, files, BOM items, locations, and attachments. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className={buttonVariants({ variant: 'destructive' })}
+                  onClick={async () => {
+                    await deleteSop();
+                    navigate(backTo);
+                  }}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardContent>
+      </Card>
+
       {pickerContext && (
         <FullScreenItemPicker
           open={!!pickerContext}
