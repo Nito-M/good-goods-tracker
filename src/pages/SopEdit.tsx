@@ -845,10 +845,13 @@ function StepRow({
                       <Link to={`/item/${it.inventory_item_id}`} className="text-muted-foreground hover:text-primary" title="Open item">
                         <ExternalLink className="h-3 w-3" />
                       </Link>
-                      <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive ml-auto"
-                        onClick={() => onRemoveItem(it.id)}>
-                        <X className="h-3 w-3" />
-                      </Button>
+                      <div className="ml-auto">
+                        <ConfirmDelete description="This will remove this linked item from the step." onConfirm={() => onRemoveItem(it.id)}>
+                          <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </ConfirmDelete>
+                      </div>
                     </div>
                   );
                 })}
