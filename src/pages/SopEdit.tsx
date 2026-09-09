@@ -696,9 +696,21 @@ export default function SopEdit() {
   );
 }
 
+import { createContext, useContext } from 'react';
+
+const SectionCollapseContext = createContext(false);
+
+function CollapsibleCardContent({ className, children }: { className?: string; children: React.ReactNode }) {
+  const collapsed = useContext(SectionCollapseContext);
+  if (collapsed) return null;
+  return <CardContent className={className}>{children}</CardContent>;
+}
+
 function SortableSection({ id, order, children }: { id: string; order: number; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const [collapsed, setCollapsed] = useState(false);
   return (
+    <SectionCollapseContext.Provider value={collapsed}>
     <div
       ref={setNodeRef}
       style={{
@@ -710,16 +722,27 @@ function SortableSection({ id, order, children }: { id: string; order: number; c
       }}
       className="relative"
     >
-      <button
-        {...attributes}
-        {...listeners}
-        title="Drag to reorder this section"
-        className="absolute -top-2 left-3 z-10 flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground cursor-grab hover:text-foreground"
-      >
-        <GripVertical className="h-3.5 w-3.5" />
-      </button>
+      <div className="absolute -top-2 left-3 z-10 flex items-center gap-1">
+        <button
+          {...attributes}
+          {...listeners}
+          title="Drag to reorder this section"
+          className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground cursor-grab hover:text-foreground"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          title={collapsed ? 'Expand this section' : 'Collapse this section'}
+          onClick={() => setCollapsed(c => !c)}
+          className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
+        >
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+      </div>
       {children}
     </div>
+    </SectionCollapseContext.Provider>
   );
 }
 
