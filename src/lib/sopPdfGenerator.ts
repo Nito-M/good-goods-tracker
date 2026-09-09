@@ -49,7 +49,7 @@ export interface SopPdfData {
     notes?: string | null;
   }[];
   bomTotal: number;
-  locations: { name: string; url?: string | null }[];
+  locations: { name: string; url?: string | null; notes?: string | null }[];
   attachments: { fileName: string }[];
 }
 
