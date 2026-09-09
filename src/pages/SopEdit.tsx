@@ -1022,24 +1022,38 @@ function SopLocationRow({ loc, logoUrl, onChange, onRemove, onUploadLogo, onRemo
             <X className="h-3.5 w-3.5" />
           </Button>
         )}
-        <Input
-          value={loc.name}
-          onChange={e => onChange({ name: e.target.value })}
-          placeholder="Location name (e.g. Shop A)"
-          className="flex-1 min-w-[160px] h-8"
-        />
-        <Input
-          value={loc.url || ''}
-          onChange={e => onChange({ url: e.target.value })}
-          placeholder="https://... (Google Maps, etc.)"
-          className="flex-[2] min-w-[220px] h-8"
-        />
-        {loc.url && (
-          <Button size="sm" variant="outline" asChild>
-            <a href={loc.url} target="_blank" rel="noreferrer">
-              <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open
-            </a>
-          </Button>
+        {editing ? (
+          <>
+            <Input
+              value={loc.name}
+              onChange={e => onChange({ name: e.target.value })}
+              placeholder="Location name (e.g. Shop A)"
+              className="flex-1 min-w-[160px] h-8"
+            />
+            <Input
+              value={loc.url || ''}
+              onChange={e => onChange({ url: e.target.value })}
+              placeholder="https://... (Google Maps, etc.)"
+              className="flex-[2] min-w-[220px] h-8"
+            />
+            <Button size="icon" variant="ghost" className="h-7 w-7" title="Done editing" onClick={() => setEditing(false)}>
+              <Check className="h-3.5 w-3.5" />
+            </Button>
+          </>
+        ) : (
+          <>
+            <span className="flex-1 min-w-[160px] text-sm font-medium truncate">{loc.name || 'Unnamed location'}</span>
+            {loc.url && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={loc.url} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Link
+                </a>
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit link" onClick={() => setEditing(true)}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          </>
         )}
         <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={onRemove}>
           <Trash2 className="h-3.5 w-3.5" />
