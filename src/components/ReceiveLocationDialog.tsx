@@ -36,6 +36,7 @@ interface ReceiveLocationDialogProps {
   warehouses: Warehouse[];
   poItems: PurchaseOrderItem[];
   loading?: boolean;
+  initialDate?: string;
 }
 
 interface LocationItemRow {
@@ -56,6 +57,7 @@ export function ReceiveLocationDialog({
   warehouses,
   poItems,
   loading,
+  initialDate,
 }: ReceiveLocationDialogProps) {
   const [locations, setLocations] = useState<LocationRow[]>([]);
   const [prevOverrides, setPrevOverrides] = useState<Record<number, string>>({});
@@ -77,9 +79,9 @@ export function ReceiveLocationDialog({
       });
       setPrevOverrides(init);
       const d = new Date();
-      setReceivedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+      setReceivedDate(initialDate || `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
     }
-  }, [open, poItems, warehouses.length]);
+  }, [open, poItems, warehouses.length, initialDate]);
 
   const getPrev = (idx: number): number => {
     const raw = prevOverrides[idx];

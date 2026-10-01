@@ -63,15 +63,37 @@ export function PurchaseOrders() {
     setProcessingId(null);
   };
 
-  const handleMarkPartiallyReceived = async (orderId: string) => {
-    setProcessingId(orderId);
-    await markAsPartiallyReceived(orderId);
-    setProcessingId(null);
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [dateDialog, setDateDialog] = useState<{ orderId: string; mode: 'full' | 'partial' } | null>(null);
+  const [pickedDate, setPickedDate] = useState<string>(todayStr());
+  const [agreedDate, setAgreedDate] = useState<string | undefined>(undefined);
+
+  const handleMarkPartiallyReceived = (orderId: string) => {
+    setPickedDate(todayStr());
+    setDateDialog({ orderId, mode: 'partial' });
   };
 
   const handleMarkReceived = (orderId: string) => {
-    setReceivingOrderId(orderId);
-    setReceiveDialogOpen(true);
+    setPickedDate(todayStr());
+    setDateDialog({ orderId, mode: 'full' });
+  };
+
+  const handleAgreeDate = async () => {
+    if (!dateDialog || !pickedDate) return;
+    const { orderId, mode } = dateDialog;
+    setDateDialog(null);
+    if (mode === 'partial') {
+      setProcessingId(orderId);
+      await markAsPartiallyReceived(orderId, pickedDate);
+      setProcessingId(null);
+    } else {
+      setAgreedDate(pickedDate);
+      setReceivingOrderId(orderId);
+      setReceiveDialogOpen(true);
+    }
   };
 
   const handleConfirmReceive = async (
@@ -400,7 +422,34 @@ export function PurchaseOrders() {
         onConfirm={handleConfirmReceive}
         warehouses={warehouses}
         poItems={receivingOrderId ? orders.find((o) => o.id === receivingOrderId)?.items ?? [] : []}
-        loading={!!processingId} />
+        loading={!!processingId}
+        initialDate={agreedDate} />
+
+      {/* Received date confirmation */}
+      <AlertDialog open={!!dateDialog} onOpenChange={(o) => !o && setDateDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {dateDialog?.mode === 'partial' ? 'Partially received on which date?' : 'Received on which date?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Today's date is filled in. Change it if the order arrived on a different day, then confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <input
+            type="date"
+            value={pickedDate}
+            onChange={(e) => setPickedDate(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAgreeDate} disabled={!pickedDate}>
+              Confirm date
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Confirmation Dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
