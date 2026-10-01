@@ -1172,10 +1172,13 @@ export function usePurchaseOrders() {
   };
 
 
-  const markAsPartiallyReceived = async (orderId: string) => {
+  const markAsPartiallyReceived = async (orderId: string, receivedDate?: string) => {
+    const at = receivedDate
+      ? new Date(`${receivedDate}T12:00:00`).toISOString()
+      : new Date().toISOString();
     const { error } = await supabase
       .from('purchase_orders')
-      .update({ status: 'partially_received', partially_received_at: new Date().toISOString() })
+      .update({ status: 'partially_received', partially_received_at: at })
       .eq('id', orderId);
 
     if (error) {
