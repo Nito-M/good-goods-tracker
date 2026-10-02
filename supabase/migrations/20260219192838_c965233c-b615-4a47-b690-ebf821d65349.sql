@@ -1,1 +1,0 @@
-ALTER TABLE public.item_vendor_prices ADD COLUMN IF NOT EXISTS vendor_sku text NULL;

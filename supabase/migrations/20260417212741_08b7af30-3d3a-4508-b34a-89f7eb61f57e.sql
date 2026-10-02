@@ -1,1 +1,0 @@
-ALTER TABLE public.item_vendor_prices DROP CONSTRAINT IF EXISTS item_vendor_prices_item_id_vendor_id_key;

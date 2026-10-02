@@ -1,1 +1,0 @@
-ALTER TABLE public.assembly_items ADD COLUMN unit_cost numeric NOT NULL DEFAULT 0;

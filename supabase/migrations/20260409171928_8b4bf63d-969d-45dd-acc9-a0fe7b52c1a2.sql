@@ -1,1 +1,0 @@
-ALTER TABLE public.purchase_orders ADD COLUMN contact_person_name TEXT DEFAULT NULL;

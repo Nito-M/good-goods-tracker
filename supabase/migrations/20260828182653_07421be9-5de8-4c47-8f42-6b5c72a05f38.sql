@@ -1,1 +1,0 @@
-ALTER TABLE public.quote_items ADD COLUMN IF NOT EXISTS invoiced_quantity numeric NOT NULL DEFAULT 0;

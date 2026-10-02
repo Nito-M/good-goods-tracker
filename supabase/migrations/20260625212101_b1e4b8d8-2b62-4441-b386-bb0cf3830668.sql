@@ -1,1 +1,0 @@
-ALTER TABLE public.vendors ADD COLUMN IF NOT EXISTS category text;

@@ -1,1 +1,0 @@
-ALTER TABLE public.job_items ADD COLUMN reserved boolean NOT NULL DEFAULT false;

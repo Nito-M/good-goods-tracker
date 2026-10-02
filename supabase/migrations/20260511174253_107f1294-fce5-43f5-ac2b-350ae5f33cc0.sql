@@ -1,4 +1,0 @@
-ALTER TABLE public.jobs
-ADD COLUMN IF NOT EXISTS quote_number TEXT,
-ADD COLUMN IF NOT EXISTS sales_order_number TEXT,
-ADD COLUMN IF NOT EXISTS invoice_number TEXT;

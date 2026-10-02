@@ -1,1 +1,0 @@
-ALTER TABLE public.app_welcome_settings ADD COLUMN IF NOT EXISTS greeting_color text NOT NULL DEFAULT '#ffffff';

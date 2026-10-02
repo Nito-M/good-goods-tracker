@@ -1,1 +1,0 @@
-ALTER TABLE public.trip_plan_locations ADD COLUMN notes text DEFAULT null;

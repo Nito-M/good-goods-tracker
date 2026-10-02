@@ -1,1 +1,0 @@
-ALTER TABLE public.sops ADD COLUMN IF NOT EXISTS notes text;

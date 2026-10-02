@@ -1,2 +1,0 @@
-ALTER TABLE public.sale_items ADD COLUMN IF NOT EXISTS picked_up_at TIMESTAMPTZ;
-UPDATE public.sale_items si SET picked_up_at = s.picked_up_at FROM public.sales s WHERE si.sale_id = s.id AND s.picked_up_at IS NOT NULL AND si.picked_up_at IS NULL;

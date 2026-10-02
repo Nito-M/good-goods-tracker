@@ -1,1 +1,0 @@
-ALTER TABLE public.sale_items ADD COLUMN IF NOT EXISTS notes text;

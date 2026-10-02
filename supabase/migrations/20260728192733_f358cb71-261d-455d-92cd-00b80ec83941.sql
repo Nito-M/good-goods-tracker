@@ -1,1 +1,0 @@
-ALTER TABLE public.so_item_job_links ADD COLUMN IF NOT EXISTS unit_notes text;

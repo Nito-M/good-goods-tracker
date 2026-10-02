@@ -1,1 +1,0 @@
-CREATE POLICY "Users can update their own tax documents" ON public.tax_documents FOR UPDATE USING (auth.uid() = user_id);

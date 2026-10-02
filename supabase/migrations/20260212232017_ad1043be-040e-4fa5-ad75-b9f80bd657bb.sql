@@ -1,1 +1,0 @@
-ALTER TABLE public.jobs ADD COLUMN due_date timestamp with time zone DEFAULT NULL;

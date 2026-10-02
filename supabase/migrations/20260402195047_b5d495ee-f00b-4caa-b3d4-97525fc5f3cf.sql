@@ -1,1 +1,0 @@
-ALTER TABLE public.quotes ADD COLUMN show_payment_terms BOOLEAN NOT NULL DEFAULT true;

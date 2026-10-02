@@ -1,1 +1,0 @@
-ALTER TABLE public.inventory_items ADD COLUMN internal_part_number text DEFAULT NULL;

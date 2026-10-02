@@ -1,1 +1,0 @@
-DROP POLICY IF EXISTS "Org members can view org todos" ON public.todos;

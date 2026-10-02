@@ -1,2 +1,0 @@
-ALTER TABLE public.sop_options DROP CONSTRAINT sop_options_kind_check;
-ALTER TABLE public.sop_options ADD CONSTRAINT sop_options_kind_check CHECK (kind = ANY (ARRAY['department'::text, 'author'::text, 'approver'::text, 'revision'::text]));

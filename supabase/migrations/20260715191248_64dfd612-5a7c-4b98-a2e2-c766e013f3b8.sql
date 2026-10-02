@@ -1,1 +1,0 @@
-ALTER TABLE public.purchase_orders ADD COLUMN IF NOT EXISTS gst_enabled boolean NOT NULL DEFAULT true;

@@ -1,1 +1,0 @@
-ALTER TABLE public.requests ADD COLUMN IF NOT EXISTS pdf_url text NULL;

@@ -1,1 +1,0 @@
-ALTER TABLE public.todos ADD COLUMN IF NOT EXISTS amount_unit text NOT NULL DEFAULT 'kg' CHECK (amount_unit IN ('kg','amount','pieces'));

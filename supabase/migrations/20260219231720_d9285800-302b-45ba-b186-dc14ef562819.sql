@@ -1,1 +1,0 @@
-ALTER TABLE public.requests ADD COLUMN IF NOT EXISTS bank_card_id uuid REFERENCES public.bank_cards(id) ON DELETE SET NULL;

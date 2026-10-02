@@ -1,1 +1,0 @@
-ALTER TABLE public.board_cells ADD COLUMN IF NOT EXISTS bg_color text;

@@ -1,1 +1,0 @@
-ALTER TABLE public.profiles ADD COLUMN card_opacity integer NOT NULL DEFAULT 100;

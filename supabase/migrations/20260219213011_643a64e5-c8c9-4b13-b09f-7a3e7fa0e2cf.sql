@@ -1,1 +1,0 @@
-ALTER TABLE public.requests ADD COLUMN IF NOT EXISTS extra_cost_label text NOT NULL DEFAULT 'Shipping';

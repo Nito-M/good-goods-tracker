@@ -1,2 +1,0 @@
-ALTER TABLE public.assembly_components DROP CONSTRAINT assembly_components_category_check;
-ALTER TABLE public.assembly_components ADD CONSTRAINT assembly_components_category_check CHECK (category IN ('front_end', 'back_end', 'deck_type', 'under_carriage'));

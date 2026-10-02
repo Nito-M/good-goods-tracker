@@ -1,3 +1,0 @@
-ALTER TABLE public.sop_locations
-  ADD COLUMN IF NOT EXISTS notes TEXT,
-  ADD COLUMN IF NOT EXISTS logo_url TEXT;

@@ -1,1 +1,0 @@
-ALTER TABLE public.profiles ADD COLUMN inventory_show_sku boolean NOT NULL DEFAULT true;

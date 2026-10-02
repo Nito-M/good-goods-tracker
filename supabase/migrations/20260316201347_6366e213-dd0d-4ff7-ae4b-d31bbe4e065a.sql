@@ -1,1 +1,0 @@
-ALTER TABLE public.assets ADD COLUMN motor_type text DEFAULT null;

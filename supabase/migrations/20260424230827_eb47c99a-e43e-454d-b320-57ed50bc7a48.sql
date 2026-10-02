@@ -1,1 +1,0 @@
-ALTER TABLE public.board_columns ADD COLUMN IF NOT EXISTS header_bg_color text;
