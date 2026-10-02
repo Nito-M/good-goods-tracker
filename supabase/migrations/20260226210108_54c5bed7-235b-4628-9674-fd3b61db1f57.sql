@@ -1,0 +1,1 @@
+ALTER TABLE public.item_vendor_prices ADD COLUMN lead_time_days integer NULL;

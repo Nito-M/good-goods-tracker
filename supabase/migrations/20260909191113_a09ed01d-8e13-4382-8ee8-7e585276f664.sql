@@ -1,0 +1,1 @@
+ALTER TABLE public.sops ADD COLUMN IF NOT EXISTS card_order TEXT[];

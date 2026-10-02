@@ -1,0 +1,1 @@
+ALTER TABLE public.job_items ADD COLUMN consumed boolean NOT NULL DEFAULT false;

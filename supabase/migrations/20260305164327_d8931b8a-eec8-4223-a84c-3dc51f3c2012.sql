@@ -1,0 +1,1 @@
+ALTER TABLE public.trip_plan_pos ADD COLUMN location_index integer DEFAULT NULL;

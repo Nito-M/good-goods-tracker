@@ -1,0 +1,1 @@
+ALTER TABLE public.bank_cards ADD COLUMN category text DEFAULT NULL;

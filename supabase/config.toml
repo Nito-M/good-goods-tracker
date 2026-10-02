@@ -1,1 +1,9 @@
-project_id = "zyyfwhvbmksmhlsafbef"
+project_id = "awzfdkhntiucfmuorbbr"
+
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.lookup-users-by-ids]
+    verify_jwt = false
+  [functions.public-storefront]
+    verify_jwt = false

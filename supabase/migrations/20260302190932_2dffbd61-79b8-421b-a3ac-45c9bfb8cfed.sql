@@ -1,0 +1,1 @@
+ALTER TABLE public.request_sub_items ADD COLUMN quantity numeric NOT NULL DEFAULT 1;

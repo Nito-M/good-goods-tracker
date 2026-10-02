@@ -1,0 +1,1 @@
+ALTER TABLE public.quotes ADD COLUMN show_sku boolean NOT NULL DEFAULT true;

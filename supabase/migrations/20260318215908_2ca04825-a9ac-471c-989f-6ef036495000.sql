@@ -1,0 +1,1 @@
+ALTER TABLE public.part_manufacturing_steps ADD COLUMN price numeric NOT NULL DEFAULT 0;
