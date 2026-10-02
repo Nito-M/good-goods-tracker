@@ -5,7 +5,5 @@ project_id = "awzfdkhntiucfmuorbbr"
     verify_jwt = false
   [functions.lookup-users-by-ids]
     verify_jwt = false
-  [functions.process-email-queue]
-    verify_jwt = true
   [functions.public-storefront]
     verify_jwt = false
